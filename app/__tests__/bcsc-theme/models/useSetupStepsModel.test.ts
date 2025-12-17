@@ -35,7 +35,7 @@ describe('useSetupStepsModel', () => {
       verificationRequestId: 'test-verification-id',
       deviceCode: 'test-device-code',
       userCode: 'test-user-code',
-      cardType: 'combined',
+      cardProcess: 'combined',
     },
   }
 
@@ -191,13 +191,13 @@ describe('useSetupStepsModel', () => {
   })
 
   describe('stepActions.email', () => {
-    it('should navigate to EnterEmail screen with cardType', () => {
+    it('should navigate to EnterEmail screen with cardProcess', () => {
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
       result.current.stepActions.email()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterEmail, {
-        cardType: mockStore.bcsc.cardType,
+        cardProcess: mockStore.bcsc.cardProcess,
       })
     })
   })

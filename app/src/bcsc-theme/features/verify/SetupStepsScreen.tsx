@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -110,9 +110,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </View>
               {
                 // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcsc.cardType === BCSCCardType.NonPhoto ? (
+                store.bcsc.cardProcess !== BCSCCardProcess.BCSCPhoto && (
                   <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
-                ) : null
+                )
               }
             </View>
           ) : null

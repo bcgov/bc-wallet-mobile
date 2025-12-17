@@ -30,6 +30,8 @@ export interface ConnectResult {
   disconnectPexip: () => Promise<void>
   stopPexipKeepAlive: () => void
   setAppInitiatedDisconnect: (value: boolean) => void
+  closePeerConnection: () => void
+  releaseLocalStream: () => void
 }
 
 export enum VideoCallFlowState {

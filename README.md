@@ -124,7 +124,6 @@ In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
 BUILD_TARGET=<bcwallet | bcsc>
-LOAD_STORYBOOK=false
 OCA_URL=<url>
 MEDIATOR_URL=<url>
 MEDIATOR_USE_PUSH_NOTIFICATIONS=false

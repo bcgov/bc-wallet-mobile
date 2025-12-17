@@ -4,11 +4,11 @@ import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 describe('Card Utils', () => {
   describe('getCardProcessForCardType', () => {
     it('should return BCSC for Combined card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.Combined)).toBe(BCSCCardProcess.BCSC)
+      expect(getCardProcessForCardType(BCSCCardType.Combined)).toBe(BCSCCardProcess.BCSCPhoto)
     })
 
     it('should return BCSC for Photo card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.Photo)).toBe(BCSCCardProcess.BCSC)
+      expect(getCardProcessForCardType(BCSCCardType.Photo)).toBe(BCSCCardProcess.BCSCPhoto)
     })
 
     it('should return BCSCNonPhoto for NonPhoto card type', () => {

@@ -1,4 +1,4 @@
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { initialState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
@@ -64,7 +64,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.completed).toBe(false)
       expect(hook.result.current.id.focused).toBe(true)
 
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
 
@@ -78,7 +78,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.NonPhoto
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCNonPhoto
       // Note: serial is NOT set - simulates user selecting card type but backing out
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -93,7 +93,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Other
+      store.bcsc.cardProcess = BCSCCardProcess.NonBCSC
       // Note: no evidence data - simulates user selecting card type but backing out
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -114,7 +114,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.focused).toBe(true)
       expect(hook.result.current.id.nonPhotoBcscNeedsAdditionalCard).toBe(false)
 
-      store.bcsc.cardType = BCSCCardType.NonPhoto
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCNonPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
 
@@ -151,7 +151,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.focused).toBe(true)
       expect(hook.result.current.id.nonBcscNeedsAdditionalCard).toBe(false)
 
-      store.bcsc.cardType = BCSCCardType.Other
+      store.bcsc.cardProcess = BCSCCardProcess.NonBCSC
 
       hook.rerender(store)
 
@@ -205,7 +205,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
 
@@ -219,7 +219,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -236,7 +236,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -251,7 +251,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = undefined
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -275,7 +275,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.NonPhoto
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCNonPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = ''
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -305,7 +305,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -321,7 +321,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = undefined
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -337,7 +337,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -355,7 +355,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -372,7 +372,7 @@ describe('useSetupSteps Hook', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -391,7 +391,7 @@ describe('useSetupSteps Hook', () => {
 
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
       store.bcsc.deviceCode = 'ABCDEFGH'
@@ -434,7 +434,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.completed).toBe(false)
       expect(hook.result.current.id.focused).toBe(true)
 
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
 
@@ -493,7 +493,7 @@ describe('useSetupSteps Hook', () => {
     it('should return address when address step is focused', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.currentStep).toBe('address')
@@ -502,7 +502,7 @@ describe('useSetupSteps Hook', () => {
     it('should return email when email step is focused', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.deviceCode = 'ABCDEFGH'
       const hook = renderHook(() => useSetupSteps(store))
@@ -512,7 +512,7 @@ describe('useSetupSteps Hook', () => {
     it('should return verify when verify step is focused', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.deviceCode = 'ABCDEFGH'
       store.bcsc.email = 'test@email.com'
@@ -524,7 +524,7 @@ describe('useSetupSteps Hook', () => {
     it('should return null when all steps are completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.deviceCode = 'ABCDEFGH'
       store.bcsc.email = 'test@email.com'
@@ -546,7 +546,7 @@ describe('useSetupSteps Hook', () => {
     it('should be false when some steps are completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.allCompleted).toBe(false)
@@ -555,7 +555,7 @@ describe('useSetupSteps Hook', () => {
     it('should be true when all steps are completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       store.bcsc.deviceCode = 'ABCDEFGH'
       store.bcsc.email = 'test@email.com'
@@ -591,7 +591,7 @@ describe('useSetupSteps Hook', () => {
     it('should return serial number in subtext when id is completed with BCSC card', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
-      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcsc.serial = '123456789'
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.id.subtext[0]).toContain('123456789')

@@ -1,6 +1,6 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { BCSCCardType } from './cards'
+import { BCSCCardProcess } from './cards'
 
 export enum BCSCStacks {
   Startup = 'BCSCStartupStack',
@@ -127,7 +127,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.MismatchedSerial]: undefined
-  [BCSCScreens.EnterEmail]: { cardType: BCSCCardType }
+  [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined

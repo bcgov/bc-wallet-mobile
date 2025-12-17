@@ -116,7 +116,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       },
 
       email: () => {
-        navigation.navigate(BCSCScreens.EnterEmail, { cardType: store.bcsc.cardType })
+        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcsc.cardProcess })
       },
 
       verify: () => {
@@ -128,7 +128,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       steps.id.nonBcscNeedsAdditionalCard,
       steps.id.nonPhotoBcscNeedsAdditionalCard,
       steps.id.completed,
-      store.bcsc.cardType,
+      store.bcsc.cardProcess,
     ]
   )
 
