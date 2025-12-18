@@ -139,7 +139,7 @@ export const useCardScanner = () => {
         const decodedCode = decodeScannedCode(code)
 
         if (!decodedCode) {
-          logger.warn(`Failed to decode scanned barcode`, { barcode: code })
+          logger.debug(`Failed to decode scanned barcode`, { failedBarcode: code })
           continue
         }
 
