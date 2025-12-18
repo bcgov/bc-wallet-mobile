@@ -1,6 +1,7 @@
 import Root from '@/Root'
 import { DeepLinkService, DeepLinkViewModel, DeepLinkViewModelProvider } from '@/bcsc-theme/features/deep-linking'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { AlertProvider } from '@/contexts/AlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
@@ -93,7 +94,9 @@ const App = () => {
                         onClose={() => setSurveyVisible(false)}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                        <Root />
+                        <AlertProvider>
+                          <Root />
+                        </AlertProvider>
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
                     </NetworkProvider>
