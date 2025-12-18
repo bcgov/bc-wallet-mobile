@@ -14,6 +14,7 @@ import {
 } from 'react-native'
 import {
   Camera,
+  CameraCaptureError,
   Code,
   CodeScannerFrame,
   CodeType,
@@ -180,7 +181,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   const handleFocusTap = async (e: GestureResponderEvent): Promise<void> => {
-    if (!device?.supportsFocus) {
+    if (!device?.supportsFocus || !camera.current) {
       return
     }
 
@@ -188,8 +189,16 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     const tapPoint = { x, y }
     drawFocusTap(tapPoint)
 
-    if (camera.current) {
+    try {
       await camera.current.focus(tapPoint)
+    } catch (error) {
+      // Ignore focus canceled errors
+      if (error instanceof CameraCaptureError && error.code === 'capture/focus-canceled') {
+        return
+      }
+
+      // Rethrow other errors
+      throw error
     }
   }
 
