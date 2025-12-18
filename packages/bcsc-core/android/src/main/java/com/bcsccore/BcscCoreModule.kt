@@ -94,6 +94,14 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
     // JWT expiration in seconds
     private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
+    
+    // Notification channel constants
+    private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
+    private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
+    
+    // Track if notification channel has been created (only needs to happen once)
+    @Volatile
+    private var notificationChannelCreated = false
   }
 
   override fun getName(): String = NAME
@@ -1571,23 +1579,23 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     
     try {
       val notificationManager = reactApplicationContext.getSystemService(NotificationManager::class.java)
-      val channelId = "bcsc_foreground_notifications"
-      var channelName = "BCSC Notifications"
 
-      // Create notification channel for Android O+
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      // Create notification channel once on first use (Android O+)
+      if (!notificationChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val channel = NotificationChannel(
-          channelId,
-          channelName,
+          NOTIFICATION_CHANNEL_ID,
+          NOTIFICATION_CHANNEL_NAME,
           NotificationManager.IMPORTANCE_HIGH
         ).apply {
-          description = "Default notification channel"
+          description = "Notifications displayed while app is in foreground"
         }
         notificationManager.createNotificationChannel(channel)
+        notificationChannelCreated = true
+        Log.d(NAME, "showLocalNotification - Notification channel created")
       }
       
       // Build and display the notification
-      val notification = NotificationCompat.Builder(reactApplicationContext, channelId)
+      val notification = NotificationCompat.Builder(reactApplicationContext, NOTIFICATION_CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(title)
         .setContentText(message)
