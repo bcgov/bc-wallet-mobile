@@ -1071,6 +1071,7 @@ class BcscCore: NSObject {
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
+    
     let content = UNMutableNotificationContent()
     content.title = title
     content.body = message
