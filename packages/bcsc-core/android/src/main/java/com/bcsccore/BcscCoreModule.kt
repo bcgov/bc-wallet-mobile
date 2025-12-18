@@ -1571,13 +1571,14 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     
     try {
       val notificationManager = reactApplicationContext.getSystemService(NotificationManager::class.java)
-      val channelId = "default_channel_id"
-      
+      val channelId = "bcsc_foreground_notifications"
+      var channelName = "BCSC Notifications"
+
       // Create notification channel for Android O+
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val channel = NotificationChannel(
           channelId,
-          "Default Channel",
+          channelName,
           NotificationManager.IMPORTANCE_HIGH
         ).apply {
           description = "Default notification channel"
