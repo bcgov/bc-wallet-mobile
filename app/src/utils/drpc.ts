@@ -35,7 +35,7 @@ const DrpcMethod = {
 export const sendDrpcRequest = async (
   agent: Agent,
   connectionId: string,
-  request: Partial<DrpcRequest>
+  request: Partial<DrpcRequest>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<DrpcResponsePromise<any>> => {
   const requestWithId = { jsonrpc: '2.0', id: Math.floor(Math.random() * 900000) + 100000, ...request }
@@ -45,7 +45,7 @@ export const sendDrpcRequest = async (
 
 export const requestNonceDrpc = async (
   agent: Agent,
-  connectionRecord: ConnectionRecord
+  connectionRecord: ConnectionRecord,
 ): Promise<DrpcResponsePromise<NonceDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
     method: DrpcMethod.RequestNonceV2,
@@ -57,7 +57,7 @@ export const requestNonceDrpc = async (
 export const requestAttestationDrpc = async (
   agent: Agent,
   connectionRecord: ConnectionRecord,
-  params: AttestationRequestParams
+  params: AttestationRequestParams,
 ): Promise<DrpcResponsePromise<AttestationDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
     method: DrpcMethod.RequestAttestationV2,

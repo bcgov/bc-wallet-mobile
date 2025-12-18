@@ -22,7 +22,7 @@ describe('AccountExpired', () => {
     const tree = render(
       <BasicAppContext>
         <AccountExpiredScreen navigation={mockNavigation} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

@@ -10,9 +10,9 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
-import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
-import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
-import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
+import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
+import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
+import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
 import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
@@ -60,7 +60,7 @@ const MainStack: React.FC = () => {
       logger?.error(
         `[MainStack] Pending deep link missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
           pairingCode ?? 'missing'
-        }`
+        }`,
       )
       return undefined
     }

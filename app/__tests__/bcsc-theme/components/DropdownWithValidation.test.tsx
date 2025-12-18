@@ -33,7 +33,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-label')).toBeTruthy()
@@ -46,7 +46,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option2" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-label')).toBeTruthy()
@@ -58,7 +58,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} error="This field is required" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-error')).toBeTruthy()
@@ -69,7 +69,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Select your preferred option" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-subtext')).toBeTruthy()
@@ -80,7 +80,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} label="Custom Label" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Custom Label')).toBeTruthy()
@@ -90,7 +90,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} placeholder="Choose an option" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Choose an option')).toBeTruthy()
@@ -100,7 +100,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Select an option')).toBeTruthy()
@@ -110,7 +110,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option2" placeholder="Choose an option" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Option 2')).toBeTruthy()
@@ -121,7 +121,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} error="This is an error" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('This is an error')).toBeTruthy()
@@ -131,7 +131,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Helper text here" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Helper text here')).toBeTruthy()
@@ -141,7 +141,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Helper text here" error="Error message" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Error message')).toBeTruthy()
@@ -154,7 +154,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -171,7 +171,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, queryByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -192,7 +192,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -210,7 +210,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -241,7 +241,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getAllByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Select your province" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -261,7 +261,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} onChange={mockOnChange} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -281,7 +281,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, queryByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} onChange={mockOnChange} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -302,7 +302,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option2" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -319,7 +319,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option2" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -340,7 +340,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -351,7 +351,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -362,7 +362,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} label="Province" placeholder="Select province" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -373,7 +373,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} label="Province" value="option2" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
@@ -384,7 +384,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -401,7 +401,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -419,7 +419,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-label')).toBeTruthy()
@@ -429,7 +429,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} error="Error message" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-error')).toBeTruthy()
@@ -439,7 +439,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Helper text" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('com.ariesbifold:id/test-dropdown-subtext')).toBeTruthy()
@@ -464,7 +464,7 @@ describe('DropdownWithValidation Component', () => {
             onChange={mockOnChange}
             label="Select Number"
           />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -488,7 +488,7 @@ describe('DropdownWithValidation Component', () => {
             onChange={jest.fn()}
             label="Select Number"
           />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Two')).toBeTruthy()
@@ -500,7 +500,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, queryByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} options={[]} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Should render without crashing
@@ -522,7 +522,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} options={singleOption} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -538,7 +538,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="nonexistent" placeholder="Select an option" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Should show placeholder when value doesn't match any option
@@ -553,7 +553,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} options={longOptions} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -574,7 +574,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} options={manyOptions} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal
@@ -591,7 +591,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByText, rerender } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option1" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Option 1')).toBeTruthy()
@@ -599,7 +599,7 @@ describe('DropdownWithValidation Component', () => {
       rerender(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} value="option3" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Option 3')).toBeTruthy()
@@ -614,7 +614,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId, getByText, queryByText, rerender } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal with original options
@@ -633,7 +633,7 @@ describe('DropdownWithValidation Component', () => {
       rerender(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} options={newOptions} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       // Open modal again
@@ -652,7 +652,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} labelProps={{ color: 'red' }} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const label = getByTestId('com.ariesbifold:id/test-dropdown-label')
@@ -663,7 +663,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} subtext="Helper text" subtextProps={{ fontSize: 14 }} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const subtext = getByTestId('com.ariesbifold:id/test-dropdown-subtext')
@@ -674,7 +674,7 @@ describe('DropdownWithValidation Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <DropdownWithValidation {...defaultProps} error="Error" errorProps={{ fontWeight: 'bold' }} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const error = getByTestId('com.ariesbifold:id/test-dropdown-error')

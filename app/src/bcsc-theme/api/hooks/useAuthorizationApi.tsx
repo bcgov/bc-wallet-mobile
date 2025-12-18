@@ -68,8 +68,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           scope: 'openid profile address offline_access',
         }
 
-        apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
-
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(
             apiClient.endpoints.deviceAuthorization,
@@ -77,7 +75,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             {
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               skipBearerAuth: true,
-            }
+            },
           )
 
           return data
@@ -95,7 +93,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         }
       })
     },
-    [apiClient]
+    [apiClient],
   )
 
   /**
@@ -138,8 +136,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           }),
         }
 
-        apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
-
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(
             apiClient.endpoints.deviceAuthorization,
@@ -147,7 +143,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             {
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               skipBearerAuth: true,
-            }
+            },
           )
 
           return data
@@ -165,7 +161,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         }
       })
     },
-    [apiClient]
+    [apiClient],
   )
 
   return useMemo(
@@ -173,7 +169,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
       authorizeDevice,
       authorizeDeviceWithUnknownBCSC,
     }),
-    [authorizeDevice, authorizeDeviceWithUnknownBCSC]
+    [authorizeDevice, authorizeDeviceWithUnknownBCSC],
   )
 }
 

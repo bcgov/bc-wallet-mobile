@@ -53,7 +53,7 @@ describe('DeepLinkService', () => {
         path: '/https%3A%2F%2Fexample.com%2Fdevice%2FMy+Service%2FCODE123',
         serviceTitle: 'My Service',
         pairingCode: 'CODE123',
-      })
+      }),
     )
     expect(mockLinking.addEventListener).toHaveBeenCalledWith('url', expect.any(Function))
     expect(capturedListener).toBeDefined()
@@ -109,7 +109,7 @@ describe('DeepLinkService', () => {
     manualEmit?.({ url: pairingUrl })
 
     expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ serviceTitle: 'My Service', pairingCode: 'CODE123' })
+      expect.objectContaining({ serviceTitle: 'My Service', pairingCode: 'CODE123' }),
     )
   })
 
@@ -143,7 +143,7 @@ describe('DeepLinkService', () => {
         path: '/https%3A%2F%2Fidsit.gov.bc.ca%2Fdevice/BC+Parks+Discover+Camping/HHFBYS',
         serviceTitle: 'BC Parks Discover Camping',
         pairingCode: 'HHFBYS',
-      })
+      }),
     )
   })
 
@@ -181,7 +181,7 @@ describe('DeepLinkService', () => {
     eventHandler?.({ url: 'myapp://other/path/segment' })
 
     expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ rawUrl: 'myapp://other/path/segment', host: 'other', path: '/path/segment' })
+      expect.objectContaining({ rawUrl: 'myapp://other/path/segment', host: 'other', path: '/path/segment' }),
     )
     expect(handler).toHaveBeenCalledWith(expect.not.objectContaining({ pairingCode: expect.any(String) }))
   })
@@ -196,7 +196,7 @@ describe('DeepLinkService', () => {
     eventHandler?.({ url: 'myapp://pair/https%3A%2F%2Fexample.com%2Fno-device%2Fonlyone' })
 
     expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ rawUrl: 'myapp://pair/https%3A%2F%2Fexample.com%2Fno-device%2Fonlyone', host: 'pair' })
+      expect.objectContaining({ rawUrl: 'myapp://pair/https%3A%2F%2Fexample.com%2Fno-device%2Fonlyone', host: 'pair' }),
     )
     expect(handler).toHaveBeenCalledWith(expect.not.objectContaining({ pairingCode: expect.any(String) }))
   })

@@ -67,7 +67,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()
@@ -87,7 +87,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()
@@ -110,7 +110,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()
@@ -132,7 +132,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     const cancelButton = tree.getByTestId(testIdWithKey('ServiceLoginCancel'))
@@ -162,7 +162,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     const cancelButton = tree.getByTestId(testIdWithKey('ServiceLoginCancel'))
@@ -191,7 +191,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginCancel')))
@@ -222,7 +222,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginCancel')))
@@ -254,7 +254,7 @@ describe('ServiceLoginScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     await fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginContinue')))

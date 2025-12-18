@@ -11,7 +11,7 @@ const mockCredentialModule = {
   getFormatData: jest
     .fn()
     .mockReturnValue(
-      Promise.resolve({} as CredentialProtocolOptions.GetCredentialFormatDataReturn<[LegacyIndyCredentialFormat]>)
+      Promise.resolve({} as CredentialProtocolOptions.GetCredentialFormatDataReturn<[LegacyIndyCredentialFormat]>),
     ),
 }
 const mockProofModule = {

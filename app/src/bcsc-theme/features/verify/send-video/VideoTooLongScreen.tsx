@@ -36,7 +36,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
             CommonActions.reset({
               index: 0,
               routes: [{ name: BCSCScreens.SetupSteps }],
-            })
+            }),
           )
         }}
         testID={'Cancel'}

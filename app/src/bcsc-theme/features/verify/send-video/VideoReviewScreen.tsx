@@ -99,7 +99,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           { name: BCSCScreens.VerificationMethodSelection },
           { name: BCSCScreens.InformationRequired },
         ],
-      })
+      }),
     )
   }
 

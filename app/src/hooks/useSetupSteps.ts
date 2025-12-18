@@ -1,4 +1,4 @@
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { AdditionalEvidenceData, BCState } from '@/store'
 import { useMemo } from 'react'
@@ -63,23 +63,23 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
   return useMemo(() => {
     // ---- Derived state from store ----
     const nickname = store.bcsc.selectedNickname || null
-    const bcscSerialNumber = store.bcsc.serial || null
-    const emailAddress = store.bcsc.email || null
-    const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
+    const bcscSerialNumber = store.bcscSecure.serial || null
+    const emailAddress = store.bcscSecure.email || null
+    const isEmailVerified = Boolean(store.bcscSecure.isEmailVerified)
     const hasSerial = Boolean(bcscSerialNumber)
 
     // Card types
-    const isCombinedCard = store.bcsc.cardType === BCSCCardType.Combined
-    const isPhotoCard = store.bcsc.cardType === BCSCCardType.Photo
-    const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
-    const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
+    const isCombinedCard = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCPhoto
+    const isPhotoCard = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCPhoto
+    const isNonPhotoCard = store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto
+    const isNonBCSCCards = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
     // Count of fully validated evidence cards (at least 1 photo taken + document number entered)
-    const completedEvidenceCount = store.bcsc.additionalEvidenceData.filter(isEvidenceComplete).length
+    const completedEvidenceCount = (store.bcscSecure.additionalEvidenceData || []).filter(isEvidenceComplete).length
 
     // Check if user has any completed photo ID evidence
-    const hasCompletedPhotoIdEvidence = store.bcsc.additionalEvidenceData.some(
-      (item) => item.evidenceType.has_photo && isEvidenceComplete(item)
+    const hasCompletedPhotoIdEvidence = (store.bcscSecure.additionalEvidenceData || []).some(
+      (item) => item.evidenceType.has_photo && isEvidenceComplete(item),
     )
 
     // Non-photo BCSC needs an additional photo ID card if serial is present but no completed photo evidence
@@ -96,9 +96,9 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Step completion states ----
     const step1Completed = Boolean(nickname)
     const step2Completed = bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
-    const step3Completed = Boolean(store.bcsc.deviceCode)
-    const step4Completed = Boolean(emailAddress && emailConfirmed)
-    const step5Completed = Boolean(store.bcsc.verified || store.bcsc.pendingVerification)
+    const step3Completed = Boolean(store.bcscSecure.deviceCode)
+    const step4Completed = Boolean(emailAddress && isEmailVerified)
+    const step5Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
@@ -124,17 +124,17 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       const cards: string[] = []
 
       // If the BCSC card is registered, show the BCSC serial number
-      if (store.bcsc.serial) {
-        cards.push(t('BCSC.Steps.GetVerificationStep2Subtext1', { serial: store.bcsc.serial }))
+      if (store.bcscSecure.serial) {
+        cards.push(t('BCSC.Steps.GetVerificationStep2Subtext1', { serial: store.bcscSecure.serial }))
       }
 
       // If the user has added additional evidence, add each to the list
-      for (const evidence of store.bcsc.additionalEvidenceData.filter(isEvidenceComplete)) {
+      for (const evidence of (store.bcscSecure.additionalEvidenceData || []).filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
             evidenceType: evidence.evidenceType.evidence_type,
             documentNumber: evidence.documentNumber,
-          })
+          }),
         )
       }
 
@@ -143,15 +143,15 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     const getStep3Subtext = (): string[] => {
       // For BCSC card with serial, address comes from the card
-      if (step2Completed && store.bcsc.serial) {
+      if (step2Completed && store.bcscSecure.serial) {
         return [t('BCSC.Steps.GetVerificationStep3Subtext1')]
       }
 
       // Only show address if step 3 is completed
-      if (step3Completed && store.bcsc.userMetadata?.address) {
+      if (step3Completed && store.bcscSecure.userMetadata?.address) {
         return [
           t('BCSC.Steps.GetVerificationStep3Subtext2', {
-            address: formatAddressForDisplay(store.bcsc.userMetadata.address),
+            address: formatAddressForDisplay(store.bcscSecure.userMetadata.address),
           }),
         ]
       }
@@ -160,8 +160,8 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     }
 
     const getStep5Subtext = (): string[] => {
-      if (step5Focused && store.bcsc.deviceCodeExpiresAt) {
-        const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
+      if (step5Focused && store.bcscSecure.deviceCodeExpiresAt) {
+        const expirationDate = store.bcscSecure.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
           day: '2-digit',
           month: 'long',
           year: 'numeric',

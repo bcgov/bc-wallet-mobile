@@ -35,7 +35,7 @@ describe('ID Token Utils', () => {
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getIdTokenMetadata -> Failed to decode ID token payload',
-        expect.any(Error)
+        expect.any(Error),
       )
     })
 

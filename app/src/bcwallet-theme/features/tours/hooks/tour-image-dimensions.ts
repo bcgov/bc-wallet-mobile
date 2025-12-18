@@ -5,7 +5,7 @@ const useTourImageDimensions = () => {
   const totalHorizontalImagePadding = 90
   const portraitMode = windowHeight > windowWidth
   const imageWidth = Math.floor(
-    portraitMode ? windowWidth - totalHorizontalImagePadding : windowHeight - totalHorizontalImagePadding
+    portraitMode ? windowWidth - totalHorizontalImagePadding : windowHeight - totalHorizontalImagePadding,
   )
   const imageHeight = Math.floor(imageWidth * 0.66)
 

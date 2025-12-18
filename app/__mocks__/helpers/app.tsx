@@ -30,7 +30,7 @@ export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, init
         ...initialStateOverride?.bcsc,
       },
     }),
-    [initialStateOverride]
+    [initialStateOverride],
   )
 
   return (

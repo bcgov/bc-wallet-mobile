@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
@@ -18,6 +19,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const [liveCallLoading, setLiveCallLoading] = useState(false)
   const { evidence, video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { updateVerificationRequest } = useSecureActions()
 
   const handlePressSendVideo = useCallback(async () => {
     try {
@@ -34,7 +36,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       VerificationVideoCache.clearCache()
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
+      updateVerificationRequest(id, sha256)
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
 
       navigation.navigate(BCSCScreens.InformationRequired)
@@ -45,6 +47,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       setSendVideoLoading(false)
     }
   }, [
+    updateVerificationRequest,
     dispatch,
     evidence,
     logger,
@@ -67,7 +70,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       // TODO (bm): Look for prod queue(s) depending on environment
       const availableDestination = destinations.find(
-        (dest) => dest.destination_name === 'Test Harness Queue Destination'
+        (dest) => dest.destination_name === 'Test Harness Queue Destination',
       )
 
       if (!availableDestination) {
@@ -105,7 +108,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     handlePressLiveCall,
     sendVideoLoading,
     liveCallLoading,
-    verificationOptions: store.bcsc.verificationOptions,
+    verificationOptions: store.bcscSecure.verificationOptions || [],
   }
 }
 export default useVerificationMethodModel

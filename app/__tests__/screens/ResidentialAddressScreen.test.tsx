@@ -21,7 +21,7 @@ describe('ResidentialAddress', () => {
     const tree = render(
       <BasicAppContext>
         <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

@@ -22,7 +22,7 @@ describe('PendingReview', () => {
     const tree = render(
       <BasicAppContext>
         <PendingReviewScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

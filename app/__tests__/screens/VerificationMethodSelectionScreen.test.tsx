@@ -22,7 +22,7 @@ describe('VerificationMethodSelection', () => {
     const tree = render(
       <BasicAppContext>
         <VerificationMethodSelectionScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

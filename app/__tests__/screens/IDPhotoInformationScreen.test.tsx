@@ -24,7 +24,7 @@ describe('IDPhotoInformation', () => {
     const tree = render(
       <BasicAppContext>
         <IDPhotoInformationScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

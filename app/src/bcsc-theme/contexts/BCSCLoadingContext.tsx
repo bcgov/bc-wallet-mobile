@@ -1,5 +1,5 @@
 import { testIdWithKey } from '@bifold/core'
-import { createContext, PropsWithChildren, useContext, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
 
@@ -41,15 +41,15 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     },
   })
 
-  const startLoading = (message?: string) => {
+  const startLoading = useCallback((message?: string) => {
     setIsLoading(true)
     setLoadingMessage(message ?? null)
-  }
+  }, [])
 
-  const stopLoading = () => {
+  const stopLoading = useCallback(() => {
     setIsLoading(false)
     setLoadingMessage(null)
-  }
+  }, [])
 
   const loadingContext = useMemo(
     () => ({
@@ -58,7 +58,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       stopLoading,
       updateLoadingMessage: setLoadingMessage,
     }),
-    [isLoading]
+    [isLoading, startLoading, stopLoading],
   )
 
   return (

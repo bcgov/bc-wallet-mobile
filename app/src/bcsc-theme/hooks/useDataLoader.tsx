@@ -79,7 +79,7 @@ export type DataLoader<ResponseType> = {
  */
 export default function useDataLoader<ResponseType>(
   fetchData: () => Promise<ResponseType>,
-  options: DataLoaderOptions
+  options: DataLoaderOptions,
 ): DataLoader<ResponseType> {
   const [data, setData] = useState<ResponseType>()
   const [error, setError] = useState<unknown>()
@@ -122,7 +122,7 @@ export default function useDataLoader<ResponseType>(
             const backoffMs = Math.min(
               interval * Math.pow(2, retryCount - 1),
               // don't wait longer than remaining timeout
-              timeout - (Date.now() - startTime)
+              timeout - (Date.now() - startTime),
             )
 
             // if no time left for retries, break
@@ -132,7 +132,7 @@ export default function useDataLoader<ResponseType>(
         }
 
         throw new Error(
-          lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`
+          lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`,
         )
       }
 

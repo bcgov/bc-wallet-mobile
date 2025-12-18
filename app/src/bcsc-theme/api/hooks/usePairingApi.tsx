@@ -34,13 +34,13 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
           `${apiClient.endpoints.cardTap}/v3/mobile/assertion`,
           { assertion: signedCode },
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
         )
 
         return response.data
       })
     },
-    [apiClient, logger]
+    [apiClient, logger],
   )
 
   /**
@@ -60,7 +60,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
       loginByPairingCode,
       forgetAllPairings,
     }),
-    [loginByPairingCode, forgetAllPairings]
+    [loginByPairingCode, forgetAllPairings],
   )
 }
 

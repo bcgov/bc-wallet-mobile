@@ -17,7 +17,7 @@ describe('AddCredentialButton Component', () => {
     const tree = render(
       <BasicAppContext>
         <AddCredentialButton />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
     expect(tree).toMatchSnapshot()
   })

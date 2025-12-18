@@ -22,7 +22,7 @@ describe('CallBusyOrClosed', () => {
     const tree = render(
       <BasicAppContext>
         <CallBusyOrClosedScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

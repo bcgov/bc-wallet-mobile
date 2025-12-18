@@ -1,8 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -11,7 +11,6 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -24,19 +23,19 @@ type EnterEmailScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
   route: {
     params: {
-      cardType: BCSCCardType
+      cardProcess: BCSCCardProcess
     }
   }
 }
 
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
   const { evidence } = useApi()
+  const { updateUserInfo } = useSecureActions()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { cardType } = route.params
+  const { cardProcess } = route.params
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
@@ -56,7 +55,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
+      await updateUserInfo({ email, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
@@ -75,10 +74,10 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       },
       {
         text: t('BCSC.EnterEmail.EmailSkipButton2'),
-        onPress: () => {
-          dispatch({
-            type: BCDispatchAction.UPDATE_EMAIL,
-            payload: [{ email: BCSC_EMAIL_NOT_PROVIDED, emailConfirmed: true }],
+        onPress: async () => {
+          await updateUserInfo({
+            email: BCSC_EMAIL_NOT_PROVIDED,
+            isEmailVerified: true,
           })
           navigation.goBack()
         },
@@ -97,7 +96,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       >
         {loading && <ButtonLoading />}
       </Button>
-      {cardType !== BCSCCardType.Other ? (
+      {cardProcess !== BCSCCardProcess.NonBCSC ? (
         <Button
           buttonType={ButtonType.Secondary}
           onPress={handleSkip}
@@ -114,7 +113,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.EnterEmail.EnterEmailAddress')}
       </ThemedText>
-      {cardType !== BCSCCardType.Other ? (
+      {cardProcess !== BCSCCardProcess.NonBCSC ? (
         <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
       ) : null}
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>

@@ -78,7 +78,7 @@ const isCurrentDayInRange = (currentDay: number, startDay: number, endDay: numbe
 const isCurrentTimeInRange = (
   currentTimeMinutes: number,
   startTimeMinutes: number,
-  endTimeMinutes: number
+  endTimeMinutes: number,
 ): boolean => {
   return currentTimeMinutes >= startTimeMinutes && currentTimeMinutes < endTimeMinutes
 }

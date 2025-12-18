@@ -28,7 +28,6 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
 import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
-import moment from 'moment'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
@@ -90,7 +89,7 @@ export class AppContainer implements Container {
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
     setSurveyVisible: (visible: boolean) => void,
-    logger: RemoteLogger = createAppLogger()
+    logger: RemoteLogger = createAppLogger(),
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.t = t
@@ -360,7 +359,7 @@ export class AppContainer implements Container {
         loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),
         loadState<DismissPersonCredentialOffer>(
           BCLocalStorageKeys.PersonCredentialOfferDismissed,
-          (val) => (personCredOfferDissmissed = val)
+          (val) => (personCredOfferDissmissed = val),
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
@@ -369,20 +368,6 @@ export class AppContainer implements Container {
         loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
-
-      // Convert date string to Date object (async-storage converts Dates to strings)
-      // timezone-safe parsing to prevent off-by-one date errors (consistent with date picker)
-      if (typeof bcsc.birthdate === 'string') {
-        const momentDate = moment(bcsc.birthdate)
-        const year = momentDate.year()
-        const month = momentDate.month()
-        const day = momentDate.date()
-        bcsc.birthdate = new Date(year, month, day, 12, 0, 0, 0)
-      }
-
-      if (typeof bcsc.deviceCodeExpiresAt === 'string') {
-        bcsc.deviceCodeExpiresAt = new Date(Date.parse(bcsc.deviceCodeExpiresAt))
-      }
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.selectedNickname = undefined
@@ -424,7 +409,7 @@ export class AppContainer implements Container {
           this.logger.overrideCurrentAutoDisableExpiration(override)
 
           this.logger.info(
-            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${this.logger.sessionId}.  Expiration override is ${override} minutes`
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${this.logger.sessionId}.  Expiration override is ${override} minutes`,
           )
         }
       }
@@ -444,7 +429,7 @@ export class AppContainer implements Container {
   }
 
   public resolveAll<K extends keyof TokenMapping, T extends K[]>(
-    tokens: [...T]
+    tokens: [...T],
   ): { [I in keyof T]: TokenMapping[T[I]] } {
     return tokens.map((key) => this.resolve(key)!) as { [I in keyof T]: TokenMapping[T[I]] }
   }

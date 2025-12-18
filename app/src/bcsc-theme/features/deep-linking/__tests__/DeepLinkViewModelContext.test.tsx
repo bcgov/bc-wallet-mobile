@@ -13,7 +13,7 @@ describe('DeepLinkViewModelContext', () => {
       {
         info: jest.fn(),
         warn: jest.fn(),
-      } as any
+      } as any,
     )
 
   it('throws when hook used outside provider', () => {
@@ -36,7 +36,7 @@ describe('DeepLinkViewModelContext', () => {
     render(
       <DeepLinkViewModelProvider viewModel={vm}>
         <Probe />
-      </DeepLinkViewModelProvider>
+      </DeepLinkViewModelProvider>,
     )
 
     expect(screen.getByTestId('probe').props.children).toBe('ok')

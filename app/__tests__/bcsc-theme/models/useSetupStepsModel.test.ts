@@ -1,8 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
-import { BCDispatchAction } from '@/store'
+import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
@@ -18,6 +19,18 @@ jest.mock('@bifold/core', () => {
   }
 })
 
+const mockUpdateTokens = jest.fn().mockResolvedValue(undefined)
+const mockUpdateVerificationRequest = jest.fn()
+const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
+jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    updateTokens: mockUpdateTokens,
+    updateVerificationRequest: mockUpdateVerificationRequest,
+    updateAccountFlags: mockUpdateAccountFlags,
+  })),
+}))
+
 describe('useSetupStepsModel', () => {
   const mockDispatch = jest.fn()
   const mockLogger = {
@@ -32,10 +45,20 @@ describe('useSetupStepsModel', () => {
 
   const mockStore: any = {
     bcsc: {
-      verificationRequestId: 'test-verification-id',
+      appVersion: '1.0.0',
+      nicknames: ['Bob'],
+      bookmarks: [],
+      bannerMessages: [],
+      analyticsOptIn: true,
+      cardType: BCSCCardType.Combined,
+      cardProcess: 'combined',
+    },
+    bcscSecure: {
+      isHydrated: true,
       deviceCode: 'test-device-code',
       userCode: 'test-user-code',
-      cardType: 'combined',
+      verificationRequestId: 'test-verification-id',
+      additionalEvidenceData: [],
     },
   }
 
@@ -66,6 +89,9 @@ describe('useSetupStepsModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUpdateTokens.mockClear()
+    mockUpdateVerificationRequest.mockClear()
+    mockUpdateAccountFlags.mockClear()
 
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
@@ -77,7 +103,7 @@ describe('useSetupStepsModel', () => {
     useSetupStepsMock.mockReturnValue(mockSteps)
 
     const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
+    bifoldMock.useStore.mockReturnValue([mockStore as BCState, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
   })
 
@@ -191,13 +217,13 @@ describe('useSetupStepsModel', () => {
   })
 
   describe('stepActions.email', () => {
-    it('should navigate to EnterEmail screen with cardType', () => {
+    it('should navigate to EnterEmail screen with cardProcess', () => {
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
       result.current.stepActions.email()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterEmail, {
-        cardType: mockStore.bcsc.cardType,
+        cardProcess: mockStore.bcscSecure.cardProcess,
       })
     })
   })
@@ -225,10 +251,7 @@ describe('useSetupStepsModel', () => {
 
       expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('test-verification-id')
       expect(mockTokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_REFRESH_TOKEN,
-        payload: ['new-refresh-token'],
-      })
+      expect(mockUpdateTokens).toHaveBeenCalledWith({ refreshToken: 'new-refresh-token' })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
     })
 
@@ -242,9 +265,7 @@ describe('useSetupStepsModel', () => {
         await result.current.handleCheckStatus()
       })
 
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN })
-      )
+      expect(mockUpdateTokens).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
     })
 
@@ -263,6 +284,9 @@ describe('useSetupStepsModel', () => {
     it('should throw error when verificationRequestId is missing', async () => {
       const storeWithoutRequestId = {
         bcsc: {
+          cardType: BCSCCardType.Combined,
+        },
+        bcscSecure: {
           verificationRequestId: null,
           deviceCode: 'test-device-code',
           userCode: 'test-user-code',
@@ -279,6 +303,9 @@ describe('useSetupStepsModel', () => {
     it('should throw error when deviceCode is missing and status is verified', async () => {
       const storeWithoutDeviceCode = {
         bcsc: {
+          cardType: BCSCCardType.Combined,
+        },
+        bcscSecure: {
           verificationRequestId: 'test-verification-id',
           deviceCode: null,
           userCode: 'test-user-code',
@@ -312,7 +339,7 @@ describe('useSetupStepsModel', () => {
         expect.arrayContaining([
           expect.objectContaining({ text: expect.any(String), onPress: expect.any(Function) }),
           expect.objectContaining({ text: expect.any(String), style: 'cancel' }),
-        ])
+        ]),
       )
     })
 
@@ -332,17 +359,21 @@ describe('useSetupStepsModel', () => {
       })
 
       expect(mockEvidenceApi.cancelVerificationRequest).toHaveBeenCalledWith('test-verification-id')
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_PENDING_VERIFICATION,
-        payload: [false],
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateAccountFlags).toHaveBeenCalledWith({
+        ...mockStore.bcscSecure.accountFlags,
+        userSubmittedVerificationVideo: false,
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
     })
 
     it('should not call cancelVerificationRequest when verificationRequestId is missing', async () => {
       const storeWithoutRequestId = {
-        bcsc: {
+        bcscSecure: {
           verificationRequestId: null,
+        },
+        bcsc: {
+          cardType: BCSCCardType.Combined,
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
@@ -360,9 +391,9 @@ describe('useSetupStepsModel', () => {
       })
 
       expect(mockEvidenceApi.cancelVerificationRequest).not.toHaveBeenCalled()
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_PENDING_VERIFICATION,
-        payload: [false],
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateAccountFlags).toHaveBeenCalledWith({
+        userSubmittedVerificationVideo: false,
       })
     })
 
@@ -382,9 +413,10 @@ describe('useSetupStepsModel', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(`Error cancelling verification request: ${mockError}`)
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_PENDING_VERIFICATION,
-        payload: [false],
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateAccountFlags).toHaveBeenCalledWith({
+        ...mockStore.bcscSecure.accountFlags,
+        userSubmittedVerificationVideo: false,
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
     })
@@ -400,7 +432,8 @@ describe('useSetupStepsModel', () => {
       cancelButton.onPress()
 
       expect(mockEvidenceApi.cancelVerificationRequest).not.toHaveBeenCalled()
-      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
+      expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
   })

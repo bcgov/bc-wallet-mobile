@@ -22,7 +22,7 @@ describe('MainContactUs', () => {
     const tree = render(
       <BasicAppContext>
         <MainContactUsScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

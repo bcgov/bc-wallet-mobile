@@ -26,7 +26,7 @@ describe('MainLoadingScreen Component', () => {
         }}
       >
         <MainLoadingScreen navigation={navigationMock} />
-      </BCSCAccountContext.Provider>
+      </BCSCAccountContext.Provider>,
     )
 
     const loadingScreen = tree.getByTestId(testIdWithKey('LoadingScreenContent'))
@@ -47,7 +47,7 @@ describe('MainLoadingScreen Component', () => {
         }}
       >
         <MainLoadingScreen navigation={navigationMock} />
-      </BCSCAccountContext.Provider>
+      </BCSCAccountContext.Provider>,
     )
 
     const loadingScreen = tree.getByTestId(testIdWithKey('LoadingScreenContent'))
@@ -63,7 +63,7 @@ describe('MainLoadingScreen Component', () => {
     const tree = render(
       <BCSCAccountContext.Provider value={null}>
         <MainLoadingScreen navigation={navigationMock} />
-      </BCSCAccountContext.Provider>
+      </BCSCAccountContext.Provider>,
     )
 
     const loadingScreen = tree.getByTestId(testIdWithKey('LoadingScreenContent'))
@@ -89,7 +89,7 @@ describe('MainLoadingScreen Component', () => {
         }}
       >
         <MainLoadingScreen navigation={navigationMock} />
-      </BCSCAccountContext.Provider>
+      </BCSCAccountContext.Provider>,
     )
 
     expect(navigationMock.dispatch).toHaveBeenCalledWith(
@@ -100,7 +100,7 @@ describe('MainLoadingScreen Component', () => {
             name: BCSCScreens.AccountExpired,
           },
         ],
-      })
+      }),
     )
   })
 
@@ -122,7 +122,7 @@ describe('MainLoadingScreen Component', () => {
         }}
       >
         <MainLoadingScreen navigation={navigationMock} />
-      </BCSCAccountContext.Provider>
+      </BCSCAccountContext.Provider>,
     )
 
     expect(navigationMock.dispatch).toHaveBeenCalledWith(
@@ -136,7 +136,7 @@ describe('MainLoadingScreen Component', () => {
             },
           },
         ],
-      })
+      }),
     )
   })
 })

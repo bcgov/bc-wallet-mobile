@@ -219,7 +219,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
                 {carouselPages.map((page, index) => (
                   <View
                     key={`carousel-circle-${page.key}`}
-                    style={[styles.carouselCircle, carouselIndex >= index && styles.carouselCircleHighlighted]}
+                    style={[styles.carouselCircle, carouselIndex == index && styles.carouselCircleHighlighted]}
                   />
                 ))}
               </View>

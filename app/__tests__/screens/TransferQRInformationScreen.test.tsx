@@ -4,7 +4,7 @@ import React from 'react'
 import { act } from 'react-test-renderer'
 import { useNavigation } from '../../__mocks__/@react-navigation/native'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import TransferQRInformationScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRInformationScreen'
+import TransferQRInformationScreen from '../../src/bcsc-theme/features/account-transfer/transferer/TransferQRInformationScreen'
 import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '../../src/constants'
 
@@ -26,7 +26,7 @@ describe('TransferQRInformationScreen', () => {
       const tree = render(
         <BasicAppContext>
           <TransferQRInformationScreen />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
       expect(tree).toMatchSnapshot()
     })
@@ -37,7 +37,7 @@ describe('TransferQRInformationScreen', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <TransferQRInformationScreen />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
       const getQRCodeButton = getByTestId('GetQRCodeButton')
       act(() => {
@@ -50,7 +50,7 @@ describe('TransferQRInformationScreen', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <TransferQRInformationScreen />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
       const learnMoreButton = getByTestId('LearnMoreButton')
       act(() => {

@@ -19,7 +19,7 @@ describe('MainSettingsHeaderButton', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <MainSettingsHeaderButton />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
@@ -32,7 +32,7 @@ describe('MainSettingsHeaderButton', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <MainSettingsHeaderButton />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))
@@ -54,7 +54,7 @@ describe('VerifySettingsHeaderButton', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <VerifySettingsHeaderButton />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
@@ -67,7 +67,7 @@ describe('VerifySettingsHeaderButton', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <VerifySettingsHeaderButton />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))

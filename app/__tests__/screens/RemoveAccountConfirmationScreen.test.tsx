@@ -18,7 +18,7 @@ describe('RemoveAccountConfirmation', () => {
     const tree = render(
       <BasicAppContext>
         <RemoveAccountConfirmationScreen />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

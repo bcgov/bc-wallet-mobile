@@ -18,7 +18,7 @@ describe('HomeHeaderView Component', () => {
     const tree = render(
       <BasicAppContext>
         <HomeHeaderView />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
     expect(tree).toMatchSnapshot()
   })

@@ -22,7 +22,7 @@ describe('EvidenceTypeList', () => {
     const tree = render(
       <BasicAppContext>
         <EvidenceTypeListScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

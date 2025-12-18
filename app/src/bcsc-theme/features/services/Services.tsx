@@ -41,7 +41,7 @@ const Services: React.FC = () => {
     () => token.getCachedIdTokenMetadata({ refreshCache: false }),
     {
       onError: (error) => logger.error('Error loading card type', error as Error),
-    }
+    },
   )
   const { serviceClients } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? BCSCCardType.None),

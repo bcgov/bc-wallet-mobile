@@ -13,7 +13,7 @@ const createMockViewModel = () =>
     initialize: jest.fn(),
     onNavigationRequest: jest.fn(() => () => {}),
     onPendingStateChange: jest.fn(() => () => {}),
-  } as unknown as DeepLinkViewModel)
+  }) as unknown as DeepLinkViewModel
 
 describe('ServiceLogin', () => {
   let mockNavigation: any
@@ -35,7 +35,7 @@ describe('ServiceLogin', () => {
         <DeepLinkViewModelProvider viewModel={createMockViewModel()}>
           <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
         </DeepLinkViewModelProvider>
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

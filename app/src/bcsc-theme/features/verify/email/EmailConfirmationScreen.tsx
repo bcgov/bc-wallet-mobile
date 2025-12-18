@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -30,8 +31,9 @@ type EmailConfirmationScreenProps = {
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { evidence } = useApi()
+  const { updateUserInfo } = useSecureActions()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
@@ -78,12 +80,15 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     try {
       setLoading(true)
       await evidence.sendEmailVerificationCode(code, id)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email: store.bcsc.email, emailConfirmed: true }] })
+      await updateUserInfo({
+        email: store.bcscSecure.email,
+        isEmailVerified: true,
+      })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }],
-        })
+        }),
       )
     } catch (error) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
@@ -97,7 +102,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
     try {
       setResendLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(store.bcsc.email!)
+      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.email!)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
@@ -164,7 +169,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         {t('BCSC.EmailConfirmation.VerifyYourEmail')}
       </ThemedText>
       <ThemedText>
-        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')} <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
+        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
+        <ThemedText variant={'bold'}>{store.bcscSecure.email}</ThemedText>
       </ThemedText>
       <CodeField
         {...props}

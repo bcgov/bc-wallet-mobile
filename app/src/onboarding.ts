@@ -29,7 +29,7 @@ export const isBiometryComplete = (didConsiderBiometry: boolean): OnboardingTask
 
 export const isPushNotificationComplete = (
   didConsiderPushNotifications: boolean,
-  enablePushNotifications: any
+  enablePushNotifications: any,
 ): OnboardingTask => {
   return {
     name: Screens.PushNotifications,
@@ -57,7 +57,7 @@ export const generateOnboardingWorkflowSteps = (
   state: BCState,
   config: Config,
   termsVersion: number,
-  agent: Agent | null
+  agent: Agent | null,
 ): Array<OnboardingTask> => {
   const {
     didSeePreface,

@@ -23,7 +23,7 @@ describe('PhotoReview', () => {
     const tree = render(
       <BasicAppContext>
         <PhotoReviewScreen navigation={mockNavigation as never} route={route as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

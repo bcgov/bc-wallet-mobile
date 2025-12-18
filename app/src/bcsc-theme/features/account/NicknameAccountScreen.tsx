@@ -16,7 +16,7 @@ const NicknameAccountScreen: React.FC = () => {
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedNickname] })
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },
-    [dispatch, navigation]
+    [dispatch, navigation],
   )
 
   return <NicknameForm onSubmit={handleSubmit} />

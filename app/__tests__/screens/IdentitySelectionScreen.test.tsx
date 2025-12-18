@@ -22,7 +22,7 @@ describe('IdentitySelection', () => {
     const tree = render(
       <BasicAppContext>
         <IdentitySelectionScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

@@ -25,7 +25,7 @@ describe('PhotoInstructions', () => {
           navigation={mockNavigation as never}
           route={{ key: 'PhotoInstructions', name: 'PhotoInstructions', params: { forLiveCall: true } } as never}
         />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

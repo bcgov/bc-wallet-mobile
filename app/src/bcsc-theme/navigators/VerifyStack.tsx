@@ -9,16 +9,11 @@ import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
-import AccountSetupSelectionScreen from '../features/account-transfer/AccountSetupSelectionScreen'
-import TransferInformationScreen from '../features/account-transfer/TransferInformationScreen'
-import TransferInstructionsScreen from '../features/account-transfer/TransferInstructionsScreen'
-import TransferQRScannerScreen from '../features/account-transfer/TransferQRScannerScreen'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
-import EnterBirthdateScreen from '../features/verify/EnterBirthdateScreen'
+
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
 import MismatchedSerialScreen from '../features/verify/MismatchedSerialScreen'
-import NewSetupScreen from '../features/verify/NewSetupScreen'
 import PhotoInstructionsScreen from '../features/verify/PhotoInstructionsScreen'
 import PhotoReviewScreen from '../features/verify/PhotoReviewScreen'
 import { ResidentialAddressScreen } from '../features/verify/ResidentialAddressScreen'
@@ -56,9 +51,12 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
+import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
 const VerifyStack = () => {
+  // eslint-disable-next-line no-console
+  console.log('VerifyStack rendered')
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
@@ -66,7 +64,7 @@ const VerifyStack = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.SetupTypes}
+      initialRouteName={BCSCScreens.SetupSteps}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,
@@ -77,15 +75,6 @@ const VerifyStack = () => {
         header: createHeaderWithoutBanner,
       }}
     >
-      <Stack.Screen
-        name={BCSCScreens.SetupTypes}
-        component={AccountSetupSelectionScreen}
-        options={{
-          headerLeft: createVerifySettingsHeaderButton(),
-          title: t('BCSC.Screens.SetupTypes'),
-        }}
-      />
-      <Stack.Screen name={BCSCScreens.NewSetup} component={NewSetupScreen} />
       <Stack.Screen
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
@@ -103,13 +92,6 @@ const VerifyStack = () => {
           headerBackTestID: testIdWithKey('Back'),
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
-        options={{ title: t('BCSC.TransferInformation.TransferAccount') }}
-      />
-      <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
-      <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen
         name={BCSCScreens.VerifyPrivacyPolicy}

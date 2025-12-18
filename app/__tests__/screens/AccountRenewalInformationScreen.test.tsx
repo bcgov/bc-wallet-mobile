@@ -22,7 +22,7 @@ describe('AccountRenewalInformation', () => {
     const tree = render(
       <BasicAppContext>
         <AccountRenewalInformationScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

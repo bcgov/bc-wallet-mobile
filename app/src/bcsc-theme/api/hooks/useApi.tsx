@@ -40,7 +40,7 @@ const useApi = () => {
       video,
       deviceAttestation,
     }),
-    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation]
+    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation],
   )
 }
 

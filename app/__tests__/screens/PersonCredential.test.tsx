@@ -25,7 +25,7 @@ describe('Person Credential Screen', () => {
     const tree = render(
       <BasicAppContext>
         <PersonCredential navigation={navigation as never} route={{} as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

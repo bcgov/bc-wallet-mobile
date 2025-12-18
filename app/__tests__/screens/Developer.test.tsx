@@ -26,7 +26,7 @@ describe('Developer Screen', () => {
         <AuthProvider>
           <Developer />
         </AuthProvider>
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

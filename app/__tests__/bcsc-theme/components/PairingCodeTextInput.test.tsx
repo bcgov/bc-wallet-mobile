@@ -24,7 +24,7 @@ describe('PairingCodeTextInput Component', () => {
       const tree = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       waitFor(() => {
@@ -36,7 +36,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -50,7 +50,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -64,7 +64,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -78,7 +78,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -92,7 +92,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -106,7 +106,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -122,7 +122,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -139,7 +139,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -156,7 +156,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -173,7 +173,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -207,7 +207,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -221,7 +221,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -235,7 +235,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -249,7 +249,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -265,7 +265,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -287,7 +287,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} {...additionalProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')
@@ -302,7 +302,7 @@ describe('PairingCodeTextInput Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <PairingCodeTextInput {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const input = getByTestId('pairing-code-input')

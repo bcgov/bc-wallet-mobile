@@ -1,3 +1,4 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -32,6 +33,7 @@ export const useFactoryReset = () => {
   const { registration } = useApi()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { clearSecureState } = useSecureActions()
 
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
@@ -64,10 +66,8 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing BCSC state...')
+        clearSecureState()
         dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: state ? [state] : undefined })
-
-        logger.info('FactoryReset: Registering new account...')
-        await registration.register()
 
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
@@ -82,7 +82,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [logger, registration, dispatch]
+    [logger, registration, dispatch, clearSecureState],
   )
 
   return factoryReset

@@ -206,7 +206,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           color: theme.ColorPalette.notification.warnText,
         },
       },
-    })
+    }),
   )
   // Inputs overrides
   .withOverrides(
@@ -226,7 +226,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           borderColor: theme.TextTheme.normal.color,
         },
       },
-    })
+    }),
   )
   // TabTheme overrides
   .withOverrides(
@@ -237,7 +237,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           color: theme.ColorPalette.grayscale.white,
         },
       },
-    })
+    }),
   )
   // NavigationTheme overrides
   .withOverrides(
@@ -247,7 +247,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           text: theme.ColorPalette.brand.text,
         },
       },
-    })
+    }),
   )
   // SettingsTheme overrides
   .withOverrides(
@@ -258,7 +258,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         },
         iconColor: theme.ColorPalette.grayscale.darkGrey,
       },
-    })
+    }),
   )
   // OnboardingTheme overrides
   .withOverrides(
@@ -276,7 +276,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           color: theme.ColorPalette.notification.infoText,
         },
       },
-    })
+    }),
   )
   // LoadingTheme overrides
   .withOverrides(
@@ -284,7 +284,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       LoadingTheme: {
         backgroundColor: theme.ColorPalette.brand.primary,
       },
-    })
+    }),
   )
   // PINInputTheme overrides
   .withOverrides(
@@ -310,7 +310,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           borderWidth: undefined, // Bifold default is 1
         },
       },
-    })
+    }),
   )
   // Assets overrides
   .withOverrides({
@@ -342,7 +342,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       CredentialCardShadowTheme: {
         shadowColor: theme.ColorPalette.grayscale.black,
       },
-    })
+    }),
   )
   // Buttons overrides
   .withOverrides(
@@ -416,7 +416,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         tertiaryText: undefined,
         tertiaryTextDisabled: undefined,
       },
-    })
+    }),
   )
   // ListItems overrides
   .withOverrides(
@@ -456,7 +456,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           fontSize: undefined,
         },
       },
-    })
+    }),
   )
   // ChatTheme overrides
   .withOverrides(
@@ -514,6 +514,6 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
           height: undefined,
         },
       },
-    })
+    }),
   )
   .build()

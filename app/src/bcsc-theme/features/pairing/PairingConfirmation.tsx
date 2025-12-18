@@ -18,7 +18,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
       CommonActions.reset({
         index: 0,
         routes: [{ name: BCSCStacks.Tab }],
-      })
+      }),
     )
   }
 

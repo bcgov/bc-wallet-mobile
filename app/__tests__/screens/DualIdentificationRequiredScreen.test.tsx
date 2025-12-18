@@ -22,7 +22,7 @@ describe('DualIdentificationRequired', () => {
     const tree = render(
       <BasicAppContext>
         <DualIdentificationRequiredScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

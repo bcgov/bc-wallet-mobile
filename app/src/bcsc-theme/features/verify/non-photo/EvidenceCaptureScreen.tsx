@@ -1,10 +1,10 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
-import { BCDispatchAction, BCState } from '@/store'
-import { MaskType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
@@ -22,7 +22,7 @@ enum CaptureState {
 
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
-  const [, dispatch] = useStore<BCState>()
+  const { updateEvidenceMetadata } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -66,7 +66,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       setCaptureState(CaptureState.CAPTURING)
       setCurrentPhotoPath(undefined)
       setCapturedPhotos([])
-    }, [])
+    }, []),
   )
 
   const handlePhotoTaken = (path: string) => {
@@ -83,10 +83,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCapturedPhotos(newPhotos)
 
     if (isLastSide) {
-      dispatch({
-        type: BCDispatchAction.UPDATE_EVIDENCE_METADATA,
-        payload: [{ evidenceType: route.params.cardType, metadata: newPhotos }],
-      })
+      await updateEvidenceMetadata(route.params.cardType, newPhotos)
       // All photos captured, navigate to form screen
       navigation.navigate(BCSCScreens.EvidenceIDCollection, { cardType })
     } else {

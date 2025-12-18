@@ -24,7 +24,7 @@ describe('OnboardingOptInAnalytics', () => {
     const tree = render(
       <BasicAppContext>
         <OnboardingOptInAnalyticsScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

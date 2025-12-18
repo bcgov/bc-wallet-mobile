@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import TransferQRScannerScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRScannerScreen'
+import TransferQRScannerScreen from '../../src/bcsc-theme/features/account-transfer/transferee/TransferQRScannerScreen'
 
 jest.mock('../../src/bcsc-theme/api/hooks/useApi', () => ({
   __esModule: true,
@@ -35,7 +35,7 @@ describe('TransferQRScanner', () => {
     const tree = render(
       <BasicAppContext>
         <TransferQRScannerScreen />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

@@ -86,7 +86,7 @@ describe('createAppLogger', () => {
     expect(RemoteLoggerMock).toHaveBeenCalledWith(
       expect.objectContaining({
         lokiLabels: expect.objectContaining({ application: 'custom-app' }),
-      })
+      }),
     )
   })
 

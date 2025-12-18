@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import TransferQRDisplayScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRDisplayScreen'
+import TransferQRDisplayScreen from '../../src/bcsc-theme/features/account-transfer/transferer/TransferQRDisplayScreen'
 
 describe('TransferQRDisplay', () => {
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('TransferQRDisplay', () => {
     const tree = render(
       <BasicAppContext>
         <TransferQRDisplayScreen />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

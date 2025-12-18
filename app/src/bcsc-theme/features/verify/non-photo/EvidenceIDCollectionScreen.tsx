@@ -1,8 +1,9 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -45,7 +46,8 @@ type EvidenceIDCollectionScreenProps = {
  * @returns {*} {JSX.Element} The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
+  const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [openDatePicker, setOpenDatePicker] = useState(false)
@@ -53,15 +55,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: '', // make the user re-enter every time
-    firstName: store.bcsc.userMetadata?.name?.first ?? '',
-    middleNames: store.bcsc.userMetadata?.name?.middle ?? '',
-    lastName: store.bcsc.userMetadata?.name?.last ?? '',
-    birthDate: store.bcsc.birthdate?.toISOString().split('T')[0] ?? '',
+    firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
+    middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
+    lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
+    birthDate: store.bcscSecure.birthdate?.toISOString().split('T')[0] ?? '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
-    store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
+    store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && store.bcscSecure.additionalEvidenceData?.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -173,27 +175,23 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
     // update the store with the collected user metadata formState
     if (additionalEvidenceRequired) {
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [new Date(formState.birthDate)] })
+      await updateUserInfo({
+        birthdate: new Date(formState.birthDate),
+      })
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
-        payload: [
-          {
-            // trim whitespace from names just in case
-            first: formState.firstName.trim(),
-            last: formState.lastName.trim(),
-            middle: formState.middleNames.trim(),
-          },
-        ],
+      await updateUserMetadata({
+        name: {
+          // trim whitespace from names just in case
+          first: formState.firstName.trim(),
+          last: formState.lastName.trim(),
+          middle: formState.middleNames.trim(),
+        },
       })
     }
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER,
-      payload: [{ evidenceType: route.params.cardType, documentNumber: formState.documentNumber }],
-    })
+    await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
 
-    const hasPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => {
+    const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
       return item.evidenceType.has_photo
     })
 
@@ -203,7 +201,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }],
-        })
+        }),
       )
       return
     }
@@ -213,7 +211,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       CommonActions.reset({
         index: 1,
         routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
-      })
+      }),
     )
   }
 

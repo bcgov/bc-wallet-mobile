@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -110,9 +110,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </View>
               {
                 // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcsc.cardType === BCSCCardType.NonPhoto ? (
+                store.bcscSecure.cardProcess !== BCSCCardProcess.BCSCPhoto && (
                   <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
-                ) : null
+                )
               }
             </View>
           ) : null
@@ -146,7 +146,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             {steps.email.completed ? (
               <>
                 <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
-                  {t('BCSC.Steps.StoredEmail', { email: store.bcsc.email })}
+                  {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.email })}
                 </ThemedText>
                 <TouchableOpacity
                   onPress={stepActions.email}
@@ -184,7 +184,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         onPress={stepActions.verify}
       />
 
-      {store.bcsc.pendingVerification ? (
+      {store.bcscSecure.userSubmittedVerificationVideo ? (
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity

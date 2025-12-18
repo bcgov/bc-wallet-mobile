@@ -1,6 +1,7 @@
 import { VerifyAttestationPayload } from '@/bcsc-theme/api/hooks/useDeviceAttestationApi'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { renderHook } from '@testing-library/react-native'
+import { BasicAppContext } from '__mocks__/helpers/app'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../../../src/bcsc-theme/api/client'
 import useTokenApi, { TokenResponse } from '../../../src/bcsc-theme/api/hooks/useTokens'
@@ -12,6 +13,14 @@ import { withAccount } from '../../../src/bcsc-theme/api/hooks/withAccountGuard'
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
   getDeviceCodeRequestBody: jest.fn(),
+  TokenType: {
+    Access: 0,
+    Refresh: 1,
+    Registration: 2,
+  },
+  getToken: jest.fn().mockResolvedValue(null),
+  setToken: jest.fn().mockResolvedValue(true),
+  deleteToken: jest.fn().mockResolvedValue(true),
 }))
 
 jest.mock('../../../src/bcsc-theme/api/hooks/withAccountGuard', () => ({
@@ -79,7 +88,7 @@ describe('useTokenApi', () => {
 
       mockApiClient.post.mockResolvedValue(mockAxiosResponse)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       const response = await result.current.deviceToken(mockPayload)
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
@@ -94,7 +103,7 @@ describe('useTokenApi', () => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
-        }
+        },
       )
 
       expect(response).toEqual(mockTokenResponse)
@@ -117,14 +126,14 @@ describe('useTokenApi', () => {
 
       mockApiClient.post.mockResolvedValue(mockAxiosResponse)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       const response = await result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
 
       expect(getDeviceCodeRequestBody).toHaveBeenCalledWith(
         'test_device_code',
         'mock_client_id',
         'mock_issuer',
-        'test_confirmation'
+        'test_confirmation',
       )
 
       expect(mockApiClient.post).toHaveBeenCalledWith('/oauth/token', mockRequestBody, {
@@ -140,10 +149,10 @@ describe('useTokenApi', () => {
       const mockError = new Error('Account not found')
       ;(withAccount as jest.Mock).mockRejectedValue(mockError)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toThrow(
-        'Account not found'
+        'Account not found',
       )
     })
   })
@@ -153,7 +162,7 @@ describe('useTokenApi', () => {
       const mockMetadata = { sub: 'user123', exp: 1234567890 }
       ;(getIdTokenMetadata as jest.Mock).mockReturnValue(mockMetadata)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       const metadata = await result.current.getCachedIdTokenMetadata({ refreshCache: false })
 
       expect(getIdTokenMetadata).toHaveBeenCalledWith('mock_id_token', mockApiClient.logger)
@@ -167,7 +176,7 @@ describe('useTokenApi', () => {
 
       mockApiClient.getTokensForRefreshToken.mockResolvedValue(mockTokenResponse)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       const metadata = await result.current.getCachedIdTokenMetadata({ refreshCache: true })
 
       expect(mockApiClient.getTokensForRefreshToken).toHaveBeenCalledWith('mock_refresh_token')
@@ -178,10 +187,10 @@ describe('useTokenApi', () => {
     it('should throw error when no tokens are available', async () => {
       mockApiClient.tokens = null as any
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(
-        'No tokens available'
+        'No tokens available',
       )
     })
 
@@ -189,10 +198,10 @@ describe('useTokenApi', () => {
       const mockError = new Error('Refresh token expired')
       mockApiClient.getTokensForRefreshToken.mockRejectedValue(mockError)
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: true })).rejects.toThrow(
-        'Refresh token expired'
+        'Refresh token expired',
       )
     })
 
@@ -210,7 +219,7 @@ describe('useTokenApi', () => {
         return Promise.resolve(updatedTokens)
       })
 
-      const { result } = renderHook(() => useTokenApi(mockApiClient))
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       await result.current.getCachedIdTokenMetadata({ refreshCache: true })
 
       expect(getIdTokenMetadata).toHaveBeenCalledWith('new_updated_id_token', mockApiClient.logger)

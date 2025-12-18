@@ -3,8 +3,9 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import CodeScanningCamera from '../../components/CodeScanningCamera'
@@ -18,8 +19,9 @@ type ScanSerialScreenProps = {
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  const [store] = useStore<BCState>()
+  const { updateUserInfo } = useSecureActions()
+  const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -50,7 +52,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     return true
   }, [serial])
 
-  const onCodeScanned = (val: any) => {
+  const onCodeScanned = async (val: any) => {
     // the scanner might pick up multiple codes
     // we will take the first valid one
 
@@ -62,7 +64,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       setSerial(code.value)
 
       if (validateSerial()) {
-        dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [code.value] })
+        await updateUserInfo({ serial: code.value })
         navigation.navigate(BCSCScreens.EnterBirthdate)
         return
       }

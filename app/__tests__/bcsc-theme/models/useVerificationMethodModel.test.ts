@@ -1,6 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import useVerificationMethodModel from '@/bcsc-theme/features/verify/_models/useVerificationMethodModel'
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
@@ -39,10 +41,25 @@ describe('useVerificationMethodModel', () => {
 
   const mockStore: any = {
     bcsc: {
+      appVersion: '1.0.0',
+      cardType: BCSCCardType.Combined,
+      nicknames: ['Bob'],
+      selectedNickname: 'Bob',
+      bookmarks: [],
+      bannerMessages: [],
+      analyticsOptIn: false,
       videoPath: '/path/to/video.mp4',
       photoPath: '/path/to/photo.jpg',
       videoThumbnailPath: '/path/to/thumbnail.jpg',
-      verificationOptions: ['video_call', 'back_check', 'counter'],
+    },
+    bcscSecure: {
+      isHydrated: true,
+      additionalEvidenceData: [],
+      verificationOptions: [
+        DeviceVerificationOption.LIVE_VIDEO_CALL,
+        DeviceVerificationOption.SEND_VIDEO,
+        DeviceVerificationOption.IN_PERSON,
+      ],
     },
   }
 
@@ -108,8 +125,12 @@ describe('useVerificationMethodModel', () => {
 
       expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST,
-        payload: [{ sha256: 'test-sha256', id: 'test-id' }],
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['test-id'],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
+        payload: ['test-sha256'],
       })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,

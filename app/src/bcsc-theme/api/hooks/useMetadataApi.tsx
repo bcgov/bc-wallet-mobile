@@ -62,7 +62,7 @@ const useMetadataApi = (apiClient: BCSCApiClient) => {
       getClientMetadata,
       getBCSCClientMetadata,
     }),
-    [getClientMetadata, getBCSCClientMetadata]
+    [getClientMetadata, getBCSCClientMetadata],
   )
 }
 

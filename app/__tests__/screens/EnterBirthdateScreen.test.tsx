@@ -3,7 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import EnterBirthdateScreen from '../../src/bcsc-theme/features/verify/EnterBirthdateScreen'
+import EnterBirthdateScreen from '../../src/bcsc-theme/features/verify/EnterBirthdate/EnterBirthdateScreen'
 
 describe('EnterBirthdate', () => {
   let mockNavigation: any
@@ -23,7 +23,7 @@ describe('EnterBirthdate', () => {
     const tree = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

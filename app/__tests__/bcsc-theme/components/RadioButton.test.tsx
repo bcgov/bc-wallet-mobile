@@ -27,7 +27,7 @@ describe('RadioButton Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       waitFor(() => {
@@ -39,7 +39,7 @@ describe('RadioButton Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} value={true} selectedValue={true} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       waitFor(() => {
@@ -51,7 +51,7 @@ describe('RadioButton Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} disabled={true} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       waitFor(() => {
@@ -63,7 +63,7 @@ describe('RadioButton Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} selectedValue={false} disabled={true} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       waitFor(() => {
@@ -75,7 +75,7 @@ describe('RadioButton Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} label="Custom Label" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByText('Custom Label')).toBeTruthy()
@@ -88,7 +88,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} onValueChange={mockonValueChange} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -103,7 +103,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} onValueChange={mockonValueChange} disabled={true} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -117,7 +117,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} onValueChange={mockonValueChange} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -134,7 +134,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByRole('radio')).toBeTruthy()
@@ -144,7 +144,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -155,7 +155,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} selectedValue={false} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -166,7 +166,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} disabled={true} />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -177,7 +177,7 @@ describe('RadioButton Component', () => {
       const { getByRole } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} label="Accessibility Label" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       const radioButton = getByRole('radio')
@@ -188,7 +188,7 @@ describe('RadioButton Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <RadioButton {...defaultProps} testID="custom-test-id" />
-        </BasicAppContext>
+        </BasicAppContext>,
       )
 
       expect(getByTestId('custom-test-id')).toBeTruthy()

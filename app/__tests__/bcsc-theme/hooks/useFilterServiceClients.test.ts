@@ -18,7 +18,7 @@ const mockServiceClientA: ClientMetadata = {
   claims_description: 'claims',
   suppress_confirmation_info: false,
   suppress_bookmark_prompt: false,
-  allowed_identification_processes: [BCSCCardProcess.BCSC],
+  allowed_identification_processes: [BCSCCardProcess.BCSCPhoto],
   bc_address: true,
   service_listing_sort_order: undefined,
 }
@@ -113,7 +113,7 @@ describe('useFilterServiceClients', () => {
       } as any)
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
-      const hook = renderHook(() => useFilterServiceClients({ cardProcessFilter: BCSCCardProcess.BCSC }))
+      const hook = renderHook(() => useFilterServiceClients({ cardProcessFilter: BCSCCardProcess.BCSCPhoto }))
 
       expect(hook.result.current.isLoading).toBe(true)
       await waitFor(() => {
@@ -266,10 +266,10 @@ describe('useFilterServiceClients', () => {
 
       const hook = renderHook(() =>
         useFilterServiceClients({
-          cardProcessFilter: BCSCCardProcess.BCSC,
+          cardProcessFilter: BCSCCardProcess.BCSCPhoto,
           requireBCAddressFilter: true,
           partialNameFilter: 'ALPHA',
-        })
+        }),
       )
 
       expect(hook.result.current.isLoading).toBe(true)
@@ -296,7 +296,7 @@ describe('useFilterServiceClients', () => {
           cardProcessFilter: BCSCCardProcess.NonBCSC,
           requireBCAddressFilter: true,
           partialNameFilter: 'ALPHA',
-        })
+        }),
       )
 
       expect(hook.result.current.isLoading).toBe(true)

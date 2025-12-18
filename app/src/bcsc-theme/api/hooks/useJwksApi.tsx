@@ -34,7 +34,7 @@ const useJwksApi = (apiClient: BCSCApiClient) => {
       getJwks,
       getFirstJwk,
     }),
-    [getJwks, getFirstJwk]
+    [getJwks, getFirstJwk],
   )
 }
 

@@ -18,7 +18,7 @@ describe('EditNickname', () => {
     const tree = render(
       <BasicAppContext>
         <EditNicknameScreen />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

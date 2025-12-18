@@ -1,5 +1,7 @@
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { useEventListener } from '@/hooks/useEventListener'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
@@ -8,9 +10,9 @@ import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/s
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCState } from '@/store'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { navigationRef } from 'App'
 import { useContext, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
@@ -81,7 +83,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const serverStatus = await configApi.getServerStatus()
 
-          const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(serverStatus, utils)]
+          const startupChecks: SystemCheckStrategy[] = [
+            new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics, logger),
+            new ServerStatusSystemCheck(serverStatus, utils),
+          ]
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
@@ -97,7 +102,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
           const updateRegistration = () =>
-            registrationApi.updateRegistration(store.bcsc.registrationAccessToken, store.bcsc.selectedNickname)
+            registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
           const startupChecks: SystemCheckStrategy[] = [
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
@@ -108,7 +113,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
             startupChecks.push(
-              new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils)
+              new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils),
             )
           }
 
@@ -130,7 +135,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     registrationApi,
     registrationApi.updateRegistration,
     scope,
-    store.bcsc,
+    store.bcsc.appVersion,
+    store.bcsc.selectedNickname,
+    store.bcsc.analyticsOptIn,
+    store.bcscSecure.registrationAccessToken,
     t,
     tokenApi,
   ])

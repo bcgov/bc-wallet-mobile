@@ -115,7 +115,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           marginBottom: safeAreaInsets.bottom,
         },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom]
+    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom],
   )
 
   const handleCancel = () => {
@@ -170,7 +170,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         setTimeout(() => {
           setPrompt(`${i}`)
           resolve(true)
-        }, 1000)
+        }, 1000),
       )
     }
 
@@ -200,7 +200,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         logger.debug(`Recording error (${error.code}): ${error.message}`)
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
-          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
         )
       },
       onRecordingFinished: async (video) => {
@@ -254,7 +254,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
             Alert.alert(
               t('BCSC.SendVideo.TakeVideo.CameraPermissionRequired'),
               t('BCSC.SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
-              [{ text: 'OK', onPress: () => navigation.goBack() }]
+              [{ text: 'OK', onPress: () => navigation.goBack() }],
             )
             return
           }
@@ -265,7 +265,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
             Alert.alert(
               t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequired'),
               t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
-              [{ text: 'OK', onPress: () => navigation.goBack() }]
+              [{ text: 'OK', onPress: () => navigation.goBack() }],
             )
             return
           }
@@ -285,7 +285,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       navigation,
       isActive,
       t,
-    ])
+    ]),
   )
 
   // Cleanup timer on unmount

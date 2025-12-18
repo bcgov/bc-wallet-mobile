@@ -19,7 +19,7 @@ describe('VerifyWebView', () => {
     const tree = render(
       <BasicAppContext>
         <VerifyWebViewScreen route={route as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

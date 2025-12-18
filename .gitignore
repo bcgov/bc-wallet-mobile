@@ -14,6 +14,7 @@ xbuild/
 pc-api*.json
 api*.json
 *secret*
+!PINSecret.swift
 *secrets*
 .env
 .idea/
@@ -73,3 +74,4 @@ app/vendor/
 .metro-cache/
 
 coverage/
+.settings/

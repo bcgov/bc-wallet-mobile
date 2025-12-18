@@ -98,7 +98,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       return
     }
     cleanupCompletedRef.current = true
-    stopAllMedia()
     connection?.setAppInitiatedDisconnect(true)
     connection?.stopPexipKeepAlive()
     clearIntervalIfExists(backendKeepAliveTimerRef)
@@ -109,6 +108,23 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     } catch (error) {
       logger.error('Error disconnecting from Pexip:', error as Error)
     }
+
+    try {
+      connection?.releaseLocalStream()
+    } catch (error) {
+      logger.error('Error releasing local stream:', error as Error)
+    }
+
+    try {
+      connection?.closePeerConnection()
+    } catch (error) {
+      logger.error('Error closing peer connection:', error as Error)
+    }
+
+    // Clear stream state after releasing local streams and closing peer connections
+    // to prevent stale references
+    setLocalStream(null)
+    setRemoteStream(null)
 
     try {
       if (!session || !clientCallId) {
@@ -134,7 +150,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setClientCallId(null)
     setConnection(null)
     setVideoCallError(null)
-  }, [video, stopAllMedia, clientCallId, session, connection, logger, t])
+  }, [video, clientCallId, session, connection, logger, t])
 
   const startBackendKeepAlive = useCallback(() => {
     clearIntervalIfExists(backendKeepAliveTimerRef)
@@ -184,7 +200,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       setClientCallId(null)
       setConnection(null)
     },
-    [stopAllMedia, logger]
+    [stopAllMedia, logger],
   )
 
   // 1. a session must be created before anything else
@@ -232,7 +248,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         return false
       }
     },
-    [handleError, logger]
+    [handleError, logger],
   )
 
   // 3. this API call is really just for the benefit of the backend to track the call
@@ -249,7 +265,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         return null
       }
     },
-    [video, handleError]
+    [video, handleError],
   )
 
   // three step process with the steps above

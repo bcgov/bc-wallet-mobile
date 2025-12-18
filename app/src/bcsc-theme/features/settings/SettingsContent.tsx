@@ -1,5 +1,6 @@
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import {
   LockoutReason,
@@ -111,14 +112,31 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
-  const onPressOptInAnalytics = () => {
-    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [!store.bcsc.analyticsOptIn] })
+  const onPressOptInAnalytics = async () => {
+    if (store.bcsc.analyticsOptIn) {
+      Analytics.stopTracking()
+      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [false] })
+      return
+    }
+
+    try {
+      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
+      await Analytics.initializeTracker()
+    } catch (error) {
+      logger.error(
+        'Failed to initialize analytics tracker on opt-in',
+        {
+          file: 'SettingsContent.tsx',
+        },
+        error as Error,
+      )
+    }
   }
 
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        {store.bcsc.verified ? (
+        {store.bcscSecure.verified ? (
           <>
             <View style={styles.sectionContainer}>
               <SettingsActionCard

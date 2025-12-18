@@ -22,7 +22,7 @@ describe('ForgetAllPairings', () => {
     const tree = render(
       <BasicAppContext>
         <ForgetAllPairingsScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

@@ -25,6 +25,8 @@ const MaskedCamera = ({
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
+  // eslint-disable-next-line no-console
+  console.log('MaskedCamera rendered')
   const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
@@ -91,7 +93,7 @@ const MaskedCamera = ({
           Alert.alert(
             t('BCSC.CameraDisclosure.CameraPermissionRequired'),
             t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage'),
-            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }],
           )
           return
         }

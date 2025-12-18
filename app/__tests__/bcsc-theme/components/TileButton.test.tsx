@@ -32,7 +32,7 @@ describe('TileButton Component', () => {
           testIDKey={testIDKey}
           accessibilityLabel={accessibilityLabel}
         />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
     expect(tree).toMatchSnapshot()
   })
@@ -47,7 +47,7 @@ describe('TileButton Component', () => {
           testIDKey={testIDKey}
           accessibilityLabel={accessibilityLabel}
         />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     const tileButton = getByTestId(testIdWithKey(testIDKey))

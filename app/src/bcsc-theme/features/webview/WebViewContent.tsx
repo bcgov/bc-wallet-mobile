@@ -58,7 +58,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       const { nativeEvent } = syntheticEvent
       logger.error('WebView Error:', { ...nativeEvent })
     },
-    [logger]
+    [logger],
   )
 
   const handleHttpError = useCallback(
@@ -70,7 +70,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
         description: nativeEvent.description,
       })
     },
-    [logger]
+    [logger],
   )
 
   return (

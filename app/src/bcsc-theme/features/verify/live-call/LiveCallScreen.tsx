@@ -3,7 +3,7 @@ import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/comp
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -19,6 +19,7 @@ import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
 import CallProcessingView from './components/CallProcessingView'
 
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { CROP_DELAY_MS } from '@/constants'
 import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
@@ -29,7 +30,7 @@ type LiveCallScreenProps = {
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, NavigationTheme } = useTheme()
   const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
@@ -41,26 +42,30 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
+  const { updateTokens } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
     try {
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
+      const { refresh_token } = await token.checkDeviceCodeStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode,
+      )
 
       if (refresh_token) {
-        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+        await updateTokens({ refreshToken: refresh_token })
       }
 
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.VerificationSuccess }],
-        })
+        }),
       )
     } catch {
       // TODO (bm): as of Sept 10th 2025, the API throws if the user is not
@@ -75,10 +80,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             { name: BCSCScreens.VerificationMethodSelection },
             { name: BCSCScreens.VerifyNotComplete },
           ],
-        })
+        }),
       )
     }
-  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger, t])
+  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, updateTokens, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {

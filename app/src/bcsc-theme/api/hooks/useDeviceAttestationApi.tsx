@@ -5,7 +5,7 @@ import BCSCApiClient from '../client'
 export interface VerifyAttestationPayload {
   client_id: string
   device_code: string // Current devices device_code
-  attestation: string // JWT assertion collected form previously registered device
+  attestation: string // JWT assertion collected from previously registered device
   client_assertion: string // JWT assertion signed by the pending/ current device
 }
 
@@ -51,7 +51,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient]
+    [apiClient],
   )
 
   /**
@@ -83,7 +83,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient]
+    [apiClient],
   )
 
   return useMemo(
@@ -91,7 +91,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
       verifyAttestation,
       checkAttestationStatus,
     }),
-    [verifyAttestation, checkAttestationStatus]
+    [verifyAttestation, checkAttestationStatus],
   )
 }
 

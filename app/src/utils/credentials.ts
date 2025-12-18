@@ -169,7 +169,7 @@ const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterB
 export const credentialsMatchForProof = async (
   agent: BifoldAgent,
   proof: ProofExchangeRecord,
-  filterByNonRevocationRequirements = true
+  filterByNonRevocationRequirements = true,
 ): Promise<GetCredentialsForProofRequestReturn> => {
   const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
   const credentials = await agent.proofs.getCredentialsForRequest({

@@ -88,7 +88,7 @@ export const SystemModal = ({
       return () => {
         beforeRemove()
       }
-    }, [navigation])
+    }, [navigation]),
   )
 
   return (

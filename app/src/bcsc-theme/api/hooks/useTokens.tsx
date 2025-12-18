@@ -1,14 +1,19 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
-import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
 
 export interface IdTokenMetadataConfig {
   refreshCache: boolean
 }
 
+export interface DeviceTokenPayload {
+  client_id: string
+  device_code: string
+  client_assertion: string
+}
 export interface TokenResponse {
   access_token: string
   expires_in: number
@@ -19,8 +24,9 @@ export interface TokenResponse {
 }
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
+  const { updateTokens } = useSecureActions()
   const deviceToken = useCallback(
-    async (payload: VerifyAttestationPayload) => {
+    async (payload: DeviceTokenPayload) => {
       const { data } = await apiClient.post<TokenResponse>(
         apiClient.endpoints.token,
         {
@@ -33,12 +39,12 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
-        }
+        },
       )
 
       return data
     },
-    [apiClient]
+    [apiClient],
   )
 
   const checkDeviceCodeStatus = useCallback(
@@ -51,12 +57,13 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           skipBearerAuth: true,
         })
 
+        await updateTokens({ refreshToken: data.refresh_token })
         apiClient.tokens = data
 
         return apiClient.tokens
       })
     },
-    [apiClient]
+    [apiClient, updateTokens],
   )
 
   /**
@@ -81,7 +88,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },
-    [apiClient]
+    [apiClient],
   )
 
   return useMemo(
@@ -90,7 +97,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
       deviceToken,
       getCachedIdTokenMetadata,
     }),
-    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken]
+    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken],
   )
 }
 

@@ -35,7 +35,7 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
               name: BCSCScreens.AccountExpired,
             },
           ],
-        })
+        }),
       )
     }
 
@@ -51,7 +51,7 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
             },
           },
         ],
-      })
+      }),
     )
   }
 

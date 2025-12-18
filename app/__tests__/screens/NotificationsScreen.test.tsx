@@ -24,7 +24,7 @@ describe('Notifications', () => {
     const tree = render(
       <BasicAppContext>
         <NotificationsScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
+      </BasicAppContext>,
     )
 
     expect(tree).toMatchSnapshot()

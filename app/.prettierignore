@@ -1,9 +1,0 @@
-package-lock.json
-app.json
-ios/
-android/
-node_modules/
-generate-app-package-json.js
-src/configs/ledgers/indy/ledgers.json
-.gitignore
-coverage/

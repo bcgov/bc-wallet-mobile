@@ -61,7 +61,7 @@ describe('useServiceLoginState', () => {
         pairingCode: 'PAIR-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(result.current.state.serviceTitle).toBe('Example Service')
@@ -79,7 +79,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockLoad).toHaveBeenCalledTimes(1)
@@ -103,7 +103,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service?.client_ref_id).toBe('client-123'))
@@ -134,7 +134,7 @@ describe('useServiceLoginState', () => {
         serviceTitle: 'services card',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service?.client_ref_id).toBeDefined())
@@ -162,7 +162,7 @@ describe('useServiceLoginState', () => {
         serviceTitle: 'Nonexistent',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service).toBeUndefined())
@@ -179,7 +179,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-locked',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockConsumePending).not.toHaveBeenCalled()
@@ -196,7 +196,7 @@ describe('useServiceLoginState', () => {
         pairingCode: 'EXISTING',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockConsumePending).not.toHaveBeenCalled()
@@ -212,7 +212,7 @@ describe('useServiceLoginState', () => {
       useServiceLoginState({
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.pairingCode).toBe('PAIR-999'))
@@ -229,7 +229,7 @@ describe('useServiceLoginState', () => {
       useServiceLoginState({
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.pairingCode).toBeUndefined())
