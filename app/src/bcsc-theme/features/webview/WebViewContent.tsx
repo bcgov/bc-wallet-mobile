@@ -1,5 +1,5 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { combineAccessibilityScriptWithInjectedJS, getAndroidTextZoom } from '@/bcsc-theme/utils/webview-utils'
+import { getWebViewAccessibilityProps } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -43,15 +43,12 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { fontScale } = useWindowDimensions()
 
-  // Combine accessibility font scaling with any custom injected JavaScript
-  // iOS requires JavaScript injection for font scaling, Android uses textZoom prop
-  const combinedInjectedJavascript = useMemo(
-    () => combineAccessibilityScriptWithInjectedJS(Platform.OS, fontScale, injectedJavascript),
+  // Platform-specific accessibility text scaling:
+  // iOS uses JavaScript injection, Android uses native textZoom prop
+  const { injectedJavaScript, textZoom } = useMemo(
+    () => getWebViewAccessibilityProps(Platform.OS, fontScale, injectedJavascript),
     [fontScale, injectedJavascript]
   )
-
-  // Android textZoom: converts fontScale (e.g., 1.0, 1.5, 2.0) to percentage (100, 150, 200)
-  const androidTextZoom = getAndroidTextZoom(Platform.OS, fontScale)
 
   const styles = StyleSheet.create({
     loadingContainer: {
@@ -111,8 +108,8 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       thirdPartyCookiesEnabled={true}
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
-      textZoom={androidTextZoom}
-      injectedJavaScriptBeforeContentLoaded={combinedInjectedJavascript}
+      textZoom={textZoom}
+      injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />

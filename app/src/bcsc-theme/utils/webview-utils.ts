@@ -62,32 +62,29 @@ export const createAccessibilityFontScalingScript = (fontScale: number): string 
   `
 }
 
-/**
- * Combines accessibility font scaling script with any custom injected JavaScript for iOS.
- * Android uses the textZoom prop instead of JavaScript injection.
- *
- * @param platform - The current platform ('ios' or 'android')
- * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
- * @param injectedJavascript - Optional custom JavaScript to inject
- * @returns Combined JavaScript string to inject into the WebView
- */
-export const combineAccessibilityScriptWithInjectedJS = (
-  platform: string,
-  fontScale: number,
-  injectedJavascript?: string
-): string => {
-  const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
-  return injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript
+interface WebViewAccessibilityProps {
+  injectedJavaScript: string
+  textZoom: number | undefined
 }
 
 /**
- * Calculates the Android textZoom value from the font scale.
- * Converts fontScale (e.g., 1.0, 1.5, 2.0) to percentage (100, 150, 200).
+ * Returns platform-specific accessibility props for WebView text scaling.
+ * - iOS: Uses JavaScript injection to scale fonts
+ * - Android: Uses the native textZoom prop
  *
  * @param platform - The current platform ('ios' or 'android')
  * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
- * @returns The textZoom percentage for Android, or undefined for other platforms
+ * @param injectedJavascript - Optional custom JavaScript to inject (will be combined with accessibility script)
+ * @returns WebView props for accessibility text scaling
  */
-export const getAndroidTextZoom = (platform: string, fontScale: number): number | undefined => {
-  return platform === 'android' ? Math.round(fontScale * 100) : undefined
+export const getWebViewAccessibilityProps = (
+  platform: string,
+  fontScale: number,
+  injectedJavascript?: string
+): WebViewAccessibilityProps => {
+  const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
+  return {
+    injectedJavaScript: injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript,
+    textZoom: platform === 'android' ? Math.round(fontScale * 100) : undefined,
+  }
 }
