@@ -44,3 +44,50 @@ export const createSecuringAppWebViewJavascriptInjection = (): string => {
     });
   `
 }
+
+/**
+ * Creates JavaScript to apply accessibility font scaling on iOS.
+ * This ensures web content respects the device's text size accessibility settings.
+ *
+ * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
+ * @returns JavaScript string to inject into the WebView
+ */
+export const createAccessibilityFontScalingScript = (fontScale: number): string => {
+  return `
+    (function() {
+      const fontScale = ${fontScale};
+      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+      document.body.style.fontSize = (16 * fontScale) + 'px';
+    })();
+  `
+}
+
+/**
+ * Combines accessibility font scaling script with any custom injected JavaScript for iOS.
+ * Android uses the textZoom prop instead of JavaScript injection.
+ *
+ * @param platform - The current platform ('ios' or 'android')
+ * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
+ * @param injectedJavascript - Optional custom JavaScript to inject
+ * @returns Combined JavaScript string to inject into the WebView
+ */
+export const combineAccessibilityScriptWithInjectedJS = (
+  platform: string,
+  fontScale: number,
+  injectedJavascript?: string
+): string => {
+  const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
+  return injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript
+}
+
+/**
+ * Calculates the Android textZoom value from the font scale.
+ * Converts fontScale (e.g., 1.0, 1.5, 2.0) to percentage (100, 150, 200).
+ *
+ * @param platform - The current platform ('ios' or 'android')
+ * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
+ * @returns The textZoom percentage for Android, or undefined for other platforms
+ */
+export const getAndroidTextZoom = (platform: string, fontScale: number): number | undefined => {
+  return platform === 'android' ? Math.round(fontScale * 100) : undefined
+}

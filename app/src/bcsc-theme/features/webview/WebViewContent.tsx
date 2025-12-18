@@ -1,4 +1,5 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { combineAccessibilityScriptWithInjectedJS, getAndroidTextZoom } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -30,23 +31,6 @@ interface WebViewContentProps {
 }
 
 /**
- * Creates JavaScript to apply accessibility font scaling on iOS.
- * This ensures web content respects the device's text size accessibility settings.
- *
- * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
- * @returns JavaScript string to inject into the WebView
- */
-const createAccessibilityFontScalingScript = (fontScale: number): string => {
-  return `
-    (function() {
-      const fontScale = ${fontScale};
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    })();
-  `
-}
-
-/**
  * A WebView component that loads a given URL with optional injected JavaScript.
  * Automatically applies accessibility font scaling based on device settings.
  *
@@ -61,13 +45,13 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
 
   // Combine accessibility font scaling with any custom injected JavaScript
   // iOS requires JavaScript injection for font scaling, Android uses textZoom prop
-  const combinedInjectedJavascript = useMemo(() => {
-    const accessibilityScript = Platform.OS === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
-    return injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript
-  }, [fontScale, injectedJavascript])
+  const combinedInjectedJavascript = useMemo(
+    () => combineAccessibilityScriptWithInjectedJS(Platform.OS, fontScale, injectedJavascript),
+    [fontScale, injectedJavascript]
+  )
 
   // Android textZoom: converts fontScale (e.g., 1.0, 1.5, 2.0) to percentage (100, 150, 200)
-  const androidTextZoom = Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined
+  const androidTextZoom = getAndroidTextZoom(Platform.OS, fontScale)
 
   const styles = StyleSheet.create({
     loadingContainer: {
