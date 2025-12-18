@@ -18,14 +18,14 @@ runs:
   steps:
     - name: Sign & Export
       env:
-        export_options: ${{ inputs.export_options }}
+        EXPORT_OPTIONS: ${{ inputs.export_options }}
       shell: bash
       run: |
         xcodebuild \
         -exportArchive \
         -archivePath AriesBifold.xcarchive \
         -exportPath export \
-        -exportOptionsPlist ./$export_options \
+        -exportOptionsPlist ./$EXPORT_OPTIONS \
         -verbose
 
     - name: Upload signed artifact
