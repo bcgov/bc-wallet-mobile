@@ -1595,8 +1595,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       }
       
       // Build and display the notification
+      // Look up icon from app resources (not library resources)
+      val iconResId = reactApplicationContext.resources.getIdentifier(
+        "ic_notification",
+        "drawable",
+        reactApplicationContext.packageName
+      ).takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info
+      
       val notification = NotificationCompat.Builder(reactApplicationContext, NOTIFICATION_CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_notification)
+        .setSmallIcon(iconResId)
         .setContentTitle(title)
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
