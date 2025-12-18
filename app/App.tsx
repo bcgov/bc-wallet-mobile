@@ -53,7 +53,11 @@ messaging().onMessage(async (remoteMessage) => {
   const title = remoteMessage.notification?.title
   const message = remoteMessage.notification?.body
   if (title && message) {
-    await showLocalNotification(title, message)
+    try {
+      await showLocalNotification(title, message)
+    } catch (error) {
+      appLogger.error(`Failed to show local notification: ${error}`)
+    }
   }
 })
 
