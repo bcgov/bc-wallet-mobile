@@ -49,7 +49,7 @@ export const useCardScanner = () => {
    */
   const handleScanComboCard = useCallback(
     async (bcscSerial: string, license: DriversLicenseMetadata) => {
-      if (!license.birthDate || isNaN(license.birthDate.getTime())) {
+      if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
         // Should never happen, probably a decoder error
         throw new Error('handleScanComboCard: License birthdate is missing or invalid')
       }
