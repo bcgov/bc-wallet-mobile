@@ -104,6 +104,7 @@ export interface Spec extends TurboModule {
   hashBase64(base64: string): Promise<string>;
   removeAccount(): Promise<void>;
   createSignedJWT(claims: JWTClaims): Promise<string>;
+  showLocalNotification(title: string, message: string): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

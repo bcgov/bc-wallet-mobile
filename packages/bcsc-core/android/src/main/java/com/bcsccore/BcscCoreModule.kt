@@ -1,11 +1,14 @@
 package com.bcsccore
 
 // Android imports
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
 // React Native imports
 import com.facebook.react.bridge.Arguments
@@ -91,6 +94,14 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
     // JWT expiration in seconds
     private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
+    
+    // Notification channel constants
+    private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
+    private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
+    
+    // Track if notification channel has been created (only needs to happen once)
+    @Volatile
+    private var notificationChannelCreated = false
   }
 
   override fun getName(): String = NAME
@@ -1554,6 +1565,60 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
     } catch (e: Exception) {
       Log.w(NAME, "removeAccountFromFile - Error removing account from file: ${e.message}", e)
+    }
+  }
+
+  /**
+   * Displays a local notification on the device.
+   * @param title The notification title
+   * @param message The notification body/message
+   */
+  @ReactMethod
+  override fun showLocalNotification(title: String, message: String, promise: Promise) {
+    Log.d(NAME, "showLocalNotification - title: $title, message: $message")
+    
+    try {
+      val notificationManager = reactApplicationContext.getSystemService(NotificationManager::class.java)
+
+      // Create notification channel once on first use (Android O+)
+      if (!notificationChannelCreated && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+          NOTIFICATION_CHANNEL_ID,
+          NOTIFICATION_CHANNEL_NAME,
+          NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+          description = "Notifications displayed while app is in foreground"
+        }
+        notificationManager.createNotificationChannel(channel)
+        notificationChannelCreated = true
+        Log.d(NAME, "showLocalNotification - Notification channel created")
+      }
+      
+      // Build and display the notification
+      // Look up icon from app resources (not library resources)
+      val iconResId = reactApplicationContext.resources.getIdentifier(
+        "ic_notification",
+        "drawable",
+        reactApplicationContext.packageName
+      ).takeIf { it != 0 } ?: android.R.drawable.ic_dialog_info
+      
+      val notification = NotificationCompat.Builder(reactApplicationContext, NOTIFICATION_CHANNEL_ID)
+        .setSmallIcon(iconResId)
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .build()
+      
+      val notificationId = System.currentTimeMillis().toInt()
+      notificationManager.notify(notificationId, notification)
+      
+      Log.d(NAME, "showLocalNotification - Notification displayed with ID: $notificationId")
+      promise.resolve(null)
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "showLocalNotification - Error displaying notification: ${e.message}", e)
+      promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
     }
   }
 

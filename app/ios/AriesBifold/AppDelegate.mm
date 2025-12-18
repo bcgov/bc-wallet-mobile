@@ -6,7 +6,11 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
 #import <React/RCTLinkingManager.h>
+#import <UserNotifications/UserNotifications.h>
 #import "Orientation.h"
+
+@interface AppDelegate () <UNUserNotificationCenterDelegate>
+@end
 
 @implementation AppDelegate
 
@@ -16,6 +20,10 @@
   [WebRTCModuleOptions sharedInstance].enableMultitaskingCameraAccess = YES;
 
   [FIRApp configure];
+  
+  // Set notification delegate to allow foreground notifications
+  [UNUserNotificationCenter currentNotificationCenter].delegate = self;
+  
   self.moduleName = @"BCWallet";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
@@ -84,6 +92,14 @@
     } else {
       NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
     }
+}
+
+// Allow notifications to be displayed when app is in foreground
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler
+{
+  completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound | UNNotificationPresentationOptionBadge);
 }
 
 @end

@@ -23,4 +23,5 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun hashBase64(base64: String, promise: Promise)
   abstract fun decodePayload(jweString: String, promise: Promise)
   abstract fun removeAccount(promise: Promise)
+  abstract fun showLocalNotification(title: String, message: String, promise: Promise)
 }

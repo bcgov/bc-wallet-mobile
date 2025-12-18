@@ -33,15 +33,33 @@ import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
+
+import { showLocalNotification } from 'react-native-bcsc-core'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
 
-// Do nothing with push notifications received while the app is in the background
+// Do nothing with push notifications received while the
+// app is in the background
 messaging().setBackgroundMessageHandler(async () => {})
 
-// Do nothing with push notifications received while the app is in the foreground
-messaging().onMessage(async () => {})
+// Display notifications received while app is in foreground.
+// Without this handler, foreground notifications are silently ignored.
+messaging().onMessage(async (remoteMessage) => {
+  if (remoteMessage.data) {
+    appLogger.info(`FCM message payload: ${JSON.stringify(remoteMessage.data)}`)
+  }
+
+  const title = remoteMessage.notification?.title
+  const message = remoteMessage.notification?.body
+  if (title && message) {
+    try {
+      await showLocalNotification(title, message)
+    } catch (error) {
+      appLogger.error(`Failed to show local notification: ${error}`)
+    }
+  }
+})
 
 const App = () => {
   const { t } = useTranslation()
