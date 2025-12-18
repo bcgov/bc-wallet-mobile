@@ -40,6 +40,12 @@ exports[`TermsOfUse renders correctly 1`] = `
         bounces={false}
         domStorageEnabled={true}
         injectedJavaScriptBeforeContentLoaded="
+    (function() {
+      const fontScale = 2;
+      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+      document.body.style.fontSize = (16 * fontScale) + 'px';
+    })();
+  
     document.addEventListener('DOMContentLoaded', function() {
       const style = document.createElement('style');
 
@@ -56,10 +62,6 @@ exports[`TermsOfUse renders correctly 1`] = `
 
       document.head.appendChild(style);
     });
-  
-    const fontScale = 2;
-    document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-    document.body.style.fontSize = (16 * fontScale) + 'px';
   "
         javaScriptEnabled={true}
         mixedContentMode="compatibility"
