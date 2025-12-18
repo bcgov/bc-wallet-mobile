@@ -1,5 +1,6 @@
 import { QRScannerTorch, useTheme } from '@bifold/core'
-import React, { useEffect, useRef, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Animated,
@@ -105,6 +106,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       requestPermission()
     }
   }, [hasPermission, requestPermission, autoRequestPermission])
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setTorchEnabled(false)
+      }
+    }, [])
+  )
 
   const toggleTorch = () => {
     setTorchEnabled((prev) => !prev)
