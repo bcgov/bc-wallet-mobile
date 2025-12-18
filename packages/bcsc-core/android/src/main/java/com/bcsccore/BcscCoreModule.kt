@@ -1588,7 +1588,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
       // Build and display the notification
       val notification = NotificationCompat.Builder(reactApplicationContext, channelId)
-        .setSmallIcon(android.R.drawable.ic_dialog_info) // Use default icon, or replace with your app's icon
+        .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(title)
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
