@@ -12,6 +12,8 @@ import {
   ScanableCode,
 } from '../utils/decoder-strategy/DecoderStrategy'
 
+type DriversLicenseMetadataStub = { birthDate: Date }
+
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
@@ -38,7 +40,7 @@ export const useCardScanner = () => {
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-  const scanCompletedRef = useRef(false)
+  const scannerEnabledRef = useRef(true)
 
   /**
    * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
@@ -48,7 +50,7 @@ export const useCardScanner = () => {
    * @returns A promise that resolves when the scanning process is complete.
    */
   const handleScanComboCard = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadata) => {
+    async (bcscSerial: string, license: DriversLicenseMetadataStub) => {
       if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
         // Should never happen, probably a decoder error
         throw new Error('handleScanComboCard: License birthdate is missing or invalid')
@@ -88,6 +90,26 @@ export const useCardScanner = () => {
   )
 
   /**
+   * Starts the scanning process by setting the scan enabled flag.
+   * This allows scans to be processed.
+   *
+   * @returns void
+   */
+  const startScan = () => {
+    scannerEnabledRef.current = true
+  }
+
+  /**
+   * Completes the scanning process by setting the scan enabled flag.
+   * This prevents further scans from being processed.
+   *
+   * @returns void
+   */
+  const completeScan = () => {
+    scannerEnabledRef.current = false
+  }
+
+  /**
    * Handles the scanning of a card by processing the scanned barcodes.
    *
    * Note: On iOS it make take multiple attempts to scan both barcodes on a combo card.
@@ -104,7 +126,7 @@ export const useCardScanner = () => {
       handleScannedCardData: (bcscSerial: string | null, license: DriversLicenseMetadata | null) => Promise<void> | void
     ) => {
       // Prevent multiple scans from being processed
-      if (scanCompletedRef.current) {
+      if (!scannerEnabledRef.current) {
         return
       }
 
@@ -121,7 +143,7 @@ export const useCardScanner = () => {
           continue
         }
 
-        logger.debug(`Decoded barcode metadata:`, { barcodeMetadata: decodedCode })
+        logger.debug(`Decoded barcode metadata:`, { decodedBarcode: decodedCode })
 
         // Extract the decoded metadata
         switch (decodedCode.kind) {
@@ -138,7 +160,6 @@ export const useCardScanner = () => {
         }
       }
 
-      scanCompletedRef.current = true
       await handleScannedCardData(bcscSerial, licenseMetadata)
     },
     [logger]
@@ -147,6 +168,8 @@ export const useCardScanner = () => {
   return useMemo(
     () => ({
       scanCard: handleCardScan,
+      startScan,
+      completeScan,
       handleScanComboCard,
       handleScanBCServicesCard,
     }),

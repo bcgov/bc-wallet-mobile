@@ -47,7 +47,7 @@ export interface DriversLicenseBarcode {
 
 // Narrowed BC services card barcode type
 export interface BCServicesCardBarcode {
-  type: 'code-39'
+  type: 'code-39' | 'code-128'
   value: string
 }
 

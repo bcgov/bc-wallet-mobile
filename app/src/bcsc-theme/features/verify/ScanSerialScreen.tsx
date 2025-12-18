@@ -15,7 +15,7 @@ type ScanSerialScreenProps = {
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const { scanCard, handleScanBCServicesCard, handleScanComboCard } = useCardScanner()
+  const scanner = useCardScanner()
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -35,20 +35,34 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   })
 
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
-    await scanCard(barcodes, async (bcscSerial, license) => {
+    await scanner.scanCard(barcodes, async (bcscSerial, license) => {
       if (bcscSerial && license) {
-        return handleScanComboCard(bcscSerial, license)
+        scanner.completeScan()
+        await scanner.handleScanComboCard(bcscSerial, license)
+        return
       }
 
       if (bcscSerial) {
-        return handleScanBCServicesCard(bcscSerial)
+        scanner.completeScan()
+        await scanner.handleScanBCServicesCard(bcscSerial)
+        return
+      }
+
+      if (license) {
+        // TODO (MD): Handle when drivers license barcode scanned. Current V3 app provides no user feedback.
+        // Don't complete the scan so user can try a different barcode
+        return
       }
     })
   }
 
   return (
     <>
-      <CodeScanningCamera codeTypes={['code-39', 'pdf-417']} onCodeScanned={onCodeScanned} cameraType={'back'} />
+      <CodeScanningCamera
+        codeTypes={['code-128', 'code-39', 'pdf-417']}
+        onCodeScanned={onCodeScanned}
+        cameraType={'back'}
+      />
       <ScreenWrapper
         padded={false}
         scrollable={false}

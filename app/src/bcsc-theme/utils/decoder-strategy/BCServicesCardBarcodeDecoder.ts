@@ -17,7 +17,11 @@ import {
  */
 export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
   canDecode(barcode: ScanableCode): barcode is BCServicesCardBarcode {
-    return barcode.type === 'code-39' && typeof barcode.value === 'string' && isBCSCSerial(barcode.value)
+    return (
+      (barcode.type === 'code-39' || barcode.type === 'code-128') &&
+      typeof barcode.value === 'string' &&
+      isBCSCSerial(barcode.value)
+    )
   }
 
   decode(barcode: BCServicesCardBarcode): BCServicesCardDecodedBarcode {

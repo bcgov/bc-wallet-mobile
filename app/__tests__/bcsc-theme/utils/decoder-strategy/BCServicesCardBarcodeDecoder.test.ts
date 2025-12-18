@@ -55,6 +55,15 @@ describe('BCServicesCardBarcodeDecoder', () => {
     })
   })
   describe('canDecode', () => {
+    it('should return true for a valid BCSC serial Code 128 barcode', () => {
+      const decoder = new BCServicesCardBarcodeDecoder()
+      const barcode: BCServicesCardBarcode = {
+        type: 'code-128',
+        value: 'A12345678',
+      }
+
+      expect(decoder.canDecode(barcode)).toBe(true)
+    })
     it('should return true for a valid BCSC serial Code 39 barcode', () => {
       const decoder = new BCServicesCardBarcodeDecoder()
       const barcode: BCServicesCardBarcode = {
