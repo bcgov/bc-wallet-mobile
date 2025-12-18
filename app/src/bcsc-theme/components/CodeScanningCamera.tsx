@@ -1,11 +1,13 @@
 import { QRScannerTorch, useTheme } from '@bifold/core'
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Animated,
   GestureResponderEvent,
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
   ViewStyle,
   useWindowDimensions,
@@ -56,6 +58,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   autoRequestPermission = true,
   cameraType = 'back',
 }) => {
+  const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
@@ -66,6 +69,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusScale = useRef(new Animated.Value(1)).current
   const device = useCameraDevice(cameraType, {
     physicalDevices: Platform.select({
+      // Note: Unable to focus camera on iOS without ultra-wide angle camera
       ios: ['ultra-wide-angle-camera'],
     }),
   })
@@ -188,8 +192,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   if (!device || !hasPermission) {
-    // TODO (MD): Show a placeholder or message indicating that the camera is not available or permission is denied
-    return null
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</Text>
+      </View>
+    )
   }
 
   return (

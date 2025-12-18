@@ -132,5 +132,38 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       expect(() => decoder.decode(barcode)).toThrow()
     })
+
+    it('should handle century rollover edge case for expiry dates', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2100-01-01'))
+
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value:
+          '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=250419470429=?_%0AV8W3Y8                     X160 57WHIBLU9123456789                E$!(\\0CUPXD?',
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.expiryDate).toEqual(new Date('2125-04-29'))
+
+      jest.useRealTimers()
+    })
+
+    it('should handle century rollover edge case for birth dates', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2100-01-01'))
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value:
+          '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=250420000429=?_%0AV8W3Y8                     X160 57WHIBLU9123456789                E$!(\\0CUPXD?',
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded.birthDate).toEqual(new Date('2000-04-29'))
+
+      jest.useRealTimers()
+    })
   })
 })

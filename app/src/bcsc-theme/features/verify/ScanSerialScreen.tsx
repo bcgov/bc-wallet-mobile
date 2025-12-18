@@ -12,7 +12,6 @@ type ScanSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
 
-// TODO (MD): Rename to ScanCardScreen
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()

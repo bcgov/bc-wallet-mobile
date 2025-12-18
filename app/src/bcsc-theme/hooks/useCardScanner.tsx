@@ -118,7 +118,7 @@ export const useCardScanner = () => {
 
         if (!decodedCode) {
           logger.warn(`Failed to decode scanned barcode`, { barcode: code })
-          return
+          continue
         }
 
         logger.debug(`Decoded barcode metadata:`, { barcodeMetadata: decodedCode })

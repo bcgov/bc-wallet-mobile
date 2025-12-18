@@ -6,8 +6,6 @@ import {
   ScanableCode,
 } from './DecoderStrategy'
 
-const CURRENT_MILLENNIUM = 2000
-
 /**
  * Decoder for British Columbia Driver’s Licence PDF-417 barcodes.
  *
@@ -96,11 +94,14 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     const birthMonth = Number.parseInt(rawBirthdate.slice(8, 10)) - 1 // Months are zero-indexed
     const birthDay = Number.parseInt(rawBirthdate.slice(10, 12))
 
-    const expiryYear = Number.parseInt(rawBirthdate.slice(0, 2)) + CURRENT_MILLENNIUM // TODO (MD): Handle century rollover
+    const expiryYear = Number.parseInt(rawBirthdate.slice(0, 2))
     const expiryMonth = Number.parseInt(rawBirthdate.slice(2, 4)) - 1 // Months are zero-indexed
 
+    const currentCenturyBase = Math.floor(new Date().getFullYear() / 100) * 100
+    const adjustedExpiryYear = currentCenturyBase + expiryYear
+
     return {
-      expiryDate: new Date(expiryYear, expiryMonth, birthDay),
+      expiryDate: new Date(adjustedExpiryYear, expiryMonth, birthDay),
       birthDate: new Date(birthYear, birthMonth, birthDay),
     }
   }
