@@ -301,7 +301,7 @@ export const removeAccount = async (): Promise<void> => {
 };
 
 /**
- * Displays a local notification on the device (Android only for now).
+ * Displays a local notification on the device.
  * @param title The notification title
  * @param message The notification body/message
  * @returns A promise that resolves when the notification has been displayed.
