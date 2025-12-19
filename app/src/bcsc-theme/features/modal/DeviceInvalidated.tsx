@@ -27,9 +27,6 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Elemen
    * Handles the factory reset operation.
    */
   const handleFactoryReset = useCallback(async () => {
-    if (!invalidationReason) {
-      logger.warn('DeviceInvalidated: invalidationReason is undefined')
-    }
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
       // Can add more cases here for different BCSCReason types in the future
       [BCSCReason.CanceledByAgent]: {
@@ -39,7 +36,7 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Elemen
       [BCSCReason.CanceledByUser]: {}, // Empty for a 'new install state'
     }
 
-    const result = await factoryReset(invalidationReason && factoryResetParams[invalidationReason])
+    const result = await factoryReset(factoryResetParams[invalidationReason])
 
     if (!result.success) {
       logger.error('Factory reset failed', result.error)
