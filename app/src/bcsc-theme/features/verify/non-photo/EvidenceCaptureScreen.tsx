@@ -1,14 +1,17 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { MaskType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { useCodeScanner } from 'react-native-vision-camera'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -30,6 +33,40 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { width } = useWindowDimensions()
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const scanner = useCardScanner()
+  const codeScanner = useCodeScanner({
+    codeTypes: [
+      // Currently supported barcodes
+      BC_SERVICES_CARD_BARCODE,
+      OLD_BC_SERVICES_CARD_BARCODE,
+      DRIVERS_LICENSE_BARCODE,
+    ],
+    onCodeScanned: async (codes) => {
+      if (!codes.length) {
+        return
+      }
+
+      await scanner.scanCard(codes, async (bcscSerial, license) => {
+        if (bcscSerial && license) {
+          scanner.completeScan()
+          await scanner.handleScanComboCard(bcscSerial, license)
+          return
+        }
+
+        if (bcscSerial) {
+          scanner.completeScan()
+          await scanner.handleScanBCServicesCard(bcscSerial)
+          return
+        }
+
+        if (license) {
+          scanner.completeScan()
+          scanner.handleScanDriversLicense(license)
+          return
+        }
+      })
+    },
+  })
 
   const styles = StyleSheet.create({
     container: {
@@ -119,6 +156,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             maskType={MaskType.ID_CARD}
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
+            codeScanner={codeScanner}
           />
         </View>
       ) : (

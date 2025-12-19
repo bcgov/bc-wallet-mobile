@@ -82,6 +82,7 @@ export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
+export const PHOTO_RESOLUTION_720P = { width: 1280, height: 720 } // high definition photo resolution
 export const SELFIE_VIDEO_FRAME_RATE = 24
 export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
@@ -93,3 +94,8 @@ export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
 
 // Styling contants
 export const DEFAULT_HEADER_TITLE_CONTAINER_STYLE: ViewStyle = { flexShrink: 1, maxWidth: '68%' }
+
+// Barcode scanner constants
+export const BC_SERVICES_CARD_BARCODE = 'code-39'
+export const OLD_BC_SERVICES_CARD_BARCODE = 'code-128'
+export const DRIVERS_LICENSE_BARCODE = 'pdf-417'
