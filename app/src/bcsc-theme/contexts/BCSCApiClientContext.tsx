@@ -30,15 +30,14 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
-  const [isClientReady, setIsClientReady] = useState(Boolean(BCSC_API_CLIENT_SINGLETON))
+  const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const handleNewClient = (client: BCSCApiClient | null, errorMessage?: string) => {
+  const setClientAndSingleton = (client: BCSCApiClient | null) => {
     BCSC_API_CLIENT_SINGLETON = client
-    setIsClientReady(Boolean(client))
-    setError(errorMessage ?? null)
+    setClient(client)
   }
 
   useEffect(() => {
@@ -48,21 +47,17 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const configureClient = async () => {
-      setIsClientReady(Boolean(BCSC_API_CLIENT_SINGLETON))
       setError(null)
 
-      let newClient = BCSC_API_CLIENT_SINGLETON
+      let newClient = client
 
       try {
         // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (
-          !BCSC_API_CLIENT_SINGLETON ||
-          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
-        ) {
+        if (!client || client.baseURL !== store.developer.environment.iasApiBaseUrl) {
           newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
           await newClient.fetchEndpointsAndConfig()
 
-          handleNewClient(newClient)
+          setClientAndSingleton(newClient)
         }
       } catch (err) {
         /**
@@ -72,27 +67,36 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
          * while also alowing the Internet Disconnected modal to be displayed.
          */
         if (isNetworkError(err)) {
-          handleNewClient(newClient)
+          setClientAndSingleton(newClient)
           return
         }
 
         const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
           (err as Error)?.message
         }`
-        handleNewClient(null, errorMessage)
+
+        setClientAndSingleton(null)
+        setError(errorMessage)
       }
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
+  }, [
+    store.stateLoaded,
+    store.developer.environment.name,
+    store.developer.environment.iasApiBaseUrl,
+    logger,
+    dispatch,
+    client,
+  ])
 
   const contextValue = useMemo(
     () => ({
-      client: BCSC_API_CLIENT_SINGLETON,
-      isClientReady,
+      client,
+      isClientReady: Boolean(client),
       error,
     }),
-    [isClientReady, error]
+    [client, error]
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>
