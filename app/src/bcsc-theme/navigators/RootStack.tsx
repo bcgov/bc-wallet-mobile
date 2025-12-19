@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
 import { getAccount } from 'react-native-bcsc-core'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -15,8 +16,6 @@ import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
-  // eslint-disable-next-line no-console
-  console.log('RootStack rendered')
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
@@ -65,38 +64,31 @@ const BCSCRootStack: React.FC = () => {
     asyncEffect()
   }, [logger, dispatch, store.bcsc.nicknames, loading])
 
-  // Show loading screen if state or API client or auth status not ready yet
+  // Show loading screen if state or API client or account status not ready yet
   if (!store.stateLoaded || !isClientReady || loading) {
     return <LoadingScreenContent />
   }
 
-  if (!store.bcscSecure.hasAccount) {
-    // eslint-disable-next-line no-console
-    console.log('RootStack: Rendering OnboardingStack')
-    return <OnboardingStack />
-  }
+  if (!store.bcscSecure.hasAccount) return <OnboardingStack />
 
-  if (!store.authentication.didAuthenticate) {
-    // eslint-disable-next-line no-console
-    console.log('RootStack: Rendering AuthStack')
-    return <AuthStack />
-  }
+  if (!store.authentication.didAuthenticate) return <AuthStack />
 
   if (!store.bcscSecure.verified) {
-    // eslint-disable-next-line no-console
-    console.log('RootStack: Rendering VerifyStack')
-    return <VerifyStack key="verify-stack" />
+    return (
+      <BCSCActivityProvider>
+        <VerifyStack />
+      </BCSCActivityProvider>
+    )
   }
 
-  // eslint-disable-next-line no-console
-  console.log('RootStack: Rendering MainStack')
-
   return (
-    <BCSCAccountProvider>
-      <BCSCIdTokenProvider>
-        <BCSCMainStack />
-      </BCSCIdTokenProvider>
-    </BCSCAccountProvider>
+    <BCSCActivityProvider>
+      <BCSCAccountProvider>
+        <BCSCIdTokenProvider>
+          <BCSCMainStack />
+        </BCSCIdTokenProvider>
+      </BCSCAccountProvider>
+    </BCSCActivityProvider>
   )
 }
 

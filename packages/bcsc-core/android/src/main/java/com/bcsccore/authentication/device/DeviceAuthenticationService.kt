@@ -83,58 +83,61 @@ class DeviceAuthenticationServiceImpl(
         subtitle: String,
         callback: (DeviceAuthenticationResult) -> Unit,
     ) {
-        try {
-            val biometricPrompt =
-                androidx.biometric.BiometricPrompt(
-                    activity,
-                    androidx.core.content.ContextCompat
-                        .getMainExecutor(context),
-                    object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
-                        override fun onAuthenticationError(
-                            errorCode: Int,
-                            errString: CharSequence,
-                        ) {
-                            super.onAuthenticationError(errorCode, errString)
-                            when (errorCode) {
-                                androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
-                                androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                                -> {
-                                    callback(DeviceAuthenticationResult.CANCELLED)
-                                }
+        // BiometricPrompt must be created and used on the main UI thread
+        activity.runOnUiThread {
+            try {
+                val biometricPrompt =
+                    androidx.biometric.BiometricPrompt(
+                        activity,
+                        androidx.core.content.ContextCompat
+                            .getMainExecutor(context),
+                        object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                            override fun onAuthenticationError(
+                                errorCode: Int,
+                                errString: CharSequence,
+                            ) {
+                                super.onAuthenticationError(errorCode, errString)
+                                when (errorCode) {
+                                    androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED,
+                                    androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                                    -> {
+                                        callback(DeviceAuthenticationResult.CANCELLED)
+                                    }
 
-                                else -> {
-                                    callback(DeviceAuthenticationResult.ERROR)
+                                    else -> {
+                                        callback(DeviceAuthenticationResult.ERROR)
+                                    }
                                 }
                             }
-                        }
 
-                        override fun onAuthenticationSucceeded(
-                            result: androidx.biometric.BiometricPrompt.AuthenticationResult,
-                        ) {
-                            super.onAuthenticationSucceeded(result)
-                            callback(DeviceAuthenticationResult.SUCCESS)
-                        }
+                            override fun onAuthenticationSucceeded(
+                                result: androidx.biometric.BiometricPrompt.AuthenticationResult,
+                            ) {
+                                super.onAuthenticationSucceeded(result)
+                                callback(DeviceAuthenticationResult.SUCCESS)
+                            }
 
-                        override fun onAuthenticationFailed() {
-                            super.onAuthenticationFailed()
-                            callback(DeviceAuthenticationResult.FAILED)
-                        }
-                    },
-                )
+                            override fun onAuthenticationFailed() {
+                                super.onAuthenticationFailed()
+                                callback(DeviceAuthenticationResult.FAILED)
+                            }
+                        },
+                    )
 
-            val promptInfo =
-                androidx.biometric.BiometricPrompt.PromptInfo
-                    .Builder()
-                    .setTitle(title)
-                    .setSubtitle(subtitle)
-                    .setAllowedAuthenticators(
-                        BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                            BiometricManager.Authenticators.DEVICE_CREDENTIAL,
-                    ).build()
+                val promptInfo =
+                    androidx.biometric.BiometricPrompt.PromptInfo
+                        .Builder()
+                        .setTitle(title)
+                        .setSubtitle(subtitle)
+                        .setAllowedAuthenticators(
+                            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                                BiometricManager.Authenticators.DEVICE_CREDENTIAL,
+                        ).build()
 
-            biometricPrompt.authenticate(promptInfo)
-        } catch (e: Exception) {
-            callback(DeviceAuthenticationResult.ERROR)
+                biometricPrompt.authenticate(promptInfo)
+            } catch (e: Exception) {
+                callback(DeviceAuthenticationResult.ERROR)
+            }
         }
     }
 

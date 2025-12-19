@@ -1548,19 +1548,6 @@ class BcscCore: NSObject {
     resolve(["locked": isLocked, "remainingTime": max(0, remainingTime)])
   }
 
-  /// Gets the best available account security method based on device capabilities
-  /// - Parameters:
-  ///   - resolve: Returns the recommended security method string
-  ///   - reject: Returns error on failure
-
-  func getBestAvailableAccountSecurityMethod(
-    _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
-  ) {
-    let currentMethod = AccountSecurityMethod.getCurrentPINMethod()
-    resolve(currentMethod.rawValue)
-  }
-
   // MARK: - Device Security Methods
 
   /// Generates a random 6-digit PIN for internal use
@@ -1815,7 +1802,6 @@ class BcscCore: NSObject {
 
   /// Checks if the stored PIN was auto-generated (for device security) or user-created
   /// - Parameters:
-  ///   - accountID: The account identifier
   ///   - resolve: Returns true if PIN was auto-generated, false if user-created
   ///   - reject: Returns error on failure
 
@@ -2280,7 +2266,7 @@ class BcscCore: NSObject {
 
   /**
    * Deletes credential information from native storage.
-   * This effectively marks the account as not verified in v3 compatibility mode.
+   * This effectively marks the account as not verified
    */
   func deleteCredential(
     _ resolve: @escaping RCTPromiseResolveBlock,
@@ -2346,7 +2332,7 @@ class BcscCore: NSObject {
 
   /**
    * Checks if a credential exists without retrieving it.
-   * Useful for quick verification status checks in v3 compatibility mode.
+   * Useful for quick verification status checks
    */
   func hasCredential(
     _ resolve: @escaping RCTPromiseResolveBlock,

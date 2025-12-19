@@ -21,6 +21,13 @@ export enum BiometricType {
   OpticID = 'opticID',
 }
 
+export enum BCSCCardProcess {
+  BCSCPhoto = 'IDIM L3 Remote BCSC Photo Identity Verification',
+  BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+  NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
+  None = 'N/A',
+}
+
 // Key Management
 export const getAllKeys = jest.fn().mockResolvedValue([])
 export const getKeyPair = jest.fn().mockResolvedValue({
@@ -74,7 +81,6 @@ export const canPerformBiometricAuthentication = jest.fn().mockResolvedValue(fal
 export const setAccountSecurityMethod = jest.fn().mockResolvedValue(true)
 export const getAccountSecurityMethod = jest.fn().mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
 export const isAccountLocked = jest.fn().mockResolvedValue({ locked: false, remainingTime: 0 })
-export const getBestAvailableAccountSecurityMethod = jest.fn().mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
 
 // Device Security Methods
 export const setupDeviceSecurity = jest

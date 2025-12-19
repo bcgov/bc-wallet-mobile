@@ -6,7 +6,7 @@ import NativeBcscCoreSpec, {
   type NativeAuthorizationRequest,
 } from './NativeBcscCore';
 export type { NativeAccount, JWK, NativeAuthorizationRequest, NativeAddress } from './NativeBcscCore';
-export { AccountSecurityMethod } from './NativeBcscCore';
+export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
   type: TokenType;
@@ -482,11 +482,6 @@ export const isAccountLocked = async (): Promise<import('./NativeBcscCore').Acco
  * Gets the best available account security method based on device capabilities.
  * @returns A promise that resolves to the recommended security method
  */
-export const getBestAvailableAccountSecurityMethod = async (): Promise<
-  import('./NativeBcscCore').AccountSecurityMethod
-> => {
-  return BcscCore.getBestAvailableAccountSecurityMethod();
-};
 
 // MARK: - Device Security Methods (for biometric/device authentication)
 
@@ -759,7 +754,7 @@ export const deleteEvidenceMetadata = async (): Promise<boolean> => {
  * Credential Management
  *
  * These methods manage the credential object that indicates verified account status.
- * In v3 compatibility mode, the presence of a credential object means the account
+ * Migrating from v3, the presence of a credential object means the account
  * is verified and can access the verified card screen.
  *
  * Storage locations:

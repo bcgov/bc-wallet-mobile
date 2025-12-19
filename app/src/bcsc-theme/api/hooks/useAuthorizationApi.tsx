@@ -1,8 +1,7 @@
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
-import { createDeviceSignedJWT } from 'react-native-bcsc-core'
+import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 

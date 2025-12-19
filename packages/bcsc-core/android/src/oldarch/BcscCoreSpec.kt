@@ -4,7 +4,6 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.Promise
 
-@Suppress("UndefinedClass")
 abstract class BcscCoreSpec internal constructor(
     context: ReactApplicationContext,
 ) : ReactContextBaseJavaModule(context) {
@@ -142,8 +141,6 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun getAccountSecurityMethod(promise: Promise)
 
     abstract fun isAccountLocked(promise: Promise)
-
-    abstract fun getBestAvailableAccountSecurityMethod(promise: Promise)
 
     // Device Security Methods (for biometric/device authentication)
     abstract fun setupDeviceSecurity(promise: Promise)

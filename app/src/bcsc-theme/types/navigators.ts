@@ -1,6 +1,6 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { BCSCCardProcess } from './cards'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
@@ -83,8 +83,10 @@ export enum BCSCScreens {
   MainContactUs = 'BCSCMainContactUs',
   MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
   MainDeveloper = 'BCSCMainDeveloper',
+  MainAutoLock = 'BCSCMainAutoLock',
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
+  VerifyAutoLock = 'BCSCVerifyAutoLock',
   VerifyContactUs = 'BCSCVerifyContactUs',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
@@ -166,6 +168,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
+  [BCSCScreens.VerifyAutoLock]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -199,6 +202,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
+  [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.AccountExpired]: undefined
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined

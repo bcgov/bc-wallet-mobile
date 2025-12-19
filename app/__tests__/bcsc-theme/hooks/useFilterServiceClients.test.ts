@@ -1,10 +1,9 @@
 import * as useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import { useFilterServiceClients } from '@/bcsc-theme/features/services/hooks/useFilterServiceClients'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import * as Bifold from '@bifold/core'
-// import * as navigation from '@react-navigation/native'
 import { renderHook, waitFor } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/api/hooks/useApi')

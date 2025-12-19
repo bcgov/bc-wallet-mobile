@@ -4,9 +4,9 @@ import { renderHook, waitFor } from '@testing-library/react-native'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/EnterBirthdateViewModel'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as Bifold from '@bifold/core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
 const mockUseApi = jest.mocked(useApi)

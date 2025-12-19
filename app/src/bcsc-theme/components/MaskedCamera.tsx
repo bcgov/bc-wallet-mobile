@@ -25,8 +25,6 @@ const MaskedCamera = ({
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  // eslint-disable-next-line no-console
-  console.log('MaskedCamera rendered')
   const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()

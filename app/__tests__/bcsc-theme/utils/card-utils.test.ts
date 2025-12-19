@@ -1,5 +1,6 @@
-import { BCSCCardProcess, BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 describe('Card Utils', () => {
   describe('getCardProcessForCardType', () => {

@@ -30,8 +30,6 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
       accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
       testID={testIdWithKey('IDPhotoInformationTakePhoto')}
       onPress={() => {
-        // eslint-disable-next-line no-console
-        console.log('Navigating to EvidenceCapture')
         navigation.navigate(BCSCScreens.EvidenceCapture, {
           cardType: cardType,
         })

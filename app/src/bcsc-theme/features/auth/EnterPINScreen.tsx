@@ -12,6 +12,7 @@ import {
   useAnimatedComponents,
   useServices,
 } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +20,7 @@ import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
+  isAccountLocked,
   unlockWithDeviceSecurity,
   verifyPIN,
 } from 'react-native-bcsc-core'
@@ -46,6 +48,17 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
 
         // Only attempt device authentication if that is the configured method
         if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
+          // If PIN is the method, check if account is locked and immediately show
+          // lockout screen if so
+          const { locked } = await isAccountLocked()
+          if (locked) {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: BCSCScreens.Lockout }],
+              }),
+            )
+          }
           return
         }
 
@@ -53,18 +66,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const deviceAuthAvailable = await canPerformDeviceAuthentication()
 
         if (deviceAuthAvailable) {
-          try {
-            const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
-            if (success) {
-              await handleSuccessfulAuth(walletKey)
-              logger.info('Device authentication successful')
-            } else {
-              logger.info('Device authentication failed')
-              navigation.goBack()
-            }
-          } catch (error) {
-            const strErr = error instanceof Error ? error.message : String(error)
-            logger.error(`Device authentication error: ${strErr}`)
+          const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
+          if (success) {
+            await handleSuccessfulAuth(walletKey)
+            logger.info('Device authentication successful')
+          } else {
+            logger.info('Device authentication failed - user cancelled or auth failed')
             navigation.goBack()
           }
         } else {
@@ -72,8 +79,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         }
       } catch (error) {
         const strErr = error instanceof Error ? error.message : String(error)
-        logger.error(`Authentication initialization error: ${strErr}`)
-        setErrorMessage('Unable to initialize authentication')
+        logger.error(`Device authentication error: ${strErr}`)
+        navigation.goBack()
       } finally {
         stopLoading()
       }
@@ -100,7 +107,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
           await handleSuccessfulAuth(walletKey)
           logger.info('PIN verified successfully - navigating to main app')
         } else if (locked) {
-          navigation.navigate(BCSCScreens.Lockout)
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: BCSCScreens.Lockout }],
+            }),
+          )
         } else {
           setErrorMessage(message || 'Incorrect PIN')
         }
@@ -123,11 +135,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   }, [])
 
   const handlePINChange = useCallback((pin: string) => {
+    setErrorMessage(undefined)
     setCurrentPIN(pin)
   }, [])
 
   const handlePINComplete = useCallback(
-    (completedPIN: string) => {
+    async (completedPIN: string) => {
       if (completedPIN.length === 6) {
         verifyPINAndContinue(completedPIN)
       }
@@ -142,7 +155,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
         testID={testIdWithKey('Continue')}
-        disabled={loading || currentPIN.length < 6}
+        disabled={loading}
         onPress={onPressContinue}
       >
         {loading && <ButtonLoading />}

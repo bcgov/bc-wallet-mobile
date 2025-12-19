@@ -1,4 +1,5 @@
-import { BCSCCardProcess, BCSCCardType } from '../types/cards'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardType } from '../types/cards'
 
 /**
  * Get the card process for a given card type.

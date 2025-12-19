@@ -1,6 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import {
@@ -17,6 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {

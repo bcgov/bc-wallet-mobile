@@ -26,6 +26,7 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
@@ -126,6 +127,15 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Screens.Settings'),
+            headerBackTestID: testIdWithKey('Back'),
+          }}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainAutoLock}
+          component={AutoLockScreen}
+          options={{
+            headerShown: true,
+            title: t('BCSC.Settings.AutoLockTime'),
             headerBackTestID: testIdWithKey('Back'),
           }}
         />

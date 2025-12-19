@@ -1,7 +1,6 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import {
@@ -20,6 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import DatePicker from 'react-native-date-picker'
 
 type EvidenceCollectionFormState = {

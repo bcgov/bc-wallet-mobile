@@ -1,9 +1,9 @@
-import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import useApi from '../api/hooks/useApi'
+import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import {
   DecodedCodeKind,
@@ -11,6 +11,7 @@ import {
   DriversLicenseMetadata,
   ScanableCode,
 } from '../utils/decoder-strategy/DecoderStrategy'
+import { useSecureActions } from './useSecureActions'
 
 type DriversLicenseMetadataStub = { birthDate: Date }
 
@@ -37,10 +38,10 @@ type DriversLicenseMetadataStub = { birthDate: Date }
  */
 export const useCardScanner = () => {
   const { authorization } = useApi()
-  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scannerEnabledRef = useRef(true)
+  const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
 
   /**
    * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
@@ -56,12 +57,29 @@ export const useCardScanner = () => {
         throw new Error('handleScanComboCard: License birthdate is missing or invalid')
       }
 
-      dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerial] })
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [license.birthDate] })
+      await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
 
       try {
         const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
-        dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
+
+        if (deviceAuth) {
+          await updateUserInfo({
+            email: deviceAuth.verified_email,
+            isEmailVerified: !!deviceAuth.verified_email,
+          })
+
+          await updateDeviceCodes({
+            deviceCode: deviceAuth.device_code,
+            userCode: deviceAuth.user_code,
+            deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+          })
+
+          await updateCardProcess(deviceAuth.process)
+          await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+        } else {
+          logger.warn('Device authorization returned no data')
+        }
+
         navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
       } catch (error) {
         logger.error('Device authorization failed during combo card scan', error as Error)
@@ -72,7 +90,15 @@ export const useCardScanner = () => {
         })
       }
     },
-    [authorization, dispatch, logger, navigation],
+    [
+      authorization,
+      updateUserInfo,
+      updateDeviceCodes,
+      updateCardProcess,
+      updateVerificationOptions,
+      logger,
+      navigation,
+    ],
   )
 
   /**
@@ -83,10 +109,10 @@ export const useCardScanner = () => {
    */
   const handleScanBCServicesCard = useCallback(
     async (bcscSerial: string) => {
-      dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerial] })
+      await updateUserInfo({ serial: bcscSerial })
       navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }] })
     },
-    [dispatch, navigation],
+    [updateUserInfo, navigation],
   )
 
   /**

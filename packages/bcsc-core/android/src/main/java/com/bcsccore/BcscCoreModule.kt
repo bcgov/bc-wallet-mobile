@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.fragment.app.FragmentActivity
 
 // React Native imports
 import com.facebook.react.bridge.Arguments
@@ -136,10 +137,7 @@ class BcscCoreModule(
 
     // Initialize native-compatible storage for rollback support
     private val nativeStorage: NativeCompatibleStorage by lazy {
-        NativeCompatibleStorage(reactApplicationContext).also {
-            // Attempt to migrate from old flat-file format if needed
-            it.migrateFromFlatFileIfNeeded()
-        }
+        NativeCompatibleStorage(reactApplicationContext)
     }
 
     /**
@@ -1730,7 +1728,28 @@ class BcscCoreModule(
         if (accountId != null) {
             try {
                 Log.d(NAME, "removeAccount - Removing data for account ID: $accountId")
+                
+                // TODO (bm): remove old method call once we are happy with native compatible approach
+                // Remove from old flat file format (old v4, leaving here for reference for now)
                 removeAccountFromFile(accountId)
+                
+                // Remove from native-compatible storage
+                try {
+                    val issuerName = nativeStorage.getDefaultIssuerName()
+                    Log.d(NAME, "removeAccount - Attempting to delete native storage for issuer: $issuerName")
+                    
+                    // Delete the entire issuer directory (contains all accounts and their data)
+                    val issuerDir = File(reactApplicationContext.filesDir, issuerName)
+                    if (issuerDir.exists() && issuerDir.isDirectory) {
+                        val deleted = issuerDir.deleteRecursively()
+                        Log.d(NAME, "removeAccount - Native storage deletion result: $deleted")
+                    } else {
+                        Log.d(NAME, "removeAccount - Native storage directory does not exist: ${issuerDir.absolutePath}")
+                    }
+                } catch (e: Exception) {
+                    Log.w(NAME, "removeAccount - Error deleting native storage: ${e.message}", e)
+                }
+                
                 Log.d(NAME, "removeAccount - Successfully removed account data")
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -1981,26 +2000,73 @@ class BcscCoreModule(
 
             val account = existingAccounts.first()
             val accountID = account.uuid
+            val currentTimeMillis = System.currentTimeMillis()
+
+            // Check if account is currently locked
+            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
+            if (remainingPenaltyTime > 0) {
+                val result = Arguments.createMap()
+                result.putBoolean("success", false)
+                result.putBoolean("locked", true)
+                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
+                result.putString("title", "Too Many Attempts")
+                result.putString("message", "Please wait before trying again")
+                Log.d(NAME, "verifyPIN: Account locked, remaining time: ${remainingPenaltyTime}ms")
+                promise.resolve(result)
+                return
+            }
 
             // Validate PIN and get hash if successful
             val validationResult = pinService.validatePINReturningHash(accountID, pin)
 
             val result = Arguments.createMap()
             result.putBoolean("success", validationResult.first)
-            result.putBoolean("locked", false) // Lock tracking not yet implemented
-            result.putInt("remainingTime", 0)
 
             if (validationResult.first) {
+                // Reset penalty on successful verification
+                val updatedAccount = account.copy(
+                    penalty = NativePenalty(penaltyAttempts = 0, penaltyEndTime = 0L)
+                )
+                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
+
+                result.putBoolean("locked", false)
+                result.putInt("remainingTime", 0)
+                
                 // Include the wallet key (hash) on successful verification
                 validationResult.second?.let { hash ->
                     result.putString("walletKey", hash)
                 }
+                Log.d(NAME, "verifyPIN: Success, penalty reset")
             } else {
-                result.putString("title", "Incorrect PIN")
-                result.putString("message", "Please try again")
-            }
+                // Increment failed attempts and calculate penalty
+                val newFailedAttempts = account.penalty.penaltyAttempts + 1
+                val penaltyDuration = calculatePenaltyDuration(newFailedAttempts)
+                val penaltyEndTime = if (penaltyDuration > 0) currentTimeMillis + penaltyDuration else 0L
 
-            Log.d(NAME, "verifyPIN for account $accountID: success=${validationResult.first}")
+                val updatedAccount = account.copy(
+                    penalty = NativePenalty(
+                        penaltyAttempts = newFailedAttempts,
+                        penaltyEndTime = penaltyEndTime
+                    )
+                )
+                nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
+
+                val (title, message) = getPenaltyMessage(newFailedAttempts, penaltyDuration)
+                
+                if (penaltyDuration > 0) {
+                    result.putBoolean("locked", true)
+                    result.putInt("remainingTime", (penaltyDuration / 1000).toInt())
+                } else {
+                    result.putBoolean("locked", false)
+                    result.putInt("remainingTime", 0)
+                }
+                
+                result.putString("title", title)
+                result.putString("message", message)
+                
+                Log.d(NAME, "verifyPIN: Failed, attempts=$newFailedAttempts, penalty=${penaltyDuration}ms")
+            }
+                
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "verifyPIN error: ${e.message}", e)
@@ -2291,49 +2357,41 @@ class BcscCoreModule(
      * Checks if the current account is currently locked due to failed PIN attempts.
      * Matches TypeScript: isAccountLocked(): Promise<AccountLockStatus>
      * Returns: { locked: boolean, remainingTime: number }
-     * Note: Lock tracking not yet fully implemented - returns unlocked status
      */
     @ReactMethod
     override fun isAccountLocked(promise: Promise) {
         try {
-            // Note: Full lock tracking would need to be implemented in NativeCompatiblePinStorage
-            // For now, return unlocked status
-            val result = Arguments.createMap()
-            result.putBoolean("locked", false)
-            result.putInt("remainingTime", 0)
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val existingAccounts = nativeStorage.readAccounts(issuerName)
 
-            Log.d(NAME, "isAccountLocked: locked=false (tracking not yet implemented)")
+            if (existingAccounts == null || existingAccounts.isEmpty()) {
+                // No account means no lock
+                val result = Arguments.createMap()
+                result.putBoolean("locked", false)
+                result.putInt("remainingTime", 0)
+                promise.resolve(result)
+                return
+            }
+
+            val account = existingAccounts.first()
+            val currentTimeMillis = System.currentTimeMillis()
+            val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
+
+            val result = Arguments.createMap()
+            if (remainingPenaltyTime > 0) {
+                result.putBoolean("locked", true)
+                result.putInt("remainingTime", (remainingPenaltyTime / 1000).toInt()) // Convert to seconds
+                Log.d(NAME, "isAccountLocked: locked=true, remainingTime=${remainingPenaltyTime}ms")
+            } else {
+                result.putBoolean("locked", false)
+                result.putInt("remainingTime", 0)
+                Log.d(NAME, "isAccountLocked: locked=false")
+            }
+
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "isAccountLocked error: ${e.message}", e)
             promise.reject("E_IS_ACCOUNT_LOCKED_ERROR", "Error checking account lock status: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Gets the best available account security method based on device capabilities.
-     * Matches TypeScript: getBestAvailableAccountSecurityMethod(): Promise<AccountSecurityMethod>
-     */
-    @ReactMethod
-    override fun getBestAvailableAccountSecurityMethod(promise: Promise) {
-        try {
-            val hasDeviceAuth = deviceAuthenticationService.canPerformDeviceAuthentication()
-            val securityMethod =
-                if (hasDeviceAuth) {
-                    "app_pin_has_device_authn"
-                } else {
-                    "app_pin_no_device_authn"
-                }
-
-            Log.d(NAME, "getBestAvailableAccountSecurityMethod: $securityMethod (hasDeviceAuth=$hasDeviceAuth)")
-            promise.resolve(securityMethod)
-        } catch (e: Exception) {
-            Log.e(NAME, "getBestAvailableAccountSecurityMethod error: ${e.message}", e)
-            promise.reject(
-                "E_GET_BEST_AVAILABLE_SECURITY_ERROR",
-                "Error getting best available account security method: ${e.message}",
-                e,
-            )
         }
     }
 
@@ -2407,12 +2465,12 @@ class BcscCoreModule(
             val accountID = account.uuid
 
             val activity = currentActivity
-            if (activity == null || activity !is androidx.fragment.app.FragmentActivity) {
+            if (activity == null || activity !is FragmentActivity) {
                 promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return
             }
 
-            // Perform device authentication first
+            // Perform device authentication
             val title = reason ?: "Authentication Required"
             val subtitle = "Please authenticate to unlock"
 
@@ -2420,29 +2478,21 @@ class BcscCoreModule(
                 activity,
                 title,
                 subtitle,
-            ) { authResult ->
+            ) { authResult: DeviceAuthenticationResult ->
                 when (authResult) {
                     DeviceAuthenticationResult.SUCCESS -> {
                         try {
                             // Get the stored PIN hash
                             val hashResult = pinService.getPINHash(accountID)
+                            
                             if (hashResult != null) {
                                 val result = Arguments.createMap()
                                 result.putBoolean("success", true)
                                 result.putString("walletKey", hashResult.first)
-                                Log.d(
-                                    NAME,
-                                    "unlockWithDeviceSecurity: Successfully authenticated and retrieved hash for account $accountID",
-                                )
                                 promise.resolve(result)
                             } else {
                                 // No PIN hash found - this is a v3 migration scenario
                                 // User had device security but no random PIN. Generate one now.
-                                Log.d(
-                                    NAME,
-                                    "unlockWithDeviceSecurity: No PIN found, migrating v3 user for account $accountID",
-                                )
-
                                 val secureRandom = java.security.SecureRandom()
                                 val pinDigits = StringBuilder()
                                 for (i in 0 until 6) {
@@ -2456,14 +2506,9 @@ class BcscCoreModule(
                                 result.putBoolean("success", true)
                                 result.putString("walletKey", hash)
                                 result.putBoolean("migrated", true)
-                                Log.d(
-                                    NAME,
-                                    "unlockWithDeviceSecurity: Successfully migrated v3 user for account $accountID",
-                                )
                                 promise.resolve(result)
                             }
                         } catch (e: Exception) {
-                            Log.e(NAME, "unlockWithDeviceSecurity error: ${e.message}", e)
                             promise.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error during unlock: ${e.message}", e)
                         }
                     }
@@ -2471,7 +2516,6 @@ class BcscCoreModule(
                     DeviceAuthenticationResult.CANCELLED -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        Log.d(NAME, "unlockWithDeviceSecurity: Authentication cancelled for account $accountID")
                         promise.resolve(result)
                     }
 
@@ -2480,7 +2524,6 @@ class BcscCoreModule(
                     -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        Log.e(NAME, "unlockWithDeviceSecurity: Authentication failed for account $accountID")
                         promise.resolve(result)
                     }
                 }
@@ -2493,16 +2536,23 @@ class BcscCoreModule(
 
     /**
      * Checks if the stored PIN was auto-generated (for device security) or user-created.
-     * Matches TypeScript: isPINAutoGenerated(accountID: string): Promise<boolean>
+     * Matches TypeScript: isPINAutoGenerated(): Promise<boolean>
      */
     @ReactMethod
     override fun isPINAutoGenerated(
-        accountID: String,
         promise: Promise,
     ) {
         try {
-            if (accountID.isEmpty()) {
-                promise.reject("E_INVALID_PARAMETERS", "AccountID cannot be empty")
+            // Get the account to obtain the account ID
+            val account = getAccountSync()
+            if (account == null) {
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
+                return
+            }
+
+            val accountID = account.getString("id")
+            if (accountID.isNullOrEmpty()) {
+                promise.reject("E_INVALID_ACCOUNT", "Account ID is null or empty")
                 return
             }
 
@@ -2843,7 +2893,7 @@ class BcscCoreModule(
             }
 
             // Read from account-specific SharedPreferences (v3 compatible)
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
             val result = Arguments.createMap()
@@ -2894,7 +2944,7 @@ class BcscCoreModule(
             }
 
             // Write to account-specific SharedPreferences (v3 compatible)
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             val editor = prefs.edit()
 
@@ -2954,7 +3004,7 @@ class BcscCoreModule(
             }
 
             // Clear account-specific SharedPreferences
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             prefs.edit().clear().apply()
 
@@ -2993,7 +3043,7 @@ class BcscCoreModule(
             }
 
             // Read from account-specific SharedPreferences
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             val evidenceJson = prefs.getString("evidence_metadata", null)
 
@@ -3069,7 +3119,7 @@ class BcscCoreModule(
             }
 
             // Write to account-specific SharedPreferences
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             prefs.edit().putString("evidence_metadata", jsonArray.toString()).apply()
 
@@ -3103,7 +3153,7 @@ class BcscCoreModule(
             }
 
             // Remove from account-specific SharedPreferences
-            val prefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
             prefs.edit().remove("evidence_metadata").apply()
 
@@ -3130,7 +3180,7 @@ class BcscCoreModule(
         try {
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    "ca.bc.gov.id.servicescard",
+                    reactApplicationContext.packageName,
                     Context.MODE_PRIVATE,
                 )
 
@@ -3194,7 +3244,7 @@ class BcscCoreModule(
         try {
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    "ca.bc.gov.id.servicescard",
+                    reactApplicationContext.packageName,
                     Context.MODE_PRIVATE,
                 )
 
@@ -3256,7 +3306,7 @@ class BcscCoreModule(
 
     /**
      * Deletes credential information from native storage.
-     * This effectively marks the account as not verified in v3 compatibility mode.
+     * This effectively marks the account as not verified
      * Matches TypeScript: deleteCredential(): Promise<boolean>
      */
     @ReactMethod
@@ -3264,7 +3314,7 @@ class BcscCoreModule(
         try {
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    "ca.bc.gov.id.servicescard",
+                    reactApplicationContext.packageName,
                     Context.MODE_PRIVATE,
                 )
 
@@ -3308,7 +3358,7 @@ class BcscCoreModule(
 
     /**
      * Checks if a credential exists without retrieving it.
-     * Useful for quick verification status checks in v3 compatibility mode.
+     * Useful for quick verification status checks
      * Matches TypeScript: hasCredential(): Promise<boolean>
      */
     @ReactMethod
@@ -3316,7 +3366,7 @@ class BcscCoreModule(
         try {
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    "ca.bc.gov.id.servicescard",
+                    reactApplicationContext.packageName,
                     Context.MODE_PRIVATE,
                 )
 
@@ -3543,6 +3593,74 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "showLocalNotification - Error displaying notification: ${e.message}", e)
             promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
+        }
+    }
+
+    // MARK: - PIN Penalty Helper Methods
+
+    /**
+     * Calculates remaining penalty time in milliseconds.
+     * Returns 0 if no penalty is active.
+     */
+    private fun getRemainingPenaltyTime(penalty: NativePenalty, currentTimeMillis: Long): Long {
+        if (penalty.penaltyEndTime <= 0) {
+            return 0L
+        }
+        val remaining = penalty.penaltyEndTime - currentTimeMillis
+        return if (remaining > 0) remaining else 0L
+    }
+
+    /**
+     * Calculates penalty duration in milliseconds based on failed attempt count.
+     * Matches iOS penalty schedule:
+     * - 5 attempts: 30 seconds
+     * - 6 attempts: 1 minute
+     * - 7 attempts: 5 minutes
+     * - 8+ attempts (every 3): 15 minutes
+     */
+    private fun calculatePenaltyDuration(failedAttempts: Int): Long {
+        return when (failedAttempts) {
+            5 -> 30_000L  // 30 seconds
+            6 -> 60_000L  // 1 minute
+            7 -> 300_000L // 5 minutes
+            else -> {
+                // For 8+ attempts, apply 15 minute penalty every 3 attempts
+                if (failedAttempts >= 8 && failedAttempts % 3 == 0) {
+                    900_000L // 15 minutes
+                } else {
+                    0L // No penalty
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets appropriate title and message for penalty state.
+     * Returns pair of (title, message).
+     */
+    private fun getPenaltyMessage(failedAttempts: Int, penaltyDuration: Long): Pair<String, String> {
+        return if (penaltyDuration > 0) {
+            Pair("Too Many Attempts", "Please wait before trying again")
+        } else {
+            // Calculate remaining attempts until next penalty
+            val attemptsUntilPenalty = when {
+                failedAttempts < 5 -> 5 - failedAttempts
+                failedAttempts < 6 -> 6 - failedAttempts
+                failedAttempts < 7 -> 7 - failedAttempts
+                else -> {
+                    // After 7, penalty every 3 attempts
+                    val nextPenaltyAttempt = ((failedAttempts / 3) + 1) * 3
+                    nextPenaltyAttempt - failedAttempts
+                }
+            }
+            
+            val message = if (attemptsUntilPenalty == 1) {
+                "Enter your PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app."
+            } else {
+                "Incorrect PIN"
+            }
+            
+            Pair("Incorrect PIN", message)
         }
     }
 }

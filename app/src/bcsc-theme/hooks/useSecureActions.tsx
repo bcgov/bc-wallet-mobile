@@ -1,8 +1,9 @@
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import type { AccountFlags, EvidenceMetadata, NativeAuthorizationRequest } from 'react-native-bcsc-core'
 import {
+  BCSCCardProcess,
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
@@ -299,7 +300,7 @@ export const useSecureActions = () => {
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
   const updateCardProcess = useCallback(
-    async (cardProcess: string | undefined) => {
+    async (cardProcess: BCSCCardProcess | undefined) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_CARD_PROCESS,
         payload: [cardProcess],
@@ -566,7 +567,6 @@ export const useSecureActions = () => {
       logger.info('Hydrating secure state from native storage...')
 
       // Load all data from native storage in parallel
-      logger.info(`Getting tokens - Refresh type: ${TokenType.Refresh}, Registration type: ${TokenType.Registration}`)
       const [authRequest, refreshTokenObj, registrationAccessTokenObj, accessTokenObj, accountFlags, evidenceData] =
         await Promise.all([
           getAuthorizationRequest(),
@@ -623,7 +623,6 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
-        // Flatten account flags
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress,
         temporaryEmailId: accountFlags.temporaryEmailId,
@@ -655,6 +654,21 @@ export const useSecureActions = () => {
       type: BCDispatchAction.CLEAR_SECURE_STATE,
     })
   }, [logger, dispatch])
+
+  /**
+   * Logs out the user by clearing secure state from memory and marking as not authenticated.
+   * Does NOT delete persisted data from native storage.
+   */
+  const logout = useCallback(() => {
+    logger.info('Logging out user - clearing secure state and marking as not authenticated')
+    clearSecureState()
+    dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
+    dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+    dispatch({
+      type: DispatchAction.DID_AUTHENTICATE,
+      payload: [false],
+    })
+  }, [logger, clearSecureState, dispatch])
 
   /**
    * Completely removes sensitive data from native storage.
@@ -712,6 +726,7 @@ export const useSecureActions = () => {
     // Hydration & clearing
     hydrateSecureState,
     clearSecureState,
+    logout,
     deleteSecureData,
   }
 }

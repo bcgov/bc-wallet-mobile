@@ -1,17 +1,9 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import {
-  LockoutReason,
-  ThemedText,
-  TOKENS,
-  useAuth,
-  useDeveloperMode,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
@@ -26,6 +18,7 @@ interface SettingsContentProps {
   onPressDeveloperMode: () => void
   onEditNickname?: () => void
   onForgetAllPairings?: () => void
+  onAutoLock?: () => void
 }
 
 /**
@@ -39,11 +32,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onPressDeveloperMode,
   onEditNickname,
   onForgetAllPairings,
+  onAutoLock,
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const auth = useAuth()
+  const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -136,15 +130,14 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        {store.bcscSecure.verified ? (
+        {store.authentication.didAuthenticate ? (
           <>
             <View style={styles.sectionContainer}>
               <SettingsActionCard
                 title={t('BCSC.Settings.SignOut')}
                 startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
                 onPress={() => {
-                  auth.lockOutUser(LockoutReason.Logout)
-                  dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+                  logout()
                 }}
               />
             </View>
@@ -166,15 +159,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 title={t('BCSC.Settings.ChangePIN')}
                 onPress={onPressActionTodo}
               />
-              {onEditNickname ? (
+              {store.bcscSecure.verified && onEditNickname ? (
                 <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
               ) : null}
-              {/* TODO (MD + BM): Implement actions for these two cards */}
-              <SettingsActionCard
-                title={t('BCSC.Settings.AutoLockTime')}
-                onPress={onPressActionTodo}
-                endAdornmentText={`${store.preferences.autoLockTime} min`}
-              />
+              {onAutoLock ? (
+                <SettingsActionCard
+                  title={t('BCSC.Settings.AutoLockTime')}
+                  onPress={onAutoLock}
+                  endAdornmentText={`${store.preferences.autoLockTime} min`}
+                />
+              ) : null}
               {/* TODO: (AR) Keeping this hidden for phase 1 */}
               {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
               {onForgetAllPairings ? (

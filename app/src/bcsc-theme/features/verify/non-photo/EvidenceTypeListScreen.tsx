@@ -2,7 +2,6 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -10,6 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AdditionalIdentificationRequired>

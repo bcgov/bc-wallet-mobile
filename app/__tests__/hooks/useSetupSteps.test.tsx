@@ -1,7 +1,7 @@
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { initialState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 // Mock react-i18next
 jest.mock('react-i18next', () => ({

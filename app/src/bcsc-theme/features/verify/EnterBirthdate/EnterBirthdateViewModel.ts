@@ -5,9 +5,9 @@ import { useCallback } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * EnterBirthdateViewmodel - Handles business logic for authorizing a device based on manually entered CSN + birthdate

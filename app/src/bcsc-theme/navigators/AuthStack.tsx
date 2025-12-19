@@ -53,6 +53,7 @@ const AuthStack = (): JSX.Element => {
         component={LockoutScreen}
         options={{
           title: '',
+          headerLeft: () => null,
         }}
       />
       <Stack.Screen

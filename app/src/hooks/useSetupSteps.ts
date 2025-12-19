@@ -1,8 +1,8 @@
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { AdditionalEvidenceData, BCState } from '@/store'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * Validates that an evidence item is fully completed.

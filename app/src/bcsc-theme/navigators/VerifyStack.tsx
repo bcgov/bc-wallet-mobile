@@ -48,6 +48,7 @@ import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
@@ -55,8 +56,6 @@ import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthda
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
 const VerifyStack = () => {
-  // eslint-disable-next-line no-console
-  console.log('VerifyStack rendered')
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
@@ -253,6 +252,14 @@ const VerifyStack = () => {
           title: t('BCSC.Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VerifyAutoLock}
+        component={AutoLockScreen}
+        options={{
+          headerShown: true,
+          title: t('BCSC.Settings.AutoLockTime'),
         }}
       />
 

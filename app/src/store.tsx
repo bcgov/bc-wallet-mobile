@@ -7,7 +7,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 
-import { BCSCCardProcess } from '@bcsc-theme/types/cards'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'

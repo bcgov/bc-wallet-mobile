@@ -2,7 +2,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
 
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EnterEmailScreen from '../../src/bcsc-theme/features/verify/email/EnterEmailScreen'

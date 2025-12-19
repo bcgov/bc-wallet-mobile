@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 interface FilterServiceClientsResult {
   serviceClients: ClientMetadata[]
