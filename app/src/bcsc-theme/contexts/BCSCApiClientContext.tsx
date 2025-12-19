@@ -30,7 +30,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
-  const [isClientReady, setIsClientReady] = useState(false)
+  const [isClientReady, setIsClientReady] = useState(Boolean(BCSC_API_CLIENT_SINGLETON))
   const [error, setError] = useState<string | null>(null)
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -48,7 +48,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const configureClient = async () => {
-      setIsClientReady(false)
+      setIsClientReady(Boolean(BCSC_API_CLIENT_SINGLETON))
       setError(null)
 
       let newClient = BCSC_API_CLIENT_SINGLETON
