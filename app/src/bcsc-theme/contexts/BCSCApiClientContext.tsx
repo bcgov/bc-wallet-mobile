@@ -49,7 +49,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     const configureClient = async () => {
       setError(null)
 
-      // Use the singleton as reference to prevent infinite loops
+      // Use the singleton as reference to prevent infinite re-renders
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
@@ -89,9 +89,9 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const contextValue = useMemo(
     () => ({
-      client,
+      client: client,
       isClientReady: Boolean(client),
-      error,
+      error: error,
     }),
     [client, error]
   )
