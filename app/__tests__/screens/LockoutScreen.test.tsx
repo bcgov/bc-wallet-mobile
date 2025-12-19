@@ -2,9 +2,9 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
+import * as BcscCore from 'react-native-bcsc-core'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import * as BcscCore from 'react-native-bcsc-core'
 
 describe('LockoutScreen', () => {
   let mockNavigation: any
@@ -13,7 +13,7 @@ describe('LockoutScreen', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
-    
+
     // Mock isAccountLocked to return locked state with remaining time
     jest.spyOn(BcscCore, 'isAccountLocked').mockResolvedValue({
       locked: true,

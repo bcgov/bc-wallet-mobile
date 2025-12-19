@@ -1728,28 +1728,31 @@ class BcscCoreModule(
         if (accountId != null) {
             try {
                 Log.d(NAME, "removeAccount - Removing data for account ID: $accountId")
-                
+
                 // TODO (bm): remove old method call once we are happy with native compatible approach
                 // Remove from old flat file format (old v4, leaving here for reference for now)
                 removeAccountFromFile(accountId)
-                
+
                 // Remove from native-compatible storage
                 try {
                     val issuerName = nativeStorage.getDefaultIssuerName()
                     Log.d(NAME, "removeAccount - Attempting to delete native storage for issuer: $issuerName")
-                    
+
                     // Delete the entire issuer directory (contains all accounts and their data)
                     val issuerDir = File(reactApplicationContext.filesDir, issuerName)
                     if (issuerDir.exists() && issuerDir.isDirectory) {
                         val deleted = issuerDir.deleteRecursively()
                         Log.d(NAME, "removeAccount - Native storage deletion result: $deleted")
                     } else {
-                        Log.d(NAME, "removeAccount - Native storage directory does not exist: ${issuerDir.absolutePath}")
+                        Log.d(
+                            NAME,
+                            "removeAccount - Native storage directory does not exist: ${issuerDir.absolutePath}",
+                        )
                     }
                 } catch (e: Exception) {
                     Log.w(NAME, "removeAccount - Error deleting native storage: ${e.message}", e)
                 }
-                
+
                 Log.d(NAME, "removeAccount - Successfully removed account data")
                 promise.resolve(null)
             } catch (e: Exception) {
@@ -2024,14 +2027,15 @@ class BcscCoreModule(
 
             if (validationResult.first) {
                 // Reset penalty on successful verification
-                val updatedAccount = account.copy(
-                    penalty = NativePenalty(penaltyAttempts = 0, penaltyEndTime = 0L)
-                )
+                val updatedAccount =
+                    account.copy(
+                        penalty = NativePenalty(penaltyAttempts = 0, penaltyEndTime = 0L),
+                    )
                 nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
 
                 result.putBoolean("locked", false)
                 result.putInt("remainingTime", 0)
-                
+
                 // Include the wallet key (hash) on successful verification
                 validationResult.second?.let { hash ->
                     result.putString("walletKey", hash)
@@ -2043,16 +2047,18 @@ class BcscCoreModule(
                 val penaltyDuration = calculatePenaltyDuration(newFailedAttempts)
                 val penaltyEndTime = if (penaltyDuration > 0) currentTimeMillis + penaltyDuration else 0L
 
-                val updatedAccount = account.copy(
-                    penalty = NativePenalty(
-                        penaltyAttempts = newFailedAttempts,
-                        penaltyEndTime = penaltyEndTime
+                val updatedAccount =
+                    account.copy(
+                        penalty =
+                            NativePenalty(
+                                penaltyAttempts = newFailedAttempts,
+                                penaltyEndTime = penaltyEndTime,
+                            ),
                     )
-                )
                 nativeStorage.saveAccounts(listOf(updatedAccount), issuerName)
 
                 val (title, message) = getPenaltyMessage(newFailedAttempts, penaltyDuration)
-                
+
                 if (penaltyDuration > 0) {
                     result.putBoolean("locked", true)
                     result.putInt("remainingTime", (penaltyDuration / 1000).toInt())
@@ -2060,13 +2066,13 @@ class BcscCoreModule(
                     result.putBoolean("locked", false)
                     result.putInt("remainingTime", 0)
                 }
-                
+
                 result.putString("title", title)
                 result.putString("message", message)
-                
+
                 Log.d(NAME, "verifyPIN: Failed, attempts=$newFailedAttempts, penalty=${penaltyDuration}ms")
             }
-                
+
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "verifyPIN error: ${e.message}", e)
@@ -2484,7 +2490,7 @@ class BcscCoreModule(
                         try {
                             // Get the stored PIN hash
                             val hashResult = pinService.getPINHash(accountID)
-                            
+
                             if (hashResult != null) {
                                 val result = Arguments.createMap()
                                 result.putBoolean("success", true)
@@ -2539,9 +2545,7 @@ class BcscCoreModule(
      * Matches TypeScript: isPINAutoGenerated(): Promise<boolean>
      */
     @ReactMethod
-    override fun isPINAutoGenerated(
-        promise: Promise,
-    ) {
+    override fun isPINAutoGenerated(promise: Promise) {
         try {
             // Get the account to obtain the account ID
             val account = getAccountSync()
@@ -3602,7 +3606,10 @@ class BcscCoreModule(
      * Calculates remaining penalty time in milliseconds.
      * Returns 0 if no penalty is active.
      */
-    private fun getRemainingPenaltyTime(penalty: NativePenalty, currentTimeMillis: Long): Long {
+    private fun getRemainingPenaltyTime(
+        penalty: NativePenalty,
+        currentTimeMillis: Long,
+    ): Long {
         if (penalty.penaltyEndTime <= 0) {
             return 0L
         }
@@ -3618,11 +3625,23 @@ class BcscCoreModule(
      * - 7 attempts: 5 minutes
      * - 8+ attempts (every 3): 15 minutes
      */
-    private fun calculatePenaltyDuration(failedAttempts: Int): Long {
-        return when (failedAttempts) {
-            5 -> 30_000L  // 30 seconds
-            6 -> 60_000L  // 1 minute
-            7 -> 300_000L // 5 minutes
+    private fun calculatePenaltyDuration(failedAttempts: Int): Long =
+        when (failedAttempts) {
+            5 -> {
+                30_000L
+            }
+
+            // 30 seconds
+            6 -> {
+                60_000L
+            }
+
+            // 1 minute
+            7 -> {
+                300_000L
+            }
+
+            // 5 minutes
             else -> {
                 // For 8+ attempts, apply 15 minute penalty every 3 attempts
                 if (failedAttempts >= 8 && failedAttempts % 3 == 0) {
@@ -3632,35 +3651,47 @@ class BcscCoreModule(
                 }
             }
         }
-    }
 
     /**
      * Gets appropriate title and message for penalty state.
      * Returns pair of (title, message).
      */
-    private fun getPenaltyMessage(failedAttempts: Int, penaltyDuration: Long): Pair<String, String> {
-        return if (penaltyDuration > 0) {
+    private fun getPenaltyMessage(
+        failedAttempts: Int,
+        penaltyDuration: Long,
+    ): Pair<String, String> =
+        if (penaltyDuration > 0) {
             Pair("Too Many Attempts", "Please wait before trying again")
         } else {
             // Calculate remaining attempts until next penalty
-            val attemptsUntilPenalty = when {
-                failedAttempts < 5 -> 5 - failedAttempts
-                failedAttempts < 6 -> 6 - failedAttempts
-                failedAttempts < 7 -> 7 - failedAttempts
-                else -> {
-                    // After 7, penalty every 3 attempts
-                    val nextPenaltyAttempt = ((failedAttempts / 3) + 1) * 3
-                    nextPenaltyAttempt - failedAttempts
+            val attemptsUntilPenalty =
+                when {
+                    failedAttempts < 5 -> {
+                        5 - failedAttempts
+                    }
+
+                    failedAttempts < 6 -> {
+                        6 - failedAttempts
+                    }
+
+                    failedAttempts < 7 -> {
+                        7 - failedAttempts
+                    }
+
+                    else -> {
+                        // After 7, penalty every 3 attempts
+                        val nextPenaltyAttempt = ((failedAttempts / 3) + 1) * 3
+                        nextPenaltyAttempt - failedAttempts
+                    }
                 }
-            }
-            
-            val message = if (attemptsUntilPenalty == 1) {
-                "Enter your PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app."
-            } else {
-                "Incorrect PIN"
-            }
-            
+
+            val message =
+                if (attemptsUntilPenalty == 1) {
+                    "Enter your PIN. For security, if you enter another incorrect PIN, it will temporarily lock the app."
+                } else {
+                    "Incorrect PIN"
+                }
+
             Pair("Incorrect PIN", message)
         }
-    }
 }
