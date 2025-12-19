@@ -133,4 +133,6 @@ RCT_EXTERN_METHOD(deleteCredential : (RCTPromiseResolveBlock)resolve reject : (R
 
 RCT_EXTERN_METHOD(hasCredential : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString *)
+                      message resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 @end

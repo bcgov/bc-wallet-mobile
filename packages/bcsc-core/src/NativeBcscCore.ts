@@ -364,6 +364,7 @@ export interface Spec extends TurboModule {
    * @returns true if credential exists, false otherwise
    */
   hasCredential(): Promise<boolean>;
+  showLocalNotification(title: string, message: string): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');
