@@ -9,7 +9,6 @@
   },
   "typescript.tsdk": "node_modules/typescript/lib",
 
-  // Default formatter settings
   "editor.defaultFormatter": "esbenp.prettier-vscode",
 
   // TypeScript/JavaScript - use Prettier
@@ -46,11 +45,9 @@
   "clang-format.style": "file",
   "clang-format.fallbackStyle": "LLVM",
 
-  // Kotlin - use ktlint for formatting
-  // use mathiasfrohlich.kotlin for syntax highlighting only
+  // Kotlin - use ktlint
   "[kotlin]": {
-    "editor.defaultFormatter": "shengchen.vscode-ktlint",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "cstef.kotlin-formatter"
   },
   "ktlint.enable": true,
 

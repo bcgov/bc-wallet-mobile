@@ -66,5 +66,9 @@
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"
+  },
+  "devDependencies": {
+    "prettier": "~3.4.2",
+    "prettier-plugin-organize-imports": "^4.3.0"
   }
 }

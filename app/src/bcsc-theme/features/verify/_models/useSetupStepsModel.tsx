@@ -2,7 +2,6 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
-import { BCSCCardProcess } from '@bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -134,7 +133,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       },
 
       email: () => {
-        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcscSecure.cardProcess! as BCSCCardProcess })
+        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcscSecure.cardProcess! })
       },
 
       verify: () => {

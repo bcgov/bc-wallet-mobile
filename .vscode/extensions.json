@@ -1,23 +1,20 @@
 {
   "recommendations": [
     // ===== JavaScript/TypeScript =====
-    "dbaeumer.vscode-eslint",           // ESLint integration
-    "esbenp.prettier-vscode",           // Prettier formatter
-    
-    // ===== Swift =====
-    "vknabel.vscode-swiftformat",       // SwiftFormat integration
-    
-    // ===== Objective-C / C =====
-    "xaver.clang-format",               // clang-format integration
-    
-    // ===== Kotlin =====
-    "mathiasfrohlich.kotlin",           // Kotlin syntax highlighting
-    "cstef.kotlin-formatter",           // ktlint format integration
+    "dbaeumer.vscode-eslint", // ESLint integration
+    "esbenp.prettier-vscode", // Prettier formatter
 
-    // ===== Ruby =====
-    "shopify.ruby-lsp",                 // Ruby formatting & language support
-    
+    // ===== Swift =====
+    "vknabel.vscode-swiftformat", // SwiftFormat integration
+
+    // ===== Objective-C / C =====
+    "xaver.clang-format", // clang-format integration
+
+    // ===== Kotlin =====
+    "mathiasfrohlich.kotlin", // Kotlin syntax highlighting
+    "cstef.kotlin-formatter", // ktlint formatting (uses ktlint)
+
     // ===== YAML =====
-    "redhat.vscode-yaml",               // YAML language support
+    "redhat.vscode-yaml" // YAML language support
   ]
 }

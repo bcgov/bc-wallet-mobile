@@ -50,8 +50,6 @@ describe('useSetupStepsModel', () => {
       bookmarks: [],
       bannerMessages: [],
       analyticsOptIn: true,
-      cardType: BCSCCardType.Combined,
-      cardProcess: 'combined',
     },
     bcscSecure: {
       isHydrated: true,
@@ -59,6 +57,7 @@ describe('useSetupStepsModel', () => {
       userCode: 'test-user-code',
       verificationRequestId: 'test-verification-id',
       additionalEvidenceData: [],
+      cardProcess: 'combined',
     },
   }
 

@@ -181,7 +181,6 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
 
-      // QUESTION (MD): What is the correct value for expiresAt?
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
       await updateDeviceCodes({
         deviceCode: deviceAuth.device_code,

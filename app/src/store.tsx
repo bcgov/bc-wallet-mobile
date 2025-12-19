@@ -7,6 +7,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 
+import { BCSCCardProcess } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -108,7 +109,7 @@ export interface BCSCSecureState {
   /** Expiration time for device code */
   deviceCodeExpiresAt?: Date
   /** Identification process type (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification') */
-  cardProcess?: string
+  cardProcess?: BCSCCardProcess
   /** User's birthdate from BC Services Card - used during verification */
   birthdate?: Date
   /** BC Services Card serial number */
@@ -140,7 +141,7 @@ export interface BCSCSecureState {
 
   // === from Evidence Data ===
   /** Additional evidence data for non-BCSC verification */
-  additionalEvidenceData?: AdditionalEvidenceData[]
+  additionalEvidenceData: AdditionalEvidenceData[] // initialized as an empty array to prevent ?.length usage
 
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
@@ -150,6 +151,7 @@ export interface BCSCSecureState {
 /** Initial secure state - unhyrdrated with no data */
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
+  additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
 }
 
 export interface AdditionalEvidenceData {
@@ -196,7 +198,6 @@ enum BCSCDispatchAction {
   SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
-
   CLEAR_BCSC = 'bcsc/clearBCSC',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
