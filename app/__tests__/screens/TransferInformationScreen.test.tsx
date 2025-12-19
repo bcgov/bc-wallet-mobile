@@ -18,7 +18,7 @@ describe('TransferInformation', () => {
     const tree = render(
       <BasicAppContext>
         <TransferInformationScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

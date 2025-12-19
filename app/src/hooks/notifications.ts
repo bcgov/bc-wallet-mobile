@@ -63,7 +63,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
     const credentials = [...credsDone, ...credsReceived]
     const credentialDefinitionIDs = credentials.map(
-      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string,
+      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
     const invitationDate = new Date()
     const custom =
@@ -79,7 +79,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
       )
     })
     const notif = [...messagesToShow, ...offers, ...proofs, ...revoked].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
     const notificationsWithCustom = [...custom, ...notif]
@@ -101,7 +101,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
           value: proof,
           include: !isAttestation,
         }
-      }),
+      })
     ).then((val) => setNonAttestationProofs(val.filter((v) => v.include).map((data) => data.value)))
   }, [proofsRequested, proofsDone, agent])
 

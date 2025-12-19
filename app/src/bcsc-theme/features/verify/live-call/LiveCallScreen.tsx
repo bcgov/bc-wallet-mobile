@@ -54,7 +54,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
       const { refresh_token } = await token.checkDeviceCodeStatus(
         store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode,
+        store.bcscSecure.userCode
       )
 
       if (refresh_token) {
@@ -65,7 +65,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.VerificationSuccess }],
-        }),
+        })
       )
     } catch {
       // TODO (bm): as of Sept 10th 2025, the API throws if the user is not
@@ -80,7 +80,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             { name: BCSCScreens.VerificationMethodSelection },
             { name: BCSCScreens.VerifyNotComplete },
           ],
-        }),
+        })
       )
     }
   }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, updateTokens, navigation, logger, t])

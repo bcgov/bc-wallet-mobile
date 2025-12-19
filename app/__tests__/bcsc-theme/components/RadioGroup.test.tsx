@@ -30,7 +30,7 @@ describe('RadioGroup Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       waitFor(() => {
@@ -42,7 +42,7 @@ describe('RadioGroup Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} selectedValue="option2" />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       waitFor(() => {
@@ -60,7 +60,7 @@ describe('RadioGroup Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} options={optionsWithDisabled} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       waitFor(() => {
@@ -72,7 +72,7 @@ describe('RadioGroup Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByText('Option 1')).toBeTruthy()
@@ -87,7 +87,7 @@ describe('RadioGroup Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} onValueChange={mockOnValueChange} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       fireEvent.press(getByText('Option 2'))
@@ -101,7 +101,7 @@ describe('RadioGroup Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} onValueChange={mockOnValueChange} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       fireEvent.press(getByText('Option 1'))
@@ -124,7 +124,7 @@ describe('RadioGroup Component', () => {
       const { getByText } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} options={optionsWithDisabled} onValueChange={mockOnValueChange} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Press enabled option - should work
@@ -147,7 +147,7 @@ describe('RadioGroup Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} selectedValue="option2" />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Check that the correct option shows as selected via accessibility state
@@ -197,7 +197,7 @@ describe('RadioGroup Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} testID="custom-radio-group" />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByTestId('custom-radio-group')).toBeTruthy()
@@ -207,7 +207,7 @@ describe('RadioGroup Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} testID="test-group" />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByTestId('test-group-option-Option1')).toBeTruthy()
@@ -221,7 +221,7 @@ describe('RadioGroup Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} options={[]} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       waitFor(() => {
@@ -235,7 +235,7 @@ describe('RadioGroup Component', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} options={singleOption} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       waitFor(() => {
@@ -247,7 +247,7 @@ describe('RadioGroup Component', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} selectedValue="nonexistent" />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // All options should be unselected

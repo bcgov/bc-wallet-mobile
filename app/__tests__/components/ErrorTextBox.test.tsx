@@ -17,7 +17,7 @@ describe('ErrorTextBox Component', () => {
     const tree = render(
       <BasicAppContext>
         <ErrorTextBox>Lorem ipsum sit dolar</ErrorTextBox>
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

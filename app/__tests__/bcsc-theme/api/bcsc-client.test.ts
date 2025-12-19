@@ -23,7 +23,7 @@ describe('BCSC Client', () => {
         '/endpoint',
         expect.objectContaining({
           suppressStatusCodeLogs: [404],
-        }),
+        })
       )
 
       expect(mockLogger.error).not.toHaveBeenCalled()
@@ -46,12 +46,12 @@ describe('BCSC Client', () => {
         '/endpoint',
         expect.objectContaining({
           suppressStatusCodeLogs: [404],
-        }),
+        })
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'IAS API Error',
-        expect.objectContaining({ name: expect.any(String) }),
+        expect.objectContaining({ name: expect.any(String) })
       )
     }
   })

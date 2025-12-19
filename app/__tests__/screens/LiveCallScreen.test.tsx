@@ -22,7 +22,7 @@ describe('LiveCall', () => {
     const tree = render(
       <BasicAppContext>
         <LiveCallScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

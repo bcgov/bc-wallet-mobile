@@ -22,7 +22,7 @@ describe('DeviceAuthAppResetScreen', () => {
     const tree = render(
       <BasicAppContext>
         <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

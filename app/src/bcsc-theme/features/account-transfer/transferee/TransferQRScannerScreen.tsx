@@ -89,7 +89,7 @@ const TransferQRScannerScreen: React.FC = () => {
           Alert.alert(
             t('BCSC.CameraDisclosure.CameraPermissionRequired'),
             t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage2'),
-            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigator.goBack() }],
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigator.goBack() }]
           )
           return
         }
@@ -167,7 +167,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store.bcscSecure.deviceCode, deviceAttestation, client, t, token, isLoading, scanError],
+    [store.bcscSecure.deviceCode, deviceAttestation, client, t, token, isLoading, scanError]
   )
 
   if (isLoading) {

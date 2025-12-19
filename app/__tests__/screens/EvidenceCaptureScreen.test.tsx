@@ -44,7 +44,7 @@ describe('EvidenceCapture', () => {
           navigation={mockNavigation as never}
           route={{ params: { cardType: mockEvidenceType } } as never}
         />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

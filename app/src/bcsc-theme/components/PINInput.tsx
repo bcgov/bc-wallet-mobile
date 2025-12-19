@@ -90,7 +90,7 @@ export const PINInput = forwardRef<TextInput, PINInputProps>(
         </View>
       </>
     )
-  },
+  }
 )
 
 PINInput.displayName = 'PINInput'

@@ -79,7 +79,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     // Check if user has any completed photo ID evidence
     const hasCompletedPhotoIdEvidence = (store.bcscSecure.additionalEvidenceData || []).some(
-      (item) => item.evidenceType.has_photo && isEvidenceComplete(item),
+      (item) => item.evidenceType.has_photo && isEvidenceComplete(item)
     )
 
     // Non-photo BCSC needs an additional photo ID card if serial is present but no completed photo evidence
@@ -134,7 +134,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
             evidenceType: evidence.evidenceType.evidence_type,
             documentNumber: evidence.documentNumber,
-          }),
+          })
         )
       }
 

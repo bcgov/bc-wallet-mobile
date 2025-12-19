@@ -66,7 +66,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       setCaptureState(CaptureState.CAPTURING)
       setCurrentPhotoPath(undefined)
       setCapturedPhotos([])
-    }, []),
+    }, [])
   )
 
   const handlePhotoTaken = (path: string) => {

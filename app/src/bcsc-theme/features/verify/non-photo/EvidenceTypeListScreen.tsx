@@ -90,12 +90,12 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
           (collection_order === 'BOTH' || collection_order === 'SECOND') &&
           // if the user is seeing this screen for the second time, we only show cards that are not already selected
           !(store.bcscSecure.additionalEvidenceData || []).some(
-            (evidence) => evidence.evidenceType.evidence_type_label === card.evidence_type_label,
+            (evidence) => evidence.evidenceType.evidence_type_label === card.evidence_type_label
           )
         )
       }
     },
-    [store.bcscSecure.additionalEvidenceData],
+    [store.bcscSecure.additionalEvidenceData]
   )
 
   useEffect(() => {

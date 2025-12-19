@@ -51,7 +51,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient],
+    [apiClient]
   )
 
   /**
@@ -83,7 +83,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient],
+    [apiClient]
   )
 
   return useMemo(
@@ -91,7 +91,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
       verifyAttestation,
       checkAttestationStatus,
     }),
-    [verifyAttestation, checkAttestationStatus],
+    [verifyAttestation, checkAttestationStatus]
   )
 }
 

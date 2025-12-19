@@ -103,7 +103,7 @@ describe('useTokenApi', () => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
-        },
+        }
       )
 
       expect(response).toEqual(mockTokenResponse)
@@ -133,7 +133,7 @@ describe('useTokenApi', () => {
         'test_device_code',
         'mock_client_id',
         'mock_issuer',
-        'test_confirmation',
+        'test_confirmation'
       )
 
       expect(mockApiClient.post).toHaveBeenCalledWith('/oauth/token', mockRequestBody, {
@@ -152,7 +152,7 @@ describe('useTokenApi', () => {
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toThrow(
-        'Account not found',
+        'Account not found'
       )
     })
   })
@@ -190,7 +190,7 @@ describe('useTokenApi', () => {
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(
-        'No tokens available',
+        'No tokens available'
       )
     })
 
@@ -201,7 +201,7 @@ describe('useTokenApi', () => {
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: true })).rejects.toThrow(
-        'Refresh token expired',
+        'Refresh token expired'
       )
     })
 

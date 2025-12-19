@@ -74,7 +74,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
 
         const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
         await register(
-          isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth,
+          isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
         )
         const { success, walletKey } = await setPIN(pin1)
 
@@ -91,7 +91,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
         setLoading(false)
       }
     },
-    [checked, logger, handleSuccessfulAuth, register],
+    [checked, logger, handleSuccessfulAuth, register]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -117,7 +117,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
       Keyboard.dismiss()
       validateAndContinue(currentPIN1, completedPIN)
     },
-    [currentPIN1, validateAndContinue],
+    [currentPIN1, validateAndContinue]
   )
 
   const controls = (

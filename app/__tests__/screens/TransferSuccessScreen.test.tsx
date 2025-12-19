@@ -26,7 +26,7 @@ describe('TransferSuccess', () => {
       const tree = render(
         <BasicAppContext>
           <TransferSuccessScreen />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(tree).toMatchSnapshot()
@@ -38,7 +38,7 @@ describe('TransferSuccess', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <TransferSuccessScreen />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const homeButton = getByTestId(testIdWithKey('BCSC.TransferSuccess.ButtonText'))
@@ -53,7 +53,7 @@ describe('TransferSuccess', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <TransferSuccessScreen />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const removeAccountButton = getByTestId(testIdWithKey('BCSC.Account.RemoveAccount'))

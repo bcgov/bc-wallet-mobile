@@ -32,7 +32,7 @@ type AlertAction = AlertButton & { text: string }
 export const showAlert = (
   event: AlertEvent,
   actions: AlertAction[] = [ALERT_ACTION_OK],
-  renderAlert: RenderAlertFn = Alert.alert,
+  renderAlert: RenderAlertFn = Alert.alert
 ) => {
   /**
    * I think we can get away with using the i18n translation (t) function directly here

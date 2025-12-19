@@ -17,7 +17,7 @@ export class DeepLinkViewModel {
 
   constructor(
     private readonly deepLinkService: DeepLinkService,
-    private readonly logger: AbstractBifoldLogger,
+    private readonly logger: AbstractBifoldLogger
   ) {}
 
   public initialize() {

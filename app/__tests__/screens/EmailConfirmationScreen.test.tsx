@@ -23,7 +23,7 @@ describe('EmailConfirmation', () => {
     const tree = render(
       <BasicAppContext>
         <EmailConfirmationScreen navigation={mockNavigation as never} route={route as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

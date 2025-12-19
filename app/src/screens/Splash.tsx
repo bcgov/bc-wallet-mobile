@@ -84,7 +84,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const steps: string[] = useMemo(
     () => [t('Init.Starting'), t('Init.CheckingOCA'), t('Init.InitializingAgent'), t('Init.Finishing')],
-    [t],
+    [t]
   )
 
   const setStep = useCallback(
@@ -93,7 +93,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       const percent = Math.floor((stepIdx / steps.length) * 100)
       setProgressPercent(percent)
     },
-    [steps],
+    [steps]
   )
 
   useEffect(() => {
@@ -149,7 +149,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       reported ? (
         <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPalette.semantic.success} />
       ) : undefined,
-    [reported, ColorPalette.semantic.success],
+    [reported, ColorPalette.semantic.success]
   )
 
   return (

@@ -112,7 +112,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       return () => {
         setTorchEnabled(false)
       }
-    }, []),
+    }, [])
   )
 
   const toggleTorch = () => {

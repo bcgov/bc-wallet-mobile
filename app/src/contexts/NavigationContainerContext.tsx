@@ -26,7 +26,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
     () => ({
       isNavigationReady: navigationReady,
     }),
-    [navigationReady],
+    [navigationReady]
   )
 
   return (

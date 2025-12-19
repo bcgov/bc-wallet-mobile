@@ -42,7 +42,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
       const { refresh_token } = await token.checkDeviceCodeStatus(
         store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode,
+        store.bcscSecure.userCode
       )
 
       if (refresh_token) {
@@ -146,7 +146,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       steps.id.nonPhotoBcscNeedsAdditionalCard,
       steps.id.completed,
       store.bcscSecure.cardProcess,
-    ],
+    ]
   )
 
   return {

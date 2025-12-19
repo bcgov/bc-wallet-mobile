@@ -105,7 +105,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     // Filter services based on the card process
     if (filter.cardProcessFilter) {
       serviceClientsCopy = serviceClientsCopy.filter((service) =>
-        service.allowed_identification_processes.includes(filter.cardProcessFilter!),
+        service.allowed_identification_processes.includes(filter.cardProcessFilter!)
       )
     }
 

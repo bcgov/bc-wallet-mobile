@@ -39,12 +39,12 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
-        },
+        }
       )
 
       return data
     },
-    [apiClient],
+    [apiClient]
   )
 
   const checkDeviceCodeStatus = useCallback(
@@ -63,7 +63,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         return apiClient.tokens
       })
     },
-    [apiClient, updateTokens],
+    [apiClient, updateTokens]
   )
 
   /**
@@ -88,7 +88,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },
-    [apiClient],
+    [apiClient]
   )
 
   return useMemo(
@@ -97,7 +97,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
       deviceToken,
       getCachedIdTokenMetadata,
     }),
-    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken],
+    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken]
   )
 }
 

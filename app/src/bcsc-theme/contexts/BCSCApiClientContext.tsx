@@ -92,7 +92,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       isClientReady,
       error,
     }),
-    [isClientReady, error],
+    [isClientReady, error]
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>

@@ -74,7 +74,7 @@ const TransferQRDisplayScreen: React.FC = () => {
         // Do nothing, a fail state from this endpoint just means the attestation hasn't been consumed yet
       }
     },
-    [deviceAttestation, navigation],
+    [deviceAttestation, navigation]
   )
   const startInterval = useCallback(() => {
     if (intervalRef.current) {

@@ -18,7 +18,7 @@ describe('TransferQRDisplay', () => {
     const tree = render(
       <BasicAppContext>
         <TransferQRDisplayScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

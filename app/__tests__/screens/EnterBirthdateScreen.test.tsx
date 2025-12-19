@@ -23,7 +23,7 @@ describe('EnterBirthdate', () => {
     const tree = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

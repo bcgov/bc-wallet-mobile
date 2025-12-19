@@ -18,7 +18,7 @@ describe('AccountRenewalFinalWarning', () => {
     const tree = render(
       <BasicAppContext>
         <AccountRenewalFinalWarningScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

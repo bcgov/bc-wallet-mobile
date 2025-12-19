@@ -22,7 +22,7 @@ describe('ScanSerial', () => {
     const tree = render(
       <BasicAppContext>
         <ScanSerialScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

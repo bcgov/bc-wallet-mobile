@@ -89,7 +89,7 @@ export class AppContainer implements Container {
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
     setSurveyVisible: (visible: boolean) => void,
-    logger: RemoteLogger = createAppLogger(),
+    logger: RemoteLogger = createAppLogger()
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.t = t
@@ -359,7 +359,7 @@ export class AppContainer implements Container {
         loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),
         loadState<DismissPersonCredentialOffer>(
           BCLocalStorageKeys.PersonCredentialOfferDismissed,
-          (val) => (personCredOfferDissmissed = val),
+          (val) => (personCredOfferDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
@@ -409,7 +409,7 @@ export class AppContainer implements Container {
           this.logger.overrideCurrentAutoDisableExpiration(override)
 
           this.logger.info(
-            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${this.logger.sessionId}.  Expiration override is ${override} minutes`,
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${this.logger.sessionId}.  Expiration override is ${override} minutes`
           )
         }
       }
@@ -429,7 +429,7 @@ export class AppContainer implements Container {
   }
 
   public resolveAll<K extends keyof TokenMapping, T extends K[]>(
-    tokens: [...T],
+    tokens: [...T]
   ): { [I in keyof T]: TokenMapping[T[I]] } {
     return tokens.map((key) => this.resolve(key)!) as { [I in keyof T]: TokenMapping[T[I]] }
   }

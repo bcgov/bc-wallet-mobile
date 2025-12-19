@@ -56,7 +56,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
 
       const { refresh_token } = await token.checkDeviceCodeStatus(
         store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode,
+        store.bcscSecure.userCode
       )
       if (refresh_token) {
         await updateTokens({ refreshToken: refresh_token })

@@ -200,7 +200,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       setClientCallId(null)
       setConnection(null)
     },
-    [stopAllMedia, logger],
+    [stopAllMedia, logger]
   )
 
   // 1. a session must be created before anything else
@@ -248,7 +248,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         return false
       }
     },
-    [handleError, logger],
+    [handleError, logger]
   )
 
   // 3. this API call is really just for the benefit of the backend to track the call
@@ -265,7 +265,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         return null
       }
     },
-    [video, handleError],
+    [video, handleError]
   )
 
   // three step process with the steps above

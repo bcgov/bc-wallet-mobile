@@ -113,7 +113,7 @@ describe('DeviceInvalidatedSystemCheck', () => {
       expect(getIdToken).toHaveBeenCalledTimes(1)
       expect(mockUtils.logger.error).toHaveBeenCalledWith(
         'DeviceInvalidatedSystemCheck: Id token request failed',
-        networkError,
+        networkError
       )
     })
 
@@ -129,7 +129,7 @@ describe('DeviceInvalidatedSystemCheck', () => {
       expect(getIdToken).toHaveBeenCalledTimes(1)
       expect(mockUtils.logger.error).toHaveBeenCalledWith(
         'DeviceInvalidatedSystemCheck: Id token request failed',
-        nonNetworkError,
+        nonNetworkError
       )
     })
   })

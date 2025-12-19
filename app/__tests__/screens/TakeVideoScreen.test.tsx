@@ -31,7 +31,7 @@ describe('TakeVideoScreen', () => {
     const tree = render(
       <BasicAppContext>
         <TakeVideoScreen navigation={navigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()
@@ -45,7 +45,7 @@ describe('TakeVideoScreen', () => {
     const { getByText } = render(
       <BasicAppContext>
         <TakeVideoScreen navigation={navigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(getByText('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')).toBeTruthy()
@@ -61,7 +61,7 @@ describe('TakeVideoScreen', () => {
     const { getByText } = render(
       <BasicAppContext>
         <TakeVideoScreen navigation={navigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(getByText('BCSC.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')).toBeTruthy()

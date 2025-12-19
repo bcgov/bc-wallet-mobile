@@ -29,7 +29,7 @@ const SetupTypesScreen = ({ navigation }: SetupTypesScreenProps) => {
   const [otherPersonPresent, setOtherPersonPresent] = useState<boolean>()
   const canContinue = useMemo(
     () => myOwnId !== undefined && (myOwnId === true || otherPersonPresent !== undefined),
-    [myOwnId, otherPersonPresent],
+    [myOwnId, otherPersonPresent]
   )
 
   const styles = StyleSheet.create({

@@ -55,7 +55,7 @@ describe('CreatePINScreen snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <CreatePINScreen navigation={mockNavigation} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })

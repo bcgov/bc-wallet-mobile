@@ -18,7 +18,7 @@ describe('NicknameAccount', () => {
     const tree = render(
       <BasicAppContext>
         <NicknameAccountScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

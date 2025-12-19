@@ -42,7 +42,7 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   runCheck() {
     const isExpiringSoon = AccountExpirySystemCheck.isAccountExpired(
       this.accountExpiration,
-      ACCOUNT_EXPIRATION_WARNING_DAYS,
+      ACCOUNT_EXPIRATION_WARNING_DAYS
     )
     const isExpired = AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
 

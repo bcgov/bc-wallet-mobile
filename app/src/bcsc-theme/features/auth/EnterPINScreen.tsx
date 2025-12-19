@@ -56,7 +56,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: BCSCScreens.Lockout }],
-              }),
+              })
             )
           }
           return
@@ -111,7 +111,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
             CommonActions.reset({
               index: 0,
               routes: [{ name: BCSCScreens.Lockout }],
-            }),
+            })
           )
         } else {
           setErrorMessage(message || 'Incorrect PIN')
@@ -123,7 +123,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setLoading(false)
       }
     },
-    [logger, handleSuccessfulAuth, navigation],
+    [logger, handleSuccessfulAuth, navigation]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -145,7 +145,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         verifyPINAndContinue(completedPIN)
       }
     },
-    [verifyPINAndContinue],
+    [verifyPINAndContinue]
   )
 
   const controls = (

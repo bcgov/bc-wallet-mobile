@@ -18,7 +18,7 @@ describe('VerificationSuccess', () => {
     const tree = render(
       <BasicAppContext>
         <VerificationSuccessScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

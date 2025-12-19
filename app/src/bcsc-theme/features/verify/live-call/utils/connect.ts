@@ -23,7 +23,7 @@ export const connect = async (
     onRemoteStream: (mediaStream: MediaStream) => void
     onRemoteDisconnect: () => void
   },
-  logger: BifoldLogger,
+  logger: BifoldLogger
 ): Promise<ConnectResult> => {
   logger.info('Requesting user media (camera and microphone)...')
   const localStream = await mediaDevices.getUserMedia({

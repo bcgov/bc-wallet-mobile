@@ -93,7 +93,7 @@ describe('EnterBirthdateViewModel', () => {
           CommonActions.reset({
             index: 0,
             routes: [{ name: BCSCScreens.SetupSteps }],
-          }),
+          })
         )
       })
     })
@@ -150,7 +150,7 @@ describe('EnterBirthdateViewModel', () => {
           CommonActions.reset({
             index: 0,
             routes: [{ name: BCSCScreens.SetupSteps }],
-          }),
+          })
         )
       })
     })

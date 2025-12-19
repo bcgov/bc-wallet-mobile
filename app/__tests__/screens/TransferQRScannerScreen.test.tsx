@@ -35,7 +35,7 @@ describe('TransferQRScanner', () => {
     const tree = render(
       <BasicAppContext>
         <TransferQRScannerScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

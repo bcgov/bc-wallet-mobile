@@ -32,7 +32,7 @@ describe('useConfigApi', () => {
         `${mockApiClient.endpoints.cardTap}/v3/status/android/mobile_card`,
         {
           skipBearerAuth: true,
-        },
+        }
       )
       expect(response).toEqual({ status: 'ok' })
     })

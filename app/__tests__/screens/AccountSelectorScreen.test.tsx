@@ -21,7 +21,7 @@ describe('AccountSetup', () => {
     const tree = render(
       <BasicAppContext>
         <AccountSelectorScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

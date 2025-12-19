@@ -22,7 +22,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       CommonActions.reset({
         index: 1,
         routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
-      }),
+      })
     )
   }
 

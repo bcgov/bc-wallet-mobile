@@ -55,7 +55,7 @@ const useBCAgentSetup = () => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
     },
-    [attestationMonitor],
+    [attestationMonitor]
   )
 
   const restartExistingAgent = useCallback(
@@ -75,7 +75,7 @@ const useBCAgentSetup = () => {
 
       return agent
     },
-    [logger],
+    [logger]
   )
 
   const createNewAgent = useCallback(
@@ -121,7 +121,7 @@ const useBCAgentSetup = () => {
 
       return newAgent
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy],
+    [store.preferences.walletName, logger, store.developer.enableProxy]
   )
 
   const migrateIfRequired = useCallback(
@@ -134,7 +134,7 @@ const useBCAgentSetup = () => {
         })
       }
     },
-    [store.migration.didMigrateToAskar, dispatch],
+    [store.migration.didMigrateToAskar, dispatch]
   )
 
   const warmUpCache = useCallback(
@@ -181,7 +181,7 @@ const useBCAgentSetup = () => {
         await pool.pool.submitRequest(schemaRequest)
       })
     },
-    [credDefs, schemas],
+    [credDefs, schemas]
   )
 
   const initializeAgent = useCallback(
@@ -245,7 +245,7 @@ const useBCAgentSetup = () => {
       warmUpCache,
       refreshAttestationMonitor,
       restartExistingAgent,
-    ],
+    ]
   )
 
   const shutdownAndClearAgentIfExists = useCallback(async () => {

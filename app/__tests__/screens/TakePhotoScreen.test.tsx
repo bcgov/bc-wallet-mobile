@@ -42,7 +42,7 @@ describe('TakePhoto', () => {
             } as any
           }
         />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

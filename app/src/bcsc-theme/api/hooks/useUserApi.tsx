@@ -58,14 +58,14 @@ const useUserApi = (apiClient: BCSCApiClient) => {
 
         // convert to base64
         const base64String = btoa(
-          new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+          new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
         )
 
         // return as uri
         return `data:image/jpeg;base64,${base64String}`
       })
     },
-    [apiClient],
+    [apiClient]
   )
 
   /**
@@ -103,7 +103,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
       getUserMetadata,
       getAccountExpirationDate,
     }),
-    [getUserInfo, getPicture, getUserMetadata, getAccountExpirationDate],
+    [getUserInfo, getPicture, getUserMetadata, getAccountExpirationDate]
   )
 }
 

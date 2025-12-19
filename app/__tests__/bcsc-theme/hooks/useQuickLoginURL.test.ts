@@ -180,7 +180,7 @@ describe('useQuickLoginURL', () => {
       'test',
       'jwk',
       'fcm',
-      'apns',
+      'apns'
     )
   })
 })

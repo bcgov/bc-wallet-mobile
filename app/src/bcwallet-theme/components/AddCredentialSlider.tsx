@@ -86,7 +86,7 @@ export default function AddCredentialSlider() {
 
   useEffect(() => {
     const credentialDefinitionIDs = [...credentialsReceived, ...credentialsDone].map(
-      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string,
+      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
 
     setShowGetPersonCredential(showPersonCredentialSelector(credentialDefinitionIDs))

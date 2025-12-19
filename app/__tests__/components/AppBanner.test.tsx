@@ -53,7 +53,7 @@ describe('AppBanner', () => {
 describe('AppBannerSection', () => {
   it('renders correctly with the correct icon and color for type', () => {
     const { getByText, getByTestId } = render(
-      <AppBannerSection id={'A' as BCSCBanner} title="Success Message" type="success" dismissible={true} />,
+      <AppBannerSection id={'A' as BCSCBanner} title="Success Message" type="success" dismissible={true} />
     )
 
     expect(getByText('Success Message')).toBeTruthy()
@@ -70,7 +70,7 @@ describe('AppBannerSection', () => {
         type="info"
         dismissible={true}
         onPress={onPressMock}
-      />,
+      />
     )
 
     fireEvent.press(getByText('Dismissible Message'))
@@ -88,7 +88,7 @@ describe('AppBannerSection', () => {
         type="warning"
         dismissible={false}
         onPress={onPressMock}
-      />,
+      />
     )
 
     fireEvent.press(getByText('Non-dismissible Message'))

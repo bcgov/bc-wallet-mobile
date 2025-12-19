@@ -120,7 +120,7 @@ export const useServiceLoginState = ({
         pendingConsumedRef.current
       }, hasLoginData: ${Boolean(state.pairingCode || state.serviceTitle)}, hasPendingDeepLink: ${
         viewModel.hasPendingDeepLink
-      }`,
+      }`
     )
 
     if (serviceClientId) {

@@ -73,7 +73,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.EnterPIN }],
-        }),
+        })
       )
     }
   }, [shouldNavigateBack, navigation])

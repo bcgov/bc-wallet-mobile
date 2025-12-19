@@ -25,7 +25,7 @@ describe('SecureApp', () => {
         <BCSCLoadingProvider>
           <SecureAppScreen navigation={mockNavigation as never} />
         </BCSCLoadingProvider>
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

@@ -22,7 +22,7 @@ export const AccountRenewalFinalWarningScreen = (): JSX.Element => {
         } catch (error) {
           logger.error(
             'AccountRenewalFinalWarningScreen: Error during factory reset on account renewal',
-            error as Error,
+            error as Error
           )
         }
       }}

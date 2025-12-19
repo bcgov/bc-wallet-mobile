@@ -122,7 +122,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         {
           file: 'SettingsContent.tsx',
         },
-        error as Error,
+        error as Error
       )
     }
   }

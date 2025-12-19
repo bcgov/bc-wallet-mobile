@@ -22,7 +22,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
       CommonActions.reset({
         index: 1,
         routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
-      }),
+      })
     )
   }
 

@@ -50,7 +50,7 @@ const EditNicknameScreen: React.FC = () => {
       store.bcscSecure.registrationAccessToken,
       store.bcsc.selectedNickname,
       t,
-    ],
+    ]
   )
 
   return <NicknameForm onSubmit={handleSubmit} isRenaming />

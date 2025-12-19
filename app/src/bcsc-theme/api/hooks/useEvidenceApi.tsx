@@ -124,7 +124,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
           },
           // Evidence endpoints do not require a full access token
           skipBearerAuth: true,
-        },
+        }
       )
       return data
     })
@@ -142,12 +142,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
   const uploadVideoEvidenceMetadata = useCallback(
     async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
@@ -161,18 +161,18 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const sendVerificationRequest = useCallback(
     async (
       verificationRequestId: string,
-      payload: SendVerificationPayload,
+      payload: SendVerificationPayload
     ): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
@@ -184,12 +184,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const getVerificationRequestPrompts = useCallback(
@@ -203,12 +203,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const getVerificationRequestStatus = useCallback(
@@ -222,12 +222,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   // This is only valid once sendVerificationRequest has been called
@@ -244,7 +244,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
 
         updateVerificationRequest(null, null)
@@ -252,7 +252,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         return data
       })
     },
-    [_getDeviceCode, apiClient, updateVerificationRequest],
+    [_getDeviceCode, apiClient, updateVerificationRequest]
   )
 
   const createEmailVerification = useCallback(
@@ -267,12 +267,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const sendEmailVerificationCode = useCallback(
@@ -289,12 +289,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const uploadPhotoEvidenceBinary = useCallback(
@@ -312,7 +312,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const uploadVideoEvidenceBinary = useCallback(
@@ -330,7 +330,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   const sendEvidenceMetadata = useCallback(
@@ -345,12 +345,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
-          },
+          }
         )
         return data
       })
     },
-    [_getDeviceCode, apiClient],
+    [_getDeviceCode, apiClient]
   )
 
   return useMemo(
@@ -383,7 +383,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       sendEmailVerificationCode,
       sendEvidenceMetadata,
       getEvidenceMetadata,
-    ],
+    ]
   )
 }
 

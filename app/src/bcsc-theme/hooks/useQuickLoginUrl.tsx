@@ -72,7 +72,7 @@ export const useQuickLoginURL = () => {
           serviceClient.client_ref_id,
           jwk,
           tokens.fcmDeviceToken,
-          tokens.deviceToken,
+          tokens.deviceToken
         )
 
         const encodedTokenHint = encodeURIComponent(loginHint)
@@ -82,7 +82,7 @@ export const useQuickLoginURL = () => {
         return { success: false, error: `Error creating quick login URL: ${(error as Error).message}` }
       }
     },
-    [client, jwks, logger],
+    [client, jwks, logger]
   )
 
   return getQuickLoginURL

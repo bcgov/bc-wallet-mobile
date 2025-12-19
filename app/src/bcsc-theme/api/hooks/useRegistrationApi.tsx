@@ -96,7 +96,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           {
             skipBearerAuth: true,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          },
+          }
         )
         logger.debug(`Received nonce for Android Play Integrity attestation`)
         attestation = await googleAttestation(nonce)
@@ -168,7 +168,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, dispatch],
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, dispatch]
   )
 
   /**
@@ -222,7 +222,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${registrationAccessToken}`,
               },
-            },
+            }
           )
 
           updatedRegistrationData = data
@@ -255,7 +255,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens],
+    [isClientReady, apiClient, logger, getAttestation, updateTokens]
   )
 
   /**
@@ -286,7 +286,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken],
+    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken]
   )
 
   return useMemo(
@@ -295,7 +295,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       updateRegistration,
       deleteRegistration,
     }),
-    [register, updateRegistration, deleteRegistration],
+    [register, updateRegistration, deleteRegistration]
   )
 }
 

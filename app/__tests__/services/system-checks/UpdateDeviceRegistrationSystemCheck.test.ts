@@ -83,7 +83,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
       expect(mockUtils.logger.error).toHaveBeenCalledWith(
         'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
-        error,
+        error
       )
     })
   })

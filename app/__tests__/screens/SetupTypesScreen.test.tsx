@@ -25,7 +25,7 @@ describe('SetupTypesScreen', () => {
       const tree = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(tree).toMatchSnapshot()
@@ -35,7 +35,7 @@ describe('SetupTypesScreen', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const myOwnIdOption = getByTestId(testIdWithKey('MyOwnIdRadioGroup-option-BCSC.NewSetup.MyOwnID'))
@@ -51,7 +51,7 @@ describe('SetupTypesScreen', () => {
       const { getByText, getByTestId } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Select "Someone else's ID"
@@ -69,7 +69,7 @@ describe('SetupTypesScreen', () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Initially, help information should not be visible
@@ -98,7 +98,7 @@ describe('SetupTypesScreen', () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Error should not be visible initially
@@ -118,7 +118,7 @@ describe('SetupTypesScreen', () => {
       const { getByText, queryByText, getByTestId } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // Select "Someone else's ID"
@@ -158,7 +158,7 @@ describe('SetupTypesScreen', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const continueButton = getByTestId(testIdWithKey('Continue'))
@@ -177,7 +177,7 @@ describe('SetupTypesScreen', () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <SetupTypesScreen navigation={mockNavigation} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const cancelButton = getByTestId(testIdWithKey('Cancel'))

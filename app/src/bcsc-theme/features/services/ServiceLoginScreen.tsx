@@ -160,7 +160,7 @@ const ServiceLoginDefaultView = ({
                   })
                 } catch (error) {
                   logger.error(
-                    `ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`,
+                    `ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`
                   )
                 }
               }}

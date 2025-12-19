@@ -192,7 +192,7 @@ describe('readFileInChunks', () => {
       ;(RNFS.read as jest.Mock).mockResolvedValue(testBuffer.toString('base64'))
 
       await expect(readFileInChunks(mockFilePath, mockLogger as any, 1024, onChunkMock)).rejects.toThrow(
-        'Callback error',
+        'Callback error'
       )
     })
   })

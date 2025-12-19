@@ -80,7 +80,7 @@ interface WebViewAccessibilityProps {
 export const getWebViewAccessibilityProps = (
   platform: string,
   fontScale: number,
-  injectedJavascript?: string,
+  injectedJavascript?: string
 ): WebViewAccessibilityProps => {
   const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
   return {

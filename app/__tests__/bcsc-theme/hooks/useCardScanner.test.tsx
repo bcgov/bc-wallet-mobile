@@ -100,7 +100,7 @@ describe('useCardScanner', () => {
         expect.objectContaining({
           licenseNumber: '2222222',
           bcscSerial: 'S00023254',
-        }),
+        })
       )
     })
 
@@ -142,7 +142,7 @@ describe('useCardScanner', () => {
         null,
         expect.objectContaining({
           licenseNumber: '2222222',
-        }),
+        })
       )
     })
 
@@ -188,7 +188,7 @@ describe('useCardScanner', () => {
         'S00023254',
         expect.objectContaining({
           licenseNumber: '2222222',
-        }),
+        })
       )
     })
   })
@@ -296,7 +296,7 @@ describe('useCardScanner', () => {
       }
 
       await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
-        'handleScanComboCard: License birthdate is missing or invalid',
+        'handleScanComboCard: License birthdate is missing or invalid'
       )
     })
 
@@ -332,7 +332,7 @@ describe('useCardScanner', () => {
       }
 
       await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
-        'handleScanComboCard: License birthdate is missing or invalid',
+        'handleScanComboCard: License birthdate is missing or invalid'
       )
     })
 

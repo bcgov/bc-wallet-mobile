@@ -61,7 +61,7 @@ const MainStack: React.FC = () => {
       logger?.error(
         `[MainStack] Pending deep link missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
           pairingCode ?? 'missing'
-        }`,
+        }`
       )
       return undefined
     }

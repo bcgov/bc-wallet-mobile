@@ -69,7 +69,7 @@ describe('useUserApi', () => {
         .mockResolvedValueOnce({ data: 'encoded-data' }) // first call for user info
         .mockResolvedValueOnce({ data: binaryData.buffer }) // second call for picture
       decodePayloadMock.mockResolvedValue(
-        JSON.stringify({ given_name: 'steve brule', picture: 'http://example.com/pic.jpg' }),
+        JSON.stringify({ given_name: 'steve brule', picture: 'http://example.com/pic.jpg' })
       )
       const hook = renderHook(() => useUserApi(mockApiClient as any))
 

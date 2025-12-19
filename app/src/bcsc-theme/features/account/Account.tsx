@@ -52,7 +52,7 @@ const Account: React.FC = () => {
       logger.info('Account screen focused, refreshing ID token metadata...')
       refreshIdToken()
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [logger]),
+    }, [logger])
   )
 
   // Refresh user data when returning to this screen from the BCSC Account webview

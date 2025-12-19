@@ -43,7 +43,7 @@ describe('useFactoryReset', () => {
             deleteRegistration: deleteRegistrationMock,
             register: registerMock,
           },
-        }) as any,
+        }) as any
     )
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, dispatchMock])
     bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)

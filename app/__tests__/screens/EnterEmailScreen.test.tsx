@@ -54,7 +54,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByText('BCSC.EnterEmail.EnterEmailAddress')).toBeTruthy()
@@ -68,7 +68,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByText('BCSC.EnterEmail.EmailDescription1')).toBeTruthy()
@@ -78,7 +78,7 @@ describe('EnterEmailScreen', () => {
       const { queryByText } = render(
         <BasicAppContext>
           <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(queryByText('BCSC.EnterEmail.EmailDescription1')).toBeNull()
@@ -91,7 +91,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(getByTestId('SkipButton')).toBeTruthy()
@@ -101,7 +101,7 @@ describe('EnterEmailScreen', () => {
       const { queryByTestId } = render(
         <BasicAppContext>
           <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }} />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       expect(queryByTestId('SkipButton')).toBeNull()
@@ -116,7 +116,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const continueButton = getByTestId('ContinueButton')
@@ -136,7 +136,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const emailInput = getByTestId('EmailInput')
@@ -163,7 +163,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       // First submit with empty email to trigger error
@@ -203,7 +203,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const emailInput = getByTestId('EmailInput')
@@ -233,7 +233,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const emailInput = getByTestId('EmailInput')
@@ -254,7 +254,7 @@ describe('EnterEmailScreen', () => {
         BCSCScreens.EmailConfirmation,
         expect.objectContaining({
           emailAddressId: 'test-id',
-        }),
+        })
       )
     })
 
@@ -267,7 +267,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const emailInput = getByTestId('EmailInput')
@@ -294,7 +294,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const emailInput = getByTestId('EmailInput')
@@ -323,7 +323,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const skipButton = getByTestId('SkipButton')
@@ -337,7 +337,7 @@ describe('EnterEmailScreen', () => {
         expect.arrayContaining([
           expect.objectContaining({ text: 'BCSC.EnterEmail.EmailSkipButton' }),
           expect.objectContaining({ text: 'BCSC.EnterEmail.EmailSkipButton2' }),
-        ]),
+        ])
       )
     })
 
@@ -348,7 +348,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const skipButton = getByTestId('SkipButton')
@@ -372,7 +372,7 @@ describe('EnterEmailScreen', () => {
             navigation={mockNavigation}
             route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
           />
-        </BasicAppContext>,
+        </BasicAppContext>
       )
 
       const skipButton = getByTestId('SkipButton')

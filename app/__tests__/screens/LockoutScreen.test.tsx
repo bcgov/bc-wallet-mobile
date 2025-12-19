@@ -29,7 +29,7 @@ describe('LockoutScreen', () => {
     const tree = render(
       <BasicAppContext>
         <LockoutScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

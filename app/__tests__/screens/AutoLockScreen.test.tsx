@@ -18,7 +18,7 @@ describe('AutoLockScreen', () => {
     const tree = render(
       <BasicAppContext>
         <AutoLockScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

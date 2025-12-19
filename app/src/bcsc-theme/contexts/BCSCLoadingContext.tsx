@@ -58,7 +58,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       stopLoading,
       updateLoadingMessage: setLoadingMessage,
     }),
-    [isLoading, startLoading, stopLoading],
+    [isLoading, startLoading, stopLoading]
   )
 
   return (

@@ -103,7 +103,7 @@ export const useSecureActions = () => {
         throw error
       }
     },
-    [logger],
+    [logger]
   )
 
   /**
@@ -120,7 +120,7 @@ export const useSecureActions = () => {
         throw error
       }
     },
-    [logger],
+    [logger]
   )
 
   /**
@@ -137,7 +137,7 @@ export const useSecureActions = () => {
         throw error
       }
     },
-    [logger],
+    [logger]
   )
 
   /**
@@ -154,7 +154,7 @@ export const useSecureActions = () => {
         throw error
       }
     },
-    [logger],
+    [logger]
   )
 
   // ============================================================================
@@ -195,7 +195,7 @@ export const useSecureActions = () => {
       promises.push(persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken))
       await Promise.all(promises)
     },
-    [dispatch, persistTokens, apiClient, isClientReady],
+    [dispatch, persistTokens, apiClient, isClientReady]
   )
 
   /**
@@ -247,7 +247,7 @@ export const useSecureActions = () => {
         await persistAuthorizationRequest(authRequestData)
       }
     },
-    [dispatch, persistAuthorizationRequest],
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -292,7 +292,7 @@ export const useSecureActions = () => {
         await persistAuthorizationRequest(authRequestData)
       }
     },
-    [dispatch, persistAuthorizationRequest],
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -310,7 +310,7 @@ export const useSecureActions = () => {
         await persistAuthorizationRequest({ cardProcess })
       }
     },
-    [dispatch, persistAuthorizationRequest],
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -348,7 +348,7 @@ export const useSecureActions = () => {
         await persistAuthorizationRequest(authRequestData)
       }
     },
-    [dispatch, persistAuthorizationRequest],
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -369,7 +369,7 @@ export const useSecureActions = () => {
         await deleteCredential()
       }
     },
-    [dispatch],
+    [dispatch]
   )
 
   /**
@@ -383,7 +383,7 @@ export const useSecureActions = () => {
         payload: [walletKey],
       })
     },
-    [dispatch],
+    [dispatch]
   )
 
   /**
@@ -424,7 +424,7 @@ export const useSecureActions = () => {
 
       await persistAccountFlags(flags)
     },
-    [dispatch, persistAccountFlags],
+    [dispatch, persistAccountFlags]
   )
 
   /**
@@ -468,7 +468,7 @@ export const useSecureActions = () => {
         payload: [verificationRequestSha],
       })
     },
-    [dispatch],
+    [dispatch]
   )
 
   /**
@@ -481,7 +481,7 @@ export const useSecureActions = () => {
         payload: [verificationOptions],
       })
     },
-    [dispatch],
+    [dispatch]
   )
 
   /**
@@ -503,7 +503,7 @@ export const useSecureActions = () => {
       })
       await persistCurrentEvidenceData()
     },
-    [dispatch, persistCurrentEvidenceData],
+    [dispatch, persistCurrentEvidenceData]
   )
 
   /**
@@ -517,7 +517,7 @@ export const useSecureActions = () => {
       })
       await persistCurrentEvidenceData()
     },
-    [dispatch, persistCurrentEvidenceData],
+    [dispatch, persistCurrentEvidenceData]
   )
 
   /**
@@ -531,7 +531,7 @@ export const useSecureActions = () => {
       })
       await persistCurrentEvidenceData()
     },
-    [dispatch, persistCurrentEvidenceData],
+    [dispatch, persistCurrentEvidenceData]
   )
 
   /**
@@ -701,7 +701,7 @@ export const useSecureActions = () => {
       updateWalletKey(walletKey)
       dispatch({ type: BCDispatchAction.SUCCESSFUL_AUTH })
     },
-    [hydrateSecureState, updateWalletKey, dispatch],
+    [hydrateSecureState, updateWalletKey, dispatch]
   )
 
   return {

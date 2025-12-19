@@ -101,7 +101,7 @@ export const getDecoderStrategies = (): DecoderStrategy[] => {
  */
 export const decodeScannedCode = (
   code: ScanableCode,
-  decoderStrategies: DecoderStrategy[] = getDecoderStrategies(),
+  decoderStrategies: DecoderStrategy[] = getDecoderStrategies()
 ): DecodedCode | null => {
   for (const strategy of decoderStrategies) {
     if (strategy.canDecode(code)) {

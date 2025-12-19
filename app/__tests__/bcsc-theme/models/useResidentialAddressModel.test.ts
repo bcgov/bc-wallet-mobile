@@ -347,12 +347,12 @@ describe('useResidentialAddressModel', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found',
+        'ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found'
       )
       expect(Toast.show).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'error',
-        }),
+        })
       )
     })
 
@@ -411,7 +411,7 @@ describe('useResidentialAddressModel', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'ResidentialAddressScreen.handleSubmit -> device authorization failed',
-        { error: mockError },
+        { error: mockError }
       )
       expect(Toast.show).toHaveBeenCalledWith({
         type: 'error',

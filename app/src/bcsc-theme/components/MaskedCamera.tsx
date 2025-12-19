@@ -91,7 +91,7 @@ const MaskedCamera = ({
           Alert.alert(
             t('BCSC.CameraDisclosure.CameraPermissionRequired'),
             t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage'),
-            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }],
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
           )
           return
         }

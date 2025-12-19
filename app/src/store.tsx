@@ -349,7 +349,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       if (enabledAt) {
         PersistentStorage.storeValueForKey<RemoteDebuggingState>(
           BCLocalStorageKeys.RemoteDebugging,
-          developer.remoteDebugging,
+          developer.remoteDebugging
         )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
@@ -380,7 +380,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       PersistentStorage.storeValueForKey<boolean>(
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
-        developer.enableAppToAppPersonFlow,
+        developer.enableAppToAppPersonFlow
       )
 
       return { ...state, developer }
@@ -393,7 +393,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // save to storage so notification doesn't reapper on app restart
       PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        newState.dismissPersonCredentialOffer,
+        newState.dismissPersonCredentialOffer
       )
 
       return newState
@@ -622,7 +622,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const { evidenceType, metadata }: { evidenceType: EvidenceType; metadata: PhotoMetadata[] } =
         (action?.payload || []).pop() ?? {}
       const updatedEvidenceData = (state.bcscSecure.additionalEvidenceData || []).map((item) =>
-        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item,
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
       return { ...state, bcscSecure }
@@ -631,14 +631,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const { evidenceType, documentNumber }: { evidenceType: EvidenceType; documentNumber: string } =
         (action?.payload || []).pop() ?? {}
       const updatedEvidenceData = (state.bcscSecure.additionalEvidenceData || []).map((item) =>
-        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item,
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.REMOVE_INCOMPLETE_SECURE_EVIDENCE: {
       const completeEvidence = (state.bcscSecure.additionalEvidenceData || []).filter(
-        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber),
+        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: completeEvidence }
       return { ...state, bcscSecure }

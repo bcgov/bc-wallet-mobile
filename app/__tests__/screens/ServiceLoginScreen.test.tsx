@@ -35,7 +35,7 @@ describe('ServiceLogin', () => {
         <DeepLinkViewModelProvider viewModel={createMockViewModel()}>
           <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
         </DeepLinkViewModelProvider>
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

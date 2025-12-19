@@ -18,7 +18,7 @@ describe('MismatchedSerial', () => {
     const tree = render(
       <BasicAppContext>
         <MismatchedSerialScreen />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

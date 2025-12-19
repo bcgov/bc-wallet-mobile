@@ -55,7 +55,7 @@ export const getVideoMetadata = async (
   buffer: Buffer,
   duration: number,
   prompts: VerificationPrompt[],
-  mtime: number,
+  mtime: number
 ): Promise<VerificationVideoUploadPayload> => {
   return {
     content_type: VIDEO_MP4_MIME_TYPE,

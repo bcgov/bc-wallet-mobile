@@ -20,7 +20,7 @@ describe('LoadingIcon Component', () => {
     const tree = render(
       <BasicAppContext>
         <LoadingIcon size={size} color={color} active={active} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })

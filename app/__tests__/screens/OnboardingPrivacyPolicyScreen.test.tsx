@@ -22,7 +22,7 @@ describe('OnboardingPrivacyPolicy', () => {
     const tree = render(
       <BasicAppContext>
         <OnboardingPrivacyPolicyScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

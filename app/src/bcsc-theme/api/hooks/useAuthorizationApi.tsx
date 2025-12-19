@@ -74,7 +74,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             {
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               skipBearerAuth: true,
-            },
+            }
           )
 
           return data
@@ -92,7 +92,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         }
       })
     },
-    [apiClient],
+    [apiClient]
   )
 
   /**
@@ -142,7 +142,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             {
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
               skipBearerAuth: true,
-            },
+            }
           )
 
           return data
@@ -160,7 +160,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         }
       })
     },
-    [apiClient],
+    [apiClient]
   )
 
   return useMemo(
@@ -168,7 +168,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
       authorizeDevice,
       authorizeDeviceWithUnknownBCSC,
     }),
-    [authorizeDevice, authorizeDeviceWithUnknownBCSC],
+    [authorizeDevice, authorizeDeviceWithUnknownBCSC]
   )
 }
 

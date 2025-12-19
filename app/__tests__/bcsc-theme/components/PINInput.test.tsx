@@ -12,7 +12,7 @@ describe('PINInput snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <PINInput onPINChange={jest.fn()} onPINComplete={jest.fn()} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })
@@ -21,7 +21,7 @@ describe('PINInput snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <PINInput onPINChange={jest.fn()} onPINComplete={jest.fn()} errorMessage="Invalid PIN" />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })
@@ -30,7 +30,7 @@ describe('PINInput snapshots', () => {
     const tree = render(
       <BasicAppContext>
         <PINInput onPINChange={jest.fn()} onPINComplete={jest.fn()} autoFocus={true} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })

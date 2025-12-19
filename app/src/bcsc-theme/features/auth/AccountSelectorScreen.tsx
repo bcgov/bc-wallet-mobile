@@ -30,7 +30,7 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
       navigation.navigate(BCSCScreens.EnterPIN)
     },
-    [dispatch, navigation],
+    [dispatch, navigation]
   )
 
   // This handles the case where user has completed onboarding but has not set a nickname yet

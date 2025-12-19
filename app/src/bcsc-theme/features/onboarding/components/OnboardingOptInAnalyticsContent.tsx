@@ -43,7 +43,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         {
           file: 'OnboardingOptInAnalyticsContent.tsx',
         },
-        error as Error,
+        error as Error
       )
     }
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })

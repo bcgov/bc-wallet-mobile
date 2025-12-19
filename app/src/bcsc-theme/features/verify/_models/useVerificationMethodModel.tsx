@@ -70,7 +70,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       // TODO (bm): Look for prod queue(s) depending on environment
       const availableDestination = destinations.find(
-        (dest) => dest.destination_name === 'Test Harness Queue Destination',
+        (dest) => dest.destination_name === 'Test Harness Queue Destination'
       )
 
       if (!availableDestination) {

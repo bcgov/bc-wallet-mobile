@@ -57,7 +57,7 @@ describe('useDeviceAttestationApi', () => {
         {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
-        },
+        }
       )
 
       expect(response).toBe(true)
@@ -96,7 +96,7 @@ describe('useDeviceAttestationApi', () => {
       const { result } = renderHook(() => useDeviceAttestationApi(null))
 
       await expect(result.current.verifyAttestation(mockPayload)).rejects.toThrow(
-        'BCSC client not ready for Device Attestation!',
+        'BCSC client not ready for Device Attestation!'
       )
     })
   })
@@ -141,7 +141,7 @@ describe('useDeviceAttestationApi', () => {
       const { result } = renderHook(() => useDeviceAttestationApi(null))
 
       await expect(result.current.checkAttestationStatus(mockJwtID)).rejects.toThrow(
-        'BCSC client not ready for Device Attestation!',
+        'BCSC client not ready for Device Attestation!'
       )
     })
   })

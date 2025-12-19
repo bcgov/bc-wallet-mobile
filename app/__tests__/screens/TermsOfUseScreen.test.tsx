@@ -22,7 +22,7 @@ describe('TermsOfUse', () => {
     const tree = render(
       <BasicAppContext>
         <TermsOfUseScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

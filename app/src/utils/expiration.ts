@@ -1,6 +1,6 @@
 export const expirationOverrideInMinutes = (
   enabledAt: Date,
-  autoDisableRemoteLoggingIntervalInMinutes: number,
+  autoDisableRemoteLoggingIntervalInMinutes: number
 ): number => {
   const now = Date.now()
   const enabledAtTime = enabledAt.getTime()

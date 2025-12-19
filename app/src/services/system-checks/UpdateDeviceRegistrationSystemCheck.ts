@@ -49,7 +49,7 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
     } catch (error) {
       this.utils.logger.error(
         'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
-        error as Error,
+        error as Error
       )
     }
   }

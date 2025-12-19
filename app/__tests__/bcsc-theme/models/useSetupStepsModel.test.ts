@@ -338,7 +338,7 @@ describe('useSetupStepsModel', () => {
         expect.arrayContaining([
           expect.objectContaining({ text: expect.any(String), onPress: expect.any(Function) }),
           expect.objectContaining({ text: expect.any(String), style: 'cancel' }),
-        ]),
+        ])
       )
     })
 

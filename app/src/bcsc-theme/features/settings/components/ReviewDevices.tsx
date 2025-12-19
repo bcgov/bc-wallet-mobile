@@ -66,7 +66,7 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevic
         <ThemedText variant={'headingThree'}>{t('BCSC.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
 
         <ThemedText>{`${t('BCSC.SystemChecks.Devices.ReviewDevicesContentA1')} ${maxDevices} ${t(
-          'BCSC.SystemChecks.Devices.ReviewDevicesContentA2',
+          'BCSC.SystemChecks.Devices.ReviewDevicesContentA2'
         )}`}</ThemedText>
 
         <ThemedText>{t('BCSC.SystemChecks.Devices.ReviewDevicesContentB')}</ThemedText>

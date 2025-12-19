@@ -13,7 +13,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
  * EnterBirthdateViewmodel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
  */
 export const useEnterBirthdateViewModel = (
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>,
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
   const [store] = useStore<BCState>()
   const { authorization } = useApi()
@@ -32,7 +32,7 @@ export const useEnterBirthdateViewModel = (
           CommonActions.reset({
             index: 0,
             routes: [{ name: BCSCScreens.SetupSteps }],
-          }),
+          })
         )
         return
       }
@@ -59,21 +59,13 @@ export const useEnterBirthdateViewModel = (
           CommonActions.reset({
             index: 0,
             routes: [{ name: BCSCScreens.SetupSteps }],
-          }),
+          })
         )
       } else {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       }
     },
-    [
-      authorization,
-      navigation,
-      logger,
-      updateUserInfo,
-      updateDeviceCodes,
-      updateCardProcess,
-      updateVerificationOptions,
-    ],
+    [authorization, navigation, logger, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions]
   )
 
   return {

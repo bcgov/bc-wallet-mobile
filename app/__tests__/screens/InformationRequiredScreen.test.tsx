@@ -25,7 +25,7 @@ describe('InformationRequired', () => {
         <BCSCLoadingProvider>
           <InformationRequiredScreen navigation={mockNavigation as never} />
         </BCSCLoadingProvider>
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

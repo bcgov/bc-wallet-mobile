@@ -43,7 +43,7 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
         {
           file: 'AnalyticsSystemCheck.ts',
         },
-        error as Error,
+        error as Error
       )
     }
   }

@@ -36,7 +36,7 @@ const HelpHeaderButton: React.FC<{
         logger.error(`Error navigating to Help Center webview: ${error}`)
       }
     },
-    [navigateToWebView, logger, t],
+    [navigateToWebView, logger, t]
   )
 
   return (
@@ -67,7 +67,7 @@ export const createMainHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProp
       (url: string, title: string) => {
         navigation.navigate(BCSCScreens.MainWebView, { url, title })
       },
-      [navigation],
+      [navigation]
     )
 
     return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
@@ -86,7 +86,7 @@ export const createVerifyHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonPr
       (url: string, title: string) => {
         navigation.navigate(BCSCScreens.VerifyWebView, { url, title })
       },
-      [navigation],
+      [navigation]
     )
 
     return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
@@ -105,7 +105,7 @@ export const createOnboardingHelpHeaderButton = (helpHeaderProps: HelpHeaderButt
       (url: string, title: string) => {
         navigation.navigate(BCSCScreens.OnboardingWebView, { url, title })
       },
-      [navigation],
+      [navigation]
     )
 
     return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />

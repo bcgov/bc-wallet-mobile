@@ -59,7 +59,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       t('PersonCredential.OfferingCredential'),
       t('PersonCredential.InitiatingAppToAppFlow'),
     ],
-    [t],
+    [t]
   )
 
   const setStep = useCallback(
@@ -68,7 +68,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
       setProgressPercent(percent)
     },
-    [steps],
+    [steps]
   )
 
   const styles = StyleSheet.create({
@@ -127,7 +127,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
         params: { credentialId },
       })
     },
-    [navigation],
+    [navigation]
   )
 
   useEffect(() => {
@@ -155,7 +155,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
     subscriptions.push(
-      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, handleFailedAttestation),
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, handleFailedAttestation)
     )
 
     return () => {

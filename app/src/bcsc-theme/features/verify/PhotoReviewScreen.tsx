@@ -38,7 +38,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
               { name: BCSCScreens.PhotoInstructions, params: { forLiveCall: true } },
               { name: BCSCScreens.StartCall },
             ],
-          }),
+          })
         )
         return
       }
@@ -51,7 +51,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
             { name: BCSCScreens.VerificationMethodSelection },
             { name: BCSCScreens.InformationRequired },
           ],
-        }),
+        })
       )
     } catch (error) {
       logger.error(`Error saving photo: ${error}`)

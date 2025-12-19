@@ -16,7 +16,7 @@ describe('EmptyList Component', () => {
     const tree = render(
       <BasicAppContext>
         <EmptyList />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })

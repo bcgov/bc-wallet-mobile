@@ -137,7 +137,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           color: theme.ColorPalette.notification.infoText,
         },
       },
-    }),
+    })
   )
   // NavigationTheme overrides
   .withOverrides(
@@ -150,7 +150,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           text: theme.ColorPalette.brand.secondaryBackground,
         },
       },
-    }),
+    })
   )
   // LoadingTheme overrides
   .withOverrides(
@@ -158,7 +158,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       LoadingTheme: {
         backgroundColor: theme.ColorPalette.brand.primary,
       },
-    }),
+    })
   )
   // PINInputTheme overrides
   .withOverrides(
@@ -184,7 +184,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           color: theme.ColorPalette.grayscale.darkGrey,
         },
       },
-    }),
+    })
   )
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
@@ -202,7 +202,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           fill: theme.ColorPalette.notification.infoText,
         },
       },
-    }),
+    })
   )
   // InputTheme overrides
   .withOverrides(
@@ -226,7 +226,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           color: theme.ColorPalette.brand.text,
         },
       },
-    }),
+    })
   )
   // ButtonTheme overrides
   .withOverrides(
@@ -302,7 +302,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         modalTertiaryTextDisabled: undefined,
         modalPrimaryTextDisabled: undefined,
       },
-    }),
+    })
   )
   // ListItems overrides
   .withOverrides(
@@ -342,7 +342,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           fontSize: undefined,
         },
       },
-    }),
+    })
   )
   // TabTheme overrides
   .withOverrides(
@@ -370,7 +370,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         tabBarActiveTintColor: theme.ColorPalette.brand.primary,
         tabBarInactiveTintColor: theme.ColorPalette.grayscale.white,
       },
-    }),
+    })
   )
   // SettingsTheme overrides
   .withOverrides(
@@ -388,7 +388,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         groupBackground: theme.ColorPalette.brand.secondaryBackground,
       },
-    }),
+    })
   )
   // ChatTheme overrides
   .withOverrides(
@@ -442,7 +442,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           alignItems: undefined,
         },
       },
-    }),
+    })
   )
   // HomeTheme overrides
   .withOverrides(
@@ -457,7 +457,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           color: theme.ColorPalette.brand.link,
         },
       },
-    }),
+    })
   )
   // Assets overrides
   .withOverrides({

@@ -268,7 +268,7 @@ describe('useFilterServiceClients', () => {
           cardProcessFilter: BCSCCardProcess.BCSCPhoto,
           requireBCAddressFilter: true,
           partialNameFilter: 'ALPHA',
-        }),
+        })
       )
 
       expect(hook.result.current.isLoading).toBe(true)
@@ -295,7 +295,7 @@ describe('useFilterServiceClients', () => {
           cardProcessFilter: BCSCCardProcess.NonBCSC,
           requireBCAddressFilter: true,
           partialNameFilter: 'ALPHA',
-        }),
+        })
       )
 
       expect(hook.result.current.isLoading).toBe(true)

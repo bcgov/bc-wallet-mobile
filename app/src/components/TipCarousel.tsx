@@ -110,7 +110,7 @@ const TipCarousel = () => {
         }
       }),
     ],
-    [t],
+    [t]
   )
 
   const scrolling = useCallback(() => {

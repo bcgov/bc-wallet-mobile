@@ -102,7 +102,7 @@ const findCredDefIDs = (restrictions: [Restriction]): Array<string> => {
 const invitationUrlFromRestrictions = async (
   proof: ProofExchangeRecord,
   agent: BifoldAgent,
-  restrictions: AttestationRestrictionsType,
+  restrictions: AttestationRestrictionsType
 ): Promise<string | undefined> => {
   const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
@@ -129,7 +129,7 @@ const invitationUrlFromRestrictions = async (
 export const isProofRequestingAttestation = async (
   proof: ProofExchangeRecord,
   agent: BifoldAgent,
-  restrictions: AttestationRestrictionsType,
+  restrictions: AttestationRestrictionsType
 ): Promise<boolean> => {
   return (await invitationUrlFromRestrictions(proof, agent, restrictions)) !== undefined
 }
@@ -203,7 +203,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'The agent cannot be undefined.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -218,7 +218,7 @@ export class AttestationMonitor implements AttestationMonitorI {
           'Attestation Service',
           'Unable to connect to the attestation service.',
           'No details provided.',
-          AttestationErrorCodes.FailedToConnectToAttestationAgent,
+          AttestationErrorCodes.FailedToConnectToAttestationAgent
         )
       }
 
@@ -228,7 +228,7 @@ export class AttestationMonitor implements AttestationMonitorI {
           'Attestation Service',
           'Unable to connect to the attestation service.',
           'No details provided.',
-          AttestationErrorCodes.FailedToConnectToAttestationAgent,
+          AttestationErrorCodes.FailedToConnectToAttestationAgent
         )
       }
 
@@ -238,7 +238,7 @@ export class AttestationMonitor implements AttestationMonitorI {
           'Attestation Service',
           'There was a problem with the attestation service.',
           'No details provided.',
-          AttestationErrorCodes.FailedToFetchNonceForAttestation,
+          AttestationErrorCodes.FailedToFetchNonceForAttestation
         )
       }
 
@@ -248,7 +248,7 @@ export class AttestationMonitor implements AttestationMonitorI {
           'Attestation Service',
           'There was a problem with the attestation service.',
           'No details provided.',
-          AttestationErrorCodes.FailedToGenerateAttestation,
+          AttestationErrorCodes.FailedToGenerateAttestation
         )
       }
 
@@ -258,7 +258,7 @@ export class AttestationMonitor implements AttestationMonitorI {
           'Attestation Service',
           'There was a problem with the attestation service.',
           'No details provided.',
-          AttestationErrorCodes.FailedToValidateAttestation,
+          AttestationErrorCodes.FailedToValidateAttestation
         )
       }
     } catch (error) {
@@ -305,7 +305,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'The agent cannot be undefined.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -361,7 +361,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'The agent cannot be undefined.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -425,7 +425,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'The agent cannot be undefined.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -438,7 +438,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'Unable to parse the attestation agent invitation',
         'No details provided.',
-        AttestationErrorCodes.BadInvitation,
+        AttestationErrorCodes.BadInvitation
       )
     }
 
@@ -452,7 +452,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'Unable to accept attestation agent invitation',
         'No details provided.',
-        AttestationErrorCodes.BadInvitation,
+        AttestationErrorCodes.BadInvitation
       )
     }
 
@@ -467,7 +467,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'The agent cannot be undefined.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -483,7 +483,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'Timeout occurred.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -491,14 +491,14 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     if (nonceResponse.error) {
       this.log?.error(
-        `Failed to fetch nonce for attestation, code = ${nonceResponse.error.code}, reason = ${nonceResponse.error.message}`,
+        `Failed to fetch nonce for attestation, code = ${nonceResponse.error.code}, reason = ${nonceResponse.error.message}`
       )
 
       throw new BifoldError(
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         nonceResponse.error.message ?? 'No details provided.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -509,14 +509,14 @@ export class AttestationMonitor implements AttestationMonitorI {
 
   private async requestAttestation(
     connection: ConnectionRecord,
-    attestationObj: AttestationRequestParams,
+    attestationObj: AttestationRequestParams
   ): Promise<AttestationResult> {
     if (!this.agent) {
       throw new BifoldError(
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'No details provided.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation,
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
 
@@ -532,7 +532,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         'Timeout occurred.',
-        AttestationErrorCodes.FailedToRequestAttestation,
+        AttestationErrorCodes.FailedToRequestAttestation
       )
     }
 
@@ -540,14 +540,14 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     if (attestationResponse.error) {
       this.log?.error(
-        `Failed to request attestation, code = ${attestationResponse.error.code}, reason = ${attestationResponse.error.message}`,
+        `Failed to request attestation, code = ${attestationResponse.error.code}, reason = ${attestationResponse.error.message}`
       )
 
       throw new BifoldError(
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         attestationResponse.error.message ?? 'No details provided.',
-        AttestationErrorCodes.FailedToRequestAttestation,
+        AttestationErrorCodes.FailedToRequestAttestation
       )
     }
 
@@ -610,7 +610,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Google Play Integrity Unavailable',
         'Google Play Integrity is required for device attestation but is not available on this device.',
         'The device attestation process cannot be completed without Google Play Integrity services.',
-        AttestationErrorCodes.IntegrityUnavailable,
+        AttestationErrorCodes.IntegrityUnavailable
       )
 
       throw error
@@ -628,7 +628,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Google Attestation Error',
         'There was a problem with the Google Integrity API.',
         (error as Error)?.message || 'No details provided.',
-        AttestationErrorCodes.IntegrityUnavailable,
+        AttestationErrorCodes.IntegrityUnavailable
       )
       throw bifoldError
     }

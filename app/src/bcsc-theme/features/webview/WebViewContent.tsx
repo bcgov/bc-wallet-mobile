@@ -47,7 +47,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   // iOS uses JavaScript injection, Android uses native textZoom prop
   const { injectedJavaScript, textZoom } = useMemo(
     () => getWebViewAccessibilityProps(Platform.OS, fontScale, injectedJavascript),
-    [fontScale, injectedJavascript],
+    [fontScale, injectedJavascript]
   )
 
   const styles = StyleSheet.create({
@@ -68,7 +68,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       const { nativeEvent } = syntheticEvent
       logger.error('WebView Error:', { ...nativeEvent })
     },
-    [logger],
+    [logger]
   )
 
   const handleHttpError = useCallback(
@@ -80,7 +80,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
         description: nativeEvent.description,
       })
     },
-    [logger],
+    [logger]
   )
 
   return (

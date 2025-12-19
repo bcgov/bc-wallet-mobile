@@ -17,7 +17,7 @@ describe('ProgressBar Component', () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     waitFor(() => {
@@ -29,7 +29,7 @@ describe('ProgressBar Component', () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} dark />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     waitFor(() => {

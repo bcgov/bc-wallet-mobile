@@ -89,7 +89,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         // For each metadata item, find matching upload URI and upload binary
         for (const metadataItem of evidenceItem.metadata) {
           const matchingResponse = evidenceMetadataResponse.find(
-            (response: any) => response.label === metadataItem.label,
+            (response: any) => response.label === metadataItem.label
           )
 
           if (matchingResponse) {
@@ -143,7 +143,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SuccessfullySent }],
-        }),
+        })
       )
     } catch (error) {
       // TODO (MD): Handle this error properly (show user feedback etc...)

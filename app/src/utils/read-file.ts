@@ -15,7 +15,7 @@ const readFileInChunks = async (
   filePath: string,
   logger: BifoldLogger,
   chunkSize: number = DEFAULT_CHUNK_SIZE,
-  onChunk?: (chunkBuffer: Buffer, progress: number) => void | Promise<void>,
+  onChunk?: (chunkBuffer: Buffer, progress: number) => void | Promise<void>
 ): Promise<Buffer> => {
   try {
     const stat = await RNFS.stat(filePath)

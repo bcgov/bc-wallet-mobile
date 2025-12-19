@@ -23,7 +23,7 @@ describe('OnboardingWebView', () => {
     const tree = render(
       <BasicAppContext>
         <OnboardingWebViewScreen route={route} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

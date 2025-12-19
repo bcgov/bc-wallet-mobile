@@ -44,7 +44,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
 export const connectToIASAgent = async (
   agent: Agent,
   iasAgentInviteUrl: string,
-  t: TFunction<'translation', undefined>,
+  t: TFunction<'translation', undefined>
 ): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
@@ -63,7 +63,7 @@ export const connectToIASAgent = async (
       t('Error.Title2021'),
       t('Error.Message2021'),
       t('Error.NoMessage'),
-      ErrorCodes.ReceiveInvitationError,
+      ErrorCodes.ReceiveInvitationError
     )
   }
 
@@ -77,7 +77,7 @@ export const connectToIASAgent = async (
       t('Error.Title2022'),
       t('Error.Message2022'),
       t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID,
+      ErrorCodes.CannotGetLegacyDID
     )
   }
 
@@ -89,7 +89,7 @@ export const connectToIASAgent = async (
       t('Error.Title2022'),
       t('Error.Message2022'),
       t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID,
+      ErrorCodes.CannotGetLegacyDID
     )
   }
 
@@ -101,7 +101,7 @@ export const connectToIASAgent = async (
       t('Error.Title2022'),
       t('Error.Message2022'),
       t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID,
+      ErrorCodes.CannotGetLegacyDID
     )
   }
 
@@ -124,7 +124,7 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 export const initiateAppToAppFlow = async (
   url: string,
   t: TFunction<'translation', undefined>,
-  logger?: BifoldLogger,
+  logger?: BifoldLogger
 ) => {
   try {
     if (await Linking.canOpenURL(url)) {
@@ -143,7 +143,7 @@ export const initiateAppToAppFlow = async (
 export const authenticateWithServiceCard = async (
   legacyConnectionDid: string,
   iasPortalUrl: string,
-  callback?: (status: boolean) => void,
+  callback?: (status: boolean) => void
 ): Promise<void> => {
   try {
     const url = `${iasPortalUrl}/${legacyConnectionDid}`
@@ -208,7 +208,7 @@ export const authenticateWithServiceCard = async (
   } catch (error: unknown) {
     const code = (error as BifoldError).code
     cleanupAfterServiceCardAuthentication(
-      code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail,
+      code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)

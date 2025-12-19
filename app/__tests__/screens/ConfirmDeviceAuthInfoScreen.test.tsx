@@ -22,7 +22,7 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
     const tree = render(
       <BasicAppContext>
         <ConfirmDeviceAuthInfoScreen navigation={mockNavigation as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

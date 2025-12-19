@@ -78,7 +78,7 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
         inactivityTimeoutRef.current = setTimeout(handleInactivityTimeout, milliseconds)
       }
     },
-    [clearInactivityTimeoutIfExists, handleInactivityTimeout],
+    [clearInactivityTimeoutIfExists, handleInactivityTimeout]
   )
 
   // TODO (bm): use these in live call
@@ -161,7 +161,7 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
 
   const contextValue = useMemo(
     () => ({ appStateStatus, pauseActivityTracking, resumeActivityTracking }),
-    [appStateStatus, pauseActivityTracking, resumeActivityTracking],
+    [appStateStatus, pauseActivityTracking, resumeActivityTracking]
   )
 
   return (

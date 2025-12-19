@@ -113,7 +113,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
             startupChecks.push(
-              new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils),
+              new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils)
             )
           }
 

@@ -20,7 +20,7 @@ describe('RemoteLogWarning Screen', () => {
     const tree = render(
       <BasicAppContext>
         <RemoteLogWarning onEnablePressed={jest.fn()} onBackPressed={jest.fn()} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

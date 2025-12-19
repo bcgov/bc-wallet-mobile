@@ -64,7 +64,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       // clear field-specific error on change
       setFormErrors((prev) => ({ ...prev, [field]: undefined }))
     },
-    [],
+    []
   )
 
   /**
@@ -93,7 +93,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       return errors
     },
-    [t],
+    [t]
   )
 
   /**

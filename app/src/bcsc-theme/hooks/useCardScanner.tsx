@@ -90,15 +90,7 @@ export const useCardScanner = () => {
         })
       }
     },
-    [
-      authorization,
-      updateUserInfo,
-      updateDeviceCodes,
-      updateCardProcess,
-      updateVerificationOptions,
-      logger,
-      navigation,
-    ],
+    [authorization, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, logger, navigation]
   )
 
   /**
@@ -112,7 +104,7 @@ export const useCardScanner = () => {
       await updateUserInfo({ serial: bcscSerial })
       navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }] })
     },
-    [updateUserInfo, navigation],
+    [updateUserInfo, navigation]
   )
 
   /**
@@ -149,10 +141,7 @@ export const useCardScanner = () => {
   const handleCardScan = useCallback(
     async (
       barcodes: ScanableCode[],
-      handleScannedCardData: (
-        bcscSerial: string | null,
-        license: DriversLicenseMetadata | null,
-      ) => Promise<void> | void,
+      handleScannedCardData: (bcscSerial: string | null, license: DriversLicenseMetadata | null) => Promise<void> | void
     ) => {
       // Prevent multiple scans from being processed
       if (!scannerEnabledRef.current) {
@@ -191,7 +180,7 @@ export const useCardScanner = () => {
 
       await handleScannedCardData(bcscSerial, licenseMetadata)
     },
-    [logger],
+    [logger]
   )
 
   return useMemo(
@@ -202,6 +191,6 @@ export const useCardScanner = () => {
       handleScanComboCard,
       handleScanBCServicesCard,
     }),
-    [handleCardScan, handleScanBCServicesCard, handleScanComboCard],
+    [handleCardScan, handleScanBCServicesCard, handleScanComboCard]
   )
 }

@@ -19,7 +19,7 @@ describe('MainWebView', () => {
     const tree = render(
       <BasicAppContext>
         <MainWebViewScreen route={route as never} />
-      </BasicAppContext>,
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()

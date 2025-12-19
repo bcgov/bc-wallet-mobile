@@ -48,7 +48,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
 
     if (!bcscSerial) {
       throw new Error(
-        'Failed to decode BCSC serial from combo card barcode. Did you forget to check if it can be decoded?',
+        'Failed to decode BCSC serial from combo card barcode. Did you forget to check if it can be decoded?'
       )
     }
 

@@ -150,7 +150,7 @@ export function createMinimalCredential(
   issuer: string,
   subject: string,
   cardType?: string,
-  accountType?: string,
+  accountType?: string
 ): CredentialInfo {
   return {
     issuer,
