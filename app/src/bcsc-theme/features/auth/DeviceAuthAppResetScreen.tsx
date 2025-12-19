@@ -1,3 +1,4 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
@@ -12,7 +13,6 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 // import { useTranslation } from 'react-i18next'
-import { removeAccount } from 'react-native-bcsc-core'
 
 interface DeviceAuthAppResetScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.DeviceAuthInfo>
@@ -20,17 +20,17 @@ interface DeviceAuthAppResetScreenProps {
 
 export const DeviceAuthAppResetScreen: React.FC<DeviceAuthAppResetScreenProps> = () => {
   const { Spacing } = useTheme()
-  // const { t } = useTranslation()
+  const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const onPressSetUpApp = useCallback(async () => {
     try {
-      await removeAccount()
+      await factoryReset()
     } catch (error) {
       const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Error removing account: ${strErr}`)
+      logger.error(`Error resetting account: ${strErr}`)
     }
-  }, [logger])
+  }, [logger, factoryReset])
 
   const onPressLearnMore = useCallback(() => {
     // TODO (bm): implement

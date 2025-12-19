@@ -1,3 +1,4 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
@@ -14,7 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { isAccountLocked, removeAccount } from 'react-native-bcsc-core'
+import { isAccountLocked } from 'react-native-bcsc-core'
 
 const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60)
@@ -36,6 +37,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0)
   const [shouldNavigateBack, setShouldNavigateBack] = useState(false)
+  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     hr: {
@@ -99,12 +101,12 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
 
   const onPressRemoveAccount = useCallback(async () => {
     try {
-      await removeAccount()
+      await factoryReset()
     } catch (error) {
       const strErr = error instanceof Error ? error.message : String(error)
       logger.error(`Error removing account: ${strErr}`)
     }
-  }, [logger])
+  }, [logger, factoryReset])
 
   const controls = (
     <Button

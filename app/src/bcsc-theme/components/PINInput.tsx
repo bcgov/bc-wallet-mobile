@@ -1,4 +1,4 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { forwardRef, useState } from 'react'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -81,7 +81,12 @@ export const PINInput = forwardRef<TextInput, PINInputProps>(
             accessibilityLabel={pin.split('').join(' ')}
             accessibilityHint="Enter your 6-digit PIN"
           />
-          <TouchableOpacity style={styles.eyeIcon} onPress={toggleVisibility}>
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={toggleVisibility}
+            testID={testIdWithKey('VisibilityButton')}
+            accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
+          >
             <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
           </TouchableOpacity>
         </View>

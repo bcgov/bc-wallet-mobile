@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`PINInput snapshots renders correctly with autoFocus enabled 1`] = `
+exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
 [
   <View
     style={
@@ -116,7 +116,7 @@ exports[`PINInput snapshots renders correctly with autoFocus enabled 1`] = `
 ]
 `;
 
-exports[`PINInput snapshots renders correctly with error message 1`] = `
+exports[`PINInput Snapshot renders correctly with error message 1`] = `
 [
   <View
     style={
@@ -243,13 +243,13 @@ exports[`PINInput snapshots renders correctly with error message 1`] = `
         ]
       }
     >
-      Invalid PIN
+      Incorrect PIN
     </Text>
   </View>,
 ]
 `;
 
-exports[`PINInput snapshots renders correctly without error 1`] = `
+exports[`PINInput Snapshot renders correctly without error message 1`] = `
 [
   <View
     style={
