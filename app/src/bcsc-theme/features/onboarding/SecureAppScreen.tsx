@@ -15,7 +15,6 @@ import { Platform, StyleSheet } from 'react-native'
 import {
   AccountSecurityMethod,
   BiometricType,
-  canPerformBiometricAuthentication,
   canPerformDeviceAuthentication,
   getAvailableBiometricType,
   performDeviceAuthentication,
@@ -39,7 +38,6 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
   const { register } = useRegistrationApi(client, isClientReady)
   const [isDeviceAuthAvailable, setIsDeviceAuthAvailable] = useState(false)
   const [deviceAuthMethodName, setDeviceAuthMethodName] = useState('')
-  const [hasBiometrics, setHasBiometrics] = useState(false)
   const { startLoading, stopLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -53,19 +51,16 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
     const asyncEffect = async () => {
       try {
         startLoading()
-        const [deviceAuthAvailable, biometricType, biometricsAvailable] = await Promise.all([
+        const [deviceAuthAvailable, biometricType] = await Promise.all([
           canPerformDeviceAuthentication(),
           getAvailableBiometricType(),
-          canPerformBiometricAuthentication(),
         ])
         setIsDeviceAuthAvailable(deviceAuthAvailable)
-        setHasBiometrics(biometricsAvailable && biometricType !== BiometricType.None)
         setDeviceAuthMethodName(biometricType === BiometricType.None ? 'Device Passcode' : upperFirst(biometricType))
       } catch (error) {
         const strErr = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking device auth availability: ${strErr}`)
         setIsDeviceAuthAvailable(false)
-        setHasBiometrics(false)
       } finally {
         stopLoading()
       }
@@ -85,33 +80,16 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
     try {
       startLoading()
 
-      // First try biometrics if available
-      if (hasBiometrics) {
-        try {
-          const biometricSuccess = await performDeviceAuthentication('Authenticate to secure your app')
-          if (biometricSuccess) {
-            await completeDeviceSecuritySetup()
-            return
-          }
-        } catch (biometricError) {
-          const strErr = biometricError instanceof Error ? biometricError.message : String(biometricError)
-          logger.debug(`Biometric authentication failed ${strErr}`)
-          // Do nothing, fallback to passcode if available
-        }
-      }
-
-      // Fallback to device passcode if biometrics failed or aren't available
       if (isDeviceAuthAvailable) {
         try {
-          const passcodeSuccess = await performDeviceAuthentication('Enter your device passcode to secure your app')
-          if (passcodeSuccess) {
+          const deviceAuthSuccessful = await performDeviceAuthentication('Authenticate to secure your app')
+          if (deviceAuthSuccessful) {
             await completeDeviceSecuritySetup()
             return
           }
-        } catch (passcodeError) {
-          const strErr = passcodeError instanceof Error ? passcodeError.message : String(passcodeError)
-          logger.debug(`Device passcode authentication failed ${strErr}`)
-          // Do nothing - user failed authentication
+        } catch (deviceAuthError) {
+          const strErr = deviceAuthError instanceof Error ? deviceAuthError.message : String(deviceAuthError)
+          logger.debug(`Device authentication failed ${strErr}`)
         }
       }
     } catch (error) {

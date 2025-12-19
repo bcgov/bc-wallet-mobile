@@ -12,7 +12,7 @@ import {
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -57,7 +57,7 @@ export interface NonceResponseData {
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
 
@@ -158,8 +158,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         nickname: store.bcsc.selectedNickname,
       })
 
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-
       await updateTokens({
         registrationAccessToken: data.registration_access_token,
       })
@@ -168,7 +166,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, dispatch]
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
   )
 
   /**
