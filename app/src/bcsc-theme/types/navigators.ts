@@ -214,7 +214,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.DeviceInvalidated]: { caseType: BCSCReason }
+  [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
 }
 
 export type BCSCAuthStackParams = {
