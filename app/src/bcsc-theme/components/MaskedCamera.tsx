@@ -1,10 +1,11 @@
+import { PHOTO_RESOLUTION_720P } from '@/constants'
 import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import { Camera, CodeScanner, useCameraDevice, useCameraFormat, useCameraPermission } from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
   navigation: any
@@ -13,6 +14,7 @@ type MaskedCameraProps = {
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
 
@@ -22,6 +24,7 @@ const MaskedCamera = ({
   cameraLabel,
   maskLineColor,
   maskType,
+  codeScanner,
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
@@ -35,6 +38,14 @@ const MaskedCamera = ({
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasTorch = device?.hasTorch ?? false
+  const format = useCameraFormat(device, [
+    {
+      fps: Platform.OS === 'ios' ? 'max' : 30,
+    },
+    {
+      photoResolution: PHOTO_RESOLUTION_720P,
+    },
+  ])
 
   const styles = StyleSheet.create({
     container: {
@@ -154,10 +165,12 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
+        format={format}
         isActive={isActive}
         photo={true}
         onInitialized={() => setIsActive(true)}
         onError={onError}
+        codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />

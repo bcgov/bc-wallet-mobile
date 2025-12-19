@@ -17,7 +17,7 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
- * API:
+ * API: Includes some oppioniated default handlers for common scanning scenarios.
  * 	- scanCard: Function to handle the scanning of a card.
  * 	- handleScanComboCard: Default function to handle combo card scanning (both BCSC serial and driver's license metadata).
  * 	- handleScanBCServicesCard: Default function to handle BCSC card scanning (BCSC serial only).
@@ -87,6 +87,41 @@ export const useCardScanner = () => {
       navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }] })
     },
     [dispatch, navigation]
+  )
+
+  /**
+   * Default handler for driver's license scanning (license metadata only).
+   *
+   * @param license - The driver's license metadata.
+   * @returns A promise that resolves when the scanning process is complete.
+   */
+  const handleScanDriversLicense = useCallback(
+    async (license: DriversLicenseMetadata) => {
+      dispatch({
+        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
+        payload: [
+          {
+            streetAddress: license.streetAddress,
+            postalCode: license.postalCode,
+            city: license.city,
+            province: license.province,
+            country: 'CA', // currently we only support Canada licenses
+          },
+        ],
+      })
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
+        payload: [
+          {
+            first: license.firstName,
+            last: license.lastName,
+            middle: license.middleNames,
+          },
+        ],
+      })
+    },
+    [dispatch]
   )
 
   /**
@@ -172,7 +207,8 @@ export const useCardScanner = () => {
       completeScan,
       handleScanComboCard,
       handleScanBCServicesCard,
+      handleScanDriversLicense,
     }),
-    [handleCardScan, handleScanBCServicesCard, handleScanComboCard]
+    [handleCardScan, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
   )
 }
