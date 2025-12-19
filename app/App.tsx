@@ -70,7 +70,8 @@ const App = () => {
   // Wrap navigationRef.navigate to avoid accessing it before initialization
   const navigate = (stack: never, params: never) => {
     if (navigationRef.isReady()) {
-      ;(navigationRef.navigate as (stack: never, params: never) => void)(stack, params)
+      const nav = navigationRef.navigate as (stack: never, params: never) => void
+      nav(stack, params)
     }
   }
   const bcwContainer = new AppContainer(bifoldContainer, t, navigate, setSurveyVisible).init()
