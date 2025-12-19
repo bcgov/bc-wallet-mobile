@@ -24,17 +24,10 @@ type LockoutRowProps = AutoLockListItem & {
   selected: boolean
 }
 
-export const AutoLockScreen: React.FC = () => {
-  const { t } = useTranslation()
-  const [store, dispatch] = useStore()
+const LockoutRow: React.FC<LockoutRowProps> = ({ title, value, selected, testID, onPress }) => {
   const { ColorPalette, SettingsTheme, Spacing } = useTheme()
-  const currentLockoutTime = store.preferences.autoLockTime ?? AutoLockTime.FiveMinutes
 
   const styles = StyleSheet.create({
-    container: {
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      width: '100%',
-    },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
       paddingHorizontal: Spacing.lg,
@@ -45,24 +38,12 @@ export const AutoLockScreen: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    itemSeparator: {
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.primaryBackground,
-      marginHorizontal: Spacing.lg,
-    },
     checkboxContainer: {
       justifyContent: 'center',
     },
   })
 
-  const handleTimeoutChange = (time: (typeof AutoLockTime)[keyof typeof AutoLockTime]) => {
-    dispatch({
-      type: DispatchAction.AUTO_LOCK_TIME,
-      payload: [time],
-    })
-  }
-
-  const LockoutRow: React.FC<LockoutRowProps> = ({ title, value, selected, testID, onPress }) => (
+  return (
     <View style={[styles.section, styles.sectionRow]}>
       <ThemedText variant="title">{title}</ThemedText>
       <Pressable
@@ -87,6 +68,40 @@ export const AutoLockScreen: React.FC = () => {
       </Pressable>
     </View>
   )
+}
+
+const ItemSeparator: React.FC = () => {
+  const { ColorPalette, SettingsTheme, Spacing } = useTheme()
+
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: SettingsTheme.groupBackground,
+    },
+    separator: {
+      borderBottomWidth: 1,
+      borderBottomColor: ColorPalette.brand.primaryBackground,
+      marginHorizontal: Spacing.lg,
+    },
+  })
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.separator} />
+    </View>
+  )
+}
+
+export const AutoLockScreen: React.FC = () => {
+  const { t } = useTranslation()
+  const [store, dispatch] = useStore()
+  const currentLockoutTime = store.preferences.autoLockTime ?? AutoLockTime.FiveMinutes
+
+  const handleTimeoutChange = (time: (typeof AutoLockTime)[keyof typeof AutoLockTime]) => {
+    dispatch({
+      type: DispatchAction.AUTO_LOCK_TIME,
+      payload: [time],
+    })
+  }
 
   return (
     <ScreenWrapper scrollable={false} edges={['bottom']}>
@@ -123,11 +138,7 @@ export const AutoLockScreen: React.FC = () => {
             />
           )
         }}
-        ItemSeparatorComponent={() => (
-          <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-            <View style={styles.itemSeparator} />
-          </View>
-        )}
+        ItemSeparatorComponent={ItemSeparator}
       />
     </ScreenWrapper>
   )

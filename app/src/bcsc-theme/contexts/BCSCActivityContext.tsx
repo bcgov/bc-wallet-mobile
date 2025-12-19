@@ -159,8 +159,13 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
     })
   }, [resetInactivityTimeout])
 
+  const contextValue = useMemo(
+    () => ({ appStateStatus, pauseActivityTracking, resumeActivityTracking }),
+    [appStateStatus, pauseActivityTracking, resumeActivityTracking],
+  )
+
   return (
-    <BCSCActivityContext.Provider value={{ appStateStatus, pauseActivityTracking, resumeActivityTracking }}>
+    <BCSCActivityContext.Provider value={contextValue}>
       <View style={{ flex: 1 }} {...panResponder.panHandlers}>
         {children}
       </View>

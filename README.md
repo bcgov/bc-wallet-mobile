@@ -143,24 +143,18 @@ The project uses multiple formatters and linters for different languages
 ### Install Native Formatters (macOS)
 
 ```sh
-brew install swiftformat clang-format ktlint google-java-format
+brew install swiftformat clang-format ktlint
 ```
 
 ### Install VS Code Extensions
 
 The project includes recommended extensions in `.vscode/extensions.json`. VS Code will prompt you to install them when you open the project.
 
-To install all recommended extensions via command line:
-
-```sh
-cat .vscode/extensions.json | grep -o '"[^"]*\.[^"]*"' | tr -d '"' | xargs -I {} code --install-extension {}
-```
-
 ### Available Scripts
 
 ```sh
 # From the root directory
-yarn lint           # Lint all files (TypeScript, Swift, C, Kotlin, Java)
+yarn lint           # Lint all files (TypeScript, Swift, C, Kotlin)
 yarn format         # Format all files
 yarn format:check   # Check formatting without making changes
 yarn typecheck      # TypeScript type checking
