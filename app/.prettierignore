@@ -1,0 +1,21 @@
+# Build artifacts
+**/build/**
+**/lib/**
+coverage/
+
+# iOS
+ios/**
+!ios/*.h
+!ios/*.m
+
+# Android
+android/**
+!android/app/src/**
+
+# Dependencies
+**/Pods/**
+node_modules/
+
+# Caches
+.jest/
+.metro-cache/

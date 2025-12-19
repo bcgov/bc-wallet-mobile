@@ -364,7 +364,7 @@ const translation = {
       "SecureAppHeader": "Choose how to secure this app",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",
-      "SecureAppDeviceAuthSubtext": "It’s already setup on this {{platform}}. It never leaves this device or is shared with us.",
+      "SecureAppDeviceAuthSubtext": "It’s already set up on this {{platform}}. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
       "AnalyticsTitle": "Enable Analytics?",

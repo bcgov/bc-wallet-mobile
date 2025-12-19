@@ -363,7 +363,7 @@ const translation = {
       "SecureAppHeader": "Choose how to secure this app (PT-BR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (PT-BR)",
       "SecureAppFaceIDTitle": "Use Face ID (PT-BR)",
-      "SecureAppFaceIDSubtext": "It's already setup on this iPhone or iPad. It never leaves this device or is shared with us. (PT-BR)",
+      "SecureAppFaceIDSubtext": "It's already set up on this iPhone or iPad. It never leaves this device or is shared with us. (PT-BR)",
       "SecureAppBiometricsTitle": "TODO: Android title (PT-BR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
