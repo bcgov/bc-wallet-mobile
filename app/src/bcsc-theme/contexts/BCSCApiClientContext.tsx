@@ -49,11 +49,15 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     const configureClient = async () => {
       setError(null)
 
-      let newClient = client
+      // Use the singleton as reference to prevent infinite loops
+      let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
         // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (!client || client.baseURL !== store.developer.environment.iasApiBaseUrl) {
+        if (
+          !BCSC_API_CLIENT_SINGLETON ||
+          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
+        ) {
           newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
           await newClient.fetchEndpointsAndConfig()
 
@@ -81,14 +85,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [
-    store.stateLoaded,
-    store.developer.environment.name,
-    store.developer.environment.iasApiBaseUrl,
-    logger,
-    dispatch,
-    client,
-  ])
+  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
 
   const contextValue = useMemo(
     () => ({
