@@ -22,7 +22,11 @@ class TimeZoneTypeAdapter : TypeAdapter<TimeZone>() {
     }
 
     override fun read(`in`: JsonReader): TimeZone? {
+        if (`in`.peek() == com.google.gson.stream.JsonToken.NULL) {
+            `in`.nextNull()
+            return null
+        }
         val id = `in`.nextString()
-        return if (id != null) TimeZone.getTimeZone(id) else null
+        return TimeZone.getTimeZone(id)
     }
 }
