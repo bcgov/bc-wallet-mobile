@@ -83,7 +83,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     (card: EvidenceType): boolean => {
       const { collection_order } = card
       // If no additional evidence is present, the user is seeing this screen for the first time
-      if (store.bcscSecure.additionalEvidenceData?.length === 0) {
+      if (store.bcscSecure.additionalEvidenceData.length === 0) {
         return collection_order === 'BOTH' || collection_order === 'FIRST'
       } else {
         return (
@@ -148,7 +148,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
    * @returns {[string, string]} An array containing the heading and description text.
    */
   const getEvidenceHeadingAndDescription = useCallback(() => {
-    const evidenceCount = store.bcscSecure.additionalEvidenceData?.length
+    const evidenceCount = store.bcscSecure.additionalEvidenceData.length
     const isNonBCSCCard = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
     if (evidenceCount === 1 && isNonBCSCCard) {
@@ -163,7 +163,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [store.bcscSecure.additionalEvidenceData?.length, store.bcscSecure.cardProcess, t])
+  }, [store.bcscSecure.additionalEvidenceData.length, store.bcscSecure.cardProcess, t])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

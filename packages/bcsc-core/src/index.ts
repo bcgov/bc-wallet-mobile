@@ -30,6 +30,36 @@ export enum TokenType {
   Registration = 2,
 }
 
+/**
+ * BCSC Card Type enum matching native app enums.
+ * iOS: CredentialType in GlobalEnums.swift
+ * Android: BcscCardType in BcscCardType.java
+ */
+export enum BCSCCardType {
+  /** Photo BC Services Card */
+  PhotoCard = 'BC Services Card Photo',
+  /** Non-Photo BC Services Card */
+  NonPhotoCard = 'BC Services Card Non-Photo',
+  /** Combined BC Driver's Licence and Services Card */
+  ComboCard = 'BC Services Card Combo',
+  /** Non-BCSC verification */
+  NonBcsc = 'N/A',
+}
+
+/**
+ * BCSC Account Type enum matching native app enums.
+ * iOS: accountType string values in Credential.swift
+ * Android: BcscAccountType in BcscAccountType.kt
+ */
+export enum BCSCAccountType {
+  /** BC Services Card with photo */
+  PhotoCard = 'BC Services Card with photo',
+  /** BC Services Card without photo */
+  NonPhotoCard = 'BC Services Card without photo',
+  /** Other - no BC Services Card (non-BCSC verification) */
+  NoBcscCard = 'Other - no BC Services Card',
+}
+
 export interface KeyPair {
   id: string; // 'id' for platform neutrality
   public: string;
@@ -76,8 +106,8 @@ export interface CredentialInfo {
   // Device and account info
   devicesCount?: number | null;
   maxDevices?: number | null;
-  cardType?: string | null;
-  accountType?: string | null;
+  cardType?: BCSCCardType;
+  accountType?: BCSCAccountType;
 
   // Security and authentication
   acr?: number | null; // Authentication Context Reference / LOA level
@@ -105,8 +135,8 @@ export interface BasicCredentialInfo {
   subject: string;
   label: string;
   created: number;
-  cardType?: string | null;
-  accountType?: string | null;
+  cardType?: BCSCCardType;
+  accountType?: BCSCAccountType;
 }
 
 const LINKING_ERROR =

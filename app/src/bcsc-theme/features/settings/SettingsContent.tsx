@@ -4,9 +4,10 @@ import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
+import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
@@ -39,6 +40,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [store, dispatch] = useStore<BCState>()
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
 
   const styles = StyleSheet.create({
     container: {
@@ -68,6 +70,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     onPressDeveloperMode()
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
+
+  useEffect(() => {
+    const fetchAccountSecurityMethod = async () => {
+      try {
+        const method = await getAccountSecurityMethod()
+        setAccountSecurityMethod(method)
+      } catch (error) {
+        logger.error('Error fetching app security method', error instanceof Error ? error : new Error(String(error)))
+      }
+    }
+    fetchAccountSecurityMethod()
+  }, [logger])
 
   // TODO (MD): Remove this once all settings actions have been implemented
   const onPressActionTodo = () => {
@@ -146,19 +160,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               {t('BCSC.Settings.HeaderA')}
             </ThemedText>
             <View style={styles.sectionContainer}>
-              <SettingsActionCard
-                // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
+              {/* TODO (bm): like for like with v3 feature still needed here (and translation) */}
+              <SettingsActionCard onPress={onPressActionTodo} title={'Change App Security'} />
+              {accountSecurityMethod !== AccountSecurityMethod.DeviceAuth ? (
+                // TODO (MD + BM): update with like for like change pin screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
-                title={t('BCSC.Settings.Biometrics')}
-                onPress={onPressActionTodo}
-                endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
-              />
-              <SettingsActionCard
-                // TODO (MD + BM): Update with like for like change pin screen if that is their chosen auth method
-                // only show one or the other (device auth or change pin)
-                title={t('BCSC.Settings.ChangePIN')}
-                onPress={onPressActionTodo}
-              />
+                <SettingsActionCard title={t('BCSC.Settings.ChangePIN')} onPress={onPressActionTodo} />
+              ) : null}
               {store.bcscSecure.verified && onEditNickname ? (
                 <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
               ) : null}

@@ -45,8 +45,8 @@ const VerificationSuccessScreen = () => {
 
       await registration.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
-      const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Failed to update registration: ${strErr}`)
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Failed to update registration: ${errMessage}`)
       return
     }
   }, [registration, store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, logger])

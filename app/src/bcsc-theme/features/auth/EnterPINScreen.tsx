@@ -2,6 +2,7 @@ import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { PIN_LENGTH } from '@/constants'
 import {
   Button,
   ButtonType,
@@ -78,8 +79,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
           navigation.navigate(BCSCScreens.DeviceAuthAppReset)
         }
       } catch (error) {
-        const strErr = error instanceof Error ? error.message : String(error)
-        logger.error(`Device authentication error: ${strErr}`)
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Device authentication error: ${errMessage}`)
         navigation.goBack()
       } finally {
         stopLoading()
@@ -95,7 +96,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setLoading(true)
         setErrorMessage(undefined)
 
-        if (pin.length < 6) {
+        if (pin.length < PIN_LENGTH) {
           setErrorMessage('PIN must be 6 digits')
           setLoading(false)
           return
@@ -141,8 +142,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
 
   const handlePINComplete = useCallback(
     async (completedPIN: string) => {
-      if (completedPIN.length === 6) {
-        verifyPINAndContinue(completedPIN)
+      if (completedPIN.length === PIN_LENGTH) {
+        await verifyPINAndContinue(completedPIN)
       }
     },
     [verifyPINAndContinue]

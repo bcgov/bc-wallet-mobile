@@ -1,7 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -44,7 +43,7 @@ const Services: React.FC = () => {
     }
   )
   const { serviceClients } = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? BCSCCardType.None),
+    cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
 

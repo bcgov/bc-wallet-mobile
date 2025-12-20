@@ -1,25 +1,25 @@
-import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { BCSCCardType } from '../types/cards'
+import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
 /**
  * Get the card process for a given card type.
  *
- * @throws {Error} If the card type is invalid or None.
- * @param {BCSCCardType} cardType - The type of BCSC card.
- * @returns {*} {BCSCCardProcess} The corresponding card process.
+ * @param {BCSCCardType | null} cardType - The type of BCSC card, or null if no card.
+ * @returns {*} {BCSCCardProcess | null} The corresponding card process.
  */
-export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProcess | null {
+export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCardProcess | null {
+  if (cardType === null) {
+    return null // No card -> no card process
+  }
+
   switch (cardType) {
-    case BCSCCardType.Combined:
+    case BCSCCardType.ComboCard:
       return BCSCCardProcess.BCSCPhoto
-    case BCSCCardType.Photo:
+    case BCSCCardType.PhotoCard:
       return BCSCCardProcess.BCSCPhoto
-    case BCSCCardType.NonPhoto:
+    case BCSCCardType.NonPhotoCard:
       return BCSCCardProcess.BCSCNonPhoto
-    case BCSCCardType.Other:
+    case BCSCCardType.NonBcsc:
       return BCSCCardProcess.NonBCSC
-    case BCSCCardType.None:
-      return null // No card -> no card process
     default:
       return null // Unknown card type -> no card process
   }

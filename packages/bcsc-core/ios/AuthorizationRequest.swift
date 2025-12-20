@@ -22,7 +22,7 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   enum CodingKeys: String {
     case streetAddress
     case locality
-    case postalCode = "postalСode" // Note: v3 used Cyrillic 'С' in postal code key
+    case postalCode
     case country
     case region
   }
@@ -147,6 +147,9 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
   // Evidence upload
   var evidenceUploadURI: String?
 
+  // Identification process type
+  var cardProcess: String?
+
   // Coding keys matching v3's encoding
   private enum CodingKeys: String {
     case process
@@ -205,6 +208,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     coder.encode(lastName, forKey: CodingKeys.lastName.rawValue)
     coder.encode(address, forKey: CodingKeys.address.rawValue)
     coder.encode(evidenceUploadURI, forKey: CodingKeys.evidenceUploadURI.rawValue)
+    coder.encode(cardProcess, forKey: CodingKeys.process.rawValue)
   }
 
   required init?(coder decoder: NSCoder) {
@@ -258,6 +262,9 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
 
     // Decode complex objects
     address = decoder.decodeObject(forKey: CodingKeys.address.rawValue) as? Address
+
+    // Decode card process
+    cardProcess = decoder.decodeObject(forKey: CodingKeys.process.rawValue) as? String
   }
 
   /// Convert to dictionary for React Native
@@ -279,6 +286,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
       "verificationURIVideo": verificationURIVideo,
       "backCheckVerificationId": backCheckVerificationId,
       "evidenceUploadURI": evidenceUploadURI,
+      "cardProcess": cardProcess,
     ]
 
     // Convert dates to timestamps
@@ -324,6 +332,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     request.verificationURIVideo = dict["verificationURIVideo"] as? String
     request.backCheckVerificationId = dict["backCheckVerificationId"] as? String
     request.evidenceUploadURI = dict["evidenceUploadURI"] as? String
+    request.cardProcess = dict["cardProcess"] as? String
 
     // Convert status from number
     if let statusRaw = dict["status"] as? Int,

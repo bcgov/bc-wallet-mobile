@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
@@ -54,7 +55,9 @@ describe('CreatePINScreen snapshots', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <CreatePINScreen navigation={mockNavigation} />
+        <BCSCLoadingProvider>
+          <CreatePINScreen navigation={mockNavigation} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()

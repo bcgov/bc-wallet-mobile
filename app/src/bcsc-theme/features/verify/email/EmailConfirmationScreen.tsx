@@ -8,7 +8,9 @@ import {
   ScreenWrapper,
   ThemedText,
   ToastType,
+  TOKENS,
   useAnimatedComponents,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
@@ -46,6 +48,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     setValue: setCode,
   })
   const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     codeFieldRoot: {
@@ -102,7 +105,13 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
     try {
       setResendLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.email!)
+
+      if (!store.bcscSecure.email) {
+        logger.error('No email address found in store')
+        throw new Error('No email address found in store, cannot resend verification code')
+      }
+
+      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.email)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,

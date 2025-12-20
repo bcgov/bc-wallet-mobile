@@ -63,7 +63,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
-    store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && store.bcscSecure.additionalEvidenceData?.length === 1
+    store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && store.bcscSecure.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.

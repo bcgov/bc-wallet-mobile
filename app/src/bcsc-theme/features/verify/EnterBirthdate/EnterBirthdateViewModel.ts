@@ -4,6 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
@@ -49,7 +50,7 @@ export const useEnterBirthdateViewModel = (
         deviceCodeExpiresAt: expiresAt,
       })
       await updateCardProcess(deviceAuth.process)
-      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as any)
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
       logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 

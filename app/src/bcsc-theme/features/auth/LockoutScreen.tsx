@@ -60,8 +60,8 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
         // remainingTime is already in seconds from native code
         setRemainingSeconds(remainingTime)
       } catch (error) {
-        const strErr = error instanceof Error ? error.message : String(error)
-        logger.error(`Error checking lock status: ${strErr}`)
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Error checking lock status: ${errMessage}`)
       }
     }
 
@@ -103,8 +103,8 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
     try {
       await factoryReset()
     } catch (error) {
-      const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Error removing account: ${strErr}`)
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Error removing account: ${errMessage}`)
     }
   }, [logger, factoryReset])
 

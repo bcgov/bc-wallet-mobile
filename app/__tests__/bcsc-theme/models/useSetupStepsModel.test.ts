@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
+import { BCSCCardType } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/hooks/useSetupSteps')
@@ -283,7 +283,7 @@ describe('useSetupStepsModel', () => {
     it('should throw error when verificationRequestId is missing', async () => {
       const storeWithoutRequestId = {
         bcsc: {
-          cardType: BCSCCardType.Combined,
+          cardType: BCSCCardType.ComboCard,
         },
         bcscSecure: {
           verificationRequestId: null,
@@ -302,7 +302,7 @@ describe('useSetupStepsModel', () => {
     it('should throw error when deviceCode is missing and status is verified', async () => {
       const storeWithoutDeviceCode = {
         bcsc: {
-          cardType: BCSCCardType.Combined,
+          cardType: BCSCCardType.ComboCard,
         },
         bcscSecure: {
           verificationRequestId: 'test-verification-id',
@@ -372,7 +372,7 @@ describe('useSetupStepsModel', () => {
           verificationRequestId: null,
         },
         bcsc: {
-          cardType: BCSCCardType.Combined,
+          cardType: BCSCCardType.ComboCard,
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)

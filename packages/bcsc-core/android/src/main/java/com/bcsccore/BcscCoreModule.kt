@@ -2666,6 +2666,9 @@ class BcscCoreModule(
                             }
                         putMap("address", addressMap)
                     }
+
+                    // Card process
+                    authRequest.cardProcess?.let { putString("cardProcess", it) }
                 }
 
             Log.d(NAME, "getAuthorizationRequest: Successfully read authorization request")
@@ -2822,6 +2825,7 @@ class BcscCoreModule(
                         } else {
                             null
                         },
+                    cardProcess = if (data.hasKey("cardProcess")) data.getString("cardProcess") else null,
                 )
 
             // Save to encrypted storage

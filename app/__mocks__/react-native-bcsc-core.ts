@@ -1,7 +1,9 @@
 // Mock implementations for react-native-bcsc-core module
 // Provides jest mock functions for all exported methods
 
-// Enums
+// TODO (bm): we should re-export the actual types / enums from bcsc-core package to avoid duplication
+// but Jest is having issues with that currently
+
 export enum TokenType {
   Access = 0,
   Refresh = 1,
@@ -26,6 +28,19 @@ export enum BCSCCardProcess {
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
   NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
   None = 'N/A',
+}
+
+export enum BCSCCardType {
+  PhotoCard = 'BC Services Card Photo',
+  NonPhotoCard = 'BC Services Card Non-Photo',
+  ComboCard = 'BC Services Card Combo',
+  NonBcsc = 'N/A',
+}
+
+export enum BCSCAccountType {
+  PhotoCard = 'BC Services Card with photo',
+  NonPhotoCard = 'BC Services Card without photo',
+  NoBcscCard = 'Other - no BC Services Card',
 }
 
 // Key Management

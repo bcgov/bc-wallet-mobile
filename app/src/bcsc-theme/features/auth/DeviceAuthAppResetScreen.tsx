@@ -27,8 +27,8 @@ export const DeviceAuthAppResetScreen: React.FC<DeviceAuthAppResetScreenProps> =
     try {
       await factoryReset()
     } catch (error) {
-      const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Error resetting account: ${strErr}`)
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Error resetting account: ${errMessage}`)
     }
   }, [logger, factoryReset])
 

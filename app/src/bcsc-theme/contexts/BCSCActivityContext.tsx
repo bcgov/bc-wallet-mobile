@@ -1,4 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { DEFAULT_AUTO_LOCK_TIME_MIN } from '@/constants'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, {
@@ -44,7 +45,7 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   const [store] = useStore<BCState>()
   const { logout } = useSecureActions()
   const lastActiveTimeRef = useRef<number | undefined>(undefined)
-  const timeoutInMilliseconds = useRef<number>((store.preferences.autoLockTime ?? 5) * 60000)
+  const timeoutInMilliseconds = useRef<number>((store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN) * 60000)
   const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const prevAppStateStatusRef = useRef(AppState.currentState)
   const [appStateStatus, setAppStateStatus] = useState<AppStateStatus>(AppState.currentState)
@@ -135,7 +136,7 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
 
   useEffect(() => {
     // user has updated settings for auto lock time
-    const newTimeoutMillis = (store.preferences.autoLockTime ?? 5) * 60000
+    const newTimeoutMillis = (store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN) * 60000
     logger.info(`BCSC Activity: Auto lock time updated to ${store.preferences.autoLockTime} minutes`)
     timeoutInMilliseconds.current = newTimeoutMillis
 

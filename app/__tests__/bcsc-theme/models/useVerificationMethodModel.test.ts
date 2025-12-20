@@ -2,13 +2,13 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import useVerificationMethodModel from '@/bcsc-theme/features/verify/_models/useVerificationMethodModel'
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import { BCSCCardType } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/bcsc-theme/utils/file-info')
@@ -42,7 +42,7 @@ describe('useVerificationMethodModel', () => {
   const mockStore: any = {
     bcsc: {
       appVersion: '1.0.0',
-      cardType: BCSCCardType.Combined,
+      cardType: BCSCCardType.ComboCard,
       nicknames: ['Bob'],
       selectedNickname: 'Bob',
       bookmarks: [],

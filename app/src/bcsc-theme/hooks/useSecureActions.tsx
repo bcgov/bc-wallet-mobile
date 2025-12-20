@@ -1,18 +1,24 @@
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
-import type { AccountFlags, EvidenceMetadata, NativeAuthorizationRequest } from 'react-native-bcsc-core'
 import {
+  AccountFlags,
+  BCSCAccountType,
   BCSCCardProcess,
+  BCSCCardType,
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
   deleteEvidenceMetadata,
   deleteToken,
+  EvidenceMetadata,
+  getAccount,
   getAccountFlags,
   getAuthorizationRequest,
+  getCredential,
   getEvidenceMetadata,
   getToken,
+  NativeAuthorizationRequest,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
@@ -24,6 +30,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
+import { createMinimalCredential } from '../utils/bcsc-credential'
 import { PhotoMetadata } from '../utils/file-info'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
@@ -109,11 +116,14 @@ export const useSecureActions = () => {
   /**
    * Persists authorization request data to native secure storage.
    * This includes PII like birthdate, serial, email, and device codes.
+   * Merges with existing data to avoid overwriting previously saved fields.
    */
   const persistAuthorizationRequest = useCallback(
     async (data: Partial<NativeAuthorizationRequest>) => {
       try {
-        await setAuthorizationRequest(data as NativeAuthorizationRequest)
+        const existingData = await getAuthorizationRequest()
+        const mergedData = { ...existingData, ...data }
+        await setAuthorizationRequest(mergedData as NativeAuthorizationRequest)
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist authorization request:', error as Error)
@@ -126,11 +136,14 @@ export const useSecureActions = () => {
   /**
    * Persists account flags to native secure storage.
    * This includes user preferences and verification flags.
+   * Merges with existing data to avoid overwriting previously saved fields.
    */
   const persistAccountFlags = useCallback(
     async (flags: AccountFlags) => {
       try {
-        await setAccountFlags(flags)
+        const existingFlags = await getAccountFlags()
+        const mergedFlags = { ...existingFlags, ...flags }
+        await setAccountFlags(mergedFlags)
         logger.info('Account flags persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist account flags:', error as Error)
@@ -356,20 +369,49 @@ export const useSecureActions = () => {
    * When marking as verified, stores the credential object; when unverified, removes it
    */
   const updateVerified = useCallback(
-    async (verified: boolean, credentialData?: any) => {
+    async (verified: boolean) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [verified],
       })
 
+      const account = await getAccount()
+      if (!account) {
+        logger.error('Cannot mark as verified: no account found')
+        return
+      }
+
+      // Map cardProcess to proper enums
+      const cardProcess = store.bcscSecure.cardProcess
+      let cardType: BCSCCardType
+      let accountType: BCSCAccountType
+
+      if (cardProcess === BCSCCardProcess.BCSCPhoto) {
+        cardType = BCSCCardType.PhotoCard
+        accountType = BCSCAccountType.PhotoCard
+      } else if (cardProcess === BCSCCardProcess.BCSCNonPhoto) {
+        cardType = BCSCCardType.NonPhotoCard
+        accountType = BCSCAccountType.NonPhotoCard
+      } else if (cardProcess === BCSCCardProcess.NonBCSC) {
+        cardType = BCSCCardType.NonBcsc
+        accountType = BCSCAccountType.NoBcscCard
+      } else {
+        // Default to non-bcsc if process is unknown
+        cardType = BCSCCardType.NonBcsc
+        accountType = BCSCAccountType.NoBcscCard
+      }
+
+      // Create minimal credential for v3 compatibility
+      const credential = createMinimalCredential(account.issuer, account.clientID, cardType, accountType)
+
       // Persist credential state for v3 rollback compatibility
-      if (verified && credentialData) {
-        await setCredential(credentialData)
+      if (verified) {
+        await setCredential(credential)
       } else if (!verified) {
         await deleteCredential()
       }
     },
-    [dispatch]
+    [dispatch, logger, store.bcscSecure.cardProcess]
   )
 
   /**
@@ -472,16 +514,20 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Update verification options in secure state
+   * Update verification options in secure state and persist to native storage
    */
   const updateVerificationOptions = useCallback(
-    (verificationOptions: DeviceVerificationOption[]) => {
+    async (verificationOptions: DeviceVerificationOption[]) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS,
         payload: [verificationOptions],
       })
+
+      // Persist as space-separated string to match v3 format
+      const verificationOptionsString = verificationOptions.join(' ')
+      await persistAuthorizationRequest({ verificationOptions: verificationOptionsString })
     },
-    [dispatch]
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -567,19 +613,28 @@ export const useSecureActions = () => {
       logger.info('Hydrating secure state from native storage...')
 
       // Load all data from native storage in parallel
-      const [authRequest, refreshTokenObj, registrationAccessTokenObj, accessTokenObj, accountFlags, evidenceData] =
-        await Promise.all([
-          getAuthorizationRequest(),
-          getToken(TokenType.Refresh),
-          getToken(TokenType.Registration),
-          getToken(TokenType.Access),
-          getAccountFlags(),
-          getEvidenceMetadata(),
-        ])
+      const [
+        authRequest,
+        refreshTokenObj,
+        registrationAccessTokenObj,
+        accessTokenObj,
+        accountFlags,
+        evidenceData,
+        credential,
+      ] = await Promise.all([
+        getAuthorizationRequest(),
+        getToken(TokenType.Refresh),
+        getToken(TokenType.Registration),
+        getToken(TokenType.Access),
+        getAccountFlags(),
+        getEvidenceMetadata(),
+        getCredential(),
+      ])
 
       const refreshToken = refreshTokenObj?.token
       const registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
+      const verified = !!credential
 
       await updateTokens({ refreshToken, registrationAccessToken, accessToken })
 
@@ -623,14 +678,23 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
+        verified,
+
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress,
         temporaryEmailId: accountFlags.temporaryEmailId,
         userSubmittedVerificationVideo: accountFlags.userSubmittedVerificationVideo,
 
+        // Parse verificationOptions from space-separated string to array
+        verificationOptions: authRequest?.verificationOptions
+          ? (authRequest.verificationOptions.split(' ') as DeviceVerificationOption[])
+          : undefined,
+
         additionalEvidenceData: evidenceData,
         userMetadata,
       }
+
+      logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
 
       dispatch({
         type: BCDispatchAction.HYDRATE_SECURE_STATE,

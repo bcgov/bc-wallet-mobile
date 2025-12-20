@@ -1,27 +1,26 @@
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
 describe('Card Utils', () => {
   describe('getCardProcessForCardType', () => {
     it('should return BCSC for Combined card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.Combined)).toBe(BCSCCardProcess.BCSCPhoto)
+      expect(getCardProcessForCardType(BCSCCardType.ComboCard)).toBe(BCSCCardProcess.BCSCPhoto)
     })
 
     it('should return BCSC for Photo card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.Photo)).toBe(BCSCCardProcess.BCSCPhoto)
+      expect(getCardProcessForCardType(BCSCCardType.PhotoCard)).toBe(BCSCCardProcess.BCSCPhoto)
     })
 
     it('should return BCSCNonPhoto for NonPhoto card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.NonPhoto)).toBe(BCSCCardProcess.BCSCNonPhoto)
+      expect(getCardProcessForCardType(BCSCCardType.NonPhotoCard)).toBe(BCSCCardProcess.BCSCNonPhoto)
     })
 
     it('should return NonBCSC for Other card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.Other)).toBe(BCSCCardProcess.NonBCSC)
+      expect(getCardProcessForCardType(BCSCCardType.NonBcsc)).toBe(BCSCCardProcess.NonBCSC)
     })
 
-    it('should return null for None card type', () => {
-      expect(getCardProcessForCardType(BCSCCardType.None)).toBeNull()
+    it('should return null for null card type', () => {
+      expect(getCardProcessForCardType(null)).toBeNull()
     })
 
     it('should return null for unknown card type', () => {
@@ -31,7 +30,7 @@ describe('Card Utils', () => {
     it('should support all BCSCCardType values', () => {
       const cardTypes = Object.values(BCSCCardType)
       cardTypes.forEach((cardType) => {
-        if (cardType === BCSCCardType.None) {
+        if (cardType === null) {
           expect(getCardProcessForCardType(cardType)).toBeNull()
         } else {
           const process = getCardProcessForCardType(cardType)

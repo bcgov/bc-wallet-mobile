@@ -115,4 +115,7 @@ data class NativeAuthorizationRequest(
     // Evidence upload
     @SerializedName("evidence_upload_uri")
     val evidenceUploadUri: String? = null,
+    // Identification process type
+    @SerializedName("cardProcess")
+    val cardProcess: String? = null,
 )

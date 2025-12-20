@@ -225,8 +225,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
           updatedRegistrationData = data
         } catch (error) {
-          const strErr = error instanceof Error ? error.message : String(error)
-          logger.error(`Failed to update registration: ${strErr}`)
+          const errMessage = error instanceof Error ? error.message : String(error)
+          logger.error(`Failed to update registration: ${errMessage}`)
           throw error
         }
 
@@ -246,8 +246,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             registrationAccessToken: updatedRegistrationData.registration_access_token,
           })
         } catch (error) {
-          const strErr = error instanceof Error ? error.message : String(error)
-          logger.error(`Failed to store updated registration data: ${strErr}`)
+          const errMessage = error instanceof Error ? error.message : String(error)
+          logger.error(`Failed to store updated registration data: ${errMessage}`)
         }
 
         return updatedRegistrationData

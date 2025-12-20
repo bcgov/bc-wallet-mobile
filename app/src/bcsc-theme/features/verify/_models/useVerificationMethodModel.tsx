@@ -108,7 +108,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     handlePressLiveCall,
     sendVideoLoading,
     liveCallLoading,
-    verificationOptions: store.bcscSecure.verificationOptions || [],
+    verificationOptions: store.bcscSecure.verificationOptions ?? [],
   }
 }
 export default useVerificationMethodModel

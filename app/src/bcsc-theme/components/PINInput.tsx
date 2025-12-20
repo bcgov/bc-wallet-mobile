@@ -1,3 +1,4 @@
+import { PIN_LENGTH } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { forwardRef, useState } from 'react'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
@@ -48,11 +49,11 @@ export const PINInput = forwardRef<TextInput, PINInputProps>(
 
     const handlePINChange = (value: string) => {
       // Only allow digits and limit to 6 characters
-      const numericValue = String(value.replaceAll(/\D/g, '')).slice(0, 6)
+      const numericValue = String(value.replaceAll(/\D/g, '')).slice(0, PIN_LENGTH)
       setPin(numericValue)
       onPINChange?.(numericValue)
 
-      if (numericValue.length === 6) {
+      if (numericValue.length === PIN_LENGTH) {
         onPINComplete?.(numericValue)
       }
     }
@@ -73,7 +74,7 @@ export const PINInput = forwardRef<TextInput, PINInputProps>(
             onBlur={() => setIsFocused(false)}
             keyboardType="number-pad"
             secureTextEntry={!isVisible}
-            maxLength={6}
+            maxLength={PIN_LENGTH}
             autoFocus={autoFocus}
             maxFontSizeMultiplier={1}
             cursorColor={ColorPalette.grayscale.darkGrey}

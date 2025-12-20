@@ -58,8 +58,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
         setIsDeviceAuthAvailable(deviceAuthAvailable)
         setDeviceAuthMethodName(biometricType === BiometricType.None ? 'Device Passcode' : upperFirst(biometricType))
       } catch (error) {
-        const strErr = error instanceof Error ? error.message : String(error)
-        logger.error(`Error checking device auth availability: ${strErr}`)
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Error checking device auth availability: ${errMessage}`)
         setIsDeviceAuthAvailable(false)
       } finally {
         stopLoading()
@@ -88,13 +88,13 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
             return
           }
         } catch (deviceAuthError) {
-          const strErr = deviceAuthError instanceof Error ? deviceAuthError.message : String(deviceAuthError)
-          logger.debug(`Device authentication failed ${strErr}`)
+          const errMessage = deviceAuthError instanceof Error ? deviceAuthError.message : String(deviceAuthError)
+          logger.debug(`Device authentication failed ${errMessage}`)
         }
       }
     } catch (error) {
-      const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Error during device authentication: ${strErr}`)
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Error during device authentication: ${errMessage}`)
     } finally {
       stopLoading()
     }
@@ -113,8 +113,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      const strErr = error instanceof Error ? error.message : String(error)
-      logger.error(`Error completing device security setup: ${strErr}`)
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Error completing device security setup: ${errMessage}`)
     }
   }
 

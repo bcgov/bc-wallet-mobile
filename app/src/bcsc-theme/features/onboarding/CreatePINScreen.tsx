@@ -1,5 +1,6 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -29,6 +30,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   const { ButtonLoading } = useAnimatedComponents()
   const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
+  const { startLoading, stopLoading } = useLoadingScreen()
   const { register } = useRegistrationApi(client, isClientReady)
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
@@ -72,6 +74,10 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
           return
         }
 
+        // All validations passed, show a full screen loading indicator
+        // as the steps after here may take some time
+        startLoading('Setting up your account...')
+
         const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
         await register(
           isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
@@ -89,9 +95,10 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
         logger.error(`PIN setup error: ${error}`)
       } finally {
         setLoading(false)
+        stopLoading()
       }
     },
-    [checked, logger, handleSuccessfulAuth, register]
+    [checked, logger, handleSuccessfulAuth, register, startLoading, stopLoading]
   )
 
   const onPressContinue = useCallback(async () => {
