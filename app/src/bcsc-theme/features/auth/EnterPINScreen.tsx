@@ -17,6 +17,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { InteractionManager } from 'react-native'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
@@ -95,6 +96,9 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       try {
         setLoading(true)
         setErrorMessage(undefined)
+
+        // Wait for UI to update before running native methods that block the JS thread
+        await InteractionManager.runAfterInteractions()
 
         if (pin.length < PIN_LENGTH) {
           setErrorMessage('PIN must be 6 digits')
