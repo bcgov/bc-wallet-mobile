@@ -520,7 +520,6 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     logger.log("setAccount called with account: \(account)")
-    let accountID = UUID().uuidString
     let storage = StorageService()
 
     // Extract required fields from the dictionary
@@ -534,43 +533,82 @@ class BcscCore: NSObject {
       return
     }
 
-    // Create Account object with required fields
-    let newAccount = Account(
-      id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod
+    // Check if an account already exists
+    let existingAccount: Account? = storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
     )
 
-    if let displayName = account["displayName"] as? String {
-      newAccount.displayName = displayName
-    }
+    let accountToSave: Account
+    let accountID: String
 
-    if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
-      newAccount.didPostNicknameToServer = didPostNicknameToServer
-    }
+    if let existing = existingAccount {
+      // Update existing account - preserve the ID and update fields
+      logger.log("setAccount - Updating existing account with ID: \(existing.id)")
+      accountID = existing.id
+      accountToSave = existing
 
-    if let nickname = account["nickname"] as? String {
-      newAccount.nickname = nickname
-    }
+      // Update fields
+      accountToSave.clientID = clientID
+      accountToSave.issuer = issuer
+      accountToSave.securityMethod = securityMethod
 
-    if let failedAttemptCount = account["failedAttemptCount"] as? Int {
-      newAccount.failedAttemptCount = failedAttemptCount
-    }
+      if let displayName = account["displayName"] as? String {
+        accountToSave.displayName = displayName
+      }
 
-    // Ensure account structure exists before writing
-    do {
-      try storage.updateAccountListEntry(accountID: accountID)
-      logger.log("setAccount - Account list entry updated for ID: \(accountID)")
-    } catch {
-      reject(
-        "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
-        "Failed to update account list entry: \(error.localizedDescription)", error
+      if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
+        accountToSave.didPostNicknameToServer = didPostNicknameToServer
+      }
+
+      if let nickname = account["nickname"] as? String {
+        accountToSave.nickname = nickname
+      }
+
+      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
+        accountToSave.failedAttemptCount = failedAttemptCount
+      }
+    } else {
+      // Create new account with new ID
+      logger.log("setAccount - Creating new account")
+      accountID = UUID().uuidString
+      accountToSave = Account(
+        id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod
       )
-      return
+
+      if let displayName = account["displayName"] as? String {
+        accountToSave.displayName = displayName
+      }
+
+      if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
+        accountToSave.didPostNicknameToServer = didPostNicknameToServer
+      }
+
+      if let nickname = account["nickname"] as? String {
+        accountToSave.nickname = nickname
+      }
+
+      if let failedAttemptCount = account["failedAttemptCount"] as? Int {
+        accountToSave.failedAttemptCount = failedAttemptCount
+      }
+
+      // Ensure account structure exists before writing
+      do {
+        try storage.updateAccountListEntry(accountID: accountID)
+        logger.log("setAccount - Account list entry updated for ID: \(accountID)")
+      } catch {
+        reject(
+          "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
+          "Failed to update account list entry: \(error.localizedDescription)", error
+        )
+        return
+      }
     }
 
     // Create a fresh storage instance to ensure currentAccountID is read from the updated file
     let writeStorage = StorageService()
 
-    // Verify currentAccountID is now set
+    // Verify currentAccountID is now set (for new accounts) or still valid (for updates)
     guard let verifiedAccountID = writeStorage.currentAccountID else {
       reject("E_ACCOUNT_ID_NOT_SET", "Failed to set current account ID in storage", nil)
       return
@@ -579,7 +617,7 @@ class BcscCore: NSObject {
     logger.log("setAccount - Verified current account ID: \(verifiedAccountID)")
 
     let success = writeStorage.writeData(
-      data: newAccount,
+      data: accountToSave,
       file: AccountFiles.accountMetadata,
       pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
     )

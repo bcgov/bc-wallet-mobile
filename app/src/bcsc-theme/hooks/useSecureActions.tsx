@@ -744,8 +744,10 @@ export const useSecureActions = () => {
         deleteAuthorizationRequest(),
         deleteToken(TokenType.Refresh),
         deleteToken(TokenType.Registration),
+        deleteToken(TokenType.Access),
         deleteAccountFlags(),
         deleteEvidenceMetadata(),
+        deleteCredential(),
       ])
       logger.info('Secure data deleted from native storage')
     } catch (error) {

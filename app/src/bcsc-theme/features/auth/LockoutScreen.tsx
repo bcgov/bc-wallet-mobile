@@ -18,8 +18,10 @@ import { StyleSheet, View } from 'react-native'
 import { isAccountLocked } from 'react-native-bcsc-core'
 
 const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSecs = seconds % 60
+  // Ensure we're working with whole seconds
+  const wholeSeconds = Math.ceil(seconds)
+  const minutes = Math.floor(wholeSeconds / 60)
+  const remainingSecs = wholeSeconds % 60
 
   if (minutes > 0) {
     return `${minutes} minute${minutes === 1 ? '' : 's'} ${remainingSecs} second${remainingSecs === 1 ? '' : 's'}`
@@ -57,8 +59,8 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
           return
         }
 
-        // remainingTime is already in seconds from native code
-        setRemainingSeconds(remainingTime)
+        // Round up to nearest second to avoid showing decimals
+        setRemainingSeconds(Math.ceil(remainingTime))
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking lock status: ${errMessage}`)
@@ -101,7 +103,9 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
 
   const onPressRemoveAccount = useCallback(async () => {
     try {
-      await factoryReset()
+      // Don't delete from server when locked out - user hasn't authenticated yet
+      // This matches ias-ios behavior which only cleans up local storage
+      await factoryReset(undefined, false)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error removing account: ${errMessage}`)

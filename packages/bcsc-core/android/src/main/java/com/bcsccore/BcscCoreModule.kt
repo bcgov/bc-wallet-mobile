@@ -683,15 +683,29 @@ class BcscCoreModule(
                 return
             }
 
-            // Generate a new UUID for the account
-            val accountId = UUID.randomUUID().toString()
-
-            Log.d(NAME, "setAccount - Creating account with generated id: $accountId")
-
             try {
                 // Get issuer name for native-compatible storage path
                 val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
                 Log.d(NAME, "setAccount - Using issuer name: $issuerName")
+
+                // Try to load existing account
+                val existingAccounts = nativeStorage.readAccounts(issuerName)
+                val existingAccount = existingAccounts?.firstOrNull()
+
+                val accountId: String
+                val createdAt: Long
+
+                if (existingAccount != null) {
+                    // Update existing account - preserve ID and creation timestamp
+                    Log.d(NAME, "setAccount - Updating existing account with id: ${existingAccount.uuid}")
+                    accountId = existingAccount.uuid
+                    createdAt = existingAccount.createdAt
+                } else {
+                    // Create new account
+                    accountId = UUID.randomUUID().toString()
+                    createdAt = System.currentTimeMillis()
+                    Log.d(NAME, "setAccount - Creating new account with generated id: $accountId")
+                }
 
                 // Map securityMethod to native AccountSecurityType
                 val accountSecurityType =
@@ -725,7 +739,7 @@ class BcscCoreModule(
                         nickName = nickname,
                         issuer = issuer,
                         clientId = clientID,
-                        createdAt = System.currentTimeMillis(),
+                        createdAt = createdAt,
                         penalty = NativePenalty(penaltyAttempts = failedAttempts),
                         accountSecurityType = accountSecurityType,
                     )

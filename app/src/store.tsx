@@ -148,7 +148,7 @@ export interface BCSCSecureState {
   walletKey?: string
 }
 
-/** Initial secure state - unhyrdrated with no data */
+/** Initial secure state - unhydrated with no data */
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
