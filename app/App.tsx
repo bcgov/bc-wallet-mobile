@@ -35,6 +35,7 @@ import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
 import { showLocalNotification } from 'react-native-bcsc-core'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
@@ -111,7 +112,9 @@ const App = () => {
                         onClose={() => setSurveyVisible(false)}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                        <Root />
+                        <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                          <Root />
+                        </KeyboardProvider>
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
                     </NetworkProvider>
