@@ -34,20 +34,14 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
 
   const styles = StyleSheet.create({
     scrollContainer: {
-      gap: Spacing.md,
-    },
-    contentText: {
-      lineHeight: 30,
-      fontSize: 18,
+      gap: Spacing.lg,
     },
     bulletContainer: {
       gap: Spacing.sm,
       paddingLeft: Spacing.sm,
     },
-
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
     },
   })
 
@@ -92,8 +86,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
         <Image source={notifications} />
       </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
-      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
+      <ThemedText>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
+      <ThemedText>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
 
       <View style={styles.bulletContainer}>
         {bulletItems.map((item) => (

@@ -27,7 +27,7 @@ exports[`Notifications renders correctly 1`] = `
           "padding": 16,
         },
         {
-          "gap": 16,
+          "gap": 24,
         },
       ]
     }
@@ -38,7 +38,6 @@ exports[`Notifications renders correctly 1`] = `
         style={
           {
             "alignItems": "center",
-            "marginBottom": 10,
           }
         }
       >
@@ -96,10 +95,7 @@ exports[`Notifications renders correctly 1`] = `
               "fontSize": 18,
               "fontWeight": "normal",
             },
-            {
-              "fontSize": 18,
-              "lineHeight": 30,
-            },
+            undefined,
           ]
         }
       >
@@ -115,10 +111,7 @@ exports[`Notifications renders correctly 1`] = `
               "fontSize": 18,
               "fontWeight": "normal",
             },
-            {
-              "fontSize": 18,
-              "lineHeight": 30,
-            },
+            undefined,
           ]
         }
       >

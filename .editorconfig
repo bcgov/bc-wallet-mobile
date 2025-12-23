@@ -1,2 +1,63 @@
+# EditorConfig for bc-wallet-mobile
+# https://editorconfig.org
+
+root = true
+
 [*]
+charset = utf-8
 end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# TypeScript/JavaScript
+[*.{ts,tsx,js,jsx}]
+indent_style = space
+indent_size = 2
+
+# Swift
+[*.swift]
+indent_style = space
+indent_size = 2
+
+# C/Objective-C
+[*.{h,m,c,mm}]
+indent_style = space
+indent_size = 2
+
+# Kotlin (ktlint reads from .editorconfig)
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+ktlint_standard_import-ordering = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_package-name = disabled
+
+# Java
+[*.java]
+indent_style = space
+indent_size = 2
+
+# JSON
+[*.json]
+indent_style = space
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# Ruby (for Podfile, Fastfile, etc.)
+[{Podfile,Fastfile,Gemfile,*.rb}]
+indent_style = space
+indent_size = 2
+
+# Gradle
+[*.gradle]
+indent_style = space
+indent_size = 4

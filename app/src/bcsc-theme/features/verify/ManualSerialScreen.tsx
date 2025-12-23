@@ -12,8 +12,9 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { StackNavigationProp } from '@react-navigation/stack'
 
@@ -34,8 +35,9 @@ type ManualSerialScreenProps = {
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  const [store] = useStore<BCState>()
+  const { updateUserInfo } = useSecureActions()
+  const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
   const { width } = useWindowDimensions()
   const [errorState, setErrorState] = useState<ErrorState>({
     visible: false,
@@ -59,7 +61,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
     setSerial(text.replace(/\s/g, ''))
   }, [])
 
-  const onContinuePressed = useCallback(() => {
+  const onContinuePressed = useCallback(async () => {
     if (serial.length < 1) {
       setErrorState({
         description: t('BCSC.ManualSerial.EmptySerialError'),
@@ -76,9 +78,9 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       return
     }
 
-    dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [serial] })
+    await updateUserInfo({ serial })
     navigation.navigate(BCSCScreens.EnterBirthdate)
-  }, [serial, t, dispatch, navigation])
+  }, [serial, t, navigation, updateUserInfo])
 
   const controls = (
     <Button

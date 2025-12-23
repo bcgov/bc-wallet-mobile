@@ -9315,7 +9315,7 @@ __metadata:
     mockdate: "npm:~3.0.5"
     moment: "npm:~2.29.4"
     pod-install: "npm:~0.1.39"
-    prettier: "npm:~2.8.8"
+    prettier: "npm:~3.4.2"
     prettier-plugin-organize-imports: "npm:^4.3.0"
     query-string: "npm:~7.1.3"
     react: "npm:~18.3.1"
@@ -9378,6 +9378,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bc-wallet-mobile@workspace:."
   dependencies:
+    prettier: "npm:~3.4.2"
+    prettier-plugin-organize-imports: "npm:^4.3.0"
     react-native-bcsc-core: "workspace:*"
   languageName: unknown
   linkType: soft
@@ -19232,12 +19234,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:~2.8.8":
-  version: 2.8.8
-  resolution: "prettier@npm:2.8.8"
+"prettier@npm:~3.4.2":
+  version: 3.4.2
+  resolution: "prettier@npm:3.4.2"
   bin:
-    prettier: bin-prettier.js
-  checksum: 10c0/463ea8f9a0946cd5b828d8cf27bd8b567345cf02f56562d5ecde198b91f47a76b7ac9eae0facd247ace70e927143af6135e8cf411986b8cb8478784a4d6d724a
+    prettier: bin/prettier.cjs
+  checksum: 10c0/99e076a26ed0aba4ebc043880d0f08bbb8c59a4c6641cdee6cdadf2205bdd87aa1d7823f50c3aea41e015e99878d37c58d7b5f0e663bba0ef047f94e36b96446
   languageName: node
   linkType: hard
 
@@ -19671,7 +19673,7 @@ __metadata:
     eslint-plugin-ft-flow: "npm:^3.0.11"
     eslint-plugin-prettier: "npm:~5.2.6"
     jest: "npm:~29.6.4"
-    prettier: "npm:~2.8.8"
+    prettier: "npm:~3.4.2"
     react: "npm:~18.3.1"
     react-native: "npm:0.73.11"
     react-native-builder-bob: "npm:~0.40.13"

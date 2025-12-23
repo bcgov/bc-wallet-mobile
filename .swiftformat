@@ -1,0 +1,28 @@
+# SwiftFormat configuration for bc-wallet-mobile
+# https://github.com/nicklockwood/SwiftFormat
+
+# Format options
+--indent 2
+--indentcase false
+--trimwhitespace always
+--voidtype void
+--nospaceoperators
+--wraparguments before-first
+--wrapcollections before-first
+--wrapconditions after-first
+--wrapparameters before-first
+--maxwidth 120
+--swiftversion 5.0
+
+# Rules
+--enable isEmpty
+--enable sortImports
+--enable trailingCommas
+--enable wrapEnumCases
+
+# Disable rules that may cause issues
+--disable redundantSelf
+--disable trailingClosures
+
+# Excluded paths
+--exclude Pods,build,*.generated.swift,node_modules
