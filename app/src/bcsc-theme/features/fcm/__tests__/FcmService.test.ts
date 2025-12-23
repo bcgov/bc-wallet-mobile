@@ -1,11 +1,21 @@
 import { FcmService } from '../services/fcm-service'
 
+// Store the onMessage callback so we can trigger it in tests
+let onMessageCallback: ((message: any) => void) | null = null
+
+// Create stable mock functions that persist across calls
+const mockOnMessage = jest.fn((callback) => {
+  onMessageCallback = callback
+  return jest.fn() // unsubscribe function
+})
+const mockSetBackgroundMessageHandler = jest.fn()
+
 // Mock Firebase messaging
 jest.mock('@react-native-firebase/messaging', () => ({
   __esModule: true,
   default: jest.fn(() => ({
-    onMessage: jest.fn(() => jest.fn()),
-    setBackgroundMessageHandler: jest.fn(),
+    onMessage: mockOnMessage,
+    setBackgroundMessageHandler: mockSetBackgroundMessageHandler,
   })),
 }))
 
@@ -13,6 +23,9 @@ describe('FcmService', () => {
   let service: FcmService
 
   beforeEach(() => {
+    onMessageCallback = null
+    mockOnMessage.mockClear()
+    mockSetBackgroundMessageHandler.mockClear()
     service = new FcmService()
   })
 
@@ -40,11 +53,184 @@ describe('FcmService', () => {
     })
   })
 
-  // TODO: Add tests for:
-  // - parseMessage with challenge type
-  // - parseMessage with status type
-  // - parseMessage with notification type
-  // - parseMessage with unknown type
-  // - init() idempotency
-  // - destroy() cleanup
+  describe('init', () => {
+    it('sets up foreground message listener', async () => {
+      await service.init()
+
+      expect(onMessageCallback).not.toBeNull()
+    })
+
+    it('is idempotent - calling init multiple times only initializes once', async () => {
+      await service.init()
+      await service.init()
+      await service.init()
+
+      expect(mockOnMessage).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('destroy', () => {
+    it('clears handlers and resets initialized state', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      await service.init()
+
+      service.destroy()
+
+      // After destroy, a new init should work (proving initialized was reset)
+      mockOnMessage.mockClear()
+      await service.init()
+      expect(mockOnMessage).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('message parsing', () => {
+    beforeEach(async () => {
+      await service.init()
+    })
+
+    it('parses challenge message type', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { bcsc_challenge_request: 'test-jwt-token' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'challenge',
+          challengeJwt: 'test-jwt-token',
+        })
+      )
+    })
+
+    it('parses status message type', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { bcsc_status_notification: 'approved', status: 'active' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'status',
+          statusData: { bcsc_status_notification: 'approved', status: 'active' },
+        })
+      )
+    })
+
+    it('parses notification message type (notification only)', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: undefined,
+        notification: { title: 'Test Title', body: 'Test Body' },
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'notification',
+          title: 'Test Title',
+          body: 'Test Body',
+        })
+      )
+    })
+
+    it('parses notification message type (with data)', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { custom: 'data' },
+        notification: { title: 'Test', body: 'Body' },
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'notification',
+        })
+      )
+    })
+
+    it('parses unknown message type when no data or notification', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: undefined,
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'unknown',
+        })
+      )
+    })
+
+    it('parses unknown message type for data-only without recognized keys', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { some_random_key: 'value' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'unknown',
+        })
+      )
+    })
+
+    it('notifies all subscribed handlers', () => {
+      const handler1 = jest.fn()
+      const handler2 = jest.fn()
+      service.subscribe(handler1)
+      service.subscribe(handler2)
+
+      const remoteMessage = {
+        data: { bcsc_challenge_request: 'jwt' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler1).toHaveBeenCalled()
+      expect(handler2).toHaveBeenCalled()
+    })
+
+    it('does not notify unsubscribed handlers', () => {
+      const handler = jest.fn()
+      const unsubscribe = service.subscribe(handler)
+      unsubscribe()
+
+      const remoteMessage = {
+        data: { bcsc_challenge_request: 'jwt' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+  })
 })

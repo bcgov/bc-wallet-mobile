@@ -38,10 +38,13 @@ export class FcmService {
       this.emit(remoteMessage)
     })
 
-    // Set up background message handler (must be registered at module level for iOS)
-    // This is a no-op handler as background messages are handled by the OS
+    // Note: background messages (including potential challenge data) are intentionally
+    // not processed here. The OS notification system delivers them to the user and
+    // any challenge/status handling is performed only when the app is brought to the
+    // foreground and messages are received via the foreground listener above.
     messaging().setBackgroundMessageHandler(async () => {
-      // Background messages are handled by the OS notification system
+      // Intentionally left as a no-op: do not process challenge/status data while the
+      // app is in the background; rely on the foreground flow for handling.
     })
   }
 
