@@ -9,18 +9,9 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   static var supportsSecureCoding: Bool = true
 
   let id: String
-  let issuer: String
-  let clientID: String
-
-  private var _securityMethod: String
-  var securityMethod: AccountSecurityMethod? {
-    get {
-      return AccountSecurityMethod(rawValue: _securityMethod)
-    }
-    set {
-      _securityMethod = newValue?.rawValue ?? ""
-    }
-  }
+  var issuer: String
+  var clientID: String
+  var securityMethod: AccountSecurityMethod
 
   // User full name
   var displayName: String?
@@ -49,11 +40,11 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   ]
 
   // Regular initializer
-  init(id: String, clientID: String, issuer: String, securityMethod: String = "app_pin_no_device_authn") {
+  init(id: String, clientID: String, issuer: String, securityMethod: AccountSecurityMethod = AccountSecurityMethod(rawValue:"app_pin_no_device_authn")!) {
     self.id = id
     self.clientID = clientID
     self.issuer = issuer
-    self._securityMethod = securityMethod
+    self.securityMethod = securityMethod
     super.init()
   }
 
@@ -61,7 +52,8 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     self.id = decoder.decodeObject(forKey: .id) as! String
     self.issuer = decoder.decodeObject(forKey: .issuer) as! String
     self.clientID = decoder.decodeObject(forKey: .clientID) as! String
-    self._securityMethod = decoder.decodeObject(forKey: .securityMethod) as! String
+    let securityMethodString = decoder.decodeObject(forKey: .securityMethod) as! String
+    self.securityMethod = AccountSecurityMethod(rawValue: securityMethodString)!
     self.failedAttemptCount = decoder.decodeInteger(forKey: .failedAttemptCount)
     self.lastAttemptDate = decoder.decodeObject(forKey: .lastAttemptDate) as? Date
     self.displayName = decoder.decodeObject(forKey: .displayName) as? String
@@ -73,7 +65,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     encoder.encode(id, forKey: .id)
     encoder.encode(issuer, forKey: .issuer)
     encoder.encode(clientID, forKey: .clientID)
-    encoder.encode(_securityMethod, forKey: .securityMethod)
+    encoder.encode(securityMethod.rawValue, forKey: .securityMethod)
     encoder.encode(failedAttemptCount, forKey: .failedAttemptCount)
     encoder.encode(lastAttemptDate, forKey: .lastAttemptDate)
     encoder.encode(displayName, forKey: .displayName)
@@ -84,7 +76,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   /// Return true if securityMethod is PIN and has PIN setup in keychain
   func hasPINSetup(keychainService: PINKeychainServiceProtocol = PINKeychainService()) -> Bool {
     let secretID = PINSecret.composeID(issuer: self.issuer, accountID: self.id)
-    return securityMethod?.isPIN == true && keychainService.getSecret(secretID) != nil
+    return securityMethod.isPIN && keychainService.getSecret(secretID) != nil
   }
 
   /// Verify PIN with penalty management

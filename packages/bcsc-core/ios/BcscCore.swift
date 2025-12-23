@@ -524,7 +524,7 @@ class BcscCore: NSObject {
 
     // Extract required fields from the dictionary
     guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
-          let securityMethod = account["securityMethod"] as? String
+          let securityMethod = AccountSecurityMethod(rawValue: account["securityMethod"] as! String)
     else {
       reject(
         "E_INVALID_ACCOUNT_DATA",
@@ -552,11 +552,9 @@ class BcscCore: NSObject {
       accountToSave.clientID = clientID
       accountToSave.issuer = issuer
       accountToSave.securityMethod = securityMethod
-
       if let displayName = account["displayName"] as? String {
         accountToSave.displayName = displayName
       }
-
       if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
         accountToSave.didPostNicknameToServer = didPostNicknameToServer
       }
@@ -564,7 +562,6 @@ class BcscCore: NSObject {
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
       }
-
       if let failedAttemptCount = account["failedAttemptCount"] as? Int {
         accountToSave.failedAttemptCount = failedAttemptCount
       }
@@ -587,6 +584,7 @@ class BcscCore: NSObject {
       if let nickname = account["nickname"] as? String {
         accountToSave.nickname = nickname
       }
+
 
       if let failedAttemptCount = account["failedAttemptCount"] as? Int {
         accountToSave.failedAttemptCount = failedAttemptCount
@@ -644,7 +642,7 @@ class BcscCore: NSObject {
         "id": acc.id,
         "issuer": acc.issuer,
         "clientID": acc.clientID,
-        // "_securityMethod": acc._securityMethod,
+        // "_securityMethod": acc._securityMethod, // Question (Al): why is this commented out?
         "displayName": acc.displayName,
         "didPostNicknameToServer": acc.didPostNicknameToServer,
         "nickname": acc.nickname,
@@ -1556,7 +1554,7 @@ class BcscCore: NSObject {
       return
     }
 
-    let securityMethod = account.securityMethod?.rawValue ?? AccountSecurityMethod.pinNoDeviceAuth.rawValue
+    let securityMethod = account.securityMethod.rawValue
     resolve(securityMethod)
   }
 
