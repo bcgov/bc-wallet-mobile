@@ -12,9 +12,11 @@ describe('usePendingPairing', () => {
   })
 
   const createWrapper = (service: PairingService) => {
-    return ({ children }: { children: React.ReactNode }) => (
+    const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <PairingServiceProvider service={service}>{children}</PairingServiceProvider>
     )
+    Wrapper.displayName = 'PairingServiceWrapper'
+    return Wrapper
   }
 
   it('returns false when no pending pairing exists', () => {
