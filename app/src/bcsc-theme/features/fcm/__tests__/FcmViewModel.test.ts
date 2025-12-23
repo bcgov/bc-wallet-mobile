@@ -1,13 +1,6 @@
 import { PairingService } from '../../pairing'
 import { FcmViewModel } from '../FcmViewModel'
-import {
-  FcmChallengeMessage,
-  FcmMessage,
-  FcmNotificationMessage,
-  FcmService,
-  FcmStatusMessage,
-  FcmUnknownMessage,
-} from '../services/fcm-service'
+import { FcmMessage, FcmService } from '../services/fcm-service'
 
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
@@ -125,10 +118,10 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockResolvedValue(mockResult)
 
-      const message: FcmChallengeMessage = {
+      const message = {
         type: 'challenge',
         data: { jwt: 'test-jwt' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -136,10 +129,10 @@ describe('FcmViewModel', () => {
     })
 
     it('routes status messages to handleStatusNotification', async () => {
-      const message: FcmStatusMessage = {
+      const message = {
         type: 'status',
-        data: { status: 'approved', title: 'Status Update', message: 'Approved!' },
-      }
+        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -147,10 +140,10 @@ describe('FcmViewModel', () => {
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
-      const message: FcmNotificationMessage = {
+      const message = {
         type: 'notification',
         data: { title: 'Test Title', body: 'Test Body' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -158,10 +151,9 @@ describe('FcmViewModel', () => {
     })
 
     it('logs warning for unknown message types', async () => {
-      const message: FcmUnknownMessage = {
+      const message = {
         type: 'unknown',
-        data: undefined,
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -184,10 +176,10 @@ describe('FcmViewModel', () => {
       }
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
 
-      const message: FcmChallengeMessage = {
+      const message = {
         type: 'challenge',
         data: { jwt: 'valid-jwt' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -208,10 +200,10 @@ describe('FcmViewModel', () => {
       }
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
 
-      const message: FcmChallengeMessage = {
+      const message = {
         type: 'challenge',
         data: { jwt: 'jwt-with-missing-claims' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -223,10 +215,10 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockRejectedValue(new Error('Invalid JWT'))
 
-      const message: FcmChallengeMessage = {
+      const message = {
         type: 'challenge',
         data: { jwt: 'invalid-jwt' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -241,10 +233,10 @@ describe('FcmViewModel', () => {
     })
 
     it('shows notification when title and body are present', async () => {
-      const message: FcmNotificationMessage = {
+      const message = {
         type: 'notification',
         data: { title: 'Hello', body: 'World' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -255,10 +247,10 @@ describe('FcmViewModel', () => {
       const mockShowNotification = showLocalNotification as jest.Mock
       mockShowNotification.mockRejectedValue(new Error('Notification failed'))
 
-      const message: FcmNotificationMessage = {
+      const message = {
         type: 'notification',
         data: { title: 'Hello', body: 'World' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
@@ -317,10 +309,10 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockResolvedValue(mockResult)
 
-      const message: FcmChallengeMessage = {
+      const message = {
         type: 'challenge',
         data: { jwt: 'test-jwt' },
-      }
+      } as FcmMessage
 
       await capturedMessageHandler?.(message)
 

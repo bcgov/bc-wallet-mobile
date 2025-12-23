@@ -1,2 +1,2 @@
 export { FcmViewModel } from './FcmViewModel'
-export { FcmService, type FcmMessageHandler, type FcmMessagePayload } from './services/fcm-service'
+export { FcmService, type FcmMessage, type FcmMessageHandler } from './services/fcm-service'
