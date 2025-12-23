@@ -8,14 +8,19 @@ jest.mock('react-native-bcsc-core', () => ({
   showLocalNotification: jest.fn(),
 }))
 
-jest.mock('react-native-config', () => ({
-  IAS_PORTAL_URL: 'https://test.example.com',
+// Mock the API client getter
+const mockFetchJwk = jest.fn()
+const mockApiClient = {
+  baseURL: 'https://test.example.com',
+  fetchJwk: mockFetchJwk,
+}
+
+jest.mock('../../../contexts/BCSCApiClientContext', () => ({
+  getBCSCApiClient: jest.fn(() => mockApiClient),
 }))
 
-// Mock fetch
-global.fetch = jest.fn()
-
 import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
+import { getBCSCApiClient } from '../../../contexts/BCSCApiClientContext'
 
 describe('FcmViewModel', () => {
   let viewModel: FcmViewModel
@@ -27,6 +32,13 @@ describe('FcmViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     capturedMessageHandler = null
+
+    // Reset mockApiClient to default state
+    mockApiClient.baseURL = 'https://test.example.com'
+
+    // Reset getBCSCApiClient to return mockApiClient (in case a test changed it)
+    const mockGetBCSCApiClient = getBCSCApiClient as jest.Mock
+    mockGetBCSCApiClient.mockReturnValue(mockApiClient)
 
     mockFcmService = {
       init: jest.fn(),
@@ -47,10 +59,8 @@ describe('FcmViewModel', () => {
       handlePairing: jest.fn(),
     } as unknown as jest.Mocked<PairingService>
 
-    // Mock fetch for JWK
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      json: () => Promise.resolve({ keys: [{ kty: 'RSA', n: 'test', e: 'AQAB' }] }),
-    })
+    // Mock fetchJwk to return a test JWK
+    mockFetchJwk.mockResolvedValue({ kty: 'RSA', n: 'test', e: 'AQAB' })
 
     viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService)
   })
@@ -80,13 +90,13 @@ describe('FcmViewModel', () => {
       expect(callOrder).toEqual(['subscribe', 'init'])
     })
 
-    it('fetches server JWK on initialization', async () => {
+    it('fetches server JWK on initialization when API client is available', async () => {
       viewModel.initialize()
 
       // Wait for async fetch
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(global.fetch).toHaveBeenCalledWith('https://test.example.com/device/jwk')
+      expect(mockFetchJwk).toHaveBeenCalled()
     })
   })
 
@@ -105,7 +115,8 @@ describe('FcmViewModel', () => {
           bcsc_challenge: 'challenge123',
         },
       }
-      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+      const mockDecode = decodeLoginChallenge as jest.Mock
+      mockDecode.mockResolvedValue(mockResult)
 
       const payload: FcmMessagePayload = {
         rawMessage: {} as any,
@@ -300,10 +311,7 @@ describe('FcmViewModel', () => {
 
   describe('fetchServerJwk', () => {
     it('logs warning when no keys in response', async () => {
-      const mockFetch = global.fetch as jest.Mock
-      mockFetch.mockResolvedValue({
-        json: () => Promise.resolve({ keys: [] }),
-      })
+      mockFetchJwk.mockResolvedValue(null)
 
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
@@ -312,13 +320,56 @@ describe('FcmViewModel', () => {
     })
 
     it('logs error when fetch fails', async () => {
-      const mockFetch = global.fetch as jest.Mock
-      mockFetch.mockRejectedValue(new Error('Network error'))
+      mockFetchJwk.mockRejectedValue(new Error('Network error'))
 
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch server JWK'))
+    })
+
+    it('logs warning when API client is not available', async () => {
+      const mockGetBCSCApiClient = getBCSCApiClient as jest.Mock
+      mockGetBCSCApiClient.mockReturnValue(null)
+
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('API client not available'))
+    })
+
+    it('refetches JWK when environment changes', async () => {
+      // First initialization with original baseURL
+      viewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockFetchJwk).toHaveBeenCalledTimes(1)
+
+      // Simulate environment change
+      mockApiClient.baseURL = 'https://new-environment.com'
+      mockFetchJwk.mockClear()
+
+      // Process a challenge - should detect environment change and refetch
+      const mockResult = {
+        verified: true,
+        claims: {
+          bcsc_client_name: 'Test Service',
+          bcsc_challenge: 'challenge123',
+        },
+      }
+      const mockDecode = decodeLoginChallenge as jest.Mock
+      mockDecode.mockResolvedValue(mockResult)
+
+      const payload: FcmMessagePayload = {
+        rawMessage: {} as any,
+        type: 'challenge',
+        challengeJwt: 'test-jwt',
+      }
+
+      await capturedMessageHandler?.(payload)
+
+      expect(mockFetchJwk).toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('environment changed'))
     })
   })
 })

@@ -1,8 +1,8 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import Config from 'react-native-config'
 
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
+import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
 import { FcmMessagePayload, FcmService } from './services/fcm-service'
@@ -13,6 +13,7 @@ import { FcmMessagePayload, FcmService } from './services/fcm-service'
  */
 export class FcmViewModel {
   private serverJwk: JWK | null = null
+  private lastJwkBaseUrl: string | null = null
 
   constructor(
     private readonly fcmService: FcmService,
@@ -27,7 +28,7 @@ export class FcmViewModel {
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
     this.fcmService.init()
     this.logger.info('[FcmViewModel] FCM service initialized')
-    // Pre-fetch the server JWK for signature verification
+    // Pre-fetch the server JWK for signature verification (if API client is ready)
     this.fetchServerJwk()
   }
 
@@ -64,9 +65,12 @@ export class FcmViewModel {
     this.logger.info(`[FcmViewModel] Processing challenge request`)
 
     try {
-      // Ensure JWK is available for verification (lazy fetch if not pre-loaded)
-      if (!this.serverJwk) {
-        this.logger.info('[FcmViewModel] JWK not yet available, fetching now...')
+      // Check if environment changed or JWK not yet available
+      const apiClient = getBCSCApiClient()
+      const envChanged = apiClient && this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL
+
+      if (!this.serverJwk || envChanged) {
+        this.logger.info('[FcmViewModel] JWK not available or environment changed, fetching now...')
         await this.fetchServerJwk()
       }
 
@@ -116,15 +120,26 @@ export class FcmViewModel {
   }
 
   private async fetchServerJwk(): Promise<void> {
-    // TODO: Use API client if available
     try {
-      const baseURL = Config.IAS_PORTAL_URL || 'https://idsit.gov.bc.ca'
-      const response = await fetch(`${baseURL}/device/jwk`)
-      const data = await response.json()
+      const apiClient = getBCSCApiClient()
 
-      if (data.keys && data.keys.length > 0) {
-        this.serverJwk = data.keys[0]
-        this.logger.info(`[FcmViewModel] Server JWK fetched successfully`)
+      if (!apiClient) {
+        this.logger.warn('[FcmViewModel] API client not available yet, will retry on next challenge')
+        return
+      }
+
+      // Check if environment changed (baseURL changed) - invalidate cached JWK
+      if (this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL) {
+        this.logger.info('[FcmViewModel] Environment changed, clearing cached JWK')
+        this.serverJwk = null
+      }
+
+      const jwk = await apiClient.fetchJwk()
+
+      if (jwk) {
+        this.serverJwk = jwk
+        this.lastJwkBaseUrl = apiClient.baseURL
+        this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
         this.logger.warn(`[FcmViewModel] No keys found in JWKS response`)
       }

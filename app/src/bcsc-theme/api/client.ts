@@ -263,6 +263,27 @@ class BCSCApiClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(url, config)
   }
+
+  /**
+   * Fetches the first JWK from the server's JWKS endpoint.
+   * Used for JWT signature verification.
+   */
+  async fetchJwk(): Promise<any | null> {
+    try {
+      const response = await this.get<{ keys: any[] }>(this.endpoints.jwksURI, {
+        skipBearerAuth: true,
+      })
+
+      if (response.data.keys && response.data.keys.length > 0) {
+        return response.data.keys[0]
+      }
+
+      return null
+    } catch (error) {
+      this.logger.error(`Failed to fetch JWK: ${error}`)
+      return null
+    }
+  }
 }
 
 export default BCSCApiClient
