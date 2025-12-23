@@ -3,21 +3,21 @@ import Config from 'react-native-config'
 
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
-import { DeepLinkViewModel } from '../deep-linking'
+import { PairingService } from '../pairing'
 
 import { FcmMessagePayload, FcmService } from './services/fcm-service'
-import { BcscChallenge, ChallengeNavigationEvent, ChallengeNavigationListener, PendingChallengeListener } from './types'
 
+/**
+ * ViewModel for handling Firebase Cloud Messaging events.
+ * Decodes JWT challenges and delegates pairing requests to PairingService.
+ */
 export class FcmViewModel {
-  private readonly navigationListeners = new Set<ChallengeNavigationListener>()
-  private readonly pendingStateListeners = new Set<PendingChallengeListener>()
-  private pendingChallenge: BcscChallenge | null = null
   private serverJwk: JWK | null = null
 
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly deepLinkViewModel: DeepLinkViewModel,
+    private readonly pairingService: PairingService,
   ) {}
 
   public initialize() {
@@ -29,52 +29,6 @@ export class FcmViewModel {
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification
     this.fetchServerJwk()
-  }
-
-  public onNavigationRequest(listener: ChallengeNavigationListener): () => void {
-    this.navigationListeners.add(listener)
-    return () => this.navigationListeners.delete(listener)
-  }
-
-  public onPendingStateChange(listener: PendingChallengeListener): () => void {
-    this.pendingStateListeners.add(listener)
-    // Emit current state immediately upon subscription
-    listener(this.hasPendingChallenge)
-    return () => this.pendingStateListeners.delete(listener)
-  }
-
-  public get hasPendingChallenge(): boolean {
-    return this.pendingChallenge !== null
-  }
-
-  public getPendingChallenge(): BcscChallenge | null {
-    return this.pendingChallenge
-  }
-
-  public consumePendingChallenge(): BcscChallenge | null {
-    if (!this.pendingChallenge) {
-      return null
-    }
-
-    const challenge = this.pendingChallenge
-    this.pendingChallenge = null
-    this.notifyPendingStateChange()
-    return challenge
-  }
-
-  public processPendingChallenge() {
-    if (this.pendingChallenge) {
-      this.logger.info(`[FcmViewModel] Processing pending challenge`)
-      const challenge = this.pendingChallenge
-      this.pendingChallenge = null
-      this.notifyPendingStateChange()
-      this.emitChallengeNavigation(challenge)
-    }
-  }
-
-  public clearPendingChallenge() {
-    this.pendingChallenge = null
-    this.notifyPendingStateChange()
   }
 
   private async handleMessage(payload: FcmMessagePayload) {
@@ -126,8 +80,12 @@ export class FcmViewModel {
         return
       }
 
-      this.logger.info(`[FcmViewModel] Injecting challenge into deep link flow: ${serviceTitle}`)
-      this.deepLinkViewModel.injectPairingPayload(serviceTitle, pairingCode)
+      this.logger.info(`[FcmViewModel] Injecting challenge into pairing flow: ${serviceTitle}`)
+      this.pairingService.handlePairing({
+        serviceTitle,
+        pairingCode,
+        source: 'fcm',
+      })
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
     }
@@ -167,18 +125,5 @@ export class FcmViewModel {
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)
     }
-  }
-
-  private emitChallengeNavigation(challenge: BcscChallenge) {
-    const event: ChallengeNavigationEvent = {
-      screen: 'BcscChallenge', // TODO: Define actual screen name
-      params: { challenge },
-    }
-    this.navigationListeners.forEach((listener) => listener(event))
-  }
-
-  private notifyPendingStateChange() {
-    const hasPending = this.hasPendingChallenge
-    this.pendingStateListeners.forEach((listener) => listener(hasPending))
   }
 }

@@ -1,6 +1,7 @@
 import Root from '@/Root'
-import { DeepLinkService, DeepLinkViewModel, DeepLinkViewModelProvider } from '@/bcsc-theme/features/deep-linking'
-import { FcmService, FcmViewModel, FcmViewModelProvider } from '@/bcsc-theme/features/fcm'
+import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-linking'
+import { FcmService, FcmViewModel } from '@/bcsc-theme/features/fcm'
+import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { AlertProvider } from '@/contexts/AlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -46,15 +47,20 @@ const App = () => {
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
 
+  // Create PairingService first - it's the shared dependency
+  const pairingService = useMemo(() => {
+    return new PairingService(logger)
+  }, [logger])
+
   const deepLinkViewModel = useMemo(() => {
     const service = new DeepLinkService()
-    return new DeepLinkViewModel(service, logger)
-  }, [logger])
+    return new DeepLinkViewModel(service, logger, pairingService)
+  }, [logger, pairingService])
 
   const fcmViewModel = useMemo(() => {
     const service = new FcmService()
-    return new FcmViewModel(service, logger, deepLinkViewModel)
-  }, [logger, deepLinkViewModel])
+    return new FcmViewModel(service, logger, pairingService)
+  }, [logger, pairingService])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -87,29 +93,27 @@ const App = () => {
             defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
             <NavigationContainerProvider>
-              <DeepLinkViewModelProvider viewModel={deepLinkViewModel}>
-                <FcmViewModelProvider viewModel={fcmViewModel}>
-                  <AnimatedComponentsProvider value={animatedComponents}>
-                    <AuthProvider>
-                      <NetworkProvider>
-                        <ErrorModal enableReport />
-                        <WebDisplay
-                          destinationUrl={surveyMonkeyUrl}
-                          exitUrl={surveyMonkeyExitUrl}
-                          visible={surveyVisible}
-                          onClose={() => setSurveyVisible(false)}
-                        />
-                        <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                          <AlertProvider>
-                            <Root />
-                          </AlertProvider>
-                        </TourProvider>
-                        <Toast topOffset={15} config={toastConfig} />
-                      </NetworkProvider>
-                    </AuthProvider>
-                  </AnimatedComponentsProvider>
-                </FcmViewModelProvider>
-              </DeepLinkViewModelProvider>
+              <PairingServiceProvider service={pairingService}>
+                <AnimatedComponentsProvider value={animatedComponents}>
+                  <AuthProvider>
+                    <NetworkProvider>
+                      <ErrorModal enableReport />
+                      <WebDisplay
+                        destinationUrl={surveyMonkeyUrl}
+                        exitUrl={surveyMonkeyExitUrl}
+                        visible={surveyVisible}
+                        onClose={() => setSurveyVisible(false)}
+                      />
+                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                        <AlertProvider>
+                          <Root />
+                        </AlertProvider>
+                      </TourProvider>
+                      <Toast topOffset={15} config={toastConfig} />
+                    </NetworkProvider>
+                  </AuthProvider>
+                </AnimatedComponentsProvider>
+              </PairingServiceProvider>
             </NavigationContainerProvider>
           </ThemeProvider>
         </StoreProvider>

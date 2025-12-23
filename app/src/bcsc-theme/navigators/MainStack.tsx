@@ -19,10 +19,10 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
-import { useDeepLinkViewModel } from '../features/deep-linking'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
@@ -45,23 +45,23 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const deepLinkViewModel = useDeepLinkViewModel()
+  const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  // Consume any cold-start deep link once and use it to seed the initial route
-  const [pendingDeepLink] = useState(() => deepLinkViewModel.consumePendingDeepLink())
-  const deepLinkInitialParams = useMemo(() => {
-    if (!pendingDeepLink) {
+  // Consume any cold-start pairing request once and use it to seed the initial route
+  const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
+  const pairingInitialParams = useMemo(() => {
+    if (!pendingPairing) {
       return undefined
     }
 
-    const { serviceTitle, pairingCode } = pendingDeepLink
+    const { serviceTitle, pairingCode } = pendingPairing
 
     if (!serviceTitle || !pairingCode) {
       logger?.error(
-        `[MainStack] Pending deep link missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
+        `[MainStack] Pending pairing missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
           pairingCode ?? 'missing'
-        }`
+        }`,
       )
       return undefined
     }
@@ -70,24 +70,20 @@ const MainStack: React.FC = () => {
       serviceTitle,
       pairingCode,
     }
-  }, [logger, pendingDeepLink])
-  const initialRouteName = deepLinkInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
+  }, [logger, pendingPairing])
+  const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
   useSystemChecks(SystemCheckScope.MAIN_STACK)
 
   useEffect(() => {
-    const unsubscribe = deepLinkViewModel.onNavigationRequest(({ screen, params }) => {
+    const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {
       if (screen === BCSCScreens.ServiceLogin) {
         navigation.navigate(BCSCScreens.ServiceLogin, params as BCSCMainStackParams[BCSCScreens.ServiceLogin])
         return
       }
-
-      if (screen === BCSCStacks.Tab) {
-        navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
-      }
     })
 
     return unsubscribe
-  }, [deepLinkViewModel, navigation])
+  }, [pairingService, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -199,7 +195,7 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.ServiceLogin}
           component={ServiceLoginScreen}
-          initialParams={deepLinkInitialParams}
+          initialParams={pairingInitialParams}
           options={() => ({
             headerShown: true,
           })}

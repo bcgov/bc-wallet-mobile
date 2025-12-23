@@ -21,15 +21,15 @@ jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
   default: (...args: any[]) => mockUseDataLoader(...args),
 }))
 
-let mockHasPendingDeepLink = false
+let mockHasPendingPairing = false
 const mockConsumePending = jest.fn()
 
-jest.mock('../../deep-linking', () => ({
-  useDeepLinkViewModel: jest.fn(() => ({
-    get hasPendingDeepLink() {
-      return mockHasPendingDeepLink
+jest.mock('../../pairing', () => ({
+  usePairingService: jest.fn(() => ({
+    get hasPendingPairing() {
+      return mockHasPendingPairing
     },
-    consumePendingDeepLink: mockConsumePending,
+    consumePendingPairing: mockConsumePending,
   })),
 }))
 
@@ -38,7 +38,7 @@ describe('useServiceLoginState', () => {
     mockData = []
     mockIsLoading = false
     mockLoad = jest.fn()
-    mockHasPendingDeepLink = false
+    mockHasPendingPairing = false
     mockConsumePending.mockReset()
     logger.info.mockReset()
     logger.debug.mockReset()
@@ -61,7 +61,7 @@ describe('useServiceLoginState', () => {
         pairingCode: 'PAIR-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(result.current.state.serviceTitle).toBe('Example Service')
@@ -79,7 +79,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockLoad).toHaveBeenCalledTimes(1)
@@ -103,7 +103,7 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-123',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service?.client_ref_id).toBe('client-123'))
@@ -134,7 +134,7 @@ describe('useServiceLoginState', () => {
         serviceTitle: 'services card',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service?.client_ref_id).toBeDefined())
@@ -162,16 +162,16 @@ describe('useServiceLoginState', () => {
         serviceTitle: 'Nonexistent',
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.service).toBeUndefined())
     expect(result.current.serviceHydrated).toBe(false)
   })
 
-  it('does not consume pending deep link when serviceClientId is present', () => {
+  it('does not consume pending pairing when serviceClientId is present', () => {
     const metadata = { getClientMetadata: jest.fn() }
-    mockHasPendingDeepLink = true
+    mockHasPendingPairing = true
     mockConsumePending.mockReturnValue({ serviceTitle: 'Pending', pairingCode: 'CODE' })
 
     const { result } = renderHook(() =>
@@ -179,16 +179,16 @@ describe('useServiceLoginState', () => {
         serviceClientId: 'client-locked',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockConsumePending).not.toHaveBeenCalled()
     expect(result.current.state.pairingCode).toBeUndefined()
   })
 
-  it('does not consume pending deep link when pairing code already present', () => {
+  it('does not consume pending pairing when pairing code already present', () => {
     const metadata = { getClientMetadata: jest.fn() }
-    mockHasPendingDeepLink = true
+    mockHasPendingPairing = true
     mockConsumePending.mockReturnValue({ serviceTitle: 'Pending', pairingCode: 'CODE' })
 
     const { result } = renderHook(() =>
@@ -196,23 +196,23 @@ describe('useServiceLoginState', () => {
         pairingCode: 'EXISTING',
         metadata,
         logger,
-      })
+      }),
     )
 
     expect(mockConsumePending).not.toHaveBeenCalled()
     expect(result.current.state.pairingCode).toBe('EXISTING')
   })
 
-  it('consumes pending deep link when no service or pairing data exists', async () => {
+  it('consumes pending pairing when no service or pairing data exists', async () => {
     const metadata = { getClientMetadata: jest.fn() }
-    mockHasPendingDeepLink = true
+    mockHasPendingPairing = true
     mockConsumePending.mockReturnValue({ serviceTitle: 'Pending Service', pairingCode: 'PAIR-999' })
 
     const { result } = renderHook(() =>
       useServiceLoginState({
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.pairingCode).toBe('PAIR-999'))
@@ -220,16 +220,16 @@ describe('useServiceLoginState', () => {
     expect(mockConsumePending).toHaveBeenCalledTimes(1)
   })
 
-  it('ignores pending deep link when consume returns null', async () => {
+  it('ignores pending pairing when consume returns null', async () => {
     const metadata = { getClientMetadata: jest.fn() }
-    mockHasPendingDeepLink = true
+    mockHasPendingPairing = true
     mockConsumePending.mockReturnValue(null)
 
     const { result } = renderHook(() =>
       useServiceLoginState({
         metadata,
         logger,
-      })
+      }),
     )
 
     await waitFor(() => expect(result.current.state.pairingCode).toBeUndefined())
