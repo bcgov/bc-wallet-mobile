@@ -1,21 +1,89 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 
-export type FcmMessagePayload = {
-  /** The raw message object from Firebase */
-  rawMessage: FirebaseMessagingTypes.RemoteMessage
-  /** Message type identifier */
-  type: 'challenge' | 'status' | 'notification' | 'unknown'
-  /** Challenge JWT if present */
-  challengeJwt?: string
-  /** Status notification data if present */
-  statusData?: Record<string, string>
-  /** Notification title */
-  title?: string
-  /** Notification body */
-  body?: string
+// ============================================================================
+// Status Notification Types
+// ============================================================================
+
+export type BCSCStatusNotificationClaims = {
+  aud: string
+  iss: string
+  bcsc_reason: string
+  bcsc_event: string
+  exp: number
+  iat: number
+  jti: string
 }
 
-export type FcmMessageHandler = (payload: FcmMessagePayload) => void
+export type StatusNotification = {
+  bcsc_status_notification: string // JSON string of BCSCStatusNotificationClaims
+  message: string
+  title: string
+}
+
+// ============================================================================
+// Basic Notification Types
+// ============================================================================
+
+export type BasicNotification = {
+  title: string
+  body: string
+}
+
+// ============================================================================
+// Challenge Notification Types
+// ============================================================================
+
+export type ChallengeNotification = {
+  /** The raw JWT string to be decoded */
+  jwt: string
+}
+
+// Decoded challenge result (returned from decodeLoginChallenge)
+export type BCSCChallengeClaims = {
+  aud: string
+  bcsc_challenge: string
+  bcsc_client_name: string
+  exp: number
+  iat: number
+  iss: string
+  jti: string
+}
+
+export type ChallengeResult = {
+  claims: BCSCChallengeClaims
+  verified: boolean
+}
+
+// ============================================================================
+// Discriminated Union for FCM Messages
+// ============================================================================
+
+type FcmMessageBase = {
+  rawMessage: FirebaseMessagingTypes.RemoteMessage
+}
+
+export type FcmChallengeMessage = FcmMessageBase & {
+  type: 'challenge'
+  data: ChallengeNotification
+}
+
+export type FcmStatusMessage = FcmMessageBase & {
+  type: 'status'
+  data: StatusNotification
+}
+
+export type FcmNotificationMessage = FcmMessageBase & {
+  type: 'notification'
+  data: BasicNotification
+}
+
+export type FcmUnknownMessage = FcmMessageBase & {
+  type: 'unknown'
+}
+
+export type FcmMessage = FcmChallengeMessage | FcmStatusMessage | FcmNotificationMessage | FcmUnknownMessage
+
+export type FcmMessageHandler = (message: FcmMessage) => void
 
 /**
  * Lightweight pub-sub wrapper around Firebase Cloud Messaging so screens/view models
@@ -61,51 +129,54 @@ export class FcmService {
   }
 
   private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage): void {
-    const payload = this.parseMessage(remoteMessage)
-    this.handlers.forEach((handler) => handler(payload))
+    const message = this.parseMessage(remoteMessage)
+    this.handlers.forEach((handler) => handler(message))
   }
 
-  private parseMessage(remoteMessage: FirebaseMessagingTypes.RemoteMessage): FcmMessagePayload {
+  private parseMessage(remoteMessage: FirebaseMessagingTypes.RemoteMessage): FcmMessage {
     const data = remoteMessage.data
     const notification = remoteMessage.notification
 
-    const basePayload: FcmMessagePayload = {
-      rawMessage: remoteMessage,
-      type: 'unknown',
-      title: notification?.title,
-      body: notification?.body,
-    }
-
-    if (!data) {
-      if (notification) {
-        return { ...basePayload, type: 'notification' }
-      }
-      return basePayload
-    }
-
     // Check for BCSC challenge request
-    if (data[FcmService.BCSC_CHALLENGE_REQUEST]) {
+    if (data?.[FcmService.BCSC_CHALLENGE_REQUEST]) {
       return {
-        ...basePayload,
+        rawMessage: remoteMessage,
         type: 'challenge',
-        challengeJwt: data[FcmService.BCSC_CHALLENGE_REQUEST] as string,
+        data: {
+          jwt: data[FcmService.BCSC_CHALLENGE_REQUEST] as string,
+        },
       }
     }
 
     // Check for BCSC status notification
-    if (data[FcmService.BCSC_STATUS_NOTIFICATION]) {
+    if (data?.[FcmService.BCSC_STATUS_NOTIFICATION]) {
       return {
-        ...basePayload,
+        rawMessage: remoteMessage,
         type: 'status',
-        statusData: data as Record<string, string>,
+        data: {
+          bcsc_status_notification: data[FcmService.BCSC_STATUS_NOTIFICATION] as string,
+          message: (data.message as string) || '',
+          title: (data.title as string) || '',
+        },
       }
     }
 
-    // Generic notification with data
-    if (notification) {
-      return { ...basePayload, type: 'notification' }
+    // Generic notification (from Firebase console or similar)
+    if (notification?.title && notification?.body) {
+      return {
+        rawMessage: remoteMessage,
+        type: 'notification',
+        data: {
+          title: notification.title,
+          body: notification.body,
+        },
+      }
     }
 
-    return basePayload
+    // Unknown message type
+    return {
+      rawMessage: remoteMessage,
+      type: 'unknown',
+    }
   }
 }

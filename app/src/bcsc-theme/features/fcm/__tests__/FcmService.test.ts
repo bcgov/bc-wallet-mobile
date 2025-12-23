@@ -100,12 +100,11 @@ describe('FcmService', () => {
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'challenge',
-          challengeJwt: 'test-jwt-token',
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'challenge',
+        data: { jwt: 'test-jwt-token' },
+      })
     })
 
     it('parses status message type', () => {
@@ -113,18 +112,21 @@ describe('FcmService', () => {
       service.subscribe(handler)
 
       const remoteMessage = {
-        data: { bcsc_status_notification: 'approved', status: 'active' },
+        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Your account is approved' },
         notification: undefined,
       }
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'status',
-          statusData: { bcsc_status_notification: 'approved', status: 'active' },
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'approved',
+          title: 'Status Update',
+          message: 'Your account is approved',
+        },
+      })
     })
 
     it('parses notification message type (notification only)', () => {
@@ -138,13 +140,11 @@ describe('FcmService', () => {
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'notification',
-          title: 'Test Title',
-          body: 'Test Body',
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'notification',
+        data: { title: 'Test Title', body: 'Test Body' },
+      })
     })
 
     it('parses notification message type (with data)', () => {
@@ -158,11 +158,11 @@ describe('FcmService', () => {
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'notification',
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'notification',
+        data: { title: 'Test', body: 'Body' },
+      })
     })
 
     it('parses unknown message type when no data or notification', () => {
@@ -176,11 +176,10 @@ describe('FcmService', () => {
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'unknown',
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'unknown',
+      })
     })
 
     it('parses unknown message type for data-only without recognized keys', () => {
@@ -194,11 +193,10 @@ describe('FcmService', () => {
 
       onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'unknown',
-        })
-      )
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'unknown',
+      })
     })
 
     it('notifies all subscribed handlers', () => {

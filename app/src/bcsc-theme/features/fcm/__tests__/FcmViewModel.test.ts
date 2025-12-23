@@ -1,6 +1,13 @@
 import { PairingService } from '../../pairing'
 import { FcmViewModel } from '../FcmViewModel'
-import { FcmMessagePayload, FcmService } from '../services/fcm-service'
+import {
+  FcmChallengeMessage,
+  FcmMessage,
+  FcmNotificationMessage,
+  FcmService,
+  FcmStatusMessage,
+  FcmUnknownMessage,
+} from '../services/fcm-service'
 
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
@@ -27,7 +34,7 @@ describe('FcmViewModel', () => {
   let mockFcmService: jest.Mocked<FcmService>
   let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
   let mockPairingService: jest.Mocked<PairingService>
-  let capturedMessageHandler: ((payload: FcmMessagePayload) => void) | null = null
+  let capturedMessageHandler: ((message: FcmMessage) => void) | null = null
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -118,49 +125,45 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockResolvedValue(mockResult)
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmChallengeMessage = {
         type: 'challenge',
-        challengeJwt: 'test-jwt',
+        data: { jwt: 'test-jwt' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(decodeLoginChallenge).toHaveBeenCalledWith('test-jwt', { kty: 'RSA', n: 'test', e: 'AQAB' })
     })
 
     it('routes status messages to handleStatusNotification', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmStatusMessage = {
         type: 'status',
-        statusData: { status: 'approved' },
+        data: { status: 'approved', title: 'Status Update', message: 'Approved!' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
-      expect(showLocalNotification).toHaveBeenCalled()
+      expect(showLocalNotification).toHaveBeenCalledWith('Status Update', 'Approved!')
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmNotificationMessage = {
         type: 'notification',
-        title: 'Test Title',
-        body: 'Test Body',
+        data: { title: 'Test Title', body: 'Test Body' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(showLocalNotification).toHaveBeenCalledWith('Test Title', 'Test Body')
     })
 
     it('logs warning for unknown message types', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmUnknownMessage = {
         type: 'unknown',
+        data: undefined,
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown message type'))
     })
@@ -181,32 +184,18 @@ describe('FcmViewModel', () => {
       }
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmChallengeMessage = {
         type: 'challenge',
-        challengeJwt: 'valid-jwt',
+        data: { jwt: 'valid-jwt' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockPairingService.handlePairing).toHaveBeenCalledWith({
         serviceTitle: 'My Service',
         pairingCode: 'code456',
         source: 'fcm',
       })
-    })
-
-    it('logs error when challengeJwt is missing', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
-        type: 'challenge',
-        challengeJwt: undefined,
-      }
-
-      await capturedMessageHandler?.(payload)
-
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Challenge payload missing JWT'))
-      expect(decodeLoginChallenge).not.toHaveBeenCalled()
     })
 
     it('logs error when required claims are missing', async () => {
@@ -219,13 +208,12 @@ describe('FcmViewModel', () => {
       }
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmChallengeMessage = {
         type: 'challenge',
-        challengeJwt: 'jwt-with-missing-claims',
+        data: { jwt: 'jwt-with-missing-claims' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('missing required fields'))
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
@@ -235,13 +223,12 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockRejectedValue(new Error('Invalid JWT'))
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmChallengeMessage = {
         type: 'challenge',
-        challengeJwt: 'invalid-jwt',
+        data: { jwt: 'invalid-jwt' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
@@ -254,56 +241,26 @@ describe('FcmViewModel', () => {
     })
 
     it('shows notification when title and body are present', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmNotificationMessage = {
         type: 'notification',
-        title: 'Hello',
-        body: 'World',
+        data: { title: 'Hello', body: 'World' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(showLocalNotification).toHaveBeenCalledWith('Hello', 'World')
-    })
-
-    it('does not show notification when title is missing', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
-        type: 'notification',
-        title: undefined,
-        body: 'World',
-      }
-
-      await capturedMessageHandler?.(payload)
-
-      expect(showLocalNotification).not.toHaveBeenCalled()
-    })
-
-    it('does not show notification when body is missing', async () => {
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
-        type: 'notification',
-        title: 'Hello',
-        body: undefined,
-      }
-
-      await capturedMessageHandler?.(payload)
-
-      expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
     it('logs error when showLocalNotification throws', async () => {
       const mockShowNotification = showLocalNotification as jest.Mock
       mockShowNotification.mockRejectedValue(new Error('Notification failed'))
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmNotificationMessage = {
         type: 'notification',
-        title: 'Hello',
-        body: 'World',
+        data: { title: 'Hello', body: 'World' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to show local notification'))
     })
@@ -360,13 +317,12 @@ describe('FcmViewModel', () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockResolvedValue(mockResult)
 
-      const payload: FcmMessagePayload = {
-        rawMessage: {} as any,
+      const message: FcmChallengeMessage = {
         type: 'challenge',
-        challengeJwt: 'test-jwt',
+        data: { jwt: 'test-jwt' },
       }
 
-      await capturedMessageHandler?.(payload)
+      await capturedMessageHandler?.(message)
 
       expect(mockFetchJwk).toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('environment changed'))

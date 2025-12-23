@@ -5,7 +5,13 @@ import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-b
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
-import { FcmMessagePayload, FcmService } from './services/fcm-service'
+import {
+  BasicNotification,
+  ChallengeNotification,
+  FcmMessage,
+  FcmService,
+  StatusNotification,
+} from './services/fcm-service'
 
 /**
  * ViewModel for handling Firebase Cloud Messaging events.
@@ -32,36 +38,27 @@ export class FcmViewModel {
     this.fetchServerJwk()
   }
 
-  private async handleMessage(payload: FcmMessagePayload) {
-    this.logger.info(`[FcmViewModel] Received FCM message: type=${payload.type}`)
+  private async handleMessage(message: FcmMessage) {
+    this.logger.info(`[FcmViewModel] Received FCM message: type=${message.type}`)
 
-    switch (payload.type) {
+    switch (message.type) {
       case 'challenge':
-        // BCSC login challenge request, i.e. login from
-        // a web service.
-        await this.handleChallengeRequest(payload)
+        await this.handleChallengeRequest(message.data)
         break
       case 'status':
-        // BCSC status notification, i.e. account approved.
-        await this.handleStatusNotification(payload)
+        await this.handleStatusNotification(message.data)
         break
       case 'notification':
-        // Generic notification, i.e sent from Firebase console.
         this.logger.info(`[FcmViewModel] Handling generic notification`)
-        await this.handleGenericNotification(payload)
+        await this.handleGenericNotification(message.data)
         break
       default:
-        this.logger.warn(`[FcmViewModel] Unknown message type: ${payload.type}`)
+        this.logger.warn(`[FcmViewModel] Unknown message type`)
     }
   }
 
-  private async handleChallengeRequest(payload: FcmMessagePayload) {
-    if (!payload.challengeJwt) {
-      this.logger.error('[FcmViewModel] Challenge payload missing JWT')
-      return
-    }
-
-    const jwt = payload.challengeJwt
+  private async handleChallengeRequest(data: ChallengeNotification) {
+    const { jwt } = data
     this.logger.info(`[FcmViewModel] Processing challenge request`)
 
     try {
@@ -101,15 +98,14 @@ export class FcmViewModel {
     }
   }
 
-  private async handleStatusNotification(payload: FcmMessagePayload) {
-    this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(payload.statusData)}`)
+  private async handleStatusNotification(data: StatusNotification) {
+    this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    const title = payload.statusData?.title
-    const body = payload.statusData?.message
+    const { title, message } = data
 
-    if (title && body) {
+    if (title && message) {
       try {
-        await showLocalNotification(title, body)
+        await showLocalNotification(title, message)
       } catch (error) {
         this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
       }
@@ -118,15 +114,13 @@ export class FcmViewModel {
     }
   }
 
-  private async handleGenericNotification(payload: FcmMessagePayload) {
-    const { title, body } = payload
+  private async handleGenericNotification(data: BasicNotification) {
+    const { title, body } = data
 
-    if (title && body) {
-      try {
-        await showLocalNotification(title, body)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
-      }
+    try {
+      await showLocalNotification(title, body)
+    } catch (error) {
+      this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
     }
   }
 
