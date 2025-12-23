@@ -61,7 +61,7 @@ const MainStack: React.FC = () => {
       logger?.error(
         `[MainStack] Pending pairing missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
           pairingCode ?? 'missing'
-        }`
+        }`,
       )
       return undefined
     }
@@ -78,7 +78,6 @@ const MainStack: React.FC = () => {
     const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {
       if (screen === BCSCScreens.ServiceLogin) {
         navigation.navigate(BCSCScreens.ServiceLogin, params as BCSCMainStackParams[BCSCScreens.ServiceLogin])
-        return
       }
     })
 
