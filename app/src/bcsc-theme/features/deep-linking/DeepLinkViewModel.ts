@@ -15,10 +15,7 @@ export class DeepLinkViewModel {
   private readonly pendingStateListeners = new Set<PendingStateListener>()
   private pendingDeepLink: DeepLinkPayload | null = null
 
-  constructor(
-    private readonly deepLinkService: DeepLinkService,
-    private readonly logger: AbstractBifoldLogger
-  ) {}
+  constructor(private readonly deepLinkService: DeepLinkService, private readonly logger: AbstractBifoldLogger) {}
 
   public initialize() {
     this.deepLinkService.subscribe(this.handleDeepLink.bind(this))
@@ -69,6 +66,20 @@ export class DeepLinkViewModel {
   public clearPendingDeepLink() {
     this.pendingDeepLink = null
     this.notifyPendingStateChange()
+  }
+
+  /**
+   * Inject a pairing payload from an external source (e.g., FCM push notification).
+   * This allows challenge notifications to reuse the deep link pairing flow.
+   */
+  public injectPairingPayload(serviceTitle: string, pairingCode: string) {
+    const syntheticPayload: DeepLinkPayload = {
+      rawUrl: 'fcm://challenge',
+      host: 'pair',
+      serviceTitle,
+      pairingCode,
+    }
+    this.handleDeepLink(syntheticPayload)
   }
 
   private handleDeepLink(payload: DeepLinkPayload) {

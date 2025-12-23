@@ -53,8 +53,8 @@ const App = () => {
 
   const fcmViewModel = useMemo(() => {
     const service = new FcmService()
-    return new FcmViewModel(service, logger)
-  }, [logger])
+    return new FcmViewModel(service, logger, deepLinkViewModel)
+  }, [logger, deepLinkViewModel])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()

@@ -3,6 +3,8 @@ import Config from 'react-native-config'
 
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
+import { DeepLinkViewModel } from '../deep-linking'
+
 import { FcmMessagePayload, FcmService } from './services/fcm-service'
 import { BcscChallenge, ChallengeNavigationEvent, ChallengeNavigationListener, PendingChallengeListener } from './types'
 
@@ -15,6 +17,7 @@ export class FcmViewModel {
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
+    private readonly deepLinkViewModel: DeepLinkViewModel,
   ) {}
 
   public initialize() {
@@ -114,20 +117,17 @@ export class FcmViewModel {
         `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`,
       )
 
-      const challenge: BcscChallenge = {
-        result,
-        receivedAt: Date.now(),
+      // Extract pairing data and inject into deep link flow
+      const serviceTitle = result.claims.bcsc_client_name
+      const pairingCode = result.claims.bcsc_challenge
+
+      if (!serviceTitle || !pairingCode) {
+        this.logger.error('[FcmViewModel] Challenge missing required fields (bcsc_client_name or bcsc_challenge)')
+        return
       }
 
-      console.log('zzz FcmViewModel Challenge:', challenge)
-      // if (this.navigationListeners.size > 0) {
-      //   this.logger.info(`[FcmViewModel] Emitting challenge navigation`)
-      //   this.emitChallengeNavigation(challenge)
-      // } else {
-      //   this.logger.info(`[FcmViewModel] Buffering challenge (no listeners)`)
-      //   this.pendingChallenge = challenge
-      //   this.notifyPendingStateChange()
-      // }
+      this.logger.info(`[FcmViewModel] Injecting challenge into deep link flow: ${serviceTitle}`)
+      this.deepLinkViewModel.injectPairingPayload(serviceTitle, pairingCode)
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
     }
