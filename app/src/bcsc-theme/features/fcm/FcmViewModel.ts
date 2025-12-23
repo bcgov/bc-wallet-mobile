@@ -18,8 +18,12 @@ export class FcmViewModel {
   ) {}
 
   public initialize() {
+    this.logger.info('[FcmViewModel] Initializing...')
+    // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
+    this.logger.info('[FcmViewModel] Subscribed to FCM service')
     this.fcmService.init()
+    this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification
     this.fetchServerJwk()
   }
@@ -75,12 +79,17 @@ export class FcmViewModel {
 
     switch (payload.type) {
       case 'challenge':
+        // BCSC login challenge request, i.e. login from
+        // a web service.
         await this.handleChallengeRequest(payload)
         break
       case 'status':
-        this.handleStatusNotification(payload)
+        // BCSC status notification, i.e. account approved.
+        await this.handleStatusNotification(payload)
         break
       case 'notification':
+        // Generic notification, i.e sent from Firebase console.
+        this.logger.info(`[FcmViewModel] Handling generic notification`)
         await this.handleGenericNotification(payload)
         break
       default:
@@ -106,27 +115,28 @@ export class FcmViewModel {
       )
 
       const challenge: BcscChallenge = {
-        jwt,
         result,
         receivedAt: Date.now(),
       }
 
-      if (this.navigationListeners.size > 0) {
-        this.logger.info(`[FcmViewModel] Emitting challenge navigation`)
-        this.emitChallengeNavigation(challenge)
-      } else {
-        this.logger.info(`[FcmViewModel] Buffering challenge (no listeners)`)
-        this.pendingChallenge = challenge
-        this.notifyPendingStateChange()
-      }
+      console.log('zzz FcmViewModel Challenge:', challenge)
+      // if (this.navigationListeners.size > 0) {
+      //   this.logger.info(`[FcmViewModel] Emitting challenge navigation`)
+      //   this.emitChallengeNavigation(challenge)
+      // } else {
+      //   this.logger.info(`[FcmViewModel] Buffering challenge (no listeners)`)
+      //   this.pendingChallenge = challenge
+      //   this.notifyPendingStateChange()
+      // }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
     }
   }
 
-  private handleStatusNotification(payload: FcmMessagePayload) {
+  private async handleStatusNotification(payload: FcmMessagePayload) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(payload.statusData)}`)
-    // TODO: Implement status notification handling
+
+    await showLocalNotification('title', 'body')
   }
 
   private async handleGenericNotification(payload: FcmMessagePayload) {
@@ -142,6 +152,7 @@ export class FcmViewModel {
   }
 
   private async fetchServerJwk(): Promise<void> {
+    // TODO: Use API client if available
     try {
       const baseURL = Config.IAS_PORTAL_URL || 'https://idsit.gov.bc.ca'
       const response = await fetch(`${baseURL}/device/jwk`)

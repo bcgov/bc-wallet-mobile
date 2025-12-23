@@ -4,8 +4,6 @@ import { LoginChallengeResult } from 'react-native-bcsc-core'
  * Represents a decoded and optionally verified BCSC login challenge
  */
 export type BcscChallenge = {
-  /** The original JWT string */
-  jwt: string
   /** Decoded and verified challenge result */
   result: LoginChallengeResult
   /** Timestamp when the challenge was received */
