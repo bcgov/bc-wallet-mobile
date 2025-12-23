@@ -1,5 +1,5 @@
 import { PairingService } from '../PairingService'
-import { PairingNavigationEvent, PairingRequest } from '../types'
+import { PairingNavigationEvent, PairingPayload } from '../types'
 
 describe('PairingService', () => {
   let logger: { info: jest.Mock; debug: jest.Mock }
@@ -26,7 +26,7 @@ describe('PairingService', () => {
 
     service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'deep-link',
@@ -44,7 +44,7 @@ describe('PairingService', () => {
 
     service.onNavigationRequest((event) => navEvents.push(event))
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'fcm',
@@ -66,7 +66,7 @@ describe('PairingService', () => {
 
     service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'deep-link',
@@ -95,7 +95,7 @@ describe('PairingService', () => {
 
     service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'deep-link',
@@ -124,7 +124,7 @@ describe('PairingService', () => {
 
     service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'fcm',
@@ -144,7 +144,7 @@ describe('PairingService', () => {
     const unsubscribe = service.onNavigationRequest((event) => navEvents.push(event))
     unsubscribe()
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'deep-link',
@@ -164,7 +164,7 @@ describe('PairingService', () => {
     const unsubscribe = service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
     unsubscribe()
 
-    const request: PairingRequest = {
+    const request: PairingPayload = {
       serviceTitle: 'Test Service',
       pairingCode: 'CODE123',
       source: 'deep-link',

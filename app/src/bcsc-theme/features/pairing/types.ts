@@ -13,11 +13,6 @@ export type PairingPayload = {
 }
 
 /**
- * Alias for PairingPayload used when handling incoming pairing requests
- */
-export type PairingRequest = PairingPayload
-
-/**
  * Navigation event emitted when pairing navigation should occur
  */
 export type PairingNavigationEvent = {
