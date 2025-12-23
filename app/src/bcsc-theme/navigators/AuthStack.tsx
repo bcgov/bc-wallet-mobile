@@ -18,6 +18,7 @@ const AuthStack = (): JSX.Element => {
   const Stack = createStackNavigator<BCSCAuthStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
 
+  // TODO (bm): Add settings, modals, etc. as needed
   return (
     <Stack.Navigator
       initialRouteName={BCSCScreens.AccountSelector}
@@ -41,6 +42,7 @@ const AuthStack = (): JSX.Element => {
           title: 'Enter PIN',
         }}
       />
+      {/* TODO (bm): Hook up to show users on first device auth usage */}
       <Stack.Screen
         name={BCSCScreens.DeviceAuthInfo}
         component={ConfirmDeviceAuthInfoScreen}

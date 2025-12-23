@@ -614,14 +614,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         metadata: [],
         documentNumber: '',
       }
-      const additionalEvidenceData = [...(state.bcscSecure.additionalEvidenceData || []), newEvidenceData]
+      const additionalEvidenceData = [...state.bcscSecure.additionalEvidenceData, newEvidenceData]
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA: {
       const { evidenceType, metadata }: { evidenceType: EvidenceType; metadata: PhotoMetadata[] } =
         (action?.payload || []).pop() ?? {}
-      const updatedEvidenceData = (state.bcscSecure.additionalEvidenceData || []).map((item) =>
+      const updatedEvidenceData = state.bcscSecure.additionalEvidenceData.map((item) =>
         item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
@@ -630,14 +630,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER: {
       const { evidenceType, documentNumber }: { evidenceType: EvidenceType; documentNumber: string } =
         (action?.payload || []).pop() ?? {}
-      const updatedEvidenceData = (state.bcscSecure.additionalEvidenceData || []).map((item) =>
+      const updatedEvidenceData = state.bcscSecure.additionalEvidenceData.map((item) =>
         item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.REMOVE_INCOMPLETE_SECURE_EVIDENCE: {
-      const completeEvidence = (state.bcscSecure.additionalEvidenceData || []).filter(
+      const completeEvidence = state.bcscSecure.additionalEvidenceData.filter(
         (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
       )
       const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: completeEvidence }

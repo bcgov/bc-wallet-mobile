@@ -534,7 +534,7 @@ export const useSecureActions = () => {
    * Helper function to persist current evidence data to native storage
    */
   const persistCurrentEvidenceData = useCallback(async () => {
-    const evidenceData = store.bcscSecure.additionalEvidenceData || []
+    const evidenceData = store.bcscSecure.additionalEvidenceData
     await persistEvidenceData(evidenceData)
   }, [store.bcscSecure.additionalEvidenceData, persistEvidenceData])
 

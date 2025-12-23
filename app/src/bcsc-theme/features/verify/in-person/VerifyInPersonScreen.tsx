@@ -93,8 +93,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       </Button>
       <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
         {t('BCSC.VerifyIdentity.CardSerialNumber', {
-          serial:
-            store.bcscSecure.serial ?? (store.bcscSecure.additionalEvidenceData || [])[0]?.documentNumber ?? 'N/A',
+          serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
         })}
       </ThemedText>
     </>

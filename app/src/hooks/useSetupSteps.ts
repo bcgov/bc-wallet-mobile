@@ -75,10 +75,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const isNonBCSCCards = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
     // Count of fully validated evidence cards (at least 1 photo taken + document number entered)
-    const completedEvidenceCount = (store.bcscSecure.additionalEvidenceData || []).filter(isEvidenceComplete).length
+    const completedEvidenceCount = store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete).length
 
     // Check if user has any completed photo ID evidence
-    const hasCompletedPhotoIdEvidence = (store.bcscSecure.additionalEvidenceData || []).some(
+    const hasCompletedPhotoIdEvidence = store.bcscSecure.additionalEvidenceData.some(
       (item) => item.evidenceType.has_photo && isEvidenceComplete(item)
     )
 
@@ -129,7 +129,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       }
 
       // If the user has added additional evidence, add each to the list
-      for (const evidence of (store.bcscSecure.additionalEvidenceData || []).filter(isEvidenceComplete)) {
+      for (const evidence of store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
             evidenceType: evidence.evidenceType.evidence_type,

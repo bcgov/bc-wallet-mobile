@@ -67,7 +67,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
       // Process additional evidence data
       // TODO (bm): store properly typed additional evidence in state
-      const additionalEvidence = store.bcscSecure.additionalEvidenceData || []
+      const additionalEvidence = store.bcscSecure.additionalEvidenceData
       const evidenceUploadPromises: Promise<any>[] = []
       const evidenceUploadUris: string[] = []
 
