@@ -40,7 +40,12 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   ]
 
   // Regular initializer
-  init(id: String, clientID: String, issuer: String, securityMethod: AccountSecurityMethod = AccountSecurityMethod(rawValue:"app_pin_no_device_authn")!) {
+  init(
+    id: String,
+    clientID: String,
+    issuer: String,
+    securityMethod: AccountSecurityMethod = AccountSecurityMethod(rawValue: "app_pin_no_device_authn")!
+  ) {
     self.id = id
     self.clientID = clientID
     self.issuer = issuer

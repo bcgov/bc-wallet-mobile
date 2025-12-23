@@ -21,7 +21,13 @@ class ClientRegistration: NSObject, NSSecureCoding {
   required init?(coder: NSCoder) {
     // self.provider = coder.decodeObject(of: Provider.self, forKey: .provider)
     // self.keys = coder.decodeObject(of: [NSArray.self, JWK.self], forKey: .keys) as? [JWK] ?? []
-    self.credential = coder.decodeObject(of: Credential.self, forKey: .credential)
+
+    // Decode credential with all required Foundation types for secure coding
+    self.credential = coder.decodeObject(
+      of: [Credential.self, NSString.self, NSDate.self, NSNumber.self, NSArray.self],
+      forKey: .credential
+    ) as? Credential
+
     self.accessToken = coder.decodeObject(forKey: .accessToken) as? String
     self.accessTokenID = coder.decodeObject(forKey: .accessTokenID) as? String
     self.registrationClientURI = coder.decodeObject(forKey: .registrationClientURI) as? String

@@ -585,7 +585,6 @@ class BcscCore: NSObject {
         accountToSave.nickname = nickname
       }
 
-
       if let failedAttemptCount = account["failedAttemptCount"] as? Int {
         accountToSave.failedAttemptCount = failedAttemptCount
       }
