@@ -1,6 +1,30 @@
 import type { TurboModule } from 'react-native';
 import { TurboModuleRegistry } from 'react-native';
 
+export type LoginChallenge = {
+  /** Audience - the client ID */
+  aud: string;
+  /** Issuer URL */
+  iss: string;
+  /** The challenge code */
+  bcsc_challenge: string;
+  /** Expiration timestamp (Unix seconds) */
+  exp: number;
+  /** Client display name */
+  bcsc_client_name: string;
+  /** Issued at timestamp (Unix seconds) */
+  iat: number;
+  /** JWT ID */
+  jti: string;
+};
+
+export type LoginChallengeResult = {
+  /** Whether the JWT signature was verified against the issuer's public key */
+  verified: boolean;
+  /** The decoded JWT claims */
+  claims: LoginChallenge;
+};
+
 // Re-declaring PrivateKeyInfo and KeyPair here to avoid import issues from index.ts
 // Ideally, these would be in a shared types file if not for TurboModule limitations.
 export type PrivateKeyInfo = {
@@ -196,6 +220,7 @@ export interface Spec extends TurboModule {
     confirmationCode: string
   ): Promise<string | null>;
   decodePayload(jweString: string): Promise<string>;
+  decodeLoginChallenge(jwt: string, key: JWK | null): Promise<LoginChallengeResult>;
   createPreVerificationJWT(deviceCode: string, clientID: string): Promise<string>;
   createQuickLoginJWT(
     accessToken: string,
