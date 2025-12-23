@@ -17,7 +17,7 @@ export class FcmViewModel {
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService,
+    private readonly pairingService: PairingService
   ) {}
 
   public initialize() {
@@ -68,7 +68,7 @@ export class FcmViewModel {
       const result = await decodeLoginChallenge(jwt, this.serverJwk ?? undefined)
 
       this.logger.info(
-        `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`,
+        `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`
       )
 
       // Extract pairing data and inject into deep link flow

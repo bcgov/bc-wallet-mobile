@@ -87,10 +87,7 @@ To add a new pairing source (e.g., QR code scanning):
 ```typescript
 // Example: QrViewModel.ts
 export class QrViewModel {
-  constructor(
-    private readonly qrService: QrService,
-    private readonly pairingService: PairingService,
-  ) {}
+  constructor(private readonly qrService: QrService, private readonly pairingService: PairingService) {}
 
   public initialize() {
     this.qrService.subscribe(this.handleQrScan.bind(this))
@@ -229,7 +226,7 @@ export class YourSourceViewModel {
   constructor(
     private readonly sourceService: YourSourceService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService,
+    private readonly pairingService: PairingService
   ) {}
 
   public initialize(): void {
@@ -273,7 +270,7 @@ const pairingService = new PairingService(logger)
 const yourSourceViewModel = new YourSourceViewModel(
   new YourSourceService(),
   logger,
-  pairingService, // Pass the SAME instance
+  pairingService // Pass the SAME instance
 )
 
 // Initialize in useEffect
@@ -314,7 +311,7 @@ describe('YourSourceViewModel', () => {
     const viewModel = new YourSourceViewModel(
       mockService as any,
       { info: jest.fn(), warn: jest.fn() } as any,
-      mockPairingService as any,
+      mockPairingService as any
     )
 
     viewModel.initialize()
@@ -331,7 +328,7 @@ describe('YourSourceViewModel', () => {
     const viewModel = new YourSourceViewModel(
       mockService as any,
       { info: jest.fn(), warn: jest.fn() } as any,
-      mockPairingService as any,
+      mockPairingService as any
     )
 
     viewModel.initialize()

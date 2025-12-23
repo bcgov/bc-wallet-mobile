@@ -12,7 +12,7 @@ export class DeepLinkViewModel {
   constructor(
     private readonly deepLinkService: DeepLinkService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService,
+    private readonly pairingService: PairingService
   ) {}
 
   public initialize() {

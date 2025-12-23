@@ -120,7 +120,7 @@ export const useServiceLoginState = ({
         pendingConsumedRef.current
       }, hasLoginData: ${Boolean(state.pairingCode || state.serviceTitle)}, hasPendingPairing: ${
         pairingService.hasPendingPairing
-      }`,
+      }`
     )
 
     if (serviceClientId) {
