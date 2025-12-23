@@ -3,13 +3,22 @@ import { renderHook, waitFor } from '@testing-library/react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/EnterBirthdateViewModel'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
 const mockUseApi = jest.mocked(useApi)
+
+// Mock secure actions
+const mockUpdateUserInfo = jest.fn()
+const mockUpdateDeviceCodes = jest.fn()
+const mockUpdateCardProcess = jest.fn()
+const mockUpdateVerificationOptions = jest.fn()
+
+jest.mock('@/bcsc-theme/hooks/useSecureActions')
+const mockUseSecureActions = jest.mocked(useSecureActions)
 
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
@@ -25,7 +34,6 @@ const mockNavigation = {
   navigate: jest.fn(),
   dispatch: jest.fn(),
 } as any
-const mockDispatch = jest.fn()
 
 // Mock logger
 const mockLogger = {
@@ -39,7 +47,7 @@ describe('EnterBirthdateViewModel', () => {
   const mockSerial = '123456789'
   const mockBirthdate = new Date('1990-01-15')
   const mockStore: any = {
-    bcsc: {
+    bcscSecure: {
       serial: mockSerial,
       birthdate: mockBirthdate,
     },
@@ -54,9 +62,16 @@ describe('EnterBirthdateViewModel', () => {
       },
     } as any)
 
+    mockUseSecureActions.mockReturnValue({
+      updateUserInfo: mockUpdateUserInfo,
+      updateDeviceCodes: mockUpdateDeviceCodes,
+      updateCardProcess: mockUpdateCardProcess,
+      updateVerificationOptions: mockUpdateVerificationOptions,
+    } as any)
+
     // Setup mocks
     const bifoldMock = jest.mocked(Bifold)
-    bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
+    bifoldMock.useStore.mockReturnValue([mockStore, jest.fn()])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
   })
 
@@ -71,13 +86,8 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
         expect(mockAuthorizeDevice).toHaveBeenCalledWith(mockSerial, mockBirthdate)
-        expect(mockDispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: BCDispatchAction.UPDATE_BIRTHDATE,
-            payload: [mockBirthdate],
-          })
-        )
         expect(mockLogger.info).toHaveBeenCalledWith('Device already authorized, navigating to SetupSteps screen')
         expect(mockNavigation.dispatch).toHaveBeenCalledWith(
           CommonActions.reset({
@@ -109,39 +119,31 @@ describe('EnterBirthdateViewModel', () => {
       const expectedExpiresAt = new Date(Date.now() + mockDeviceAuth.expires_in * 1000)
 
       await waitFor(() => {
-        // Verify all dispatches were called
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_BIRTHDATE,
-          payload: [mockBirthdate],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_EMAIL,
-          payload: [{ email: mockDeviceAuth.verified_email, emailConfirmed: true }],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_DEVICE_CODE,
-          payload: [mockDeviceAuth.device_code],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_USER_CODE,
-          payload: [mockDeviceAuth.user_code],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_CARD_PROCESS,
-          payload: [mockDeviceAuth.process],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-          payload: [['video_call']],
+        // Verify updateUserInfo was called for birthdate
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
+
+        // Verify updateUserInfo was called for email
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({
+          email: mockDeviceAuth.verified_email,
+          isEmailVerified: true,
         })
 
-        // Verify device code expires at dispatch
-        const dispatchCall = mockDispatch.mock.calls.find(
-          (call) => call[0].type === BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT
-        )
-        expect(dispatchCall).toBeDefined()
-        const actualExpiresAt = dispatchCall![0].payload[0]
-        expect(actualExpiresAt.getTime()).toBeCloseTo(expectedExpiresAt.getTime(), -2)
+        // Verify updateDeviceCodes was called
+        expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+          deviceCode: mockDeviceAuth.device_code,
+          userCode: mockDeviceAuth.user_code,
+          deviceCodeExpiresAt: expect.any(Date),
+        })
+
+        // Verify the expiration time is correct
+        const deviceCodesCall = mockUpdateDeviceCodes.mock.calls[0][0]
+        expect(deviceCodesCall.deviceCodeExpiresAt.getTime()).toBeCloseTo(expectedExpiresAt.getTime(), -2)
+
+        // Verify updateCardProcess was called
+        expect(mockUpdateCardProcess).toHaveBeenCalledWith(mockDeviceAuth.process)
+
+        // Verify updateVerificationOptions was called
+        expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call'])
 
         // Verify navigation
         expect(mockNavigation.dispatch).toHaveBeenCalledWith(
@@ -170,9 +172,9 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_EMAIL,
-          payload: [{ email: undefined, emailConfirmed: false }],
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({
+          email: undefined,
+          isEmailVerified: false,
         })
       })
     })
@@ -196,19 +198,10 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        // Verify dispatches
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_BIRTHDATE,
-          payload: [mockBirthdate],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_CARD_PROCESS,
-          payload: [mockDeviceAuth.process],
-        })
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-          payload: [['video_call', 'back_check']],
-        })
+        // Verify secure actions were called
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
+        expect(mockUpdateCardProcess).toHaveBeenCalledWith(mockDeviceAuth.process)
+        expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
 
         // Verify navigation
         expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
@@ -234,10 +227,7 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_CARD_PROCESS,
-          payload: [mockDeviceAuth.process],
-        })
+        expect(mockUpdateCardProcess).toHaveBeenCalledWith(mockDeviceAuth.process)
         expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
       })
     })
@@ -261,10 +251,7 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-          payload: [['video_call', 'back_check', 'counter', 'self']],
-        })
+        expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check', 'counter', 'self'])
       })
     })
 
@@ -285,10 +272,7 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        expect(mockDispatch).toHaveBeenCalledWith({
-          type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-          payload: [['self']],
-        })
+        expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['self'])
       })
     })
   })
@@ -315,12 +299,10 @@ describe('EnterBirthdateViewModel', () => {
       const afterTime = Date.now()
 
       await waitFor(() => {
-        const dispatchCall = mockDispatch.mock.calls.find(
-          (call) => call[0].type === BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT
-        )
-        expect(dispatchCall).toBeDefined()
+        expect(mockUpdateDeviceCodes).toHaveBeenCalled()
 
-        const expiresAt = dispatchCall![0].payload[0] as Date
+        const deviceCodesCall = mockUpdateDeviceCodes.mock.calls[0][0]
+        const expiresAt = deviceCodesCall.deviceCodeExpiresAt as Date
         const expectedMin = beforeTime + mockDeviceAuth.expires_in * 1000
         const expectedMax = afterTime + mockDeviceAuth.expires_in * 1000
 
@@ -330,8 +312,8 @@ describe('EnterBirthdateViewModel', () => {
     })
   })
 
-  describe('authorizeDevice - dispatch order', () => {
-    it('should dispatch UPDATE_BIRTHDATE before calling authorizeDevice API', async () => {
+  describe('authorizeDevice - call order', () => {
+    it('should call updateUserInfo with birthdate before calling authorizeDevice API', async () => {
       const mockDeviceAuth = {
         device_code: 'test-device-code',
         user_code: 'ABCD1234',
@@ -348,15 +330,13 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        // Find the index of UPDATE_BIRTHDATE dispatch
-        const birthdateDispatchIndex = mockDispatch.mock.calls.findIndex(
-          (call) => call[0].type === BCDispatchAction.UPDATE_BIRTHDATE
-        )
-        expect(birthdateDispatchIndex).toBe(0) // Should be first dispatch
+        // updateUserInfo should be called first with birthdate
+        expect(mockUpdateUserInfo.mock.calls[0]).toEqual([{ birthdate: mockBirthdate }])
+        expect(mockAuthorizeDevice).toHaveBeenCalledWith(mockSerial, mockBirthdate)
       })
     })
 
-    it('should dispatch all authorization data in correct sequence', async () => {
+    it('should call all secure actions in correct sequence', async () => {
       const mockDeviceAuth = {
         device_code: 'test-device-code',
         user_code: 'ABCD1234',
@@ -373,17 +353,15 @@ describe('EnterBirthdateViewModel', () => {
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
 
       await waitFor(() => {
-        const dispatchTypes = mockDispatch.mock.calls.map((call) => call[0].type)
-
-        expect(dispatchTypes).toEqual([
-          BCDispatchAction.UPDATE_BIRTHDATE,
-          BCDispatchAction.UPDATE_EMAIL,
-          BCDispatchAction.UPDATE_DEVICE_CODE,
-          BCDispatchAction.UPDATE_USER_CODE,
-          BCDispatchAction.UPDATE_CARD_PROCESS,
-          BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT,
-          BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
+        // Verify call order
+        expect(mockUpdateUserInfo).toHaveBeenCalledTimes(2)
+        expect(mockUpdateUserInfo.mock.calls[0]).toEqual([{ birthdate: mockBirthdate }])
+        expect(mockUpdateUserInfo.mock.calls[1]).toEqual([
+          { email: mockDeviceAuth.verified_email, isEmailVerified: true },
         ])
+        expect(mockUpdateDeviceCodes).toHaveBeenCalledTimes(1)
+        expect(mockUpdateCardProcess).toHaveBeenCalledTimes(1)
+        expect(mockUpdateVerificationOptions).toHaveBeenCalledTimes(1)
       })
     })
   })
@@ -397,11 +375,8 @@ describe('EnterBirthdateViewModel', () => {
 
       await expect(result.current.authorizeDevice(mockSerial, mockBirthdate)).rejects.toThrow('Authorization failed')
 
-      // Verify UPDATE_BIRTHDATE was still dispatched before error
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_BIRTHDATE,
-        payload: [mockBirthdate],
-      })
+      // Verify updateUserInfo was still called before error
+      expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
     })
   })
 })

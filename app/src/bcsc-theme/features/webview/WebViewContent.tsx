@@ -1,7 +1,8 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { getWebViewAccessibilityProps } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
-import React, { useCallback } from 'react'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import React, { useCallback, useMemo } from 'react'
+import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
@@ -31,6 +32,7 @@ interface WebViewContentProps {
 
 /**
  * A WebView component that loads a given URL with optional injected JavaScript.
+ * Automatically applies accessibility font scaling based on device settings.
  *
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {JSX.Element} The rendered WebView component.
@@ -39,6 +41,14 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { fontScale } = useWindowDimensions()
+
+  // Platform-specific accessibility text scaling:
+  // iOS uses JavaScript injection, Android uses native textZoom prop
+  const { injectedJavaScript, textZoom } = useMemo(
+    () => getWebViewAccessibilityProps(Platform.OS, fontScale, injectedJavascript),
+    [fontScale, injectedJavascript]
+  )
 
   const styles = StyleSheet.create({
     loadingContainer: {
@@ -97,7 +107,9 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       sharedCookiesEnabled={true}
       thirdPartyCookiesEnabled={true}
       userAgent="Single App"
-      injectedJavaScriptBeforeContentLoaded={injectedJavascript}
+      // Accessibility: Apply font scaling for dynamic text sizing
+      textZoom={textZoom}
+      injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />

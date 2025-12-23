@@ -1,5 +1,4 @@
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCAccountType, getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
@@ -43,7 +42,7 @@ describe('ID Token Utils', () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockIdToken = {
-        bcsc_account_type: BCSCAccountType.Other,
+        bcsc_account_type: BcscCore.BCSCAccountType.NoBcscCard,
         bcsc_card_type: undefined,
       }
 
@@ -55,8 +54,8 @@ describe('ID Token Utils', () => {
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
       expect(idToken).toEqual({
-        bcsc_account_type: BCSCAccountType.Other,
-        bcsc_card_type: BCSCCardType.Other,
+        bcsc_account_type: BcscCore.BCSCAccountType.NoBcscCard,
+        bcsc_card_type: BcscCore.BCSCCardType.NonBcsc,
       })
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
@@ -65,7 +64,7 @@ describe('ID Token Utils', () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockIdToken = {
-        bcsc_account_type: BCSCAccountType.Photo,
+        bcsc_account_type: BcscCore.BCSCAccountType.PhotoCard,
         bcsc_card_type: undefined,
       }
 
@@ -77,7 +76,7 @@ describe('ID Token Utils', () => {
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
       expect(idToken).toEqual({
-        bcsc_account_type: BCSCAccountType.Photo,
+        bcsc_account_type: BcscCore.BCSCAccountType.PhotoCard,
         bcsc_card_type: undefined,
       })
       expect(mockLogger.error).not.toHaveBeenCalled()

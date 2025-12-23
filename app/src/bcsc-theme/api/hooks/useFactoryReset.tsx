@@ -1,3 +1,5 @@
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -29,9 +31,11 @@ type FactoryResetResult =
  * @returns {Function} A function that performs the factory reset when called.
  */
 export const useFactoryReset = () => {
+  const client = useBCSCApiClient()
   const { registration } = useApi()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { clearSecureState, deleteSecureData } = useSecureActions()
 
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
@@ -39,35 +43,45 @@ export const useFactoryReset = () => {
    * Performs a factory reset of the BCSC account and state.
    *
    * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
+   * @param {boolean} [deleteFromServer=true] - Whether to delete the account from the IAS server for situations where this is
+   * not possible (e.g., account is locked)
    * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
-    async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
+    async (state?: Partial<BCSCState>, deleteFromServer: boolean = true): Promise<FactoryResetResult> => {
       try {
         const account = await BcscCore.getAccount()
 
-        if (!account) {
-          throw new Error('Local account not found for factory reset')
+        if (deleteFromServer) {
+          if (!account) {
+            throw new Error('Local account not found for factory reset')
+          }
+
+          // Delete IAS account
+          logger.info('FactoryReset: Deleting IAS account from server...')
+          const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+
+          if (!deleteIASAccount.success) {
+            throw new Error('IAS server account deletion failed')
+          }
+        } else {
+          logger.info('FactoryReset: Skipping server deletion (deleteFromServer=false)')
         }
 
-        // Delete IAS account
-        logger.info('FactoryReset: Deleting IAS account from server...')
-        const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-        if (!deleteIASAccount.success) {
-          throw new Error('IAS server account deletion failed')
-        }
+        // Delete secure data from native storage
+        logger.info('FactoryReset: Deleting secure data from native storage...')
+        await deleteSecureData()
 
         // Remove local account file
         logger.info('FactoryReset: Removing local account file...')
         await BcscCore.removeAccount()
 
         // Reset BCSC state to initial state
-        logger.info('FactoryReset: Clearing BCSC state...')
+        logger.info('FactoryReset: Clearing secure and plain BCSC state...')
+        clearSecureState()
         dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: state ? [state] : undefined })
-
-        logger.info('FactoryReset: Registering new account...')
-        await registration.register()
+        // TODO (bm): We should have an actual method to clear tokens
+        client.tokens = undefined
 
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
@@ -82,7 +96,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [logger, registration, dispatch]
+    [logger, registration, dispatch, clearSecureState, deleteSecureData, client]
   )
 
   return factoryReset

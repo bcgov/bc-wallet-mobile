@@ -15,7 +15,10 @@ export class DeepLinkViewModel {
   private readonly pendingStateListeners = new Set<PendingStateListener>()
   private pendingDeepLink: DeepLinkPayload | null = null
 
-  constructor(private readonly deepLinkService: DeepLinkService, private readonly logger: AbstractBifoldLogger) {}
+  constructor(
+    private readonly deepLinkService: DeepLinkService,
+    private readonly logger: AbstractBifoldLogger
+  ) {}
 
   public initialize() {
     this.deepLinkService.subscribe(this.handleDeepLink.bind(this))

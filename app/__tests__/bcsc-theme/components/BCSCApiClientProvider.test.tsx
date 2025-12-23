@@ -227,7 +227,7 @@ describe('BCSCApiClientProvider', () => {
         ({
           fetchEndpointsAndConfig: fetchMock,
           baseURL: store.developer.environment.iasApiBaseUrl,
-        } as any)
+        }) as any
     )
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (

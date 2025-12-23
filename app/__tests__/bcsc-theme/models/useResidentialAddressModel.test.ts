@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/useResidentialAddressModel'
 import { isCanadianPostalCode } from '@/bcsc-theme/utils/address-utils'
-import { BCDispatchAction } from '@/store'
+import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { ToastType } from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -22,6 +22,18 @@ jest.mock('@bifold/core', () => {
   }
 })
 
+const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
+const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
+const mockUpdateVerificationOptions = jest.fn()
+jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    updateUserMetadata: mockUpdateUserMetadata,
+    updateDeviceCodes: mockUpdateDeviceCodes,
+    updateVerificationOptions: mockUpdateVerificationOptions,
+  })),
+}))
+
 describe('useResidentialAddressModel', () => {
   const mockDispatch = jest.fn()
   const mockLogger = {
@@ -36,7 +48,10 @@ describe('useResidentialAddressModel', () => {
   } as any
 
   const mockStore: any = {
-    bcsc: {
+    bcscSecure: {
+      birthdate: new Date('1990-01-15'),
+      deviceCode: null,
+      deviceCodeExpiresAt: null,
       userMetadata: {
         name: {
           first: 'John',
@@ -50,9 +65,7 @@ describe('useResidentialAddressModel', () => {
           postalCode: 'V6B 1A1',
         },
       },
-      birthdate: new Date('1990-01-15'),
-      deviceCode: null,
-      deviceCodeExpiresAt: null,
+      additionalEvidenceData: [],
     },
   }
 
@@ -66,6 +79,9 @@ describe('useResidentialAddressModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUpdateUserMetadata.mockClear()
+    mockUpdateDeviceCodes.mockClear()
+    mockUpdateVerificationOptions.mockClear()
 
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
@@ -97,7 +113,7 @@ describe('useResidentialAddressModel', () => {
 
     it('should return empty form state when no address in store', () => {
       const storeWithoutAddress = {
-        bcsc: {
+        bcscSecure: {
           userMetadata: null,
         },
       } as any
@@ -125,12 +141,12 @@ describe('useResidentialAddressModel', () => {
       isCanadianPostalCodeMock.mockReturnValue(false)
 
       const storeWithEmptyAddress = {
-        bcsc: {
+        bcscSecure: {
+          birthdate: new Date('1990-01-15'),
           userMetadata: {
             name: { first: 'John', last: 'Doe' },
             address: null,
           },
-          birthdate: new Date('1990-01-15'),
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
@@ -160,12 +176,12 @@ describe('useResidentialAddressModel', () => {
       isCanadianPostalCodeMock.mockReturnValue(false)
 
       const storeWithEmptyAddress = {
-        bcsc: {
+        bcscSecure: {
+          birthdate: new Date('1990-01-15'),
           userMetadata: {
             name: { first: 'John', last: 'Doe' },
             address: null,
           },
-          birthdate: new Date('1990-01-15'),
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
@@ -181,7 +197,7 @@ describe('useResidentialAddressModel', () => {
       expect(result.current.formErrors.city).toBeDefined()
       expect(result.current.formErrors.province).toBeDefined()
       expect(result.current.formErrors.postalCode).toBeDefined()
-      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
     })
 
     it('should set validation error for invalid postal code', async () => {
@@ -202,8 +218,8 @@ describe('useResidentialAddressModel', () => {
     it('should navigate to SetupSteps when device is already authorized', async () => {
       const storeWithDeviceCode = {
         ...mockStore,
-        bcsc: {
-          ...mockStore.bcsc,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
           deviceCode: 'existing-device-code',
           deviceCodeExpiresAt: new Date(Date.now() + 3600000),
         },
@@ -217,9 +233,19 @@ describe('useResidentialAddressModel', () => {
         await result.current.handleSubmit()
       })
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
-        payload: expect.any(Array),
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
       })
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
@@ -255,26 +281,26 @@ describe('useResidentialAddressModel', () => {
         },
       })
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
-        payload: expect.any(Array),
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          city: 'Vancouver',
+          province: 'BC',
+          postalCode: 'V6B 1A1',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
       })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_DEVICE_CODE,
-        payload: ['new-device-code'],
+      expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+        deviceCode: 'new-device-code',
+        userCode: 'new-user-code',
+        deviceCodeExpiresAt: expect.any(Date),
       })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_USER_CODE,
-        payload: ['new-user-code'],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT,
-        payload: [expect.any(Date)],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [['video_call', 'back_check']],
-      })
+      expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
 
       expect(Toast.show).toHaveBeenCalledWith({
         type: ToastType.Success,
@@ -293,8 +319,8 @@ describe('useResidentialAddressModel', () => {
       // Store with existing device code
       const storeWithDeviceCode = {
         ...mockStore,
-        bcsc: {
-          ...mockStore.bcsc,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
           deviceCode: 'existing-device-code',
         },
       }
@@ -339,8 +365,14 @@ describe('useResidentialAddressModel', () => {
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
+      let submitPromise: Promise<void>
       act(() => {
-        result.current.handleSubmit()
+        submitPromise = result.current.handleSubmit()
+      })
+
+      // Wait a tick to allow isSubmitting to be set
+      await act(async () => {
+        await Promise.resolve()
       })
 
       expect(result.current.isSubmitting).toBe(true)
@@ -352,7 +384,7 @@ describe('useResidentialAddressModel', () => {
           expires_in: 3600,
           verification_options: 'video_call',
         })
-        await authPromise
+        await submitPromise!
       })
 
       expect(result.current.isSubmitting).toBe(false)
@@ -365,7 +397,16 @@ describe('useResidentialAddressModel', () => {
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
       await act(async () => {
-        await result.current.handleSubmit()
+        try {
+          await result.current.handleSubmit()
+        } catch (error) {
+          // Error is caught and handled internally, but we need to await it
+        }
+      })
+
+      // Wait for state updates to complete
+      await act(async () => {
+        await Promise.resolve()
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -383,14 +424,14 @@ describe('useResidentialAddressModel', () => {
 
     it('should throw error when birthdate is missing', async () => {
       const storeWithoutBirthdate = {
-        bcsc: {
-          userMetadata: {
-            name: { first: 'John', last: 'Doe' },
-            address: mockStore.bcsc.userMetadata.address,
-          },
+        bcscSecure: {
           birthdate: null,
           deviceCode: null,
           deviceCodeExpiresAt: null,
+          userMetadata: {
+            name: { first: 'John', last: 'Doe' },
+            address: mockStore.bcscSecure.userMetadata.address,
+          },
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
@@ -403,14 +444,14 @@ describe('useResidentialAddressModel', () => {
 
     it('should throw error when user name is missing', async () => {
       const storeWithoutName = {
-        bcsc: {
-          userMetadata: {
-            name: null,
-            address: mockStore.bcsc.userMetadata.address,
-          },
+        bcscSecure: {
           birthdate: new Date('1990-01-15'),
           deviceCode: null,
           deviceCodeExpiresAt: null,
+          userMetadata: {
+            name: null,
+            address: mockStore.bcscSecure.userMetadata.address,
+          },
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
@@ -425,11 +466,15 @@ describe('useResidentialAddressModel', () => {
   describe('form state updates', () => {
     it('should trim values when dispatching address metadata', async () => {
       const storeWithDeviceCode = {
-        ...mockStore,
         bcsc: {
           ...mockStore.bcsc,
+        },
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          deviceCode: 'existing-device-code',
+          deviceCodeExpiresAt: new Date(Date.now() + 3600000),
           userMetadata: {
-            ...mockStore.bcsc.userMetadata,
+            name: mockStore.bcscSecure.userMetadata.name,
             address: {
               streetAddress: '  123 Main St  ',
               city: '  Vancouver  ',
@@ -437,30 +482,29 @@ describe('useResidentialAddressModel', () => {
               postalCode: '  V6B 1A1  ',
             },
           },
-          deviceCode: 'existing-device-code',
-          deviceCodeExpiresAt: new Date(Date.now() + 3600000),
         },
       }
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode, mockDispatch])
+      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode as BCState, mockDispatch])
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
 
       await act(async () => {
         await result.current.handleSubmit()
       })
-
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
-        payload: [
-          {
-            streetAddress: '123 Main St',
-            postalCode: 'V6B 1A1',
-            city: 'Vancouver',
-            province: 'BC',
-            country: 'CA',
-          },
-        ],
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith({
+        address: {
+          streetAddress: '123 Main St',
+          postalCode: 'V6B 1A1',
+          city: 'Vancouver',
+          province: 'BC',
+          country: 'CA',
+        },
+        name: {
+          first: 'John',
+          last: 'Doe',
+          middle: 'M',
+        },
       })
     })
   })

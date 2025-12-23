@@ -44,3 +44,47 @@ export const createSecuringAppWebViewJavascriptInjection = (): string => {
     });
   `
 }
+
+/**
+ * Creates JavaScript to apply accessibility font scaling on iOS.
+ * This ensures web content respects the device's text size accessibility settings.
+ *
+ * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
+ * @returns JavaScript string to inject into the WebView
+ */
+export const createAccessibilityFontScalingScript = (fontScale: number): string => {
+  return `
+    (function() {
+      const fontScale = ${fontScale};
+      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+      document.body.style.fontSize = (16 * fontScale) + 'px';
+    })();
+  `
+}
+
+interface WebViewAccessibilityProps {
+  injectedJavaScript: string
+  textZoom: number | undefined
+}
+
+/**
+ * Returns platform-specific accessibility props for WebView text scaling.
+ * - iOS: Uses JavaScript injection to scale fonts
+ * - Android: Uses the native textZoom prop
+ *
+ * @param platform - The current platform ('ios' or 'android')
+ * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
+ * @param injectedJavascript - Optional custom JavaScript to inject (will be combined with accessibility script)
+ * @returns WebView props for accessibility text scaling
+ */
+export const getWebViewAccessibilityProps = (
+  platform: string,
+  fontScale: number,
+  injectedJavascript?: string
+): WebViewAccessibilityProps => {
+  const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
+  return {
+    injectedJavaScript: injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript,
+    textZoom: platform === 'android' ? Math.round(fontScale * 100) : undefined,
+  }
+}

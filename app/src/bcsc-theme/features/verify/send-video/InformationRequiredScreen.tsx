@@ -1,8 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -20,8 +21,9 @@ type InformationRequiredScreenProps = {
 const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProps) => {
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { evidence } = useApi()
+  const { updateAccountFlags } = useSecureActions()
   const { t } = useTranslation()
   const loadingScreen = useLoadingScreen()
 
@@ -64,7 +66,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data
-      const additionalEvidence = store.bcsc.additionalEvidenceData
+      // TODO (bm): store properly typed additional evidence in state
+      const additionalEvidence = store.bcscSecure.additionalEvidenceData
       const evidenceUploadPromises: Promise<any>[] = []
       const evidenceUploadUris: string[] = []
 
@@ -127,13 +130,15 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
 
       // Send final verification request
-      await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
+      await evidence.sendVerificationRequest(store.bcscSecure.verificationRequestId!, {
         upload_uris: allUploadUris,
-        sha256: store.bcsc.verificationRequestSha!,
+        sha256: store.bcscSecure.verificationRequestSha!,
       })
       logger.debug(`Completed verification request`)
 
-      dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
+      await updateAccountFlags({
+        userSubmittedVerificationVideo: true,
+      })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,

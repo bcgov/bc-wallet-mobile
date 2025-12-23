@@ -72,6 +72,8 @@ export const formStringLengths = {
   minimumLength: 1,
   maximumLength: 30,
 } as const
+export const PIN_LENGTH = 6
+export const DEFAULT_AUTO_LOCK_TIME_MIN = 5
 export const PAIRING_CODE_LENGTH = 6
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000

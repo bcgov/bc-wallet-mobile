@@ -65,10 +65,10 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {
-    const code = store.bcsc.deviceCode
+    const code = store.bcscSecure.deviceCode
     if (!code) throw new Error('Device code is missing. Re install the app and try again.')
     return code
-  }, [store.bcsc.deviceCode])
+  }, [store.bcscSecure.deviceCode])
 
   const createVideoSession = useCallback(async (): Promise<VideoSession> => {
     return withAccount(async (account) => {
