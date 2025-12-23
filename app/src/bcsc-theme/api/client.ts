@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { formatAxiosErrorForLogger, formatIasAxiosResponseError } from '../utils/error-utils'
+import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
@@ -268,9 +269,9 @@ class BCSCApiClient {
    * Fetches the first JWK from the server's JWKS endpoint.
    * Used for JWT signature verification.
    */
-  async fetchJwk(): Promise<any | null> {
+  async fetchJwk(): Promise<JWK | null> {
     try {
-      const response = await this.get<{ keys: any[] }>(this.endpoints.jwksURI, {
+      const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
         skipBearerAuth: true,
       })
 
