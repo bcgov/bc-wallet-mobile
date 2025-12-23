@@ -64,6 +64,12 @@ export class FcmViewModel {
     this.logger.info(`[FcmViewModel] Processing challenge request`)
 
     try {
+      // Ensure JWK is available for verification (lazy fetch if not pre-loaded)
+      if (!this.serverJwk) {
+        this.logger.info('[FcmViewModel] JWK not yet available, fetching now...')
+        await this.fetchServerJwk()
+      }
+
       // Decode and verify the JWT
       const result = await decodeLoginChallenge(jwt, this.serverJwk ?? undefined)
 
