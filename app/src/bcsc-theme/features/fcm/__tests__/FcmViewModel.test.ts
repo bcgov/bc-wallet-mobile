@@ -221,7 +221,8 @@ describe('FcmViewModel', () => {
     })
 
     it('logs error when decodeLoginChallenge throws', async () => {
-      ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(new Error('Invalid JWT'))
+      const mockDecode = decodeLoginChallenge as jest.Mock
+      mockDecode.mockRejectedValue(new Error('Invalid JWT'))
 
       const payload: FcmMessagePayload = {
         rawMessage: {} as any,
@@ -281,7 +282,8 @@ describe('FcmViewModel', () => {
     })
 
     it('logs error when showLocalNotification throws', async () => {
-      ;(showLocalNotification as jest.Mock).mockRejectedValue(new Error('Notification failed'))
+      const mockShowNotification = showLocalNotification as jest.Mock
+      mockShowNotification.mockRejectedValue(new Error('Notification failed'))
 
       const payload: FcmMessagePayload = {
         rawMessage: {} as any,
@@ -298,7 +300,8 @@ describe('FcmViewModel', () => {
 
   describe('fetchServerJwk', () => {
     it('logs warning when no keys in response', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValue({
+      const mockFetch = global.fetch as jest.Mock
+      mockFetch.mockResolvedValue({
         json: () => Promise.resolve({ keys: [] }),
       })
 
@@ -309,7 +312,8 @@ describe('FcmViewModel', () => {
     })
 
     it('logs error when fetch fails', async () => {
-      ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
+      const mockFetch = global.fetch as jest.Mock
+      mockFetch.mockRejectedValue(new Error('Network error'))
 
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
