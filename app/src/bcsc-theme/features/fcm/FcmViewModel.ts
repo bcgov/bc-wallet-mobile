@@ -104,7 +104,18 @@ export class FcmViewModel {
   private async handleStatusNotification(payload: FcmMessagePayload) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(payload.statusData)}`)
 
-    await showLocalNotification('title', 'body')
+    const title = payload.statusData?.title
+    const body = payload.statusData?.message
+
+    if (title && body) {
+      try {
+        await showLocalNotification(title, body)
+      } catch (error) {
+        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+      }
+    } else {
+      this.logger.warn('[FcmViewModel] Status notification missing title or message')
+    }
   }
 
   private async handleGenericNotification(payload: FcmMessagePayload) {
