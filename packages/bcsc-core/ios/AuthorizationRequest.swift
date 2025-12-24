@@ -216,8 +216,15 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     let rawStatus = decoder.decodeInteger(forKey: CodingKeys.status.rawValue)
     status = RequestStatus(rawValue: rawStatus) ?? .initialized
 
-    // Decode method - v3 could store as string or int
-    if let rawMethod = decoder.decodeObject(forKey: CodingKeys.method.rawValue) as? String {
+    // Decode method - handle both integer and string for v3 compatibility
+    let rawMethodInt = decoder.decodeInteger(forKey: CodingKeys.method.rawValue)
+    if rawMethodInt != 0 {
+      // Integer was found
+      method = AuthorizationMethodType(rawValue: rawMethodInt) ?? .none
+    } else if decoder.containsValue(forKey: CodingKeys.method.rawValue),
+              let rawMethod = try? decoder.decodeTopLevelObject(forKey: CodingKeys.method.rawValue) as? String
+    {
+      // String was found (legacy v3 format)
       switch rawMethod {
       case "counter": method = .counter
       case "face": method = .face
@@ -227,8 +234,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
       default: method = .none
       }
     } else {
-      let rawMethodInt = decoder.decodeInteger(forKey: CodingKeys.method.rawValue)
-      method = AuthorizationMethodType(rawValue: rawMethodInt) ?? .none
+      method = .none
     }
 
     // Decode strings
