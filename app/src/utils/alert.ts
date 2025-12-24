@@ -29,7 +29,7 @@ type AlertAction = AlertButton & { text: string }
  * @param {RenderAlertFn} [renderAlert=Alert.alert] - Optional function to render the alert. Defaults to React Native's Alert.alert.
  * @returns {*} {void}
  */
-export const showAlert = (
+export const showNativeAlert = (
   event: AlertEvent,
   actions: AlertAction[] = [ALERT_ACTION_OK],
   renderAlert: RenderAlertFn = Alert.alert
@@ -57,4 +57,26 @@ export const showAlert = (
 
   // Track the alert display event
   Analytics.trackAlertDisplayEvent(event)
+}
+
+/**
+ * Helper function to get the confirm button label for a given alert event.
+ *
+ * @param event - The alert event.
+ * @param translate - Optional translation function. Defaults to i18n.t.
+ * @returns The confirm button label.
+ */
+export const getConfirmAlertLabel = (event: AlertEvent, translate = i18n.t): string => {
+  return translate(`Alerts.${event.toLowerCase()}.Confirm`)
+}
+
+/**
+ * Helper function to get the cancel button label for a given alert event.
+ *
+ * @param event - The alert event.
+ * @param translate - Optional translation function. Defaults to i18n.t.
+ * @returns The cancel button label.
+ */
+export const getCancelAlertLabel = (event: AlertEvent, translate = i18n.t): string => {
+  return translate(`Alerts.${event.toLowerCase()}.Cancel`)
 }
