@@ -1,8 +1,7 @@
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
-import { createDeviceSignedJWT } from 'react-native-bcsc-core'
+import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -67,8 +66,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
           scope: 'openid profile address offline_access',
         }
-
-        apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
 
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(
@@ -137,8 +134,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             middle_name: config.middleNames || undefined,
           }),
         }
-
-        apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
 
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(

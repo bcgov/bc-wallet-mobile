@@ -87,7 +87,8 @@ export class AnalyticsTracker {
       screenContext: false, // Tracked manually via trackScreenEvent
       lifecycleAutotracking: true,
       screenEngagementAutotracking: false,
-      installAutotracking: true,
+      // TODO (bm): Re-enable once we figure out the bug with the AsyncStorage keys
+      installAutotracking: false, // Disabled: Causes JSON parse errors with malformed AsyncStorage keys
       useAsyncStorageForEventStore: true,
       timezone: 'America/Vancouver',
       language: 'en',

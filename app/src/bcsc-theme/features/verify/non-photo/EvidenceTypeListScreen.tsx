@@ -1,14 +1,15 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -42,8 +43,10 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
+  const { removeIncompleteEvidence, addEvidenceType } = useSecureActions()
   const [evidenceSections, setEvidenceSections] = useState<{ title: string; data: EvidenceType[] }[]>([])
+  const didCleanupRef = useRef(false)
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
     onError: (error: unknown) => {
       logger.error(`Error loading evidence metadata: ${error}`)
@@ -66,8 +69,11 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   // Clean up any incomplete evidence entries when the screen mounts
   // This handles the case where user selected a card but backed out before completing
   useEffect(() => {
-    dispatch({ type: BCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE, payload: [] })
-  }, [dispatch])
+    if (!didCleanupRef.current) {
+      didCleanupRef.current = true
+      removeIncompleteEvidence()
+    }
+  }, [removeIncompleteEvidence])
 
   useEffect(() => {
     load()
@@ -77,19 +83,19 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     (card: EvidenceType): boolean => {
       const { collection_order } = card
       // If no additional evidence is present, the user is seeing this screen for the first time
-      if (store.bcsc.additionalEvidenceData.length === 0) {
+      if (store.bcscSecure.additionalEvidenceData.length === 0) {
         return collection_order === 'BOTH' || collection_order === 'FIRST'
       } else {
         return (
           (collection_order === 'BOTH' || collection_order === 'SECOND') &&
           // if the user is seeing this screen for the second time, we only show cards that are not already selected
-          !store.bcsc.additionalEvidenceData.some(
+          !store.bcscSecure.additionalEvidenceData.some(
             (evidence) => evidence.evidenceType.evidence_type_label === card.evidence_type_label
           )
         )
       }
     },
-    [store.bcsc.additionalEvidenceData]
+    [store.bcscSecure.additionalEvidenceData]
   )
 
   useEffect(() => {
@@ -98,7 +104,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     // filter data based on the selected card type (process)
     let cards: Record<string, EvidenceType[]> = {}
 
-    const selectedProcess = store.bcsc.cardProcess
+    const selectedProcess = store.bcscSecure.cardProcess
     data.processes.forEach((p) => {
       // only show card that matches the selected process
       if (p.process === selectedProcess) {
@@ -114,7 +120,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     })
     const mappedData = mapEvidenceToSections(cards)
     setEvidenceSections(mappedData)
-  }, [data, store.bcsc.cardProcess, shouldAddEvidence])
+  }, [data, store.bcscSecure.cardProcess, shouldAddEvidence])
 
   const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
     const mappedData: { title: string; data: EvidenceType[] }[] = []
@@ -142,8 +148,8 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
    * @returns {[string, string]} An array containing the heading and description text.
    */
   const getEvidenceHeadingAndDescription = useCallback(() => {
-    const evidenceCount = store.bcsc.additionalEvidenceData.length
-    const isNonBCSCCard = store.bcsc.cardProcess === BCSCCardProcess.NonBCSC
+    const evidenceCount = store.bcscSecure.additionalEvidenceData.length
+    const isNonBCSCCard = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
     if (evidenceCount === 1 && isNonBCSCCard) {
       // Choose your second ID
@@ -157,7 +163,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [store.bcsc.additionalEvidenceData.length, store.bcsc.cardProcess, t])
+  }, [store.bcscSecure.additionalEvidenceData.length, store.bcscSecure.cardProcess, t])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
@@ -184,14 +190,11 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
             {item.section.title}
           </ThemedText>
         )}
-        renderItem={(data) => (
+        renderItem={(data: { item: EvidenceType }) => (
           <Pressable
             onPress={() => {
               // navigate to the next screen with the correct data
-              dispatch({
-                type: BCDispatchAction.ADD_EVIDENCE_TYPE,
-                payload: [data.item as EvidenceType],
-              })
+              addEvidenceType(data.item)
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}

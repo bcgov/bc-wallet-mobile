@@ -1,5 +1,5 @@
 import { AlertEvent } from '@/events/alertEvents'
-import { showAlert } from '@/utils/alert'
+import { showNativeAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import i18n from 'i18next'
 
@@ -11,7 +11,7 @@ describe('showAlert', () => {
 
     translationSpy.mockReturnValue('Translated Text')
 
-    showAlert('test_event' as AlertEvent, [{ text: 'OK', onPress: defaultOnPressMock }], renderAlertMock)
+    showNativeAlert('test_event' as AlertEvent, [{ text: 'OK', onPress: defaultOnPressMock }], renderAlertMock)
 
     expect(renderAlertMock).toHaveBeenCalledTimes(1)
     expect(translationSpy).toHaveBeenCalledWith('Alerts.test_event.Title')
@@ -32,7 +32,7 @@ describe('showAlert', () => {
     const translationSpy = jest.spyOn(i18n, 't')
 
     translationSpy.mockReturnValue('Translated Text')
-    showAlert('test_event' as AlertEvent, [{ text: 'Confirm', onPress: onPressMock }], renderAlertMock)
+    showNativeAlert('test_event' as AlertEvent, [{ text: 'Confirm', onPress: onPressMock }], renderAlertMock)
 
     // Simulate button press
     const alertButtons = renderAlertMock.mock.calls[0][2]
@@ -48,7 +48,7 @@ describe('showAlert', () => {
     const translationSpy = jest.spyOn(i18n, 't')
 
     translationSpy.mockReturnValue('Translated Text')
-    showAlert('test_event' as AlertEvent, [], renderAlertMock)
+    showNativeAlert('test_event' as AlertEvent, [], renderAlertMock)
 
     expect(alertDisplayAnalyticsSpy).toHaveBeenCalledWith('test_event')
   })

@@ -1,79 +1,505 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SecureApp renders correctly 1`] = `
-<RNCSafeAreaView
-  edges={
+exports[`SecureApp renders correctly when device auth IS available 1`] = `
+<View
+  style={
     {
-      "bottom": "additive",
-      "left": "additive",
-      "right": "additive",
-      "top": "off",
+      "display": "flex",
+      "flex": 1,
     }
   }
-  style={
-    [
-      {
-        "backgroundColor": "#F2F2F2",
-        "flex": 1,
-      },
-      undefined,
-    ]
-  }
+  testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
 >
-  <RCTScrollView
-    contentContainerStyle={
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
       [
         {
-          "padding": 16,
+          "backgroundColor": "#F2F2F2",
+          "flex": 1,
         },
-        {
-          "gap": 24,
-        },
+        undefined,
       ]
     }
-    showsVerticalScrollIndicator={false}
   >
-    <View>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "padding": 16,
+          },
+          {
+            "gap": 24,
+          },
+        ]
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.Onboarding.SecureAppHeader
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.Onboarding.SecureAppContent
+        </Text>
+        <View
+          accessibilityLabel="BCSC.Onboarding.SecureAppDeviceAuthTitle"
+          accessibilityRole="button"
+          accessibilityState={
             {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 26,
-              "fontWeight": "bold",
-            },
-            undefined,
-          ]
-        }
-      >
-        BCSC.Onboarding.SecureAppHeader
-      </Text>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
             {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            undefined,
-          ]
-        }
-      >
-        BCSC.Onboarding.SecureAppContent
-      </Text>
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D9EAF7",
+              "borderRadius": 4,
+              "borderWidth": 1,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle"
+        >
+          <View
+            style={
+              {
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 20,
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                BCSC.Onboarding.SecureAppDeviceAuthTitle
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "fontSize": 18,
+                    "lineHeight": 30,
+                  },
+                ]
+              }
+            >
+              BCSC.Onboarding.SecureAppDeviceAuthSubtext
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D9EAF7",
+              "borderRadius": 4,
+              "borderWidth": 1,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+        >
+          <View
+            style={
+              {
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 20,
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                BCSC.Onboarding.SecureAppPINTitle
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "fontSize": 18,
+                    "lineHeight": 30,
+                  },
+                ]
+              }
+            >
+              BCSC.Onboarding.SecureAppPINSubtext
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Onboarding.LearnMore"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D9EAF7",
+              "borderRadius": 4,
+              "borderWidth": 1,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+        >
+          <View
+            style={
+              {
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 20,
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                BCSC.Onboarding.LearnMore
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": undefined,
+                      "fontSize": 32,
+                    },
+                    {
+                      "color": "#003366",
+                    },
+                    {
+                      "fontFamily": "Material Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>
+</View>
+`;
+
+exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
+<View
+  style={
+    {
+      "display": "flex",
+      "flex": 1,
+    }
+  }
+  testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
+>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
+      [
+        {
+          "backgroundColor": "#F2F2F2",
+          "flex": 1,
+        },
+        undefined,
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "padding": 16,
+          },
+          {
+            "gap": 24,
+          },
+        ]
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          Secure this app
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          You need to choose a PIN. It keeps your information private.
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.
+        </Text>
+      </View>
+    </RCTScrollView>
+    <View
+      style={
+        [
+          {
+            "gap": 16,
+          },
+          {
+            "paddingBottom": 16,
+            "paddingHorizontal": 16,
+          },
+          undefined,
+        ]
+      }
+    >
       <View
-        accessibilityLabel="BCSC.Onboarding.SecureAppFaceIDTitle"
+        accessibilityLabel="Choose a PIN"
         accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
             "checked": undefined,
-            "disabled": undefined,
+            "disabled": false,
             "expanded": undefined,
             "selected": undefined,
           }
@@ -98,53 +524,23 @@ exports[`SecureApp renders correctly 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D9EAF7",
+            "backgroundColor": "#003366",
             "borderRadius": 4,
-            "borderWidth": 1,
             "opacity": 1,
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppFaceIDTitle"
+        testID="blah"
       >
         <View
           style={
             {
-              "gap": 8,
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
-              }
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  {
-                    "color": "#003366",
-                    "fontSize": 20,
-                    "fontWeight": "bold",
-                  },
-                ]
-              }
-            >
-              BCSC.Onboarding.SecureAppFaceIDTitle
-            </Text>
-          </View>
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -155,25 +551,33 @@ exports[`SecureApp renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                {
-                  "fontSize": 18,
-                  "lineHeight": 30,
-                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                  false,
+                ],
               ]
             }
           >
-            BCSC.Onboarding.SecureAppFaceIDSubtext
+            Choose a PIN
           </Text>
         </View>
       </View>
       <View
-        accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
+        accessibilityLabel="Learn more"
         accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
             "checked": undefined,
-            "disabled": undefined,
+            "disabled": false,
             "expanded": undefined,
             "selected": undefined,
           }
@@ -198,53 +602,24 @@ exports[`SecureApp renders correctly 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D9EAF7",
+            "borderColor": "#003366",
             "borderRadius": 4,
-            "borderWidth": 1,
+            "borderWidth": 2,
             "opacity": 1,
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+        testID="blah"
       >
         <View
           style={
             {
-              "gap": 8,
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
-              }
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  {
-                    "color": "#003366",
-                    "fontSize": 20,
-                    "fontWeight": "bold",
-                  },
-                ]
-              }
-            >
-              BCSC.Onboarding.SecureAppPINTitle
-            </Text>
-          </View>
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -255,122 +630,26 @@ exports[`SecureApp renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                {
-                  "fontSize": 18,
-                  "lineHeight": 30,
-                },
+                [
+                  {
+                    "color": "#003366",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                  false,
+                ],
               ]
             }
           >
-            BCSC.Onboarding.SecureAppPINSubtext
+            Learn more
           </Text>
-        </View>
-      </View>
-      <View
-        accessibilityLabel="BCSC.Onboarding.LearnMore"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D9EAF7",
-            "borderRadius": 4,
-            "borderWidth": 1,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
-      >
-        <View
-          style={
-            {
-              "gap": 8,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
-              }
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  {
-                    "color": "#003366",
-                    "fontSize": 20,
-                    "fontWeight": "bold",
-                  },
-                ]
-              }
-            >
-              BCSC.Onboarding.LearnMore
-            </Text>
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": undefined,
-                    "fontSize": 32,
-                  },
-                  {
-                    "color": "#003366",
-                  },
-                  {
-                    "fontFamily": "Material Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              
-            </Text>
-          </View>
         </View>
       </View>
     </View>
-  </RCTScrollView>
-</RNCSafeAreaView>
+  </RNCSafeAreaView>
+</View>
 `;

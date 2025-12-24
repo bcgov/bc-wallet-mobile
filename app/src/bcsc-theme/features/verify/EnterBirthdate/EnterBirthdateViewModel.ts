@@ -4,9 +4,11 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * EnterBirthdateViewmodel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
@@ -14,13 +16,14 @@ import { BCDispatchAction, BCState } from '@/store'
 export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
 
   const authorizeDevice = useCallback(
     async (serial: string, date: Date) => {
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
+      await updateUserInfo({ birthdate: date })
       const deviceAuth = await authorization.authorizeDevice(serial, date)
 
       // Device already authorized
@@ -35,7 +38,19 @@ export const useEnterBirthdateViewModel = (
         return
       }
 
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
+      // Store authorization data
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+      await updateUserInfo({
+        email: deviceAuth.verified_email,
+        isEmailVerified: !!deviceAuth.verified_email,
+      })
+      await updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: expiresAt,
+      })
+      await updateCardProcess(deviceAuth.process)
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
       logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 
@@ -51,12 +66,12 @@ export const useEnterBirthdateViewModel = (
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       }
     },
-    [dispatch, authorization, navigation, logger]
+    [authorization, navigation, logger, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions]
   )
 
   return {
-    serial: store.bcsc.serial,
-    initialDate: store.bcsc.birthdate,
+    serial: store.bcscSecure.serial,
+    initialDate: store.bcscSecure.birthdate,
     authorizeDevice,
   }
 }

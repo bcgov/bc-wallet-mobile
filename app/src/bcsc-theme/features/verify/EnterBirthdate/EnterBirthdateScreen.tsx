@@ -59,6 +59,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const handleSubmit = async () => {
     try {
       setLoading(true)
+      if (!vm.serial) {
+        logger.error('EnterBirthdateScreen: No serial number available')
+        navigation.goBack()
+        return null
+      }
+
       await vm.authorizeDevice(vm.serial, date)
     } catch (error) {
       logger.error('CSN and birthdate mismatch, card not found', { error })
