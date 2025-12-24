@@ -1735,25 +1735,60 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
+    do {
+      let storage = StorageService()
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
 
-    // Register Address class for decoding
-    let prodAddressClass = "bc_services_card.Address"
-    let devAddressClass = "bc_services_card_dev.Address"
-    NSKeyedUnarchiver.setClass(Address.self, forClassName: prodAddressClass)
-    NSKeyedUnarchiver.setClass(Address.self, forClassName: devAddressClass)
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        logger.log("getAuthorizationRequest: File does not exist")
+        resolve(nil)
+        return
+      }
 
-    guard let authRequest: AuthorizationRequest = storage.readData(
-      file: AccountFiles.authorizationRequest,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    ) else {
-      // No authorization request stored - this is not an error
+      let data = try Data(contentsOf: fileUrl)
+      logger.log("getAuthorizationRequest: Read \(data.count) bytes")
+
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+
+      // Register classes with both prod and dev module names for v3 compatibility
+      NSKeyedUnarchiver.setClass(AuthorizationRequest.self, forClassName: "bc_services_card.AuthorizationRequest")
+      NSKeyedUnarchiver.setClass(AuthorizationRequest.self, forClassName: "bc_services_card_dev.AuthorizationRequest")
+      NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
+      NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
+
+      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
+      if let requestsDict = rootObject as? [String: AuthorizationRequest],
+         let authRequest = requestsDict.values.first
+      {
+        logger.log("getAuthorizationRequest: Successfully decoded dictionary with \(requestsDict.count) entries")
+        resolve(authRequest.toDictionary())
+        return
+      }
+
+      // Fallback: try as single AuthorizationRequest
+      if let authRequest = rootObject as? AuthorizationRequest {
+        logger.log("getAuthorizationRequest: Successfully decoded as single AuthorizationRequest")
+        resolve(authRequest.toDictionary())
+        return
+      }
+
+      logger.log("getAuthorizationRequest: Failed to decode")
       resolve(nil)
-      return
+    } catch {
+      logger.log("getAuthorizationRequest: Exception - \(error.localizedDescription)")
+      resolve(nil)
     }
-
-    logger.log("getAuthorizationRequest: Successfully read authorization request")
-    resolve(authRequest.toDictionary())
   }
 
   /// Saves authorization request data to storage.
@@ -1770,25 +1805,56 @@ class BcscCore: NSObject {
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    guard let dataDict = data as? [String: Any] else {
-      reject("E_INVALID_DATA", "Data must be a dictionary", nil)
-      return
-    }
+    do {
+      guard let dataDict = data as? [String: Any] else {
+        reject("E_INVALID_DATA", "Data must be a dictionary", nil)
+        return
+      }
 
-    let authRequest = AuthorizationRequest.fromDictionary(dataDict)
-    let storage = StorageService()
+      let authRequest = AuthorizationRequest.fromDictionary(dataDict)
+      let storage = StorageService()
 
-    let success = storage.writeData(
-      data: authRequest,
-      file: AccountFiles.authorizationRequest,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+      // Get account to use issuer as fallback key for v3 compatibility
+      guard let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      ) else {
+        reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
+        return
+      }
 
-    if success {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let baseUrl = rootDirectoryURL.appendingPathComponent(storage.basePath)
+      try FileManager.default.createDirectory(
+        at: baseUrl,
+        withIntermediateDirectories: true,
+        attributes: nil
+      )
+
+      let fileUrl = baseUrl.appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
+
+      // Save as dictionary [String: AuthorizationRequest] keyed by audience (v3 format maintained for compatibility)
+      // Use account issuer as fallback key for v3 rollback compatibility
+      let key = authRequest.audience ?? account.issuer
+      let requestsDict = [key: authRequest]
+
+      let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+      archiver.setClassName("\(storage.nativeModuleName).AuthorizationRequest", for: AuthorizationRequest.self)
+      archiver.setClassName("\(storage.nativeModuleName).Address", for: Address.self)
+      archiver.encode(requestsDict, forKey: NSKeyedArchiveRootObjectKey)
+      archiver.finishEncoding()
+
+      try archiver.encodedData.write(to: fileUrl)
+
       logger.log("setAuthorizationRequest: Successfully saved authorization request")
       resolve(true)
-    } else {
-      reject("E_SAVE_FAILED", "Failed to save authorization request", nil)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save authorization request: \(error.localizedDescription)", error)
     }
   }
 
@@ -2004,19 +2070,51 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService()
+    do {
+      let storage = StorageService()
+      guard let accountID = storage.currentAccountID else {
+        resolve([])
+        return
+      }
 
-    guard let evidenceArray: NSArray = storage.readData(
-      file: AccountFiles.evidenceMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    ) else {
-      // No evidence metadata stored yet - return empty array
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
+
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        resolve([])
+        return
+      }
+
+      let data = try Data(contentsOf: fileUrl)
+      logger.log("getEvidenceMetadata: Read \(data.count) bytes")
+
+      // Try v4 format (NSArray) first
+      if let evidenceArray: NSArray = storage.readData(
+        file: AccountFiles.evidenceMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      ) {
+        logger.log("getEvidenceMetadata: Successfully read as NSArray (v4 format)")
+        resolve(evidenceArray)
+        return
+      }
+
+      // Try v3 format (dictionary) - just return empty array for now as v3 evidence structure is complex
+      // and likely not needed for migration (evidence is temporary during verification flow)
+      logger.log("getEvidenceMetadata: Could not read evidence, returning empty array")
       resolve([])
-      return
-    }
 
-    logger.log("getEvidenceMetadata: Successfully read evidence metadata")
-    resolve(evidenceArray)
+    } catch {
+      logger.log("getEvidenceMetadata: Error - \(error.localizedDescription)")
+      resolve([])
+    }
   }
 
   /// Sets evidence metadata in storage.
@@ -2133,20 +2231,51 @@ class BcscCore: NSObject {
       }
 
       let data = try Data(contentsOf: fileUrl)
-      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-      unarchiver.setClass(ClientRegistration.self, forClassName: "\(storage.nativeModuleName).ClientRegistration")
-      unarchiver.setClass(Credential.self, forClassName: "\(storage.nativeModuleName).Credential")
+      logger.log("getCredential: Read \(data.count) bytes from client_registration file")
 
-      guard let clientRegistration = unarchiver.decodeObject(
-        of: ClientRegistration.self,
-        forKey: NSKeyedArchiveRootObjectKey
-      ),
-        let credential = clientRegistration.credential
-      else {
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+
+      // Register classes with both prod and dev module names for v3 compatibility
+      NSKeyedUnarchiver.setClass(ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration")
+      NSKeyedUnarchiver.setClass(ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration")
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+
+      // Try to decode the root object first to see what type it is
+      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+      logger.log("getCredential: Root object type: \(type(of: rootObject))")
+
+      // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
+      guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
+        logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
+        resolve(nil)
+        return
+      }
+
+      logger
+        .log(
+          "getCredential: Successfully decoded dictionary with \(clientRegistrationsDict.count) entries, keys: \(clientRegistrationsDict.keys)"
+        )
+
+      guard let clientRegistration = clientRegistrationsDict.values.first else {
+        logger.log("getCredential: Dictionary is empty")
+        resolve(nil)
+        return
+      }
+
+      logger
+        .log(
+          "getCredential: ClientRegistration decoded, credential property: \(String(describing: clientRegistration.credential))"
+        )
+
+      guard let credential = clientRegistration.credential else {
         logger.log("getCredential: No credential found in ClientRegistration")
         resolve(nil)
         return
       }
+
+      logger.log("getCredential: Successfully decoded credential from ClientRegistration dictionary")
 
       // Convert credential to dictionary for React Native
       let credentialDict: [String: Any] = [
@@ -2154,8 +2283,8 @@ class BcscCore: NSObject {
         "subject": credential.subject,
         "label": credential.label,
         "created": credential.created.timeIntervalSince1970,
-        "bcscEvent": credential.bcscEvent,
-        "bcscReason": credential.bcscReason,
+        "bcscEvent": credential.bcscEvent ?? NSNull(),
+        "bcscReason": credential.bcscReason ?? NSNull(),
         "lastUsed": credential.lastUsed?.timeIntervalSince1970 ?? NSNull(),
         "updatedDate": credential.updatedDate?.timeIntervalSince1970 ?? NSNull(),
         "bcscStatusDate": credential.bcscStatusDate?.timeIntervalSince1970 ?? NSNull(),
@@ -2236,9 +2365,7 @@ class BcscCore: NSObject {
       guard let issuer = credentialData["issuer"] as? String,
             let subject = credentialData["subject"] as? String,
             let label = credentialData["label"] as? String,
-            let createdTimestamp = credentialData["created"] as? Double,
-            let bcscEvent = credentialData["bcscEvent"] as? String,
-            let bcscReason = credentialData["bcscReason"] as? String
+            let createdTimestamp = credentialData["created"] as? Double
       else {
         reject("E_INVALID_DATA", "Missing required credential fields", nil)
         return
@@ -2249,8 +2376,8 @@ class BcscCore: NSObject {
         subject: subject,
         label: label,
         created: Date(timeIntervalSince1970: createdTimestamp),
-        bcscEvent: bcscEvent,
-        bcscReason: bcscReason
+        bcscEvent: credentialData["bcscEvent"] as? String,
+        bcscReason: credentialData["bcscReason"] as? String
       )
 
       // Set optional fields
@@ -2283,11 +2410,21 @@ class BcscCore: NSObject {
       // Set credential in ClientRegistration
       clientRegistration.credential = credential
 
-      // Save ClientRegistration
-      let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+      // Get account to find issuer for dictionary key
+      guard let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      ) else {
+        reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
+        return
+      }
+
+      let clientRegistrationsDict = [account.issuer: clientRegistration]
+
+      let archiver = NSKeyedArchiver(requiringSecureCoding: false)
       archiver.setClassName("\(storage.nativeModuleName).ClientRegistration", for: ClientRegistration.self)
       archiver.setClassName("\(storage.nativeModuleName).Credential", for: Credential.self)
-      archiver.encode(clientRegistration, forKey: NSKeyedArchiveRootObjectKey)
+      archiver.encode(clientRegistrationsDict, forKey: NSKeyedArchiveRootObjectKey)
       archiver.finishEncoding()
 
       try archiver.encodedData.write(to: fileUrl)
@@ -2332,17 +2469,24 @@ class BcscCore: NSObject {
         return
       }
 
-      // Load existing ClientRegistration
+      // Load existing ClientRegistration dictionary
       let data = try Data(contentsOf: fileUrl)
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-      unarchiver.setClass(ClientRegistration.self, forClassName: "\(storage.nativeModuleName).ClientRegistration")
-      unarchiver.setClass(Credential.self, forClassName: "\(storage.nativeModuleName).Credential")
+      unarchiver.requiresSecureCoding = false
 
-      guard let clientRegistration = unarchiver.decodeObject(
-        of: ClientRegistration.self,
-        forKey: NSKeyedArchiveRootObjectKey
-      ) else {
-        logger.log("deleteCredential: Could not decode ClientRegistration")
+      // Register classes with both prod and dev module names
+      NSKeyedUnarchiver.setClass(ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration")
+      NSKeyedUnarchiver.setClass(ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration")
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+
+      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration],
+            let issuer = clientRegistrationsDict.keys.first,
+            let clientRegistration = clientRegistrationsDict[issuer]
+      else {
+        logger.log("deleteCredential: Could not decode ClientRegistration dictionary")
         resolve(true)
         return
       }
@@ -2350,10 +2494,12 @@ class BcscCore: NSObject {
       // Remove credential from ClientRegistration
       clientRegistration.credential = nil
 
-      // Save updated ClientRegistration
-      let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+      // Save updated dictionary
+      let updatedDict = [issuer: clientRegistration]
+      let archiver = NSKeyedArchiver(requiringSecureCoding: false)
       archiver.setClassName("\(storage.nativeModuleName).ClientRegistration", for: ClientRegistration.self)
-      archiver.encode(clientRegistration, forKey: NSKeyedArchiveRootObjectKey)
+      archiver.setClassName("\(storage.nativeModuleName).Credential", for: Credential.self)
+      archiver.encode(updatedDict, forKey: NSKeyedArchiveRootObjectKey)
       archiver.finishEncoding()
 
       try archiver.encodedData.write(to: fileUrl)
