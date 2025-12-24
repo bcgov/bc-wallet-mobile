@@ -99,6 +99,30 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   case videoCall = 3
   case backCheck = 4
   case selfVerify = 5
+
+  // V3 compatibility: Store as String to match v3's enum AuthorizationMethod: String
+  var stringValue: String {
+    switch self {
+    case .counter: return "counter"
+    case .face: return "face"
+    case .videoCall: return "video_call"
+    case .backCheck: return "back_check"
+    case .selfVerify: return "self"
+    case .none: return ""
+    }
+  }
+
+  static func from(string: String?) -> AuthorizationMethodType {
+    guard let string = string else { return .none }
+    switch string {
+    case "counter": return .counter
+    case "face": return .face
+    case "video_call": return .videoCall
+    case "back_check": return .backCheck
+    case "self": return .selfVerify
+    default: return .none
+    }
+  }
 }
 
 /// AuthorizationRequest model compatible with v3 native app storage.
@@ -187,7 +211,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
 
   func encode(with coder: NSCoder) {
     coder.encode(status.rawValue, forKey: CodingKeys.status.rawValue)
-    coder.encode(method.rawValue, forKey: CodingKeys.method.rawValue)
+    coder.encode(method.stringValue, forKey: CodingKeys.method.rawValue)
     coder.encode(audience, forKey: CodingKeys.audience.rawValue)
     coder.encode(csn, forKey: CodingKeys.csn.rawValue)
     coder.encode(birthdate, forKey: CodingKeys.birthdate.rawValue)
@@ -216,26 +240,9 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     let rawStatus = decoder.decodeInteger(forKey: CodingKeys.status.rawValue)
     status = RequestStatus(rawValue: rawStatus) ?? .initialized
 
-    // Decode method - handle both integer and string for v3 compatibility
-    let rawMethodInt = decoder.decodeInteger(forKey: CodingKeys.method.rawValue)
-    if rawMethodInt != 0 {
-      // Integer was found
-      method = AuthorizationMethodType(rawValue: rawMethodInt) ?? .none
-    } else if decoder.containsValue(forKey: CodingKeys.method.rawValue),
-              let rawMethod = try? decoder.decodeTopLevelObject(forKey: CodingKeys.method.rawValue) as? String
-    {
-      // String was found (legacy v3 format)
-      switch rawMethod {
-      case "counter": method = .counter
-      case "face": method = .face
-      case "video_call": method = .videoCall
-      case "back_check": method = .backCheck
-      case "self": method = .selfVerify
-      default: method = .none
-      }
-    } else {
-      method = .none
-    }
+    // Decode method - string format to match v3
+    let rawMethod = decoder.decodeObject(forKey: CodingKeys.method.rawValue) as? String
+    method = AuthorizationMethodType.from(string: rawMethod)
 
     // Decode strings
     audience = decoder.decodeObject(forKey: CodingKeys.audience.rawValue) as? String

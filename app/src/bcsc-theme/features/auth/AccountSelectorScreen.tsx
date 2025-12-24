@@ -4,7 +4,7 @@ import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -34,27 +34,23 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   )
 
   // This handles the case where user has completed onboarding but has not set a nickname yet
-  const controls = useMemo(
-    () =>
-      store.bcsc.nicknames.length ? (
-        <>
-          <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.ContinueAs')}</ThemedText>
-          <View style={{ gap: Spacing.sm }}>
-            {Array.from(store.bcsc.nicknames).map((nickname) => (
-              <CardButton key={nickname} title={nickname} onPress={() => handleAccountSelect(nickname)} />
-            ))}
-          </View>
-        </>
-      ) : (
-        <Button
-          buttonType={ButtonType.Primary}
-          testID={testIdWithKey('ContinueSetup')}
-          title={'Continue setting up account'}
-          accessibilityLabel={'Continue setting up account'}
-          onPress={() => navigation.navigate(BCSCScreens.EnterPIN)}
-        />
-      ),
-    [handleAccountSelect, navigation, store.bcsc.nicknames, Spacing.sm, t]
+  const controls = store.bcsc.nicknames.length ? (
+    <>
+      <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.ContinueAs')}</ThemedText>
+      <View style={{ gap: Spacing.sm }}>
+        {Array.from(store.bcsc.nicknames).map((nickname) => (
+          <CardButton key={nickname} title={nickname} onPress={() => handleAccountSelect(nickname)} />
+        ))}
+      </View>
+    </>
+  ) : (
+    <Button
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('ContinueSetup')}
+      title={'Continue setting up account'}
+      accessibilityLabel={'Continue setting up account'}
+      onPress={() => navigation.navigate(BCSCScreens.EnterPIN)}
+    />
   )
 
   return (

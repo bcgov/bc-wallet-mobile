@@ -38,12 +38,12 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, t, store.stateLoaded])
 
-  // Check for existing account on initial load
+  // Check for existing account on initial load - only runs after state is loaded
   useEffect(() => {
+    if (!store.stateLoaded || !loading) return
+
     const asyncEffect = async () => {
       try {
-        if (!loading) return
-
         const account = await getAccount()
         if (account) {
           // adds nickname to store if migrating from v3 and isn't already present
@@ -62,7 +62,7 @@ const BCSCRootStack: React.FC = () => {
       }
     }
     asyncEffect()
-  }, [logger, dispatch, store.bcsc.nicknames, loading])
+  }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
 
   // Show loading screen if state or API client or account status not ready yet
   if (!store.stateLoaded || !isClientReady || loading) {

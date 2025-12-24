@@ -1737,6 +1737,13 @@ class BcscCore: NSObject {
   ) {
     do {
       let storage = StorageService()
+
+      guard let accountID = storage.currentAccountID else {
+        logger.log("getAuthorizationRequest: No current account ID found")
+        resolve(nil)
+        return
+      }
+
       let rootDirectoryURL = try FileManager.default.url(
         for: defaultSearchPathDirectory,
         in: .userDomainMask,
@@ -1745,6 +1752,7 @@ class BcscCore: NSObject {
       )
       let fileUrl = rootDirectoryURL
         .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
         .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
@@ -1823,13 +1831,20 @@ class BcscCore: NSObject {
         return
       }
 
+      guard let accountID = storage.currentAccountID else {
+        reject("E_ACCOUNT_ID_NOT_FOUND", "Current account ID not found", nil)
+        return
+      }
+
       let rootDirectoryURL = try FileManager.default.url(
         for: defaultSearchPathDirectory,
         in: .userDomainMask,
         appropriateFor: nil,
         create: false
       )
-      let baseUrl = rootDirectoryURL.appendingPathComponent(storage.basePath)
+      let baseUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
       try FileManager.default.createDirectory(
         at: baseUrl,
         withIntermediateDirectories: true,
@@ -2070,51 +2085,22 @@ class BcscCore: NSObject {
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      let storage = StorageService()
-      guard let accountID = storage.currentAccountID else {
-        resolve([])
-        return
-      }
+    let storage = StorageService()
 
-      let rootDirectoryURL = try FileManager.default.url(
-        for: defaultSearchPathDirectory,
-        in: .userDomainMask,
-        appropriateFor: nil,
-        create: false
-      )
-      let fileUrl = rootDirectoryURL
-        .appendingPathComponent(storage.basePath)
-        .appendingPathComponent(accountID)
-        .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
-
-      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        resolve([])
-        return
-      }
-
-      let data = try Data(contentsOf: fileUrl)
-      logger.log("getEvidenceMetadata: Read \(data.count) bytes")
-
-      // Try v4 format (NSArray) first
-      if let evidenceArray: NSArray = storage.readData(
-        file: AccountFiles.evidenceMetadata,
-        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-      ) {
-        logger.log("getEvidenceMetadata: Successfully read as NSArray (v4 format)")
-        resolve(evidenceArray)
-        return
-      }
-
-      // Try v3 format (dictionary) - just return empty array for now as v3 evidence structure is complex
-      // and likely not needed for migration (evidence is temporary during verification flow)
-      logger.log("getEvidenceMetadata: Could not read evidence, returning empty array")
-      resolve([])
-
-    } catch {
-      logger.log("getEvidenceMetadata: Error - \(error.localizedDescription)")
-      resolve([])
+    // Try v4 format (NSArray) first
+    if let evidenceArray: NSArray = storage.readData(
+      file: AccountFiles.evidenceMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    ) {
+      logger.log("getEvidenceMetadata: Successfully read as NSArray (v4 format)")
+      resolve(evidenceArray)
+      return
     }
+
+    // Try v3 format (dictionary) - just return empty array for now as v3 evidence structure is complex
+    // and likely not needed for migration (evidence is temporary during verification flow)
+    logger.log("getEvidenceMetadata: Could not read evidence, returning empty array")
+    resolve([])
   }
 
   /// Sets evidence metadata in storage.

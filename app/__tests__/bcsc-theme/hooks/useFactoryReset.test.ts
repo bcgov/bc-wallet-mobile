@@ -15,6 +15,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
+const warnMock = jest.fn()
 
 describe('useFactoryReset', () => {
   beforeEach(() => {
@@ -90,7 +91,7 @@ describe('useFactoryReset', () => {
 
   it.todo('should factory reset with custom state when provided')
 
-  it('should return an error if account is null', async () => {
+  it('should log a warning if account is null', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useApiMock = jest.mocked(useApi)
     const useSecureActionsMock = jest.mocked(useSecureActions)
@@ -105,25 +106,20 @@ describe('useFactoryReset', () => {
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 
     await act(async () => {
-      const result = await hook.result.current()
-      if (result.success) {
-        expect(true).toBe(false) // Force fail if success is true
-      } else {
-        expect(result.success).toBe(false)
-        expect(result.error.message).toContain('Local account')
-      }
+      await hook.result.current()
     })
 
     expect(bcscCoreMock.getAccount).toHaveBeenCalled()
+    expect(warnMock).toHaveBeenCalled()
     expect(deleteRegistrationMock).not.toHaveBeenCalled()
   })
 
-  it('should return an error if IAS account deletion fails', async () => {
+  it('should log a warning if IAS account deletion fails', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useApiMock = jest.mocked(useApi)
     const useSecureActionsMock = jest.mocked(useSecureActions)
@@ -138,22 +134,16 @@ describe('useFactoryReset', () => {
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 
     await act(async () => {
-      const result = await hook.result.current()
-      if (result.success) {
-        expect(true).toBe(false) // Force fail if success is true
-      } else {
-        expect(result.success).toBe(false)
-        expect(result.error.message).toContain('IAS')
-      }
+      await hook.result.current()
     })
 
     expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('test-client-id')
+    expect(warnMock).toHaveBeenCalled()
   })
 
   it('should return an error if local account file deletion fails', async () => {
