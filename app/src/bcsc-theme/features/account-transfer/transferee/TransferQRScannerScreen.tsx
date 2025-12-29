@@ -127,7 +127,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
       // TODO: (Al) Is there a security method for self transfer?
       // TODO: (Al) This will need to clean up when this screen in loaded, remove anything and re-register
-      const registrationResults = await register(AccountSecurityMethod.)
+      const registrationResults = await register(AccountSecurityMethod.PinNoDeviceAuth)
       let clientId = ''
       // What happens if go back to this screen afterwards? like register, get an account, then close the app?
       // do the registration results have what we need?
@@ -141,8 +141,6 @@ const TransferQRScannerScreen: React.FC = () => {
 
       console.log('_____ CLIENT ID: ')
       console.log(clientId)
-
-
 
       // console.log('Scanned QR Code:', account)
       // try {
