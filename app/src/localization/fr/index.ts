@@ -940,6 +940,30 @@ const translation = {
       "SetupNotComplete": "App setup is not complete. Please complete the setup process. (FR)",
       "StringResourceError": "Failed to retrieve required text resource. Please try again. (FR)",
     },
+    "Wallet": {
+      "Title": "Wallet Error (FR)",
+      "StateLoadError": "Failed to load wallet state. Please restart the app. (FR)",
+      "AgentInitError": "Failed to initialize wallet agent. Please restart the app. (FR)",
+      "SecretNotFound": "Wallet credentials not found. Please sign in again. (FR)",
+    },
+    "Connection": {
+      "Title": "Connection Error (FR)",
+      "ParseInvitationError": "There was a problem parsing the connection invitation. (FR)",
+      "ReceiveInvitationError": "There was a problem receiving the invitation to connect. (FR)",
+      "LegacyDIDError": "There was a problem extracting the connection identifier. (FR)",
+      "AppToAppURLError": "There was a problem opening the app-to-app URL. (FR)",
+      "ServiceCardAuthError": "There was a problem authenticating with the service card. (FR)",
+    },
+    "Attestation": {
+      "Title": "Attestation Error (FR)",
+      "BadInvitation": "Unable to parse attestation agent invitation. (FR)",
+      "ConnectionError": "Unable to connect to the attestation service. (FR)",
+      "NonceError": "There was a problem with the attestation service. (FR)",
+      "GenerationError": "There was a problem generating attestation. (FR)",
+      "ValidationError": "There was a problem validating attestation. (FR)",
+      "AgentUndefined": "The agent cannot be undefined for attestation. (FR)",
+      "IntegrityUnavailable": "Device integrity service is not available. (FR)",
+    },
   },
 }
 

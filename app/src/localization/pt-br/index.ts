@@ -940,6 +940,30 @@ const translation = {
       "SetupNotComplete": "App setup is not complete. Please complete the setup process. (PT-BR)",
       "StringResourceError": "Failed to retrieve required text resource. Please try again. (PT-BR)",
     },
+    "Wallet": {
+      "Title": "Wallet Error (PT-BR)",
+      "StateLoadError": "Failed to load wallet state. Please restart the app. (PT-BR)",
+      "AgentInitError": "Failed to initialize wallet agent. Please restart the app. (PT-BR)",
+      "SecretNotFound": "Wallet credentials not found. Please sign in again. (PT-BR)",
+    },
+    "Connection": {
+      "Title": "Connection Error (PT-BR)",
+      "ParseInvitationError": "There was a problem parsing the connection invitation. (PT-BR)",
+      "ReceiveInvitationError": "There was a problem receiving the invitation to connect. (PT-BR)",
+      "LegacyDIDError": "There was a problem extracting the connection identifier. (PT-BR)",
+      "AppToAppURLError": "There was a problem opening the app-to-app URL. (PT-BR)",
+      "ServiceCardAuthError": "There was a problem authenticating with the service card. (PT-BR)",
+    },
+    "Attestation": {
+      "Title": "Attestation Error (PT-BR)",
+      "BadInvitation": "Unable to parse attestation agent invitation. (PT-BR)",
+      "ConnectionError": "Unable to connect to the attestation service. (PT-BR)",
+      "NonceError": "There was a problem with the attestation service. (PT-BR)",
+      "GenerationError": "There was a problem generating attestation. (PT-BR)",
+      "ValidationError": "There was a problem validating attestation. (PT-BR)",
+      "AgentUndefined": "The agent cannot be undefined for attestation. (PT-BR)",
+      "IntegrityUnavailable": "Device integrity service is not available. (PT-BR)",
+    },
   },
 }
 

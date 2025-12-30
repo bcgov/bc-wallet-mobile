@@ -1,8 +1,8 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { BifoldError, EventTypes, TOKENS, useServices, useStore } from '@bifold/core'
+import { emitError } from '@/errors'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
 import { getAccount } from 'react-native-bcsc-core'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
@@ -33,8 +33,7 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (error) {
-      const bifoldError = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (error as Error).message, 1001)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+      emitError('STATE_LOAD_ERROR', t, { error })
     }
   }, [dispatch, loadState, t, store.stateLoaded])
 

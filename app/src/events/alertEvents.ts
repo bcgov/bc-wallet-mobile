@@ -139,5 +139,23 @@ export enum AlertEvent {
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
+  // Wallet/Agent Errors
+  STATE_LOAD_ERROR = 'state_load_error',
+  AGENT_INITIALIZATION_ERROR = 'agent_initialization_error',
+  WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found',
+  // BCID/Connection Errors
+  PARSE_INVITATION_ERROR = 'parse_invitation_error',
+  RECEIVE_INVITATION_ERROR = 'receive_invitation_error',
+  LEGACY_DID_ERROR = 'legacy_did_error',
+  APP_TO_APP_URL_ERROR = 'app_to_app_url_error',
+  SERVICE_CARD_AUTH_ERROR = 'service_card_auth_error',
+  // Attestation Errors
+  ATTESTATION_BAD_INVITATION = 'attestation_bad_invitation',
+  ATTESTATION_CONNECTION_ERROR = 'attestation_connection_error',
+  ATTESTATION_NONCE_ERROR = 'attestation_nonce_error',
+  ATTESTATION_GENERATION_ERROR = 'attestation_generation_error',
+  ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error',
+  ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined',
+  ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable',
   // ... other alert events go here
 }

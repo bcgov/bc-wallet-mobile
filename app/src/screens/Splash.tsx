@@ -10,6 +10,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { emitError, getErrorDefinition } from '@/errors'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -107,7 +108,10 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
     if (!walletSecret) {
       initializing.current = false
-      setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), 'Wallet secret is not found', 2031))
+      const errorDef = getErrorDefinition('WALLET_SECRET_NOT_FOUND')
+      // Track error in analytics (without showing modal since we have custom UI)
+      emitError('WALLET_SECRET_NOT_FOUND', t, { showModal: false })
+      setInitError(new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), 'Wallet secret is not found', errorDef.code))
       return
     }
 
@@ -122,8 +126,10 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         setStep(4)
       } catch (e: unknown) {
         initializing.current = false
-
-        setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
+        const errorDef = getErrorDefinition('AGENT_INITIALIZATION_ERROR')
+        // Track error in analytics (without showing modal since we have custom UI)
+        emitError('AGENT_INITIALIZATION_ERROR', t, { error: e, showModal: false })
+        setInitError(new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), (e as Error)?.message, errorDef.code))
       }
     }
 

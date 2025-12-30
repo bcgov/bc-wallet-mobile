@@ -855,6 +855,138 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
   },
+
+  // ============================================
+  // Wallet/Agent Errors (2900-2999)
+  // ============================================
+  STATE_LOAD_ERROR: {
+    code: 2900,
+    alertEvent: AlertEvent.STATE_LOAD_ERROR,
+    titleKey: 'BCWalletError.Wallet.Title',
+    descriptionKey: 'BCWalletError.Wallet.StateLoadError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.WALLET,
+  },
+  AGENT_INITIALIZATION_ERROR: {
+    code: 2901,
+    alertEvent: AlertEvent.AGENT_INITIALIZATION_ERROR,
+    titleKey: 'BCWalletError.Wallet.Title',
+    descriptionKey: 'BCWalletError.Wallet.AgentInitError',
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.WALLET,
+  },
+  WALLET_SECRET_NOT_FOUND: {
+    code: 2902,
+    alertEvent: AlertEvent.WALLET_SECRET_NOT_FOUND,
+    titleKey: 'BCWalletError.Wallet.Title',
+    descriptionKey: 'BCWalletError.Wallet.SecretNotFound',
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.WALLET,
+  },
+
+  // ============================================
+  // Connection/BCID Errors (3000-3099)
+  // ============================================
+  PARSE_INVITATION_ERROR: {
+    code: 3000,
+    alertEvent: AlertEvent.PARSE_INVITATION_ERROR,
+    titleKey: 'BCWalletError.Connection.Title',
+    descriptionKey: 'BCWalletError.Connection.ParseInvitationError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+  },
+  RECEIVE_INVITATION_ERROR: {
+    code: 3001,
+    alertEvent: AlertEvent.RECEIVE_INVITATION_ERROR,
+    titleKey: 'BCWalletError.Connection.Title',
+    descriptionKey: 'BCWalletError.Connection.ReceiveInvitationError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+  },
+  LEGACY_DID_ERROR: {
+    code: 3002,
+    alertEvent: AlertEvent.LEGACY_DID_ERROR,
+    titleKey: 'BCWalletError.Connection.Title',
+    descriptionKey: 'BCWalletError.Connection.LegacyDIDError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+  },
+  APP_TO_APP_URL_ERROR: {
+    code: 3003,
+    alertEvent: AlertEvent.APP_TO_APP_URL_ERROR,
+    titleKey: 'BCWalletError.Connection.Title',
+    descriptionKey: 'BCWalletError.Connection.AppToAppURLError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+  },
+  SERVICE_CARD_AUTH_ERROR: {
+    code: 3004,
+    alertEvent: AlertEvent.SERVICE_CARD_AUTH_ERROR,
+    titleKey: 'BCWalletError.Connection.Title',
+    descriptionKey: 'BCWalletError.Connection.ServiceCardAuthError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+  },
+
+  // ============================================
+  // Attestation Errors (3100-3199)
+  // ============================================
+  ATTESTATION_BAD_INVITATION: {
+    code: 3100,
+    alertEvent: AlertEvent.ATTESTATION_BAD_INVITATION,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.BadInvitation',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_CONNECTION_ERROR: {
+    code: 3101,
+    alertEvent: AlertEvent.ATTESTATION_CONNECTION_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.ConnectionError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_NONCE_ERROR: {
+    code: 3102,
+    alertEvent: AlertEvent.ATTESTATION_NONCE_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.NonceError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_GENERATION_ERROR: {
+    code: 3103,
+    alertEvent: AlertEvent.ATTESTATION_GENERATION_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.GenerationError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_VALIDATION_ERROR: {
+    code: 3104,
+    alertEvent: AlertEvent.ATTESTATION_VALIDATION_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.ValidationError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_AGENT_UNDEFINED: {
+    code: 3105,
+    alertEvent: AlertEvent.ATTESTATION_AGENT_UNDEFINED,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.AgentUndefined',
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_INTEGRITY_UNAVAILABLE: {
+    code: 3106,
+    alertEvent: AlertEvent.ATTESTATION_INTEGRITY_UNAVAILABLE,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.IntegrityUnavailable',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
 } as const
 
 export type ErrorRegistryKey = keyof typeof ErrorRegistry

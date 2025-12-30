@@ -9,6 +9,7 @@ import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
+import { emitError, getErrorDefinition } from '@/errors'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -51,7 +52,8 @@ export const connectToIASAgent = async (
   const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
-    throw new BifoldError(t('Error.Title2020'), t('Error.Message2020'), t('Error.NoMessage'), ErrorCodes.BadInvitation)
+    const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   await removeExistingInvitationsById(agent, invite.id)
@@ -59,12 +61,8 @@ export const connectToIASAgent = async (
   const record = await agent.oob.receiveInvitation(invite)
 
   if (!record) {
-    throw new BifoldError(
-      t('Error.Title2021'),
-      t('Error.Message2021'),
-      t('Error.NoMessage'),
-      ErrorCodes.ReceiveInvitationError
-    )
+    const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
@@ -73,36 +71,24 @@ export const connectToIASAgent = async (
   const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   const dids = await didRepository.getAll(agent.context)
   const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
   if (!didRecord) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   return {
@@ -134,9 +120,7 @@ export const initiateAppToAppFlow = async (
     }
   } catch (err: unknown) {
     logger?.error(`Error opening URL ${(err as Error).message}`)
-
-    const error = new BifoldError(t('Error.Title2032'), t('Error.Message2032'), t('Error.NoMessage'), 2032)
-    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    emitError('APP_TO_APP_URL_ERROR', t, { error: err })
   }
 }
 
@@ -211,6 +195,13 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
-    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    // Re-emit the caught error (could be a BifoldError thrown from connectToIASAgent or other source)
+    if (error instanceof BifoldError) {
+      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    } else {
+      // For unexpected errors, use the generic service card auth error
+      // Note: This function doesn't have access to `t`, so we emit the raw error
+      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    }
   }
 }
