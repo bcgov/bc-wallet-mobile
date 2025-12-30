@@ -3,6 +3,7 @@ import { BifoldError, EventTypes } from '@bifold/core'
 import { TFunction } from 'i18next'
 
 import { AlertInteractionEvent } from '../events/alertEvents'
+import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 
 import { BCWalletErrorDefinition, ErrorRegistry, ErrorRegistryKey } from './errorRegistry'
@@ -90,24 +91,21 @@ export function dismissError(): void {
 
 /**
  * Track error in Snowplow analytics
- *
- * TODO: Integrate with Snowplow tracker once the analytics PR is merged
  */
 function trackErrorInAnalytics(
   definition: BCWalletErrorDefinition,
   interactionType: AlertInteractionEvent
 ): void {
-  // TODO (KE): Integrate with Snowplow tracker
-  // This will be implemented once the Snowplow analytics is available
-  //
-  // Example implementation:
-  // trackAlertEvent({
-  //   alertKey: definition.alertEvent,
-  //   interactionType,
-  //   errorCode: definition.code,
-  //   category: definition.category,
-  //   severity: definition.severity,
-  // })
+  // Track the error event
+  Analytics.trackErrorEvent({
+    code: String(definition.code),
+    message: definition.alertEvent,
+  })
+
+  // Track the alert display event
+  if (interactionType === AlertInteractionEvent.ALERT_DISPLAY) {
+    Analytics.trackAlertDisplayEvent(definition.alertEvent)
+  }
 
   appLogger.debug(`Analytics: ${interactionType} - ${definition.alertEvent}`, {
     code: definition.code,
@@ -120,15 +118,16 @@ function trackErrorInAnalytics(
  * Track error action (user dismissed, tapped button, etc.)
  *
  * @param errorKey - The error registry key for the error being acted upon
+ * @param actionLabel - The action label taken on the alert (e.g., 'dismiss', 'retry')
  */
-export function trackErrorAction(errorKey: ErrorRegistryKey): void {
+export function trackErrorAction(errorKey: ErrorRegistryKey, actionLabel = 'dismiss'): void {
   const definition = ErrorRegistry[errorKey]
   if (!definition) {
     appLogger.warn(`Unknown error key for tracking: ${errorKey}`)
     return
   }
 
-  // TODO: Integrate with Snowplow tracker
+  Analytics.trackAlertActionEvent(definition.alertEvent, actionLabel)
   appLogger.debug(`Analytics: ${AlertInteractionEvent.ALERT_ACTION} - ${definition.alertEvent}`)
 }
 
