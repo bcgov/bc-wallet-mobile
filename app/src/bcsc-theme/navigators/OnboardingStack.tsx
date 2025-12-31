@@ -6,7 +6,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
-import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
+import TransferAccountInformationScreen from '../features/account-transfer/transferee/TransferAccountInformationScreen'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -118,9 +118,10 @@ const OnboardingStack = (): JSX.Element => {
           headerLeft: createMainWebviewHeaderBackButton(),
         })}
       />
+      {/* Account transfer */}
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
+        component={TransferAccountInformationScreen}
         options={{
           title: 'Transfer Account Information',
           headerShown: true,

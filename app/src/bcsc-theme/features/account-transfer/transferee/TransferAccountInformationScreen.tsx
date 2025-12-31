@@ -10,7 +10,7 @@ import { Image } from 'react-native'
 
 const TWO_PHONES = Image.resolveAssetSource(TwoPhones)
 
-const TransferInformationScreen: React.FC = () => {
+const TransferAccountInformationScreen: React.FC = () => {
   const { t } = useTranslation()
 
   const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
@@ -20,7 +20,7 @@ const TransferInformationScreen: React.FC = () => {
       title={t('BCSC.TransferInformation.TransferAccount')}
       buttonType={ButtonType.Primary}
       onPress={() => {
-        navigation.navigate(BCSCScreens.TransferAccountInstructions)
+        navigation.navigate(BCSCScreens.TransferAccountPrivacyPolicy)
       }}
     />
   )
@@ -33,4 +33,4 @@ const TransferInformationScreen: React.FC = () => {
   )
 }
 
-export default TransferInformationScreen
+export default TransferAccountInformationScreen
