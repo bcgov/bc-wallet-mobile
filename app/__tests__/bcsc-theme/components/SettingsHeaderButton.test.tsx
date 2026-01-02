@@ -1,4 +1,5 @@
 import {
+  createAuthSettingsHeaderButton,
   createMainSettingsHeaderButton,
   createVerifySettingsHeaderButton,
 } from '@/bcsc-theme/components/SettingsHeaderButton'
@@ -75,5 +76,40 @@ describe('VerifySettingsHeaderButton', () => {
     fireEvent.press(button)
 
     expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifySettings)
+  })
+})
+
+describe('AuthSettingsHeaderButton', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it('renders the auth settings menu button', () => {
+    const AuthSettingsHeaderButton = createAuthSettingsHeaderButton()
+
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <AuthSettingsHeaderButton />
+      </BasicAppContext>
+    )
+
+    expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
+  })
+
+  it('should navigate to AuthSettings screen on press', async () => {
+    const AuthSettingsHeaderButton = createAuthSettingsHeaderButton()
+    const navigation = useNavigation()
+
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <AuthSettingsHeaderButton />
+      </BasicAppContext>
+    )
+
+    const button = getByTestId(testIdWithKey('SettingsMenuButton'))
+
+    fireEvent.press(button)
+
+    expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.AuthSettings)
   })
 })

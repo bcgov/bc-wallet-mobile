@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuthWebView renders correctly 1`] = `
+<View
+  allowsBackForwardNavigationGestures={true}
+  bounces={false}
+  domStorageEnabled={true}
+  injectedJavaScriptBeforeContentLoaded="
+    (function() {
+      const fontScale = 2;
+      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+      document.body.style.fontSize = (16 * fontScale) + 'px';
+    })();
+  "
+  javaScriptEnabled={true}
+  mixedContentMode="compatibility"
+  onError={[Function]}
+  onHttpError={[Function]}
+  onMessage={[Function]}
+  originWhitelist={
+    [
+      "*",
+    ]
+  }
+  renderLoading={[Function]}
+  sharedCookiesEnabled={true}
+  source={
+    {
+      "headers": {
+        "Authorization": "Bearer undefined",
+      },
+      "uri": "https://example.com",
+    }
+  }
+  startInLoadingState={true}
+  testID="mocked-webview"
+  thirdPartyCookiesEnabled={true}
+  userAgent="Single App"
+/>
+`;
