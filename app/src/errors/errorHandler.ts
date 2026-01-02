@@ -8,9 +8,32 @@ import { appLogger } from '../utils/logger'
 
 import { BCWalletErrorDefinition, ErrorRegistry, ErrorRegistryKey } from './errorRegistry'
 
+/**
+ * Extract a meaningful message from an unknown error value
+ */
+function extractErrorMessage(error: unknown): string {
+  if (error == null) {
+    return ''
+  }
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  if (typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+  try {
+    return JSON.stringify(error)
+  } catch {
+    return String(error)
+  }
+}
+
 export interface EmitErrorOptions {
   /** Original error for technical details */
-  error?: Error | unknown
+  error?: unknown
   /** Override the default modal behavior */
   showModal?: boolean
   /** Additional context for logging */
@@ -46,7 +69,7 @@ export function emitError(errorKey: ErrorRegistryKey, t: TFunction, options: Emi
   }
 
   const { error, showModal = (definition as BCWalletErrorDefinition).showModal ?? true, context } = options
-  const technicalMessage = error instanceof Error ? error.message : String(error ?? '')
+  const technicalMessage = extractErrorMessage(error)
 
   // Create the bifold error
   const bifoldError = new BifoldError(

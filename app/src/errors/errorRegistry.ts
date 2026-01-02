@@ -987,6 +987,30 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
   },
+  ATTESTATION_GENERAL_PROOF_ERROR: {
+    code: 3107,
+    alertEvent: AlertEvent.ATTESTATION_GENERAL_PROOF_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.GeneralProofError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_REQUEST_ERROR: {
+    code: 3108,
+    alertEvent: AlertEvent.ATTESTATION_REQUEST_ERROR,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.RequestError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+  },
+  ATTESTATION_UNSUPPORTED_PLATFORM: {
+    code: 3109,
+    alertEvent: AlertEvent.ATTESTATION_UNSUPPORTED_PLATFORM,
+    titleKey: 'BCWalletError.Attestation.Title',
+    descriptionKey: 'BCWalletError.Attestation.UnsupportedPlatform',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+  },
 } as const
 
 export type ErrorRegistryKey = keyof typeof ErrorRegistry

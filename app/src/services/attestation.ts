@@ -81,13 +81,14 @@ interface AttestationProofRequestFormat {
 const AttestationErrorCodes = {
   BadInvitation: getErrorDefinition('ATTESTATION_BAD_INVITATION').code,
   ReceiveInvitationError: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
-  GeneralProofError: 2029, // TODO: Add to registry if needed
+  GeneralProofError: getErrorDefinition('ATTESTATION_GENERAL_PROOF_ERROR').code,
   FailedToConnectToAttestationAgent: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
   FailedToFetchNonceForAttestation: getErrorDefinition('ATTESTATION_NONCE_ERROR').code,
   FailedToGenerateAttestation: getErrorDefinition('ATTESTATION_GENERATION_ERROR').code,
-  FailedToRequestAttestation: 2033, // TODO: Add to registry if needed
+  FailedToRequestAttestation: getErrorDefinition('ATTESTATION_REQUEST_ERROR').code,
   FailedToValidateAttestation: getErrorDefinition('ATTESTATION_VALIDATION_ERROR').code,
   IntegrityUnavailable: getErrorDefinition('ATTESTATION_INTEGRITY_UNAVAILABLE').code,
+  UnsupportedPlatform: getErrorDefinition('ATTESTATION_UNSUPPORTED_PLATFORM').code,
 } as const
 
 type Restriction = {
@@ -573,8 +574,12 @@ export class AttestationMonitor implements AttestationMonitorI {
         return this.generateGoogleAttestation(nonce)
 
       default:
-        // TODO(jl): throw unsupported platform error
-        break
+        throw new BifoldError(
+          'Unsupported Platform',
+          'Device attestation is not supported on this platform.',
+          `Platform "${Platform.OS}" is not supported for attestation.`,
+          AttestationErrorCodes.UnsupportedPlatform
+        )
     }
   }
 

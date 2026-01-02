@@ -157,5 +157,8 @@ export enum AlertEvent {
   ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error',
   ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined',
   ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable',
+  ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
+  ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
+  ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
   // ... other alert events go here
 }
