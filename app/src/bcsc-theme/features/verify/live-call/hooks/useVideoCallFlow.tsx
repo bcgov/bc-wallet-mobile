@@ -8,6 +8,7 @@ import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
 
 import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
+import { emitError } from '@/errors'
 import {
   ConnectionRequest,
   ConnectResult,
@@ -330,7 +331,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
             leaveCall()
           })
           .catch((error) => {
-            logger.error('Error during full cleanup background transition:', error)
+            emitError('VIDEO_CALL_END_ERROR', t, { error, showModal: false })
           })
       }
 
@@ -356,7 +357,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
       prevIsInBackgroundRef.current = isInBackground
     }
-  }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCall, logger])
+  }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCall, logger, t])
 
   // start the API keep alive when the call is ready
   useEffect(() => {

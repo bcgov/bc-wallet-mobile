@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import { emitError } from '@/errors'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
@@ -92,7 +93,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       await Linking.openURL(TERMS_OF_USE_URL)
     } catch (error) {
-      logger.error('Error opening Terms of Use URL', error instanceof Error ? error : new Error(String(error)))
+      emitError('INVALID_URL', t, { error, showModal: false })
     }
   }
 
@@ -100,7 +101,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       await Linking.openURL(FEEDBACK_URL)
     } catch (error) {
-      logger.error('Error opening Feedback URL', error instanceof Error ? error : new Error(String(error)))
+      emitError('INVALID_URL', t, { error, showModal: false })
     }
   }
 
@@ -108,7 +109,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       await Linking.openURL(ACCESSIBILITY_URL)
     } catch (error) {
-      logger.error('Error opening Accessibility URL', error instanceof Error ? error : new Error(String(error)))
+      emitError('INVALID_URL', t, { error, showModal: false })
     }
   }
 
@@ -116,7 +117,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     try {
       await Linking.openURL(ANALYTICS_URL)
     } catch (error) {
-      logger.error('Error opening Analytics URL', error instanceof Error ? error : new Error(String(error)))
+      emitError('INVALID_URL', t, { error, showModal: false })
     }
   }
 
@@ -131,13 +132,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
       await Analytics.initializeTracker()
     } catch (error) {
-      logger.error(
-        'Failed to initialize analytics tracker on opt-in',
-        {
-          file: 'SettingsContent.tsx',
-        },
-        error as Error
-      )
+      emitError('ANALYTICS_INIT_ERROR', t, { error, showModal: false })
     }
   }
 

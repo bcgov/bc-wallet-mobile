@@ -3,6 +3,7 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -146,8 +147,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
-      // TODO (MD): Handle this error properly (show user feedback etc...)
-      logger.error('Error during sending information to Service BC', error as Error)
+      emitError('EVIDENCE_UPLOAD_SERVER_ERROR', t, { error })
     } finally {
       loadingScreen.stopLoading()
     }

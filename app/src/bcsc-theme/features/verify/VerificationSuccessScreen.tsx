@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -45,11 +46,10 @@ const VerificationSuccessScreen = () => {
 
       await registration.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Failed to update registration: ${errMessage}`)
+      emitError('DYNAMIC_REGISTRATION_ERROR', t, { error, showModal: false })
       return
     }
-  }, [registration, store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, logger])
+  }, [registration, store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, t, logger])
 
   const controls = (
     <Button

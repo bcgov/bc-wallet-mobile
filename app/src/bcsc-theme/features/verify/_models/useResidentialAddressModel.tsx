@@ -3,6 +3,7 @@ import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizatio
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -191,7 +192,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     } catch (error) {
-      logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
+      emitError('DEVICE_AUTHORIZATION_ERROR', t, { error, showModal: false })
       Toast.show({
         type: 'error',
         text1: t('BCSC.Address.AuthorizationErrorTitle'),

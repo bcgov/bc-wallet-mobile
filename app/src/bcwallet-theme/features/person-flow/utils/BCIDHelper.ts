@@ -1,14 +1,8 @@
-import { emitError, getErrorDefinition } from '@/errors'
-import {
-  Agent,
-  BifoldError,
-  EventTypes as BifoldEventTypes,
-  BifoldLogger,
-  removeExistingInvitationsById,
-} from '@bifold/core'
+import { emitBifoldError, emitError, getErrorDefinition } from '@/errors'
+import { Agent, BifoldError, BifoldLogger, removeExistingInvitationsById } from '@bifold/core'
 import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
-import { DeviceEventEmitter, Linking } from 'react-native'
+import { Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
@@ -195,7 +189,9 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
-    // Re-emit the caught error (could be a BifoldError or other error type)
-    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    // Re-emit the caught error using centralized error handler
+    if (error instanceof BifoldError) {
+      emitBifoldError(error)
+    }
   }
 }

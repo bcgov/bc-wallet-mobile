@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import {
   Button,
@@ -95,6 +96,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       )
     } catch (error) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
+      emitError('EMAIL_VERIFICATION_ERROR', t, { error, showModal: false })
     } finally {
       setLoading(false)
     }
@@ -122,6 +124,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       })
     } catch (error) {
       setError(t('BCSC.EmailConfirmation.ErrorResendingCode'))
+      emitError('EMAIL_VERIFICATION_ERROR', t, { error, showModal: false })
     } finally {
       setResendLoading(false)
     }

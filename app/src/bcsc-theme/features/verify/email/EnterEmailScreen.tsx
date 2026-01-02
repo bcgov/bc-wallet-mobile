@@ -2,16 +2,8 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  ThemedText,
-  TOKENS,
-  useAnimatedComponents,
-  useServices,
-  useTheme,
-} from '@bifold/core'
+import { emitError } from '@/errors'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useAnimatedComponents, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +29,6 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const [error, setError] = useState<string | null>(null)
   const { cardProcess } = route.params
   const { ButtonLoading } = useAnimatedComponents()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
 
   const handleChangeEmail = (em: string) => {
@@ -59,8 +50,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
-
-      logger.error(t('BCSC.EmailConfirmation.ErrorTitle'), error)
+      emitError('EMAIL_SUBMISSION_ERROR', t, { error, showModal: false })
     } finally {
       setLoading(false)
     }

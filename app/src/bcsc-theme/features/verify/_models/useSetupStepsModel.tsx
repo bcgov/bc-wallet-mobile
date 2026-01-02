@@ -1,9 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { emitError } from '@/errors'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +21,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const [store] = useStore<BCState>()
   const { updateTokens, updateVerificationRequest, updateAccountFlags } = useSecureActions()
   const { evidence, token } = useApi()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -78,7 +78,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
             }
             await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
           } catch (error) {
-            logger.error(`Error cancelling verification request: ${error}`)
+            emitError('DELETE_VERIFY_REQUEST_ERROR', t, { error, showModal: false })
           } finally {
             // Clear verification request from secure state
             updateVerificationRequest(null, null)
@@ -95,15 +95,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         style: 'cancel',
       },
     ])
-  }, [
-    store.bcscSecure.verificationRequestId,
-    evidence,
-    logger,
-    navigation,
-    updateVerificationRequest,
-    updateAccountFlags,
-    t,
-  ])
+  }, [store.bcscSecure.verificationRequestId, evidence, navigation, updateVerificationRequest, updateAccountFlags, t])
 
   /**
    * Navigation actions for each step

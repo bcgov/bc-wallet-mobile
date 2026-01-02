@@ -863,6 +863,10 @@ const translation = {
       "TypeChanged": "Your card type has changed.",
       "NotFound": "The card could not be found.",
       "WillExpire": "Your physical card will expire soon. Please renew it.",
+      "ScanBirthdateInvalid": "The birthdate on your card could not be read. Please enter it manually.",
+      "Mismatch": "The card information does not match our records. Please verify your details.",
+      "ProofFormatLookupError": "Unable to look up the required proof format. Please try again.",
+      "LookupError": "Unable to look up your credentials. Please try again.",
     },
     "Verification": {
       "Title": "Verification Error",
@@ -876,6 +880,12 @@ const translation = {
       "RemoteIncomplete": "Remote verification is incomplete. Please complete the process.",
       "DeleteRequestError": "Failed to delete the verification request. Please try again.",
       "VideoServiceHoursNull": "Video service hours could not be retrieved. Please try again later.",
+      "EmailSubmissionError": "Failed to submit your email address. Please try again.",
+      "EmailVerificationError": "Failed to verify your email. Please check the code and try again.",
+      "PhotoCaptureError": "An error occurred while capturing the photo. Please try again.",
+      "VideoCallConnectionError": "Unable to connect to the video call service. Please try again.",
+      "VideoCallSessionError": "The video call session could not be established. Please try again.",
+      "VideoCallEndError": "An error occurred while ending the video call.",
     },
     "Token": {
       "Title": "Authentication Error",
@@ -894,6 +904,7 @@ const translation = {
       "SignClaimsError": "Failed to sign authentication claims. Please try again.",
       "ParseJWSError": "Failed to parse authentication signature. Please sign in again.",
       "JWTDeviceInfoError": "Failed to process device authentication info. Please try again.",
+      "RefreshExpired": "Your session has expired. Please sign in again.",
     },
     "Storage": {
       "Title": "Storage Error",
@@ -915,6 +926,7 @@ const translation = {
       "AuthorizationError": "Device authorization failed. Please try again.",
       "IncorrectOS": "This app is not supported on your current operating system.",
       "KeypairGenerationError": "Failed to generate device keys. Please try again.",
+      "DeviceCodeMissing": "Device code is missing. Please reinstall the app and try again.",
     },
     "General": {
       "Title": "Something Went Wrong",
@@ -939,6 +951,9 @@ const translation = {
       "EmptyKeychain": "Security credentials are empty. Please sign in again.",
       "SetupNotComplete": "App setup is not complete. Please complete the setup process.",
       "StringResourceError": "Failed to retrieve required text resource. Please try again.",
+      "FactoryResetAccountNotFound": "No account found to reset. Please try again.",
+      "FactoryResetServerError": "Failed to reset account on server. Please try again.",
+      "AnalyticsInitError": "Failed to initialize analytics. This won't affect app functionality.",
     },
     "Wallet": {
       "Title": "Wallet Error",
@@ -963,6 +978,11 @@ const translation = {
       "ValidationError": "There was a problem validating attestation.",
       "AgentUndefined": "The agent cannot be undefined for attestation.",
       "IntegrityUnavailable": "Device integrity service is not available.",
+      "GeneralProofError": "There was a problem handling the attestation proof.",
+      "RequestError": "There was a problem with the attestation request.",
+      "UnsupportedPlatform": "Attestation is not supported on this platform.",
+      "CredentialOfferError": "There was a problem handling the attestation credential offer.",
+      "ProofError": "There was a problem handling the attestation proof request.",
     },
   },
 }

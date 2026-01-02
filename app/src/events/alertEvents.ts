@@ -160,5 +160,27 @@ export enum AlertEvent {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
-  // ... other alert events go here
+  // Device/System Errors
+  DEVICE_CODE_MISSING = 'device_code_missing',
+  // Verification Errors
+  EMAIL_SUBMISSION_ERROR = 'email_submission_error',
+  EMAIL_VERIFICATION_ERROR = 'email_verification_error',
+  PHOTO_CAPTURE_ERROR = 'photo_capture_error',
+  VIDEO_CALL_CONNECTION_ERROR = 'video_call_connection_error',
+  VIDEO_CALL_SESSION_ERROR = 'video_call_session_error',
+  VIDEO_CALL_END_ERROR = 'video_call_end_error',
+  // Card/Credential Errors
+  CARD_SCAN_BIRTHDATE_INVALID = 'card_scan_birthdate_invalid',
+  CARD_MISMATCH = 'card_mismatch',
+  PROOF_FORMAT_LOOKUP_ERROR = 'proof_format_lookup_error',
+  CREDENTIAL_LOOKUP_ERROR = 'credential_lookup_error',
+  // Token Errors
+  REFRESH_TOKEN_EXPIRED = 'refresh_token_expired',
+  // General Errors
+  FACTORY_RESET_ACCOUNT_NOT_FOUND = 'factory_reset_account_not_found',
+  FACTORY_RESET_SERVER_ERROR = 'factory_reset_server_error',
+  ANALYTICS_INIT_ERROR = 'analytics_init_error',
+  // Attestation Credential/Proof Errors
+  ATTESTATION_CREDENTIAL_OFFER_ERROR = 'attestation_credential_offer_error',
+  ATTESTATION_PROOF_ERROR = 'attestation_proof_error',
 }

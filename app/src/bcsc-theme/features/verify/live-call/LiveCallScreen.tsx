@@ -3,6 +3,7 @@ import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/comp
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -243,9 +244,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       await cleanup()
       await leaveCall()
     } catch (error) {
-      logger.error('Error while leaving video call', error as Error)
+      emitError('VIDEO_CALL_END_ERROR', t, { error, showModal: false })
     }
-  }, [setCallEnded, cleanup, leaveCall, logger])
+  }, [setCallEnded, cleanup, leaveCall, t, logger])
 
   if (flowState === VideoCallFlowState.ERROR) {
     return (
