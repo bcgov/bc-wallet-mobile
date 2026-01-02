@@ -27,7 +27,8 @@ function extractErrorMessage(error: unknown): string {
   try {
     return JSON.stringify(error)
   } catch {
-    return String(error)
+    // JSON.stringify failed (e.g., circular reference), return type info instead
+    return `[Non-serializable ${typeof error}]`
   }
 }
 
