@@ -26,16 +26,7 @@ class ClientRegistration: NSObject, NSSecureCoding {
     _ = coder.decodeObject(forKey: .keys)
 
     let decodedCredential = coder.decodeObject(forKey: .credential)
-    print(
-      "ClientRegistration.init: Decoded credential object type: \(type(of: decodedCredential)), value: \(String(describing: decodedCredential))"
-    )
     self.credential = decodedCredential as? Credential
-    if self.credential == nil, decodedCredential != nil {
-      print(
-        "ClientRegistration.init: Failed to cast credential to Credential type, actual type: \(type(of: decodedCredential))"
-      )
-    }
-
     self.accessToken = coder.decodeObject(forKey: .accessToken) as? String
     self.accessTokenID = coder.decodeObject(forKey: .accessTokenID) as? String
     self.registrationClientURI = coder.decodeObject(forKey: .registrationClientURI) as? String
