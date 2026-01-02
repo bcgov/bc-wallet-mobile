@@ -7,7 +7,7 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferAccountInformationScreen from '../features/account-transfer/transferee/TransferAccountInformationScreen'
-import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
+import TransferAccountInstructionsScreen from '../features/account-transfer/transferee/TransferAccountInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -129,7 +129,7 @@ const OnboardingStack = (): JSX.Element => {
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
-        component={TransferInstructionsScreen}
+        component={TransferAccountInstructionsScreen}
         options={{
           title: 'Transfer Instructions',
           headerShown: true,

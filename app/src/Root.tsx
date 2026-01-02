@@ -3,6 +3,7 @@ import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
 import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
 import { BCSCLoadingProvider } from './bcsc-theme/contexts/BCSCLoadingContext'
+import { WorkflowNavigationProvider } from './contexts/WorkflowNavigationContext'
 
 const Root: React.FC = () => {
   const [store] = useStore<BCState>()
@@ -10,7 +11,9 @@ const Root: React.FC = () => {
   return store.mode === Mode.BCSC ? (
     <BCSCApiClientProvider>
       <BCSCLoadingProvider>
-        <BCSCRootStack />
+        <WorkflowNavigationProvider>
+          <BCSCRootStack />
+        </WorkflowNavigationProvider>
       </BCSCLoadingProvider>
     </BCSCApiClientProvider>
   ) : (
