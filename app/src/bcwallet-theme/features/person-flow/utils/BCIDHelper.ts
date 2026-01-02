@@ -1,3 +1,4 @@
+import { emitError, getErrorDefinition } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -9,7 +10,6 @@ import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
-import { emitError, getErrorDefinition } from '@/errors'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -195,13 +195,7 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
-    // Re-emit the caught error (could be a BifoldError thrown from connectToIASAgent or other source)
-    if (error instanceof BifoldError) {
-      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
-    } else {
-      // For unexpected errors, use the generic service card auth error
-      // Note: This function doesn't have access to `t`, so we emit the raw error
-      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
-    }
+    // Re-emit the caught error (could be a BifoldError or other error type)
+    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }

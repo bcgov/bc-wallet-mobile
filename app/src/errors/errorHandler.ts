@@ -1,6 +1,6 @@
-import { DeviceEventEmitter } from 'react-native'
 import { BifoldError, EventTypes } from '@bifold/core'
 import { TFunction } from 'i18next'
+import { DeviceEventEmitter } from 'react-native'
 
 import { AlertInteractionEvent } from '../events/alertEvents'
 import { Analytics } from '../utils/analytics/analytics-singleton'
@@ -92,10 +92,7 @@ export function dismissError(): void {
 /**
  * Track error in Snowplow analytics
  */
-function trackErrorInAnalytics(
-  definition: BCWalletErrorDefinition,
-  interactionType: AlertInteractionEvent
-): void {
+function trackErrorInAnalytics(definition: BCWalletErrorDefinition, interactionType: AlertInteractionEvent): void {
   // Track the error event
   Analytics.trackErrorEvent({
     code: String(definition.code),
@@ -137,4 +134,3 @@ export function trackErrorAction(errorKey: ErrorRegistryKey, actionLabel = 'dism
 export function getErrorDefinition(errorKey: ErrorRegistryKey): BCWalletErrorDefinition {
   return ErrorRegistry[errorKey]
 }
-

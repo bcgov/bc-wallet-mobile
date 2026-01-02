@@ -12,8 +12,10 @@ import {
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -60,7 +62,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-
+  const { t } = useTranslation()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -107,9 +109,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     } catch (error) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
       logger.warn(`Attestation failed: ${error instanceof Error ? error.message : String(error)}`)
+      emitError('ATTESTATION_GENERATION_ERROR', t, { error })
     }
     return attestation
-  }, [apiClient, isClientReady, logger])
+  }, [apiClient, isClientReady, logger, t])
 
   /**
    * Registers a new BCSC client with dynamic client registration.
