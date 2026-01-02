@@ -11,17 +11,17 @@ import { EnterPINScreen } from '../features/auth/EnterPINScreen'
 import { LockoutScreen } from '../features/auth/LockoutScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
-import { AuthContactUsScreen } from '../features/settings/AuthContactUsScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { AuthWebViewScreen } from '../features/webview/AuthWebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
- * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
+ * Renders the auth stack. These screens are shown when the user has an account but is not yet authenticated.
  *
- * @returns {*} {JSX.Element} The OnboardingStack component.
+ * @returns {*} {JSX.Element} The AuthStack component.
  */
 const AuthStack = (): JSX.Element => {
   const { t } = useTranslation()
@@ -92,7 +92,7 @@ const AuthStack = (): JSX.Element => {
       />
       <Stack.Screen
         name={BCSCScreens.AuthContactUs}
-        component={AuthContactUsScreen}
+        component={ContactUsScreen}
         options={{
           title: t('BCSC.Screens.ContactUs'),
         }}

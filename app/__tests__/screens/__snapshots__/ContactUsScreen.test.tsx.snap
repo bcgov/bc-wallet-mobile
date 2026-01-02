@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VerifyContactUs renders correctly 1`] = `
+exports[`ContactUs renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
