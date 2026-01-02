@@ -25,8 +25,7 @@ class ClientRegistration: NSObject, NSSecureCoding {
     // V3 has a keys array we don't need in v4 - decode and ignore it
     _ = coder.decodeObject(forKey: .keys)
 
-    let decodedCredential = coder.decodeObject(forKey: .credential)
-    self.credential = decodedCredential as? Credential
+    self.credential = coder.decodeObject(forKey: .credential) as? Credential
     self.accessToken = coder.decodeObject(forKey: .accessToken) as? String
     self.accessTokenID = coder.decodeObject(forKey: .accessTokenID) as? String
     self.registrationClientURI = coder.decodeObject(forKey: .registrationClientURI) as? String
