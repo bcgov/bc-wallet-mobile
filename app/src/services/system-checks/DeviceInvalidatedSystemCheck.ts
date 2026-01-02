@@ -18,7 +18,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
   private readonly getIdToken: () => Promise<IdToken>
   private readonly navigation: SystemCheckNavigation
   private readonly utils: SystemCheckUtils
-  private caseType?: BCSCReason
+  private invalidationReason?: BCSCReason
 
   constructor(getIdToken: () => Promise<IdToken>, navigation: SystemCheckNavigation, utils: SystemCheckUtils) {
     this.getIdToken = getIdToken
@@ -43,7 +43,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
       const idToken = await this.getIdToken()
 
       if (idToken.bcsc_event === BCSCEvent.Cancel) {
-        this.caseType = idToken.bcsc_reason
+        this.invalidationReason = idToken.bcsc_reason
         return false
       }
 
@@ -69,7 +69,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    this.navigation.navigate(BCSCModals.DeviceInvalidated, { caseType: this.caseType })
+    this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.invalidationReason })
   }
 
   /**

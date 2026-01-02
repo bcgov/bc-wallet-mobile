@@ -147,7 +147,9 @@ describe('DeviceInvalidatedSystemCheck', () => {
       check.onFail()
 
       expect(mockUtils.logger.warn).toHaveBeenCalledWith('DeviceInvalidatedSystemCheck: Device invalidated')
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, { caseType: undefined })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
+        invalidationReason: undefined,
+      })
     })
 
     it('should not navigate when modal is already visible', () => {
