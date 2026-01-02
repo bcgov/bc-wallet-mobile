@@ -49,8 +49,8 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
@@ -99,7 +99,7 @@ const VerifyStack = () => {
       />
       <Stack.Screen
         name={BCSCScreens.VerifyContactUs}
-        component={VerifyContactUsScreen}
+        component={ContactUsScreen}
         options={{ title: t('BCSC.Screens.ContactUs') }}
       />
       <Stack.Screen
