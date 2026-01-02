@@ -19,15 +19,13 @@ class ClientRegistration: NSObject, NSSecureCoding {
   }
 
   required init?(coder: NSCoder) {
-    // self.provider = coder.decodeObject(of: Provider.self, forKey: .provider)
-    // self.keys = coder.decodeObject(of: [NSArray.self, JWK.self], forKey: .keys) as? [JWK] ?? []
+    // Attempt to decode v3 fields but ignore if they fail (for migration compatibility)
+    // V3 has a provider object we don't need in v4 - decode and ignore it
+    _ = try? coder.decodeTopLevelObject(forKey: .provider)
+    // V3 has a keys array we don't need in v4 - decode and ignore it
+    _ = coder.decodeObject(forKey: .keys)
 
-    // Decode credential with all required Foundation types for secure coding
-    self.credential = coder.decodeObject(
-      of: [Credential.self, NSString.self, NSDate.self, NSNumber.self, NSArray.self],
-      forKey: .credential
-    ) as? Credential
-
+    self.credential = coder.decodeObject(forKey: .credential) as? Credential
     self.accessToken = coder.decodeObject(forKey: .accessToken) as? String
     self.accessTokenID = coder.decodeObject(forKey: .accessTokenID) as? String
     self.registrationClientURI = coder.decodeObject(forKey: .registrationClientURI) as? String

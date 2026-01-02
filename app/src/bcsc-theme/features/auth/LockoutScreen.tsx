@@ -103,9 +103,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
 
   const onPressRemoveAccount = useCallback(async () => {
     try {
-      // Don't delete from server when locked out - user hasn't authenticated yet
-      // This matches ias-ios behavior which only cleans up local storage
-      await factoryReset(undefined, false)
+      await factoryReset()
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error removing account: ${errMessage}`)
