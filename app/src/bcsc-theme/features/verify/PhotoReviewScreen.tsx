@@ -1,4 +1,5 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { emitError } from '@/errors'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
@@ -19,6 +20,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   const { t } = useTranslation()
 
   if (!photoPath) {
+    emitError('PHOTO_CAPTURE_ERROR', t, { showModal: false, context: { reason: 'PhotoReviewScreen missing path' } })
     throw new Error(t('BCSC.PhotoReview.PathRequired'))
   }
 

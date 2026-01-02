@@ -75,6 +75,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    */
   const getAttestation = useCallback(async (): Promise<string | null> => {
     if (!isClientReady || !apiClient) {
+      emitError('CLIENT_REGISTRATION_NULL', t, { showModal: false, context: { reason: 'attestation' } })
       throw new Error('BCSC client not ready for attestation')
     }
 
@@ -127,6 +128,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const register = useCallback(
     async (securityMethod: AccountSecurityMethod) => {
       if (!isClientReady || !apiClient) {
+        emitError('CLIENT_REGISTRATION_NULL', t, { showModal: false, context: { reason: 'registration' } })
         throw new Error('BCSC client not ready for registration')
       }
 
@@ -169,7 +171,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, t]
   )
 
   /**
@@ -188,14 +190,17 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
       return withAccount(async (account) => {
         if (!isClientReady || !apiClient) {
+          emitError('CLIENT_REGISTRATION_NULL', t, { showModal: false, context: { reason: 'registration update' } })
           throw new Error('BCSC client not ready for registration update')
         }
 
         if (!registrationAccessToken) {
+          emitError('TOKEN_NULL', t, { showModal: false, context: { reason: 'registration access token missing' } })
           throw new Error('No registration access token found for registration update')
         }
 
         if (!selectedNickname) {
+          emitError('INVALID_REGISTRATION_REQUEST', t, { showModal: false, context: { reason: 'client name missing' } })
           throw new Error('No client name found for registration update')
         }
 
@@ -256,7 +261,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens, t]
   )
 
   /**
@@ -272,6 +277,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const deleteRegistration = useCallback(
     async (clientId: string) => {
       if (!isClientReady || !apiClient) {
+        emitError('CLIENT_REGISTRATION_NULL', t, { showModal: false, context: { reason: 'registration deletion' } })
         throw new Error('BCSC client not ready for registration deletion')
       }
 
@@ -287,7 +293,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken]
+    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken, t]
   )
 
   return useMemo(

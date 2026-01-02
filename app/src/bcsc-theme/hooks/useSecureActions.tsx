@@ -1,6 +1,8 @@
+import { emitError } from '@/errors'
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountFlags,
   BCSCAccountType,
@@ -69,6 +71,7 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
   // ============================================================================
@@ -106,11 +109,11 @@ export const useSecureActions = () => {
         await Promise.all(promises)
         logger.info(`Tokens persisted to native storage successfully`)
       } catch (error) {
-        logger.error('Failed to persist tokens:', error as Error)
+        emitError('STORAGE_WRITE_ERROR', t, { error, showModal: false, context: { operation: 'persist tokens' } })
         throw error
       }
     },
-    [logger]
+    [logger, t]
   )
 
   /**
@@ -126,11 +129,11 @@ export const useSecureActions = () => {
         await setAuthorizationRequest(mergedData as NativeAuthorizationRequest)
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
-        logger.error('Failed to persist authorization request:', error as Error)
+        emitError('STORAGE_WRITE_ERROR', t, { error, showModal: false, context: { operation: 'persist auth request' } })
         throw error
       }
     },
-    [logger]
+    [logger, t]
   )
 
   /**
@@ -146,11 +149,15 @@ export const useSecureActions = () => {
         await setAccountFlags(mergedFlags)
         logger.info('Account flags persisted to native storage')
       } catch (error) {
-        logger.error('Failed to persist account flags:', error as Error)
+        emitError('STORAGE_WRITE_ERROR', t, {
+          error,
+          showModal: false,
+          context: { operation: 'persist account flags' },
+        })
         throw error
       }
     },
-    [logger]
+    [logger, t]
   )
 
   /**
@@ -163,11 +170,15 @@ export const useSecureActions = () => {
         await setEvidenceMetadata(evidenceData)
         logger.info('Evidence metadata persisted to native storage')
       } catch (error) {
-        logger.error('Failed to persist evidence metadata:', error as Error)
+        emitError('STORAGE_WRITE_ERROR', t, {
+          error,
+          showModal: false,
+          context: { operation: 'persist evidence metadata' },
+        })
         throw error
       }
     },
-    [logger]
+    [logger, t]
   )
 
   // ============================================================================
@@ -704,9 +715,10 @@ export const useSecureActions = () => {
       logger.info('Secure state hydrated successfully')
     } catch (error) {
       logger.error('Failed to hydrate secure state:', error as Error)
+      emitError('STORAGE_READ_ERROR', t, { error, showModal: false, context: { operation: 'hydrate secure state' } })
       throw error
     }
-  }, [logger, dispatch, updateTokens])
+  }, [logger, dispatch, updateTokens, t])
 
   /**
    * Clears secure state from store (does not delete from native storage).
@@ -752,9 +764,10 @@ export const useSecureActions = () => {
       logger.info('Secure data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
+      emitError('STORAGE_WRITE_ERROR', t, { error, showModal: false, context: { operation: 'delete secure data' } })
       throw error
     }
-  }, [logger])
+  }, [logger, t])
 
   /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.

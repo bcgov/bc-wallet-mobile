@@ -1,8 +1,10 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -96,12 +98,16 @@ export interface EvidenceMetadataPayload {
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
   const { updateVerificationRequest } = useSecureActions()
+  const { t } = useTranslation()
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
-    if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
+    if (!code) {
+      emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'evidence API' } })
+      throw new Error('Device code is missing. Re install the app and setup try again.')
+    }
     return code
-  }, [store.bcscSecure.deviceCode])
+  }, [store.bcscSecure.deviceCode, t])
 
   const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`, {

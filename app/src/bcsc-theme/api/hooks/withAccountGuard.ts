@@ -1,3 +1,5 @@
+import { emitError } from '@/errors'
+import i18next from 'i18next'
 import { getAccount } from 'react-native-bcsc-core'
 
 /**
@@ -9,6 +11,7 @@ import { getAccount } from 'react-native-bcsc-core'
 export const withAccount = async <T>(fn: (account: any) => Promise<T>): Promise<T> => {
   const account = await getAccount()
   if (!account) {
+    emitError('CLIENT_REGISTRATION_NULL', i18next.t, { showModal: false, context: { reason: 'withAccountGuard' } })
     throw new Error('No account found. Please register first.')
   }
 

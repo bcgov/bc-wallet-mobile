@@ -1,3 +1,4 @@
+import { emitError } from '@/errors'
 import { BifoldLogger } from '@bifold/core'
 import {
   callsWebrtcParticipant,
@@ -8,6 +9,7 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
+import i18next from 'i18next'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
 
@@ -38,7 +40,11 @@ export const connect = async (
   let response = await requestInfinityToken(req)
 
   if (response.status !== 200) {
-    throw new Error('Cannot establish the connection. Pexip unavailable (1):', response.status)
+    emitError('VIDEO_CALL_CONNECTION_ERROR', i18next.t, {
+      showModal: false,
+      context: { reason: 'Pexip token request failed', status: response.status },
+    })
+    throw new Error('Cannot establish the connection. Pexip unavailable (1):' + response.status)
   }
 
   const participantUuid = response.data.result.participant_uuid
@@ -145,7 +151,11 @@ export const connect = async (
   })
 
   if (response.status !== 200) {
-    throw new Error('Cannot establish the connection. Pexip unavailable (2):', response.status)
+    emitError('VIDEO_CALL_CONNECTION_ERROR', i18next.t, {
+      showModal: false,
+      context: { reason: 'Pexip call request failed', status: response.status },
+    })
+    throw new Error('Cannot establish the connection. Pexip unavailable (2):' + response.status)
   }
 
   const callUuid = response.data.result.call_uuid

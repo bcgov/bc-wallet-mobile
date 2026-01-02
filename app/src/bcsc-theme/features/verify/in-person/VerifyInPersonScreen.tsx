@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
@@ -51,6 +52,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setError(false)
 
       if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+        emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'VerifyInPersonScreen' } })
         throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
@@ -67,7 +69,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         logger.error('Device verification failed, no refresh token received.')
       }
     } catch (e) {
-      logger.error(`Error completing device verification: ${e}`)
+      emitError('DEVICE_AUTHORIZATION_ERROR', t, { error: e, showModal: false })
       setError(true)
     } finally {
       setLoading(false)

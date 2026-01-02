@@ -1,6 +1,8 @@
+import { emitError } from '@/errors'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -63,12 +65,16 @@ export interface ServiceHours {
 
 const useVideoCallApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
+  const { t } = useTranslation()
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
-    if (!code) throw new Error('Device code is missing. Re install the app and try again.')
+    if (!code) {
+      emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'video call API' } })
+      throw new Error('Device code is missing. Re install the app and try again.')
+    }
     return code
-  }, [store.bcscSecure.deviceCode])
+  }, [store.bcscSecure.deviceCode, t])
 
   const createVideoSession = useCallback(async (): Promise<VideoSession> => {
     return withAccount(async (account) => {

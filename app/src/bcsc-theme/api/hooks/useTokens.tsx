@@ -1,6 +1,8 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { emitError } from '@/errors'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -25,6 +27,7 @@ export interface TokenResponse {
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
   const { updateTokens } = useSecureActions()
+  const { t } = useTranslation()
   const deviceToken = useCallback(
     async (payload: DeviceTokenPayload) => {
       const { data } = await apiClient.post<TokenResponse>(
@@ -78,6 +81,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
       if (!apiClient.tokens) {
+        emitError('NO_TOKENS_RETURNED', t, { showModal: false, context: { reason: 'getCachedIdTokenMetadata' } })
         throw new Error('No tokens available')
       }
 
@@ -88,7 +92,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },
-    [apiClient]
+    [apiClient, t]
   )
 
   return useMemo(

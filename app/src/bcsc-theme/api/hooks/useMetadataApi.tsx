@@ -1,4 +1,6 @@
+import { emitError } from '@/errors'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import BCSCApiClient from '../client'
 
 export type Clients = ClientMetadata[]
@@ -29,6 +31,8 @@ export interface ClientMetadata {
 }
 
 const useMetadataApi = (apiClient: BCSCApiClient) => {
+  const { t } = useTranslation()
+
   /**
    * Fetches the client metadata from the IAS Client Metadata endpoint.
    *
@@ -51,11 +55,12 @@ const useMetadataApi = (apiClient: BCSCApiClient) => {
     const bcscClient = clients.find((client) => client.client_uri === `${apiClient.endpoints.account}/`)
 
     if (!bcscClient) {
+      emitError('PROVIDER_NULL', t, { showModal: false, context: { reason: 'BCSC client metadata not found' } })
       throw new Error('BCSC client metadata not found')
     }
 
     return bcscClient
-  }, [apiClient, getClientMetadata])
+  }, [apiClient, getClientMetadata, t])
 
   return useMemo(
     () => ({

@@ -50,6 +50,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const leaveCall = useCallback(async () => {
     try {
       if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+        emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'leaveCall in LiveCallScreen' } })
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 

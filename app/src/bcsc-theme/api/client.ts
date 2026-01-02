@@ -1,5 +1,7 @@
+import { emitError } from '@/errors'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import i18next from 'i18next'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
@@ -173,13 +175,13 @@ class BCSCApiClient {
 
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
-        this.logger.error('BCSCClient: Missing tokens - call getTokensForRefreshToken to initialize tokens')
+        emitError('NO_TOKENS_RETURNED', i18next.t, { showModal: false, context: { reason: 'ensureValidTokens' } })
         throw new Error('Client missing tokens')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
         // refresh tokens should not expire
-        this.logger.error('BCSCClient: Refresh token expired - fatal error detected')
+        emitError('REFRESH_TOKEN_EXPIRED', i18next.t, { showModal: false })
         throw new Error('Refresh token expired')
       }
 

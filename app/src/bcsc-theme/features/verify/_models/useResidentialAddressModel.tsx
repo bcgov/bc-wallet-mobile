@@ -140,6 +140,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         name: store.bcscSecure.userMetadata?.name,
       })
 
+      emitError('VERIFY_STEPS_INCOMPLETE', t, { showModal: false, context: { reason: 'missing birthdate or name' } })
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
     }
 
@@ -161,7 +162,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       // device previously registered, but no deviceCode found in store
       if (deviceAuth === null && !store.bcscSecure.deviceCode) {
-        logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
+        emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'device registered but no code' } })
         throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
       }
 

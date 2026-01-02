@@ -129,6 +129,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     try {
       if (!session || !clientCallId) {
+        emitError('VIDEO_CALL_END_ERROR', t, { showModal: false, context: { reason: 'Missing session or clientCallId' } })
         throw new Error('Missing required parameters to end call')
       }
 
@@ -139,6 +140,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     try {
       if (!session) {
+        emitError('VIDEO_CALL_SESSION_ERROR', t, { showModal: false, context: { reason: 'Missing session' } })
         throw new Error(t('BCSC.VideoCall.MissingSession'))
       }
 
@@ -161,6 +163,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         if (session && clientCallId) {
           await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_in_call')
         } else {
+          emitError('VIDEO_CALL_SESSION_ERROR', t, {
+            showModal: false,
+            context: { reason: 'Missing session or clientCallId for keep-alive' },
+          })
           throw new Error(t('BCSC.VideoCall.MissingSessionOrCallId'))
         }
       } catch {

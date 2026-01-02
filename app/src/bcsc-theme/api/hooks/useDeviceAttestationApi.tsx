@@ -1,4 +1,6 @@
+import { emitError } from '@/errors'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import BCSCApiClient from '../client'
 
@@ -13,6 +15,8 @@ export interface VerifyAttestationPayload {
 const assertionType = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
 const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
+  const { t } = useTranslation()
+
   /**
    * Verifies device attestation by submitting attestation data to the API
    *
@@ -29,6 +33,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
   const verifyAttestation = useCallback(
     async (data: VerifyAttestationPayload) => {
       if (!apiClient) {
+        emitError('ATTESTATION_AGENT_UNDEFINED', t, { showModal: false, context: { reason: 'verifyAttestation' } })
         throw new Error('BCSC client not ready for Device Attestation!')
       }
 
@@ -51,7 +56,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient]
+    [apiClient, t]
   )
 
   /**
@@ -71,6 +76,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
   const checkAttestationStatus = useCallback(
     async (jwtID: string): Promise<boolean | undefined> => {
       if (!apiClient) {
+        emitError('ATTESTATION_AGENT_UNDEFINED', t, { showModal: false, context: { reason: 'checkAttestationStatus' } })
         throw new Error('BCSC client not ready for Device Attestation!')
       }
 
@@ -83,7 +89,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
 
       return false
     },
-    [apiClient]
+    [apiClient, t]
   )
 
   return useMemo(

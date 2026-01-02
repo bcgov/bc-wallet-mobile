@@ -1,6 +1,8 @@
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { emitError } from '@/errors'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -41,6 +43,8 @@ export interface AuthorizeDeviceUnknownBCSCConfig {
 }
 
 const useAuthorizationApi = (apiClient: BCSCApiClient) => {
+  const { t } = useTranslation()
+
   /**
    * Authorize a device with a known BCSC card. Serial and birthdate are optional, but if serial is provided, both must be provided. These values will be provided during the
    * new account flow when entering card information.
@@ -57,6 +61,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
     async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse | null> => {
       return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
         if (serial && !birthdate) {
+          emitError('BAD_REQUEST', t, { showModal: false, context: { reason: 'birthdate required with serial' } })
           throw new Error('Birthdate is required when providing a serial number')
         }
         const body = {
@@ -92,7 +97,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         }
       })
     },
-    [apiClient]
+    [apiClient, t]
   )
 
   /**

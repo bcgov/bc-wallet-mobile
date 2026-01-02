@@ -43,10 +43,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
 
       if (!store.bcsc.photoPath || !store.bcsc.videoPath || !store.bcsc.videoDuration) {
+        emitError('VIDEO_CAPTURE_ERROR', t, { showModal: false, context: { reason: 'missing photo or video data' } })
         throw new Error('Error - missing photo or video data')
       }
 
       if (!prompts || prompts.length === 0) {
+        emitError('VIDEO_CAPTURE_ERROR', t, { showModal: false, context: { reason: 'missing video prompts data' } })
         throw new Error('Error - missing video prompts data')
       }
 
@@ -58,6 +60,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       ])
 
       if (!videoBytes) {
+        emitError('VIDEO_CAPTURE_ERROR', t, { showModal: false, context: { reason: 'cache missing video data' } })
         throw new Error('Error - cache missing video data')
       }
 

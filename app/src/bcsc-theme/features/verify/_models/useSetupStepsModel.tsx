@@ -30,6 +30,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    */
   const handleCheckStatus = useCallback(async () => {
     if (!store.bcscSecure.verificationRequestId) {
+      emitError('VERIFY_STEPS_INCOMPLETE', t, { showModal: false, context: { reason: 'verificationRequestId missing' } })
       throw new Error(t('BCSC.Steps.VerificationIDMissing'))
     }
 
@@ -37,6 +38,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
     if (status === 'verified') {
       if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+        emitError('DEVICE_CODE_MISSING', t, { showModal: false, context: { reason: 'handleCheckStatus' } })
         throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
       }
 

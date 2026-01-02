@@ -46,6 +46,7 @@ export const connectToIASAgent = async (
   const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
+    emitError('PARSE_INVITATION_ERROR', t, { showModal: false })
     const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
     throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
@@ -55,6 +56,7 @@ export const connectToIASAgent = async (
   const record = await agent.oob.receiveInvitation(invite)
 
   if (!record) {
+    emitError('RECEIVE_INVITATION_ERROR', t, { showModal: false })
     const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
     throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
@@ -65,6 +67,7 @@ export const connectToIASAgent = async (
   const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
+    emitError('LEGACY_DID_ERROR', t, { showModal: false })
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
     throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
@@ -73,6 +76,7 @@ export const connectToIASAgent = async (
   const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
   if (!didRecord) {
+    emitError('LEGACY_DID_ERROR', t, { showModal: false, context: { reason: 'DID record not found' } })
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
     throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
@@ -81,6 +85,7 @@ export const connectToIASAgent = async (
   const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
+    emitError('LEGACY_DID_ERROR', t, { showModal: false, context: { reason: 'Invalid legacy connection DID' } })
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
     throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }

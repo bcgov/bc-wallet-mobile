@@ -28,7 +28,7 @@ import { DeviceEventEmitter, Platform } from 'react-native'
 import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 import { AttestationRestrictions } from '@/constants'
-import { getErrorDefinition } from '@/errors'
+import { emitBifoldError, getErrorDefinition } from '@/errors'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 
@@ -267,6 +267,11 @@ export class AttestationMonitor implements AttestationMonitorI {
     } catch (error) {
       this.log?.error('Failed to fetch attestation credential', error as Error)
 
+      // Track error in analytics (modal already not shown since this is internal service error)
+      if (error instanceof BifoldError) {
+        emitBifoldError(error)
+      }
+
       this.stopWorkflow(AttestationEventTypes.FailedRequestCredential, error as Error)
     }
   }
@@ -354,6 +359,11 @@ export class AttestationMonitor implements AttestationMonitorI {
     } catch (error) {
       this.log?.error('Failed to handle credential offer', error as Error)
 
+      // Track error in analytics
+      if (error instanceof BifoldError) {
+        emitBifoldError(error)
+      }
+
       this.stopWorkflow(AttestationEventTypes.FailedHandleOffer, error as Error)
     }
   }
@@ -417,6 +427,11 @@ export class AttestationMonitor implements AttestationMonitorI {
       await this.requestAttestationCredential()
     } catch (error) {
       this.log?.error('Failed to handle proof', error as Error)
+
+      // Track error in analytics
+      if (error instanceof BifoldError) {
+        emitBifoldError(error)
+      }
 
       this.stopWorkflow(AttestationEventTypes.FailedHandleProof, error as Error)
     }

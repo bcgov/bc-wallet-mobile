@@ -1,5 +1,6 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { emitError } from '@/errors'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import {
@@ -47,6 +48,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { t } = useTranslation()
 
   if (!videoPath || !videoThumbnailPath) {
+    emitError('VIDEO_CAPTURE_ERROR', t, { showModal: false, context: { reason: 'VideoReviewScreen missing paths' } })
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
   }
 
