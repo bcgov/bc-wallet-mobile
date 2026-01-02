@@ -14,8 +14,8 @@ class Credential: NSObject, NSSecureCoding {
   var updatedDate: Date?
 
   // BCSC specific fields
-  var bcscEvent: String
-  var bcscReason: String
+  var bcscEvent: String?
+  var bcscReason: String?
   var bcscStatusDate: Date?
   var bcscEventDate: Date?
 
@@ -49,8 +49,8 @@ class Credential: NSObject, NSSecureCoding {
     subject: String,
     label: String,
     created: Date,
-    bcscEvent: String,
-    bcscReason: String
+    bcscEvent: String? = nil,
+    bcscReason: String? = nil
   ) {
     self.issuer = issuer
     self.subject = subject
@@ -62,12 +62,16 @@ class Credential: NSObject, NSSecureCoding {
   }
 
   required init?(coder: NSCoder) {
-    guard let issuer = coder.decodeObject(forKey: .issuer) as? String,
-          let subject = coder.decodeObject(forKey: .subject) as? String,
-          let label = coder.decodeObject(forKey: .label) as? String,
-          let created = coder.decodeObject(forKey: .created) as? Date,
-          let bcscEvent = coder.decodeObject(forKey: .bcscEvent) as? String,
-          let bcscReason = coder.decodeObject(forKey: .bcscReason) as? String
+    let issuer = coder.decodeObject(forKey: .issuer) as? String
+    let subject = coder.decodeObject(forKey: .subject) as? String
+    let label = coder.decodeObject(forKey: .label) as? String
+    let created = coder.decodeObject(forKey: .created) as? Date
+
+    // Only require core fields
+    guard let issuer = issuer,
+          let subject = subject,
+          let label = label,
+          let created = created
     else {
       return nil
     }
@@ -76,10 +80,10 @@ class Credential: NSObject, NSSecureCoding {
     self.subject = subject
     self.label = label
     self.created = created
-    self.bcscEvent = bcscEvent
-    self.bcscReason = bcscReason
 
     // Optional fields
+    self.bcscEvent = coder.decodeObject(forKey: .bcscEvent) as? String
+    self.bcscReason = coder.decodeObject(forKey: .bcscReason) as? String
     self.lastUsed = coder.decodeObject(forKey: .lastUsed) as? Date
     self.updatedDate = coder.decodeObject(forKey: .updatedDate) as? Date
     self.bcscStatusDate = coder.decodeObject(forKey: .bcscStatusDate) as? Date

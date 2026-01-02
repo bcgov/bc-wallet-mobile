@@ -22,10 +22,10 @@ type FactoryResetResult =
  * WARNING: This is a destructive action and will result in loss of all user data and settings.
  *
  * This includes:
- *  - Deleting the IAS account associated with the current clientID.
+ *  - Deleting the IAS account associated with the current clientID from server (non-blocking if fails).
+ *  - Deleting all secure data stored in native storage.
  *  - Removing the local account file.
  *  - Clearing the BCSC state in the global store.
- *  - Registering a new account to generate a new clientID and save it locally.
  *  - Logging out the user by updating the authentication state.
  *
  * @returns {Function} A function that performs the factory reset when called.
@@ -43,31 +43,33 @@ export const useFactoryReset = () => {
    * Performs a factory reset of the BCSC account and state.
    *
    * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
-   * @param {boolean} [deleteFromServer=true] - Whether to delete the account from the IAS server for situations where this is
-   * not possible (e.g., account is locked)
    * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
-    async (state?: Partial<BCSCState>, deleteFromServer: boolean = true): Promise<FactoryResetResult> => {
+    async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
       try {
         const account = await BcscCore.getAccount()
 
-        if (deleteFromServer) {
-          if (!account) {
-            throw new Error('Local account not found for factory reset')
-          }
-
-          // Delete IAS account
-          logger.info('FactoryReset: Deleting IAS account from server...')
-          const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-          if (!deleteIASAccount.success) {
-            throw new Error('IAS server account deletion failed')
-          }
-        } else {
-          logger.info('FactoryReset: Skipping server deletion (deleteFromServer=false)')
+        if (!account) {
+          throw new Error('Local account not found for factory reset')
         }
 
+        // Delete IAS account
+        logger.info('FactoryReset: Deleting IAS account from server...')
+        const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+
+        if (!deleteIASAccount.success) {
+          throw new Error('IAS server account deletion failed')
+        }
+      } catch (error) {
+        // Error expected here when user is locked out of their account or doesn't have valid tokens
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.warn(
+          `FactoryReset: Error deleting IAS account from server: ${errMessage} \nProceeding with local reset...`
+        )
+      }
+
+      try {
         // Delete secure data from native storage
         logger.info('FactoryReset: Deleting secure data from native storage...')
         await deleteSecureData()
