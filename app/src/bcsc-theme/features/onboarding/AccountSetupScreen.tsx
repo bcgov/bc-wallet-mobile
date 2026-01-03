@@ -1,5 +1,6 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowNavigation, WorkflowType } from '@/contexts/WorkflowNavigationContext'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -11,6 +12,7 @@ interface AccountSetupScreenProps {
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
+  const workflowNavigation = useWorkflowNavigation()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
 
@@ -36,8 +38,8 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   }, [navigation])
 
   const handleTransferAccount = useCallback(() => {
-    navigation.navigate(BCSCScreens.TransferAccountInformation)
-  }, [navigation])
+    workflowNavigation.startWorkflow(WorkflowType.AccountTransfer)
+  }, [workflowNavigation])
 
   return (
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>

@@ -1,5 +1,6 @@
 import { RadioGroup } from '@/bcsc-theme/components/RadioGroup'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import {
   Button,
   ButtonType,
@@ -23,6 +24,7 @@ type SetupTypesScreenProps = {
 }
 
 const SetupTypesScreen = ({ navigation }: SetupTypesScreenProps) => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const [myOwnId, setMyOwnId] = useState<boolean>(true)
@@ -162,7 +164,7 @@ const SetupTypesScreen = ({ navigation }: SetupTypesScreenProps) => {
           buttonType={ButtonType.Primary}
           title={t('Global.Continue')}
           onPress={() => {
-            navigation.navigate(BCSCScreens.OnboardingIntroCarousel)
+            goToNextScreen()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}

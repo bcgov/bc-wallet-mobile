@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { OnboardingOptInAnalyticsContent } from './components/OnboardingOptInAnalyticsContent'
@@ -14,8 +15,9 @@ interface OnboardingOptInAnalyticsScreenProps {
 export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsScreenProps> = ({
   navigation,
 }: OnboardingOptInAnalyticsScreenProps): JSX.Element => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
+    goToNextScreen()
   }
 
   return <OnboardingOptInAnalyticsContent onPress={onPress} />

@@ -1,6 +1,7 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -18,11 +19,12 @@ interface OnboardingPrivacyPolicyScreenProps {
 export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScreenProps> = ({
   navigation,
 }: OnboardingPrivacyPolicyScreenProps): JSX.Element => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const { t } = useTranslation()
   const theme = useTheme()
 
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
+    goToNextScreen()
   }
 
   const handleLearnMore = () => {

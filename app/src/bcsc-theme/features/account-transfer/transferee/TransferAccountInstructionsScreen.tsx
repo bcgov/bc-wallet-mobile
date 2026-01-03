@@ -13,7 +13,7 @@ const TAB_NAVIGATOR = Image.resolveAssetSource(TabNavigator)
 const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
 const QR_SCAN = Image.resolveAssetSource(QRScan)
 
-const TransferInstructionsScreen: React.FC = () => {
+const TransferAccountInstructionsScreen: React.FC = () => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
@@ -53,4 +53,4 @@ const TransferInstructionsScreen: React.FC = () => {
   )
 }
 
-export default TransferInstructionsScreen
+export default TransferAccountInstructionsScreen

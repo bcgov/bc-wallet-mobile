@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import notifications from '@assets/img/notifications.png'
 import {
   Button,
@@ -27,6 +28,7 @@ interface NotificationsScreenProps {
  * @returns {*} {JSX.Element} The NotificationsScreen component.
  */
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): JSX.Element => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const { Spacing } = useTheme()
@@ -73,7 +75,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
       buttonType={ButtonType.Primary}
       onPress={async () => {
         await activatePushNotifications()
-        navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        goToNextScreen()
       }}
       testID={testIdWithKey('Continue')}
       accessibilityLabel={t('Global.Continue')}

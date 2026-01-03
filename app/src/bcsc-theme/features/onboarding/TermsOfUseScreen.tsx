@@ -1,6 +1,7 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createTermsOfUseWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
@@ -19,6 +20,7 @@ interface TermsOfUseScreenProps {
  * @returns {*} {JSX.Element} The TermsOfUseScreen component.
  */
 export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Element => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
@@ -42,10 +44,12 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
           status === PushNotifications.NotificationPermissionStatus.GRANTED ||
           status === PushNotifications.NotificationPermissionStatus.BLOCKED
         ) {
-          return navigation.navigate(BCSCScreens.OnboardingSecureApp)
+          // ensure that the next navigation isn't hit while transitioning
+          // needs to skip notifications
+          return goToNextScreen(BCSCScreens.OnboardingSecureApp)
         }
 
-        navigation.navigate(BCSCScreens.OnboardingNotifications)
+        goToNextScreen()
       }}
       testID={testIdWithKey('AcceptAndContinue')}
       accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}

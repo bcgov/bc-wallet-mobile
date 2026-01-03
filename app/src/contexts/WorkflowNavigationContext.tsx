@@ -1,7 +1,7 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack/lib/typescript/src/types'
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 export enum WorkflowType {
   Onboarding = 'onboarding',
@@ -56,56 +56,69 @@ interface WorkflowNavigationContext {
   workflowType: WorkflowType | null
   currentScreen: BCSCScreens | null
   startWorkflow: (type: WorkflowType) => void
-  goToNextScreen: () => void
+  goToNextScreen: (screen?: BCSCScreens) => void
   goToPreviousScreen: () => void
-  goToScreen: (screen: BCSCScreens) => void
+  goToScreen: (skipToScreen: BCSCScreens) => void
   endWorkflow: () => void
 }
 
 const WorkflowNavigationContext = createContext<WorkflowNavigationContext | undefined>(undefined)
 // TODO: add error logger to this thang
 export const WorkflowNavigationProvider: React.FC<WorkflowProviderProps> = ({ children }) => {
+  console.log('___ Rendering WorkflowNavigationProvider')
   const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
   const [currentScreen, setCurrentScreen] = useState<BCSCScreens | null>(null)
   const [workflowType, setWorkflowType] = useState<WorkflowType | null>(null)
   const [currentWorkflow, setCurrentWorkflow] = useState<WorkflowConfig | null>(null)
 
-  const startWorkflow = (type: WorkflowType) => {
-    console.log('Starting workflow:', type)
-    const flow = FLOW_CONFIGURATIONS[type]
-    if (!flow.screens.length) {
-      throw new Error(`Workflow ${type} has no configured screens.`)
-    }
+  const startWorkflow = useCallback(
+    (type: WorkflowType) => {
+      console.log('Starting workflow:', type)
+      const flow = FLOW_CONFIGURATIONS[type]
+      if (!flow.screens.length) {
+        console.warn('No screens defined for this workflow type:', type)
+        return
+      }
 
-    const firstScreen = flow.screens[0]
-    setCurrentWorkflow(flow)
-    setWorkflowType(type)
-    setCurrentScreen(firstScreen)
-    navigation.navigate(firstScreen as never) // TODO: this is hacky
-  }
+      const firstScreen = flow.screens[0]
+      setCurrentWorkflow(flow)
+      setWorkflowType(type)
+      setCurrentScreen(firstScreen)
+      navigation.navigate(firstScreen as never) // TODO: this is hacky
+    },
+    [navigation, setCurrentWorkflow, setWorkflowType, setCurrentScreen]
+  )
 
-  const goToNextScreen = () => {
-    if (!currentScreen || !workflowType) {
-      // no active workflow
-      return
-    }
+  const goToNextScreen = useCallback(
+    (skipToScreen?: BCSCScreens) => {
+      console.log('Going to next screen in workflow')
+      const currentActiveScreen = skipToScreen ?? currentScreen
+      if (!currentActiveScreen || !workflowType) {
+        console.warn('No current screen or workflow type set.')
+        console.log(currentActiveScreen, workflowType)
+        return
+      }
 
-    const currentIndex = currentWorkflow?.screens.indexOf(currentScreen)
+      const currentIndex = currentWorkflow?.screens.indexOf(currentActiveScreen)
 
-    if (currentIndex === undefined || currentIndex === -1 || !currentWorkflow) {
-      // current screen not found in workflow
-      return
-    }
+      if (currentIndex === undefined || currentIndex === -1 || !currentWorkflow) {
+        // current screen not found in workflow
+        console.warn('Current screen not found in workflow.')
+        return
+      }
 
-    // if last scren
-    // run endWorkflow (clean up store, reset states, clean context)
+      // if last scren
+      // run endWorkflow (clean up store, reset states, clean context)
 
-    if (currentIndex + 1 >= currentWorkflow.screens.length) {
-      const screen = currentWorkflow.screens[currentIndex]
-      setCurrentScreen(screen)
-      navigation.navigate(screen as never) // TODO: this is hacky
-    }
-  }
+      if (currentIndex + 1 <= currentWorkflow.screens.length) {
+        const screen = currentWorkflow.screens[currentIndex + 1]
+        console.log('Navigating to next screen:', screen)
+        setCurrentScreen(screen)
+        navigation.navigate(screen as never) // TODO: this is hacky
+      }
+    },
+    [navigation, currentScreen, workflowType, currentWorkflow]
+  )
 
   const goToPreviousScreen = () => {
     const currentIndex = currentWorkflow?.screens.indexOf(currentScreen as BCSCScreens)
@@ -133,7 +146,7 @@ export const WorkflowNavigationProvider: React.FC<WorkflowProviderProps> = ({ ch
       goToScreen: (screen: BCSCScreens) => {},
       endWorkflow,
     }),
-    []
+    [workflowType, currentScreen, startWorkflow, goToNextScreen, goToPreviousScreen, endWorkflow]
   )
 
   return <WorkflowNavigationContext.Provider value={contextValues}>{children}</WorkflowNavigationContext.Provider>

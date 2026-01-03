@@ -6,6 +6,7 @@ import { useStore } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import NicknameForm from './components/NicknameForm'
 
+// TODO: (Al) Add custom props, so this has a screen to navigate to rather than hard coded
 const NicknameAccountScreen: React.FC = () => {
   const navigation = useNavigation()
   const [, dispatch] = useStore<BCState>()
