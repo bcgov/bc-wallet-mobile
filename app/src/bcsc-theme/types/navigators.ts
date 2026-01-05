@@ -1,6 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
+import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
@@ -213,7 +214,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.DeviceInvalidated]: undefined
+  [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
 }
 
 export type BCSCAuthStackParams = {
