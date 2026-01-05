@@ -87,7 +87,10 @@ To add a new pairing source (e.g., QR code scanning):
 ```typescript
 // Example: QrViewModel.ts
 export class QrViewModel {
-  constructor(private readonly qrService: QrService, private readonly pairingService: PairingService) {}
+  constructor(
+    private readonly qrService: QrService,
+    private readonly pairingService: PairingService
+  ) {}
 
   public initialize() {
     this.qrService.subscribe(this.handleQrScan.bind(this))
