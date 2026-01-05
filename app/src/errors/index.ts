@@ -9,24 +9,13 @@
  *
  * @example
  * ```typescript
- * // In a component
- * import { useErrorHandler } from '@/hooks/useErrorHandler'
- *
- * const { handleError } = useErrorHandler()
+ * import { emitError } from '@/errors'
  *
  * try {
  *   await someOperation()
  * } catch (err) {
- *   handleError('NETWORK_ERROR', { error: err })
+ *   emitError('NETWORK_ERROR', t, { error: err })
  * }
- * ```
- *
- * @example
- * ```typescript
- * // Outside React components
- * import { emitError } from '@/errors'
- *
- * emitError('INVALID_QR_CODE', t, { error: err })
  * ```
  */
 
