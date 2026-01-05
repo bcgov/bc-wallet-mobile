@@ -46,6 +46,8 @@ import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 
 import { createHeaderBackButton } from '../components/HeaderBackButton'
+import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
+import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
@@ -260,6 +262,23 @@ const VerifyStack = () => {
         options={{
           headerShown: true,
           title: t('BCSC.Settings.AutoLockTime'),
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInstructions}
+        component={TransferInstructionsScreen}
+        options={{
+          title: 'Transfer Instructions',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountQRScan}
+        component={TransferQRScannerScreen}
+        options={{
+          title: 'Scan QR Code',
+          headerShown: true,
         }}
       />
 

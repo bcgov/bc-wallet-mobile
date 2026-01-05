@@ -42,8 +42,9 @@ export interface SetupStepsResult {
   address: StepState
   email: StepState
   verify: StepState
+  transfer: StepState
   /** The currently focused step, or null if all complete */
-  currentStep: 'nickname' | 'id' | 'address' | 'email' | 'verify' | null
+  currentStep: 'nickname' | 'id' | 'address' | 'email' | 'verify' | 'transfer' | null
   /** Whether all steps are completed */
   allCompleted: boolean
 }
@@ -103,6 +104,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Step focus states ----
     const step1Focused = !step1Completed
     const step2Focused = step1Completed && !step2Completed
+    const step2AFocused = step1Completed // this is used for the account transfer process
     const step3Focused = step2Completed && !step3Completed
     const step4Focused = step2Completed && step3Completed && !step4Completed
     const step5Focused = step2Completed && step3Completed && step4Completed && !step5Completed
@@ -176,6 +178,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       return [t('BCSC.Steps.GetVerificationStep5Subtext3')]
     }
 
+    const getTransferSubtext = (): string[] => {
+      return ['Transfer account from another device']
+    }
+
     // ---- Determine current step ----
     const getCurrentStep = (): SetupStepsResult['currentStep'] => {
       if (step1Focused) return 'nickname'
@@ -183,6 +189,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       if (step3Focused) return 'address'
       if (step4Focused) return 'email'
       if (step5Focused) return 'verify'
+      if (step2AFocused) return 'transfer'
       return null
     }
 
@@ -214,6 +221,11 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
         completed: step5Completed,
         focused: step5Focused,
         subtext: getStep5Subtext(),
+      },
+      transfer: {
+        completed: false,
+        focused: step2AFocused,
+        subtext: getTransferSubtext(),
       },
       currentStep: getCurrentStep(),
       allCompleted: step1Completed && step2Completed && step3Completed && step4Completed && step5Completed,
