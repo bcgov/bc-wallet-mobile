@@ -35,7 +35,7 @@ export enum ErrorCategory {
 /**
  * Error definition containing all metadata for an error type
  */
-export interface BCWalletErrorDefinition {
+export interface ErrorDefinition {
   /** Unique error code (for support reference) */
   code: number
   /** AlertEvent key for Snowplow analytics */

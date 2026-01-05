@@ -24,7 +24,7 @@ export {
   ErrorCategory,
   ErrorRegistry,
   ErrorSeverity,
-  type BCWalletErrorDefinition,
+  type ErrorDefinition,
   type ErrorRegistryKey,
 } from './errorRegistry'
 

@@ -6,7 +6,7 @@ import { AlertInteractionEvent } from '../events/alertEvents'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 
-import { BCWalletErrorDefinition, ErrorRegistry, ErrorRegistryKey } from './errorRegistry'
+import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from './errorRegistry'
 
 /**
  * Extract a meaningful message from an unknown error value
@@ -69,7 +69,7 @@ export function emitError(errorKey: ErrorRegistryKey, t: TFunction, options: Emi
     return
   }
 
-  const { error, showModal = (definition as BCWalletErrorDefinition).showModal ?? true, context } = options
+  const { error, showModal = (definition as ErrorDefinition).showModal ?? true, context } = options
   const technicalMessage = extractErrorMessage(error)
 
   // Create the bifold error
@@ -89,11 +89,10 @@ export function emitError(errorKey: ErrorRegistryKey, t: TFunction, options: Emi
     ...context,
   })
 
-  // Track in Snowplow analytics
-  trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
   // Emit for ErrorModal (if enabled)
   if (showModal) {
+    // Track in Snowplow analytics
+    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
     DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
   }
 }
@@ -116,7 +115,7 @@ export function dismissError(): void {
 /**
  * Track error in Snowplow analytics
  */
-function trackErrorInAnalytics(definition: BCWalletErrorDefinition, interactionType: AlertInteractionEvent): void {
+function trackErrorInAnalytics(definition: ErrorDefinition, interactionType: AlertInteractionEvent): void {
   // Track the error event
   Analytics.trackErrorEvent({
     code: String(definition.code),
@@ -155,6 +154,6 @@ export function trackErrorAction(errorKey: ErrorRegistryKey, actionLabel = 'dism
 /**
  * Get error definition by key (useful for custom error handling)
  */
-export function getErrorDefinition(errorKey: ErrorRegistryKey): BCWalletErrorDefinition {
+export function getErrorDefinition(errorKey: ErrorRegistryKey): ErrorDefinition {
   return ErrorRegistry[errorKey]
 }
