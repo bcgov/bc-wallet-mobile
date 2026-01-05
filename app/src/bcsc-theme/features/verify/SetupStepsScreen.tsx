@@ -1,6 +1,6 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { hitSlop } from '@/constants'
-import { BCState } from '@/store'
+import { AccountSetupType, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
@@ -14,7 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -47,6 +47,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   const { steps, stepActions, handleCheckStatus, handleCancelVerification } = useSetupStepsModel(navigation)
 
+  useEffect(() => {
+    console.log('SETUP STEPS MODE: ', store.bcsc.accountSetupType)
+  }, [store])
+
   const styles = StyleSheet.create({
     itemSeparator: {
       width: '100%',
@@ -77,112 +81,138 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   return (
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
-      {/* SETUP STEP 1: Nickname Account */}
+      {store.bcsc?.accountSetupType === AccountSetupType.AddAccount ? (
+        <>
+          {/* SETUP STEP 1: Nickname Account */}
 
-      <SetupStep
-        title={t('BCSC.Steps.Step1')}
-        subtext={steps.nickname.subtext}
-        isComplete={steps.nickname.completed}
-        isFocused={steps.nickname.focused}
-        onPress={stepActions.nickname}
-      />
+          <SetupStep
+            title={t('BCSC.Steps.Step1')}
+            subtext={steps.nickname.subtext}
+            isComplete={steps.nickname.completed}
+            isFocused={steps.nickname.focused}
+            onPress={stepActions.nickname}
+          />
 
-      <View style={styles.itemSeparator} />
+          <View style={styles.itemSeparator} />
 
-      {/* SETUP STEP 2: Identification submission */}
+          {/* SETUP STEP 2: Identification submission */}
 
-      <SetupStep
-        title={t('BCSC.Steps.Step2')}
-        subtext={steps.id.subtext}
-        isComplete={steps.id.completed}
-        isFocused={steps.id.focused}
-        onPress={stepActions.id}
-      >
-        {
-          // show additional text if a second card is required
-          steps.id.nonBcscNeedsAdditionalCard || steps.id.nonPhotoBcscNeedsAdditionalCard ? (
-            <View>
-              <View style={styles.addSecondIdTextContainer}>
-                <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
-                  {t('BCSC.Steps.AddSecondIdText')}
-                </ThemedText>
-                <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
-              </View>
-              {
-                // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcscSecure.cardProcess !== BCSCCardProcess.BCSCPhoto && (
-                  <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
-                )
-              }
-            </View>
-          ) : null
-        }
-      </SetupStep>
+          <SetupStep
+            title={t('BCSC.Steps.Step2')}
+            subtext={steps.id.subtext}
+            isComplete={steps.id.completed}
+            isFocused={steps.id.focused}
+            onPress={stepActions.id}
+          >
+            {
+              // show additional text if a second card is required
+              steps.id.nonBcscNeedsAdditionalCard || steps.id.nonPhotoBcscNeedsAdditionalCard ? (
+                <View>
+                  <View style={styles.addSecondIdTextContainer}>
+                    <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
+                      {t('BCSC.Steps.AddSecondIdText')}
+                    </ThemedText>
+                    <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
+                  </View>
+                  {
+                    // QUESTION (MD): Do we want the same for the non bcsc card verification?
+                    store.bcscSecure.cardProcess !== BCSCCardProcess.BCSCPhoto && (
+                      <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
+                    )
+                  }
+                </View>
+              ) : null
+            }
+          </SetupStep>
 
-      <View style={styles.itemSeparator} />
+          <View style={styles.itemSeparator} />
 
-      {/* SETUP STEP 3: Residential Address */}
+          {/* SETUP STEP 3: Residential Address */}
 
-      <SetupStep
-        title={t('BCSC.Steps.Step3')}
-        subtext={steps.address.subtext}
-        isComplete={steps.address.completed}
-        isFocused={steps.address.focused}
-        onPress={stepActions.address}
-      />
+          <SetupStep
+            title={t('BCSC.Steps.Step3')}
+            subtext={steps.address.subtext}
+            isComplete={steps.address.completed}
+            isFocused={steps.address.focused}
+            onPress={stepActions.address}
+          />
 
-      <View style={styles.itemSeparator} />
-      {/* SETUP STEP 4: Email Address */}
+          <View style={styles.itemSeparator} />
+          {/* SETUP STEP 4: Email Address */}
 
-      <SetupStep
-        title={t('BCSC.Steps.Step4')}
-        subtext={steps.email.subtext}
-        isComplete={steps.email.completed}
-        isFocused={steps.email.focused}
-        onPress={stepActions.email}
-      >
-        {
-          <View style={styles.contentEmailContainer}>
-            {steps.email.completed ? (
-              <>
-                <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
-                  {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.email })}
-                </ThemedText>
-                <TouchableOpacity
-                  onPress={stepActions.email}
-                  testID={testIdWithKey('EditEmail')}
-                  accessibilityLabel={t('BCSC.Steps.EditEmail')}
-                  hitSlop={hitSlop}
-                >
-                  <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
-                    {t('BCSC.Steps.EditEmail')}
+          <SetupStep
+            title={t('BCSC.Steps.Step4')}
+            subtext={steps.email.subtext}
+            isComplete={steps.email.completed}
+            isFocused={steps.email.focused}
+            onPress={stepActions.email}
+          >
+            {
+              <View style={styles.contentEmailContainer}>
+                {steps.email.completed ? (
+                  <>
+                    <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
+                      {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.email })}
+                    </ThemedText>
+                    <TouchableOpacity
+                      onPress={stepActions.email}
+                      testID={testIdWithKey('EditEmail')}
+                      accessibilityLabel={t('BCSC.Steps.EditEmail')}
+                      hitSlop={hitSlop}
+                    >
+                      <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
+                        {t('BCSC.Steps.EditEmail')}
+                      </ThemedText>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <ThemedText
+                    style={{
+                      color: steps.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
+                    }}
+                  >
+                    {t('BCSC.Steps.EmailAddress')}
                   </ThemedText>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <ThemedText
-                style={{
-                  color: steps.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
-                }}
-              >
-                {t('BCSC.Steps.EmailAddress')}
-              </ThemedText>
-            )}
-          </View>
-        }
-      </SetupStep>
+                )}
+              </View>
+            }
+          </SetupStep>
 
-      <View style={styles.itemSeparator} />
+          <View style={styles.itemSeparator} />
 
-      {/* SETUP STEP 5: Identity Verification */}
+          {/* SETUP STEP 5: Identity Verification */}
 
-      <SetupStep
-        title={t('BCSC.Steps.Step5')}
-        subtext={steps.verify.subtext}
-        isComplete={steps.verify.completed}
-        isFocused={steps.verify.focused}
-        onPress={stepActions.verify}
-      />
+          <SetupStep
+            title={t('BCSC.Steps.Step5')}
+            subtext={steps.verify.subtext}
+            isComplete={steps.verify.completed}
+            isFocused={steps.verify.focused}
+            onPress={stepActions.verify}
+          />
+        </>
+      ) : (
+        <>
+          {/* SETUP STEP 1: Nickname Account */}
+
+          <SetupStep
+            title={t('BCSC.Steps.Step1')}
+            subtext={steps.nickname.subtext}
+            isComplete={steps.nickname.completed}
+            isFocused={steps.nickname.focused}
+            onPress={stepActions.nickname}
+          />
+
+          <View style={styles.itemSeparator} />
+
+          <SetupStep
+            title={t('BCSC.Steps.Step2')}
+            subtext={steps.transfer.subtext}
+            isComplete={steps.transfer.completed}
+            isFocused={steps.transfer.focused}
+            onPress={stepActions.transfer}
+          />
+        </>
+      )}
 
       {store.bcscSecure.userSubmittedVerificationVideo ? (
         <>
@@ -226,7 +256,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </>
       ) : null}
-      <View style={styles.itemSeparator} />
+
       <View style={{ padding: Spacing.md }}>
         <Button
           title={t('BCSC.Steps.ResetData')}
