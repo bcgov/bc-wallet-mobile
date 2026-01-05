@@ -197,8 +197,9 @@ const translation = {
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated (PT-BR)",
-        "ContentA": "This device has been invalidated. You must re-authorize the device to continue. (PT-BR)",
-        "ContentB": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
+        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (PT-BR)",
+        "CancelledByUser": "This device has been removed from your account by a user action. (PT-BR)",
+        "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
       }  
     },
@@ -363,7 +364,7 @@ const translation = {
       "SecureAppHeader": "Choose how to secure this app (PT-BR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (PT-BR)",
       "SecureAppFaceIDTitle": "Use Face ID (PT-BR)",
-      "SecureAppFaceIDSubtext": "It's already setup on this iPhone or iPad. It never leaves this device or is shared with us. (PT-BR)",
+      "SecureAppFaceIDSubtext": "It's already set up on this iPhone or iPad. It never leaves this device or is shared with us. (PT-BR)",
       "SecureAppBiometricsTitle": "TODO: Android title (PT-BR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",

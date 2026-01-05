@@ -1,10 +1,11 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { BCSCCardProcess } from './cards'
+import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {
-  Startup = 'BCSCStartupStack',
   Onboarding = 'BCSCOnboardingStack',
+  Auth = 'BCSCAuthStack',
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
   Main = 'BCSCMainStack',
@@ -17,14 +18,11 @@ export enum BCSCModals {
 }
 
 export enum BCSCScreens {
-  Splash = 'BCSCSplash',
   Home = 'BCSCHome',
   Services = 'BCSCServices',
   Account = 'BCSCAccount',
   ForgetAllPairings = 'BCSCForgetAllPairings',
-  NewSetup = 'BCSCNewSetup',
   SetupSteps = 'BCSCSetupSteps',
-  SetupTypes = 'BCSCSetupTypes',
   IdentitySelection = 'BCSCIdentitySelection',
   SerialInstructions = 'BCSCSerialInstructions',
   ManualSerial = 'BCSCManualSerial',
@@ -70,7 +68,8 @@ export enum BCSCScreens {
   ServiceLogin = 'BCSCServiceLogin',
   NicknameAccount = 'BCSCNicknameAccount',
   EditNickname = 'BCSCEditNickname',
-  AccountSelector = 'BCSCAccountSelector',
+  OnboardingAccountSetup = 'BCSCOnboardingAccountSetup',
+  OnboardingSetupTypes = 'BCSCOnboardingSetupTypes',
   OnboardingIntroCarousel = 'BCSCOnboardingIntroCarousel',
   OnboardingPrivacyPolicy = 'BCSCOnboardingPrivacyPolicy',
   OnboardingTermsOfUse = 'BCSCOnboardingTermsOfUse',
@@ -85,8 +84,10 @@ export enum BCSCScreens {
   MainContactUs = 'BCSCMainContactUs',
   MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
   MainDeveloper = 'BCSCMainDeveloper',
+  MainAutoLock = 'BCSCMainAutoLock',
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
+  VerifyAutoLock = 'BCSCVerifyAutoLock',
   VerifyContactUs = 'BCSCVerifyContactUs',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
@@ -94,14 +95,25 @@ export enum BCSCScreens {
   AccountRenewalInformation = 'BCSCAccountRenewalInformation',
   AccountRenewalFirstWarning = 'BCSCAccountRenewalFirstWarning',
   AccountRenewalFinalWarning = 'BCSCAccountRenewalFinalWarning',
-}
-
-export type BCSCStartupStackParams = {
-  [BCSCScreens.Splash]: undefined
+  AccountSelector = 'BCSCAccountSelector',
+  EnterPIN = 'BCSCEnterPIN',
+  DeviceAuthInfo = 'BCSCDeviceAuthInfo',
+  Lockout = 'BCSCLockout',
+  DeviceAuthAppReset = 'BCSCDeviceAuthAppReset',
+  AuthSettings = 'BCSCAuthSettings',
+  AuthWebView = 'BCSCAuthWebView',
+  AuthContactUs = 'BCSCAuthContactUs',
+  AuthPrivacyPolicy = 'BCSCAuthPrivacyPolicy',
+  AuthDeveloper = 'BCSCAuthDeveloper',
 }
 
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.OnboardingAccountSetup]: undefined
+  [BCSCScreens.OnboardingSetupTypes]: undefined
+  [BCSCScreens.TransferAccountInstructions]: undefined
+  [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.TransferAccountInformation]: undefined
   [BCSCScreens.OnboardingIntroCarousel]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
@@ -109,18 +121,14 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
+
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
 }
 
 export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyWebView]: { url: string; title: string; injectedJavascript?: string }
-  [BCSCScreens.NewSetup]: undefined
   [BCSCScreens.SetupSteps]: undefined
-  [BCSCScreens.SetupTypes]: undefined
-  [BCSCScreens.TransferAccountInstructions]: undefined
-  [BCSCScreens.TransferAccountQRScan]: undefined
-  [BCSCScreens.TransferAccountInformation]: undefined
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
@@ -160,11 +168,11 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddress]: undefined
   [BCSCScreens.NicknameAccount]: undefined
-  [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.VerifySettings]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
+  [BCSCScreens.VerifyAutoLock]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -198,6 +206,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
+  [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.AccountExpired]: undefined
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
@@ -205,5 +214,21 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.DeviceInvalidated]: undefined
+  [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
+}
+
+export type BCSCAuthStackParams = {
+  [BCSCScreens.AccountSelector]: undefined
+  [BCSCScreens.EnterPIN]: undefined
+  [BCSCScreens.DeviceAuthInfo]: undefined
+  [BCSCScreens.Lockout]: undefined
+  [BCSCScreens.DeviceAuthAppReset]: undefined
+  [BCSCScreens.AuthSettings]: undefined
+  [BCSCScreens.AuthWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.AuthContactUs]: undefined
+  [BCSCScreens.AuthPrivacyPolicy]: undefined
+  [BCSCScreens.AuthDeveloper]: undefined
+
+  [BCSCModals.InternetDisconnected]: undefined
+  [BCSCModals.MandatoryUpdate]: undefined
 }

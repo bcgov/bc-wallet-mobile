@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
@@ -26,7 +27,8 @@ type VerifyInPersonScreenProps = {
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
+  const { updateTokens } = useSecureActions()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const { token } = useApi()
@@ -48,13 +50,16 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setLoading(true)
       setError(false)
 
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
         throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
+      const { refresh_token } = await token.checkDeviceCodeStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode
+      )
       if (refresh_token) {
-        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+        await updateTokens({ refreshToken: refresh_token })
 
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } else {
@@ -88,7 +93,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       </Button>
       <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
         {t('BCSC.VerifyIdentity.CardSerialNumber', {
-          serial: store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
+          serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
         })}
       </ThemedText>
     </>
@@ -122,11 +127,12 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       </View>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
       <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
-        {`${store.bcsc.userCode?.slice(0, 4)}-${store.bcsc.userCode?.slice(4, 8)}`}
+        {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
+        {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
       </ThemedText>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
       <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
-        {store.bcsc.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+        {store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
           month: 'long',
           day: 'numeric',
           year: 'numeric',

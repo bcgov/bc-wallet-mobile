@@ -15,6 +15,9 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
+    ignores: ['node_modules/', 'lib/', 'android/', 'ios/', 'eslint.config.mjs'],
+  },
+  {
     extends: fixupConfigRules(compat.extends('@react-native', 'prettier')),
     rules: {
       'react/react-in-jsx-scope': 'off',
@@ -30,6 +33,5 @@ export default defineConfig([
         },
       ],
     },
-    ignores: ['node_modules/', 'lib/'],
   },
 ]);

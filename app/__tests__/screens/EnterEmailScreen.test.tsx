@@ -2,13 +2,15 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
 
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EnterEmailScreen from '../../src/bcsc-theme/features/verify/email/EnterEmailScreen'
 import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 
 const mockCreateEmailVerification = jest.fn()
+const mockUpdateUserInfo = jest.fn().mockResolvedValue(undefined)
+
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
   return {
     __esModule: true,
@@ -19,6 +21,13 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
     })),
   }
 })
+
+jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    updateUserInfo: mockUpdateUserInfo,
+  })),
+}))
 
 describe('EnterEmailScreen', () => {
   let mockNavigation: any
@@ -356,7 +365,7 @@ describe('EnterEmailScreen', () => {
       expect(mockNavigation.goBack).not.toHaveBeenCalled()
     })
 
-    it('should navigate back when skip is confirmed', () => {
+    it('should navigate back when skip is confirmed', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
           <EnterEmailScreen
@@ -374,11 +383,14 @@ describe('EnterEmailScreen', () => {
       // Get the confirm button callback and execute it
       const alertCall = (Alert.alert as jest.Mock).mock.calls[0]
       const confirmButton = alertCall[2][1]
-      act(() => {
-        confirmButton.onPress()
+
+      await act(async () => {
+        await confirmButton.onPress()
       })
 
-      expect(mockNavigation.goBack).toHaveBeenCalled()
+      await waitFor(() => {
+        expect(mockNavigation.goBack).toHaveBeenCalled()
+      })
     })
   })
 })

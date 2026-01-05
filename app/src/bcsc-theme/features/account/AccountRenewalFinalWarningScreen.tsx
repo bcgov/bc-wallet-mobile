@@ -1,7 +1,6 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
-import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore } from '@bifold/core'
+import { ThemedText, TOKENS, useServices } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 
 /**
@@ -11,7 +10,6 @@ import { useTranslation } from 'react-i18next'
  */
 export const AccountRenewalFinalWarningScreen = (): JSX.Element => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()
 
@@ -20,19 +18,13 @@ export const AccountRenewalFinalWarningScreen = (): JSX.Element => {
       primaryActionText={t('BCSC.AccountRenewal.WarningRenewButton')}
       onPressPrimaryAction={async () => {
         try {
-          await factoryReset({
-            completedNewSetup: true,
-            completedOnboarding: true,
-            nicknames: store.bcsc.nicknames,
-            selectedNickname: store.bcsc.selectedNickname,
-          })
+          await factoryReset()
         } catch (error) {
           logger.error(
             'AccountRenewalFinalWarningScreen: Error during factory reset on account renewal',
             error as Error
           )
         }
-        dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
       }}
     >
       <ThemedText variant="headingThree">{t('BCSC.AccountRenewal.WarningHeader')}</ThemedText>

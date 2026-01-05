@@ -10,9 +10,9 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
-import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
-import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
-import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
+import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
+import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
+import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
 import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
@@ -26,8 +26,9 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import { AutoLockScreen } from '../features/settings/AutoLockScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
-import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainLoadingScreen } from '../features/splash-loading/MainLoadingScreen'
@@ -130,6 +131,15 @@ const MainStack: React.FC = () => {
           }}
         />
         <Stack.Screen
+          name={BCSCScreens.MainAutoLock}
+          component={AutoLockScreen}
+          options={{
+            headerShown: true,
+            title: t('BCSC.Settings.AutoLockTime'),
+            headerBackTestID: testIdWithKey('Back'),
+          }}
+        />
+        <Stack.Screen
           name={BCSCScreens.ManualPairingCode}
           component={ManualPairingCode}
           options={() => ({
@@ -196,7 +206,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainContactUs}
-          component={MainContactUsScreen}
+          component={ContactUsScreen}
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.ContactUs'),

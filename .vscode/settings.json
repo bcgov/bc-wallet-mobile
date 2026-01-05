@@ -1,9 +1,77 @@
 {
   "search.exclude": {
     "**/node_modules": true,
+    "**/Pods": true,
+    "**/build": true
   },
   "[helm]": {
     "editor.formatOnSave": false
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // TypeScript/JavaScript - use Prettier
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Swift - use SwiftFormat
+  "[swift]": {
+    "editor.defaultFormatter": "vknabel.vscode-swiftformat"
+  },
+  "swiftformat.path": "swiftformat",
+  "swiftformat.configSearchPaths": [".swiftformat"],
+
+  // C/Objective-C - use clang-format
+  "[c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[objective-c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "[objective-cpp]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  "clang-format.style": "file",
+  "clang-format.fallbackStyle": "LLVM",
+
+  // Kotlin - use ktlint
+  "[kotlin]": {
+    "editor.defaultFormatter": "cstef.kotlin-formatter"
+  },
+  "ktlint.enable": true,
+
+  // File exclusions for formatting
+  "files.exclude": {
+    "**/Pods": true
+  },
+
+  "files.associations": {
+    "*.podspec": "ruby",
+    "Podfile": "ruby",
+    "Gemfile": "ruby",
+    "Fastfile": "ruby",
+    "Appfile": "ruby",
+    "Matchfile": "ruby",
+    "*.gradle": "groovy",
+    "*.gradle.kts": "kotlin",
+    "proguard-rules.pro": "java"
+  },
+
+  "editor.semanticHighlighting.enabled": true,
+
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  }
 }

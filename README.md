@@ -14,6 +14,7 @@ BC Wallet to hold Verifiable Credentials
 - [React Native setup](#react-native-setup)
 - [Installing npm modules](#installing-npm-modules)
 - [Configuration](#configuration)
+- [Code Formatting and Linting](#code-formatting-and-linting)
 - [Running in an Android emulator](#running-in-an-android-emulator)
 - [Troubleshooting and debugging](#troubleshooting-and-debugging)
 <!-- TOC -->
@@ -134,6 +135,31 @@ INDY_VDR_PROXY_URL=<url>
 ```
 
 Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly.
+
+## Code Formatting and Linting
+
+The project uses multiple formatters and linters for different languages
+
+### Install Native Formatters (macOS)
+
+```sh
+brew install swiftformat clang-format ktlint
+```
+
+### Install VS Code Extensions
+
+The project includes recommended extensions in `.vscode/extensions.json`. VS Code will prompt you to install them when you open the project.
+
+### Available Scripts
+
+```sh
+# From the root directory
+yarn lint           # Lint all files (TypeScript, Swift, C, Kotlin)
+yarn format         # Format all files
+yarn format:check   # Check formatting without making changes
+yarn typecheck      # TypeScript type checking
+yarn check          # Run all checks (typecheck + lint + format:check + test)
+```
 
 ## Running in an Android emulator
 

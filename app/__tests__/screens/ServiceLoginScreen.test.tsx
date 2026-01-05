@@ -13,7 +13,7 @@ const createMockViewModel = () =>
     initialize: jest.fn(),
     onNavigationRequest: jest.fn(() => () => {}),
     onPendingStateChange: jest.fn(() => () => {}),
-  } as unknown as DeepLinkViewModel)
+  }) as unknown as DeepLinkViewModel
 
 describe('ServiceLogin', () => {
   let mockNavigation: any

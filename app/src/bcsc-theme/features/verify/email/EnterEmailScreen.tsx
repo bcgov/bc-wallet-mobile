@@ -1,8 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -11,13 +10,13 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
@@ -31,8 +30,8 @@ type EnterEmailScreenProps = {
 
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
   const { evidence } = useApi()
+  const { updateUserInfo } = useSecureActions()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +55,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
+      await updateUserInfo({ email, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
@@ -75,10 +74,10 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       },
       {
         text: t('BCSC.EnterEmail.EmailSkipButton2'),
-        onPress: () => {
-          dispatch({
-            type: BCDispatchAction.UPDATE_EMAIL,
-            payload: [{ email: BCSC_EMAIL_NOT_PROVIDED, emailConfirmed: true }],
+        onPress: async () => {
+          await updateUserInfo({
+            email: BCSC_EMAIL_NOT_PROVIDED,
+            isEmailVerified: true,
           })
           navigation.goBack()
         },

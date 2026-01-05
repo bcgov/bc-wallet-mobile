@@ -2,7 +2,7 @@ import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { t } from 'i18next'
-import { BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 
 /**
  * Creates a Settings Header Button for the Main Stack that navigates to MainSettings.
@@ -42,4 +42,24 @@ export const createVerifySettingsHeaderButton = () => {
     )
   }
   return VerifySettingsHeaderButton
+}
+
+/**
+ * Creates a Settings Header Button for the Auth Stack that navigates to AuthSettings.
+ */
+export const createAuthSettingsHeaderButton = () => {
+  const AuthSettingsHeaderButton = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
+
+    return (
+      <IconButton
+        buttonLocation={ButtonLocation.Left}
+        icon={'menu'}
+        accessibilityLabel={t('Settings.ButtonTitle')}
+        testID={testIdWithKey('SettingsMenuButton')}
+        onPress={() => navigation.navigate(BCSCScreens.AuthSettings)}
+      />
+    )
+  }
+  return AuthSettingsHeaderButton
 }

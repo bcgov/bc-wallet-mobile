@@ -1,3 +1,5 @@
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -20,18 +22,20 @@ type FactoryResetResult =
  * WARNING: This is a destructive action and will result in loss of all user data and settings.
  *
  * This includes:
- *  - Deleting the IAS account associated with the current clientID.
+ *  - Deleting the IAS account associated with the current clientID from server (non-blocking if fails).
+ *  - Deleting all secure data stored in native storage.
  *  - Removing the local account file.
  *  - Clearing the BCSC state in the global store.
- *  - Registering a new account to generate a new clientID and save it locally.
  *  - Logging out the user by updating the authentication state.
  *
  * @returns {Function} A function that performs the factory reset when called.
  */
 export const useFactoryReset = () => {
+  const client = useBCSCApiClient()
   const { registration } = useApi()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { clearSecureState, deleteSecureData } = useSecureActions()
 
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
@@ -57,17 +61,29 @@ export const useFactoryReset = () => {
         if (!deleteIASAccount.success) {
           throw new Error('IAS server account deletion failed')
         }
+      } catch (error) {
+        // Error expected here when user is locked out of their account or doesn't have valid tokens
+        const errMessage = error instanceof Error ? error.message : String(error)
+        logger.warn(
+          `FactoryReset: Error deleting IAS account from server: ${errMessage} \nProceeding with local reset...`
+        )
+      }
+
+      try {
+        // Delete secure data from native storage
+        logger.info('FactoryReset: Deleting secure data from native storage...')
+        await deleteSecureData()
 
         // Remove local account file
         logger.info('FactoryReset: Removing local account file...')
         await BcscCore.removeAccount()
 
         // Reset BCSC state to initial state
-        logger.info('FactoryReset: Clearing BCSC state...')
+        logger.info('FactoryReset: Clearing secure and plain BCSC state...')
+        clearSecureState()
         dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: state ? [state] : undefined })
-
-        logger.info('FactoryReset: Registering new account...')
-        await registration.register()
+        // TODO (bm): We should have an actual method to clear tokens
+        client.tokens = undefined
 
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
@@ -82,7 +98,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [logger, registration, dispatch]
+    [logger, registration, dispatch, clearSecureState, deleteSecureData, client]
   )
 
   return factoryReset
