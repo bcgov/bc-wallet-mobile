@@ -16,7 +16,7 @@ const createMockPairingService = () =>
     processPendingPairing: jest.fn(),
     clearPendingPairing: jest.fn(),
     getPendingPairing: jest.fn(),
-  } as unknown as PairingService)
+  }) as unknown as PairingService
 
 describe('ServiceLogin', () => {
   let mockNavigation: any

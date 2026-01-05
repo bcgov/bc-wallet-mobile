@@ -203,6 +203,6 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun decodeLoginChallenge(
         jwt: String,
         key: com.facebook.react.bridge.ReadableMap?,
-        promise: Promise
+        promise: Promise,
     )
 }
