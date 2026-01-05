@@ -1006,6 +1006,69 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Decodes a login challenge JWT and optionally verifies its signature.
+  ///
+  /// - Parameters:
+  ///   - jwt: The JWT string containing the login challenge.
+  ///   - key: Optional JWK public key for signature verification.
+  ///   - resolve: Returns LoginChallengeResult with verified status and decoded claims.
+  ///   - reject: An error if the JWT cannot be parsed.
+
+  func decodeLoginChallenge(
+    _ jwt: String, key: NSDictionary?,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    // Claim keys
+    let kBcscChallenge = "bcsc_challenge"
+    let kBcscClientName = "bcsc_client_name"
+
+    guard !jwt.isEmpty else {
+      reject("E_INVALID_JWT", "JWT must not be empty", nil)
+      return
+    }
+
+    do {
+      // 1. Parse the JWT
+      let jws = try JWS.parse(s: jwt)
+
+      // 2. Extract claims
+      guard let claimsSet = try jws.getJwtClaimsSet() else {
+        reject("E_INVALID_JWT", "Unable to parse JWT claims", nil)
+        return
+      }
+
+      // 3. Verify signature if key is provided
+      var verified = false
+      if let keyDict = key, let jwk = JWK(json: keyDict) {
+        if let secKey = JWK.jwkToSecKey(jwk: jwk) {
+          let verifier = RSAVerifier(rsaKey: secKey)
+          verified = (try? jws.verify(verifier: verifier)) ?? false
+        }
+      }
+
+      // 4. Build claims response
+      let claims: [String: Any] = [
+        "aud": claimsSet.audience ?? "",
+        "iss": claimsSet.issuer ?? "",
+        kBcscChallenge: claimsSet.getClaimAsString(kBcscChallenge) ?? "",
+        "exp": claimsSet.expirationTime?.timeIntervalSince1970 ?? 0,
+        kBcscClientName: claimsSet.getClaimAsString(kBcscClientName) ?? "",
+        "iat": claimsSet.issuedAt?.timeIntervalSince1970 ?? 0,
+        "jti": claimsSet.jwtID ?? "",
+      ]
+
+      let result: [String: Any] = [
+        "verified": verified,
+        "claims": claims,
+      ]
+
+      resolve(result)
+    } catch {
+      reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge: \(error.localizedDescription)", error)
+    }
+  }
+
   /// Creates a quick login JWT assertion matching the format used in ias-ios app.
   /// This creates a signed JWT with device info claims and access token nonce, following QuickLoginProtocol pattern.
   ///
@@ -1196,7 +1259,7 @@ class BcscCore: NSObject {
   /// Helper method to add device info claims to JWT builder (used by all methods)
   @discardableResult
   private func addDeviceInfoClaims(
-    to builder: JWTClaimsSet.Builder, fcmDeviceToken _: String, deviceToken: String?
+    to builder: JWTClaimsSet.Builder, fcmDeviceToken: String, deviceToken: String?
   ) -> Bool {
     guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
       as? String,
@@ -1219,7 +1282,7 @@ class BcscCore: NSObject {
       .claim(name: DeviceInfoKeys.appVersion, value: version)
       .claim(name: DeviceInfoKeys.appBuild, value: build)
       .claim(name: DeviceInfoKeys.appSetID, value: appSetId)
-    // .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken)
+      .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken)
 
     return true
   }
