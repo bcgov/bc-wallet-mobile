@@ -1,6 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
+import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
@@ -99,9 +100,11 @@ export enum BCSCScreens {
   DeviceAuthInfo = 'BCSCDeviceAuthInfo',
   Lockout = 'BCSCLockout',
   DeviceAuthAppReset = 'BCSCDeviceAuthAppReset',
-  // For convenient local testing purposes only
-  // To use, add to RootStack as initial screen
-  MethodTest = 'BCSCMethodTest',
+  AuthSettings = 'BCSCAuthSettings',
+  AuthWebView = 'BCSCAuthWebView',
+  AuthContactUs = 'BCSCAuthContactUs',
+  AuthPrivacyPolicy = 'BCSCAuthPrivacyPolicy',
+  AuthDeveloper = 'BCSCAuthDeveloper',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -118,6 +121,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
+
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
 }
@@ -210,7 +214,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.DeviceInvalidated]: undefined
+  [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
 }
 
 export type BCSCAuthStackParams = {
@@ -219,4 +223,12 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.DeviceAuthInfo]: undefined
   [BCSCScreens.Lockout]: undefined
   [BCSCScreens.DeviceAuthAppReset]: undefined
+  [BCSCScreens.AuthSettings]: undefined
+  [BCSCScreens.AuthWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.AuthContactUs]: undefined
+  [BCSCScreens.AuthPrivacyPolicy]: undefined
+  [BCSCScreens.AuthDeveloper]: undefined
+
+  [BCSCModals.InternetDisconnected]: undefined
+  [BCSCModals.MandatoryUpdate]: undefined
 }

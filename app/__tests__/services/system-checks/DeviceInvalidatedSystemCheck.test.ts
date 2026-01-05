@@ -84,7 +84,7 @@ describe('DeviceInvalidatedSystemCheck', () => {
       expect(getIdToken).toHaveBeenCalledTimes(1)
     })
 
-    it('should return true when device is not invalidated (Cancel event with different reason)', async () => {
+    it('should return false when device is invalidated by user (Cancel event with different reason)', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Cancel,
         bcsc_reason: BCSCReason.CanceledByUser,
@@ -95,7 +95,7 @@ describe('DeviceInvalidatedSystemCheck', () => {
 
       const result = await check.runCheck()
 
-      expect(result).toBe(true)
+      expect(result).toBe(false)
       expect(getIdToken).toHaveBeenCalledTimes(1)
     })
 
@@ -147,7 +147,9 @@ describe('DeviceInvalidatedSystemCheck', () => {
       check.onFail()
 
       expect(mockUtils.logger.warn).toHaveBeenCalledWith('DeviceInvalidatedSystemCheck: Device invalidated')
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.DeviceInvalidated, {
+        invalidationReason: undefined,
+      })
     })
 
     it('should not navigate when modal is already visible', () => {

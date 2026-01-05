@@ -1,14 +1,14 @@
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { CONTACT_US_GOVERNMENT_WEBSITE_URL } from '@/constants'
-import { Link, ThemedText, useTheme } from '@bifold/core'
+import { Link, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 
 /**
- * Shared contact us content component that can be used across different navigation stacks.
+ * Contact us screen
  * Pure content component with no navigation dependencies.
  */
-export const ContactUsContent = (): JSX.Element => {
+export const ContactUsScreen = (): JSX.Element => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
@@ -25,7 +25,7 @@ export const ContactUsContent = (): JSX.Element => {
   }
 
   return (
-    <>
+    <ScreenWrapper>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.xl }}>
         {t('BCSC.ContactUs.Title')}
       </ThemedText>
@@ -58,6 +58,6 @@ export const ContactUsContent = (): JSX.Element => {
       <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint2')} />
       <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint3')} />
       <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint4')} />
-    </>
+    </ScreenWrapper>
   )
 }

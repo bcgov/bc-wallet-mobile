@@ -3,9 +3,9 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import { MainContactUsScreen } from '../../src/bcsc-theme/features/settings/MainContactUsScreen'
+import { AuthSettingsScreen } from '../../src/bcsc-theme/features/settings/AuthSettingsScreen'
 
-describe('MainContactUs', () => {
+describe('AuthSettings', () => {
   let mockNavigation: any
 
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('MainContactUs', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <MainContactUsScreen navigation={mockNavigation as never} />
+        <AuthSettingsScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 

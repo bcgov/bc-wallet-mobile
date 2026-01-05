@@ -198,8 +198,9 @@ const translation = {
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
-        "ContentA": "This device has been invalidated. You must re-authorize the device to continue.",
-        "ContentB": "Tap OK to clear local data and restart setup on this device.",
+        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue.",
+        "CancelledByUser": "This device has been removed from your account by a user action.",
+        "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
       }
     },

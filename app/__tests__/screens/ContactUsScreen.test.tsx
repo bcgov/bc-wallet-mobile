@@ -1,15 +1,11 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import { VerifyContactUsScreen } from '../../src/bcsc-theme/features/settings/VerifyContactUsScreen'
+import { ContactUsScreen } from '../../src/bcsc-theme/features/settings/ContactUsScreen'
 
-describe('VerifyContactUs', () => {
-  let mockNavigation: any
-
+describe('ContactUs', () => {
   beforeEach(() => {
-    mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
   })
@@ -21,7 +17,7 @@ describe('VerifyContactUs', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <VerifyContactUsScreen navigation={mockNavigation as never} />
+        <ContactUsScreen />
       </BasicAppContext>
     )
 
