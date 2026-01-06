@@ -56,27 +56,27 @@ const TransferQRScannerScreen: React.FC = () => {
   })
 
   const registerDevice = useCallback(async () => {
-    console.log('Register Device:')
-
     // we already have a device code, no need to authorize again
     if (store.bcscSecure.deviceCode) {
-      console.log('STORE: we have a device code')
       return
     }
 
-    console.log('__ no device code, keeop going')
     const deviceAuth = await authorization.authorizeDevice()
     // device already authorized
     if (deviceAuth === null) {
-      console.log('DEVICE IS AUTHORIZED ALREADY')
       return
     }
 
+    // New device registerd, store
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+
+    // Update user information
     await updateUserInfo({
       email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
-      isEmailVerified: true,
+      isEmailVerified: !!deviceAuth.verified_email,
     })
+
+    // Update secure store with device codes
     await updateDeviceCodes({
       deviceCode: deviceAuth.device_code,
       userCode: deviceAuth.user_code,
