@@ -1609,18 +1609,18 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 40bd9054049b2eae9a2c38ef1c3dd213df3605cd
   FirebaseMessaging: 5e5118a2383b3531e730d974680954c679ca0a13
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  glog: 79d13cd7c34b5d0cea5f4ca72c0e6b462ef8fb4d
+  glog: c5d68082e772fa1c511173d6b30a9de2c05a69a2
   GoogleAppMeasurement: 4c19f031220c72464d460c9daa1fb5d1acce958e
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
-  hermes-engine: 97349138f8c3dfef746d492ebaf3c7b8e981ba64
+  hermes-engine: d992945b77c506e5164e6a9a77510c9d57472c59
   indy-vdr: aada31078a9ed270dd618fadb4cf69bcdc333d68
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Mute: 20135a96076f140cc82bfc8b810e2d6150d8ec7e
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  RCT-Folly: b0fb8ea7c0a672b8da19caf9e6c9e8e9aac047ec
+  RCT-Folly: cd21f1661364f975ae76b3308167ad66b09f53f5
   RCTRequired: 415e56f7c33799a6483e41e4dce607f3daf1e69b
   RCTTypeSafety: e984a88e713281c2d8c2309a1a6d2775af0107ae
   React: ab885684e73c5f659bad63446a977312fd3d1ecb
