@@ -6,6 +6,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { upperFirst } from 'lodash'
@@ -31,6 +32,7 @@ interface SecureAppScreenProps {
  * @returns {*} {JSX.Element} The SecureAppScreen component.
  */
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Element => {
+  const { goToNextScreen } = useWorkflowNavigation()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -125,7 +127,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
         title={'Choose a PIN'}
         accessibilityLabel={'Choose a PIN'}
         onPress={() => {
-          navigation.navigate(BCSCScreens.OnboardingCreatePIN)
+          goToNextScreen()
         }}
         testID={'blah'}
       />
@@ -155,7 +157,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
         title={t('BCSC.Onboarding.SecureAppPINTitle')}
         subtext={t('BCSC.Onboarding.SecureAppPINSubtext')}
         onPress={() => {
-          navigation.navigate(BCSCScreens.OnboardingCreatePIN)
+          goToNextScreen()
         }}
       />
 

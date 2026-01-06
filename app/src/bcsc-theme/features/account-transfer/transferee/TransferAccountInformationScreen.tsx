@@ -1,10 +1,7 @@
-import { BCSCOnboardingStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { useWorkflowNavigation } from '@/contexts/WorkflowNavigationContext'
 import TwoPhones from '@assets/img/transfer-account-two-phones.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image } from 'react-native'
@@ -14,8 +11,6 @@ const TWO_PHONES = Image.resolveAssetSource(TwoPhones)
 const TransferAccountInformationScreen: React.FC = () => {
   const { t } = useTranslation()
   const { goToNextScreen } = useWorkflowNavigation()
-
-  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
 
   const controls = (
     <Button

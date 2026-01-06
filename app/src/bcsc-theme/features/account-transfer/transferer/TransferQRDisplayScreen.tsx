@@ -103,13 +103,14 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
   }, [refreshToken, startInterval])
 
-  useEffect(() => {
-    checkAttestation(jti)
-    const interval = setInterval(() => {
-      checkAttestation(jti)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [checkAttestation, jti])
+  // this api call is checking if the attestation has been consumed yet
+  // useEffect(() => {
+  //   checkAttestation(jti)
+  //   const interval = setInterval(() => {
+  //     checkAttestation(jti)
+  //   }, 3000)
+  //   return () => clearInterval(interval)
+  // }, [checkAttestation, jti])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

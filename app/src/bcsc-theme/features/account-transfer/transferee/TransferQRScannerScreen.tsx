@@ -192,8 +192,6 @@ const TransferQRScannerScreen: React.FC = () => {
 
       //     // TODO (bm): clean up old way below and implement nickname and app security selection
       //     // flow after successful transfer, followed by account creation and login
-
-      //     // I wonder how this will change things...
       //   } else {
       //     setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound')))
       //   }

@@ -235,6 +235,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateSecureEvidenceDocumentNumber',
   REMOVE_INCOMPLETE_SECURE_EVIDENCE = 'bcsc/removeIncompleteSecureEvidence',
   CLEAR_SECURE_ADDITIONAL_EVIDENCE = 'bcsc/clearSecureAdditionalEvidence',
+  ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
 }
 
 enum ModeDispatchAction {
