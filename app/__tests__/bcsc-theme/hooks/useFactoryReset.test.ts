@@ -96,6 +96,7 @@ describe('useFactoryReset', () => {
     const useApiMock = jest.mocked(useApi)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
+    const infoMock = jest.fn()
 
     const deleteRegistrationMock = jest.fn()
 
@@ -106,7 +107,7 @@ describe('useFactoryReset', () => {
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: infoMock, error: jest.fn() }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -115,7 +116,8 @@ describe('useFactoryReset', () => {
     })
 
     expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(warnMock).toHaveBeenCalled()
+    expect(warnMock).not.toHaveBeenCalled()
+    expect(infoMock).toHaveBeenCalled()
     expect(deleteRegistrationMock).not.toHaveBeenCalled()
   })
 
@@ -162,7 +164,7 @@ describe('useFactoryReset', () => {
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 

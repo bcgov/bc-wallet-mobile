@@ -40,6 +40,36 @@ export const useFactoryReset = () => {
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
   /**
+   * Removes all artifacts associated with the current BCSC account.
+   *
+   * @returns A promise that resolves when all account dependencies have been purged.
+   */
+  const removeAccountArtifacts = useCallback(async () => {
+    const account = await BcscCore.getAccount()
+
+    if (!account) {
+      logger.info('FactoryReset: No BCSC account found')
+      return
+    }
+
+    // Delete IAS account registration
+    logger.info('FactoryReset: Deleting IAS account from server...')
+    const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+
+    if (!deleteIASAccount.success) {
+      logger.warn('FactoryReset: Failed to delete IAS account from server')
+    }
+
+    // Delete secure data from native storage
+    logger.info('FactoryReset: Deleting secure data from native storage...')
+    await deleteSecureData()
+
+    // Remove local account file
+    logger.info('FactoryReset: Removing local account file...')
+    await BcscCore.removeAccount()
+  }, [deleteSecureData, logger, registration])
+
+  /**
    * Performs a factory reset of the BCSC account and state.
    *
    * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
@@ -47,38 +77,8 @@ export const useFactoryReset = () => {
    */
   const factoryReset = useCallback(
     async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
-      let account: BcscCore.NativeAccount | null = null
-
       try {
-        account = await BcscCore.getAccount()
-
-        if (account) {
-          // Delete IAS account
-          logger.info('FactoryReset: Deleting IAS account from server...')
-          const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-          if (!deleteIASAccount.success) {
-            throw new Error('IAS server account deletion failed')
-          }
-        }
-      } catch (error) {
-        // Error expected here when user is locked out of their account or doesn't have valid tokens
-        const errMessage = error instanceof Error ? error.message : String(error)
-        logger.warn(
-          `FactoryReset: Error deleting IAS account from server: ${errMessage} \nProceeding with local reset...`
-        )
-      }
-
-      try {
-        if (account) {
-          // Delete secure data from native storage
-          logger.info('FactoryReset: Deleting secure data from native storage...')
-          await deleteSecureData()
-
-          // Remove local account file
-          logger.info('FactoryReset: Removing local account file...')
-          await BcscCore.removeAccount()
-        }
+        await removeAccountArtifacts()
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
@@ -95,12 +95,12 @@ export const useFactoryReset = () => {
         return { success: true }
       } catch (error) {
         const factoryResetError = _formatFactoryResetError(error)
-        logger.error(`FactoryReset: ${factoryResetError.message}`, factoryResetError)
+        logger.error(factoryResetError.message)
 
         return { success: false, error: factoryResetError }
       }
     },
-    [logger, registration, dispatch, clearSecureState, deleteSecureData, client]
+    [removeAccountArtifacts, logger, clearSecureState, dispatch, client]
   )
 
   return factoryReset
