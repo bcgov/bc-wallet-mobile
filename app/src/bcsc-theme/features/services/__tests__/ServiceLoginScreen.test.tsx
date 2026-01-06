@@ -22,16 +22,16 @@ jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: () => jest.fn(),
 }))
 
-const mockDeepLinkViewModel = {
-  hasPendingDeepLink: false,
-  consumePendingDeepLink: jest.fn(),
+const mockPairingService = {
+  hasPendingPairing: false,
+  consumePendingPairing: jest.fn(),
 }
 
-jest.mock('../../deep-linking', () => {
-  const actual = jest.requireActual('../../deep-linking')
+jest.mock('../../pairing', () => {
+  const actual = jest.requireActual('../../pairing')
   return {
     ...actual,
-    useDeepLinkViewModel: () => mockDeepLinkViewModel,
+    usePairingService: () => mockPairingService,
   }
 })
 
@@ -51,8 +51,8 @@ describe('ServiceLoginScreen snapshots', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockDeepLinkViewModel.hasPendingDeepLink = false
-    mockDeepLinkViewModel.consumePendingDeepLink = jest.fn()
+    mockPairingService.hasPendingPairing = false
+    mockPairingService.consumePendingPairing = jest.fn()
     getPairingMock().loginByPairingCode.mockReset()
   })
 
@@ -201,10 +201,10 @@ describe('ServiceLoginScreen snapshots', () => {
     expect(navigation.navigate).toHaveBeenCalledTimes(1)
   })
 
-  it('clears pending deep link on cancel when present', () => {
-    mockDeepLinkViewModel.hasPendingDeepLink = true
-    const consumePendingDeepLink = jest.fn()
-    mockDeepLinkViewModel.consumePendingDeepLink = consumePendingDeepLink
+  it('clears pending pairing on cancel when present', () => {
+    mockPairingService.hasPendingPairing = true
+    const consumePendingPairing = jest.fn()
+    mockPairingService.consumePendingPairing = consumePendingPairing
 
     mockUseServiceLoginState.mockReturnValue({
       state: {
@@ -227,7 +227,7 @@ describe('ServiceLoginScreen snapshots', () => {
 
     fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginCancel')))
 
-    expect(consumePendingDeepLink).toHaveBeenCalledTimes(1)
+    expect(consumePendingPairing).toHaveBeenCalledTimes(1)
     expect(navigation.goBack).not.toHaveBeenCalled()
     expect(navigation.navigate).not.toHaveBeenCalled()
   })

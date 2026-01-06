@@ -43,6 +43,9 @@ RCT_EXTERN_METHOD(getDeviceCodeRequestBody : (NSString *)deviceCode clientID : (
 RCT_EXTERN_METHOD(decodePayload : (NSString *)jweString resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(decodeLoginChallenge : (NSString *)jwt key : (NSDictionary *_Nullable)
+                      key resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(createPreVerificationJWT : (NSString *)deviceCode clientID : (NSString *)
                       clientID resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
