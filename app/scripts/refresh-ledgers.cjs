@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require('fs')
 const path = require('path')
-const { getIndyLedgers, IndyLedger, writeIndyLedgersToFile } = require('@bifold/core/lib/commonjs/utils/ledger')
+const { getIndyLedgers, IndyLedger, writeIndyLedgersToFile } = require('@bifold/core')
 
 const LEDGERS_JSON_FILE = 'app/src/configs/ledgers/indy/ledgers.json'
 
