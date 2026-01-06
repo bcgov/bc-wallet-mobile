@@ -40,27 +40,18 @@ import { AppContainer } from './container-imp'
 
 initLanguages(localization)
 
+// Module-level singletons - constructors are pure (no RN bridge calls)
+// All platform interactions happen in initialize() methods
+const pairingService = new PairingService(appLogger)
+const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService)
+
 const App = () => {
   const { t } = useTranslation()
   const logger = appLogger
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
-
-  // Create PairingService first - it's the shared dependency
-  const pairingService = useMemo(() => {
-    return new PairingService(logger)
-  }, [logger])
-
-  const deepLinkViewModel = useMemo(() => {
-    const service = new DeepLinkService()
-    return new DeepLinkViewModel(service, logger, pairingService)
-  }, [logger, pairingService])
-
-  const fcmViewModel = useMemo(() => {
-    const service = new FcmService()
-    return new FcmViewModel(service, logger, pairingService)
-  }, [logger, pairingService])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -78,11 +69,8 @@ const App = () => {
 
   useEffect(() => {
     deepLinkViewModel.initialize()
-  }, [deepLinkViewModel])
-
-  useEffect(() => {
     fcmViewModel.initialize()
-  }, [fcmViewModel])
+  }, [])
 
   return (
     <ErrorBoundaryWrapper logger={logger}>
