@@ -4,8 +4,16 @@ import NativeBcscCoreSpec, {
   type JWK,
   type JWTClaims,
   type NativeAuthorizationRequest,
+  type LoginChallengeResult,
 } from './NativeBcscCore';
-export type { NativeAccount, JWK, NativeAuthorizationRequest, NativeAddress } from './NativeBcscCore';
+export type {
+  LoginChallenge,
+  LoginChallengeResult,
+  NativeAccount,
+  JWK,
+  NativeAuthorizationRequest,
+  NativeAddress,
+} from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
@@ -332,6 +340,10 @@ export const getDeviceCodeRequestBody = async (
 
 export const decodePayload = async (jweString: string): Promise<any> => {
   return BcscCore.decodePayload(jweString);
+};
+
+export const decodeLoginChallenge = async (jwt: string, key?: JWK): Promise<LoginChallengeResult> => {
+  return BcscCore.decodeLoginChallenge(jwt, key ?? null);
 };
 
 /**

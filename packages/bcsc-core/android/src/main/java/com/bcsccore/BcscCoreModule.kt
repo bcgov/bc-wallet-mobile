@@ -56,9 +56,11 @@ import com.nimbusds.jose.JWEObject
 import com.nimbusds.jose.Payload
 import com.nimbusds.jose.crypto.RSADecrypter
 import com.nimbusds.jose.crypto.RSAEncrypter
+import com.nimbusds.jose.crypto.RSASSAVerifier
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.SignedJWT
 
 // BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
@@ -3712,4 +3714,105 @@ class BcscCoreModule(
 
             Pair("Incorrect PIN", message)
         }
+
+    @ReactMethod
+    override fun decodeLoginChallenge(
+        jwt: String,
+        key: ReadableMap?,
+        promise: Promise,
+    ) {
+        try {
+            if (jwt.isBlank()) {
+                Log.e(NAME, "decodeLoginChallenge: JWT is empty or blank")
+                promise.reject("E_INVALID_JWT", "JWT must not be empty")
+                return
+            }
+            val signedJWT = SignedJWT.parse(jwt)
+            val jwtClaims = signedJWT.jwtClaimsSet
+
+            Log.d(NAME, "decodeLoginChallenge: claims = ${jwtClaims.toJSONObject()}")
+
+            // Attempt verification if key is provided
+            val verified =
+                if (key != null) {
+                    verifyJwtSignature(signedJWT, key)
+                } else {
+                    false
+                }
+
+            val claims =
+                Arguments.createMap().apply {
+                    putString("aud", jwtClaims.audience?.firstOrNull() ?: "")
+                    putString("iss", jwtClaims.issuer ?: "")
+                    putString("bcsc_challenge", jwtClaims.getStringClaim("bcsc_challenge") ?: "")
+                    putDouble(
+                        "exp",
+                        jwtClaims.expirationTime
+                            ?.time
+                            ?.div(1000)
+                            ?.toDouble() ?: 0.0,
+                    )
+                    putString("bcsc_client_name", jwtClaims.getStringClaim("bcsc_client_name") ?: "")
+                    putDouble(
+                        "iat",
+                        jwtClaims.issueTime
+                            ?.time
+                            ?.div(1000)
+                            ?.toDouble() ?: 0.0,
+                    )
+                    putString("jti", jwtClaims.jwtid ?: "")
+                }
+
+            val result =
+                Arguments.createMap().apply {
+                    putBoolean("verified", verified)
+                    putMap("claims", claims)
+                }
+
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "decodeLoginChallenge: Unexpected error: ${e.message}", e)
+            promise.reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge", e)
+        }
+    }
+
+    /**
+     * Verifies the JWT signature using the provided JWK.
+     * Returns true if verification succeeds, false otherwise.
+     */
+    private fun verifyJwtSignature(
+        signedJWT: SignedJWT,
+        jwk: ReadableMap,
+    ): Boolean {
+        return try {
+            // Validate JWK has required fields
+            if (!jwk.hasKey("n") || !jwk.hasKey("e")) {
+                Log.w(NAME, "verifyJwtSignature: JWK missing required fields (n, e)")
+                return false
+            }
+
+            val n = jwk.getString("n") ?: return false
+            val e = jwk.getString("e") ?: return false
+
+            // Build RSA public key from JWK components
+            val rsaKey =
+                RSAKey
+                    .Builder(
+                        com.nimbusds.jose.util
+                            .Base64URL(n),
+                        com.nimbusds.jose.util
+                            .Base64URL(e),
+                    ).build()
+
+            val publicKey = rsaKey.toRSAPublicKey()
+            val verifier = RSASSAVerifier(publicKey)
+
+            val verified = signedJWT.verify(verifier)
+            Log.d(NAME, "verifyJwtSignature: verification result = $verified")
+            verified
+        } catch (e: Exception) {
+            Log.e(NAME, "verifyJwtSignature: Verification failed: ${e.message}", e)
+            false
+        }
+    }
 }
