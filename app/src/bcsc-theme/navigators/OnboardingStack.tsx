@@ -1,4 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import Developer from '@/screens/Developer'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +52,14 @@ const OnboardingStack = (): JSX.Element => {
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingAccountSetup} component={AccountSetupScreen} />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingDeveloper}
+        component={Developer}
+        options={{
+          title: t('Developer.DeveloperMode'),
+          headerShown: true,
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.OnboardingSetupTypes}
         component={SetupTypesScreen}

@@ -47,19 +47,19 @@ export const useFactoryReset = () => {
    */
   const factoryReset = useCallback(
     async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
+      let account: BcscCore.NativeAccount | null = null
+
       try {
-        const account = await BcscCore.getAccount()
+        account = await BcscCore.getAccount()
 
-        if (!account) {
-          throw new Error('Local account not found for factory reset')
-        }
+        if (account) {
+          // Delete IAS account
+          logger.info('FactoryReset: Deleting IAS account from server...')
+          const deleteIASAccount = await registration.deleteRegistration(account.clientID)
 
-        // Delete IAS account
-        logger.info('FactoryReset: Deleting IAS account from server...')
-        const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-        if (!deleteIASAccount.success) {
-          throw new Error('IAS server account deletion failed')
+          if (!deleteIASAccount.success) {
+            throw new Error('IAS server account deletion failed')
+          }
         }
       } catch (error) {
         // Error expected here when user is locked out of their account or doesn't have valid tokens
@@ -70,13 +70,15 @@ export const useFactoryReset = () => {
       }
 
       try {
-        // Delete secure data from native storage
-        logger.info('FactoryReset: Deleting secure data from native storage...')
-        await deleteSecureData()
+        if (account) {
+          // Delete secure data from native storage
+          logger.info('FactoryReset: Deleting secure data from native storage...')
+          await deleteSecureData()
 
-        // Remove local account file
-        logger.info('FactoryReset: Removing local account file...')
-        await BcscCore.removeAccount()
+          // Remove local account file
+          logger.info('FactoryReset: Removing local account file...')
+          await BcscCore.removeAccount()
+        }
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')

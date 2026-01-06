@@ -9,7 +9,7 @@ import {
 
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
-import { getInstallerPackageNameSync, getVersion } from 'react-native-device-info'
+import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
@@ -258,38 +258,66 @@ export const BCDispatchAction = {
 
 const getInitialEnvironment = (): IASEnvironment => {
   if (__DEV__) {
-    return iasEnvironments.TEST_SIT
+    return IASEnvironment.SIT
   }
 
-  if (getInstallerPackageNameSync() === 'TestFlight') {
-    return iasEnvironments.TEST_SIT
-  }
-
-  // QUESTION (MD): What is the value for Android builds distributed via Play Store internal testing?
-
-  return iasEnvironments.PRODUCTION
+  return IASEnvironment.PROD
 }
 
-const createEnvironment = (name: string, environment: string): IASEnvironment => {
-  const appToAppEnvironment = environment === 'id' ? 'id' : 'iddev'
+const createIASEnvironment = (config: {
+  name: string
+  subdomain: string
+  agentInviteUrl: string | null
+}): IASEnvironment => {
   return {
-    name: name,
-    iasAgentInviteUrl:
-      'https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==',
-    iasPortalUrl: `https://${environment}.gov.bc.ca/issuer/v1/dids`,
-    appToAppUrl: `ca.bc.gov.${appToAppEnvironment}.servicescard.v2://credentials/person/v1`,
-    iasApiBaseUrl: `https://${environment}.gov.bc.ca`,
+    name: `${config.name} (${config.subdomain})`,
+    iasAgentInviteUrl: config.agentInviteUrl ?? '',
+    iasPortalUrl: `https://${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
+    appToAppUrl: `ca.bc.gov.${config.subdomain}.servicescard.v2://credentials/person/v1`,
+    iasApiBaseUrl: `https://${config.subdomain}.gov.bc.ca`,
   }
 }
 
-export const iasEnvironments = {
-  PRODUCTION: createEnvironment('Production', 'id'),
-  PRE_PRODUCTION: createEnvironment('Pre-Production (preprod)', 'idpreprod'),
-  DEVELOPMENT: createEnvironment('Development (iddev)', 'iddev'),
-  DEVELOPMENT_2: createEnvironment('Development (iddev2)', 'iddev2'),
-  TEST: createEnvironment('Test (idtest)', 'idtest'),
-  TEST_SIT: createEnvironment('Test (idsit)', 'idsit'),
-  QA: createEnvironment('QA (idqa)', 'idqa'),
+// TODO (MD): Add IASAgentInviteUrls for all environments once known
+export const IASEnvironment = {
+  PROD: createIASEnvironment({
+    name: 'Prod',
+    subdomain: 'id',
+    agentInviteUrl:
+      'https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==',
+  }),
+  PREPROD: createIASEnvironment({
+    name: 'Preprod',
+    subdomain: 'idpreprod',
+    agentInviteUrl: null,
+  }),
+  QA: createIASEnvironment({
+    name: 'QA',
+    subdomain: 'idqa',
+    agentInviteUrl: null,
+  }),
+  TEST: createIASEnvironment({
+    name: 'Test',
+    subdomain: 'idtest',
+    agentInviteUrl: null,
+  }),
+  SIT: createIASEnvironment({
+    name: 'Sit',
+    subdomain: 'idsit',
+    agentInviteUrl:
+      'https://idim-sit-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZDFkMDk5MDQtN2ZlOC00YzlkLTk4YjUtZmNmYmEwODkzZTAzIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKFNJVCkiLCAicmVjaXBpZW50S2V5cyI6IFsiNVgzblBoZkVIOU4zb05kcHdqdUdjM0ZhVzNQbmhiY05QemRGbzFzS010dEoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tc2l0LWFnZW50LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyJ9',
+  }),
+  DEV: createIASEnvironment({
+    name: 'Dev',
+    subdomain: 'iddev',
+    agentInviteUrl:
+      'https://idim-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiY2U1NWFiZDctNWRmYy00YjQ5LWExODYtOWUzMzQ1ZjEyZThkIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKERldikiLCAicmVjaXBpZW50S2V5cyI6IFsiM0I0bnlDMVg4R1E0M0NLczR4clVXOFdnbWE5MUpMem50cVVYdlo0UjQ4TXQiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQtZGV2LmFwcHMuc2lsdmVyLmRldm9wcy5nb3YuYmMuY2EiLCAiaW1hZ2VVcmwiOiAiaHR0cHM6Ly9pZC5nb3YuYmMuY2Evc3RhdGljL0dvdi0yLjAvaW1hZ2VzL2Zhdmljb24uaWNvIn0=',
+  }),
+  DEV2: createIASEnvironment({
+    name: 'Dev2',
+    subdomain: 'iddev2',
+    agentInviteUrl: null,
+  }),
 }
 
 const remoteDebuggingState: RemoteDebuggingState = {

@@ -6,7 +6,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
+import { BCDispatchAction, BCState, IASEnvironment } from '../store'
 
 interface IASEnvironmentProps {
   shouldDismissModal: () => void
@@ -41,7 +41,17 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     },
   })
 
+  /**
+   * Handles the change of the IAS environment by performing a factory reset and updating the store.
+   *
+   * Note: Switching environments currently requires a factory reset.
+   * Persisting state between environments is planned as a future improvement.
+   *
+   * @param environment - The selected IAS environment to switch to.
+   * @returns A promise that resolves when the environment change process is complete.
+   * */
   const handleEnvironmentChange = async (environment: IASEnvironment) => {
+    // hard factory reset, no state saved
     await factoryReset()
 
     dispatch({
@@ -55,7 +65,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={Object.values(iasEnvironments)}
+        data={Object.values(IASEnvironment)}
         renderItem={({ item: environment }) => {
           const { name }: IASEnvironment = environment
           return (
