@@ -1,7 +1,7 @@
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useEffect, useReducer, useRef } from 'react'
-import { useDeepLinkViewModel } from '../../deep-linking'
+import { usePairingService } from '../../pairing'
 
 export type LocalState = {
   serviceTitle?: string
@@ -58,7 +58,7 @@ export const useServiceLoginState = ({
   metadata,
   logger,
 }: UseServiceLoginStateArgs): UseServiceLoginStateResult => {
-  const viewModel = useDeepLinkViewModel()
+  const pairingService = usePairingService()
   const [state, dispatch] = useReducer(merge, {
     ...initialState,
     serviceTitle: initialServiceTitle,
@@ -116,10 +116,10 @@ export const useServiceLoginState = ({
 
   useEffect(() => {
     logger.debug(
-      `ServiceLoginScreen: Pending deep link check - serviceClientId: ${serviceClientId}, pendingConsumedRef: ${
+      `ServiceLoginScreen: Pending pairing check - serviceClientId: ${serviceClientId}, pendingConsumedRef: ${
         pendingConsumedRef.current
-      }, hasLoginData: ${Boolean(state.pairingCode || state.serviceTitle)}, hasPendingDeepLink: ${
-        viewModel.hasPendingDeepLink
+      }, hasLoginData: ${Boolean(state.pairingCode || state.serviceTitle)}, hasPendingPairing: ${
+        pairingService.hasPendingPairing
       }`
     )
 
@@ -136,23 +136,23 @@ export const useServiceLoginState = ({
       return
     }
 
-    if (!viewModel.hasPendingDeepLink) {
+    if (!pairingService.hasPendingPairing) {
       return
     }
 
-    const pending = viewModel.consumePendingDeepLink()
+    const pending = pairingService.consumePendingPairing()
     if (!pending) {
       return
     }
 
     pendingConsumedRef.current = true
-    logger.info(`ServiceLoginScreen: Consuming pending deep link for ${pending.serviceTitle}`)
+    logger.info(`ServiceLoginScreen: Consuming pending pairing for ${pending.serviceTitle}`)
 
     dispatch({
       serviceTitle: pending.serviceTitle,
       pairingCode: pending.pairingCode,
     })
-  }, [serviceClientId, logger, state.pairingCode, state.serviceTitle, viewModel])
+  }, [serviceClientId, logger, state.pairingCode, state.serviceTitle, pairingService])
 
   return {
     state,

@@ -8,6 +8,13 @@ import { isNetworkError } from '../utils/error-utils'
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
 
+/**
+ * Returns the current BCSCApiClient singleton instance.
+ * Can be used outside of React components (e.g., in ViewModels).
+ * Returns null if the client hasn't been initialized yet.
+ */
+export const getBCSCApiClient = (): BCSCApiClient | null => BCSC_API_CLIENT_SINGLETON
+
 export interface BCSCApiClientContextType {
   client: BCSCApiClient | null
   isClientReady: boolean

@@ -1,5 +1,7 @@
 import Root from '@/Root'
-import { DeepLinkService, DeepLinkViewModel, DeepLinkViewModelProvider } from '@/bcsc-theme/features/deep-linking'
+import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-linking'
+import { FcmService, FcmViewModel } from '@/bcsc-theme/features/fcm'
+import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { AlertProvider } from '@/contexts/AlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -24,7 +26,6 @@ import {
   toastConfig,
   TourProvider,
 } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,33 +36,16 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
-import { showLocalNotification } from 'react-native-bcsc-core'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
 
-// Do nothing with push notifications received while the
-// app is in the background
-messaging().setBackgroundMessageHandler(async () => {})
-
-// Display notifications received while app is in foreground.
-// Without this handler, foreground notifications are silently ignored.
-messaging().onMessage(async (remoteMessage) => {
-  if (remoteMessage.data) {
-    appLogger.info(`FCM message payload: ${JSON.stringify(remoteMessage.data)}`)
-  }
-
-  const title = remoteMessage.notification?.title
-  const message = remoteMessage.notification?.body
-  if (title && message) {
-    try {
-      await showLocalNotification(title, message)
-    } catch (error) {
-      appLogger.error(`Failed to show local notification: ${error}`)
-    }
-  }
-})
+// Module-level singletons - constructors are pure (no RN bridge calls)
+// All platform interactions happen in initialize() methods
+const pairingService = new PairingService(appLogger)
+const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService)
 
 const App = () => {
   const { t } = useTranslation()
@@ -69,10 +53,6 @@ const App = () => {
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
-  const deepLinkViewModel = useMemo(() => {
-    const service = new DeepLinkService()
-    return new DeepLinkViewModel(service, logger)
-  }, [logger])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -90,7 +70,8 @@ const App = () => {
 
   useEffect(() => {
     deepLinkViewModel.initialize()
-  }, [deepLinkViewModel])
+    fcmViewModel.initialize()
+  }, [])
 
   return (
     <ErrorBoundaryWrapper logger={logger}>
@@ -101,7 +82,7 @@ const App = () => {
             defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
             <NavigationContainerProvider>
-              <DeepLinkViewModelProvider viewModel={deepLinkViewModel}>
+              <PairingServiceProvider service={pairingService}>
                 <AnimatedComponentsProvider value={animatedComponents}>
                   <AuthProvider>
                     <NetworkProvider>
@@ -123,7 +104,7 @@ const App = () => {
                     </NetworkProvider>
                   </AuthProvider>
                 </AnimatedComponentsProvider>
-              </DeepLinkViewModelProvider>
+              </PairingServiceProvider>
             </NavigationContainerProvider>
           </ThemeProvider>
         </StoreProvider>
