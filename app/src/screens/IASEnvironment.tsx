@@ -1,3 +1,4 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -5,7 +6,6 @@ import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
 import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
 
 interface IASEnvironmentProps {
@@ -16,13 +16,13 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-
-  const environments = iasEnvironments
+  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primaryBackground,
       width: '100%',
+      flex: 1,
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
@@ -41,7 +41,9 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     },
   })
 
-  const handleEnvironmentChange = (environment: IASEnvironment) => {
+  const handleEnvironmentChange = async (environment: IASEnvironment) => {
+    await factoryReset()
+
     dispatch({
       type: BCDispatchAction.UPDATE_ENVIRONMENT,
       payload: [environment],
@@ -53,12 +55,12 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={environments}
+        data={Object.values(iasEnvironments)}
         renderItem={({ item: environment }) => {
           const { name }: IASEnvironment = environment
           return (
             <View style={[styles.section, styles.sectionRow]}>
-              <Text style={TextTheme.title}>{t(`Developer.${name}`)}</Text>
+              <Text style={TextTheme.title}>{name}</Text>
               <BouncyCheckbox
                 accessibilityLabel={name}
                 disableText
