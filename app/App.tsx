@@ -36,6 +36,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
@@ -94,7 +95,9 @@ const App = () => {
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <AlertProvider>
-                          <Root />
+                          <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                            <Root />
+                          </KeyboardProvider>
                         </AlertProvider>
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />

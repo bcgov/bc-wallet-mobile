@@ -375,7 +375,6 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
               style={
                 {
                   "alignItems": "center",
-                  "flex": 1,
                   "flexDirection": "row-reverse",
                   "margin": 10,
                 }
