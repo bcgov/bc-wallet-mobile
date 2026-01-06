@@ -114,9 +114,9 @@ const App = () => {
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <AlertProvider>
-                        <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
-                          <Root />
-                        </KeyboardProvider>
+                          <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                            <Root />
+                          </KeyboardProvider>
                         </AlertProvider>
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
