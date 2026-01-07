@@ -6,7 +6,7 @@ import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
 import { BifoldError, EventTypes } from '@bifold/core'
 import i18next from 'i18next'
-import { createContext, PropsWithChildren, useCallback, useContext } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo } from 'react'
 import { DeviceEventEmitter } from 'react-native'
 
 export interface ErrorOptions {
@@ -133,12 +133,15 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     DeviceEventEmitter.emit(EventTypes.ERROR_REMOVED)
   }, [])
 
-  const value: ErrorAlertContextType = {
-    error,
-    errorAsAlert,
-    alert,
-    dismiss,
-  }
+  const value: ErrorAlertContextType = useMemo(
+    () => ({
+      error,
+      errorAsAlert,
+      alert,
+      dismiss,
+    }),
+    [error, errorAsAlert, alert, dismiss]
+  )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
 }
