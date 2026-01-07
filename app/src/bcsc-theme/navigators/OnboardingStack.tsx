@@ -7,8 +7,6 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
-import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
-import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
@@ -123,22 +121,6 @@ const OnboardingStack = (): JSX.Element => {
         component={TransferInformationScreen}
         options={{
           title: 'Transfer Account Information',
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInstructions}
-        component={TransferInstructionsScreen}
-        options={{
-          title: 'Transfer Instructions',
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountQRScan}
-        component={TransferQRScannerScreen}
-        options={{
-          title: 'Scan QR Code',
           headerShown: true,
         }}
       />
