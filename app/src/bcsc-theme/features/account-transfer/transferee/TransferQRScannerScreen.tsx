@@ -128,12 +128,12 @@ const TransferQRScannerScreen: React.FC = () => {
       setIsLoading(true)
       setScanError(null)
 
-      const account = await getAccount()
-      if (!account) {
-        throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound'))
-      }
-
       try {
+        const account = await getAccount()
+        if (!account) {
+          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound'))
+        }
+
         // ias tokens expect times in seconds since epoch
         const timeInSeconds = Math.floor(Date.now() / 1000)
         const qrParts = value.split('?')
