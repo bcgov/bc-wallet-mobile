@@ -16,6 +16,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
+
   const styles = StyleSheet.create({
     image: {
       width: '100%',
