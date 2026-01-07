@@ -18,7 +18,7 @@ import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useDeepLinkViewModel } from '../deep-linking'
+import { usePairingService } from '../pairing'
 
 import { REPORT_SUSPICIOUS_URL } from '@/constants'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -213,7 +213,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const viewModel = useDeepLinkViewModel()
+  const pairingService = usePairingService()
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
@@ -339,9 +339,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
   const onCancel = useCallback(() => {
-    // For deep-link cold start, clear the pending deep link so RootStack switches stacks
-    if (viewModel.hasPendingDeepLink) {
-      viewModel.consumePendingDeepLink()
+    // For cold start pairing, clear the pending pairing so RootStack switches stacks
+    if (pairingService.hasPendingPairing) {
+      pairingService.consumePendingPairing()
       return
     }
 
@@ -351,10 +351,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
-    // No pending deep link and no back stack (e.g., deep link navigated directly onto main stack)
+    // No pending pairing and no back stack (e.g., pairing navigated directly onto main stack)
     navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
     logger.info('ServiceLoginScreen: Cancel pressed without history, redirecting to Home tab')
-  }, [logger, navigation, viewModel])
+  }, [logger, navigation, pairingService])
 
   const renderState = (() => {
     if (isLoading || !serviceHydrated) {

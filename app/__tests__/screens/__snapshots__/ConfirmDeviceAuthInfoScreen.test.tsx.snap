@@ -130,7 +130,6 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
             style={
               {
                 "alignItems": "center",
-                "flex": 1,
                 "flexDirection": "row-reverse",
                 "margin": 10,
               }
