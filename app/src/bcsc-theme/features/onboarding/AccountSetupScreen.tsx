@@ -39,7 +39,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.AddAccount],
     })
     navigation.navigate(BCSCScreens.OnboardingSetupTypes)
-  }, [navigation])
+  }, [navigation, dispatch])
 
   const handleTransferAccount = useCallback(() => {
     dispatch({
@@ -47,7 +47,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.TransferAccount],
     })
     navigation.navigate(BCSCScreens.TransferAccountInformation)
-  }, [navigation])
+  }, [navigation, dispatch])
 
   return (
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>

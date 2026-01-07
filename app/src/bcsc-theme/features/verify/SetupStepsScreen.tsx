@@ -14,7 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -46,10 +46,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const factoryReset = useFactoryReset()
 
   const { steps, stepActions, handleCheckStatus, handleCancelVerification } = useSetupStepsModel(navigation)
-
-  useEffect(() => {
-    console.log('SETUP STEPS MODE: ', store.bcsc.accountSetupType)
-  }, [store])
 
   const styles = StyleSheet.create({
     itemSeparator: {

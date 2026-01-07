@@ -67,7 +67,7 @@ const TransferQRScannerScreen: React.FC = () => {
       return
     }
 
-    // New device registerd, store
+    // New device registered, store
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
     // Update user information
@@ -82,7 +82,6 @@ const TransferQRScannerScreen: React.FC = () => {
       userCode: deviceAuth.user_code,
       deviceCodeExpiresAt: expiresAt,
     })
-    console.log('Device registered successfully, store is updating')
   }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo])
 
   useEffect(() => {
@@ -106,7 +105,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
   useEffect(() => {
     registerDevice()
-  }, [])
+  }, [registerDevice])
 
   const handleScan = useCallback(
     async (value: string) => {
@@ -123,8 +122,6 @@ const TransferQRScannerScreen: React.FC = () => {
         setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound')))
         return
       }
-
-      await registerDevice()
 
       try {
         // ias tokens expect times in seconds since epoch
