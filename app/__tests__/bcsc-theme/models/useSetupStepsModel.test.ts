@@ -6,7 +6,7 @@ import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
-import { BCSCCardType } from 'react-native-bcsc-core'
+import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/hooks/useSetupSteps')
@@ -163,7 +163,9 @@ describe('useSetupStepsModel', () => {
 
       result.current.stepActions.id()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList, {
+        cardProcess: BCSCCardProcess.NonBCSC,
+      })
     })
 
     it('should navigate to AdditionalIdentificationRequired when nonPhotoBcscNeedsAdditionalCard is true', () => {

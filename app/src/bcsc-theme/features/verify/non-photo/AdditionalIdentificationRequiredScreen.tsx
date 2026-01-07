@@ -57,7 +57,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           title={t('BCSC.AdditionalEvidence.ChooseID')}
           accessibilityLabel={t('BCSC.AdditionalEvidence.ChooseID')}
           testID={testIdWithKey(t('BCSC.AdditionalEvidence.ChooseID'))}
-          onPress={async () => {
+          onPress={() => {
             navigation.navigate(BCSCScreens.EvidenceTypeList, {
               /**
                * Pass along the card process filter to the EvidenceTypeList screen
