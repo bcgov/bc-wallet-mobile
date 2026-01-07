@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
@@ -16,6 +16,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
@@ -51,13 +52,17 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
    * @returns A promise that resolves when the environment change process is complete.
    * */
   const handleEnvironmentChange = async (environment: IASEnvironment) => {
-    // hard factory reset, no state saved
-    await factoryReset()
+    try {
+      // hard factory reset, no state saved
+      await factoryReset()
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_ENVIRONMENT,
-      payload: [environment],
-    })
+      dispatch({
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [environment],
+      })
+    } catch (error) {
+      logger.error('Error during factory reset for environment change:', error as Error)
+    }
 
     shouldDismissModal()
   }
