@@ -272,7 +272,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 ]
               }
             >
-              Test
+              Sit (idsit)
             </Text>
           </View>
         </View>
