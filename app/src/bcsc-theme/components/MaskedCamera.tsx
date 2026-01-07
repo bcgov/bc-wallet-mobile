@@ -99,11 +99,6 @@ const MaskedCamera = ({
     }
 
     checkPermissions()
-
-    return () => {
-      setIsActive(false)
-      setTorchOn(false)
-    }
   }, [hasPermission, requestPermission, navigation, t])
 
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)

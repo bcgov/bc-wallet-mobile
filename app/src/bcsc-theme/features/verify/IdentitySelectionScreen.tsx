@@ -48,7 +48,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
   }, [navigation])
 
-  const onPressOtherID = useCallback(async () => {
+  const onPressOtherID = useCallback(() => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
   }, [navigation])
 
