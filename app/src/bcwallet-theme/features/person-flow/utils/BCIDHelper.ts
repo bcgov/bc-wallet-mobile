@@ -1,4 +1,4 @@
-import { emitError, getErrorDefinition } from '@/errors'
+import { ErrorRegistryKey, getErrorDefinition } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -10,6 +10,9 @@ import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
+
+/** Error handler callback type for utility functions */
+export type ErrorHandler = (key: ErrorRegistryKey, options?: { error?: unknown }) => void
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -109,18 +112,18 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 
 export const initiateAppToAppFlow = async (
   url: string,
-  t: TFunction<'translation', undefined>,
+  onError?: ErrorHandler,
   logger?: BifoldLogger
 ) => {
   try {
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url)
     } else {
-      throw new Error()
+      throw new Error('Cannot open URL')
     }
   } catch (err: unknown) {
     logger?.error(`Error opening URL ${(err as Error).message}`)
-    emitError('APP_TO_APP_URL_ERROR', t, { error: err })
+    onError?.('APP_TO_APP_URL_ERROR', { error: err })
   }
 }
 

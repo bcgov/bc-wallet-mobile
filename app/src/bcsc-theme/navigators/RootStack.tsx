@@ -1,8 +1,7 @@
-import { emitError } from '@/errors'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { getAccount } from 'react-native-bcsc-core'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
@@ -16,12 +15,12 @@ import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
-  const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const { isClientReady } = useBCSCApiClientState()
   const [loading, setLoading] = useState(true)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { error } = useErrorAlert()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   useEffect(() => {
@@ -32,10 +31,10 @@ const BCSCRootStack: React.FC = () => {
 
     try {
       loadState(dispatch)
-    } catch (error) {
-      emitError('STATE_LOAD_ERROR', t, { error })
+    } catch (err) {
+      error('STATE_LOAD_ERROR', { error: err })
     }
-  }, [dispatch, loadState, t, store.stateLoaded])
+  }, [dispatch, loadState, error, store.stateLoaded])
 
   // Check for existing account on initial load - only runs after state is loaded
   useEffect(() => {

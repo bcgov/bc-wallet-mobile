@@ -1,11 +1,8 @@
-import { DeviceEventEmitter } from 'react-native'
-
 import {
-  dismissError,
-  emitBifoldError,
-  emitError,
+  extractErrorMessage,
   getErrorDefinition,
-  trackErrorAction,
+  logError,
+  trackErrorInAnalytics,
 } from '../../src/errors/errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../../src/errors/errorRegistry'
 import { AlertInteractionEvent } from '../../src/events/alertEvents'
@@ -22,27 +19,6 @@ jest.mock('react-native', () => ({
     select: jest.fn((obj) => obj.ios ?? obj.default),
   },
 }))
-
-// Mock @bifold/core before importing
-jest.mock('@bifold/core', () => ({
-  BifoldError: class BifoldError extends Error {
-    title: string
-    description: string
-    code: number
-    constructor(title: string, description: string, message: string, code: number) {
-      super(message)
-      this.title = title
-      this.description = description
-      this.code = code
-    }
-  },
-  EventTypes: {
-    ERROR_ADDED: 'ERROR_ADDED',
-    ERROR_REMOVED: 'ERROR_REMOVED',
-  },
-}))
-
-const { BifoldError, EventTypes } = jest.requireMock('@bifold/core')
 
 jest.mock('../../src/utils/analytics/analytics-singleton', () => ({
   Analytics: {
@@ -61,190 +37,87 @@ jest.mock('../../src/utils/logger', () => ({
 }))
 
 describe('errorHandler', () => {
-  const mockT = jest.fn((key: string) => `translated:${key}`)
-
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  describe('emitError', () => {
-    it('should emit a known error with translated title and description', () => {
-      emitError('GENERAL_ERROR', mockT)
-
-      expect(mockT).toHaveBeenCalledWith(ErrorRegistry.GENERAL_ERROR.titleKey)
-      expect(mockT).toHaveBeenCalledWith(ErrorRegistry.GENERAL_ERROR.descriptionKey)
-      expect(appLogger.error).toHaveBeenCalled()
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.any(BifoldError))
+  describe('extractErrorMessage', () => {
+    it('should return empty string for null', () => {
+      expect(extractErrorMessage(null)).toBe('')
     })
 
-    it('should not show modal when showModal option is false', () => {
-      emitError('GENERAL_ERROR', mockT, { showModal: false })
-
-      expect(DeviceEventEmitter.emit).not.toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.anything())
+    it('should return empty string for undefined', () => {
+      expect(extractErrorMessage(undefined)).toBe('')
     })
 
-    it('should fallback to GENERAL_ERROR for unknown error keys', () => {
-      // Cast to any to test with an invalid key
-      emitError('UNKNOWN_ERROR_KEY' as any, mockT)
-
-      expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key'))
-      // Should then emit GENERAL_ERROR
-      expect(DeviceEventEmitter.emit).toHaveBeenCalled()
+    it('should extract message from Error object', () => {
+      const error = new Error('Test error message')
+      expect(extractErrorMessage(error)).toBe('Test error message')
     })
 
-    it('should extract error message from Error object', () => {
-      const testError = new Error('Test error message')
-      emitError('GENERAL_ERROR', mockT, { error: testError })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('GENERAL_ERROR'),
-        expect.objectContaining({
-          technicalMessage: 'Test error message',
-        })
-      )
+    it('should return string directly', () => {
+      expect(extractErrorMessage('Direct string error')).toBe('Direct string error')
     })
 
-    it('should extract error message from string', () => {
-      emitError('GENERAL_ERROR', mockT, { error: 'String error message' })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: 'String error message',
-        })
-      )
-    })
-
-    it('should extract error message from object with message property', () => {
+    it('should extract message from object with message property', () => {
       const errorObj = { message: 'Object error message' }
-      emitError('GENERAL_ERROR', mockT, { error: errorObj })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: 'Object error message',
-        })
-      )
+      expect(extractErrorMessage(errorObj)).toBe('Object error message')
     })
 
-    it('should JSON stringify unknown error types', () => {
-      const errorObj = { code: 123, details: 'some details' }
-      emitError('GENERAL_ERROR', mockT, { error: errorObj })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: JSON.stringify(errorObj),
-        })
-      )
+    it('should stringify other objects', () => {
+      const obj = { code: 123, details: 'some details' }
+      expect(extractErrorMessage(obj)).toBe(JSON.stringify(obj))
     })
 
-    it('should handle null error gracefully', () => {
-      emitError('GENERAL_ERROR', mockT, { error: null })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: '',
-        })
-      )
-    })
-
-    it('should handle undefined error gracefully', () => {
-      emitError('GENERAL_ERROR', mockT, { error: undefined })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: '',
-        })
-      )
-    })
-
-    it('should handle non-serializable errors', () => {
-      // Create a circular reference that cannot be JSON.stringify'd
-      const circular: Record<string, unknown> = {}
+    it('should handle circular references gracefully', () => {
+      const circular: Record<string, unknown> = { name: 'test' }
       circular.self = circular
-      emitError('GENERAL_ERROR', mockT, { error: circular })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: expect.stringContaining('Non-serializable'),
-        })
-      )
+      expect(extractErrorMessage(circular)).toBe('[Non-serializable object]')
     })
+  })
 
-    it('should include additional context in logs', () => {
-      const context = { userId: '123', action: 'test' }
-      emitError('GENERAL_ERROR', mockT, { context })
+  describe('trackErrorInAnalytics', () => {
+    it('should track error event in analytics', () => {
+      const definition = ErrorRegistry.CAMERA_BROKEN
 
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          userId: '123',
-          action: 'test',
-        })
-      )
-    })
-
-    it('should track error in analytics when showing modal', () => {
-      emitError('CAMERA_BROKEN', mockT)
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(ErrorRegistry.CAMERA_BROKEN.code),
-        message: ErrorRegistry.CAMERA_BROKEN.alertEvent,
+        code: String(definition.code),
+        message: definition.alertEvent,
       })
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.alertEvent)
     })
 
-    it('should respect showModal from error definition when not explicitly set', () => {
-      // If the error definition has showModal: false, it should not show modal
-      // For this test, we use an error that defaults to showing modal
-      emitError('CAMERA_BROKEN', mockT)
+    it('should track alert display event', () => {
+      const definition = ErrorRegistry.NO_INTERNET
 
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.any(BifoldError))
-    })
-  })
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
 
-  describe('emitBifoldError', () => {
-    it('should emit a raw BifoldError', () => {
-      const bifoldError = new BifoldError('Test Title', 'Test Description', 'Technical', 1234)
-
-      emitBifoldError(bifoldError)
-
-      expect(appLogger.error).toHaveBeenCalledWith(expect.stringContaining('BifoldError:1234'))
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_ADDED, bifoldError)
-    })
-  })
-
-  describe('dismissError', () => {
-    it('should emit ERROR_REMOVED event', () => {
-      dismissError()
-
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_REMOVED)
-    })
-  })
-
-  describe('trackErrorAction', () => {
-    it('should track error action in analytics', () => {
-      trackErrorAction('CAMERA_BROKEN', 'dismiss')
-
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.alertEvent, 'dismiss')
-      expect(appLogger.debug).toHaveBeenCalledWith(expect.stringContaining(AlertInteractionEvent.ALERT_ACTION))
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.alertEvent)
     })
 
-    it('should use default action label if not provided', () => {
-      trackErrorAction('CAMERA_BROKEN')
+    it('should not track alert display for non-display events', () => {
+      const definition = ErrorRegistry.SERVER_ERROR
 
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.alertEvent, 'dismiss')
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
+
+      expect(Analytics.trackErrorEvent).toHaveBeenCalled()
+      expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
     })
 
-    it('should log warning for unknown error keys', () => {
-      trackErrorAction('UNKNOWN_ERROR_KEY' as any)
+    it('should log debug information', () => {
+      const definition = ErrorRegistry.GENERAL_ERROR
 
-      expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key for tracking'))
-      expect(Analytics.trackAlertActionEvent).not.toHaveBeenCalled()
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
+
+      expect(appLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(AlertInteractionEvent.ALERT_DISPLAY),
+        expect.objectContaining({
+          code: definition.code,
+          category: definition.category,
+          severity: definition.severity,
+        })
+      )
     })
   })
 
@@ -259,7 +132,6 @@ describe('errorHandler', () => {
     })
 
     it('should return error definitions for all error categories', () => {
-      // Test various categories
       expect(getErrorDefinition('NO_INTERNET').category).toBe(ErrorCategory.NETWORK)
       expect(getErrorDefinition('LOGIN_PARSE_URI').category).toBe(ErrorCategory.AUTHENTICATION)
       expect(getErrorDefinition('CARD_EXPIRED_WILL_REMOVE').category).toBe(ErrorCategory.CREDENTIAL)
@@ -270,6 +142,53 @@ describe('errorHandler', () => {
       expect(getErrorDefinition('GENERAL_ERROR').category).toBe(ErrorCategory.GENERAL)
       expect(getErrorDefinition('STATE_LOAD_ERROR').category).toBe(ErrorCategory.WALLET)
       expect(getErrorDefinition('PARSE_INVITATION_ERROR').category).toBe(ErrorCategory.CONNECTION)
+    })
+  })
+
+  describe('logError', () => {
+    it('should log error with all details', () => {
+      const definition = ErrorRegistry.NO_INTERNET
+      const technicalMessage = 'Network request failed'
+
+      logError('NO_INTERNET', definition, technicalMessage)
+
+      expect(appLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('NO_INTERNET'),
+        expect.objectContaining({
+          code: definition.code,
+          category: definition.category,
+          severity: definition.severity,
+          technicalMessage,
+        })
+      )
+    })
+
+    it('should include additional context in logs', () => {
+      const definition = ErrorRegistry.GENERAL_ERROR
+      const context = { userId: '123', screen: 'Home' }
+
+      logError('GENERAL_ERROR', definition, 'Some error', context)
+
+      expect(appLogger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          userId: '123',
+          screen: 'Home',
+        })
+      )
+    })
+
+    it('should handle empty technical message', () => {
+      const definition = ErrorRegistry.CAMERA_BROKEN
+
+      logError('CAMERA_BROKEN', definition, '')
+
+      expect(appLogger.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          technicalMessage: '',
+        })
+      )
     })
   })
 })
