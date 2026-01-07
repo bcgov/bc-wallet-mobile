@@ -25,7 +25,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
 
 /**
- * The TransferQRScannerScreen component allows users to scan a QR code to transfer their account from an old verified device to a new, un verified one.
+ * The TransferQRScannerScreen component allows users to scan a QR code to transfer their account from an old verified device to a new, unverified one.
  * Successful scanning and verification will navigate the user to a success screen, then to the home screen of the app.
  *
  * This handles:
@@ -130,8 +130,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
       const account = await getAccount()
       if (!account) {
-        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound')))
-        return
+        throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound'))
       }
 
       try {
@@ -140,7 +139,7 @@ const TransferQRScannerScreen: React.FC = () => {
         const qrParts = value.split('?')
         const oldDeviceQRToken = qrParts.length > 1 ? qrParts[1] : undefined
         if (!oldDeviceQRToken) {
-          throw new Error(t('BCSC.Scan.InvalidQrCode'))
+          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.InvalidQrCode'))
         }
 
         const newDeviceJWT = await createDeviceSignedJWT({
@@ -176,7 +175,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
         } else {
-          throw t('BCSC.Scan.NoDeviceCodeFound')
+          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound'))
         }
       } catch (error) {
         setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, (error as Error)?.message))

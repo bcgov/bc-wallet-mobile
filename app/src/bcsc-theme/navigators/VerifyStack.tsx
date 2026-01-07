@@ -269,7 +269,7 @@ const VerifyStack = () => {
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
         options={{
-          title: 'Transfer Instructions',
+          title: t('BCSC.Screens.TransferAccountInstructions'),
           headerShown: true,
         }}
       />
@@ -277,7 +277,7 @@ const VerifyStack = () => {
         name={BCSCScreens.TransferAccountQRScan}
         component={TransferQRScannerScreen}
         options={{
-          title: 'Scan QR Code',
+          title: t('BCSC.Screens.TransferAccountScan'),
           headerShown: true,
         }}
       />

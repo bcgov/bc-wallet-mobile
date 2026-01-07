@@ -134,6 +134,8 @@ const translation = {
       "SetupSteps": "Setup Steps (FR)",
       "VerificationMethodSelection": "Choose How to Verify (FR)",
       "InformationRequired": "Information Required (FR)",
+      "TransferAccountInstructions": "Transfer Instructions (FR)",
+      "TransferAccountScan": "Scan QR Code (FR)",
       "ContactUs": "Contact Us (FR)",
       "HelpCentre": "Help Centre (FR)",
       "PrivacyInformation": "Privacy Information (FR)",

@@ -224,12 +224,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       {renderStepTransfer()}
     </>
   )
-
+  const accountType = store.bcsc?.accountSetupType ?? AccountSetupType.AddAccount
   return (
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
-      {store.bcsc?.accountSetupType === AccountSetupType.AddAccount
-        ? renderAddAccountSteps()
-        : renderTransferAccountSteps()}
+      {accountType === AccountSetupType.AddAccount ? renderAddAccountSteps() : renderTransferAccountSteps()}
 
       {store.bcscSecure.userSubmittedVerificationVideo ? (
         <>
