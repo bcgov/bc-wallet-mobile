@@ -45,7 +45,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
    * Handles the change of the IAS environment by performing a factory reset and updating the store.
    *
    * Note: Switching environments currently requires a factory reset.
-   * Persisting state between environments is planned as a future improvement.
+   * Persisting state between environments is a potential future enhancement.
    *
    * @param environment - The selected IAS environment to switch to.
    * @returns A promise that resolves when the environment change process is complete.

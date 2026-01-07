@@ -52,12 +52,16 @@ export const useFactoryReset = () => {
       return
     }
 
-    // Delete IAS account registration
-    logger.info('FactoryReset: Deleting IAS account from server...')
-    const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+    try {
+      // Delete IAS account registration
+      logger.info('FactoryReset: Deleting IAS account from server...')
+      const deleteIASAccount = await registration.deleteRegistration(account.clientID)
 
-    if (!deleteIASAccount.success) {
-      logger.warn('FactoryReset: Failed to delete IAS account from server')
+      if (!deleteIASAccount.success) {
+        logger.warn('FactoryReset: Failed to delete IAS account from server')
+      }
+    } catch (error) {
+      logger.warn('FactoryReset: Error occurred while deleting IAS account from server', { error })
     }
 
     // Delete secure data from native storage
