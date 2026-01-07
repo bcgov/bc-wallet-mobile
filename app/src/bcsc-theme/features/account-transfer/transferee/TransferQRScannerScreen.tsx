@@ -24,6 +24,19 @@ import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
 
+/**
+ * The TransferQRScannerScreen component allows users to scan a QR code to transfer their account from an old verified device to a new, un verified one.
+ * Successful scanning and verification will navigate the user to a success screen, then to the home screen of the app.
+ *
+ * This handles:
+ *  - Camera permissions
+ *  - QR code scanning
+ *  - Device authorization (with IAS backend)
+ *  - Device attestation and verification
+ *  - Token retrieval and storage
+ *
+ * @returns {*} {JSX.Element} The rendered TransferQRScannerScreen component.
+ */
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
   const { updateTokens } = useSecureActions()

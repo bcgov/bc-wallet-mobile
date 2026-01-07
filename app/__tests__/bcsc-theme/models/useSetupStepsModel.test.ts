@@ -82,6 +82,7 @@ describe('useSetupStepsModel', () => {
     address: { completed: true, focused: false, subtext: ['123 Main St'] },
     email: { completed: true, focused: false, subtext: [] },
     verify: { completed: false, focused: true, subtext: ['Complete by Jan 1'] },
+    transfer: { completed: false, focused: false, subtext: ['Transfer account from another device'] },
     currentStep: 'verify' as const,
     allCompleted: false,
   }
@@ -234,6 +235,16 @@ describe('useSetupStepsModel', () => {
       result.current.stepActions.verify()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
+    })
+  })
+
+  describe('stepActions.transfer', () => {
+    it('should navigate to TransferAccountInstructions screen', () => {
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+
+      result.current.stepActions.transfer()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
     })
   })
 
