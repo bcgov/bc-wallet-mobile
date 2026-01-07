@@ -1,9 +1,4 @@
-import {
-  extractErrorMessage,
-  getErrorDefinition,
-  logError,
-  trackErrorInAnalytics,
-} from '../../src/errors/errorHandler'
+import { extractErrorMessage, getErrorDefinition, logError, trackErrorInAnalytics } from '../../src/errors/errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../../src/errors/errorRegistry'
 import { AlertInteractionEvent } from '../../src/events/alertEvents'
 import { Analytics } from '../../src/utils/analytics/analytics-singleton'

@@ -1,3 +1,5 @@
+import i18next from 'i18next'
+
 import { AlertInteractionEvent } from '../events/alertEvents'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
@@ -66,7 +68,10 @@ export function logError(
   technicalMessage: string,
   context?: Record<string, unknown>
 ): void {
-  appLogger.error(`[${errorKey}] ${definition.titleKey}: ${definition.descriptionKey}`, {
+  const title = i18next.t(definition.titleKey)
+  const description = i18next.t(definition.descriptionKey)
+
+  appLogger.error(`[${errorKey}] ${title}: ${description}`, {
     code: definition.code,
     category: definition.category,
     severity: definition.severity,

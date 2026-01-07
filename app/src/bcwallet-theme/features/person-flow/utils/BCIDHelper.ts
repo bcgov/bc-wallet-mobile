@@ -110,11 +110,7 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
   }
 }
 
-export const initiateAppToAppFlow = async (
-  url: string,
-  onError?: ErrorHandler,
-  logger?: BifoldLogger
-) => {
+export const initiateAppToAppFlow = async (url: string, onError?: ErrorHandler, logger?: BifoldLogger) => {
   try {
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url)

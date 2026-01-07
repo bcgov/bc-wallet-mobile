@@ -160,7 +160,7 @@ const translation = {
       "Accessibility": "Accessibility (PT-BR)",
       "AnalyticsOptIn": "Analytics Opt-In Placeholder (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
-      "Analytics": "Analytics (PR-BR)",
+      "Analytics": "Analytics (PT-BR)",
     },
     "Services": {
       "CatalogueTitle": "Services (PT-BR)",
@@ -370,7 +370,7 @@ const translation = {
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
       "AnalyticsTitle": "Enable Analytics? (PT-BR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PR-BR)",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PT-BR)",
       "AcceptAnalytics": "Enable Analytics (PT-BR)",
       "DenyAnalytics":  "Skip (PT-BR)",
     },

@@ -2,10 +2,11 @@ import { act, renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { DeviceEventEmitter } from 'react-native'
 
+import i18next from 'i18next'
 import { ErrorAlertProvider, useErrorAlert } from '../../src/contexts/ErrorAlertContext'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../../src/errors/errorRegistry'
 import { AlertEvent } from '../../src/events/alertEvents'
-import { showNativeAlert } from '../../src/utils/alert'
+import { showAlert } from '../../src/utils/alert'
 import { Analytics } from '../../src/utils/analytics/analytics-singleton'
 import { appLogger } from '../../src/utils/logger'
 
@@ -196,7 +197,12 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(appLogger.error).toHaveBeenCalled()
-      expect(showNativeAlert).toHaveBeenCalledWith(ErrorRegistry.NO_INTERNET.alertEvent, undefined)
+      expect(showAlert).toHaveBeenCalledWith(
+        ErrorRegistry.NO_INTERNET.titleKey,
+        ErrorRegistry.NO_INTERNET.descriptionKey,
+        undefined,
+        ErrorRegistry.NO_INTERNET.alertEvent
+      )
       expect(DeviceEventEmitter.emit).not.toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.anything())
     })
 
@@ -208,7 +214,12 @@ describe('ErrorAlertContext', () => {
         result.current.errorAsAlert('NO_INTERNET', { actions })
       })
 
-      expect(showNativeAlert).toHaveBeenCalledWith(ErrorRegistry.NO_INTERNET.alertEvent, actions)
+      expect(showAlert).toHaveBeenCalledWith(
+        ErrorRegistry.NO_INTERNET.titleKey,
+        ErrorRegistry.NO_INTERNET.descriptionKey,
+        actions,
+        ErrorRegistry.NO_INTERNET.alertEvent
+      )
     })
 
     it('should track analytics for native alerts', () => {
@@ -241,21 +252,15 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.alert(AlertEvent.GENERAL)
+        result.current.alert(i18next.t('Global.General'), i18next.t('Global.General'), { event: AlertEvent.GENERAL })
       })
 
-      expect(showNativeAlert).toHaveBeenCalledWith(AlertEvent.GENERAL, undefined)
-    })
-
-    it('should show native alert with custom actions', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-      const actions = [{ text: 'OK', onPress: jest.fn() }]
-
-      act(() => {
-        result.current.alert(AlertEvent.DATA_USE_WARNING, actions)
-      })
-
-      expect(showNativeAlert).toHaveBeenCalledWith(AlertEvent.DATA_USE_WARNING, actions)
+      expect(showAlert).toHaveBeenCalledWith(
+        i18next.t('Global.General'),
+        i18next.t('Global.General'),
+        undefined,
+        AlertEvent.GENERAL
+      )
     })
   })
 
