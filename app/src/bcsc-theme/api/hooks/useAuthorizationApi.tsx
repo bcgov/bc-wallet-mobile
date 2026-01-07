@@ -6,6 +6,7 @@ import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
+const IAS_SCOPE = 'openid profile address offline_access'
 
 export enum DeviceVerificationOption {
   LIVE_VIDEO_CALL = 'video_call',
@@ -64,7 +65,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           client_id: account.clientID,
           card_serial_number: serial ?? undefined,
           birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
-          scope: 'openid profile address offline_access',
+          scope: IAS_SCOPE,
         }
 
         try {
@@ -111,7 +112,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
-          scope: 'openid profile address offline_access',
+          scope: IAS_SCOPE,
           id_token_hint: await createDeviceSignedJWT({
             iss: account.clientID,
             aud: account.issuer,
