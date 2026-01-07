@@ -100,12 +100,23 @@ const translation = {
   },
   "Developer": {
     "Environment": "Environment (PT-BR)",
-    "DeveloperMode": "Developer mode",
-    "Toggle": "Toggle Developer Mode",
+    "DeveloperMode": "Developer mode (PT-BR)",
+    "Toggle": "Toggle Developer Mode (PT-BR)",
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchMode": "Switch mode (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "Testing": "Testing (PT-BR)",
+    "ErrorAlertTest": "Error & Alert Testing (PT-BR)",
+    "ErrorModals": "Error Modals (PT-BR)",
+    "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (PT-BR)",
+    "ErrorAsNativeAlert": "Errors as Native Alerts (PT-BR)",
+    "ErrorAsNativeAlertDescription": "Trigger errors that display as native OS alert dialogs. (PT-BR)",
+    "PlainAlerts": "Plain Alerts (PT-BR)",
+    "PlainAlertsDescription": "Trigger non-error alert messages. (PT-BR)",
+    "DismissErrorModal": "Dismiss Error Modal (PT-BR)",
+    "DismissErrorModalDescription": "Programmatically dismiss the current error modal if one is displayed. (PT-BR)",
+    "DismissCurrentError": "Dismiss Current Error (PT-BR)",
   },
   "Tips": {
     "Header": "Tips (PT-BR)",
@@ -258,7 +269,7 @@ const translation = {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
       },
       "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}."
+        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (PT-BR)"
       },
     },
     "AccountExpired": {
@@ -964,6 +975,9 @@ const translation = {
       "ValidationError": "There was a problem validating attestation. (PT-BR)",
       "AgentUndefined": "The agent cannot be undefined for attestation. (PT-BR)",
       "IntegrityUnavailable": "Device integrity service is not available. (PT-BR)",
+      "GeneralProofError": "There was a problem with the attestation proof. (PT-BR)",
+      "RequestError": "There was a problem with the attestation request. (PT-BR)",
+      "UnsupportedPlatform": "Attestation is not supported on this platform. (PT-BR)",
     },
   },
 }
