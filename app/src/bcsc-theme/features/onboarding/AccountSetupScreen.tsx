@@ -12,7 +12,7 @@ interface AccountSetupScreenProps {
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
-  const [_, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
 

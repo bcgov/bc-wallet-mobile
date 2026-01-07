@@ -229,6 +229,7 @@ const translation = {
       "GetVerificationStep5Subtext1": "Verify identity by {{ expirationDate }} (PT-BR)",
       "GetVerificationStep5Subtext2": "Complete additional identification first (PT-BR)",
       "GetVerificationStep5Subtext3": "Verify identity (PT-BR)",
+      "TransferAccountSubtext": "Transfer your account from another device (PT-BR)",
       "AddSecondIdText": "Add second ID (PT-BR)",
       "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card. (PT-BR)",
       "StoredEmail": "Email: {{ email }} (PT-BR)",

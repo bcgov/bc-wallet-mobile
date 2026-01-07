@@ -1,5 +1,5 @@
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
-import { AdditionalEvidenceData, BCState } from '@/store'
+import { AccountSetupType, AdditionalEvidenceData, BCState } from '@/store'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -104,10 +104,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Step focus states ----
     const step1Focused = !step1Completed
     const step2Focused = step1Completed && !step2Completed
-    const step2AFocused = step1Completed // this is used for the account transfer process
     const step3Focused = step2Completed && !step3Completed
     const step4Focused = step2Completed && step3Completed && !step4Completed
     const step5Focused = step2Completed && step3Completed && step4Completed && !step5Completed
+    const step6Focused = step1Completed && store.bcsc.accountSetupType === AccountSetupType.TransferAccount // this is used for the account transfer process
 
     // ---- Subtext generators ----
     const getStep1Subtext = (): string[] => {
@@ -179,7 +179,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     }
 
     const getTransferSubtext = (): string[] => {
-      return ['Transfer account from another device']
+      return [t('BCSC.Steps.TransferAccountSubtext')]
     }
 
     // ---- Determine current step ----
@@ -189,7 +189,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       if (step3Focused) return 'address'
       if (step4Focused) return 'email'
       if (step5Focused) return 'verify'
-      if (step2AFocused) return 'transfer'
+      if (step6Focused) return 'transfer'
       return null
     }
 
@@ -223,8 +223,8 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
         subtext: getStep5Subtext(),
       },
       transfer: {
-        completed: false,
-        focused: step2AFocused,
+        completed: false, // leaving this false, once the user has scanned they don't see the steps screen again
+        focused: step6Focused,
         subtext: getTransferSubtext(),
       },
       currentStep: getCurrentStep(),

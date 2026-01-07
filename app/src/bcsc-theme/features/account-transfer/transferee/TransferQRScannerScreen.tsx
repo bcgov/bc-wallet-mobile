@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -27,7 +26,6 @@ import { useCameraPermission } from 'react-native-vision-camera'
 
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
-  const { client } = useBCSCApiClientState()
   const { updateTokens } = useSecureActions()
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const [store] = useStore<BCState>()
@@ -126,7 +124,11 @@ const TransferQRScannerScreen: React.FC = () => {
       try {
         // ias tokens expect times in seconds since epoch
         const timeInSeconds = Math.floor(Date.now() / 1000)
-        const oldDeviceQRToken = value.split('?')[1]
+        const qrParts = value.split('?')
+        const oldDeviceQRToken = qrParts.length > 1 ? qrParts[1] : undefined
+        if (!oldDeviceQRToken) {
+          throw new Error(t('BCSC.Scan.InvalidQrCode'))
+        }
 
         const newDeviceJWT = await createDeviceSignedJWT({
           aud: account.issuer,
@@ -147,8 +149,7 @@ const TransferQRScannerScreen: React.FC = () => {
           })
 
           if (!response) {
-            setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAttestationResponse')))
-            return
+            throw t('BCSC.Scan.NoAttestationResponse')
           }
 
           // fetch tokens for the new device
@@ -162,7 +163,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
         } else {
-          setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound')))
+          throw t('BCSC.Scan.NoDeviceCodeFound')
         }
       } catch (error) {
         setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, (error as Error)?.message))
@@ -170,7 +171,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store, deviceAttestation, client, t, token, isLoading, scanError]
+    [store, deviceAttestation, t, token, isLoading, scanError, navigator, updateTokens]
   )
 
   if (isLoading) {
