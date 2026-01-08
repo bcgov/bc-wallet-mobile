@@ -139,6 +139,9 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       verify: () => {
         navigation.navigate(BCSCScreens.VerificationMethodSelection)
       },
+      transfer: () => {
+        navigation.navigate(BCSCScreens.TransferAccountInstructions)
+      },
     }),
     [
       navigation,
