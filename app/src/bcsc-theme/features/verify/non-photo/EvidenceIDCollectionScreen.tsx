@@ -2,7 +2,6 @@ import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCThemeNames } from '@/constants'
 import { BCState } from '@/store'
 import {
   Button,
@@ -299,7 +298,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
             <DatePicker
               modal
-              theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
               open={openDatePicker}
               mode="date"
               title={t('BCSC.EvidenceIDCollection.BirthDatePickerLabel')}
