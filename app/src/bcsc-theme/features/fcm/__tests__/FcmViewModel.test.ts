@@ -284,7 +284,7 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('API client not available'))
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('API client not available'))
     })
 
     it('refetches JWK when environment changes', async () => {
