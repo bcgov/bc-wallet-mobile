@@ -77,7 +77,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         const navigation = await getSystemCheckNavigation()
         const utils = { dispatch, translation: t, logger }
 
-        // Use refreshCache: true to get the latest ID token after the token refresh
+        // Tokens have already been refreshed before this event; use refreshCache: false
+        // to reuse the freshly updated ID token from cache without forcing another refresh.
         const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
 
         await runSystemChecks([new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils)])
