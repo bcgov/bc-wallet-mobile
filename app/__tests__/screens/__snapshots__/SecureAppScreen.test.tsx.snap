@@ -82,7 +82,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": undefined,
+              "disabled": false,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -182,7 +182,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": undefined,
+              "disabled": false,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -442,7 +442,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
             ]
           }
         >
-          Secure this app
+          BCSC.Onboarding.SecureAppHeader
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -458,7 +458,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
             ]
           }
         >
-          You need to choose a PIN. It keeps your information private.
+          BCSC.Onboarding.SecureAppNoDeviceAuthContent1
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -474,7 +474,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
             ]
           }
         >
-          It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.
+          BCSC.Onboarding.SecureAppNoDeviceAuthContent2
         </Text>
       </View>
     </RCTScrollView>
@@ -493,7 +493,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
       }
     >
       <View
-        accessibilityLabel="Choose a PIN"
+        accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -530,7 +530,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
             "padding": 16,
           }
         }
-        testID="blah"
+        testID="ChoosePINButton"
       >
         <View
           style={
@@ -566,12 +566,12 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
               ]
             }
           >
-            Choose a PIN
+            BCSC.Onboarding.SecureAppPINTitle
           </Text>
         </View>
       </View>
       <View
-        accessibilityLabel="Learn more"
+        accessibilityLabel="BCSC.Onboarding.LearnMore"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -609,7 +609,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
             "padding": 16,
           }
         }
-        testID="blah"
+        testID="LearnMoreButton"
       >
         <View
           style={
@@ -645,7 +645,7 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
               ]
             }
           >
-            Learn more
+            BCSC.Onboarding.LearnMore
           </Text>
         </View>
       </View>

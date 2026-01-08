@@ -79,7 +79,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              Create a 6-digit PIN
+              BCSC.PIN.CreatePIN
             </Text>
             <View
               style={
@@ -206,7 +206,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              Confirm PIN
+              BCSC.PIN.ConfirmPIN
             </Text>
             <View
               style={
@@ -333,7 +333,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              Remember your PIN
+              BCSC.PIN.RememberPIN
             </Text>
             <Text
               maxFontSizeMultiplier={2}
@@ -349,7 +349,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.
+              BCSC.PIN.RememberPINDescription
             </Text>
           </View>
           <View
@@ -381,7 +381,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
               }
             >
               <View
-                accessibilityLabel="I understand if I forget my PIN that I have to set up this app again."
+                accessibilityLabel="BCSC.PIN.IUnderstand"
                 accessibilityRole="checkbox"
                 accessibilityState={
                   {
@@ -474,7 +474,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                   ]
                 }
               >
-                I understand if I forget my PIN that I have to set up this app again.
+                BCSC.PIN.IUnderstand
               </Text>
             </View>
             <View

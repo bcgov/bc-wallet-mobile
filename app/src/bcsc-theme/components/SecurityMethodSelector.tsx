@@ -151,17 +151,28 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     }
   }
 
+  // Pre-compute conditional values
+  const platformName = Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device'
+  const currentMethodIcon = isCurrentMethodDeviceAuth ? 'fingerprint' : 'lock'
+  const currentMethodLabel = isCurrentMethodDeviceAuth
+    ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
+    : t('BCSC.Settings.AppSecurity.PIN')
+  const deviceAuthSubtext =
+    isSettingsContext && isCurrentMethodDeviceAuth
+      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
+      : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName })
+  const pinSubtext =
+    isSettingsContext && !isCurrentMethodDeviceAuth
+      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
+      : t('BCSC.Onboarding.SecureAppPINSubtext')
+
   // Current method indicator (only shown in settings context)
   const currentMethodIndicator = isSettingsContext ? (
     <View style={styles.currentMethodContainer}>
-      <Icon name={isCurrentMethodDeviceAuth ? 'fingerprint' : 'lock'} size={24} color={ColorPalette.brand.primary} />
+      <Icon name={currentMethodIcon} size={24} color={ColorPalette.brand.primary} />
       <View style={styles.currentMethodText}>
         <ThemedText variant="labelSubtitle">{t('BCSC.Settings.AppSecurity.CurrentMethod')}</ThemedText>
-        <ThemedText variant="bold">
-          {isCurrentMethodDeviceAuth
-            ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
-            : t('BCSC.Settings.AppSecurity.PIN')}
-        </ThemedText>
+        <ThemedText variant="bold">{currentMethodLabel}</ThemedText>
       </View>
       <Icon name="check-circle" size={24} color={ColorPalette.semantic.success} />
     </View>
@@ -200,13 +211,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* Device Auth Option */}
         <CardButton
           title={t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })}
-          subtext={
-            isSettingsContext && isCurrentMethodDeviceAuth
-              ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-              : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', {
-                  platform: Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device',
-                })
-          }
+          subtext={deviceAuthSubtext}
           onPress={handleDeviceAuthentication}
           disabled={isSettingsContext && isCurrentMethodDeviceAuth}
         />
@@ -214,11 +219,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* PIN Option */}
         <CardButton
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
-          subtext={
-            isSettingsContext && !isCurrentMethodDeviceAuth
-              ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-              : t('BCSC.Onboarding.SecureAppPINSubtext')
-          }
+          subtext={pinSubtext}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />
