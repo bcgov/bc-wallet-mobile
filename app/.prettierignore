@@ -19,3 +19,6 @@ node_modules/
 # Caches
 .jest/
 .metro-cache/
+
+# Ledgers
+src/configs/ledgers/indy/ledgers.json
