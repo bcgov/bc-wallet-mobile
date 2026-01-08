@@ -6,6 +6,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme 
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type DualIdentificationRequiredScreenProps = {
@@ -72,7 +73,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
           accessibilityLabel={t('BCSC.AdditionalEvidence.ChooseID')}
           testID={testIdWithKey(t('BCSC.AdditionalEvidence.ChooseID'))}
           onPress={() => {
-            navigation.navigate(BCSCScreens.EvidenceTypeList)
+            navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
           }}
           buttonType={ButtonType.Primary}
         />
