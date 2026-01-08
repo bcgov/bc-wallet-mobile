@@ -1,10 +1,12 @@
 # Update Indy Ledgers Strategy
 #
 # When does this workflow run?
-#   - When a pull request is opened or updated that modifies the `app/scripts/refresh-ledgers.cjs` script or the workflow file itself.
+#   - On every pull request (opened, synchronized, or reopened)
 #
-# When does this worflow create a commit?
-#   - When the workflow detects changes in the `app/src/configs/ledgers/indy/ledgers.json` file after running the `refresh-ledgers.cjs` script.
+# When does this workflow create a commit?
+#   - When the workflow detects changes in the `app/src/configs/ledgers/indy/ledgers.json` file
+#     after running the `refresh-ledgers.cjs` script.
+#   - Note: Auto-commit only works for PRs from branches in the same repo, not from forks.
 #
 
 name: Ledgers
@@ -14,18 +16,19 @@ permissions:
   contents: write
 
 on:
-  push:
-    paths:
-      - 'app/scripts/refresh-ledgers.cjs'
-      - '.github/workflows/update-ledgers.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   update-ledgers:
     runs-on: ubuntu-22.04
     name: Update Indy ledgers
+    # Only run auto-commit for PRs from branches in the same repo (not forks)
+    # For fork PRs, we still run to validate but skip the commit step
     env:
       HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
       HEAD_REF: ${{ github.event.pull_request.head.ref || github.ref }}
+      IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -51,8 +54,26 @@ jobs:
       - name: Update Indy ledgers
         run: node app/scripts/refresh-ledgers.cjs
 
+      - name: Check for ledger changes
+        id: check_changes
+        run: |
+          if git diff --quiet app/src/configs/ledgers/indy/ledgers.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected in ledgers.json"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected in ledgers.json"
+          fi
+
+      - name: Warn about fork PR
+        if: steps.check_changes.outputs.changed == 'true' && env.IS_FORK == 'true'
+        run: |
+          echo "::warning::Ledgers have changed but cannot auto-commit to fork PRs. Please run 'node app/scripts/refresh-ledgers.cjs' locally and commit the changes."
+
       # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
-      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
+      - name: Auto-commit ledger updates
+        if: steps.check_changes.outputs.changed == 'true' && env.IS_FORK == 'false'
+        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
         with:
           # Optional. Commit message for the created commit.
           # Defaults to "Apply automatic changes"
