@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * Model hook for the SetupStepsScreen that provides:
@@ -116,7 +117,9 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
       id: () => {
         if (steps.id.nonBcscNeedsAdditionalCard) {
-          navigation.navigate(BCSCScreens.EvidenceTypeList)
+          navigation.navigate(BCSCScreens.EvidenceTypeList, {
+            cardProcess: BCSCCardProcess.NonBCSC,
+          })
           return
         }
         if (steps.id.nonPhotoBcscNeedsAdditionalCard) {

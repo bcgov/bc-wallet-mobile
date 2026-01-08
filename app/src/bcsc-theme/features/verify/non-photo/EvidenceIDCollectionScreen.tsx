@@ -13,6 +13,7 @@ import {
   TOKENS,
   useServices,
   useStore,
+  useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -46,6 +47,7 @@ type EvidenceIDCollectionScreenProps = {
  * @returns {*} {JSX.Element} The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
+  const { themeName } = useTheme()
   const [store] = useStore<BCState>()
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -210,7 +212,17 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
+        routes: [
+          {
+            name: BCSCScreens.SetupSteps,
+          },
+          {
+            name: BCSCScreens.EvidenceTypeList,
+            params: {
+              cardProcess: BCSCCardProcess.BCSCNonPhoto,
+            },
+          },
+        ],
       })
     )
   }

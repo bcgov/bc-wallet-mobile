@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EvidenceTypeListScreen from '../../src/bcsc-theme/features/verify/non-photo/EvidenceTypeListScreen'
@@ -21,7 +22,10 @@ describe('EvidenceTypeList', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <EvidenceTypeListScreen navigation={mockNavigation as never} />
+        <EvidenceTypeListScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardProcess: BCSCCardProcess.None } }}
+        />
       </BasicAppContext>
     )
 

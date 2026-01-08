@@ -1,10 +1,12 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, TouchableOpacity, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type AdditionalIdentificationRequiredScreenProps = {
@@ -16,6 +18,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
 }: AdditionalIdentificationRequiredScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
+  const [store] = useStore<BCState>()
 
   return (
     <ScreenWrapper>
@@ -55,7 +58,14 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           accessibilityLabel={t('BCSC.AdditionalEvidence.ChooseID')}
           testID={testIdWithKey(t('BCSC.AdditionalEvidence.ChooseID'))}
           onPress={() => {
-            navigation.navigate(BCSCScreens.EvidenceTypeList)
+            navigation.navigate(BCSCScreens.EvidenceTypeList, {
+              /**
+               * Pass along the card process filter to the EvidenceTypeList screen
+               * Note: The cardProcess should have been defined prior to reaching this screen.
+               * @see EnterBirthdateViewModel.authorizeDevice()
+               */
+              cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.None,
+            })
           }}
           buttonType={ButtonType.Primary}
         />

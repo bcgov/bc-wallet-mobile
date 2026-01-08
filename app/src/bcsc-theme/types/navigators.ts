@@ -156,7 +156,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
   [BCSCScreens.DualIdentificationRequired]: undefined
   [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
-  [BCSCScreens.EvidenceTypeList]: undefined
+  [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType }
   [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
