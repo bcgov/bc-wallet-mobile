@@ -12,6 +12,7 @@ import {
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
@@ -60,7 +61,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-
+  const { error: emitError } = useErrorAlert()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -104,12 +105,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           logger.debug(`Obtained Android Play Integrity attestation`)
         }
       }
-    } catch (error) {
+    } catch (err) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
-      logger.warn(`Attestation failed: ${error instanceof Error ? error.message : String(error)}`)
+      emitError('ATTESTATION_GENERATION_ERROR', { error: err })
     }
     return attestation
-  }, [apiClient, isClientReady, logger])
+  }, [apiClient, isClientReady, logger, emitError])
 
   /**
    * Registers a new BCSC client with dynamic client registration.

@@ -1,3 +1,4 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import {
   AttestationEventTypes,
   BifoldError,
@@ -48,6 +49,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
+  const { error: emitError } = useErrorAlert()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const steps: string[] = useMemo(
@@ -189,7 +191,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       store.developer.enableAppToAppPersonFlow &&
       ['Development', 'Test'].includes(store.developer.environment.name)
     ) {
-      initiateAppToAppFlow(store.developer.environment.appToAppUrl, t, logger)
+      initiateAppToAppFlow(store.developer.environment.appToAppUrl, emitError, logger)
         .then(() => {
           setStep(5)
           logger.info('Initiated app-to-app flow')
@@ -216,7 +218,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
     setStep,
-    t,
+    emitError,
   ])
 
   useEffect(() => {
