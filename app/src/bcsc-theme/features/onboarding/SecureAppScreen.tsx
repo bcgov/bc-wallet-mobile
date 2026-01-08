@@ -1,5 +1,8 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import { DeviceSecurityResult, SecurityMethodSelector } from '@/bcsc-theme/components/SecurityMethodSelector'
+import {
+  DeviceSecurityResult,
+  SecurityMethodSelector,
+} from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'

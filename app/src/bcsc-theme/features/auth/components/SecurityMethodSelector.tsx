@@ -51,7 +51,7 @@ interface SecurityMethodSelectorProps {
 /**
  * Shared security method selector component.
  * Displays options to secure the app using device authentication (biometrics/passcode) or PIN.
- * Used by both SecureAppScreen (onboarding) and AppSecurityScreen (settings).
+ * Used by both SecureAppScreen (onboarding) and ChangeSecurityScreen (settings).
  */
 export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   onDeviceAuthSuccess,

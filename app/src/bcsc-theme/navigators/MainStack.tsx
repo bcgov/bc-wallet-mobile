@@ -19,6 +19,8 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { ChangePINScreen } from '../features/auth/ChangePINScreen'
+import { ChangeSecurityScreen } from '../features/auth/ChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -26,9 +28,7 @@ import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
-import { AppSecurityScreen } from '../features/settings/AppSecurityScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
-import { ChangePINScreen } from '../features/settings/ChangePINScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
@@ -138,7 +138,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainAppSecurity}
-          component={AppSecurityScreen}
+          component={ChangeSecurityScreen}
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AppSecurity.ScreenTitle'),

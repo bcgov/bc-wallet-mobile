@@ -1,4 +1,4 @@
-import { SecurityMethodSelector } from '@/bcsc-theme/components/SecurityMethodSelector'
+import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { Alert, Platform } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod, setAccountSecurityMethod } from 'react-native-bcsc-core'
 
-interface AppSecurityScreenProps {
+interface ChangeSecurityScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainAppSecurity>
 }
 
@@ -18,7 +18,9 @@ interface AppSecurityScreenProps {
  * Allows users to toggle between PIN and biometric/device authentication.
  * Uses the shared SecurityMethodSelector component.
  */
-export const AppSecurityScreen: React.FC<AppSecurityScreenProps> = ({ navigation }: AppSecurityScreenProps) => {
+export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
+  navigation,
+}: ChangeSecurityScreenProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(null)

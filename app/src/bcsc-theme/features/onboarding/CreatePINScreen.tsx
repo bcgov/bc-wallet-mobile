@@ -1,5 +1,5 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/components/PINEntryForm'
+import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'

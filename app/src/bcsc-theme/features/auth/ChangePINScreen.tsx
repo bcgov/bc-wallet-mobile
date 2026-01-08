@@ -1,5 +1,5 @@
-import { ChangePINForm } from '@/bcsc-theme/components/ChangePINForm'
-import { PINEntryForm } from '@/bcsc-theme/components/PINEntryForm'
+import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
+import { PINEntryForm } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TOKENS, useServices } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
