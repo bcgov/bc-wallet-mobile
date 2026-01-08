@@ -19,7 +19,7 @@ type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.D
 export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Element => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const invalidationReason = route.params.invalidationReason
+  const invalidationReason = route.params?.invalidationReason
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -29,6 +29,10 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Elemen
   const handleFactoryReset = useCallback(async () => {
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
       // Can add more cases here for different BCSCReason types in the future
+      [BCSCReason.Cancel]: {
+        nicknames: store.bcsc.nicknames,
+        selectedNickname: store.bcsc.selectedNickname,
+      },
       [BCSCReason.CanceledByAgent]: {
         nicknames: store.bcsc.nicknames,
         selectedNickname: store.bcsc.selectedNickname,
@@ -45,6 +49,7 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Elemen
 
   const contentTextMap: Partial<Record<BCSCReason, string>> = {
     // Can add more cases here for different BCSCReason types in the future
+    [BCSCReason.Cancel]: t('BCSC.Modals.DeviceInvalidated.CancelledByCardCancel'),
     [BCSCReason.CanceledByAgent]: t('BCSC.Modals.DeviceInvalidated.CancelledByAgent'),
     [BCSCReason.CanceledByUser]: t('BCSC.Modals.DeviceInvalidated.CancelledByUser'),
   }

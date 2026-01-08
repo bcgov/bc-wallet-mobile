@@ -97,8 +97,8 @@ export const SystemModal = ({
         <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} />
         <View style={styles.textContainer}>
           <ThemedText variant="headingThree">{headerText}</ThemedText>
-          {contentText.map((text) => (
-            <ThemedText key={text} style={styles.textContent}>
+          {contentText.map((text, index) => (
+            <ThemedText key={`content-${index}`} style={styles.textContent}>
               {text}
             </ThemedText>
           ))}
