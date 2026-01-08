@@ -73,6 +73,7 @@ export interface BCSCState {
   bookmarks: string[]
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
+  accountSetupType?: AccountSetupType
 }
 
 /**
@@ -165,6 +166,11 @@ export enum Mode {
   BCSC = 'bcsc',
 }
 
+export enum AccountSetupType {
+  AddAccount = 'AddAccount',
+  TransferAccount = 'TransferAccount',
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
@@ -235,6 +241,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateSecureEvidenceDocumentNumber',
   REMOVE_INCOMPLETE_SECURE_EVIDENCE = 'bcsc/removeIncompleteSecureEvidence',
   CLEAR_SECURE_ADDITIONAL_EVIDENCE = 'bcsc/clearSecureAdditionalEvidence',
+  ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
 }
 
 enum ModeDispatchAction {
@@ -725,6 +732,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_ANALYTICS_OPT_IN: {
       const analyticsOptIn = (action?.payload || []).pop() ?? false
       const bcsc = { ...state.bcsc, analyticsOptIn }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.ACCOUNT_SETUP_TYPE: {
+      const accountType = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, accountSetupType: accountType }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

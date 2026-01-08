@@ -1,6 +1,7 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useDeveloperMode, useTheme } from '@bifold/core'
+import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useDeveloperMode, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,6 +12,7 @@ interface AccountSetupScreenProps {
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
+  const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
@@ -40,12 +42,20 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   })
 
   const handleAddAccount = useCallback(() => {
+    dispatch({
+      type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
+      payload: [AccountSetupType.AddAccount],
+    })
     navigation.navigate(BCSCScreens.OnboardingSetupTypes)
-  }, [navigation])
+  }, [navigation, dispatch])
 
   const handleTransferAccount = useCallback(() => {
+    dispatch({
+      type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
+      payload: [AccountSetupType.TransferAccount],
+    })
     navigation.navigate(BCSCScreens.TransferAccountInformation)
-  }, [navigation])
+  }, [navigation, dispatch])
 
   return (
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>

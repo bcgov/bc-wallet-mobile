@@ -112,8 +112,6 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.OnboardingAccountSetup]: undefined
   [BCSCScreens.OnboardingSetupTypes]: undefined
-  [BCSCScreens.TransferAccountInstructions]: undefined
-  [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
   [BCSCScreens.OnboardingIntroCarousel]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
@@ -175,9 +173,10 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
-
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCScreens.TransferAccountInstructions]: undefined
+  [BCSCScreens.TransferAccountQRScan]: undefined
 }
 
 export type BCSCTabStackParams = {

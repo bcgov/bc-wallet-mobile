@@ -1,5 +1,5 @@
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
-import { AdditionalEvidenceData, BCState } from '@/store'
+import { AccountSetupType, AdditionalEvidenceData, BCState } from '@/store'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -42,8 +42,9 @@ export interface SetupStepsResult {
   address: StepState
   email: StepState
   verify: StepState
+  transfer: StepState
   /** The currently focused step, or null if all complete */
-  currentStep: 'nickname' | 'id' | 'address' | 'email' | 'verify' | null
+  currentStep: 'nickname' | 'id' | 'address' | 'email' | 'verify' | 'transfer' | null
   /** Whether all steps are completed */
   allCompleted: boolean
 }
@@ -106,6 +107,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const step3Focused = step2Completed && !step3Completed
     const step4Focused = step2Completed && step3Completed && !step4Completed
     const step5Focused = step2Completed && step3Completed && step4Completed && !step5Completed
+    const step6Focused = step1Completed && store.bcsc.accountSetupType === AccountSetupType.TransferAccount // this is used for the account transfer process
 
     // ---- Subtext generators ----
     const getStep1Subtext = (): string[] => {
@@ -176,6 +178,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       return [t('BCSC.Steps.GetVerificationStep5Subtext3')]
     }
 
+    const getTransferSubtext = (): string[] => {
+      return [t('BCSC.Steps.TransferAccountSubtext')]
+    }
+
     // ---- Determine current step ----
     const getCurrentStep = (): SetupStepsResult['currentStep'] => {
       if (step1Focused) return 'nickname'
@@ -183,6 +189,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       if (step3Focused) return 'address'
       if (step4Focused) return 'email'
       if (step5Focused) return 'verify'
+      if (step6Focused) return 'transfer'
       return null
     }
 
@@ -214,6 +221,11 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
         completed: step5Completed,
         focused: step5Focused,
         subtext: getStep5Subtext(),
+      },
+      transfer: {
+        completed: false, // leaving this false, once the user has scanned they don't see the steps screen again
+        focused: step6Focused,
+        subtext: getTransferSubtext(),
       },
       currentStep: getCurrentStep(),
       allCompleted: step1Completed && step2Completed && step3Completed && step4Completed && step5Completed,
