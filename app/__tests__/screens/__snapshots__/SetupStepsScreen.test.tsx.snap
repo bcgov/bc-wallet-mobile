@@ -553,15 +553,6 @@ exports[`SetupSteps renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#F2F2F2",
-            "height": 8,
-            "width": "100%",
-          }
-        }
-      />
-      <View
-        style={
-          {
             "padding": 16,
           }
         }
