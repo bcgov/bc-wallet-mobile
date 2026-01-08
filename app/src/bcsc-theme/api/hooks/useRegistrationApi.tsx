@@ -202,7 +202,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 

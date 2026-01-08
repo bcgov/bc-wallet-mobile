@@ -303,14 +303,16 @@ export const signPairingCode = async (
  * @param fcmDeviceToken The FCM device token for push notifications.
  * @param deviceToken Optional device token (APNS token for iOS).
  * @param attestation Optional attestation data (Play Integrity token for Android, App Store receipt for iOS).
+ * @param nickname Optional nickname to use for client_name. If not provided, falls back to device name.
  * @returns A promise that resolves to the registration body string or null if an error occurs.
  */
 export const getDynamicClientRegistrationBody = async (
   fcmDeviceToken: string,
   deviceToken: string | null,
-  attestation: string | null
+  attestation: string | null,
+  nickname?: string | null
 ): Promise<string | null> => {
-  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation);
+  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, nickname);
 };
 
 /**
