@@ -1,55 +1,82 @@
 import { AlertEvent } from '@/events/alertEvents'
-import { showNativeAlert } from '@/utils/alert'
+import { showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import i18n from 'i18next'
+import { Alert } from 'react-native'
 
 describe('showAlert', () => {
-  it('should render the default alert with translations', () => {
-    const renderAlertMock = jest.fn()
-    const defaultOnPressMock = jest.fn()
-    const translationSpy = jest.spyOn(i18n, 't')
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.spyOn(i18n, 't').mockReturnValue('OK')
+  })
 
-    translationSpy.mockReturnValue('Translated Text')
+  it('should render the alert with provided title and body', () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
 
-    showNativeAlert('test_event' as AlertEvent, [{ text: 'OK', onPress: defaultOnPressMock }], renderAlertMock)
+    showAlert('Test Title', 'Test Body')
 
-    expect(renderAlertMock).toHaveBeenCalledTimes(1)
-    expect(translationSpy).toHaveBeenCalledWith('Alerts.test_event.Title')
-    expect(translationSpy).toHaveBeenCalledWith('Alerts.test_event.Body')
+    expect(alertSpy).toHaveBeenCalledTimes(1)
+    expect(alertSpy).toHaveBeenCalledWith('Test Title', 'Test Body', expect.any(Array))
+  })
 
-    expect(renderAlertMock).toHaveBeenCalledWith('Translated Text', 'Translated Text', [
-      {
-        text: 'OK',
-        onPress: expect.any(Function),
-      },
-    ])
+  it('should use default OK action when no actions provided', () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
+
+    showAlert('Title', 'Body')
+
+    const actions = alertSpy.mock.calls[0][2]
+    expect(actions).toHaveLength(1)
+    expect(actions?.[0].text).toBe('OK')
+  })
+
+  it('should use custom actions when provided', () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
+    const onPressMock = jest.fn()
+
+    showAlert('Title', 'Body', [{ text: 'Custom', onPress: onPressMock }])
+
+    const actions = alertSpy.mock.calls[0][2]
+    expect(actions).toHaveLength(1)
+    expect(actions?.[0].text).toBe('Custom')
   })
 
   it('should call onPress and track analytics event when button is pressed', () => {
-    const renderAlertMock = jest.fn()
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
     const onPressMock = jest.fn()
     const alertActionAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertActionEvent')
-    const translationSpy = jest.spyOn(i18n, 't')
 
-    translationSpy.mockReturnValue('Translated Text')
-    showNativeAlert('test_event' as AlertEvent, [{ text: 'Confirm', onPress: onPressMock }], renderAlertMock)
+    showAlert('Title', 'Body', [{ text: 'Confirm', onPress: onPressMock }], 'test_event' as AlertEvent)
 
     // Simulate button press
-    const alertButtons = renderAlertMock.mock.calls[0][2]
-    alertButtons[0].onPress()
+    const alertButtons = alertSpy.mock.calls[0][2]
+    alertButtons?.[0].onPress?.()
 
     expect(onPressMock).toHaveBeenCalledTimes(1)
     expect(alertActionAnalyticsSpy).toHaveBeenCalledWith('test_event', 'Confirm')
   })
 
-  it('should track alert display event', () => {
-    const renderAlertMock = jest.fn()
+  it('should track alert display event when event is provided', () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
     const alertDisplayAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertDisplayEvent')
-    const translationSpy = jest.spyOn(i18n, 't')
 
-    translationSpy.mockReturnValue('Translated Text')
-    showNativeAlert('test_event' as AlertEvent, [], renderAlertMock)
+    showAlert('Title', 'Body', undefined, 'test_event' as AlertEvent)
 
+    expect(alertSpy).toHaveBeenCalled()
     expect(alertDisplayAnalyticsSpy).toHaveBeenCalledWith('test_event')
+  })
+
+  it('should not track analytics when no event is provided', () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
+    const alertDisplayAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertDisplayEvent')
+    const alertActionAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertActionEvent')
+
+    showAlert('Title', 'Body', [{ text: 'OK', onPress: jest.fn() }])
+
+    // Simulate button press
+    const alertButtons = alertSpy.mock.calls[0][2]
+    alertButtons?.[0].onPress?.()
+
+    expect(alertDisplayAnalyticsSpy).not.toHaveBeenCalled()
+    expect(alertActionAnalyticsSpy).not.toHaveBeenCalled()
   })
 })

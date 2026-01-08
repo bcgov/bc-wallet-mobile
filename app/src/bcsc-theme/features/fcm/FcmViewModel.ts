@@ -129,7 +129,7 @@ export class FcmViewModel {
       const apiClient = getBCSCApiClient()
 
       if (!apiClient) {
-        this.logger.warn('[FcmViewModel] API client not available yet, will retry on next challenge')
+        this.logger.info('[FcmViewModel] API client not available yet, will retry on next challenge')
         return
       }
 

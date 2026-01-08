@@ -210,7 +210,17 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
+        routes: [
+          {
+            name: BCSCScreens.SetupSteps,
+          },
+          {
+            name: BCSCScreens.EvidenceTypeList,
+            params: {
+              cardProcess: BCSCCardProcess.BCSCNonPhoto,
+            },
+          },
+        ],
       })
     )
   }

@@ -3,7 +3,7 @@ import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-l
 import { FcmService, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
-import { AlertProvider } from '@/contexts/AlertContext'
+import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
@@ -94,11 +94,11 @@ const App = () => {
                         onClose={() => setSurveyVisible(false)}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                        <AlertProvider>
+                        <ErrorAlertProvider>
                           <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
                             <Root />
                           </KeyboardProvider>
-                        </AlertProvider>
+                        </ErrorAlertProvider>
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
                     </NetworkProvider>

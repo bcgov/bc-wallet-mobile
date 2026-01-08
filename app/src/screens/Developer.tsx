@@ -20,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
+import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
 
@@ -30,6 +31,7 @@ const Developer: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPalette, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
+  const [errorAlertTestModalVisible, setErrorAlertTestModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
@@ -328,6 +330,16 @@ const Developer: React.FC = () => {
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </SafeAreaModal>
+      <SafeAreaModal
+        visible={errorAlertTestModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          setErrorAlertTestModalVisible(false)
+        }}
+      >
+        <ErrorAlertTest onBack={() => setErrorAlertTestModalVisible(false)} />
+      </SafeAreaModal>
       <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}
@@ -539,6 +551,17 @@ const Developer: React.FC = () => {
             onValueChange={toggleMode}
             value={BCSCMode}
           />
+        </SectionRow>
+
+        <View style={styles.sectionSeparator}></View>
+        <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
+        <SectionRow
+          title={t('Developer.ErrorAlertTest')}
+          accessibilityLabel={t('Developer.ErrorAlertTest')}
+          testID={testIdWithKey('ErrorAlertTest')}
+          onPress={() => setErrorAlertTestModalVisible(true)}
+        >
+          <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
         </SectionRow>
       </ScrollView>
     </ScreenWrapper>

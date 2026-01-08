@@ -1,37 +1,37 @@
 # Update Indy Ledgers Strategy
 #
-# When does this workflow run?
-#   - When a pull request is opened or updated that modifies the `app/scripts/refresh-ledgers.cjs` script or the workflow file itself.
+# This workflow has two modes:
 #
-# When does this worflow create a commit?
-#   - When the workflow detects changes in the `app/src/configs/ledgers/indy/ledgers.json` file after running the `refresh-ledgers.cjs` script.
+# 1. PR Check (automatic):
+#    - Runs on every pull request
+#    - Checks if ledgers.json is outdated by comparing against upstream sources
+#    - PASSES if ledgers are up-to-date
+#    - FAILS if ledgers need updating (blocks PR merge until fixed)
+#
+# 2. Manual Update (workflow_dispatch):
+#    - Triggered manually from GitHub Actions UI
+#    - Allows you to specify a branch name to update
+#    - Fetches latest ledgers and commits them to the specified branch
 #
 
 name: Ledgers
-description: Update Aries ledgers
-
-permissions:
-  contents: write
 
 on:
-  push:
-    paths:
-      - 'app/scripts/refresh-ledgers.cjs'
-      - '.github/workflows/update-ledgers.yml'
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
-  update-ledgers:
+  # Job 1: Check if ledgers are up-to-date (runs on PRs)
+  check-ledgers:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
-    name: Update Indy ledgers
-    env:
-      HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-      HEAD_REF: ${{ github.event.pull_request.head.ref || github.ref }}
+    name: Check Indy ledgers are up-to-date
+    permissions:
+      contents: read
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
-        with:
-          repository: ${{ env.HEAD_REPO }}
-          ref: ${{ env.HEAD_REF }}
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -40,7 +40,6 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .yarn/cache
-          # Cache will be invalidated if yarn.lock changes
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
@@ -48,30 +47,89 @@ jobs:
         working-directory: app
         run: yarn install --immutable
 
-      - name: Update Indy ledgers
+      - name: Fetch latest Indy ledgers
         run: node app/scripts/refresh-ledgers.cjs
 
-      # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
-      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
+      - name: Check for ledger changes
+        id: check_changes
+        run: |
+          if git diff --quiet app/src/configs/ledgers/indy/ledgers.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ Ledgers are up-to-date"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "❌ Ledgers are outdated"
+            echo ""
+            echo "=== Changes detected ==="
+            git diff app/src/configs/ledgers/indy/ledgers.json
+          fi
+
+      - name: Fail if ledgers are outdated
+        if: steps.check_changes.outputs.changed == 'true'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "::error::Indy ledgers are outdated! To fix this:"
+          echo "::error::  1. Go to Actions → Ledgers → Run workflow"
+          echo "::error::  2. Select your branch from the dropdown: ${HEAD_REF}"
+          echo "::error::  3. Click 'Run workflow' to auto-update the ledgers"
+          echo "::error::"
+          echo "::error::Or run locally: node app/scripts/refresh-ledgers.cjs"
+          exit 1
+
+  # Job 2: Update ledgers on selected branch (manual trigger)
+  update-ledgers:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-22.04
+    name: Update Indy ledgers on branch
+    permissions:
+      contents: write
+    env:
+      # github.ref_name is the branch selected in the workflow_dispatch UI
+      TARGET_BRANCH: ${{ github.ref_name }}
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache app node_modules
+        uses: actions/cache@v3
         with:
-          # Optional. Commit message for the created commit.
-          # Defaults to "Apply automatic changes"
-          commit_message: 'chore(bot): updated Indy ledgers json file'
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
-          # Optional. Options used by `git-commit`.
-          # See https://git-scm.com/docs/git-commit#_options
-          commit_options: '--no-verify --signoff'
+      - name: Install dependencies
+        working-directory: app
+        run: yarn install --immutable
 
-          # Optional glob pattern of files which should be added to the commit
-          # Defaults to all (.)
-          # See the `pathspec`-documentation for git
-          # - https://git-scm.com/docs/git-add#Documentation/git-add.txt-ltpathspecgt82308203
-          # - https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
-          file_pattern: 'app/src/configs/ledgers/indy/ledgers.json'
+      - name: Fetch latest Indy ledgers
+        run: node app/scripts/refresh-ledgers.cjs
 
-          # Optional. Option used by `git-status` to determine if the repository is
-          # dirty. See https://git-scm.com/docs/git-status#_options
-          status_options: '--porcelain app/src/configs/ledgers/indy/ledgers.json'
+      - name: Check for ledger changes
+        id: check_changes
+        run: |
+          if git diff --quiet app/src/configs/ledgers/indy/ledgers.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ No changes needed - ledgers are already up-to-date"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📝 Changes detected - will commit update"
+          fi
 
-          # Optional. Disable dirty check and always try to create a commit and push
-          skip_dirty_check: false
+      - name: Commit and push ledger updates
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/src/configs/ledgers/indy/ledgers.json
+          git commit -m "chore(bot): updated Indy ledgers json file" --signoff
+          git push origin "${TARGET_BRANCH}"
+          echo "✅ Ledgers updated and pushed to branch: ${TARGET_BRANCH}"
+
+      - name: No changes needed
+        if: steps.check_changes.outputs.changed == 'false'
+        run: |
+          echo "✅ Branch '${TARGET_BRANCH}' already has up-to-date ledgers"
