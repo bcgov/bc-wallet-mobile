@@ -197,6 +197,7 @@ export interface Spec extends TurboModule {
    * @returns true if deleted successfully
    */
   deleteToken(tokenType: number): Promise<boolean>;
+  setIssuer(issuer: string): Promise<boolean>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: Omit<NativeAccount, 'id'>): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;

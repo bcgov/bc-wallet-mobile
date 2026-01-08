@@ -16,6 +16,9 @@ RCT_EXTERN_METHOD(setToken : (nonnull NSNumber *)tokenTypeNumber tokenString : (
 RCT_EXTERN_METHOD(deleteToken : (nonnull NSNumber *)tokenTypeNumber resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setIssuer : (NSString *)issuer resolve : (RCTPromiseResolveBlock)
+                      resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(setAccount : (NSDictionary *)account resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 

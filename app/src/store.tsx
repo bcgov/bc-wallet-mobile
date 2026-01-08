@@ -7,7 +7,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import * as BcscCore from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -110,7 +110,7 @@ export interface BCSCSecureState {
   /** Expiration time for device code */
   deviceCodeExpiresAt?: Date
   /** Identification process type (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification') */
-  cardProcess?: BCSCCardProcess
+  cardProcess?: BcscCore.BCSCCardProcess
   /** User's birthdate from BC Services Card - used during verification */
   birthdate?: Date
   /** BC Services Card serial number */
@@ -264,11 +264,9 @@ export const BCDispatchAction = {
 }
 
 const getInitialEnvironment = (): IASEnvironment => {
-  if (__DEV__) {
-    return IASEnvironment.SIT
-  }
-
-  return IASEnvironment.PROD
+  const environment = __DEV__ ? IASEnvironment.SIT : IASEnvironment.PROD
+  BcscCore.setIssuer(environment.iasApiBaseUrl)
+  return environment
 }
 
 const createIASEnvironment = (config: {

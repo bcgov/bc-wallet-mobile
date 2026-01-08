@@ -30,7 +30,9 @@ class NativeCompatibleStorage(
         private const val TAG = "NativeCompatibleStorage"
         private const val ACCOUNTS_FILENAME = "accounts"
         private const val TOKENS_FILENAME = "tokens"
+        private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
+        private const val PRODUCTION_ISSUER = "https://id.gov.bc.ca"
     }
 
     private val encryption: Encryption by lazy {
@@ -45,6 +47,11 @@ class NativeCompatibleStorage(
     }
 
     // MARK: - Issuer Name Resolution
+
+    fun saveIssuerToFile(issuer: String): Boolean {
+        val file = File(context.filesDir, ISSUER_FILENAME)
+        return writeEncryptedFile(file, issuer)
+    }
 
     /**
      * Gets the issuer name from an issuer URL.
@@ -87,43 +94,21 @@ class NativeCompatibleStorage(
         }
     }
 
-    /**
-     * Gets the default issuer name based on package name.
-     * Used when no issuer is available yet.
-     */
-    fun getDefaultIssuerName(): String {
-        val issuerName = getCurrentIssuerName()
-
-        if (issuerName != null) {
-            return issuerName
-        }
-
-        return when (context.packageName) {
-            "ca.bc.gov.id.servicescard" -> "prod"
-            "ca.bc.gov.id.servicescard.dev" -> "sit"
-            "ca.bc.gov.id.servicescard.qa" -> "qa"
-            "ca.bc.gov.id.servicescard.test" -> "test"
-            else -> "sit"
-        }
-    }
-
-
     // MARK: - File Path Helpers
 
     /**
-     * Attempts to determine the current issuer name by checking existing issuer directories.
-     * Returns the most recently modified known issuer directory name, or null if none found.
+     * Gets the current isser name by reading the issuer file.
      */
-    private fun getCurrentIssuerName(): String? {
-        val issuerDirs = context.filesDir
-            .listFiles(File::isDirectory)
-            ?.sortedByDescending { it.lastModified() }
-            ?: return null
-        val knownIssuers = listOf("prod", "sit", "qa", "dev", "dev2", "preprod", "test")
+    private fun getDefaultIssuerName(): String {
+        val path = context.filesDir + File.separator + ISSUER_FILENAME
+        val issuerFile = File(path)
+        val issuer = readEncryptedFile(issuerFile)
 
-        return knownIssuers.firstOrNull { name ->
-            issuerDirs.any { it.name == name }
+        if (issuer != null) {
+            return getIssuerNameFromIssuer(issuer)
         }
+
+        return PRODUCTION_ISSUER
     }
 
     private fun getAccountsFile(issuerName: String): File {

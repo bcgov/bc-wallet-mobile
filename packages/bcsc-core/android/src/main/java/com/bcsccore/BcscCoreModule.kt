@@ -258,17 +258,9 @@ class BcscCoreModule(
                 )}",
             )
 
-            val issuer = account.getString("issuer")
-            if (issuer.isNullOrEmpty()) {
-                Log.w(NAME, "getToken - Account issuer is null or empty, cannot determine environment")
-                promise.resolve(null)
-                return
-            }
-
-            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
-
             // Use DecryptedFileReader to read and decrypt the token file
             val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
+            val issuerName = nativeStorage.getDefaultIssuerName()
             val relativePath = "$issuerName/$accountId/tokens"
             val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
             Log.d(NAME, "Full token file path: $tokenFilePath")
@@ -643,6 +635,18 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "deleteToken: Error deleting token", e)
             promise.reject("E_TOKEN_DELETE_ERROR", "Error deleting token: ${e.message}", e)
+        }
+    }
+
+    @ReactMethod
+    override fun setIssuer(issuer: String, promise: Promise) {
+        Log.d(NAME, "setIssuer called with issuer: $issuer")
+        try {
+            nativeStorage.saveIssuerToFile(issuer)
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(NAME, "setIssuer: Error saving issuer to file: ${e.message}", e)
+            promise.resolve(false)
         }
     }
 

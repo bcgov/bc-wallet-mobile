@@ -3,6 +3,7 @@ import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTh
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
+import * as BcscCore from 'react-native-bcsc-core'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -60,6 +61,8 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         type: BCDispatchAction.UPDATE_ENVIRONMENT,
         payload: [environment],
       })
+
+      await BcscCore.setIssuer(environment.iasApiBaseUrl)
     } catch (error) {
       logger.error('Error during factory reset for environment change:', error as Error)
     }
