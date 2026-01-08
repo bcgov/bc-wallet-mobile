@@ -20,7 +20,7 @@ const TransferInformationScreen: React.FC = () => {
       title={t('BCSC.TransferInformation.TransferAccount')}
       buttonType={ButtonType.Primary}
       onPress={() => {
-        navigation.navigate(BCSCScreens.TransferAccountInstructions)
+        navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
       }}
     />
   )

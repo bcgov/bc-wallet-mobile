@@ -1,4 +1,4 @@
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import QRCodePhone from '@assets/img/qr-code-phone.png'
 import QRScan from '@assets/img/qr-code-scan.png'
 import TabNavigator from '@assets/img/tab-navigator-account.png'
@@ -17,7 +17,7 @@ const TransferInstructionsScreen: React.FC = () => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
-  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   const controls = (
     <Button
