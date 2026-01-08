@@ -28,6 +28,7 @@ import { DeviceEventEmitter, Platform } from 'react-native'
 import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 import { AttestationRestrictions } from '@/constants'
+import { getErrorDefinition } from '@/errors'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 
@@ -76,16 +77,18 @@ interface AttestationProofRequestFormat {
   request: IndyRequest & AnonCredsRequest
 }
 
+// Error codes from the central error registry for consistent tracking
 const AttestationErrorCodes = {
-  BadInvitation: 2027,
-  ReceiveInvitationError: 2028,
-  GeneralProofError: 2029,
-  FailedToConnectToAttestationAgent: 2030,
-  FailedToFetchNonceForAttestation: 2031,
-  FailedToGenerateAttestation: 2032,
-  FailedToRequestAttestation: 2033,
-  FailedToValidateAttestation: 2034,
-  IntegrityUnavailable: 2035,
+  BadInvitation: getErrorDefinition('ATTESTATION_BAD_INVITATION').code,
+  ReceiveInvitationError: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
+  GeneralProofError: getErrorDefinition('ATTESTATION_GENERAL_PROOF_ERROR').code,
+  FailedToConnectToAttestationAgent: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
+  FailedToFetchNonceForAttestation: getErrorDefinition('ATTESTATION_NONCE_ERROR').code,
+  FailedToGenerateAttestation: getErrorDefinition('ATTESTATION_GENERATION_ERROR').code,
+  FailedToRequestAttestation: getErrorDefinition('ATTESTATION_REQUEST_ERROR').code,
+  FailedToValidateAttestation: getErrorDefinition('ATTESTATION_VALIDATION_ERROR').code,
+  IntegrityUnavailable: getErrorDefinition('ATTESTATION_INTEGRITY_UNAVAILABLE').code,
+  UnsupportedPlatform: getErrorDefinition('ATTESTATION_UNSUPPORTED_PLATFORM').code,
 } as const
 
 type Restriction = {
@@ -571,8 +574,12 @@ export class AttestationMonitor implements AttestationMonitorI {
         return this.generateGoogleAttestation(nonce)
 
       default:
-        // TODO(jl): throw unsupported platform error
-        break
+        throw new BifoldError(
+          'Unsupported Platform',
+          'Device attestation is not supported on this platform.',
+          `Platform "${Platform.OS}" is not supported for attestation.`,
+          AttestationErrorCodes.UnsupportedPlatform
+        )
     }
   }
 
