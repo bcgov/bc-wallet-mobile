@@ -60,6 +60,7 @@ abstract class BcscCoreSpec internal constructor(
         fcmDeviceToken: String,
         deviceToken: String?,
         attestation: String?,
+        nickname: String?,
         promise: Promise,
     )
 
