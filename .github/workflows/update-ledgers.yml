@@ -16,9 +16,6 @@
 
 name: Ledgers
 
-permissions:
-  contents: write
-
 on:
   pull_request:
     types: [opened, synchronize, reopened]
@@ -36,6 +33,8 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
     name: Check Indy ledgers are up-to-date
+    permissions:
+      contents: read
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -89,13 +88,16 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-22.04
     name: Update Indy ledgers on branch
+    permissions:
+      contents: write
     env:
       TARGET_BRANCH: ${{ inputs.branch_name }}
     steps:
+      # Note: ref parameter is safe to use with expressions - it's a YAML parameter, not a shell command
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: "${TARGET_BRANCH}"
+          ref: ${{ inputs.branch_name }}
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
