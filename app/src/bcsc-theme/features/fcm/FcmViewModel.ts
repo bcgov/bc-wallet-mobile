@@ -21,6 +21,7 @@ import {
 export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
+  private initialized = false
 
   constructor(
     private readonly fcmService: FcmService,
@@ -29,6 +30,12 @@ export class FcmViewModel {
   ) {}
 
   public initialize() {
+    if (this.initialized) {
+      this.logger.info('[FcmViewModel] Already initialized, skipping')
+      return
+    }
+    this.initialized = true
+
     this.logger.info('[FcmViewModel] Initializing...')
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
