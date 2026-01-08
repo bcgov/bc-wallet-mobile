@@ -7,7 +7,12 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Platform } from 'react-native'
-import { AccountSecurityMethod, getAccountSecurityMethod, setAccountSecurityMethod } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  getAccountSecurityMethod,
+  setAccountSecurityMethod,
+  setupDeviceSecurity,
+} from 'react-native-bcsc-core'
 
 interface ChangeSecurityScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainAppSecurity>
@@ -42,8 +47,16 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
     loadCurrentMethod()
   }, [logger])
 
-  const handleDeviceAuthSuccess = useCallback(async () => {
+  const handleDeviceAuthPress = useCallback(async () => {
     try {
+      // In settings context, account already exists, so setupDeviceSecurity should work
+      const { success } = await setupDeviceSecurity()
+      if (!success) {
+        logger.error('Device security setup failed')
+        Alert.alert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        return
+      }
+
       await setAccountSecurityMethod(AccountSecurityMethod.DeviceAuth)
       setCurrentMethod(AccountSecurityMethod.DeviceAuth)
       logger.info('Successfully switched to device authentication')
@@ -74,7 +87,7 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
 
   return (
     <SecurityMethodSelector
-      onDeviceAuthSuccess={handleDeviceAuthSuccess}
+      onDeviceAuthPress={handleDeviceAuthPress}
       onPINPress={handlePINPress}
       onLearnMorePress={handleLearnMorePress}
       currentMethod={currentMethod}

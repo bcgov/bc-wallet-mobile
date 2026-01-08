@@ -1,8 +1,5 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import {
-  DeviceSecurityResult,
-  SecurityMethodSelector,
-} from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
+import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -12,7 +9,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AccountSecurityMethod } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -30,21 +27,26 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
   const { register } = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const handleDeviceAuthSuccess = useCallback(
-    async (result: DeviceSecurityResult) => {
-      try {
-        // Register with device auth security method
-        await register(AccountSecurityMethod.DeviceAuth)
+  const handleDeviceAuthPress = useCallback(async () => {
+    try {
+      // IMPORTANT: register() must be called FIRST to create the account
+      // setupDeviceSecurity() requires an account to already exist
+      await register(AccountSecurityMethod.DeviceAuth)
+
+      // Now setup device security (generates random PIN and stores it securely)
+      const { success, walletKey } = await setupDeviceSecurity()
+      if (success) {
         // Complete onboarding with the wallet key
-        await handleSuccessfulAuth(result.walletKey)
+        await handleSuccessfulAuth(walletKey)
         logger.info('Device security setup completed successfully')
-      } catch (error) {
-        const errMessage = error instanceof Error ? error.message : String(error)
-        logger.error(`Error completing device security setup: ${errMessage}`)
+      } else {
+        logger.error('Device security setup failed')
       }
-    },
-    [handleSuccessfulAuth, logger, register]
-  )
+    } catch (error) {
+      const errMessage = error instanceof Error ? error.message : String(error)
+      logger.error(`Error completing device security setup: ${errMessage}`)
+    }
+  }, [handleSuccessfulAuth, logger, register])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)
@@ -60,7 +62,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
 
   return (
     <SecurityMethodSelector
-      onDeviceAuthSuccess={handleDeviceAuthSuccess}
+      onDeviceAuthPress={handleDeviceAuthPress}
       onPINPress={handlePINPress}
       onLearnMorePress={handleLearnMorePress}
       deviceAuthPrompt={t('BCSC.Security.AuthenticateToSecure')}

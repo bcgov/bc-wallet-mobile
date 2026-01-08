@@ -11,21 +11,16 @@ import {
   canPerformDeviceAuthentication,
   getAvailableBiometricType,
   performDeviceAuthentication,
-  setupDeviceSecurity,
 } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-export interface DeviceSecurityResult {
-  success: boolean
-  walletKey: string
-}
-
 interface SecurityMethodSelectorProps {
   /**
-   * Called when device security setup is successful.
-   * Receives the wallet key from setupDeviceSecurity().
+   * Called when user successfully authenticates with device auth (biometric/passcode).
+   * The parent is responsible for calling register() FIRST, then setupDeviceSecurity().
+   * This is because setupDeviceSecurity() requires an account to already exist.
    */
-  onDeviceAuthSuccess: (result: DeviceSecurityResult) => Promise<void>
+  onDeviceAuthPress: () => Promise<void>
   /**
    * Called when user selects PIN option.
    * The parent should navigate to the appropriate PIN screen.
@@ -54,7 +49,7 @@ interface SecurityMethodSelectorProps {
  * Used by both SecureAppScreen (onboarding) and ChangeSecurityScreen (settings).
  */
 export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
-  onDeviceAuthSuccess,
+  onDeviceAuthPress,
   onPINPress,
   onLearnMorePress,
   currentMethod,
@@ -119,7 +114,11 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
           const prompt = deviceAuthPrompt ?? t('BCSC.Security.AuthenticatePrompt')
           const deviceAuthSuccessful = await performDeviceAuthentication(prompt)
           if (deviceAuthSuccessful) {
-            await completeDeviceSecuritySetup()
+            // Call the parent handler which is responsible for:
+            // 1. Creating the account (register) - MUST happen first
+            // 2. Calling setupDeviceSecurity() - requires account to exist
+            // 3. Completing auth with the wallet key
+            await onDeviceAuthPress()
             return
           }
         } catch (deviceAuthError) {
@@ -132,22 +131,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
       logger.error(`Error during device authentication: ${errMessage}`)
     } finally {
       stopLoading()
-    }
-  }
-
-  const completeDeviceSecuritySetup = async () => {
-    try {
-      // Setup device security (generates random PIN and stores it securely)
-      const { success, walletKey } = await setupDeviceSecurity()
-      if (success) {
-        await onDeviceAuthSuccess({ success, walletKey })
-        logger.info('Device security setup completed successfully')
-      } else {
-        logger.error('Device security setup failed')
-      }
-    } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error completing device security setup: ${errMessage}`)
     }
   }
 
