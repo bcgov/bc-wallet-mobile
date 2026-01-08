@@ -28,7 +28,7 @@ jobs:
       HEAD_REF: ${{ github.event.pull_request.head.ref || github.ref }}
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ env.HEAD_REPO }}
           ref: ${{ env.HEAD_REF }}
@@ -37,7 +37,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
@@ -52,7 +52,7 @@ jobs:
         run: node app/scripts/refresh-ledgers.cjs
 
       # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
-      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
+      - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
         with:
           # Optional. Commit message for the created commit.
           # Defaults to "Apply automatic changes"
