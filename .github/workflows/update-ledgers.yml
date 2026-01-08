@@ -73,10 +73,12 @@ jobs:
 
       - name: Fail if ledgers are outdated
         if: steps.check_changes.outputs.changed == 'true'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           echo "::error::Indy ledgers are outdated! To fix this:"
           echo "::error::  1. Go to Actions → Ledgers → Run workflow"
-          echo "::error::  2. Enter your branch name: ${{ github.head_ref }}"
+          echo "::error::  2. Enter your branch name: ${HEAD_REF}"
           echo "::error::  3. Click 'Run workflow' to auto-update the ledgers"
           echo "::error::"
           echo "::error::Or run locally: node app/scripts/refresh-ledgers.cjs"
@@ -87,13 +89,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-22.04
     name: Update Indy ledgers on branch
+    env:
+      TARGET_BRANCH: ${{ inputs.branch_name }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch_name }}
-          # Fetch with token to allow pushing
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: "${TARGET_BRANCH}"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -130,10 +132,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add app/src/configs/ledgers/indy/ledgers.json
           git commit -m "chore(bot): updated Indy ledgers json file" --signoff
-          git push origin ${{ inputs.branch_name }}
-          echo "✅ Ledgers updated and pushed to branch: ${{ inputs.branch_name }}"
+          git push origin "${TARGET_BRANCH}"
+          echo "✅ Ledgers updated and pushed to branch: ${TARGET_BRANCH}"
 
       - name: No changes needed
         if: steps.check_changes.outputs.changed == 'false'
         run: |
-          echo "✅ Branch '${{ inputs.branch_name }}' already has up-to-date ledgers"
+          echo "✅ Branch '${TARGET_BRANCH}' already has up-to-date ledgers"
