@@ -17,15 +17,9 @@
 name: Ledgers
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened]
-
-  workflow_dispatch:
-    inputs:
-      branch_name:
-        description: 'Branch name to update (e.g., feature/my-branch)'
-        required: true
-        type: string
 
 jobs:
   # Job 1: Check if ledgers are up-to-date (runs on PRs)
@@ -77,13 +71,13 @@ jobs:
         run: |
           echo "::error::Indy ledgers are outdated! To fix this:"
           echo "::error::  1. Go to Actions → Ledgers → Run workflow"
-          echo "::error::  2. Enter your branch name: ${HEAD_REF}"
+          echo "::error::  2. Select your branch from the dropdown: ${HEAD_REF}"
           echo "::error::  3. Click 'Run workflow' to auto-update the ledgers"
           echo "::error::"
           echo "::error::Or run locally: node app/scripts/refresh-ledgers.cjs"
           exit 1
 
-  # Job 2: Update ledgers on a specific branch (manual trigger)
+  # Job 2: Update ledgers on selected branch (manual trigger)
   update-ledgers:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-22.04
@@ -91,13 +85,11 @@ jobs:
     permissions:
       contents: write
     env:
-      TARGET_BRANCH: ${{ inputs.branch_name }}
+      # github.ref_name is the branch selected in the workflow_dispatch UI
+      TARGET_BRANCH: ${{ github.ref_name }}
     steps:
-      # Note: ref parameter is safe to use with expressions - it's a YAML parameter, not a shell command
       - name: Checkout branch
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch_name }}
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
