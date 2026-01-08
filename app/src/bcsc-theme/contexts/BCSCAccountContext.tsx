@@ -1,7 +1,10 @@
 import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { TOKENS, useServices } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
+import { DeviceEventEmitter } from 'react-native'
+
 import useApi from '../api/hooks/useApi'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
@@ -29,7 +32,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const { data, load, isLoading } = useDataLoader(api.user.getUserMetadata, {
+  const { data, load, isLoading, refresh } = useDataLoader(api.user.getUserMetadata, {
     onError: (error) => {
       logger.error('BCSCAccountProvider: Failed to load user metadata', { error })
     },
@@ -38,6 +41,16 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     load()
   }, [load])
+
+  // Listen for token refresh events (e.g., from FCM status notifications) and refresh account data
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, () => {
+      logger.info('BCSCAccountProvider: Tokens refreshed, reloading account data')
+      refresh()
+    })
+
+    return () => subscription.remove()
+  }, [refresh, logger])
 
   const accountContextValue = useMemo(() => {
     if (!data) {

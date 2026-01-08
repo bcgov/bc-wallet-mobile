@@ -1,7 +1,8 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-
+import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
+import { BCSCEventTypes } from '../../../events/eventTypes'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
@@ -103,6 +104,7 @@ export class FcmViewModel {
 
     const { title, message } = data
 
+    // Show local notification if we have title and message
     if (title && message) {
       try {
         await showLocalNotification(title, message)
@@ -110,7 +112,34 @@ export class FcmViewModel {
         this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
       }
     } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message')
+      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+    }
+
+    // Always refresh tokens when we receive a status notification
+    // This ensures account data is updated regardless of notification display
+    await this.refreshTokens()
+  }
+
+  /**
+   * Refreshes OAuth tokens using the current refresh token.
+   * Emits a TOKENS_REFRESHED event so React components can update their state.
+   */
+  private async refreshTokens(): Promise<void> {
+    try {
+      const apiClient = getBCSCApiClient()
+
+      if (!apiClient?.tokens?.refresh_token) {
+        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
+        return
+      }
+
+      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
+
+      // Emit event so React components (e.g., BCSCAccountProvider) can refresh their data
+      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
+    } catch (error) {
+      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
     }
   }
 
