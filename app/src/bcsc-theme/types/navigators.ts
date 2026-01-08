@@ -85,6 +85,8 @@ export enum BCSCScreens {
   MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
   MainDeveloper = 'BCSCMainDeveloper',
   MainAutoLock = 'BCSCMainAutoLock',
+  MainAppSecurity = 'BCSCMainAppSecurity',
+  MainChangePIN = 'BCSCMainChangePIN',
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
   VerifyAutoLock = 'BCSCVerifyAutoLock',
@@ -207,6 +209,8 @@ export type BCSCMainStackParams = {
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
+  [BCSCScreens.MainAppSecurity]: undefined
+  [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCScreens.AccountExpired]: undefined
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined

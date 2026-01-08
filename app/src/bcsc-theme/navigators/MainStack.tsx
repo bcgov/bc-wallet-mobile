@@ -26,7 +26,9 @@ import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import { AppSecurityScreen } from '../features/settings/AppSecurityScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
+import { ChangePINScreen } from '../features/settings/ChangePINScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
@@ -133,6 +135,26 @@ const MainStack: React.FC = () => {
             title: t('BCSC.Settings.AutoLockTime'),
             headerBackTestID: testIdWithKey('Back'),
           }}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainAppSecurity}
+          component={AppSecurityScreen}
+          options={{
+            headerShown: true,
+            title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
+            headerBackTestID: testIdWithKey('Back'),
+          }}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainChangePIN}
+          component={ChangePINScreen}
+          options={({ route }) => ({
+            headerShown: true,
+            title: route.params?.isChangingExistingPIN
+              ? t('BCSC.ChangePIN.ScreenTitle')
+              : t('BCSC.Settings.ChangePIN.ScreenTitle'),
+            headerBackTestID: testIdWithKey('Back'),
+          })}
         />
         <Stack.Screen
           name={BCSCScreens.ManualPairingCode}
