@@ -107,7 +107,6 @@ class NativeCompatibleStorage(
         }
     }
 
-
     // MARK: - File Path Helpers
 
     /**
@@ -115,10 +114,11 @@ class NativeCompatibleStorage(
      * Returns the most recently modified known issuer directory name, or null if none found.
      */
     private fun getCurrentIssuerName(): String? {
-        val issuerDirs = context.filesDir
-            .listFiles(File::isDirectory)
-            ?.sortedByDescending { it.lastModified() }
-            ?: return null
+        val issuerDirs =
+            context.filesDir
+                .listFiles(File::isDirectory)
+                ?.sortedByDescending { it.lastModified() }
+                ?: return null
         val knownIssuers = listOf("prod", "sit", "qa", "dev", "dev2", "preprod", "test")
 
         return knownIssuers.firstOrNull { name ->
