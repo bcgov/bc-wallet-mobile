@@ -158,10 +158,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         nickname: store.bcsc.selectedNickname,
       })
 
-      // TODO (MD): Resolve this failure
-      // register -> updateTokens -> persistTokens ->
-      // bcscCore.setToken -> getAccountSync -> getDefaultIssuerName
-      // returns 'sit' instead of the correct environment name
       await updateTokens({
         registrationAccessToken: data.registration_access_token,
       })
