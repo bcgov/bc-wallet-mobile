@@ -524,19 +524,36 @@ jobs:
     if: always()
     steps:
       - name: Check matrix results
+        env:
+          SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
+          ANDROID_RESULT: ${{ needs.build-android.result }}
+          IOS_RESULT: ${{ needs.build-ios.result }}
         run: |
-          if [ "${{ needs.early-exit-check.outputs.should_skip_build }}" == "true" ]; then
-            echo "✅ Nothing to build. Early exit okay"
+          echo "Debug: should_skip_build=$SHOULD_SKIP"
+          echo "Debug: build-android.result=$ANDROID_RESULT"
+          echo "Debug: build-ios.result=$IOS_RESULT"
+
+          # If builds were intentionally skipped, that's okay
+          if [ "$SHOULD_SKIP" == "true" ]; then
+            echo "✅ No relevant file changes. Build skipped intentionally."
             exit 0
           fi
 
-          if [ "${{ needs.build-android.result }}" != "success" ]; then
-            echo "Android build(s) failed"
+          # Check for actual failures (not skipped)
+          if [ "$ANDROID_RESULT" != "success" ] && [ "$ANDROID_RESULT" != "skipped" ]; then
+            echo "❌ Android build(s) failed with result: $ANDROID_RESULT"
             exit 1
           fi
 
-          if [ "${{ needs.build-ios.result }}" != "success" ]; then
-            echo "iOS build(s) failed"
+          if [ "$IOS_RESULT" != "success" ] && [ "$IOS_RESULT" != "skipped" ]; then
+            echo "❌ iOS build(s) failed with result: $IOS_RESULT"
+            exit 1
+          fi
+
+          # If we didn't skip but builds didn't run, that's an error
+          if [ "$ANDROID_RESULT" == "skipped" ] || [ "$IOS_RESULT" == "skipped" ]; then
+            echo "⚠️ Warning: Builds were skipped unexpectedly"
+            echo "This might indicate an issue with job conditions"
             exit 1
           fi
 
