@@ -211,7 +211,8 @@ export interface Spec extends TurboModule {
   getDynamicClientRegistrationBody(
     fcmDeviceToken: string,
     deviceToken: string | null,
-    attestation: string | null
+    attestation: string | null,
+    nickname?: string | null
   ): Promise<string | null>;
   getDeviceCodeRequestBody(
     deviceCode: string,

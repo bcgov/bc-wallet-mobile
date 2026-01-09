@@ -33,8 +33,8 @@ RCT_EXTERN_METHOD(signPairingCode : (NSString *)code issuer : (NSString *)issuer
                           deviceToken resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getDynamicClientRegistrationBody : (NSString *)fcmDeviceToken deviceToken : (NSString *_Nullable)
-                      deviceToken attestation : (NSString *_Nullable)attestation resolve : (RCTPromiseResolveBlock)
-                          resolve reject : (RCTPromiseRejectBlock)reject)
+                      deviceToken attestation : (NSString *_Nullable)attestation nickname : (NSString *_Nullable)
+                          nickname resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getDeviceCodeRequestBody : (NSString *)deviceCode clientID : (NSString *)clientID issuer : (
     NSString *)issuer confirmationCode : (NSString *)confirmationCode resolve : (RCTPromiseResolveBlock)

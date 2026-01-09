@@ -1110,6 +1110,7 @@ class BcscCoreModule(
         fcmDeviceToken: String,
         deviceToken: String?,
         attestation: String?,
+        nickname: String?,
         promise: Promise,
     ) {
         try {
@@ -1148,10 +1149,13 @@ class BcscCoreModule(
             // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
             val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
 
+            // Use nickname if provided, otherwise fall back to device name
+            val clientName = if (!nickname.isNullOrEmpty()) nickname else getDeviceName()
+
             // Create the dynamic client registration body structure using JSONObject for proper serialization
             val registrationBodyJson =
                 JSONObject().apply {
-                    put("client_name", "BC Services Wallet")
+                    put("client_name", clientName)
                     put(
                         "redirect_uris",
                         JSONArray().apply {
