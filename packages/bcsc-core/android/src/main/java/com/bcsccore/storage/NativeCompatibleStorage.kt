@@ -91,16 +91,40 @@ class NativeCompatibleStorage(
      * Gets the default issuer name based on package name.
      * Used when no issuer is available yet.
      */
-    fun getDefaultIssuerName(): String =
-        when (context.packageName) {
+    fun getDefaultIssuerName(): String {
+        val issuerName = getCurrentIssuerName()
+
+        if (issuerName != null) {
+            return issuerName
+        }
+
+        return when (context.packageName) {
             "ca.bc.gov.id.servicescard" -> "prod"
             "ca.bc.gov.id.servicescard.dev" -> "sit"
             "ca.bc.gov.id.servicescard.qa" -> "qa"
             "ca.bc.gov.id.servicescard.test" -> "test"
             else -> "sit"
         }
+    }
 
     // MARK: - File Path Helpers
+
+    /**
+     * Attempts to determine the current issuer name by checking existing issuer directories.
+     * Returns the most recently modified known issuer directory name, or null if none found.
+     */
+    private fun getCurrentIssuerName(): String? {
+        val issuerDirs =
+            context.filesDir
+                .listFiles(File::isDirectory)
+                ?.sortedByDescending { it.lastModified() }
+                ?: return null
+        val knownIssuers = listOf("prod", "sit", "qa", "dev", "dev2", "preprod", "test")
+
+        return knownIssuers.firstOrNull { name ->
+            issuerDirs.any { it.name == name }
+        }
+    }
 
     private fun getAccountsFile(issuerName: String): File {
         val path = issuerName + File.separator + ACCOUNTS_FILENAME

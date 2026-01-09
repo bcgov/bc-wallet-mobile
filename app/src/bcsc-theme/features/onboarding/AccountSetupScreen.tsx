@@ -1,11 +1,11 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useDeveloperMode, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, Vibration, View } from 'react-native'
 
 interface AccountSetupScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingAccountSetup>
@@ -15,6 +15,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
+    Vibration.vibrate()
+    navigation.navigate(BCSCScreens.OnboardingDeveloper)
+  })
 
   const styles = StyleSheet.create({
     container: {
@@ -30,6 +34,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     controlsContainer: {
       width: '100%',
       gap: Spacing.md,
+    },
+    pressableArea: {
+      flex: 1,
+      width: '100%',
     },
   })
 
@@ -51,12 +59,14 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
 
   return (
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>
-      <View style={styles.contentContainer}>
-        <GenericCardImage />
-        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          {t('BCSC.AccountSetup.Title')}
-        </ThemedText>
-      </View>
+      <Pressable onPress={incrementDeveloperMenuCounter} style={styles.pressableArea}>
+        <View style={styles.contentContainer}>
+          <GenericCardImage />
+          <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+            {t('BCSC.AccountSetup.Title')}
+          </ThemedText>
+        </View>
+      </Pressable>
 
       <View style={styles.controlsContainer}>
         <Button buttonType={ButtonType.Primary} title={t('BCSC.AccountSetup.AddAccount')} onPress={handleAddAccount} />
