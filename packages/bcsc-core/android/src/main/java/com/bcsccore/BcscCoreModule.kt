@@ -142,33 +142,6 @@ class BcscCoreModule(
         NativeCompatibleStorage(reactApplicationContext)
     }
 
-    /**
-     * Determines the current environment based on the Android package name.
-     * Similar to the Swift implementation that uses bundle ID.
-     */
-    private val currentEnvName: String
-        get() {
-            val packageName = reactApplicationContext.packageName
-            return when (packageName) {
-                "ca.bc.gov.id.servicescard" -> {
-                    "prod"
-                }
-
-                "ca.bc.gov.id.servicescard.dev" -> {
-                    "sit"
-                }
-
-                "ca.bc.gov.id.servicescard.qa" -> {
-                    "qa"
-                }
-
-                else -> {
-                    Log.d(NAME, "Unknown package name: $packageName, defaulting to SIT environment")
-                    "sit"
-                }
-            }
-        }
-
     @ReactMethod
     override fun getKeyPair(
         keyAlias: String,
@@ -285,9 +258,18 @@ class BcscCoreModule(
                 )}",
             )
 
+            val issuer = account.getString("issuer")
+            if (issuer.isNullOrEmpty()) {
+                Log.w(NAME, "getToken - Account issuer is null or empty, cannot determine environment")
+                promise.resolve(null)
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+
             // Use DecryptedFileReader to read and decrypt the token file
             val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
-            val relativePath = "$currentEnvName/$accountId/tokens"
+            val relativePath = "$issuerName/$accountId/tokens"
             val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
             Log.d(NAME, "Full token file path: $tokenFilePath")
 

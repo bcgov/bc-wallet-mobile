@@ -1,12 +1,12 @@
-import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
+import { BCDispatchAction, BCState, IASEnvironment } from '../store'
 
 interface IASEnvironmentProps {
   shouldDismissModal: () => void
@@ -16,13 +16,14 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-
-  const environments = iasEnvironments
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primaryBackground,
       width: '100%',
+      flex: 1,
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
@@ -41,11 +42,27 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     },
   })
 
-  const handleEnvironmentChange = (environment: IASEnvironment) => {
-    dispatch({
-      type: BCDispatchAction.UPDATE_ENVIRONMENT,
-      payload: [environment],
-    })
+  /**
+   * Handles the change of the IAS environment by performing a factory reset and updating the store.
+   *
+   * Note: Switching environments currently requires a factory reset.
+   * Persisting state between environments is a potential future enhancement.
+   *
+   * @param environment - The selected IAS environment to switch to.
+   * @returns A promise that resolves when the environment change process is complete.
+   * */
+  const handleEnvironmentChange = async (environment: IASEnvironment) => {
+    try {
+      // hard factory reset, no state saved
+      await factoryReset()
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [environment],
+      })
+    } catch (error) {
+      logger.error('Error during factory reset for environment change:', error as Error)
+    }
 
     shouldDismissModal()
   }
@@ -53,12 +70,12 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={environments}
+        data={Object.values(IASEnvironment)}
         renderItem={({ item: environment }) => {
           const { name }: IASEnvironment = environment
           return (
             <View style={[styles.section, styles.sectionRow]}>
-              <Text style={TextTheme.title}>{t(`Developer.${name}`)}</Text>
+              <Text style={TextTheme.title}>{name}</Text>
               <BouncyCheckbox
                 accessibilityLabel={name}
                 disableText
