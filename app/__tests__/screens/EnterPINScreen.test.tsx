@@ -1,14 +1,14 @@
 import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { BasicAppContext } from '../../__mocks__/helpers/app'
-import { EnterPINScreen } from '../../src/bcsc-theme/features/auth/EnterPINScreen'
 import {
+  AccountSecurityMethod,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
   isAccountLocked,
   unlockWithDeviceSecurity,
-  AccountSecurityMethod,
 } from 'react-native-bcsc-core'
+import { BasicAppContext } from '../../__mocks__/helpers/app'
+import { EnterPINScreen } from '../../src/bcsc-theme/features/auth/EnterPINScreen'
 
 jest.mock('react-native-bcsc-core', () => ({
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),

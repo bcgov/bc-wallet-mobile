@@ -17,12 +17,7 @@ global.React = React
 const originalConsole = { log: console.log, warn: console.warn, error: console.error }
 
 // Patterns to suppress (common expected log messages during tests)
-const suppressedPatterns = [
-  /RefreshOrchestrator/,
-  /\[Refresh\]/,
-  /initialized ->/,
-  /PIN set successfully/,
-]
+const suppressedPatterns = [/RefreshOrchestrator/, /\[Refresh\]/, /initialized ->/, /PIN set successfully/]
 
 // Patterns for React warnings that are expected in tests
 const expectedReactWarnings = [

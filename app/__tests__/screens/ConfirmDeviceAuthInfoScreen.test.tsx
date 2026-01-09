@@ -42,9 +42,7 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
       )
     ).toBeTruthy()
     expect(
-      tree.getByText(
-        `Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.`
-      )
+      tree.getByText(`Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.`)
     ).toBeTruthy()
   })
 

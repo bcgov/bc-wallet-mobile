@@ -136,7 +136,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -163,7 +165,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -354,7 +358,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -433,7 +439,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -465,7 +473,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -498,7 +508,9 @@ describe('SecurityMethodSelector', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      const deviceAuthButton = tree.getByTestId(
+        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
+      )
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
