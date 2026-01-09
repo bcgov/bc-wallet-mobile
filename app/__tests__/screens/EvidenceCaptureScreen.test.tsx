@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native'
+import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
@@ -18,7 +18,7 @@ describe('EvidenceCapture', () => {
     jest.useRealTimers()
   })
 
-  it('renders correctly', () => {
+  it('renders correctly', async () => {
     const mockEvidenceType = {
       evidence_type: 'passport',
       has_photo: true,
@@ -46,6 +46,11 @@ describe('EvidenceCapture', () => {
         />
       </BasicAppContext>
     )
+
+    // Wait for useFocusEffect to complete and camera to be rendered
+    await waitFor(async () => {
+      expect(tree.queryAllByText('BCSC.CameraDisclosure.NoCameraAvailable')).toBeDefined()
+    })
 
     expect(tree).toMatchSnapshot()
   })
