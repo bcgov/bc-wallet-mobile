@@ -209,7 +209,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         errorMessage={currentPINError}
       />
 
-      <View style={{ marginTop: 16 }}>
+      <View style={{ marginTop: 8 }}>
         <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterNewPIN')}</ThemedText>
         <PINInput
           ref={newPINRef}
@@ -219,7 +219,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         />
       </View>
 
-      <View style={{ marginTop: 16 }}>
+      <View style={{ marginTop: 8 }}>
         <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.ReenterNewPIN')}</ThemedText>
         <PINInput
           ref={confirmPINRef}
@@ -229,7 +229,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         />
       </View>
 
-      <View style={{ marginTop: 16 }}>
+      <View style={{ marginTop: 4 }}>
         <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.RememberPIN')}</ThemedText>
         <ThemedText>{t('BCSC.ChangePIN.RememberPINDescription')}</ThemedText>
       </View>

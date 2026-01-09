@@ -1,3 +1,4 @@
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -6,8 +7,8 @@ import { RouteProp, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert } from 'react-native'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setAccountSecurityMethod } from 'react-native-bcsc-core'
+import Toast from 'react-native-toast-message'
 
 interface ChangePINScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainChangePIN>
@@ -24,6 +25,7 @@ interface ChangePINScreenProps {
 export const ChangePINScreen: React.FC<ChangePINScreenProps> = ({ navigation }: ChangePINScreenProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { stopLoading } = useLoadingScreen()
   const route = useRoute<RouteProp<BCSCMainStackParams, BCSCScreens.MainChangePIN>>()
 
   // Check if we're changing an existing PIN or switching from Device Auth
@@ -32,16 +34,16 @@ export const ChangePINScreen: React.FC<ChangePINScreenProps> = ({ navigation }: 
   // Handler for when user is changing their existing PIN
   const handleChangePINSuccess = useCallback(async () => {
     logger.info('PIN changed successfully')
+    navigation.goBack()
+    stopLoading()
 
-    Alert.alert(t('BCSC.Settings.ChangePIN.SuccessTitle'), t('BCSC.Settings.ChangePIN.PINChanged'), [
-      {
-        text: t('Global.OK'),
-        onPress: () => {
-          navigation.goBack()
-        },
-      },
-    ])
-  }, [logger, navigation, t])
+    Toast.show({
+      type: 'success',
+      text1: t('BCSC.Settings.ChangePIN.SuccessTitle'),
+      text2: t('BCSC.Settings.ChangePIN.PINChanged'),
+      position: 'bottom',
+    })
+  }, [logger, navigation, stopLoading, t])
 
   // Handler for when user is switching from Device Auth to PIN
   const handleCreatePINSuccess = useCallback(async () => {
@@ -51,17 +53,17 @@ export const ChangePINScreen: React.FC<ChangePINScreenProps> = ({ navigation }: 
     )
 
     logger.info('Switched to PIN security method')
+    // Navigate back to settings, popping both ChangePIN and AppSecurity screens
+    navigation.pop(2)
+    stopLoading()
 
-    Alert.alert(t('BCSC.Settings.AppSecurity.SuccessTitle'), t('BCSC.Settings.AppSecurity.SwitchedToPIN'), [
-      {
-        text: t('Global.OK'),
-        onPress: () => {
-          // Navigate back to settings, popping both ChangePIN and AppSecurity screens
-          navigation.pop(2)
-        },
-      },
-    ])
-  }, [logger, navigation, t])
+    Toast.show({
+      type: 'success',
+      text1: t('BCSC.Settings.AppSecurity.SuccessTitle'),
+      text2: t('BCSC.Settings.AppSecurity.SwitchedToPIN'),
+      position: 'bottom',
+    })
+  }, [logger, navigation, stopLoading, t])
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth
   if (isChangingExistingPIN) {

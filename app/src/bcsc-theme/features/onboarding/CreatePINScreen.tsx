@@ -1,4 +1,5 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -23,21 +24,26 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
   const { register } = useRegistrationApi(client, isClientReady)
+  const { stopLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handlePINSuccess = useCallback(
     async (result: PINEntryResult) => {
-      // Register with the appropriate security method
-      const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
-      await register(
-        isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
-      )
+      try {
+        // Register with the appropriate security method
+        const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
+        await register(
+          isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
+        )
 
-      // Complete onboarding with the wallet key
-      await handleSuccessfulAuth(result.walletKey)
-      logger.info('PIN set successfully and onboarding completed')
+        // Complete onboarding with the wallet key
+        await handleSuccessfulAuth(result.walletKey)
+        logger.info('PIN set successfully and onboarding completed')
+      } finally {
+        stopLoading()
+      }
     },
-    [handleSuccessfulAuth, logger, register]
+    [handleSuccessfulAuth, logger, register, stopLoading]
   )
 
   return (

@@ -2,17 +2,19 @@ import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/Se
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Platform } from 'react-native'
+import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   getAccountSecurityMethod,
   setAccountSecurityMethod,
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
+import Toast from 'react-native-toast-message'
 
 interface ChangeSecurityScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainAppSecurity>
@@ -28,6 +30,7 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
 }: ChangeSecurityScreenProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { error } = useErrorAlert()
   const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(null)
   const deviceAuthMethodName = useMemo(() => {
     return Platform.OS === 'ios' ? 'Face ID' : 'Fingerprint'
@@ -38,14 +41,15 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
       try {
         const method = await getAccountSecurityMethod()
         setCurrentMethod(method)
-      } catch (error) {
-        const errMessage = error instanceof Error ? error.message : String(error)
+      } catch (err) {
+        const errMessage = err instanceof Error ? err.message : String(err)
         logger.error(`Error loading security method: ${errMessage}`)
+        error(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
       }
     }
 
     loadCurrentMethod()
-  }, [logger])
+  }, [logger, error, t])
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -53,7 +57,7 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
       const { success } = await setupDeviceSecurity()
       if (!success) {
         logger.error('Device security setup failed')
-        Alert.alert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        error(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
         return
       }
 
@@ -61,17 +65,20 @@ export const ChangeSecurityScreen: React.FC<ChangeSecurityScreenProps> = ({
       setCurrentMethod(AccountSecurityMethod.DeviceAuth)
       logger.info('Successfully switched to device authentication')
 
-      Alert.alert(
-        t('BCSC.Settings.AppSecurity.SuccessTitle'),
-        t('BCSC.Settings.AppSecurity.SwitchedToDeviceAuth', { method: deviceAuthMethodName }),
-        [{ text: t('Global.OK'), onPress: () => navigation.goBack() }]
-      )
-    } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
+      navigation.goBack()
+
+      Toast.show({
+        type: 'success',
+        text1: t('BCSC.Settings.AppSecurity.SuccessTitle'),
+        text2: t('BCSC.Settings.AppSecurity.SwitchedToDeviceAuth', { method: deviceAuthMethodName }),
+        position: 'bottom',
+      })
+    } catch (err) {
+      const errMessage = err instanceof Error ? err.message : String(err)
       logger.error(`Error setting account security method: ${errMessage}`)
-      Alert.alert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+      error(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [logger, navigation, t, deviceAuthMethodName])
+  }, [error, logger, navigation, t, deviceAuthMethodName])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.MainChangePIN)
