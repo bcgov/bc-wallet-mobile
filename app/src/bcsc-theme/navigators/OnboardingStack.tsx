@@ -102,7 +102,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCScreens.OnboardingCreatePIN}
         component={CreatePINScreen}
         options={{
-          title: 'Create a PIN',
+          title: t('BCSC.Onboarding.SecureAppPINTitle'),
           headerShown: true,
         }}
       />
@@ -120,7 +120,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCScreens.TransferAccountInformation}
         component={TransferInformationScreen}
         options={{
-          title: 'Transfer Account Information',
+          title: t('BCSC.TransferInformation.TransferAccount'),
           headerShown: true,
         }}
       />
