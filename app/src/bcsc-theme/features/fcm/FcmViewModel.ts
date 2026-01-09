@@ -54,7 +54,8 @@ export class FcmViewModel {
       const token = await messaging().getToken()
       this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
     } catch (error) {
-      this.logger.warn('[FcmViewModel] Failed to retrieve FCM token for logging', error as Error)
+      const message = error instanceof Error ? error.message : String(error)
+      this.logger.warn(`[FcmViewModel] Failed to retrieve FCM token for logging: ${message}`)
     }
   }
 
