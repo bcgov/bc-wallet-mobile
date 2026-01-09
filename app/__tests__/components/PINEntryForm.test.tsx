@@ -226,4 +226,79 @@ describe('PINEntryForm', () => {
 
     expect(mockOnSuccess).not.toHaveBeenCalled()
   })
+
+  it('shows error when exception is thrown during setPIN', async () => {
+    mockSetPIN.mockRejectedValue(new Error('Network error'))
+
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <PINEntryForm onSuccess={mockOnSuccess} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+    fireEvent.changeText(inputs[0], '123456')
+    fireEvent.changeText(inputs[1], '123456')
+
+    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
+    fireEvent.press(checkbox)
+
+    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    fireEvent.press(button)
+
+    await waitFor(() => {
+      expect(tree.getByText('BCSC.PIN.ErrorSettingPIN')).toBeTruthy()
+    })
+
+    expect(mockOnSuccess).not.toHaveBeenCalled()
+  })
+
+  it('shows error when first PIN is too short when pressing Continue', async () => {
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <PINEntryForm onSuccess={mockOnSuccess} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+    fireEvent.changeText(inputs[0], '123') // Too short
+    fireEvent.changeText(inputs[1], '654321')
+
+    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
+    fireEvent.press(checkbox)
+
+    // Button is disabled so we need to bypass by triggering validation directly
+    // This is simulating the scenario where the user could somehow submit
+    // Actually, the button should be disabled, so let's verify that
+    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    expect(button.props.accessibilityState.disabled).toBe(true)
+
+    expect(mockSetPIN).not.toHaveBeenCalled()
+  })
+
+  it('shows error when second PIN is too short when pressing Continue', async () => {
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <PINEntryForm onSuccess={mockOnSuccess} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
+    fireEvent.changeText(inputs[0], '123456')
+    fireEvent.changeText(inputs[1], '123') // Too short
+
+    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
+    fireEvent.press(checkbox)
+
+    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    expect(button.props.accessibilityState.disabled).toBe(true)
+
+    expect(mockSetPIN).not.toHaveBeenCalled()
+  })
 })

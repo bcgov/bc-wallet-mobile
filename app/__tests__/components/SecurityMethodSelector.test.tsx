@@ -388,4 +388,145 @@ describe('SecurityMethodSelector', () => {
       })
     })
   })
+
+  describe('error handling', () => {
+    it('handles error when loading device auth info', async () => {
+      mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Failed to check device auth'))
+      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <SecurityMethodSelector
+              onDeviceAuthPress={mockOnDeviceAuthPress}
+              onPINPress={mockOnPINPress}
+              onLearnMorePress={mockOnLearnMorePress}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      // Should fall back to device auth not available state
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppNoDeviceAuthContent1')).toBeTruthy()
+      })
+    })
+
+    it('handles device authentication failure gracefully', async () => {
+      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
+      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
+      mockPerformDeviceAuthentication.mockResolvedValue(false)
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <SecurityMethodSelector
+              onDeviceAuthPress={mockOnDeviceAuthPress}
+              onPINPress={mockOnPINPress}
+              onLearnMorePress={mockOnLearnMorePress}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+      })
+
+      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      fireEvent.press(deviceAuthButton)
+
+      await waitFor(() => {
+        expect(mockPerformDeviceAuthentication).toHaveBeenCalled()
+      })
+
+      // Should not call onDeviceAuthPress if authentication failed
+      expect(mockOnDeviceAuthPress).not.toHaveBeenCalled()
+    })
+
+    it('handles device authentication error gracefully', async () => {
+      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
+      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
+      mockPerformDeviceAuthentication.mockRejectedValue(new Error('Biometric error'))
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <SecurityMethodSelector
+              onDeviceAuthPress={mockOnDeviceAuthPress}
+              onPINPress={mockOnPINPress}
+              onLearnMorePress={mockOnLearnMorePress}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+      })
+
+      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      fireEvent.press(deviceAuthButton)
+
+      await waitFor(() => {
+        expect(mockPerformDeviceAuthentication).toHaveBeenCalled()
+      })
+
+      // Should not call onDeviceAuthPress if authentication threw error
+      expect(mockOnDeviceAuthPress).not.toHaveBeenCalled()
+    })
+
+    it('handles onDeviceAuthPress error gracefully', async () => {
+      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
+      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
+      mockPerformDeviceAuthentication.mockResolvedValue(true)
+      mockOnDeviceAuthPress.mockRejectedValue(new Error('Parent handler error'))
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <SecurityMethodSelector
+              onDeviceAuthPress={mockOnDeviceAuthPress}
+              onPINPress={mockOnPINPress}
+              onLearnMorePress={mockOnLearnMorePress}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+      })
+
+      const deviceAuthButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle')
+      fireEvent.press(deviceAuthButton)
+
+      await waitFor(() => {
+        expect(mockOnDeviceAuthPress).toHaveBeenCalled()
+      })
+
+      // Should not crash - error is caught and logged
+    })
+
+    it('shows Device Passcode label when biometric type is None', async () => {
+      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
+      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.None)
+
+      const tree = render(
+        <BasicAppContext>
+          <BCSCLoadingProvider>
+            <SecurityMethodSelector
+              onDeviceAuthPress={mockOnDeviceAuthPress}
+              onPINPress={mockOnPINPress}
+              onLearnMorePress={mockOnLearnMorePress}
+            />
+          </BCSCLoadingProvider>
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+      })
+    })
+  })
 })
