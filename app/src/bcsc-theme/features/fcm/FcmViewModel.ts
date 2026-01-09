@@ -1,5 +1,4 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
 import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
