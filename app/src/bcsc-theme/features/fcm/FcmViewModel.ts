@@ -1,4 +1,5 @@
 import { AbstractBifoldLogger } from '@bifold/core'
+import messaging from '@react-native-firebase/messaging'
 import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
@@ -44,6 +45,17 @@ export class FcmViewModel {
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
     this.fetchServerJwk()
+    // Log FCM token for debugging
+    this.logFcmToken()
+  }
+
+  private async logFcmToken(): Promise<void> {
+    try {
+      const token = await messaging().getToken()
+      this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
+    } catch (error) {
+      this.logger.warn('[FcmViewModel] Failed to retrieve FCM token for logging', error as Error)
+    }
   }
 
   private async handleMessage(message: FcmMessage) {
