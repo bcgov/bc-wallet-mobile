@@ -202,15 +202,14 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 
         try {
           const updatePayload = body ? JSON.parse(body) : body
-          // Add required fields for PUT request: client_id, client_name, and scope
+          // Add required fields for PUT request: client_id and scope
           updatePayload.client_id = account.clientID
-          updatePayload.client_name = selectedNickname
           updatePayload.scope = 'openid profile email address offline_access'
           const { data } = await apiClient.put<RegistrationResponseData>(
             `${apiClient.endpoints.registration}/${account.clientID}`,
