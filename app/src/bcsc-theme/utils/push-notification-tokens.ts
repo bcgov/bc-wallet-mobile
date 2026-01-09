@@ -67,7 +67,6 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
 
   const [fcmDeviceToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
 
-  logger.debug(`Retrieved FCM Device Token: ${fcmDeviceToken}`)
   logger.info('Successfully retrieved notification tokens for registration')
 
   return {
