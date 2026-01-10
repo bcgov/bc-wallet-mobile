@@ -75,7 +75,7 @@ describe('SecureApp', () => {
     )
 
     await waitFor(() => {
-      expect(tree.getByText('Secure this app')).toBeTruthy()
+      expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
     })
 
     expect(tree).toMatchSnapshot()

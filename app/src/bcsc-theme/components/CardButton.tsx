@@ -15,7 +15,7 @@ interface CardProps {
    *
    * @type {() => void}
    */
-  onPress: () => void
+  onPress?: () => void
   /**
    * Optional subtext to display below the title
    *
@@ -30,6 +30,12 @@ interface CardProps {
    * @type {string}
    */
   endIcon?: string
+  /**
+   * Whether the button is disabled
+   *
+   * @type {boolean}
+   */
+  disabled?: boolean
 }
 
 /**
@@ -69,14 +75,19 @@ export const CardButton = (props: CardProps): JSX.Element => {
       fontSize: 18,
       lineHeight: 30,
     },
+    cardContainerDisabled: {
+      opacity: 0.6,
+    },
   })
 
   return (
     <TouchableOpacity
-      style={styles.cardContainer}
-      onPress={props.onPress}
+      style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
+      onPress={props.disabled ? undefined : props.onPress}
       accessibilityLabel={props.title}
       accessibilityRole="button"
+      accessibilityState={{ disabled: props.disabled }}
+      disabled={props.disabled}
       testID={testIdWithKey(`CardButton-${props.title}`)}
     >
       <View style={styles.cardContentContainer}>

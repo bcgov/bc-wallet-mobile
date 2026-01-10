@@ -1,5 +1,13 @@
 // prettier-ignore
 const translation = {
+  "Global": {
+    "OK": "OK",
+    "Cancel": "Cancelar",
+    "Continue": "Continuar",
+    "Back": "Voltar",
+    "GoBack": "Voltar",
+    "Loading": "Carregando..."
+  },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
   },
@@ -156,13 +164,48 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
     },
+    "Security": {
+      "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
+      "AuthenticateToSecure": "Authenticate to secure your app (PT-BR)"
+    },
+    "PIN": {
+      "CreatePIN": "Create a 6-digit PIN (PT-BR)",
+      "ConfirmPIN": "Confirm PIN (PT-BR)",
+      "RememberPIN": "Remember your PIN (PT-BR)",
+      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (PT-BR)",
+      "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (PT-BR)",
+      "MustCheckBox": "You must check this box to continue. (PT-BR)",
+      "PINTooShort": "PIN must be 6 digits (PT-BR)",
+      "PINsDoNotMatch": "PINs do not match (PT-BR)",
+      "SettingUpPIN": "Setting up your PIN... (PT-BR)",
+      "SettingUpAccount": "Setting up your account... (PT-BR)",
+      "FailedToSetPIN": "Failed to set PIN (PT-BR)",
+      "ErrorSettingPIN": "An error occurred while setting the PIN (PT-BR)"
+    },
+    "ChangePIN": {
+      "ScreenTitle": "Change your PIN (PT-BR)",
+      "EnterCurrentPIN": "Enter your current PIN (PT-BR)",
+      "EnterNewPIN": "Enter a new 6-digit PIN (PT-BR)",
+      "ReenterNewPIN": "Re-enter new PIN (PT-BR)",
+      "RememberPIN": "Remember your PIN (PT-BR)",
+      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. (PT-BR)",
+      "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (PT-BR)",
+      "MustCheckBox": "You must check this box to continue. (PT-BR)",
+      "ButtonTitle": "Change PIN (PT-BR)",
+      "ChangingPIN": "Changing your PIN... (PT-BR)",
+      "PINTooShort": "Your PIN must be 6 digits (PT-BR)",
+      "PINsDoNotMatch": "PIN does not match (PT-BR)",
+      "IncorrectPIN": "Incorrect PIN (PT-BR)",
+      "AccountLocked": "Your account is locked. Please try again later. (PT-BR)",
+      "FailedToSetPIN": "Failed to change PIN (PT-BR)",
+      "ErrorChangingPIN": "An error occurred while changing the PIN (PT-BR)"
+    },
     "Settings": {
       "HeaderA": "App Settings (PT-BR)",
       "HeaderB": "Information (PT-BR)",
       "Help": "Help (PT-BR)",
       "SignOut": "Sign out (PT-BR)",
       "Biometrics": "Biometrics (PT-BR)",
-      "ChangePIN": "Change PIN (PT-BR)",
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
@@ -174,6 +217,39 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
       "Analytics": "Analytics (PT-BR)",
+      "AppSecurity": {
+        "ScreenTitle": "App Security (PT-BR)",
+        "ChangeAppSecurity": "Change App Security (PT-BR)",
+        "Title": "App Security (PT-BR)",
+        "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN. (PT-BR)",
+        "CurrentMethod": "Current security method (PT-BR)",
+        "ChooseMethod": "Switch to (PT-BR)",
+        "DeviceAuth": "Device Authentication (PT-BR)",
+        "PIN": "PIN (PT-BR)",
+        "UseDeviceAuth": "Use {{method}} (PT-BR)",
+        "DeviceAuthSubtext": "Use your {{platform}}'s built-in security to unlock the app. (PT-BR)",
+        "UsePIN": "Use a PIN (PT-BR)",
+        "PINSubtext": "Create a personal PIN to unlock the app. (PT-BR)",
+        "CurrentlySelected": "Currently active (PT-BR)",
+        "DeviceAuthNotSetup": "Device authentication is not available. Set up Face ID, Touch ID, or a device passcode in your device settings to use this option. (PT-BR)",
+        "DeviceAuthUnavailableTitle": "Device Authentication Unavailable (PT-BR)",
+        "DeviceAuthUnavailableMessage": "Please set up Face ID, Touch ID, or a device passcode in your device settings first. (PT-BR)",
+        "AuthenticateToSwitch": "Authenticate to change your security method (PT-BR)",
+        "SuccessTitle": "Success (PT-BR)",
+        "SwitchedToDeviceAuth": "Your app is now secured with {{method}}. (PT-BR)",
+        "SwitchedToPIN": "Your app is now secured with a PIN. (PT-BR)",
+        "ErrorTitle": "Error (PT-BR)",
+        "SetupFailedMessage": "Failed to change security method. Please try again. (PT-BR)",
+        "SwitchToPINTitle": "Switch to PIN (PT-BR)",
+        "SwitchToPINMessage": "You will need to create a new PIN to secure the app. (PT-BR)"
+      },
+      "ChangePIN": {
+        "ButtonTitle": "Change PIN (PT-BR)",
+        "ScreenTitle": "Create PIN (PT-BR)",
+        "SettingUpPIN": "Setting up your PIN... (PT-BR)",
+        "SuccessTitle": "Success (PT-BR)",
+        "PINChanged": "Your PIN has been changed successfully. (PT-BR)"
+      },
     },
     "Services": {
       "CatalogueTitle": "Services (PT-BR)",
@@ -383,6 +459,8 @@ const translation = {
       "SecureAppDeviceAuthSubtext": "It's already set up on this {{platform}}. It never leaves this device or is shared with us. (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
+      "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private. (PT-BR)",
+      "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (PT-BR)",
       "AnalyticsTitle": "Enable Analytics? (PT-BR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
       "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PT-BR)",

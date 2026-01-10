@@ -47,6 +47,14 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.MainAutoLock)
   }
 
+  const onAppSecurity = () => {
+    navigation.navigate(BCSCScreens.MainAppSecurity)
+  }
+
+  const onChangePIN = () => {
+    navigation.navigate(BCSCScreens.MainChangePIN, { isChangingExistingPIN: true })
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -56,6 +64,8 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onEditNickname={onEditNickname}
       onForgetAllPairings={onForgetAllPairings}
       onAutoLock={onAutoLock}
+      onAppSecurity={onAppSecurity}
+      onChangePIN={onChangePIN}
     />
   )
 }

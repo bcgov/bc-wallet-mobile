@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LockoutScreen renders correctly 1`] = `
+exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -96,7 +96,7 @@ exports[`LockoutScreen renders correctly 1`] = `
           ]
         }
       >
-        0 seconds
+        30 seconds
       </Text>
       <View
         style={
