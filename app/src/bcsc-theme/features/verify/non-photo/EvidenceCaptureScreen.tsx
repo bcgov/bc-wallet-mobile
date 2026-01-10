@@ -26,6 +26,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
+  const [isFocused, setIsFocused] = useState(false)
   const { width } = useWindowDimensions()
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -97,15 +98,17 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     <>
       {captureState === CaptureState.CAPTURING ? (
         <View style={styles.container}>
-          <MaskedCamera
-            navigation={navigation}
-            cameraFace={'back'}
-            cameraInstructions={currentSide.image_side_tip}
-            cameraLabel={currentSide.image_side_label}
-            maskType={MaskType.ID_CARD}
-            maskLineColor={ColorPalette.brand.primary}
-            onPhotoTaken={handlePhotoTaken}
-          />
+          {isFocused && (
+            <MaskedCamera
+              navigation={navigation}
+              cameraFace={'back'}
+              cameraInstructions={currentSide.image_side_tip}
+              cameraLabel={currentSide.image_side_label}
+              maskType={MaskType.ID_CARD}
+              maskLineColor={ColorPalette.brand.primary}
+              onPhotoTaken={handlePhotoTaken}
+            />
+          )}
         </View>
       ) : (
         <PhotoReview photoPath={currentPhotoPath!} onAccept={handleAcceptPhoto} onRetake={handleRetakePhoto} />
