@@ -425,7 +425,6 @@ jobs:
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
         run: |
-          # 1. Create .env file
           echo "BUILD_TARGET=${BUILD_TARGET}" >.env
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
