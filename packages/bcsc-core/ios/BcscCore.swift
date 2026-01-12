@@ -73,7 +73,7 @@ class BcscCore: NSObject {
     audience: String, issuer: String, subject: String, additionalClaims: [String: Any] = [:],
     reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
-    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
+    let clientAssertionJwtExpirationSeconds = 3600  // 1 hour
 
     // Make JWT Claim Set
     guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
@@ -104,7 +104,7 @@ class BcscCore: NSObject {
     let payload = builder.build()
 
     guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-      return nil // Error already handled by signJWT
+      return nil  // Error already handled by signJWT
     }
 
     return serializedJWT
@@ -157,7 +157,7 @@ class BcscCore: NSObject {
     for itemClass in secItemClasses {
       let query: [String: Any] = [
         kSecClass as String: itemClass,
-        kSecAttrSynchronizable as String: kSecAttrSynchronizableAny, // Important for iCloud Keychain items
+        kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,  // Important for iCloud Keychain items
       ]
       SecItemDelete(query as CFDictionary)
     }
@@ -178,7 +178,7 @@ class BcscCore: NSObject {
         "keyType": keyInfo.keyType.name,
         "keySize": keyInfo.keySize,
         "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970, // Convert Date to timestamp
+        "created": keyInfo.created.timeIntervalSince1970,  // Convert Date to timestamp
       ]
     }
 
@@ -233,7 +233,7 @@ class BcscCore: NSObject {
   private func generateKeyPair() -> String? {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
-    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
+    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"  // Use BcscCore.provider
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       let existingTag = latestKeyInfo.tag
@@ -243,8 +243,8 @@ class BcscCore: NSObject {
       // and if that last component can be parsed as an Int.
       if let lastNumericString = components.last, var numericSuffix = Int(lastNumericString) {
         numericSuffix += 1
-        components.removeLast() // Remove the old numeric suffix string
-        let baseId = components.joined(separator: "/") // Reconstruct the base part of the ID
+        components.removeLast()  // Remove the old numeric suffix string
+        let baseId = components.joined(separator: "/")  // Reconstruct the base part of the ID
         let newKeyId = "\(baseId)/\(numericSuffix)"
 
         logger.log(
@@ -261,7 +261,7 @@ class BcscCore: NSObject {
           logger.error(
             "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
           )
-          return nil // Failed to generate the specifically requested incremented key.
+          return nil  // Failed to generate the specifically requested incremented key.
         }
       } else {
         // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
@@ -295,7 +295,7 @@ class BcscCore: NSObject {
       do {
         _ =
           try keyPairManager
-            .generateKeyPair(withLabel: initialKeyId) // Assuming default keyType and keySize are handled by this method
+          .generateKeyPair(withLabel: initialKeyId)  // Assuming default keyType and keySize are handled by this method
         // or are acceptable.
         logger.log(
           "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
@@ -313,7 +313,7 @@ class BcscCore: NSObject {
   func getToken(
     _ tokenTypeNumber: NSNumber, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
-  ) { // Changed parameter to NSNumber
+  ) {  // Changed parameter to NSNumber
     let tokenTypeAsInt = tokenTypeNumber.intValue
     let tokenStorageService = KeychainTokenStorageService()
     let storage = StorageService()
@@ -483,7 +483,7 @@ class BcscCore: NSObject {
         "E_INVALID_ACCOUNT_DATA",
         "Account must have an 'issuer', 'clientID' and 'securityMethod' fields",
         nil
-      ) // Error already handled by signJWT
+      )  // Error already handled by signJWT
       return
     }
     resolve(serializedJWT)
@@ -512,19 +512,27 @@ class BcscCore: NSObject {
     let payload = builder.build()
 
     guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-      return // Error already handled by signJWT
+      return  // Error already handled by signJWT
     }
 
     resolve(serializedJWT)
   }
 
+  /// Sets the issuer URL in persistent storage.
+  /// - Parameters:
+  ///   - issuer: The issuer URL as a string.
+  ///   - resolve: Called with true if the issuer was saved successfully.
+  ///   - reject: Called with an error if saving fails.
   func setIssuer(
-    _ issuer: NSString, resolve _: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    _ issuer: NSString,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
-    storage.saveIssuerToFile(issuer)
+    let saved = storage.saveIssuerToFile(issuer: issuer as String)
+
+    resolve(saved)
   }
 
   func setAccount(
@@ -536,7 +544,7 @@ class BcscCore: NSObject {
 
     // Extract required fields from the dictionary
     guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
-          let securityMethod = AccountSecurityMethod(rawValue: account["securityMethod"] as! String)
+      let securityMethod = AccountSecurityMethod(rawValue: account["securityMethod"] as! String)
     else {
       reject(
         "E_INVALID_ACCOUNT_DATA",
@@ -642,7 +650,7 @@ class BcscCore: NSObject {
   func getAccount(
     _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {
-    let storage = StorageService() // Changed from PersistentStorage
+    let storage = StorageService()  // Changed from PersistentStorage
     let account: Account? = storage.readData(
       file: AccountFiles.accountMetadata,
       pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
@@ -750,11 +758,12 @@ class BcscCore: NSObject {
     let grantType = "refresh_token"
 
     // Create the client assertion JWT using the helper function
-    guard let serializedJWT = createClientAssertionJWT(
-      audience: issuer, issuer: clientID, subject: clientID, reject: reject
-    )
+    guard
+      let serializedJWT = createClientAssertionJWT(
+        audience: issuer, issuer: clientID, subject: clientID, reject: reject
+      )
     else {
-      return // Error already handled by createClientAssertionJWT
+      return  // Error already handled by createClientAssertionJWT
     }
 
     // Construct the body for the refresh token request using the provided refreshToken
@@ -917,15 +926,15 @@ class BcscCore: NSObject {
             "alg": "RS512",
             "kty": "RSA",
             "e": exponent.base64EncodedString(),
-          ],
-        ],
+          ]
+        ]
       ],
       "grant_types": [
-        "authorization_code",
+        "authorization_code"
       ],
       "application_type": "native",
       "redirect_uris": [
-        "http://localhost:8080/",
+        "http://localhost:8080/"
       ],
     ]
 
@@ -962,12 +971,13 @@ class BcscCore: NSObject {
 
     // Create the client assertion JWT using the helper function with additional code claim
     let additionalClaims = ["code": confirmationCode]
-    guard let serializedJWT = createClientAssertionJWT(
-      audience: issuer, issuer: clientID, subject: clientID, additionalClaims: additionalClaims,
-      reject: reject
-    )
+    guard
+      let serializedJWT = createClientAssertionJWT(
+        audience: issuer, issuer: clientID, subject: clientID, additionalClaims: additionalClaims,
+        reject: reject
+      )
     else {
-      return // Error already handled by createClientAssertionJWT
+      return  // Error already handled by createClientAssertionJWT
     }
 
     // Construct the body for the device code request using the provided information
@@ -1114,7 +1124,7 @@ class BcscCore: NSObject {
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     guard !accessToken.isEmpty, !clientId.isEmpty, !issuer.isEmpty, !clientRefId.isEmpty,
-          !fcmDeviceToken.isEmpty
+      !fcmDeviceToken.isEmpty
     else {
       reject(
         "E_INVALID_PARAMETERS",
@@ -1137,17 +1147,18 @@ class BcscCore: NSObject {
     }
 
     // Use the QuickLoginProtocol pattern from ias-ios
-    guard let signedJWT = makeSignedJWTForAccountLogin(
-      accessToken: accessToken,
-      clientId: clientId,
-      issuer: issuer,
-      clientRefId: clientRefId,
-      fcmDeviceToken: fcmDeviceToken,
-      deviceToken: deviceToken,
-      reject: reject
-    )
+    guard
+      let signedJWT = makeSignedJWTForAccountLogin(
+        accessToken: accessToken,
+        clientId: clientId,
+        issuer: issuer,
+        clientRefId: clientRefId,
+        fcmDeviceToken: fcmDeviceToken,
+        deviceToken: deviceToken,
+        reject: reject
+      )
     else {
-      return // Error already handled in makeSignedJWT
+      return  // Error already handled in makeSignedJWT
     }
 
     logger.log("signedJWT: \(signedJWT)")
@@ -1183,14 +1194,15 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) -> String? {
     do {
-      guard let payload = makeJWTPayloadForAccountLogin(
-        accessToken: accessToken,
-        clientId: clientId,
-        issuer: issuer,
-        clientRefId: clientRefId,
-        fcmDeviceToken: fcmDeviceToken,
-        deviceToken: deviceToken
-      )
+      guard
+        let payload = makeJWTPayloadForAccountLogin(
+          accessToken: accessToken,
+          clientId: clientId,
+          issuer: issuer,
+          clientRefId: clientRefId,
+          fcmDeviceToken: fcmDeviceToken,
+          deviceToken: deviceToken
+        )
       else {
         reject("E_JWT_PAYLOAD_CREATION_FAILED", "Failed to create JWT payload", nil)
         return nil
@@ -1242,9 +1254,10 @@ class BcscCore: NSObject {
   }
 
   /// HMAC calculation matching ias-ios AssertionFactory.commonCryptoHMAC
-  private func assertionFactoryHMAC(accessToken: String, jwtID: String, clientID: String) -> String {
+  private func assertionFactoryHMAC(accessToken: String, jwtID: String, clientID: String) -> String
+  {
     let accessTokenBytes: [UInt8] = Array(accessToken.utf8)
-    let clientIdBytes: [UInt8] = Array(clientID.lowercased().utf8) // Lowercase here to match ias-ios
+    let clientIdBytes: [UInt8] = Array(clientID.lowercased().utf8)  // Lowercase here to match ias-ios
     let jwtIdBytes: [UInt8] = Array(jwtID.utf8)
 
     let macOut = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(CC_SHA256_DIGEST_LENGTH))
@@ -1289,8 +1302,9 @@ class BcscCore: NSObject {
   private func addDeviceInfoClaims(
     to builder: JWTClaimsSet.Builder, fcmDeviceToken: String, deviceToken: String?
   ) -> Bool {
-    guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
-      as? String,
+    guard
+      let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+        as? String,
       let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String
     else {
       return false
@@ -1358,10 +1372,11 @@ class BcscCore: NSObject {
     }
 
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1403,10 +1418,11 @@ class BcscCore: NSObject {
     }
 
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1468,10 +1484,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1498,10 +1515,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1602,10 +1620,11 @@ class BcscCore: NSObject {
     }
 
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1637,10 +1656,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1661,10 +1681,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1682,7 +1703,7 @@ class BcscCore: NSObject {
   private func generateRandomPIN() -> String {
     let randomBytes = SecureRandom.nextBytes(count: 6)
     var pinDigits = ""
-    for i in 0 ..< 6 {
+    for i in 0..<6 {
       let digit = Int(randomBytes[i]) % 10
       pinDigits += String(digit)
     }
@@ -1700,10 +1721,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1748,10 +1770,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -1765,7 +1788,7 @@ class BcscCore: NSObject {
 
       guard LAContext.canPerformLocalAuthenticate(context: context, error: &error) else {
         resolve([
-          "success": false,
+          "success": false
         ])
         return
       }
@@ -1778,7 +1801,7 @@ class BcscCore: NSObject {
       } catch {
         print("Local Authentication error: ", error.localizedDescription)
         resolve([
-          "success": false,
+          "success": false
         ])
         return
       }
@@ -1823,7 +1846,7 @@ class BcscCore: NSObject {
         }
       } else {
         resolve([
-          "success": false,
+          "success": false
         ])
       }
     }
@@ -1853,9 +1876,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         logger.log("getAuthorizationRequest: File does not exist")
@@ -1883,7 +1906,7 @@ class BcscCore: NSObject {
 
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
-         let authRequest = requestsDict.values.first
+        let authRequest = requestsDict.values.first
       {
         logger.log(
           "getAuthorizationRequest: Successfully decoded dictionary with \(requestsDict.count) entries"
@@ -1931,10 +1954,11 @@ class BcscCore: NSObject {
       let storage = StorageService()
 
       // Get account to use issuer as fallback key for v3 compatibility
-      guard let account: Account = storage.readData(
-        file: AccountFiles.accountMetadata,
-        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-      )
+      guard
+        let account: Account = storage.readData(
+          file: AccountFiles.accountMetadata,
+          pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+        )
       else {
         reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
         return
@@ -1953,8 +1977,8 @@ class BcscCore: NSObject {
       )
       let baseUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
       try FileManager.default.createDirectory(
         at: baseUrl,
         withIntermediateDirectories: true,
@@ -2015,9 +2039,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.authorizationRequest.rawValue)
 
       if FileManager.default.fileExists(atPath: fileUrl.path) {
         try FileManager.default.removeItem(at: fileUrl)
@@ -2045,10 +2069,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let account: Account = storage.readData(
+        file: AccountFiles.accountMetadata,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
       return
@@ -2077,10 +2102,11 @@ class BcscCore: NSObject {
   ) {
     let storage = StorageService()
 
-    guard let flags: NSDictionary = storage.readData(
-      file: AccountFiles.accountFlag,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard
+      let flags: NSDictionary = storage.readData(
+        file: AccountFiles.accountFlag,
+        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+      )
     else {
       // No flags stored yet - return empty dictionary
       resolve([:])
@@ -2177,9 +2203,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.accountFlag.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.accountFlag.rawValue)
 
       if FileManager.default.fileExists(atPath: fileUrl.path) {
         try FileManager.default.removeItem(at: fileUrl)
@@ -2286,9 +2312,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
 
       if FileManager.default.fileExists(atPath: fileUrl.path) {
         try FileManager.default.removeItem(at: fileUrl)
@@ -2336,9 +2362,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         logger.log("getCredential: ClientRegistration file does not exist")
@@ -2457,9 +2483,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
 
       // Create the directory if it doesn't exist
       let directoryUrl = fileUrl.deletingLastPathComponent()
@@ -2489,9 +2515,9 @@ class BcscCore: NSObject {
 
       // Create credential from dictionary
       guard let issuer = credentialData["issuer"] as? String,
-            let subject = credentialData["subject"] as? String,
-            let label = credentialData["label"] as? String,
-            let createdTimestamp = credentialData["created"] as? Double
+        let subject = credentialData["subject"] as? String,
+        let label = credentialData["label"] as? String,
+        let createdTimestamp = credentialData["created"] as? Double
       else {
         reject("E_INVALID_DATA", "Missing required credential fields", nil)
         return
@@ -2537,10 +2563,11 @@ class BcscCore: NSObject {
       clientRegistration.credential = credential
 
       // Get account to find issuer for dictionary key
-      guard let account: Account = storage.readData(
-        file: AccountFiles.accountMetadata,
-        pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-      )
+      guard
+        let account: Account = storage.readData(
+          file: AccountFiles.accountMetadata,
+          pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+        )
       else {
         reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
         return
@@ -2589,9 +2616,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         logger.log("deleteCredential: ClientRegistration file does not exist")
@@ -2617,8 +2644,8 @@ class BcscCore: NSObject {
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
       guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration],
-            let issuer = clientRegistrationsDict.keys.first,
-            let clientRegistration = clientRegistrationsDict[issuer]
+        let issuer = clientRegistrationsDict.keys.first,
+        let clientRegistration = clientRegistrationsDict[issuer]
       else {
         logger.log("deleteCredential: Could not decode ClientRegistration dictionary")
         resolve(true)
@@ -2673,9 +2700,9 @@ class BcscCore: NSObject {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(storage.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         logger.log("hasCredential: ClientRegistration file does not exist")
@@ -2690,10 +2717,11 @@ class BcscCore: NSObject {
       )
       unarchiver.setClass(Credential.self, forClassName: "\(storage.nativeModuleName).Credential")
 
-      guard let clientRegistration = unarchiver.decodeObject(
-        of: ClientRegistration.self,
-        forKey: NSKeyedArchiveRootObjectKey
-      )
+      guard
+        let clientRegistration = unarchiver.decodeObject(
+          of: ClientRegistration.self,
+          forKey: NSKeyedArchiveRootObjectKey
+        )
       else {
         logger.log("hasCredential: Could not decode ClientRegistration")
         resolve(false)

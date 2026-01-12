@@ -6,8 +6,7 @@ import {
   PersistentStorage,
   ReducerAction,
 } from '@bifold/core'
-
-import * as BcscCore from 'react-native-bcsc-core'
+import { BCSCCardProcess, setIssuer } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -110,7 +109,7 @@ export interface BCSCSecureState {
   /** Expiration time for device code */
   deviceCodeExpiresAt?: Date
   /** Identification process type (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification') */
-  cardProcess?: BcscCore.BCSCCardProcess
+  cardProcess?: BCSCCardProcess
   /** User's birthdate from BC Services Card - used during verification */
   birthdate?: Date
   /** BC Services Card serial number */
@@ -270,7 +269,7 @@ const getInitialEnvironment = (): IASEnvironment => {
     environment = IASEnvironment.SIT
   }
 
-  BcscCore.setIssuer(environment.iasApiBaseUrl)
+  setIssuer(environment.iasApiBaseUrl)
   return environment
 }
 
