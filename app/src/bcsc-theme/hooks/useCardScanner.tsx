@@ -1,4 +1,5 @@
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
@@ -39,6 +40,7 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 export const useCardScanner = () => {
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scannerEnabledRef = useRef(true)
   const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
@@ -116,25 +118,21 @@ export const useCardScanner = () => {
   const handleScanDriversLicense = useCallback(
     async (license: DriversLicenseMetadata) => {
       dispatch({
-        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
+        type: BCDispatchAction.UPDATE_SECURE_USER_METADATA,
         payload: [
           {
-            streetAddress: license.streetAddress,
-            postalCode: license.postalCode,
-            city: license.city,
-            province: license.province,
-            country: 'CA', // currently we only support Canada licenses
-          },
-        ],
-      })
-
-      dispatch({
-        type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
-        payload: [
-          {
-            first: license.firstName,
-            last: license.lastName,
-            middle: license.middleNames,
+            name: {
+              first: license.firstName,
+              last: license.lastName,
+              middle: license.middleNames,
+            },
+            address: {
+              streetAddress: license.streetAddress,
+              postalCode: license.postalCode,
+              city: license.city,
+              province: license.province,
+              country: 'CA', // currently we only support Canada licenses
+            },
           },
         ],
       })
