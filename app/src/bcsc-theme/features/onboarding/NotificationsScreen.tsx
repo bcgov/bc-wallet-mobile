@@ -60,11 +60,17 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
    * @returns {*} {Promise<void>} A promise that resolves when the operation is complete.
    */
   const activatePushNotifications = async () => {
-    const status = await PushNotifications.setup()
+    logger.debug(`[NotificationsScreen] About to request push notification permission`)
 
-    logger.info(`Push notification permission status: ${status}`)
-
-    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+    try {
+      const status = await PushNotifications.setup()
+      logger.info(`[NotificationsScreen] Push notification permission status: ${status}`)
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[NotificationsScreen] Failed to request push notification permission: ${message}`)
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    }
   }
 
   const controls = (
