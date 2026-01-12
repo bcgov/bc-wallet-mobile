@@ -107,12 +107,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </ThemedText>
               <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
             </View>
-            {
-              // QUESTION (MD): Do we want the same for the non bcsc card verification?
-              store.bcscSecure.cardProcess !== BCSCCardProcess.BCSCPhoto && (
-                <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
-              )
-            }
+            {store.bcscSecure.cardProcess !== BCSCCardProcess.BCSCPhoto && (
+              <ThemedText style={{ color: ColorPalette.brand.text }}>
+                {t('BCSC.Steps.AdditionalIdentificationRequired')}
+              </ThemedText>
+            )}
           </View>
         ) : null
       }

@@ -4,12 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
@@ -25,6 +27,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const { updateCardProcess } = useSecureActions()
 
   const styles = StyleSheet.create({
     checkButtonText: {
@@ -48,9 +51,10 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
   }, [navigation])
 
-  const onPressOtherID = useCallback(() => {
+  const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
-  }, [navigation])
+    await updateCardProcess(BCSCCardProcess.NonBCSC)
+  }, [navigation, updateCardProcess])
 
   const cardButtons = useMemo(() => {
     return (

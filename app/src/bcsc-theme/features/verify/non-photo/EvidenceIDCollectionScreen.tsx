@@ -13,7 +13,6 @@ import {
   TOKENS,
   useServices,
   useStore,
-  useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -47,7 +46,6 @@ type EvidenceIDCollectionScreenProps = {
  * @returns {*} {JSX.Element} The rendered EvidenceIDCollectionScreen component.
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
-  const { themeName } = useTheme()
   const [store] = useStore<BCState>()
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -65,8 +63,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired = store.bcscSecure.additionalEvidenceData.length === 1
-
-  console.log(store.bcscSecure.additionalEvidenceData)
 
   /**
    * Handles changes to the form fields.
