@@ -426,7 +426,6 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-          ENTITLEMENTS_PATH: "ios/AriesBifold/AriesBifold.entitlements"
         run: |
           # 1. Create .env file
           echo "BUILD_TARGET=${BUILD_TARGET}" >.env
@@ -438,9 +437,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
-
-          # 2. Update iOS entitlements for FCM
-          plutil -replace aps-environment -string production $ENTITLEMENTS_PATH
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
