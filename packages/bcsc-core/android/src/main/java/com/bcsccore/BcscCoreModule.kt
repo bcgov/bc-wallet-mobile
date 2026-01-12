@@ -646,7 +646,10 @@ class BcscCoreModule(
     }
 
     @ReactMethod
-    override fun setIssuer(issuer: String, promise: Promise) {
+    override fun setIssuer(
+        issuer: String,
+        promise: Promise,
+    ) {
         Log.d(NAME, "setIssuer called with issuer: $issuer")
         try {
             nativeStorage.saveIssuerToFile(issuer)

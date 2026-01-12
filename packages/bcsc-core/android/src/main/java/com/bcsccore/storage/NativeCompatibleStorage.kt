@@ -99,7 +99,6 @@ class NativeCompatibleStorage(
     /**
      * Gets the current isser name by reading the issuer file.
      */
-<<<<<<< HEAD
     private fun getDefaultIssuerName(): String {
         val path = context.filesDir + File.separator + ISSUER_FILENAME
         val issuerFile = File(path)
@@ -107,23 +106,7 @@ class NativeCompatibleStorage(
 
         if (issuer != null) {
             return getIssuerNameFromIssuer(issuer)
-=======
-    fun getDefaultIssuerName(): String {
-        val issuerName = getCurrentIssuerName()
-
-        if (issuerName != null) {
-            return issuerName
         }
-
-        return when (context.packageName) {
-            "ca.bc.gov.id.servicescard" -> "prod"
-            "ca.bc.gov.id.servicescard.dev" -> "sit"
-            "ca.bc.gov.id.servicescard.qa" -> "qa"
-            "ca.bc.gov.id.servicescard.test" -> "test"
-            else -> "sit"
->>>>>>> f0653e301d577c5209b435875ebd5fbf1ba27410
-        }
-    }
 
         return PRODUCTION_ISSUER
     }
