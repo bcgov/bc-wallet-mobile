@@ -74,7 +74,9 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: mockFCMToken,
         deviceToken: mockAPNSToken,
       })
-      expect(mockLogger.info).toHaveBeenCalledWith('Successfully retrieved notification tokens for registration')
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[PushTokens] Successfully retrieved notification tokens for registration'
+      )
     })
 
     it('returns only FCM token on Android (no APNS token needed)', async () => {
@@ -92,7 +94,9 @@ describe('getNotificationTokens', () => {
         deviceToken: null,
       })
       expect(mockGetAPNSToken).not.toHaveBeenCalled()
-      expect(mockLogger.info).toHaveBeenCalledWith('Successfully retrieved notification tokens for registration')
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[PushTokens] Successfully retrieved notification tokens for registration'
+      )
     })
   })
 
@@ -108,7 +112,9 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: 'missing_token_due_to_fetch_failure',
         deviceToken: 'mock_apns_token',
       })
-      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: FCM token is null or undefined')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[PushTokens] FCM token fetch failed: FCM token is null or undefined'
+      )
     })
 
     it('returns dummy token when FCM token is undefined', async () => {
@@ -136,7 +142,7 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: 'missing_token_due_to_fetch_failure',
         deviceToken: 'mock_apns_token',
       })
-      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: FCM service unavailable')
+      expect(mockLogger.error).toHaveBeenCalledWith('[PushTokens] FCM token fetch failed: FCM service unavailable')
     })
 
     it('succeeds with null deviceToken when APNS token is null on iOS', async () => {
@@ -164,7 +170,7 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: 'mock_fcm_token',
         deviceToken: null,
       })
-      expect(mockLogger.warn).toHaveBeenCalledWith('APNS token fetch failed: APNS service unavailable')
+      expect(mockLogger.warn).toHaveBeenCalledWith('[PushTokens] APNS token fetch failed: APNS service unavailable')
     })
 
     it('returns dummy FCM token when FCM fails even if APNS succeeds', async () => {
@@ -191,7 +197,7 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: 'missing_token_due_to_fetch_failure',
         deviceToken: 'mock_apns_token',
       })
-      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: String error message')
+      expect(mockLogger.error).toHaveBeenCalledWith('[PushTokens] FCM token fetch failed: String error message')
     })
   })
 
@@ -292,7 +298,9 @@ describe('getNotificationTokens', () => {
       const result = await getNotificationTokens(mockLogger)
 
       expect(mockRegisterDeviceForRemoteMessages).toHaveBeenCalledTimes(1)
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to register device for remote messages', expect.any(Error))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[PushTokens] Failed to register device for remote messages: Registration failed'
+      )
       expect(result).toEqual({
         fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure',
         deviceToken: null,

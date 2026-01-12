@@ -5,9 +5,8 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 
 type EvidenceCaptureScreenProps = {
@@ -27,7 +26,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
-  const [isFocused, setIsFocused] = useState(false)
   const { width } = useWindowDimensions()
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -59,26 +57,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
   const currentSide = cardType.image_sides[currentIndex]
   const isLastSide = currentIndex === cardType.image_sides.length - 1
-
-  useFocusEffect(
-    useCallback(() => {
-      // Reset state when navigating to this screen
-      setCurrentIndex(0)
-      setCaptureState(CaptureState.CAPTURING)
-      setCurrentPhotoPath(undefined)
-      setCapturedPhotos([])
-
-      // Delay camera mount until after navigation transition completes
-      // TODO (bm): there might be a better way to structure this flow,
-      // having the same screen display both the camera and the review is a bit awkward
-      // if we did it differently we might not need this useFocusEffect at all
-      setIsFocused(true)
-
-      return () => {
-        setIsFocused(false)
-      }
-    }, [])
-  )
 
   const handlePhotoTaken = (path: string) => {
     setCurrentPhotoPath(path)
@@ -119,17 +97,15 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     <>
       {captureState === CaptureState.CAPTURING ? (
         <View style={styles.container}>
-          {isFocused && (
-            <MaskedCamera
-              navigation={navigation}
-              cameraFace={'back'}
-              cameraInstructions={currentSide.image_side_tip}
-              cameraLabel={currentSide.image_side_label}
-              maskType={MaskType.ID_CARD}
-              maskLineColor={ColorPalette.brand.primary}
-              onPhotoTaken={handlePhotoTaken}
-            />
-          )}
+          <MaskedCamera
+            navigation={navigation}
+            cameraFace={'back'}
+            cameraInstructions={currentSide.image_side_tip}
+            cameraLabel={currentSide.image_side_label}
+            maskType={MaskType.ID_CARD}
+            maskLineColor={ColorPalette.brand.primary}
+            onPhotoTaken={handlePhotoTaken}
+          />
         </View>
       ) : (
         <PhotoReview photoPath={currentPhotoPath!} onAccept={handleAcceptPhoto} onRetake={handleRetakePhoto} />
