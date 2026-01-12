@@ -41,7 +41,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
   const [store] = useStore<BCState>()
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
+  const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
     streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
@@ -187,7 +187,8 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         userCode: deviceAuth.user_code,
         deviceCodeExpiresAt: expiresAt,
       })
-      updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+      await updateCardProcess(deviceAuth.process)
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     } catch (error) {
@@ -202,17 +203,21 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       setIsSubmitting(false)
     }
   }, [
-    formState,
     validateForm,
-    store.bcscSecure,
+    formState,
+    store.bcscSecure.userMetadata,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.deviceCodeExpiresAt,
+    store.bcscSecure.birthdate,
+    updateUserMetadata,
     navigation,
     logger,
     t,
     authorization,
     Spacing.lg,
-    updateUserMetadata,
     updateDeviceCodes,
     updateVerificationOptions,
+    updateCardProcess,
   ])
 
   return {
