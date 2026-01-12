@@ -7,6 +7,7 @@ const plugins = [
       extensions: ['.tsx', 'ts'],
       alias: {
         '@': './src',
+        '@mocks': './__mocks__',
         '@assets': './src/assets',
         '@bcwallet-theme': './src/bcwallet-theme',
         '@bcsc-theme': './src/bcsc-theme',
