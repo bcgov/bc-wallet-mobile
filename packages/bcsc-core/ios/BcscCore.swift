@@ -804,7 +804,7 @@ class BcscCore: NSObject {
   }
 
   func getDynamicClientRegistrationBody(
-    _ fcmDeviceToken: NSString, deviceToken: NSString?, attestation: NSString?,
+    _ fcmDeviceToken: NSString, deviceToken: NSString?, attestation: NSString?, nickname: NSString?,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
@@ -896,9 +896,17 @@ class BcscCore: NSObject {
       return
     }
 
+    // Use nickname if provided, otherwise fall back to device name
+    let clientName: String
+    if let providedNickname = nickname as String?, !providedNickname.isEmpty {
+      clientName = providedNickname
+    } else {
+      clientName = UIDevice.current.name
+    }
+
     // Create client registration data with real values
     let clientRegistrationData: [String: Any] = [
-      "client_name": UIDevice.current.name,
+      "client_name": clientName,
       "device_info": deviceInfoJWTAsString,
       "token_endpoint_auth_method": "private_key_jwt",
       "jwks": [

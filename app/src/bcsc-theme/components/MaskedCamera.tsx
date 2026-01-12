@@ -1,4 +1,5 @@
 import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useIsFocused } from '@react-navigation/native'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -34,6 +35,7 @@ const MaskedCamera = ({
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const isFocused = useIsFocused()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -154,7 +156,7 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
-        isActive={isActive}
+        isActive={isFocused && isActive}
         photo={true}
         onInitialized={() => setIsActive(true)}
         onError={onError}

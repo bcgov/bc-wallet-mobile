@@ -1,7 +1,9 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-
+import messaging from '@react-native-firebase/messaging'
+import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
+import { BCSCEventTypes } from '../../../events/eventTypes'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
@@ -20,6 +22,7 @@ import {
 export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
+  private initialized = false
 
   constructor(
     private readonly fcmService: FcmService,
@@ -28,6 +31,12 @@ export class FcmViewModel {
   ) {}
 
   public initialize() {
+    if (this.initialized) {
+      this.logger.info('[FcmViewModel] Already initialized, skipping')
+      return
+    }
+    this.initialized = true
+
     this.logger.info('[FcmViewModel] Initializing...')
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
@@ -36,6 +45,18 @@ export class FcmViewModel {
     this.logger.info('[FcmViewModel] FCM service initialized')
     // Pre-fetch the server JWK for signature verification (if API client is ready)
     this.fetchServerJwk()
+    // Log FCM token for debugging
+    this.logFcmToken()
+  }
+
+  private async logFcmToken(): Promise<void> {
+    try {
+      const token = await messaging().getToken()
+      this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      this.logger.warn(`[FcmViewModel] Failed to retrieve FCM token for logging: ${message}`)
+    }
   }
 
   private async handleMessage(message: FcmMessage) {
@@ -103,6 +124,7 @@ export class FcmViewModel {
 
     const { title, message } = data
 
+    // Show local notification if we have title and message
     if (title && message) {
       try {
         await showLocalNotification(title, message)
@@ -110,7 +132,34 @@ export class FcmViewModel {
         this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
       }
     } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message')
+      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+    }
+
+    // Always refresh tokens when we receive a status notification
+    // This ensures account data is updated regardless of notification display
+    await this.refreshTokens()
+  }
+
+  /**
+   * Refreshes OAuth tokens using the current refresh token.
+   * Emits a TOKENS_REFRESHED event so React components can update their state.
+   */
+  private async refreshTokens(): Promise<void> {
+    try {
+      const apiClient = getBCSCApiClient()
+
+      if (!apiClient?.tokens?.refresh_token) {
+        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
+        return
+      }
+
+      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
+
+      // Emit event so React components (e.g., BCSCAccountProvider) can refresh their data
+      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
+    } catch (error) {
+      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
     }
   }
 
@@ -129,7 +178,7 @@ export class FcmViewModel {
       const apiClient = getBCSCApiClient()
 
       if (!apiClient) {
-        this.logger.warn('[FcmViewModel] API client not available yet, will retry on next challenge')
+        this.logger.info('[FcmViewModel] API client not available yet, will retry on next challenge')
         return
       }
 

@@ -281,13 +281,15 @@ class StorageService {
   ) throws -> Data {
     let className = String(describing: T.self)
 
-    // Skip class registration if the expected type is NSDictionary
-    if T.self != NSDictionary.self {
+    // Skip class registration for Foundation collection types (NSDictionary, NSArray)
+    // Modifying the global class name for these types can corrupt other frameworks
+    let isFoundationCollectionType = T.self == NSDictionary.self || T.self == NSArray.self
+    if !isFoundationCollectionType {
       let archivedClassName = "\(nativeModuleName).\(className)"
       NSKeyedArchiver.setClassName(archivedClassName, for: T.self)
       logger.log("Encoding class: \(archivedClassName)")
     } else {
-      logger.log("Skipping class registration for NSDictionary")
+      logger.log("Skipping class registration for Foundation collection type: \(className)")
     }
 
     let archiver = NSKeyedArchiver(requiringSecureCoding: false)
@@ -312,8 +314,10 @@ class StorageService {
   ) throws -> T? {
     let className = String(describing: T.self)
 
-    // Skip class registration if the expected type is NSDictionary
-    if T.self != NSDictionary.self {
+    // Skip class registration for Foundation collection types (NSDictionary, NSArray)
+    // Modifying the global class name for these types can corrupt other frameworks
+    let isFoundationCollectionType = T.self == NSDictionary.self || T.self == NSArray.self
+    if !isFoundationCollectionType {
       // Register both production and dev module names for compatibility
       let prodClassName = "bc_services_card.\(className)"
       let devClassName = "bc_services_card_dev.\(className)"
@@ -321,7 +325,7 @@ class StorageService {
       NSKeyedUnarchiver.setClass(T.self, forClassName: devClassName)
       logger.log("Decoding class - registered mappings for: \(prodClassName) and \(devClassName)")
     } else {
-      logger.log("Skipping class registration for NSDictionary")
+      logger.log("Skipping class registration for Foundation collection type: \(className)")
     }
 
     let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
@@ -329,7 +333,9 @@ class StorageService {
 
     let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
-    if T.self != NSDictionary.self {
+    // For custom types, unwrap from provider dictionary
+    // For Foundation collection types, return directly
+    if !isFoundationCollectionType {
       if let decodedDict = decoded as? [String: T] {
         return decodedDict[provider]
       }

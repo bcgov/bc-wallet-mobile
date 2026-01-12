@@ -18,21 +18,22 @@ export interface NotificationTokens {
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
   if (!messaging().isDeviceRegisteredForRemoteMessages) {
     try {
-      logger.debug('Attempting to register device for remote messages...')
+      logger.debug('[PushTokens] Attempting to register device for remote messages...')
       await messaging().registerDeviceForRemoteMessages()
-      logger.debug('Device successfully registered for remote messages')
+      logger.debug('[PushTokens] Device successfully registered for remote messages')
     } catch (error) {
       // This is the extremely rare case react-native-firebase fails to register
       // We log the error but continue with a dummy string as registration will still work
       // it will just mean push notifications won't be received until the next registration update
-      logger.error('Failed to register device for remote messages', error as Error)
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[PushTokens] Failed to register device for remote messages: ${message}`)
       return {
         fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure',
         deviceToken: null,
       }
     }
   } else {
-    logger.debug('Device already registered for remote messages')
+    logger.debug('[PushTokens] Device already registered for remote messages')
   }
 
   const fetchFcmToken = async (): Promise<string> => {
@@ -44,7 +45,7 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
       return token
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      logger.error(`FCM token fetch failed: ${message}`)
+      logger.error(`[PushTokens] FCM token fetch failed: ${message}`)
       return 'missing_token_due_to_fetch_failure' // Return dummy token on failure
     }
   }
@@ -60,15 +61,14 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
       return token || null
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      logger.warn(`APNS token fetch failed: ${message}`)
+      logger.warn(`[PushTokens] APNS token fetch failed: ${message}`)
       return null // APNS token is optional, don't fail the entire process
     }
   }
 
   const [fcmDeviceToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
 
-  logger.debug(`Retrieved FCM Device Token: ${fcmDeviceToken}`)
-  logger.info('Successfully retrieved notification tokens for registration')
+  logger.info('[PushTokens] Successfully retrieved notification tokens for registration')
 
   return {
     fcmDeviceToken,

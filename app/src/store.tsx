@@ -264,7 +264,12 @@ export const BCDispatchAction = {
 }
 
 const getInitialEnvironment = (): IASEnvironment => {
-  const environment = __DEV__ ? IASEnvironment.SIT : IASEnvironment.PROD
+  let environment = IASEnvironment.PROD
+
+  if (__DEV__) {
+    environment = IASEnvironment.SIT
+  }
+
   BcscCore.setIssuer(environment.iasApiBaseUrl)
   return environment
 }

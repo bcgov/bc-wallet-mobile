@@ -25,10 +25,10 @@ export enum BCSCReason {
   ApprovedByAgent = 'Approved by Agent',
   Renew = 'Renewed by Card Renew',
   Replace = 'Replaced by Card Replace',
-  Cancel = 'Canceled by Card Cancel',
+  Cancel = 'Canceled by Card Cancel', // i.e agent via web portal.
   ExpiredBySystem = 'Expired by System',
-  CanceledByAgent = 'Canceled by Agent',
-  CanceledByUser = 'Canceled by User',
+  CanceledByAgent = 'Canceled by Agent', // i.e automatic, too many cards.
+  CanceledByUser = 'Canceled by User', // i.e user manually removes a card.
   CanceledByAdditionalCard = 'Canceled by Additional Card',
   CanceledByCardTypeChange = 'Canceled by Card Type Change',
   CanceledDueToInactivity = 'Canceled due to Inactivity',

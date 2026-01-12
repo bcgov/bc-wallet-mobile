@@ -496,10 +496,12 @@ export const useSecureActions = () => {
   }, [dispatch])
 
   /**
-   * Update verification request data in secure state
+   * Update verification request data in secure state and persist to native storage.
+   * The ID is persisted as backCheckVerificationId in authorization request (matching v3).
+   * The SHA is kept in memory only (not persisted, matching v3 behavior).
    */
   const updateVerificationRequest = useCallback(
-    (verificationRequestId: string | null, verificationRequestSha: string | null) => {
+    async (verificationRequestId: string | null, verificationRequestSha: string | null) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
         payload: [verificationRequestId],
@@ -509,8 +511,13 @@ export const useSecureActions = () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
         payload: [verificationRequestSha],
       })
+
+      // Persist ID to authorization request (SHA is not persisted in v3)
+      if (verificationRequestId !== null) {
+        await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
+      }
     },
-    [dispatch]
+    [dispatch, persistAuthorizationRequest]
   )
 
   /**
@@ -690,6 +697,7 @@ export const useSecureActions = () => {
           ? (authRequest.verificationOptions.split(' ') as DeviceVerificationOption[])
           : undefined,
 
+        verificationRequestId: authRequest?.backCheckVerificationId,
         additionalEvidenceData: evidenceData,
         userMetadata,
       }

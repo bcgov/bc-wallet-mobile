@@ -62,8 +62,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
-  const additionalEvidenceRequired =
-    store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && store.bcscSecure.additionalEvidenceData.length === 1
+  const additionalEvidenceRequired = store.bcscSecure.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -210,7 +209,17 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
+        routes: [
+          {
+            name: BCSCScreens.SetupSteps,
+          },
+          {
+            name: BCSCScreens.EvidenceTypeList,
+            params: {
+              cardProcess: BCSCCardProcess.BCSCNonPhoto,
+            },
+          },
+        ],
       })
     )
   }
