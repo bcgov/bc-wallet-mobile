@@ -11,7 +11,6 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
-
     // react-native-screens override
     // https://github.com/software-mansion/react-native-screens#android
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,17 +50,16 @@ class MainActivity : ReactActivity() {
      * [DefaultReactActivityDelegate] which allows you to easily enable Fabric and Concurrent React
      * (aka React 18) with two boolean flags.
      */
-    override fun createReactActivityDelegate(): ReactActivityDelegate {
-        return object : DefaultReactActivityDelegate(
+    override fun createReactActivityDelegate(): ReactActivityDelegate =
+        object : DefaultReactActivityDelegate(
             this,
             mainComponentName,
-            DefaultNewArchitectureEntryPoint.fabricEnabled
+            DefaultNewArchitectureEntryPoint.fabricEnabled,
         ) {
             override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
             }
         }
-    }
 
     /**
      * Clears notification badges etc. on app open

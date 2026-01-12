@@ -1,24 +1,26 @@
-import { BCState } from '@/store'
-import { BifoldError, DispatchAction, EventTypes, TOKENS, useServices, useStore } from '@bifold/core'
-import React, { useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import React, { useEffect, useState } from 'react'
+import { getAccount } from 'react-native-bcsc-core'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
-import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
-import BCSCOnboardingStack from './OnboardingStack'
+import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
-  const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
-  const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
+  const [loading, setLoading] = useState(true)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { error } = useErrorAlert()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   useEffect(() => {
@@ -29,63 +31,62 @@ const BCSCRootStack: React.FC = () => {
 
     try {
       loadState(dispatch)
-    } catch (error) {
-      const bifoldError = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (error as Error).message, 1001)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+    } catch (err) {
+      error('STATE_LOAD_ERROR', { error: err })
     }
-  }, [dispatch, loadState, t, store.stateLoaded])
+  }, [dispatch, loadState, error, store.stateLoaded])
 
-  /**
-   * ONBOARDING PATCH
-   *
-   * TODO (MD) REMOVE: TEMPORARY CODE FOR ONBOARDING DEVELOPMENT PURPOSES
-   *
-   * Why? There are some decision notes related to PIN creation and authentication in BCSC.
-   *
-   * This useEffect is a temp patch to allow developers to bypass the PIN creation
-   * and authentication screens during onboarding. It automatically marks the user as authenticated.
-   */
+  // Check for existing account on initial load - only runs after state is loaded
   useEffect(() => {
+    if (!store.stateLoaded || !loading) return
+
     const asyncEffect = async () => {
-      if (store.authentication.didAuthenticate === false) {
-        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
+      try {
+        const account = await getAccount()
+        if (account) {
+          // adds nickname to store if migrating from v3 and isn't already present
+          if (account.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
+            dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
+          }
+          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
+        } else {
+          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
+        }
+      } catch (error) {
+        logger.error('Error checking for existing account:', error as Error)
+        dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
+      } finally {
+        setLoading(false)
       }
     }
-
     asyncEffect()
-  }, [dispatch, store.authentication.didAuthenticate])
+  }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
 
-  // Show loading screen if state or wallet secret not loaded yet
-  if (!store.stateLoaded || initializeBCSC.loading || !isClientReady) {
+  // Show loading screen if state or API client or account status not ready yet
+  if (!store.stateLoaded || !isClientReady || loading) {
     return <LoadingScreenContent />
   }
 
-  // Show onboarding stack if onboarding not completed yet
-  if (!store.bcsc.completedOnboarding) {
-    return <BCSCOnboardingStack />
+  if (!store.bcscSecure.hasAccount) return <OnboardingStack />
+
+  if (!store.authentication.didAuthenticate) return <AuthStack />
+
+  if (!store.bcscSecure.verified) {
+    return (
+      <BCSCActivityProvider>
+        <VerifyStack />
+      </BCSCActivityProvider>
+    )
   }
 
-  // Show startup stack if agent isn't initialized or user hasn't authenticated yet (biometrics/PIN)
-  // if (!agent || !store.authentication.didAuthenticate) {
-  //   return <StartupStack initializeAgent={initializeAgent} />
-  // }
-
-  // Show identity verification stack (setup steps) if user unverified
-  if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
-    return <VerifyStack />
-  }
-
-  // Otherwise, show the main stack (app)
   return (
-    // <AgentProvider agent={agent}>
-    // <OpenIDCredentialRecordProvider>
-    <BCSCAccountProvider>
-      <BCSCIdTokenProvider>
-        <BCSCMainStack />
-      </BCSCIdTokenProvider>
-    </BCSCAccountProvider>
-    // </OpenIDCredentialRecordProvider>
-    // </AgentProvider>
+    <BCSCActivityProvider>
+      <BCSCAccountProvider>
+        <BCSCIdTokenProvider>
+          <BCSCMainStack />
+        </BCSCIdTokenProvider>
+      </BCSCAccountProvider>
+    </BCSCActivityProvider>
   )
 }
 

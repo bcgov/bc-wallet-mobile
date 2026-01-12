@@ -1,4 +1,5 @@
 import { navigationRef } from '@/contexts/NavigationContainerContext'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { useEventListener } from '@/hooks/useEventListener'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
@@ -15,6 +16,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useContext, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DeviceEventEmitter } from 'react-native'
 import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -62,6 +64,32 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     })
   }, scope === SystemCheckScope.STARTUP)
 
+  // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
+  useEffect(() => {
+    if (scope !== SystemCheckScope.MAIN_STACK || !isClientReady || !client) {
+      return
+    }
+
+    const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, async () => {
+      logger.info('useSystemChecks: Tokens refreshed, running device invalidation check')
+
+      try {
+        const navigation = await getSystemCheckNavigation()
+        const utils = { dispatch, translation: t, logger }
+
+        // Tokens have already been refreshed before this event; use refreshCache: false
+        // to reuse the freshly updated ID token from cache without forcing another refresh.
+        const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
+
+        await runSystemChecks([new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils)])
+      } catch (error) {
+        logger.error(`Device invalidation check failed after token refresh: ${(error as Error).message}`)
+      }
+    })
+
+    return () => subscription.remove()
+  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger])
+
   /**
    * Checks to run on app startup to ensure system is operational.
    */
@@ -102,7 +130,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
           const updateRegistration = () =>
-            registrationApi.updateRegistration(store.bcsc.registrationAccessToken, store.bcsc.selectedNickname)
+            registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
           const startupChecks: SystemCheckStrategy[] = [
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
@@ -135,7 +163,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     registrationApi,
     registrationApi.updateRegistration,
     scope,
-    store.bcsc,
+    store.bcsc.appVersion,
+    store.bcsc.selectedNickname,
+    store.bcsc.analyticsOptIn,
+    store.bcscSecure.registrationAccessToken,
     t,
     tokenApi,
   ])

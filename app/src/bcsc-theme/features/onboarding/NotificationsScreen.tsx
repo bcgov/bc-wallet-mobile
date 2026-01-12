@@ -34,20 +34,14 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
 
   const styles = StyleSheet.create({
     scrollContainer: {
-      gap: Spacing.md,
-    },
-    contentText: {
-      lineHeight: 30,
-      fontSize: 18,
+      gap: Spacing.lg,
     },
     bulletContainer: {
       gap: Spacing.sm,
       paddingLeft: Spacing.sm,
     },
-
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
     },
   })
 
@@ -66,11 +60,17 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
    * @returns {*} {Promise<void>} A promise that resolves when the operation is complete.
    */
   const activatePushNotifications = async () => {
-    const status = await PushNotifications.setup()
+    logger.debug(`[NotificationsScreen] Requesting push notification permission`)
 
-    logger.info(`Push notification permission status: ${status}`)
-
-    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+    try {
+      const status = await PushNotifications.setup()
+      logger.info(`[NotificationsScreen] Push notification permission status: ${status}`)
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[NotificationsScreen] Failed to request push notification permission: ${message}`)
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    }
   }
 
   const controls = (
@@ -92,8 +92,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
         <Image source={notifications} />
       </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
-      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
+      <ThemedText>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
+      <ThemedText>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
 
       <View style={styles.bulletContainer}>
         {bulletItems.map((item) => (

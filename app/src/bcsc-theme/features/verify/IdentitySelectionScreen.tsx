@@ -1,18 +1,19 @@
-import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
-import { BCSCCardType } from '../../types/cards'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
 const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
@@ -27,13 +28,23 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const { updateCardProcess } = useSecureActions()
 
   const styles = StyleSheet.create({
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
   })
+
+  /**
+   * This fixes an issue where the user has selected Non-BCSC ID,
+   * then navigated back to this screen, and the previous selection remains.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      updateCardProcess(undefined)
+    }, [updateCardProcess])
+  )
 
   const onPressCombinedCard = useCallback(() => {
     navigation.navigate(BCSCScreens.SerialInstructions)
@@ -51,10 +62,10 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
   }, [navigation])
 
-  const onPressOtherID = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Other] })
+  const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
-  }, [dispatch, navigation])
+    await updateCardProcess(BCSCCardProcess.NonBCSC)
+  }, [navigation, updateCardProcess])
 
   const cardButtons = useMemo(() => {
     return (

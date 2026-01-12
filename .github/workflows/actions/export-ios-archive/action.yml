@@ -17,13 +17,15 @@ runs:
   using: composite
   steps:
     - name: Sign & Export
+      env:
+        EXPORT_OPTIONS: ${{ inputs.export_options }}
       shell: bash
       run: |
         xcodebuild \
         -exportArchive \
         -archivePath AriesBifold.xcarchive \
         -exportPath export \
-        -exportOptionsPlist ./${{ inputs.export_options }} \
+        -exportOptionsPlist ./$EXPORT_OPTIONS \
         -verbose
 
     - name: Upload signed artifact

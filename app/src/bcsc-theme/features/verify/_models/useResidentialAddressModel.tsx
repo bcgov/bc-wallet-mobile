@@ -1,7 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -36,15 +38,16 @@ type useResidentialAddressModelProps = {
 const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
-    streetAddress: store.bcsc.userMetadata?.address?.streetAddress ?? '',
-    city: store.bcsc.userMetadata?.address?.city ?? '',
-    province: (store.bcsc.userMetadata?.address?.province as ProvinceCode) ?? null,
-    postalCode: store.bcsc.userMetadata?.address?.postalCode ?? '',
+    streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
+    city: store.bcscSecure.userMetadata?.address?.city ?? '',
+    province: store.bcscSecure.userMetadata?.address?.province ?? null,
+    postalCode: store.bcscSecure.userMetadata?.address?.postalCode ?? '',
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -110,31 +113,30 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     // A1: update user metadata
     // QUESTION: Does updating the data here make sense if the IAS device auth is tied to the previous values?
     // If no: swap this block (A1) and the check for the deviceCode (A2)
-    dispatch({
-      type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
-      payload: [
-        {
-          streetAddress: formState.streetAddress.trim(),
-          postalCode: formState.postalCode.trim(),
-          city: formState.city.trim(),
-          province: formState.province,
-          country: 'CA',
-        },
-      ],
-    })
+    const updatedUserMetadata = {
+      ...store.bcscSecure.userMetadata,
+      address: {
+        streetAddress: formState.streetAddress.trim(),
+        postalCode: formState.postalCode.trim(),
+        city: formState.city.trim(),
+        province: formState.province as ProvinceCode, // we know this is present because validation passed
+        country: 'CA' as const,
+      },
+    }
+    await updateUserMetadata(updatedUserMetadata)
 
     // A2: device is already authorized
-    if (store.bcsc.deviceCode && store.bcsc.deviceCodeExpiresAt) {
+    if (store.bcscSecure.deviceCode && store.bcscSecure.deviceCodeExpiresAt) {
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
       return
     }
 
     // missing required user attributes
     // making the assumption that the user metadata has been previously saved ie: Step 1
-    if (!store.bcsc.birthdate || !store.bcsc.userMetadata?.name) {
+    if (!store.bcscSecure.birthdate || !store.bcscSecure.userMetadata?.name) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
-        birthdate: store.bcsc.birthdate,
-        name: store.bcsc.userMetadata?.name,
+        birthdate: store.bcscSecure.birthdate,
+        name: store.bcscSecure.userMetadata?.name,
       })
 
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
@@ -144,10 +146,10 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       setIsSubmitting(true)
 
       const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
-        firstName: store.bcsc.userMetadata.name.first,
-        lastName: store.bcsc.userMetadata.name.last,
-        birthdate: store.bcsc.birthdate.toISOString().split('T')[0],
-        middleNames: store.bcsc.userMetadata.name.middle,
+        firstName: store.bcscSecure.userMetadata.name.first,
+        lastName: store.bcscSecure.userMetadata.name.last,
+        birthdate: store.bcscSecure.birthdate.toISOString().split('T')[0],
+        middleNames: store.bcscSecure.userMetadata.name.middle,
         address: {
           streetAddress: formState.streetAddress,
           city: formState.city,
@@ -157,7 +159,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       })
 
       // device previously registered, but no deviceCode found in store
-      if (deviceAuth === null && !store.bcsc.deviceCode) {
+      if (deviceAuth === null && !store.bcscSecure.deviceCode) {
         logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
         throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
       }
@@ -179,7 +181,14 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
 
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+      await updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: expiresAt,
+      })
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+      await updateCardProcess(deviceAuth.process)
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     } catch (error) {
@@ -193,7 +202,23 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     } finally {
       setIsSubmitting(false)
     }
-  }, [formState, validateForm, dispatch, store.bcsc, navigation, logger, t, authorization, Spacing.lg])
+  }, [
+    validateForm,
+    formState,
+    store.bcscSecure.userMetadata,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.deviceCodeExpiresAt,
+    store.bcscSecure.birthdate,
+    updateUserMetadata,
+    navigation,
+    logger,
+    t,
+    authorization,
+    Spacing.lg,
+    updateDeviceCodes,
+    updateVerificationOptions,
+    updateCardProcess,
+  ])
 
   return {
     formState,

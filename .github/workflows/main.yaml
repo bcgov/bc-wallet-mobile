@@ -127,14 +127,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - build_type: "bc-wallet"
-            app_version: "1.0.27"
-            export_options: "export-options-bcw.plist"
-            artifact_name: "ios-bc-wallet-artifact"
-          - build_type: "single-app"
-            app_version: "4.0.0"
-            export_options: "export-options-sa.plist"
-            artifact_name: "ios-single-app-artifact"
+          - build_type: 'bc-wallet'
+            app_version: '1.0.27'
+            export_options: 'export-options-bcw.plist'
+            artifact_name: 'ios-bc-wallet-artifact'
+          - build_type: 'single-app'
+            app_version: '4.0.0'
+            export_options: 'export-options-sa.plist'
+            artifact_name: 'ios-single-app-artifact'
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -145,7 +145,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -253,8 +253,8 @@ jobs:
 
       - name: Update APS environment
         run: |
-          sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
-          cat app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -replace aps-environment -string production app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -p app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
         # This step will no work in a `fork` because it will not have access
@@ -329,20 +329,20 @@ jobs:
     strategy:
       matrix:
         include:
-          - build_type: "bc-wallet"
-            app_version: "1.0.27"
-            android_package_name: "ca.bc.gov.BCWallet"
-            jks_base64_secret: "PLAY_STORE_JKS_BASE64"
-            jks_alias_secret: "PLAY_STORE_JKS_ALIAS"
-            jks_passwd_secret: "PLAY_STORE_JKS_PASSWD"
-            artifact_name: "android-bc-wallet-artifact"
-          - build_type: "single-app"
-            app_version: "4.0.0"
-            android_package_name: "ca.bc.gov.id.servicescard.dev"
-            jks_base64_secret: "PLAY_STORE_JKS_BASE64_SADEV"
-            jks_alias_secret: "PLAY_STORE_JKS_ALIAS_SADEV"
-            jks_passwd_secret: "PLAY_STORE_JKS_PASSWD_SADEV"
-            artifact_name: "android-single-app-artifact"
+          - build_type: 'bc-wallet'
+            app_version: '1.0.27'
+            android_package_name: 'ca.bc.gov.BCWallet'
+            jks_base64_secret: 'PLAY_STORE_JKS_BASE64'
+            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS'
+            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD'
+            artifact_name: 'android-bc-wallet-artifact'
+          - build_type: 'single-app'
+            app_version: '4.0.0'
+            android_package_name: 'ca.bc.gov.id.servicescard.dev'
+            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SADEV'
+            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SADEV'
+            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SADEV'
+            artifact_name: 'android-single-app-artifact'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -363,7 +363,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -371,9 +371,9 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: "zulu"
+          distribution: 'zulu'
           java-version: 17
-          cache: "gradle"
+          cache: 'gradle'
           server-id: github
           settings-path: ${{ github.workspace }}
 
@@ -494,8 +494,8 @@ jobs:
         # working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
-          GOOGLE_API_CREDENTIALS_FILE: "api_keys.json"
-          ANDROID_BUNDLE_PATH: "app/android/app/build/outputs/bundle/release/app-release.aab"
+          GOOGLE_API_CREDENTIALS_FILE: 'api_keys.json'
+          ANDROID_BUNDLE_PATH: 'app/android/app/build/outputs/bundle/release/app-release.aab'
           ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
@@ -524,19 +524,36 @@ jobs:
     if: always()
     steps:
       - name: Check matrix results
+        env:
+          SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
+          ANDROID_RESULT: ${{ needs.build-android.result }}
+          IOS_RESULT: ${{ needs.build-ios.result }}
         run: |
-          if [ "${{ needs.early-exit-check.outputs.should_skip_build }}" == "true" ]; then
-            echo "✅ Nothing to build. Early exit okay"
+          echo "Debug: should_skip_build=$SHOULD_SKIP"
+          echo "Debug: build-android.result=$ANDROID_RESULT"
+          echo "Debug: build-ios.result=$IOS_RESULT"
+
+          # If builds were intentionally skipped, that's okay
+          if [ "$SHOULD_SKIP" == "true" ]; then
+            echo "✅ No relevant file changes. Build skipped intentionally."
             exit 0
           fi
 
-          if [ "${{ needs.build-android.result }}" != "success" ]; then
-            echo "Android build(s) failed"
+          # Check for actual failures (not skipped)
+          if [ "$ANDROID_RESULT" != "success" ] && [ "$ANDROID_RESULT" != "skipped" ]; then
+            echo "❌ Android build(s) failed with result: $ANDROID_RESULT"
             exit 1
           fi
 
-          if [ "${{ needs.build-ios.result }}" != "success" ]; then
-            echo "iOS build(s) failed"
+          if [ "$IOS_RESULT" != "success" ] && [ "$IOS_RESULT" != "skipped" ]; then
+            echo "❌ iOS build(s) failed with result: $IOS_RESULT"
+            exit 1
+          fi
+
+          # If we didn't skip but builds didn't run, that's an error
+          if [ "$ANDROID_RESULT" == "skipped" ] || [ "$IOS_RESULT" == "skipped" ]; then
+            echo "⚠️ Warning: Builds were skipped unexpectedly"
+            echo "This might indicate an issue with job conditions"
             exit 1
           fi
 
@@ -550,30 +567,30 @@ jobs:
     strategy:
       matrix:
         include:
-          - platform: "ios"
-            build_type: "bc-wallet"
-            artifact_ref: "ios-bc-wallet-artifact"
-            sauce_labs_name: "BCWallet-${{ github.run_number }}.ipa"
-            sauce_labs_description: "iOS BC Wallet App"
-            artifact_name: "BCWallet.ipa"
-          - platform: "ios"
-            build_type: "single-app"
-            artifact_ref: "ios-single-app-artifact"
-            sauce_labs_name: "BCWallet-SingleApp-${{ github.run_number }}.ipa"
-            sauce_labs_description: "iOS BC Wallet Single App"
-            artifact_name: "BCWallet.ipa"
-          - platform: "android"
-            build_type: "bc-wallet"
-            artifact_ref: "android-bc-wallet-artifact-aab"
-            sauce_labs_name: "BCWallet-${{ github.run_number }}.aab"
-            sauce_labs_description: "Android BC Wallet App"
-            artifact_name: "app-release.aab"
-          - platform: "android"
-            build_type: "single-app"
-            artifact_ref: "android-single-app-artifact-aab"
-            sauce_labs_name: "BCWallet-SingleApp-${{ github.run_number }}.aab"
-            sauce_labs_description: "Android BC Wallet Single App"
-            artifact_name: "app-release.aab"
+          - platform: 'ios'
+            build_type: 'bc-wallet'
+            artifact_ref: 'ios-bc-wallet-artifact'
+            sauce_labs_name: 'BCWallet-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Wallet App'
+            artifact_name: 'BCWallet.ipa'
+          - platform: 'ios'
+            build_type: 'single-app'
+            artifact_ref: 'ios-single-app-artifact'
+            sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Wallet Single App'
+            artifact_name: 'BCWallet.ipa'
+          - platform: 'android'
+            build_type: 'bc-wallet'
+            artifact_ref: 'android-bc-wallet-artifact-aab'
+            sauce_labs_name: 'BCWallet-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Wallet App'
+            artifact_name: 'app-release.aab'
+          - platform: 'android'
+            build_type: 'single-app'
+            artifact_ref: 'android-single-app-artifact-aab'
+            sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Wallet Single App'
+            artifact_name: 'app-release.aab'
     steps:
       - uses: actions/checkout@v4
 
@@ -597,15 +614,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - mobile-platform: "-p Android"
-            app-file-name: "-a BCWallet-${{ github.run_number }}.aab"
-            report-project: "android-bc-wallet-one-device-smoke"
+          - mobile-platform: '-p Android'
+            app-file-name: '-a BCWallet-${{ github.run_number }}.aab'
+            report-project: 'android-bc-wallet-one-device-smoke'
           # - mobile-platform: "-p Android"
           #   app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.aab"
           #   report-project: "android-single-app-one-device-smoke"
-          - mobile-platform: "-p iOS"
-            app-file-name: "-a BCWallet-${{ github.run_number }}.ipa"
-            report-project: "ios-bc-wallet-one-device-smoke"
+          - mobile-platform: '-p iOS'
+            app-file-name: '-a BCWallet-${{ github.run_number }}.ipa'
+            report-project: 'ios-bc-wallet-one-device-smoke'
           # - mobile-platform: "-p iOS"
           #   app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.ipa"
           #   report-project: "ios-single-app-one-device-smoke"
@@ -617,14 +634,14 @@ jobs:
         if: matrix.mobile-platform=='-p iOS'
         uses: ./.github/workflows/actions/run-aath-agents
         with:
-          USE_NGROK: ""
+          USE_NGROK: ''
 
       - name: run-aath-agents-ngrok
         if: matrix.mobile-platform=='-p Android'
         uses: ./.github/workflows/actions/run-aath-agents
         with:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-          USE_NGROK: "-n"
+          USE_NGROK: '-n'
 
       - name: run-sauce-connect-tunnel
         if: matrix.mobile-platform=='-p iOS'
@@ -644,18 +661,18 @@ jobs:
       - name: Run SauceLabs smoke-test
         uses: ./.github/workflows/actions/run-test-harness
         env:
-          LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
-          REGION: "us-west-1"
+          LEDGER_URL_CONFIG: 'http://test.bcovrin.vonx.io'
+          REGION: 'us-west-1'
         with:
-          MOBILE_WALLET: "-w bc_wallet"
+          MOBILE_WALLET: '-w bc_wallet'
           ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
           VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9030"'
-          DEVICE_CLOUD: "-d SauceLabs"
-          DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
-          DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
+          DEVICE_CLOUD: '-d SauceLabs'
+          DEVICE_CLOUD_USER: '-u ${{ secrets.SAUCE_USERNAME }}'
+          DEVICE_CLOUD_KEY: '-k ${{ secrets.SAUCE_ACCESS_KEY }}'
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @bc_wallet -t @SmokeTest"
+          TEST_SCOPE: '-t @bc_wallet -t @SmokeTest'
           REPORT_PROJECT: ${{ matrix.report-project }}
 
       - name: Upload smoke-test results to Allure

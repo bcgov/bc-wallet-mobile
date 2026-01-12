@@ -35,12 +35,17 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
     navigation.navigate(BCSCScreens.VerifyDeveloper)
   }
 
+  const onAutoLock = () => {
+    navigation.navigate(BCSCScreens.VerifyAutoLock)
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
       onHelp={onHelp}
       onPrivacy={onPrivacy}
       onPressDeveloperMode={onPressDeveloperMode}
+      onAutoLock={onAutoLock}
     />
   )
 }

@@ -10,7 +10,6 @@ npm install react-native-bcsc-core
 
 ## Usage
 
-
 ```js
 import { multiply } from 'react-native-bcsc-core';
 
@@ -18,7 +17,6 @@ import { multiply } from 'react-native-bcsc-core';
 
 const result = multiply(3, 7);
 ```
-
 
 ## Contributing
 

@@ -57,11 +57,25 @@ runs:
   steps:
     - name: build-mobile-test-harness
       working-directory: aries-mobile-test-harness
-      run: ./manage build ${{ inputs.MOBILE_WALLET }}
+      env:
+        MOBILE_WALLET: ${{ inputs.MOBILE_WALLET }}
+      run: ./manage build $MOBILE_WALLET
       shell: bash
     - name: run-mobile-test-harness
       working-directory: aries-mobile-test-harness
-      run: PROJECT_ID=${{inputs.REPORT_PROJECT}} ./manage run ${{ inputs.DEVICE_CLOUD }} ${{ inputs.DEVICE_CLOUD_USER }} ${{ inputs.DEVICE_CLOUD_KEY }} ${{ inputs.REPORTING }} ${{ inputs.MOBILE_PLATFORM }} ${{ inputs.APP_FILE_NAME }} ${{ inputs.ISSUER_AGENT }} ${{ inputs.VERIFIER_AGENT }} ${{ inputs.OTHER_PARAMS }} ${{ inputs.TEST_SCOPE }}
+      env:
+        REPORT_PROJECT: ${{ inputs.REPORT_PROJECT }}
+        MOBILE_PLATFORM: ${{ inputs.MOBILE_PLATFORM }}
+        APP_FILE_NAME: ${{ inputs.APP_FILE_NAME }}
+        ISSUER_AGENT: ${{ inputs.ISSUER_AGENT }}
+        VERIFIER_AGENT: ${{ inputs.VERIFIER_AGENT }}
+        REPORTING: ${{ inputs.REPORTING }}
+        DEVICE_CLOUD: ${{ inputs.DEVICE_CLOUD }}
+        DEVICE_CLOUD_USER: ${{ inputs.DEVICE_CLOUD_USER }}
+        DEVICE_CLOUD_KEY: ${{ inputs.DEVICE_CLOUD_KEY }}
+        TEST_SCOPE: ${{ inputs.TEST_SCOPE }}
+        OTHER_PARAMS: ${{ inputs.OTHER_PARAMS }}
+      run: PROJECT_ID=$REPORT_PROJECT ./manage run $DEVICE_CLOUD $DEVICE_CLOUD_USER $DEVICE_CLOUD_KEY $REPORTING $MOBILE_PLATFORM $APP_FILE_NAME $ISSUER_AGENT $VERIFIER_AGENT $OTHER_PARAMS $TEST_SCOPE
       shell: bash
       env:
         NO_TTY: "1"

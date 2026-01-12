@@ -1,3 +1,4 @@
+import { ErrorRegistryKey, getErrorDefinition } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -9,6 +10,9 @@ import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
+
+/** Error handler callback type for utility functions */
+export type ErrorHandler = (key: ErrorRegistryKey, options?: { error?: unknown }) => void
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -51,7 +55,8 @@ export const connectToIASAgent = async (
   const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
-    throw new BifoldError(t('Error.Title2020'), t('Error.Message2020'), t('Error.NoMessage'), ErrorCodes.BadInvitation)
+    const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   await removeExistingInvitationsById(agent, invite.id)
@@ -59,12 +64,8 @@ export const connectToIASAgent = async (
   const record = await agent.oob.receiveInvitation(invite)
 
   if (!record) {
-    throw new BifoldError(
-      t('Error.Title2021'),
-      t('Error.Message2021'),
-      t('Error.NoMessage'),
-      ErrorCodes.ReceiveInvitationError
-    )
+    const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
@@ -73,36 +74,24 @@ export const connectToIASAgent = async (
   const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   const dids = await didRepository.getAll(agent.context)
   const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
   if (!didRecord) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
-    throw new BifoldError(
-      t('Error.Title2022'),
-      t('Error.Message2022'),
-      t('Error.NoMessage'),
-      ErrorCodes.CannotGetLegacyDID
-    )
+    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
   }
 
   return {
@@ -121,22 +110,16 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
   }
 }
 
-export const initiateAppToAppFlow = async (
-  url: string,
-  t: TFunction<'translation', undefined>,
-  logger?: BifoldLogger
-) => {
+export const initiateAppToAppFlow = async (url: string, onError?: ErrorHandler, logger?: BifoldLogger) => {
   try {
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url)
     } else {
-      throw new Error()
+      throw new Error('Cannot open URL')
     }
   } catch (err: unknown) {
     logger?.error(`Error opening URL ${(err as Error).message}`)
-
-    const error = new BifoldError(t('Error.Title2032'), t('Error.Message2032'), t('Error.NoMessage'), 2032)
-    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    onError?.('APP_TO_APP_URL_ERROR', { error: err })
   }
 }
 
@@ -211,6 +194,7 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
+    // Re-emit the caught error (could be a BifoldError or other error type)
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }

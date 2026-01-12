@@ -1,12 +1,5 @@
 import { BifoldLogger } from '@bifold/core'
-import { decodePayload } from 'react-native-bcsc-core'
-import { BCSCCardType } from '../types/cards'
-
-export enum BCSCAccountType {
-  Photo = 'BC Services Card with photo',
-  NonPhoto = 'BC Services Card without photo',
-  Other = 'Other - no BC Services Card',
-}
+import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
 
 /**
  * BCSC event types
@@ -32,10 +25,10 @@ export enum BCSCReason {
   ApprovedByAgent = 'Approved by Agent',
   Renew = 'Renewed by Card Renew',
   Replace = 'Replaced by Card Replace',
-  Cancel = 'Canceled by Card Cancel',
+  Cancel = 'Canceled by Card Cancel', // i.e agent via web portal.
   ExpiredBySystem = 'Expired by System',
-  CanceledByAgent = 'Canceled by Agent',
-  CanceledByUser = 'Canceled by User',
+  CanceledByAgent = 'Canceled by Agent', // i.e automatic, too many cards.
+  CanceledByUser = 'Canceled by User', // i.e user manually removes a card.
   CanceledByAdditionalCard = 'Canceled by Additional Card',
   CanceledByCardTypeChange = 'Canceled by Card Type Change',
   CanceledDueToInactivity = 'Canceled due to Inactivity',
@@ -56,8 +49,8 @@ export interface IdToken {
   family_name: string
   given_name: string
   middle_name?: string
-  // note: this value is undefined for non-bcsc cards, transform to 'Other' in that case
-  bcsc_card_type: BCSCCardType.Combined | BCSCCardType.Photo | BCSCCardType.NonPhoto | BCSCCardType.Other
+  // note: this value is undefined for non-bcsc cards, transform to NonBcsc in that case
+  bcsc_card_type: BCSCCardType.ComboCard | BCSCCardType.PhotoCard | BCSCCardType.NonPhotoCard | BCSCCardType.NonBcsc
   bcsc_event: BCSCEvent
   bcsc_reason: BCSCReason
   bcsc_status_date: number // epoch
@@ -80,9 +73,9 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     const payloadString = await decodePayload(idToken)
     const payload: IdToken = JSON.parse(payloadString)
 
-    // Transform undefined card_type to 'Other' (ie: non-BCSC card) if account_type is OTHER
-    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.Other) {
-      payload.bcsc_card_type = BCSCCardType.Other
+    // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
+    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.NoBcscCard) {
+      payload.bcsc_card_type = BCSCCardType.NonBcsc
     }
 
     return payload

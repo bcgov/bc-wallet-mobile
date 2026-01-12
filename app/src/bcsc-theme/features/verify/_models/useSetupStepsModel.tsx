@@ -1,12 +1,14 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * Model hook for the SetupStepsScreen that provides:
@@ -16,7 +18,8 @@ import { Alert } from 'react-native'
  */
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
+  const { updateTokens, updateVerificationRequest, updateAccountFlags } = useSecureActions()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -27,21 +30,24 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    * Check the status of a pending verification request
    */
   const handleCheckStatus = useCallback(async () => {
-    if (!store.bcsc.verificationRequestId) {
+    if (!store.bcscSecure.verificationRequestId) {
       throw new Error(t('BCSC.Steps.VerificationIDMissing'))
     }
 
-    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
+    const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
 
     if (status === 'verified') {
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
         throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
+      const { refresh_token } = await token.checkDeviceCodeStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode
+      )
 
       if (refresh_token) {
-        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+        await updateTokens({ refreshToken: refresh_token })
       }
 
       navigation.navigate(BCSCScreens.VerificationSuccess)
@@ -49,13 +55,13 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       navigation.navigate(BCSCScreens.PendingReview)
     }
   }, [
-    store.bcsc.verificationRequestId,
-    store.bcsc.deviceCode,
-    store.bcsc.userCode,
+    store.bcscSecure.verificationRequestId,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.userCode,
     evidence,
     token,
-    dispatch,
     navigation,
+    updateTokens,
     t,
   ])
 
@@ -68,14 +74,18 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
-            if (!store.bcsc.verificationRequestId) {
+            if (!store.bcscSecure.verificationRequestId) {
               return
             }
-            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId)
+            await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
           } catch (error) {
             logger.error(`Error cancelling verification request: ${error}`)
           } finally {
-            dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [false] })
+            // Clear verification request from secure state
+            updateVerificationRequest(null, null)
+            await updateAccountFlags({
+              userSubmittedVerificationVideo: false,
+            })
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         },
@@ -86,7 +96,15 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         style: 'cancel',
       },
     ])
-  }, [store.bcsc.verificationRequestId, evidence, logger, dispatch, navigation, t])
+  }, [
+    store.bcscSecure.verificationRequestId,
+    evidence,
+    logger,
+    navigation,
+    updateVerificationRequest,
+    updateAccountFlags,
+    t,
+  ])
 
   /**
    * Navigation actions for each step
@@ -99,7 +117,9 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
       id: () => {
         if (steps.id.nonBcscNeedsAdditionalCard) {
-          navigation.navigate(BCSCScreens.EvidenceTypeList)
+          navigation.navigate(BCSCScreens.EvidenceTypeList, {
+            cardProcess: BCSCCardProcess.NonBCSC,
+          })
           return
         }
         if (steps.id.nonPhotoBcscNeedsAdditionalCard) {
@@ -116,11 +136,14 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       },
 
       email: () => {
-        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcsc.cardProcess })
+        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcscSecure.cardProcess! })
       },
 
       verify: () => {
         navigation.navigate(BCSCScreens.VerificationMethodSelection)
+      },
+      transfer: () => {
+        navigation.navigate(BCSCScreens.TransferAccountInstructions)
       },
     }),
     [
@@ -128,7 +151,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       steps.id.nonBcscNeedsAdditionalCard,
       steps.id.nonPhotoBcscNeedsAdditionalCard,
       steps.id.completed,
-      store.bcsc.cardProcess,
+      store.bcscSecure.cardProcess,
     ]
   )
 

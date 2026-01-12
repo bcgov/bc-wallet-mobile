@@ -43,6 +43,10 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.ForgetAllPairings)
   }
 
+  const onAutoLock = () => {
+    navigation.navigate(BCSCScreens.MainAutoLock)
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -51,6 +55,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onPressDeveloperMode={onPressDeveloperMode}
       onEditNickname={onEditNickname}
       onForgetAllPairings={onForgetAllPairings}
+      onAutoLock={onAutoLock}
     />
   )
 }

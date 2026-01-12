@@ -1,12 +1,12 @@
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
-import { createDeviceSignedJWT } from 'react-native-bcsc-core'
+import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
+const IAS_SCOPE = 'openid profile address offline_access'
 
 export enum DeviceVerificationOption {
   LIVE_VIDEO_CALL = 'video_call',
@@ -65,10 +65,8 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           client_id: account.clientID,
           card_serial_number: serial ?? undefined,
           birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
-          scope: 'openid profile address offline_access',
+          scope: IAS_SCOPE,
         }
-
-        apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
 
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(
@@ -114,7 +112,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
-          scope: 'openid profile address offline_access',
+          scope: IAS_SCOPE,
           id_token_hint: await createDeviceSignedJWT({
             iss: account.clientID,
             aud: account.issuer,
@@ -137,8 +135,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             middle_name: config.middleNames || undefined,
           }),
         }
-
-        apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
 
         try {
           const { data } = await apiClient.post<DeviceAuthorizationResponse>(
