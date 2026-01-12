@@ -10,6 +10,7 @@ import { HelpCentreUrl } from '@/constants'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
@@ -34,6 +35,18 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
       color: ColorPalette.brand.primary,
     },
   })
+
+  /**
+   * This fixes an issue where the user has selected Non-BCSC ID,
+   * then navigated back to this screen, and the previous selection remains.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      updateCardProcess(undefined)
+      // prevent infinite loop
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  )
 
   const onPressCombinedCard = useCallback(() => {
     navigation.navigate(BCSCScreens.SerialInstructions)
