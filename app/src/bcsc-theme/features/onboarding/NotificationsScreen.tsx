@@ -60,7 +60,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
    * @returns {*} {Promise<void>} A promise that resolves when the operation is complete.
    */
   const activatePushNotifications = async () => {
-    logger.debug(`[NotificationsScreen] About to request push notification permission`)
+    logger.debug(`[NotificationsScreen] Requesting push notification permission`)
 
     try {
       const status = await PushNotifications.setup()
