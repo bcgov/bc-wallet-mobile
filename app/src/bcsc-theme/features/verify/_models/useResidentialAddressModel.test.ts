@@ -25,12 +25,14 @@ jest.mock('@bifold/core', () => {
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationOptions = jest.fn()
+const mockUpdateCardProcess = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateUserMetadata: mockUpdateUserMetadata,
     updateDeviceCodes: mockUpdateDeviceCodes,
     updateVerificationOptions: mockUpdateVerificationOptions,
+    updateCardProcess: mockUpdateCardProcess,
   })),
 }))
 
@@ -82,6 +84,7 @@ describe('useResidentialAddressModel', () => {
     mockUpdateUserMetadata.mockClear()
     mockUpdateDeviceCodes.mockClear()
     mockUpdateVerificationOptions.mockClear()
+    mockUpdateCardProcess.mockClear()
 
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
@@ -259,6 +262,7 @@ describe('useResidentialAddressModel', () => {
         user_code: 'new-user-code',
         expires_in: 3600,
         verification_options: 'video_call back_check',
+        process: 'test-process',
       }
       mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
 
@@ -311,6 +315,7 @@ describe('useResidentialAddressModel', () => {
       })
 
       expect(mockNavigation.dispatch).toHaveBeenCalled()
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
     })
 
     it('should handle device already registered (null response)', async () => {
