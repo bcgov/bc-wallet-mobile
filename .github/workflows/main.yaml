@@ -253,8 +253,8 @@ jobs:
 
       - name: Update APS environment
         run: |
-          sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
-          cat app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -replace aps-environment -string production app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -p app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
         # This step will no work in a `fork` because it will not have access
