@@ -5,6 +5,8 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 
+// This will display a warning alert to the user (only once)
+
 /**
  * Checks if the user's account is expiring soon (warning period), but not yet expired.
  *
@@ -13,7 +15,7 @@ const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
  * @class AccountExpirySystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class AccountExpirySystemCheck implements SystemCheckStrategy {
+export class AccountExpiryWarningSystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
 
@@ -40,11 +42,11 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    const isExpiringSoon = AccountExpirySystemCheck.isAccountExpired(
+    const isExpiringSoon = AccountExpiryWarningSystemCheck.isAccountExpired(
       this.accountExpiration,
       ACCOUNT_EXPIRATION_WARNING_DAYS
     )
-    const isExpired = AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
+    const isExpired = AccountExpiryWarningSystemCheck.isAccountExpired(this.accountExpiration, 0)
 
     // Only fail if expiring soon but not yet expired
     return !isExpiringSoon || isExpired
