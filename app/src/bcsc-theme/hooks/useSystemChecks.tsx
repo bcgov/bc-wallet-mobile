@@ -1,8 +1,6 @@
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useEventListener } from '@/hooks/useEventListener'
-import { AccountExpiryAlertSystemCheck } from '@/services/system-checks/AccountExpiryAlertSystemCheck'
-import { AccountExpiryWarningAlertSystemCheck } from '@/services/system-checks/AccountExpiryWarningAlertSystemCheck'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
@@ -16,6 +14,7 @@ import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
+import moment from 'moment'
 import { useContext, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
@@ -55,7 +54,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const ranSystemChecksRef = useRef(false)
   const accountContext = useContext(BCSCAccountContext)
 
-  const accountExpirationDate = accountContext?.account?.account_expiration_date
+  const accountExpirationDate = moment(new Date()).subtract(5, 'days').toDate() //accountContext?.account?.account_expiration_date
 
   // Internet connectivity event listener
   useEventListener(() => {
@@ -137,13 +136,13 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
             new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils, navigation),
-            new AccountExpiryWarningAlertSystemCheck(
-              accountExpirationDate,
-              Boolean(store.bcsc.hasDismissedExpiryAlert),
-              utils,
-              navigation
-            ),
-            new AccountExpiryAlertSystemCheck(accountExpirationDate, navigation),
+            // new AccountExpiryWarningAlertSystemCheck(
+            //   accountExpirationDate,
+            //   Boolean(store.bcsc.hasDismissedExpiryAlert),
+            //   utils,
+            //   navigation
+            // ),
+            // new AccountExpiryAlertSystemCheck(accountExpirationDate, navigation),
           ]
 
           // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)

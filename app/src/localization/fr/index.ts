@@ -272,12 +272,13 @@ const translation = {
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (FR)",
       },
-      "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)"
+      "AccountExpiryWarningDescription": {
+        "ExpiringBannerTitle": "Expires in {{days}} days (FR)",
+        "ExpiringBannerDescription": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)"
       }
     },
     "AccountExpired": {
-      "StaticBannerTitle": "Account expired (FR)",
+      "StaticBannerTitle": "Expired (FR)",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
       "RenewButton": "Renew account (FR)",
       "RemoveButton": "Remove account (FR)",

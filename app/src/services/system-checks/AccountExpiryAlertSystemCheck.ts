@@ -1,6 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { showAlert } from '@/utils/alert'
-import moment from 'moment'
 import { isAccountExpired } from './AccountExpiryWarningBannerSystemCheck'
 import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
@@ -20,7 +19,7 @@ export class AccountExpiryAlertSystemCheck implements SystemCheckStrategy {
 
   constructor(accountExpiration: Date, navigation: SystemCheckNavigation) {
     this.accountExpiration = accountExpiration
-    this.accountExpiration = moment().subtract(1, 'day').toDate() // For testing purposes only
+    // this.accountExpiration = moment().subtract(1, 'day').toDate() // For testing purposes only
     this.navigation = navigation
   }
 

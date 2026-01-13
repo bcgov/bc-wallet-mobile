@@ -2,10 +2,11 @@ import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
-import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import HomeHeader from '../home/components/HomeHeader'
@@ -23,7 +24,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const factoryReset = useFactoryReset()
-  const account = useAccount()
+  const accountContext = useContext(BCSCAccountContext)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -42,12 +43,19 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
         title={t('BCSC.AccountExpired.StaticBannerTitle')}
         dismissible={false}
         description={t('BCSC.AccountExpired.StaticBannerDescription', {
-          accountExpiration: account.card_expiry,
+          accountExpiration: accountContext?.account?.card_expiry,
         })}
         type="warning"
+        onPress={(id: string) => {
+          navigation.navigate(BCSCScreens.AccountRenewalInformation)
+        }}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <HomeHeader name={account.fullname_formatted} fontSize={20} cardSize={GENERIC_CARD_SIZE_SMALL} />
+        <HomeHeader
+          name={accountContext?.account?.fullname_formatted || ''}
+          fontSize={20}
+          cardSize={GENERIC_CARD_SIZE_SMALL}
+        />
 
         <View style={styles.actionsContainer}>
           <CardButton

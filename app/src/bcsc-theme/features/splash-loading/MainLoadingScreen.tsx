@@ -26,7 +26,6 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
     }
 
     // Navigate to Account Expired screen when account is expired
-    // TODO: (Al) shouldn't this be handled by the system check?
     if (isAccountExpired(context.account.account_expiration_date)) {
       return navigation.dispatch(
         CommonActions.reset({
