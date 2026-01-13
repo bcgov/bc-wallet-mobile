@@ -7,6 +7,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -123,6 +124,17 @@ const Account: React.FC = () => {
     },
   })
 
+  const cardExpiryDate = useCallback(() => {
+    let dateString = account.card_expiry ?? ''
+    if (account.card_expiry) {
+      if (isAccountExpired(account.card_expiry)) {
+        dateString = 'Card expired!'
+      }
+    }
+
+    return dateString
+  }, [account])
+
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
@@ -134,7 +146,7 @@ const Account: React.FC = () => {
           </ThemedText>
         </View>
         <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
-        <AccountField label={t('BCSC.Account.AccountInfo.AppExpiryDate')} value={account.card_expiry ?? ''} />
+        <AccountField label={t('BCSC.Account.AccountInfo.AppExpiryDate')} value={cardExpiryDate()} />
         <AccountField
           label={t('BCSC.Account.AccountInfo.AccountType')}
           value={account.card_type ?? t('BCSC.Account.AccountInfo.AccountTypeNonBCServicesCard')}

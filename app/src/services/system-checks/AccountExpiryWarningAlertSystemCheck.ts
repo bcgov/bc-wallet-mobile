@@ -1,9 +1,10 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { showAlert } from '@/utils/alert'
 import moment from 'moment'
 import { isAccountExpired } from './AccountExpiryWarningBannerSystemCheck'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 // This will display a warning alert to the user (only once)
 
@@ -19,11 +20,18 @@ export class AccountExpiryWarningAlertSystemCheck implements SystemCheckStrategy
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
   private readonly hasDismissedAlert: boolean
+  private readonly navigation: SystemCheckNavigation
 
-  constructor(accountExpiration: Date, hasDismissedAlert: boolean, utils: SystemCheckUtils) {
+  constructor(
+    accountExpiration: Date,
+    hasDismissedAlert: boolean,
+    utils: SystemCheckUtils,
+    navigation: SystemCheckNavigation
+  ) {
     this.accountExpiration = accountExpiration
     this.hasDismissedAlert = hasDismissedAlert
     this.utils = utils
+    this.navigation = navigation
   }
 
   static isAccountExpired(accountExpiration: Date | string, warningPeriod = 0): boolean {
@@ -53,13 +61,15 @@ export class AccountExpiryWarningAlertSystemCheck implements SystemCheckStrategy
       'Your mobile card is about to expire, go here to request an extension',
       [
         {
-          text: 'OK',
+          text: 'Rewnewal Information',
           onPress: () => {
             // Dismissed alert, update store so it doesn't show again
             this.utils.dispatch({
               type: BCDispatchAction.DISMISSED_EXPIRY_ALERT,
               payload: [true],
             })
+
+            this.navigation.navigate(BCSCScreens.AccountRenewalInformation)
           },
         },
       ]
