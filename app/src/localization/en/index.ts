@@ -1,5 +1,13 @@
 // prettier-ignore
 const translation = {
+  "Global": {
+    "OK": "OK",
+    "Cancel": "Cancel",
+    "Continue": "Continue",
+    "Back": "Back",
+    "GoBack": "Go Back",
+    "Loading": "Loading..."
+  },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
   },
@@ -156,13 +164,48 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
     },
+    "Security": {
+      "AuthenticatePrompt": "Authenticate to secure your app",
+      "AuthenticateToSecure": "Authenticate to secure your app"
+    },
+    "PIN": {
+      "CreatePIN": "Create a 6-digit PIN",
+      "ConfirmPIN": "Confirm PIN",
+      "RememberPIN": "Remember your PIN",
+      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
+      "IUnderstand": "I understand if I forget my PIN that I have to set up this app again.",
+      "MustCheckBox": "You must check this box to continue.",
+      "PINTooShort": "PIN must be 6 digits",
+      "PINsDoNotMatch": "PINs do not match",
+      "SettingUpPIN": "Setting up your PIN...",
+      "SettingUpAccount": "Setting up your account...",
+      "FailedToSetPIN": "Failed to set PIN",
+      "ErrorSettingPIN": "An error occurred while setting the PIN"
+    },
+    "ChangePIN": {
+      "ScreenTitle": "Change your PIN",
+      "EnterCurrentPIN": "Enter your current PIN",
+      "EnterNewPIN": "Enter a new 6-digit PIN",
+      "ReenterNewPIN": "Re-enter new PIN",
+      "RememberPIN": "Remember your PIN",
+      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device.",
+      "IUnderstand": "I understand if I forget my PIN that I have to set up this app again.",
+      "MustCheckBox": "You must check this box to continue.",
+      "ButtonTitle": "Change PIN",
+      "ChangingPIN": "Changing your PIN...",
+      "PINTooShort": "Your PIN must be 6 digits",
+      "PINsDoNotMatch": "PIN does not match",
+      "IncorrectPIN": "Incorrect PIN",
+      "AccountLocked": "Your account is locked. Please try again later.",
+      "FailedToSetPIN": "Failed to change PIN",
+      "ErrorChangingPIN": "An error occurred while changing the PIN"
+    },
     "Settings": {
       "HeaderA": "App Settings",
       "HeaderB": "Information",
       "Help": "Help",
       "SignOut": "Sign out",
       "Biometrics": "Biometrics",
-      "ChangePIN": "Change PIN",
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
       "Notifications": "Notifications",
@@ -174,6 +217,39 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
+      "AppSecurity": {
+        "ScreenTitle": "App Security",
+        "ChangeAppSecurity": "Change App Security",
+        "Title": "App Security",
+        "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN.",
+        "CurrentMethod": "Current security method",
+        "ChooseMethod": "Switch to",
+        "DeviceAuth": "Device Authentication",
+        "PIN": "PIN",
+        "UseDeviceAuth": "Use {{method}}",
+        "DeviceAuthSubtext": "Use your {{platform}}'s built-in security to unlock the app.",
+        "UsePIN": "Use a PIN",
+        "PINSubtext": "Create a personal PIN to unlock the app.",
+        "CurrentlySelected": "Currently active",
+        "DeviceAuthNotSetup": "Device authentication is not available. Set up Face ID, Touch ID, or a device passcode in your device settings to use this option.",
+        "DeviceAuthUnavailableTitle": "Device Authentication Unavailable",
+        "DeviceAuthUnavailableMessage": "Please set up Face ID, Touch ID, or a device passcode in your device settings first.",
+        "AuthenticateToSwitch": "Authenticate to change your security method",
+        "SuccessTitle": "Success",
+        "SwitchedToDeviceAuth": "Your app is now secured with {{method}}.",
+        "SwitchedToPIN": "Your app is now secured with a PIN.",
+        "ErrorTitle": "Error",
+        "SetupFailedMessage": "Failed to change security method. Please try again.",
+        "SwitchToPINTitle": "Switch to PIN",
+        "SwitchToPINMessage": "You will need to create a new PIN to secure the app."
+      },
+      "ChangePIN": {
+        "ButtonTitle": "Change PIN",
+        "ScreenTitle": "Create PIN",
+        "SettingUpPIN": "Setting up your PIN...",
+        "SuccessTitle": "Success",
+        "PINChanged": "Your PIN has been changed successfully."
+      },
     },
     "Services": {
       "CatalogueTitle": "Services",
@@ -384,6 +460,8 @@ const translation = {
       "SecureAppDeviceAuthSubtext": "It’s already set up on this {{platform}}. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
+      "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private.",
+      "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.",
       "AnalyticsTitle": "Enable Analytics?",
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
       "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",

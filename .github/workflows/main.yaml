@@ -130,10 +130,12 @@ jobs:
           - build_type: 'bc-wallet'
             app_version: '1.0.27'
             export_options: 'export-options-bcw.plist'
+            release_config: 'release-bcw.xcconfig'
             artifact_name: 'ios-bc-wallet-artifact'
           - build_type: 'single-app'
             app_version: '4.0.0'
             export_options: 'export-options-sa.plist'
+            release_config: 'release-sa.xcconfig'
             artifact_name: 'ios-single-app-artifact'
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
@@ -253,8 +255,8 @@ jobs:
 
       - name: Update APS environment
         run: |
-          sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
-          cat app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -replace aps-environment -string production app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -p app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
         # This step will no work in a `fork` because it will not have access
@@ -278,7 +280,7 @@ jobs:
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
           -configuration Release \
-          -xcconfig ../../release.xcconfig \
+          -xcconfig ../../${{ matrix.release_config }} \
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
           -allowProvisioningUpdates \

@@ -5,8 +5,9 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -52,7 +53,6 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const [store] = useStore<BCState>()
   const { removeIncompleteEvidence, addEvidenceType } = useSecureActions()
   const [evidenceSections, setEvidenceSections] = useState<{ title: string; data: EvidenceType[] }[]>([])
-  const didCleanupRef = useRef(false)
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
     onError: (error: unknown) => {
       logger.error(`Error loading evidence metadata: ${error}`)
@@ -72,14 +72,15 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
-  // Clean up any incomplete evidence entries when the screen mounts
+  // Clean up any incomplete evidence entries when the screen focuses
   // This handles the case where user selected a card but backed out before completing
-  useEffect(() => {
-    if (!didCleanupRef.current) {
-      didCleanupRef.current = true
+  useFocusEffect(
+    useCallback(() => {
       removeIncompleteEvidence()
-    }
-  }, [removeIncompleteEvidence])
+      // prevent infinite loop
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  )
 
   useEffect(() => {
     load()

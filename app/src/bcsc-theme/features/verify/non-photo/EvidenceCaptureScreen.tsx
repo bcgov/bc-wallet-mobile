@@ -5,9 +5,8 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 
 type EvidenceCaptureScreenProps = {
@@ -58,16 +57,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
   const currentSide = cardType.image_sides[currentIndex]
   const isLastSide = currentIndex === cardType.image_sides.length - 1
-
-  useFocusEffect(
-    useCallback(() => {
-      // Reset state when navigating to this screen
-      setCurrentIndex(0)
-      setCaptureState(CaptureState.CAPTURING)
-      setCurrentPhotoPath(undefined)
-      setCapturedPhotos([])
-    }, [])
-  )
 
   const handlePhotoTaken = (path: string) => {
     setCurrentPhotoPath(path)
