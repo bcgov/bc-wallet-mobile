@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CreatePINScreen snapshots renders correctly 1`] = `
+exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] = `
 <View
   style={
     {

@@ -19,6 +19,8 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
+import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -133,6 +135,26 @@ const MainStack: React.FC = () => {
             title: t('BCSC.Settings.AutoLockTime'),
             headerBackTestID: testIdWithKey('Back'),
           }}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainAppSecurity}
+          component={MainChangeSecurityScreen}
+          options={{
+            headerShown: true,
+            title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
+            headerBackTestID: testIdWithKey('Back'),
+          }}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainChangePIN}
+          component={MainChangePINScreen}
+          options={({ route }) => ({
+            headerShown: true,
+            title: route.params?.isChangingExistingPIN
+              ? t('BCSC.ChangePIN.ScreenTitle')
+              : t('BCSC.Settings.ChangePIN.ScreenTitle'),
+            headerBackTestID: testIdWithKey('Back'),
+          })}
         />
         <Stack.Screen
           name={BCSCScreens.ManualPairingCode}

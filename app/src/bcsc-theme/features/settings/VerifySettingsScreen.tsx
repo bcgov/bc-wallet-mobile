@@ -39,6 +39,14 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
     navigation.navigate(BCSCScreens.VerifyAutoLock)
   }
 
+  const onAppSecurity = () => {
+    navigation.navigate(BCSCScreens.VerifyAppSecurity)
+  }
+
+  const onChangePIN = () => {
+    navigation.navigate(BCSCScreens.VerifyChangePIN, { isChangingExistingPIN: true })
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -46,6 +54,8 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
       onPrivacy={onPrivacy}
       onPressDeveloperMode={onPressDeveloperMode}
       onAutoLock={onAutoLock}
+      onAppSecurity={onAppSecurity}
+      onChangePIN={onChangePIN}
     />
   )
 }
