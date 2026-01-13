@@ -91,9 +91,11 @@ export enum BCSCScreens {
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
   VerifyAutoLock = 'BCSCVerifyAutoLock',
+  VerifyAppSecurity = 'BCSCVerifyAppSecurity',
   VerifyContactUs = 'BCSCVerifyContactUs',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
+  VerifyChangePIN = 'BCSCVerifyChangePIN',
   AccountExpired = 'BCSCAccountExpired',
   AccountRenewalInformation = 'BCSCAccountRenewalInformation',
   AccountRenewalFirstWarning = 'BCSCAccountRenewalFirstWarning',
@@ -175,6 +177,8 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
+  [BCSCScreens.VerifyAppSecurity]: undefined
+  [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined

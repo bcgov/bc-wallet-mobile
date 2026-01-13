@@ -19,8 +19,8 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
-import { ChangePINScreen } from '../features/auth/ChangePINScreen'
-import { ChangeSecurityScreen } from '../features/auth/ChangeSecurityScreen'
+import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
+import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -138,7 +138,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainAppSecurity}
-          component={ChangeSecurityScreen}
+          component={MainChangeSecurityScreen}
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
@@ -147,7 +147,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainChangePIN}
-          component={ChangePINScreen}
+          component={MainChangePINScreen}
           options={({ route }) => ({
             headerShown: true,
             title: route.params?.isChangingExistingPIN

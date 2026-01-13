@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ChangeSecurityScreen when current method is Device Auth shows Device Auth as current method 1`] = `
+exports[`ChangeSecurityContent when current method is Device Auth shows Device Auth as current method 1`] = `
 <View
   style={
     {
@@ -480,7 +480,7 @@ exports[`ChangeSecurityScreen when current method is Device Auth shows Device Au
 </View>
 `;
 
-exports[`ChangeSecurityScreen when current method is PIN and device auth is available renders security options with current method indicator 1`] = `
+exports[`ChangeSecurityContent when current method is PIN and device auth is available renders security options with current method indicator 1`] = `
 <View
   style={
     {
@@ -960,7 +960,7 @@ exports[`ChangeSecurityScreen when current method is PIN and device auth is avai
 </View>
 `;
 
-exports[`ChangeSecurityScreen when device auth is NOT available shows message that device auth is not available 1`] = `
+exports[`ChangeSecurityContent when device auth is NOT available shows message that device auth is not available 1`] = `
 <View
   style={
     {

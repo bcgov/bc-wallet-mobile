@@ -4,9 +4,9 @@ import React from 'react'
 import { canPerformDeviceAuthentication, setAccountSecurityMethod, setPIN, verifyPIN } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'
 
-import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { ChangePINScreen } from './ChangePINScreen'
+import { ChangePINContent } from './ChangePINContent'
 
 jest.mock('react-native-bcsc-core', () => ({
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
@@ -24,18 +24,21 @@ jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
 
-const mockUseRoute = useRoute as jest.Mock
 const mockSetPIN = jest.mocked(setPIN)
 const mockVerifyPIN = jest.mocked(verifyPIN)
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
 const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
 const mockToastShow = jest.mocked(Toast.show)
 
-describe('ChangePINScreen', () => {
-  let mockNavigation: ReturnType<typeof useNavigation>
+describe('ChangePINContent', () => {
+  let mockNavigation = useNavigation()
+  let onChangePINSuccess = mockNavigation['goBack']
+  let onCreatePINSuccess = mockNavigation['goBack']
 
   beforeEach(() => {
     mockNavigation = useNavigation()
+    onChangePINSuccess = mockNavigation.goBack
+    onCreatePINSuccess = mockNavigation.goBack
     jest.clearAllMocks()
     jest.useFakeTimers()
   })
@@ -45,17 +48,15 @@ describe('ChangePINScreen', () => {
   })
 
   describe('when changing existing PIN (isChangingExistingPIN = true)', () => {
-    beforeEach(() => {
-      mockUseRoute.mockReturnValue({
-        params: { isChangingExistingPIN: true },
-      })
-    })
-
     it('renders ChangePINForm with current PIN field', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={true}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -70,7 +71,11 @@ describe('ChangePINScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={true}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -94,7 +99,11 @@ describe('ChangePINScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={true}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -116,7 +125,7 @@ describe('ChangePINScreen', () => {
       await waitFor(() => {
         expect(mockVerifyPIN).toHaveBeenCalledWith('123456')
         expect(mockSetPIN).toHaveBeenCalledWith('654321')
-        expect(mockNavigation.goBack).toHaveBeenCalled()
+        expect(onChangePINSuccess).toHaveBeenCalled()
         expect(mockToastShow).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'success',
@@ -129,17 +138,15 @@ describe('ChangePINScreen', () => {
   })
 
   describe('when switching from Device Auth to PIN (isChangingExistingPIN = false)', () => {
-    beforeEach(() => {
-      mockUseRoute.mockReturnValue({
-        params: { isChangingExistingPIN: false },
-      })
-    })
-
     it('renders PINEntryForm without current PIN field', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={false}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -156,7 +163,11 @@ describe('ChangePINScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={false}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -176,7 +187,11 @@ describe('ChangePINScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={false}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -198,7 +213,7 @@ describe('ChangePINScreen', () => {
         expect(mockSetPIN).toHaveBeenCalledWith('123456')
         expect(mockCanPerformDeviceAuthentication).toHaveBeenCalled()
         expect(mockSetAccountSecurityMethod).toHaveBeenCalledWith('app_pin_has_device_authn')
-        expect(mockNavigation.pop).toHaveBeenCalledWith(2)
+        expect(onCreatePINSuccess).toHaveBeenCalled()
         expect(mockToastShow).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'success',
@@ -221,7 +236,11 @@ describe('ChangePINScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
+            <ChangePINContent
+              onChangePINSuccess={onChangePINSuccess}
+              onCreatePINSuccess={onCreatePINSuccess}
+              isChangingExistingPIN={false}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -242,28 +261,6 @@ describe('ChangePINScreen', () => {
       await waitFor(() => {
         expect(mockSetAccountSecurityMethod).toHaveBeenCalledWith('app_pin_no_device_authn')
       })
-    })
-  })
-
-  describe('when no params provided', () => {
-    beforeEach(() => {
-      mockUseRoute.mockReturnValue({
-        params: undefined,
-      })
-    })
-
-    it('defaults to PINEntryForm (switching from Device Auth)', () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <ChangePINScreen navigation={mockNavigation as never} />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
-      // Should show create PIN form, not change PIN form
-      expect(tree.getByText('BCSC.PIN.CreatePIN')).toBeTruthy()
-      expect(tree.queryByText('BCSC.ChangePIN.EnterCurrentPIN')).toBeNull()
     })
   })
 })

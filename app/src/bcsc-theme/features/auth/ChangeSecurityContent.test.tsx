@@ -15,7 +15,7 @@ import Toast from 'react-native-toast-message'
 
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { ChangeSecurityScreen } from './ChangeSecurityScreen'
+import { ChangeSecurityContent } from './ChangeSecurityContent'
 
 jest.mock('react-native-bcsc-core', () => ({
   canPerformDeviceAuthentication: jest.fn(),
@@ -58,11 +58,17 @@ const mockSetupDeviceSecurity = jest.mocked(setupDeviceSecurity)
 const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
 const mockToastShow = jest.mocked(Toast.show)
 
-describe('ChangeSecurityScreen', () => {
-  let mockNavigation: ReturnType<typeof useNavigation>
+describe('ChangeSecurityContent', () => {
+  let mockNavigation = useNavigation()
+  let onDeviceAuthSuccess = mockNavigation['goBack']
+  let onLearnMorePressed = mockNavigation['navigate']
+  let onPINPress = mockNavigation['navigate']
 
   beforeEach(() => {
     mockNavigation = useNavigation()
+    onDeviceAuthSuccess = mockNavigation.goBack
+    onLearnMorePressed = mockNavigation.navigate
+    onPINPress = mockNavigation.navigate
     jest.clearAllMocks()
     jest.useFakeTimers()
   })
@@ -82,7 +88,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -100,7 +110,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -118,7 +132,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -143,7 +161,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -160,7 +182,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -172,7 +198,7 @@ describe('ChangeSecurityScreen', () => {
       const pinButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle')
       fireEvent.press(pinButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCMainChangePIN')
+      expect(onPINPress).toHaveBeenCalled()
     })
   })
 
@@ -187,7 +213,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -210,7 +240,11 @@ describe('ChangeSecurityScreen', () => {
       render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -239,7 +273,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -262,7 +300,7 @@ describe('ChangeSecurityScreen', () => {
       })
 
       await waitFor(() => {
-        expect(mockNavigation.goBack).toHaveBeenCalled()
+        expect(onDeviceAuthSuccess).toHaveBeenCalled()
       })
 
       await waitFor(() => {
@@ -281,7 +319,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -303,7 +345,7 @@ describe('ChangeSecurityScreen', () => {
       })
 
       // Should not navigate
-      expect(mockNavigation.goBack).not.toHaveBeenCalled()
+      expect(onDeviceAuthSuccess).not.toHaveBeenCalled()
     })
 
     it('shows error when setAccountSecurityMethod throws', async () => {
@@ -313,7 +355,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -347,7 +393,11 @@ describe('ChangeSecurityScreen', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityScreen navigation={mockNavigation as never} />
+            <ChangeSecurityContent
+              onDeviceAuthSuccess={onDeviceAuthSuccess}
+              onLearnMorePress={onLearnMorePressed}
+              onPINPress={onPINPress}
+            />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -359,12 +409,7 @@ describe('ChangeSecurityScreen', () => {
       const learnMoreButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore')
       fireEvent.press(learnMoreButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        'BCSCMainWebView',
-        expect.objectContaining({
-          title: 'BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp',
-        })
-      )
+      expect(onLearnMorePressed).toHaveBeenCalled()
     })
   })
 })

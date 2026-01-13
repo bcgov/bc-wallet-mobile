@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ChangePINScreen when changing existing PIN (isChangingExistingPIN = true) renders ChangePINForm with current PIN field 1`] = `
+exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = true) renders ChangePINForm with current PIN field 1`] = `
 <View
   style={
     {
@@ -720,7 +720,7 @@ exports[`ChangePINScreen when changing existing PIN (isChangingExistingPIN = tru
 </View>
 `;
 
-exports[`ChangePINScreen when switching from Device Auth to PIN (isChangingExistingPIN = false) renders PINEntryForm without current PIN field 1`] = `
+exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExistingPIN = false) renders PINEntryForm without current PIN field 1`] = `
 <View
   style={
     {
