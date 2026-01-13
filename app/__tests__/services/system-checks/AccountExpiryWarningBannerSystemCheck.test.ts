@@ -1,11 +1,11 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { SystemCheckUtils } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 
-describe('AccountExpirySystemCheck', () => {
+describe('AccountExpiryWarningBannerSystemCheck', () => {
   beforeAll(() => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('1970-01-01'))
@@ -14,7 +14,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should return true if the account is expired (yesterday)', () => {
       const expiredDate = new Date(Date.now() - DAY_IN_MS) // Yesterday
 
-      const check = new AccountExpirySystemCheck(expiredDate, {} as SystemCheckUtils)
+      const check = new AccountExpiryWarningBannerSystemCheck(expiredDate, {} as SystemCheckUtils)
 
       expect(check.runCheck()).toBe(true)
     })
@@ -22,7 +22,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should return true if the account is expired (today)', () => {
       const expiredDate = new Date() // Today
 
-      const check = new AccountExpirySystemCheck(expiredDate, {} as SystemCheckUtils)
+      const check = new AccountExpiryWarningBannerSystemCheck(expiredDate, {} as SystemCheckUtils)
 
       expect(check.runCheck()).toBe(true)
     })
@@ -30,7 +30,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should return false if the account is expiring within the warning period (30 days)', () => {
       const expiringSoonDate = new Date(Date.now() + 30 * DAY_IN_MS)
 
-      const check = new AccountExpirySystemCheck(expiringSoonDate, {} as SystemCheckUtils)
+      const check = new AccountExpiryWarningBannerSystemCheck(expiringSoonDate, {} as SystemCheckUtils)
 
       expect(check.runCheck()).toBe(false)
     })
@@ -38,7 +38,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should return true if the account is not expiring soon (31 days)', () => {
       const validDate = new Date(Date.now() + 31 * DAY_IN_MS)
 
-      const check = new AccountExpirySystemCheck(validDate, {} as SystemCheckUtils)
+      const check = new AccountExpiryWarningBannerSystemCheck(validDate, {} as SystemCheckUtils)
 
       expect(check.runCheck()).toBe(true)
     })
@@ -48,7 +48,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should dispatch a warning banner if the account is expiring soon', () => {
       const date = new Date(Date.now() + 30 * DAY_IN_MS)
 
-      const check = new AccountExpirySystemCheck(date, {
+      const check = new AccountExpiryWarningBannerSystemCheck(date, {
         dispatch: jest.fn(),
         translation: jest.fn().mockReturnValue('Account expiring soon'),
         logger: {} as any,
@@ -77,7 +77,7 @@ describe('AccountExpirySystemCheck', () => {
     it('should dispatch an action to remove the account expiring soon banner', () => {
       const date = new Date(Date.now() + 31 * DAY_IN_MS)
 
-      const check = new AccountExpirySystemCheck(date, {
+      const check = new AccountExpiryWarningBannerSystemCheck(date, {
         dispatch: jest.fn(),
         translation: jest.fn(),
         logger: {} as any,

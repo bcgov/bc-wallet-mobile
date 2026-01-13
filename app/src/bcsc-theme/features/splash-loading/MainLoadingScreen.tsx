@@ -1,6 +1,6 @@
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext } from 'react'
@@ -26,7 +26,8 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
     }
 
     // Navigate to Account Expired screen when account is expired
-    if (AccountExpirySystemCheck.isAccountExpired(context.account.account_expiration_date)) {
+    // TODO: (Al) shouldn't this be handled by the system check?
+    if (isAccountExpired(context.account.account_expiration_date)) {
       return navigation.dispatch(
         CommonActions.reset({
           index: 0,

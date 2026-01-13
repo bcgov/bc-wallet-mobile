@@ -74,6 +74,7 @@ export interface BCSCState {
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
+  hasDismissedExpiryAlert?: boolean
 }
 
 /**
@@ -147,6 +148,8 @@ export interface BCSCSecureState {
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
+
+  hasDismissedExpiryAlert?: boolean
 }
 
 /** Initial secure state - unhydrated with no data */
@@ -242,6 +245,7 @@ enum BCSCDispatchAction {
   REMOVE_INCOMPLETE_SECURE_EVIDENCE = 'bcsc/removeIncompleteSecureEvidence',
   CLEAR_SECURE_ADDITIONAL_EVIDENCE = 'bcsc/clearSecureAdditionalEvidence',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
+  DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
 }
 
 enum ModeDispatchAction {
@@ -740,6 +744,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ACCOUNT_SETUP_TYPE: {
       const accountType = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, accountSetupType: accountType }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISSED_EXPIRY_ALERT: {
+      // this should use the date as a key, so this variable is always up to date...
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
