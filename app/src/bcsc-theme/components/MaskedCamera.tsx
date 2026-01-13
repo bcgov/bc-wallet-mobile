@@ -1,16 +1,23 @@
-import { PHOTO_RESOLUTION_720P } from '@/constants'
 import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useIsFocused } from '@react-navigation/native'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, CodeScanner, useCameraDevice, useCameraFormat, useCameraPermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CodeScanner,
+  FormatFilter,
+  useCameraDevice,
+  useCameraFormat,
+  useCameraPermission,
+} from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
   navigation: any
   cameraFace: 'front' | 'back'
+  cameraFormatFilter?: FormatFilter[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
@@ -27,6 +34,7 @@ const MaskedCamera = ({
   maskType,
   codeScanner,
   cameraFace = 'back',
+  cameraFormatFilter = [],
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
@@ -39,15 +47,8 @@ const MaskedCamera = ({
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
+  const format = useCameraFormat(device, cameraFormatFilter)
   const hasTorch = device?.hasTorch ?? false
-  const format = useCameraFormat(device, [
-    {
-      fps: Platform.OS === 'ios' ? 'max' : 30,
-    },
-    {
-      photoResolution: PHOTO_RESOLUTION_720P,
-    },
-  ])
 
   const styles = StyleSheet.create({
     container: {
@@ -174,6 +175,9 @@ const MaskedCamera = ({
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
+        // Set fps to max supported by the selected format for smoother preview
+        fps={format?.maxFps ?? 60}
+        androidPreviewViewType="surface-view"
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>

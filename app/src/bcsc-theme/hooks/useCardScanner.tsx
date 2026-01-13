@@ -190,11 +190,12 @@ export const useCardScanner = () => {
         const decodedCode = decodeScannedCode(code)
 
         if (!decodedCode) {
-          logger.debug(`Failed to decode scanned barcode`, { failedBarcode: code })
+          // This is usually from a barcode that was partially out of frame
+          logger.debug(`[CardScanner] Failed to decode scanned barcode`, { failedBarcode: code })
           continue
         }
 
-        logger.debug(`Decoded barcode metadata:`, { decodedBarcode: decodedCode })
+        logger.debug(`[CardScanner] Decoded barcode metadata:`, { decodedBarcode: decodedCode })
 
         // Extract the decoded metadata
         switch (decodedCode.kind) {
