@@ -56,9 +56,10 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
         messages={store.bcsc.bannerMessages.map((banner) => ({
           id: banner.id,
           title: banner.title,
+          description: banner.description,
           type: banner.type,
           dismissible: banner.dismissible,
-          onPress: () => handleBannerPress(banner.id),
+          onPress: banner.onPress ?? (() => handleBannerPress(banner.id)),
         }))}
       />
     </View>

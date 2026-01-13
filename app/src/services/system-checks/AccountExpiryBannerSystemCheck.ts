@@ -1,14 +1,13 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import moment from 'moment'
-import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 // This will display a warning banner to the user (only once)
 
 /**
- * Determines if the account is expired, or within the warning period.
+ * Determines if the account is expired, and dispatches an error banner letting the user know.
  *
  * @example `
  *   10 days until expiration, 30 day warning period => true
@@ -26,21 +25,18 @@ export const isAccountExpired = (accountExpiration: Date | string, warningPeriod
 
 /**
  * Checks if the user's account is expiring soon (warning period), but not yet expired.
- * Informs the user how many days until expiration, and links user to renewal information.
  *
  *
  * @class AccountExpirySystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrategy {
+export class AccountExpiryBannerSystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
-  private readonly navigation: SystemCheckNavigation
 
-  constructor(accountExpiration: Date, utils: SystemCheckUtils, navigation: SystemCheckNavigation) {
+  constructor(accountExpiration: Date, utils: SystemCheckUtils) {
     this.accountExpiration = accountExpiration
     this.utils = utils
-    this.navigation = navigation
   }
 
   runCheck() {
@@ -57,21 +53,13 @@ export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrateg
       payload: [
         {
           id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
-          title: this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerTitle', {
-            days: moment(this.accountExpiration).diff(moment(), 'days'),
+          title: this.utils.translation('BCSC.SystemChecks.AccountExpired.ExpiredBannerTitle'),
+          description: this.utils.translation('BCSC.SystemChecks.AccountExpired.ExpiredBannerDescription', {
+            accountExpiration: moment(this.accountExpiration).format('LL'), // ie: January 1, 1970
           }),
-          description: this.utils.translation(
-            'BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerDescription',
-            {
-              accountExpiration: moment(this.accountExpiration).format('LL'), // ie: January 1, 1970
-            }
-          ),
-          type: 'warning',
+          type: 'error',
           varaint: 'summary',
           dismissible: false,
-          onPress: (id: number) => {
-            this.navigation.navigate(BCSCScreens.AccountRenewalInformation)
-          },
         },
       ],
     })

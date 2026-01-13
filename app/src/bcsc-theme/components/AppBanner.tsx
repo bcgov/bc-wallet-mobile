@@ -16,13 +16,15 @@ export enum BCSCBanner {
 export interface BCSCBannerMessage {
   id: BCSCBanner
   title: string
+  description?: string
+  onPress?: (id: string) => void
   type: 'error' | 'warning' | 'info' | 'success'
   dismissible?: boolean
 }
 
 export interface AppBannerSectionProps extends BCSCBannerMessage {
   onPress?: (id: string) => void
-  description?: string // TODO (MD): Add this property to BCSCBannerMessage if needed
+  description?: string
 }
 
 interface AppBannerProps {
@@ -41,6 +43,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps
           key={message.id}
           id={message.id}
           title={message.title}
+          description={message.description}
           type={message.type}
           onPress={message.onPress}
           dismissible={message.dismissible}
@@ -109,7 +112,8 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   if (!showBanner) {
     return null
   }
-
+  console.log('BANNER MESSAGE')
+  console.log(title, description, onPress)
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity

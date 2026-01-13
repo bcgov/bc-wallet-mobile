@@ -133,11 +133,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
           const updateRegistration = () =>
             registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
-
           const startupChecks: SystemCheckStrategy[] = [
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+            new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils, navigation),
             new AccountExpiryWarningAlertSystemCheck(
               accountExpirationDate,
               Boolean(store.bcsc.hasDismissedExpiryAlert),
