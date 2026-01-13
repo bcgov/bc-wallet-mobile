@@ -176,8 +176,7 @@ const MaskedCamera = ({
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
         // Set fps to max supported by the selected format for smoother preview
-        fps={format?.maxFps ?? 60}
-        androidPreviewViewType="surface-view"
+        fps={format?.maxFps}
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>

@@ -6,7 +6,6 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
-import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
@@ -35,12 +34,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
   const codeScanner = useCodeScanner({
-    codeTypes: [
-      // Currently supported barcodes
-      BC_SERVICES_CARD_BARCODE,
-      OLD_BC_SERVICES_CARD_BARCODE,
-      DRIVERS_LICENSE_BARCODE,
-    ],
+    codeTypes: scanner.codeTypes,
     onCodeScanned: async (codes) => {
       if (!codes.length) {
         return

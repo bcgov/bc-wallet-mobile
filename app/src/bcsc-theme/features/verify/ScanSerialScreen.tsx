@@ -1,7 +1,6 @@
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
-import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -60,16 +59,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   return (
     <>
-      <CodeScanningCamera
-        codeTypes={[
-          // Currently supported barcodes
-          BC_SERVICES_CARD_BARCODE,
-          OLD_BC_SERVICES_CARD_BARCODE,
-          DRIVERS_LICENSE_BARCODE,
-        ]}
-        onCodeScanned={onCodeScanned}
-        cameraType={'back'}
-      />
+      <CodeScanningCamera codeTypes={scanner.codeTypes} onCodeScanned={onCodeScanned} cameraType={'back'} />
       <ScreenWrapper
         padded={false}
         scrollable={false}

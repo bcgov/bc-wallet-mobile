@@ -1,8 +1,10 @@
+import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
+import { CodeType } from 'react-native-vision-camera'
 import useApi from '../api/hooks/useApi'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
@@ -225,6 +227,7 @@ export const useCardScanner = () => {
       handleScanComboCard,
       handleScanBCServicesCard,
       handleScanDriversLicense,
+      codeTypes: [BC_SERVICES_CARD_BARCODE, OLD_BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE] satisfies CodeType[],
     }),
     [handleCardScan, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
   )
