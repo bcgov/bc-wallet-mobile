@@ -48,6 +48,8 @@ import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
+import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
+import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
@@ -263,6 +265,26 @@ const VerifyStack = () => {
           headerShown: true,
           title: t('BCSC.Settings.AutoLockTime'),
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VerifyAppSecurity}
+        component={VerifyChangeSecurityScreen}
+        options={{
+          headerShown: true,
+          title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
+          headerBackTestID: testIdWithKey('Back'),
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VerifyChangePIN}
+        component={VerifyChangePINScreen}
+        options={({ route }) => ({
+          headerShown: true,
+          title: route.params?.isChangingExistingPIN
+            ? t('BCSC.ChangePIN.ScreenTitle')
+            : t('BCSC.Settings.ChangePIN.ScreenTitle'),
+          headerBackTestID: testIdWithKey('Back'),
+        })}
       />
 
       <Stack.Screen
