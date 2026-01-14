@@ -34,15 +34,6 @@
 				<string>didcomm</string>
 			</array>
 		</dict>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>ca.bc.gov.id.servicescard</string>
-				<string>ca.bc.gov.id.servicescard.dev</string>
-				<string>ca.bc.gov.id.servicescard.qa</string>
-				<string>ca.bc.gov.id.servicescard.test</string>
-			</array>
-		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>

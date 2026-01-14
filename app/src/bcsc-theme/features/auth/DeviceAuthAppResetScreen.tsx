@@ -56,7 +56,7 @@ export const DeviceAuthAppResetScreen: React.FC<DeviceAuthAppResetScreenProps> =
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{`App reset for security`}</ThemedText>
       <ThemedText>{`For security reasons, you must set and keep a passcode on your phone.`}</ThemedText>
       <ThemedText>{`It looks like you may have turned off the passcode on this device.`}</ThemedText>
