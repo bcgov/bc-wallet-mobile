@@ -1,4 +1,3 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
@@ -23,7 +22,6 @@ interface AccountExpiredScreenProps {
 export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const factoryReset = useFactoryReset()
   const accountContext = useContext(BCSCAccountContext)
 
   const styles = StyleSheet.create({
