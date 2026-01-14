@@ -6,7 +6,7 @@ import {
   PersistentStorage,
   ReducerAction,
 } from '@bifold/core'
-import { BCSCCardProcess, setIssuer } from 'react-native-bcsc-core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -262,15 +262,12 @@ export const BCDispatchAction = {
   ...ModeDispatchAction,
 }
 
-const getInitialEnvironment = (): IASEnvironment => {
-  let environment = IASEnvironment.PROD
-
+export const getInitialEnvironment = (): IASEnvironment => {
   if (__DEV__) {
-    environment = IASEnvironment.SIT
+    return IASEnvironment.SIT
   }
 
-  setIssuer(environment.iasApiBaseUrl)
-  return environment
+  return IASEnvironment.PROD
 }
 
 const createIASEnvironment = (config: {
