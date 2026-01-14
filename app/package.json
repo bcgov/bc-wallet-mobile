@@ -31,6 +31,7 @@
     "test:snapshot": "TZ=GMT jest --updateSnapshot",
     "lint": "yarn lint:ts && yarn lint:swift && yarn lint:kotlin",
     "lint:ts": "eslint --color .",
+    "lint:ts:fix": "eslint --color . --fix",
     "lint:swift": "command -v swiftformat >/dev/null || { echo '⚠️  Install swiftformat: brew install swiftformat'; exit 1; } && swiftformat ios --lint --exclude ios/Pods --config ../.swiftformat",
     "lint:kotlin": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint 'android/app/src/**/*.kt'",
     "format": "yarn format:ts && yarn format:swift && yarn format:c && yarn format:kotlin",
