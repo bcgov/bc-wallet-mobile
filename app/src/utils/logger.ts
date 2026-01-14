@@ -25,7 +25,9 @@ const baseOptions: RemoteLoggerOptions = {
  * Unknown values fallback to debug.
  */
 const parseEnvLogLevel = (value?: string): LogLevel => {
-  if (!value) return LogLevel.debug
+  if (!value) {
+    return LogLevel.debug
+  }
   switch (value.toLowerCase()) {
     case 'fatal':
       return LogLevel.fatal

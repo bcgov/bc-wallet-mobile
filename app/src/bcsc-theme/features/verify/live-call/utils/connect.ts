@@ -54,7 +54,9 @@ export const connect = async (
   let appInitiatedDisconnect = false
 
   const handleDisconnect = () => {
-    if (disconnectHandled || appInitiatedDisconnect) return
+    if (disconnectHandled || appInitiatedDisconnect) {
+      return
+    }
     logger.info('Handling remote disconnect...')
     disconnectHandled = true
     req.onRemoteDisconnect?.()

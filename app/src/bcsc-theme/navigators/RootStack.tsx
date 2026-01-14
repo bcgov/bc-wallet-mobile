@@ -38,7 +38,9 @@ const BCSCRootStack: React.FC = () => {
 
   // Check for existing account on initial load - only runs after state is loaded
   useEffect(() => {
-    if (!store.stateLoaded || !loading) return
+    if (!store.stateLoaded || !loading) {
+      return
+    }
 
     const asyncEffect = async () => {
       try {
@@ -67,9 +69,13 @@ const BCSCRootStack: React.FC = () => {
     return <LoadingScreenContent />
   }
 
-  if (!store.bcscSecure.hasAccount) return <OnboardingStack />
+  if (!store.bcscSecure.hasAccount) {
+    return <OnboardingStack />
+  }
 
-  if (!store.authentication.didAuthenticate) return <AuthStack />
+  if (!store.authentication.didAuthenticate) {
+    return <AuthStack />
+  }
 
   if (!store.bcscSecure.verified) {
     return (
