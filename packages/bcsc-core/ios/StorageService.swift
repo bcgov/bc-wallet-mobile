@@ -36,6 +36,7 @@ class StorageService {
   var currentBundleID: String {
     return Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard"
   }
+
   var productionIssuer: String {
     return "https://id.gov.bc.ca"
   }
@@ -69,8 +70,8 @@ class StorageService {
       )
       let accountListFileUrl =
         rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountListURLComponent)
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
         logger.error("account_list file does not exist at \(accountListFileUrl.path).")
@@ -80,8 +81,8 @@ class StorageService {
       let data = try Data(contentsOf: accountListFileUrl)
 
       if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-        let accounts = json["accounts"] as? [String],
-        let firstAccountID = accounts.first, !firstAccountID.isEmpty
+         let accounts = json["accounts"] as? [String],
+         let firstAccountID = accounts.first, !firstAccountID.isEmpty
       {
         // logger.log("StorageService: Successfully loaded account ID \(firstAccountID) from account_list.")
         return firstAccountID
@@ -109,8 +110,8 @@ class StorageService {
 
       let issuerFileURL =
         rootDirectoryURL
-        .appendingPathComponent("\(currentBundleID)/data")
-        .appendingPathComponent(issuerURLComponent)
+          .appendingPathComponent("\(currentBundleID)/data")
+          .appendingPathComponent(issuerURLComponent)
 
       let issuerData = try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -126,13 +127,13 @@ class StorageService {
     return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
   }
 
-  // TODO (MD): What should this be? "currentIssuer + /device"?
+  // TODO: (MD): What should this be? "currentIssuer + /device"?
   var provider = "https://idsit.gov.bc.ca/device/"
 
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
     pathDirectory: FileManager.SearchPathDirectory
-  ) -> T? {  // Added file parameter
+  ) -> T? { // Added file parameter
     do {
       guard let accountID = self.currentAccountID else {
         logger.error("currentAccountID is nil. Cannot read data.")
@@ -146,9 +147,9 @@ class StorageService {
       )
       let fileUrl =
         rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountID)  // Use unwrapped accountID
-        .appendingPathComponent(file.rawValue)
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountID) // Use unwrapped accountID
+          .appendingPathComponent(file.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         return nil
@@ -199,9 +200,9 @@ class StorageService {
       )
       let fileUrl =
         rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountID)
-        .appendingPathComponent(file.rawValue)
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountID)
+          .appendingPathComponent(file.rawValue)
 
       // Encode the object to data
       let encodedData = try encodeArchivedObject(object: data)
@@ -253,8 +254,8 @@ class StorageService {
       )
       let issuerFileURL =
         rootDirectoryURL
-        .appendingPathComponent("\(currentBundleID)/data")
-        .appendingPathComponent(issuerURLComponent)
+          .appendingPathComponent("\(currentBundleID)/data")
+          .appendingPathComponent(issuerURLComponent)
 
       try issuer.write(to: issuerFileURL, atomically: true, encoding: .utf8)
       logger.log("StorageService: Successfully saved issuer to file at \(issuerFileURL.path)")
@@ -373,10 +374,10 @@ class StorageService {
     }
 
     if host.hasPrefix("id") {
-      let remainder = host.dropFirst(2)  // remove "id"
+      let remainder = host.dropFirst(2) // remove "id"
 
       if let env = remainder.split(separator: ".").first, !env.isEmpty {
-        return String(env)  // "dev", "test"
+        return String(env) // "dev", "test"
       }
     }
 
