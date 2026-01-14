@@ -36,20 +36,21 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Check lockfile drift
+      - name: Detect lockfile drift
         working-directory: app
         run: |
           set -e
 
-          echo "Checking Ruby gems (Gemfile.lock)..."
-          bundle install --deployment
+          echo "Checking Ruby gems lockfile (Gemfile.lock)..."
+          bundle config set deployment true
+          bundle install
 
-          echo "Checking iOS pods (Podfile.lock)..."
+          echo "Checking iOS pods lockfile (Podfile.lock)..."
           cd ios
           pod install --deployment
           cd ..
 
-          echo "Checking Android Gradle dependencies (gradle.lockfile)..."
+          echo "Checking Android gradle lockfile (gradle.lockfile)..."
           cd android
           ./gradlew app:dependencies --write-locks=false
 
