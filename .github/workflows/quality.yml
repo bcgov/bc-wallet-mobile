@@ -41,6 +41,7 @@ jobs:
           sudo gem uninstall cocoapods
           sudo gem install cocoapods -v 1.14.3
           pod _1.14.3_ --version
+          pod _1.14.3_ install --repo-update
 
       - name: Detect lockfile drift
         working-directory: app
