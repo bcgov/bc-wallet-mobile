@@ -121,7 +121,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{`Too many PIN attempts`}</ThemedText>
       <ThemedText>{`This app is temporarily locked because you've entered an incorrect PIN too many times.`}</ThemedText>
       <ThemedText variant={'bold'}>{`You can try again in:`}</ThemedText>

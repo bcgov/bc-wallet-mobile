@@ -1,16 +1,16 @@
-From 54e54420db6e0b220b37968148798653f67d6761 Mon Sep 17 00:00:00 2001
-From: "Jason C. Leach" <jason.leach@fullboar.ca>
-Date: Thu, 18 Dec 2025 11:43:53 -0800
+From 5efa23f309ece33b765a82814db90687c6a6baa9 Mon Sep 17 00:00:00 2001
+From: Bryce McMath <bryce.j.mcmath@gmail.com>
+Date: Tue, 13 Jan 2026 17:15:50 -0800
 Subject: [PATCH] chore: ios app to bcsc dev
 
-Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
+Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
  app/ios/AriesBifold.xcodeproj/project.pbxproj |  38 +++++++++++++-----
  .../xcschemes/AriesBifold.xcscheme            |   6 +--
- app/ios/AriesBifold/Info.plist                |   9 +++--
+ app/ios/AriesBifold/Info.plist                |  12 +++++-
  app/ios/GoogleService-Info.plist              |  14 ++++---
  .../AppIcon.appiconset/iTunesArtwork.png      | Bin 40899 -> 26160 bytes
- 5 files changed, 44 insertions(+), 23 deletions(-)
+ 5 files changed, 50 insertions(+), 20 deletions(-)
 
 diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
 index 7cbd6bc4..f181139b 100644
@@ -187,7 +187,7 @@ index bc517c67..05d5afce 100644
           </BuildableReference>
        </BuildableProductRunnable>
 diff --git a/app/ios/AriesBifold/Info.plist b/app/ios/AriesBifold/Info.plist
-index 68fbab7d..358c7d25 100644
+index 77e0b0d5..358c7d25 100644
 --- a/app/ios/AriesBifold/Info.plist
 +++ b/app/ios/AriesBifold/Info.plist
 @@ -5,7 +5,7 @@
@@ -199,20 +199,23 @@ index 68fbab7d..358c7d25 100644
  	<key>CFBundleExecutable</key>
  	<string>$(EXECUTABLE_NAME)</string>
  	<key>CFBundleIdentifier</key>
-@@ -38,9 +38,10 @@
- 			<key>CFBundleURLSchemes</key>
- 			<array>
- 				<string>ca.bc.gov.id.servicescard</string>
--				<string>ca.bc.gov.id.servicescard.dev</string>
--				<string>ca.bc.gov.id.servicescard.qa</string>
--				<string>ca.bc.gov.id.servicescard.test</string>
+@@ -34,6 +34,16 @@
+ 				<string>didcomm</string>
+ 			</array>
+ 		</dict>
++		<dict>
++			<key>CFBundleURLSchemes</key>
++			<array>
++				<string>ca.bc.gov.id.servicescard</string>
 +				<string>ca.bc.gov.iddev.servicescard</string>
 +				<string>ca.bc.gov.idqa.servicescard</string>
 +				<string>ca.bc.gov.idtest.servicescard</string>
 +				<string>ca.bc.gov.idsit.servicescard</string>
- 			</array>
- 		</dict>
++			</array>
++		</dict>
  	</array>
+ 	<key>CFBundleVersion</key>
+ 	<string>$(CURRENT_PROJECT_VERSION)</string>
 diff --git a/app/ios/GoogleService-Info.plist b/app/ios/GoogleService-Info.plist
 index 0d2b4e52..506abd7c 100644
 --- a/app/ios/GoogleService-Info.plist
@@ -1241,5 +1244,5 @@ zE5;uz@q;CPxcP)1afz7#;E%|UII8gff+hGQ_R&|$993CA9Q?O!%dX8?n_U0+KT9K=
 A=l}o!
 
 -- 
-2.51.2
+2.50.1
 
