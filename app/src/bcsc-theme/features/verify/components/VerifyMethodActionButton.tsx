@@ -59,7 +59,9 @@ const VerifyMethodActionButton = ({
     <TouchableOpacity
       style={styles.container}
       onPress={() => {
-        if (!disabled && !loading) onPress()
+        if (!disabled && !loading) {
+          onPress()
+        }
       }}
       testID={testIdWithKey(title)}
       accessibilityRole="button"

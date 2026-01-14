@@ -126,7 +126,9 @@ export default function useDataLoader<ResponseType>(
             )
 
             // if no time left for retries, break
-            if (backoffMs <= 0) break
+            if (backoffMs <= 0) {
+              break
+            }
             await new Promise((resolve) => setTimeout(resolve, backoffMs))
           }
         }

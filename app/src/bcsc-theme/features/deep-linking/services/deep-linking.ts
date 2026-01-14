@@ -22,7 +22,9 @@ export class DeepLinkService {
   private initialUrl: string | null = null
 
   public async init(): Promise<void> {
-    if (this.initialized) return
+    if (this.initialized) {
+      return
+    }
     this.initialized = true
 
     // Store the initial URL so late subscribers can still get it if needed

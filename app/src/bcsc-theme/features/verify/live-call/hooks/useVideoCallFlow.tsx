@@ -53,7 +53,9 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
   // this value is watched to determine which background-related action to take
   const backgroundMode: VideoCallBackgroundMode = useMemo(() => {
-    if (!isInBackground) return VideoCallBackgroundMode.DISABLED
+    if (!isInBackground) {
+      return VideoCallBackgroundMode.DISABLED
+    }
 
     if (
       flowState === VideoCallFlowState.WAITING_FOR_AGENT ||
@@ -274,14 +276,20 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     cleanupCompletedRef.current = false
     setFlowState(VideoCallFlowState.CREATING_SESSION)
     const newSession = await createSession()
-    if (!newSession) return
+    if (!newSession) {
+      return
+    }
 
     setFlowState(VideoCallFlowState.CONNECTING_WEBRTC)
     const connected = await establishWebRTCConnection(newSession)
-    if (!connected) return
+    if (!connected) {
+      return
+    }
 
     const newCall = await createCall(newSession.session_id)
-    if (!newCall) return
+    if (!newCall) {
+      return
+    }
   }, [createSession, establishWebRTCConnection, createCall])
 
   // if the user encounters a retryable error, they can start the process again

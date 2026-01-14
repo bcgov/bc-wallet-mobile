@@ -96,7 +96,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   const handleAcceptPhoto = async () => {
-    if (!currentPhotoPath || !currentSide) return
+    if (!currentPhotoPath || !currentSide) {
+      return
+    }
 
     const photoMetadata = await getPhotoMetadata(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
