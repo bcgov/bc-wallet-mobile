@@ -1,0 +1,31 @@
+name: Lockfile Checks
+
+on:
+  pull_request:
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure yarn.lock is committed
+        run: |
+          git diff --exit-code yarn.lock || {
+            echo "yarn.lock is out of date. Please run 'yarn install' and commit the updated lockfile.";
+            exit 1;
+          }
+
+      - name: Ensure Podfile.lock is committed
+        run: |
+          git diff --exit-code app/ios/Podfile.lock || {
+            echo "app/ios/Podfile.lock is out of date. Please run 'cd ios && pod install' and commit the updated lockfile.";
+            exit 1;
+          }
+
+      - name: Ensure gradle.lockfile is committed
+        run:
+          git diff --exit-code app/android/gradle.lockfile || {
+            echo "app/android/gradle.lockfile is out of date. Please run 'cd android && ./gradlew dependencies --write-locks' and commit the updated lockfile.";
+            exit 1;
+          }
+
