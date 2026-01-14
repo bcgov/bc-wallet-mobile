@@ -36,6 +36,23 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Check lockfile drift
+        working-directory: app
+        run: |
+          set -e
+
+          echo "Checking Ruby gems (Gemfile.lock)..."
+          bundle install --deployment
+
+          echo "Checking iOS pods (Podfile.lock)..."
+          cd ios
+          pod install --deployment
+          cd ..
+
+          echo "Checking Android Gradle dependencies (gradle.lockfile)..."
+          cd android
+          ./gradlew app:dependencies --write-locks=false
+
       - name: Cache bcsc-core build output
         uses: actions/cache@v3
         with:
@@ -46,11 +63,6 @@ jobs:
 
       - name: Build packages
         run: yarn build
-
-      - name: Check lockfiles
-        uses: ./.github/workflows/actions/lock-files
-        with:
-          files: "yarn.lock app/ios/Podfile.lock app/android/app/gradle.lockfile app/Gemfile.lock"
 
       - name: Run all checks
         run: yarn check
