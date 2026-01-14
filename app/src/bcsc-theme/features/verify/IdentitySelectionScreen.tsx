@@ -43,9 +43,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   useFocusEffect(
     useCallback(() => {
       updateCardProcess(undefined)
-      // prevent infinite loop
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [updateCardProcess])
   )
 
   const onPressCombinedCard = useCallback(() => {
