@@ -11,12 +11,14 @@ runs:
   steps:
     - name: Verify lockfiles
       shell: bash
+      env:
+        LOCKFILES: ${{ inputs.files }}
       run: |
         set -e
 
-        echo "🔍 Checking lockfiles: ${{ inputs.files }}"
+        echo "🔍 Checking lockfiles: $LOCKFILES"
 
-        for file in ${{ inputs.files }}; do
+        for file in $LOCKFILES; do
           if [ ! -f "$file" ]; then
             echo "⚠️  $file not found — skipping"
             continue
