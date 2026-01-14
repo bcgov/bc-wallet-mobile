@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup CocoaPods
         run: |
-          sudo gem install cocoapods -v 1.16.2
+          sudo gem install cocoapods -v 1.14.3
           pod --version
 
       - name: Detect lockfile drift
