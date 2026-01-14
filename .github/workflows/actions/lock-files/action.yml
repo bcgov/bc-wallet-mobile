@@ -1,32 +1,32 @@
 name: Lockfile Checks
+description: Ensure that lockfiles are up to date
 
-on:
-  pull_request:
+inputs:
+  files:
+    description: "Space delimited list of lockfiles to check"
+    required: true
 
-jobs:
-  lockfile:
-    runs-on: ubuntu-latest
+runs:
+  using: composite
+  steps:
+    - name: Verify lockfiles
+      shell: bash
+      run: |
+        set -e
 
-    steps:
-      - name: Ensure yarn.lock is committed
-        run: |
-          git diff --exit-code yarn.lock || {
-            echo "yarn.lock is out of date. Please run 'yarn install' and commit the updated lockfile.";
-            exit 1;
+        echo "🔍 Checking lockfiles: ${{ inputs.files }}"
+
+        for file in ${{ inputs.files }}; do
+          if [ ! -f "$file" ]; then
+            echo "⚠️  $file not found — skipping"
+            continue
+          fi
+
+          git diff --exit-code "$file" || {
+            echo "❌ $file was modified but not committed."
+            exit 1
           }
+        done
 
-      - name: Ensure Podfile.lock is committed
-        run: |
-          git diff --exit-code app/ios/Podfile.lock || {
-            echo "app/ios/Podfile.lock is out of date. Please run 'cd ios && pod install' and commit the updated lockfile.";
-            exit 1;
-          }
-
-      - name: Ensure gradle.lockfile is committed
-        run:
-          git diff --exit-code app/android/gradle.lockfile || {
-
-            echo "app/android/gradle.lockfile is out of date. Please run 'cd android && ./gradlew app:dependencies --write-locks' and commit the updated lockfile.";
-            exit 1;
-          }
+        echo "✅ All lockfiles are clean"
 

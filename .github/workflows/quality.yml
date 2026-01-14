@@ -47,8 +47,10 @@ jobs:
       - name: Build packages
         run: yarn build
 
-      - name: Check lockfiles are up to date
+      - name: Check lockfiles
         uses: ./.github/workflows/actions/lock-files
+        with:
+          files: "yarn.lock app/ios/Podfile.lock app/android/app/gradle.lockfile"
 
       - name: Run all checks
         run: yarn check
