@@ -23,6 +23,7 @@ import { BCDispatchAction, BCState, Mode } from '@/store'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
+import WalletEnvironment from './WalletEnvironment'
 
 const Developer: React.FC = () => {
   const { t } = useTranslation()
@@ -320,16 +321,29 @@ const Developer: React.FC = () => {
       >
         <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
       </SafeAreaModal>
-      <SafeAreaModal
-        visible={environmentModalVisible}
-        transparent={false}
-        animationType={'slide'}
-        onRequestClose={() => {
-          return
-        }}
-      >
-        <IASEnvironment shouldDismissModal={shouldDismissModal} />
-      </SafeAreaModal>
+      {store.mode === Mode.BCWallet ? (
+        <SafeAreaModal
+          visible={environmentModalVisible}
+          transparent={false}
+          animationType={'slide'}
+          onRequestClose={() => {
+            return
+          }}
+        >
+          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
+        </SafeAreaModal>
+      ) : (
+        <SafeAreaModal
+          visible={environmentModalVisible}
+          transparent={false}
+          animationType={'slide'}
+          onRequestClose={() => {
+            return
+          }}
+        >
+          <IASEnvironment shouldDismissModal={shouldDismissModal} />
+        </SafeAreaModal>
+      )}
       <SafeAreaModal
         visible={errorAlertTestModalVisible}
         transparent={false}
@@ -554,15 +568,19 @@ const Developer: React.FC = () => {
         </SectionRow>
 
         <View style={styles.sectionSeparator}></View>
-        <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
-        <SectionRow
-          title={t('Developer.ErrorAlertTest')}
-          accessibilityLabel={t('Developer.ErrorAlertTest')}
-          testID={testIdWithKey('ErrorAlertTest')}
-          onPress={() => setErrorAlertTestModalVisible(true)}
-        >
-          <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
-        </SectionRow>
+        {store.mode === Mode.BCSC ? (
+          <>
+            <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
+            <SectionRow
+              title={t('Developer.ErrorAlertTest')}
+              accessibilityLabel={t('Developer.ErrorAlertTest')}
+              testID={testIdWithKey('ErrorAlertTest')}
+              onPress={() => setErrorAlertTestModalVisible(true)}
+            >
+              <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
+            </SectionRow>
+          </>
+        ) : null}
       </ScrollView>
     </ScreenWrapper>
   )
