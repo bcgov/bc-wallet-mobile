@@ -42,7 +42,6 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
 
         logger.info('[BCSCCore] persisting issuer:', {
           issuer: environment.iasApiBaseUrl,
-          name: environment.name,
           success: success,
         })
       } catch (error) {

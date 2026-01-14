@@ -32,7 +32,7 @@ class NativeCompatibleStorage(
         private const val TOKENS_FILENAME = "tokens"
         private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
-        private const val PRODUCTION_ISSUER = "https://id.gov.bc.ca"
+        private const val DEFAULT_ISSUER = "prod"
     }
 
     private val encryption: Encryption by lazy {
@@ -86,47 +86,30 @@ class NativeCompatibleStorage(
             if (startIndex > 0 && endIndex > startIndex) {
                 issuer.substring(startIndex, endIndex)
             } else {
-                "sit" // Default fallback
+                DEFAULT_ISSUER // Default fallback
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'sit'")
-            "sit"
+            Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'prod'")
+            DEFAULT_ISSUER
         }
     }
-
-    // MARK: - File Path Helpers
 
     /**
      * Gets the current isser name by reading the issuer file.
      */
-    private fun getDefaultIssuerName(): String {
-        val path = context.filesDir + File.separator + ISSUER_FILENAME
-        val issuerFile = File(path)
+    fun getDefaultIssuerName(): String {
+        val issuerFile = File(context.filesDir, ISSUER_FILENAME)
         val issuer = readEncryptedFile(issuerFile)
 
         if (issuer != null) {
             return getIssuerNameFromIssuer(issuer)
         }
 
-        return PRODUCTION_ISSUER
+        Low.w(TAG, "Issuer file not found or unreadable, defaulting to '$DEFAULT_ISSUER'")
+        return DEFAULT_ISSUER
     }
 
-    /**
-     * Attempts to determine the current issuer name by checking existing issuer directories.
-     * Returns the most recently modified known issuer directory name, or null if none found.
-     */
-    private fun getCurrentIssuerName(): String? {
-        val issuerDirs =
-            context.filesDir
-                .listFiles(File::isDirectory)
-                ?.sortedByDescending { it.lastModified() }
-                ?: return null
-        val knownIssuers = listOf("prod", "sit", "qa", "dev", "dev2", "preprod", "test")
-
-        return knownIssuers.firstOrNull { name ->
-            issuerDirs.any { it.name == name }
-        }
-    }
+    // MARK: - File Path Helpers
 
     private fun getAccountsFile(issuerName: String): File {
         val path = issuerName + File.separator + ACCOUNTS_FILENAME

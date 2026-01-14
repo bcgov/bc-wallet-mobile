@@ -29,21 +29,29 @@ import {
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { setIssuer } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
-
-import { setIssuer } from 'react-native-bcsc-core'
-import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppContainer } from './container-imp'
 
+const issuer = getInitialEnvironment().iasApiBaseUrl
+
 initLanguages(localization)
-setIssuer(getInitialEnvironment().iasApiBaseUrl).catch((error) => {
-  appLogger.error('[BCSCCore] Error setting issuer', error as Error)
-})
+setIssuer(issuer)
+  .then((success) => {
+    appLogger.info('[BCSCCore] initializing issuer:', {
+      issuer: issuer,
+      success: success,
+    })
+  })
+  .catch((error) => {
+    appLogger.error('[BCSCCore] Error setting issuer', error as Error)
+  })
 
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods
