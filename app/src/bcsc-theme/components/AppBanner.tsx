@@ -112,8 +112,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   if (!showBanner) {
     return null
   }
-  console.log('BANNER MESSAGE')
-  console.log(title, description, onPress)
+
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity

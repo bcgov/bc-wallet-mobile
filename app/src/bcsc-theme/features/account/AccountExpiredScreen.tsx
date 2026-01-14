@@ -67,7 +67,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
           <CardButton
             title={t('BCSC.AccountExpired.RemoveButton')}
             onPress={async () => {
-              await factoryReset()
+              navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
             }}
           />
         </View>
