@@ -6,6 +6,8 @@ on:
 jobs:
   lockfile:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Ensure yarn.lock is committed
