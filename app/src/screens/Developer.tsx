@@ -321,29 +321,20 @@ const Developer: React.FC = () => {
       >
         <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
       </SafeAreaModal>
-      {store.mode === Mode.BCWallet ? (
-        <SafeAreaModal
-          visible={environmentModalVisible}
-          transparent={false}
-          animationType={'slide'}
-          onRequestClose={() => {
-            return
-          }}
-        >
-          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
-        </SafeAreaModal>
-      ) : (
-        <SafeAreaModal
-          visible={environmentModalVisible}
-          transparent={false}
-          animationType={'slide'}
-          onRequestClose={() => {
-            return
-          }}
-        >
+      <SafeAreaModal
+        visible={environmentModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          return
+        }}
+      >
+        {BCSCMode ? (
           <IASEnvironment shouldDismissModal={shouldDismissModal} />
-        </SafeAreaModal>
-      )}
+        ) : (
+          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
+        )}
+      </SafeAreaModal>
       <SafeAreaModal
         visible={errorAlertTestModalVisible}
         transparent={false}
@@ -384,7 +375,7 @@ const Developer: React.FC = () => {
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
 
-        {store.mode === Mode.BCSC ? null : (
+        {BCSCMode ? null : (
           <View>
             <SectionRow
               title={t('PasteUrl.UseShareableLink')}
@@ -568,7 +559,7 @@ const Developer: React.FC = () => {
         </SectionRow>
 
         <View style={styles.sectionSeparator}></View>
-        {store.mode === Mode.BCSC ? (
+        {BCSCMode ? (
           <>
             <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
             <SectionRow
