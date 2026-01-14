@@ -42,6 +42,7 @@ jobs:
           set -e
 
           echo "Checking Ruby gems lockfile (Gemfile.lock)..."
+          gem install bundler -v 2.1.4
           bundle config set deployment true
           bundle install
 
