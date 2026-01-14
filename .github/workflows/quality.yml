@@ -36,6 +36,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Setup CocoaPods
+        run: |
+          sudo gem install cocoapods -v 1.16.2
+          pod --version
+
       - name: Detect lockfile drift
         working-directory: app
         run: |
