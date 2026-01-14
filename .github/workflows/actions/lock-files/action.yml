@@ -25,7 +25,8 @@ jobs:
       - name: Ensure gradle.lockfile is committed
         run:
           git diff --exit-code app/android/gradle.lockfile || {
-            echo "app/android/gradle.lockfile is out of date. Please run 'cd android && ./gradlew dependencies --write-locks' and commit the updated lockfile.";
+
+            echo "app/android/gradle.lockfile is out of date. Please run 'cd android && ./gradlew app:dependencies --write-locks' and commit the updated lockfile.";
             exit 1;
           }
 

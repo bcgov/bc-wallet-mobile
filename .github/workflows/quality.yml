@@ -47,6 +47,9 @@ jobs:
       - name: Build packages
         run: yarn build
 
+      - name: Check lockfiles are up to date
+        uses: ./.github/workflows/actions/lock-files
+
       - name: Run all checks
         run: yarn check
 
