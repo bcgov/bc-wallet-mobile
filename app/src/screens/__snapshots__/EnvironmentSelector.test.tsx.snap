@@ -1,0 +1,1211 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EnvironmentSelector snapshots renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
+  }
+  style={
+    {
+      "backgroundColor": "#F2F2F2",
+      "flex": 1,
+      "width": "100%",
+    }
+  }
+>
+  <RCTScrollView
+    ItemSeparatorComponent={[Function]}
+    data={
+      [
+        {
+          "appToAppUrl": "ca.bc.gov.id.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==",
+          "iasApiBaseUrl": "https://id.gov.bc.ca",
+          "iasPortalUrl": "https://id.gov.bc.ca/issuer/v1/dids",
+          "name": "Prod (id)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.idpreprod.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "",
+          "iasApiBaseUrl": "https://idpreprod.gov.bc.ca",
+          "iasPortalUrl": "https://idpreprod.gov.bc.ca/issuer/v1/dids",
+          "name": "Preprod (idpreprod)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.idqa.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "",
+          "iasApiBaseUrl": "https://idqa.gov.bc.ca",
+          "iasPortalUrl": "https://idqa.gov.bc.ca/issuer/v1/dids",
+          "name": "QA (idqa)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.idtest.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "",
+          "iasApiBaseUrl": "https://idtest.gov.bc.ca",
+          "iasPortalUrl": "https://idtest.gov.bc.ca/issuer/v1/dids",
+          "name": "Test (idtest)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.idsit.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "https://idim-sit-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZDFkMDk5MDQtN2ZlOC00YzlkLTk4YjUtZmNmYmEwODkzZTAzIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKFNJVCkiLCAicmVjaXBpZW50S2V5cyI6IFsiNVgzblBoZkVIOU4zb05kcHdqdUdjM0ZhVzNQbmhiY05QemRGbzFzS010dEoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tc2l0LWFnZW50LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyJ9",
+          "iasApiBaseUrl": "https://idsit.gov.bc.ca",
+          "iasPortalUrl": "https://idsit.gov.bc.ca/issuer/v1/dids",
+          "name": "Sit (idsit)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.iddev.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "https://idim-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiY2U1NWFiZDctNWRmYy00YjQ5LWExODYtOWUzMzQ1ZjEyZThkIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKERldikiLCAicmVjaXBpZW50S2V5cyI6IFsiM0I0bnlDMVg4R1E0M0NLczR4clVXOFdnbWE5MUpMem50cVVYdlo0UjQ4TXQiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQtZGV2LmFwcHMuc2lsdmVyLmRldm9wcy5nb3YuYmMuY2EiLCAiaW1hZ2VVcmwiOiAiaHR0cHM6Ly9pZC5nb3YuYmMuY2Evc3RhdGljL0dvdi0yLjAvaW1hZ2VzL2Zhdmljb24uaWNvIn0=",
+          "iasApiBaseUrl": "https://iddev.gov.bc.ca",
+          "iasPortalUrl": "https://iddev.gov.bc.ca/issuer/v1/dids",
+          "name": "Dev (iddev)",
+        },
+        {
+          "appToAppUrl": "ca.bc.gov.iddev2.servicescard.v2://credentials/person/v1",
+          "iasAgentInviteUrl": "",
+          "iasApiBaseUrl": "https://iddev2.gov.bc.ca",
+          "iasPortalUrl": "https://iddev2.gov.bc.ca/issuer/v1/dids",
+          "name": "Dev2 (iddev2)",
+        },
+      ]
+    }
+    getItem={[Function]}
+    getItemCount={[Function]}
+    keyExtractor={[Function]}
+    onContentSizeChange={[Function]}
+    onLayout={[Function]}
+    onMomentumScrollBegin={[Function]}
+    onMomentumScrollEnd={[Function]}
+    onScroll={[Function]}
+    onScrollBeginDrag={[Function]}
+    onScrollEndDrag={[Function]}
+    removeClippedSubviews={false}
+    renderItem={[Function]}
+    scrollEventThrottle={0.0001}
+    stickyHeaderIndices={[]}
+    viewabilityConfigCallbackPairs={[]}
+  >
+    <View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Prod (id)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Prod (id)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/prod (id)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#003366",
+                        "fontSize": 18,
+                      },
+                      undefined,
+                      {
+                        "fontFamily": "Material Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Preprod (idpreprod)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Preprod (idpreprod)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/preprod (idpreprod)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            QA (idqa)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="QA (idqa)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/qa (idqa)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Test (idtest)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Test (idtest)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/test (idtest)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Sit (idsit)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Sit (idsit)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/sit (idsit)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Dev (iddev)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Dev (iddev)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/dev (iddev)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 25,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 25,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Dev2 (iddev2)
+          </Text>
+          <View
+            ImageComponent={[Function]}
+            accessibilityLabel="Dev2 (iddev2)"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            disableBuiltInState={true}
+            disableText={true}
+            fillColor="#FFFFFFFF"
+            focusable={true}
+            innerIconStyle={
+              {
+                "borderColor": "#003366",
+                "borderWidth": 2,
+              }
+            }
+            isChecked={false}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            size={36}
+            style={
+              [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/dev2 (iddev2)"
+            unfillColor="#FFFFFFFF"
+          >
+            <View
+              collapsable={false}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#FFFFFFFF",
+                  "borderRadius": 18,
+                  "height": 36,
+                  "justifyContent": "center",
+                  "transform": [
+                    {
+                      "scale": 1,
+                    },
+                  ],
+                  "width": 36,
+                }
+              }
+            >
+              <View
+                style={
+                  [
+                    {
+                      "alignItems": "center",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 18,
+                      "borderWidth": 1,
+                      "height": 36,
+                      "justifyContent": "center",
+                      "width": 36,
+                    },
+                    {
+                      "borderColor": "#003366",
+                      "borderWidth": 2,
+                    },
+                  ]
+                }
+              />
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      {
+        "marginHorizontal": 20,
+        "marginTop": 30,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Global.Cancel"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 2,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="com.ariesbifold:id/Cancel"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "color": "#003366",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          Global.Cancel
+        </Text>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;

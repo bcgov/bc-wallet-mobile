@@ -1,9 +1,8 @@
 import BulletPointWithText from '@/components/BulletPointWithText'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet, View } from 'react-native'
 
 export interface PINExplainerProps {
   continueCreatePIN: () => void
@@ -14,20 +13,9 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
   const { ColorPalette, Assets, Spacing } = useTheme()
 
   const style = StyleSheet.create({
-    safeAreaView: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.lg,
-    },
-    scrollViewContentContainer: {
-      flexGrow: 1,
-    },
     imageContainer: {
       alignItems: 'center',
       marginBottom: Spacing.xxl,
-    },
-    footer: {
-      paddingTop: 10,
     },
   })
 
@@ -37,28 +25,27 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
     width: 150,
   }
 
+  const controls = (
+    <Button
+      title={t('Global.Continue')}
+      accessibilityLabel={t('Global.Continue')}
+      testID={testIdWithKey('ContinueCreatePIN')}
+      onPress={continueCreatePIN}
+      buttonType={ButtonType.Primary}
+    />
+  )
+
   return (
-    <SafeAreaView style={style.safeAreaView} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={style.scrollViewContentContainer}>
-        <View style={style.imageContainer}>
-          <Assets.svg.secureCheck {...imageDisplayOptions} />
-        </View>
-        <ThemedText style={{ marginBottom: Spacing.md }} variant="headingThree">
-          {t('PINCreate.Explainer.PrimaryHeading')}
-        </ThemedText>
-        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet1'} />
-        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet2'} />
-      </ScrollView>
-      <View style={style.footer}>
-        <Button
-          title={t('Global.Continue')}
-          accessibilityLabel={t('Global.Continue')}
-          testID={testIdWithKey('ContinueCreatePIN')}
-          onPress={continueCreatePIN}
-          buttonType={ButtonType.Primary}
-        />
+    <ScreenWrapper controls={controls}>
+      <View style={style.imageContainer}>
+        <Assets.svg.secureCheck {...imageDisplayOptions} />
       </View>
-    </SafeAreaView>
+      <ThemedText style={{ marginBottom: Spacing.md }} variant="headingThree">
+        {t('PINCreate.Explainer.PrimaryHeading')}
+      </ThemedText>
+      <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet1'} />
+      <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet2'} />
+    </ScreenWrapper>
   )
 }
 

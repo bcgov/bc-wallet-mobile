@@ -30,7 +30,7 @@ const TransferInstructionsScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper controls={controls} padded scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
       <ThemedText>{t('BCSC.TransferInstructions.Step1')}</ThemedText>
