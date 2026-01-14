@@ -39,7 +39,7 @@ jobs:
       - name: Setup CocoaPods
         run: |
           sudo gem install cocoapods -v 1.14.3
-          pod --version
+          pod _1.14.3_ --version
 
       - name: Detect lockfile drift
         working-directory: app
@@ -48,7 +48,7 @@ jobs:
 
           echo "Checking iOS pods lockfile (Podfile.lock)..."
           cd ios
-          pod install --deployment
+          pod _1.14.3_ install --deployment
           cd ..
 
           echo "Checking Android gradle lockfile (gradle.lockfile)..."
