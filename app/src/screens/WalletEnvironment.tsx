@@ -11,6 +11,11 @@ interface WalletEnvironmentProps {
   shouldDismissModal: () => void
 }
 
+/**
+ * BC Wallet equivalent to the IASEnvironment Screen that BCSC uses to switch IAS environments.
+ *
+ * Allows developers to switch between different IAS environments for testing purposes.
+ */
 const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismissModal }) => {
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
@@ -40,10 +45,9 @@ const WalletEnvironmentScreen: React.FC<WalletEnvironmentProps> = ({ shouldDismi
   })
 
   /**
-   * Handles the change of the IAS environment by performing a factory reset and updating the store.
-   *
-   * Note: Switching environments currently requires a factory reset.
-   * Persisting state between environments is a potential future enhancement.
+   * Similar to IASEnvironment, handles the change of the IAS environment by updating the store,
+   * but doesn't do a factory reset as that is only a feature of the BCSC app and can't be done
+   * outside of BCSC providers.
    *
    * @param environment - The selected IAS environment to switch to.
    * @returns A promise that resolves when the environment change process is complete.
