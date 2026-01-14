@@ -98,7 +98,9 @@ export class FcmService {
   private initialized = false
 
   public async init(): Promise<void> {
-    if (this.initialized) return
+    if (this.initialized) {
+      return
+    }
     this.initialized = true
 
     // Handle foreground messages

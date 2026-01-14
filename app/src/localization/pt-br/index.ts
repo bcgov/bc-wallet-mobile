@@ -29,6 +29,13 @@ const translation = {
     "NoMessage": "No Message (PT-BR)",
     "OK": "OK (PT-BR)",
   },
+  "Screens": {
+    "Preface": "BC Wallet (PT-BR)",
+  },
+  "AppUpdate": {
+    "Heading": "Update BC Wallet to the latest version (PT-BR)",
+    "Body": "BC Wallet was updated with new improvements. Update your app now to enjoy the latest features and enhancements. (PT-BR)",
+  },
   "Credentials": {
     "AddCredential": "Add Credential (PT-BR)",
     "AddFirstCredential": "Add your first credential (PT-BR)"
@@ -49,6 +56,8 @@ const translation = {
     "Link2": "BC Wallet showcase (PT-BR)",
   },
   "PINCreate": {
+    "Header": "BC Wallet (PT-BR)",
+    "Subheader": "Secure your wallet (PT-BR)",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is: (PT-BR)",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again. (PT-BR)",

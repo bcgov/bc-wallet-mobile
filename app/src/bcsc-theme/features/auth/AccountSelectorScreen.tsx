@@ -54,7 +54,7 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
+    <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
       <GenericCardImage />
       <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
         {t('BCSC.AccountSetup.Title')}

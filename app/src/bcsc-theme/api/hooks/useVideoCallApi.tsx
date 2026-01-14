@@ -66,7 +66,9 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
-    if (!code) throw new Error('Device code is missing. Re install the app and try again.')
+    if (!code) {
+      throw new Error('Device code is missing. Re install the app and try again.')
+    }
     return code
   }, [store.bcscSecure.deviceCode])
 

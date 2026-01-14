@@ -106,7 +106,9 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   )
 
   useEffect(() => {
-    if (!data) return
+    if (!data) {
+      return
+    }
 
     // filter data based on the selected card type (process)
     let cards: Record<string, EvidenceType[]> = {}

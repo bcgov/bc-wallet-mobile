@@ -263,7 +263,7 @@ export const BCDispatchAction = {
 }
 
 export const getInitialEnvironment = (): IASEnvironment => {
-  if (__DEV__) {
+  if (__DEV__ && Config.BUILD_TARGET === Mode.BCSC) {
     return IASEnvironment.SIT
   }
 
@@ -379,7 +379,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case ModeDispatchAction.UPDATE_MODE: {
       const mode: Mode = (action?.payload || []).pop() || Mode.BCWallet
       // If the mode isn't actually changing, do nothing
-      if (state.mode === mode) return state
+      if (state.mode === mode) {
+        return state
+      }
       const newState = { ...state, mode }
       PersistentStorage.storeValueForKey<Mode>(BCLocalStorageKeys.Mode, mode)
       return newState

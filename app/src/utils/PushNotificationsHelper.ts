@@ -145,7 +145,9 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
   }
 
   const mediator = await getMediatorConnection(agent)
-  if (!mediator) return
+  if (!mediator) {
+    return
+  }
 
   const response = await agent.discovery.queryFeatures({
     awaitDisclosures: true,
