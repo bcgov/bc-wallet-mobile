@@ -35,9 +35,9 @@ const useIsFocused = () => {
 const useRoute = jest.fn().mockReturnValue({ params: {} })
 
 const CommonActions = {
-  navigate: jest.fn(),
-  reset: jest.fn(),
-  goBack: jest.fn(),
+  navigate: jest.fn((route) => ({ type: 'NAVIGATE', payload: route })),
+  reset: jest.fn((state) => ({ type: 'RESET', payload: state })),
+  goBack: jest.fn(() => ({ type: 'GO_BACK' })),
 }
 
 const useFocusEffect = jest.fn()

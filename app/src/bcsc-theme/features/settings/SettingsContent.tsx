@@ -4,7 +4,8 @@ import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -20,6 +21,8 @@ interface SettingsContentProps {
   onEditNickname?: () => void
   onForgetAllPairings?: () => void
   onAutoLock?: () => void
+  onAppSecurity?: () => void
+  onChangePIN?: () => void
 }
 
 /**
@@ -34,6 +37,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onEditNickname,
   onForgetAllPairings,
   onAutoLock,
+  onAppSecurity,
+  onChangePIN,
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -71,22 +76,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
-  useEffect(() => {
-    const fetchAccountSecurityMethod = async () => {
-      try {
-        const method = await getAccountSecurityMethod()
-        setAccountSecurityMethod(method)
-      } catch (error) {
-        logger.error('Error fetching app security method', error instanceof Error ? error : new Error(String(error)))
+  // Refresh the security method every time the screen comes into focus
+  // This ensures the UI updates after changing security settings
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAccountSecurityMethod = async () => {
+        try {
+          const method = await getAccountSecurityMethod()
+          setAccountSecurityMethod(method)
+        } catch (error) {
+          logger.error('Error fetching app security method', error instanceof Error ? error : new Error(String(error)))
+        }
       }
-    }
-    fetchAccountSecurityMethod()
-  }, [logger])
-
-  // TODO (MD): Remove this once all settings actions have been implemented
-  const onPressActionTodo = () => {
-    logger.info('TODO: Settings action pressed')
-  }
+      fetchAccountSecurityMethod()
+    }, [logger])
+  )
 
   const onPressTermsOfUse = async () => {
     try {
@@ -141,10 +145,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
+  // Pre-compute conditional values
+  const isAuthenticated = store.authentication.didAuthenticate
+  const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
+  const showEditNickname = store.bcscSecure.verified && onEditNickname
+  const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
+  const autoLockTimeText = `${store.preferences.autoLockTime} min`
+
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        {store.authentication.didAuthenticate ? (
+        {isAuthenticated ? (
           <>
             <View style={styles.sectionContainer}>
               <SettingsActionCard
@@ -160,21 +171,20 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               {t('BCSC.Settings.HeaderA')}
             </ThemedText>
             <View style={styles.sectionContainer}>
-              {/* TODO (bm): like for like with v3 feature still needed here (and translation) */}
-              <SettingsActionCard onPress={onPressActionTodo} title={'Change App Security'} />
-              {accountSecurityMethod !== AccountSecurityMethod.DeviceAuth ? (
-                // TODO (MD + BM): update with like for like change pin screen if that is their chosen auth method
-                // only show one or the other (device auth or change pin)
-                <SettingsActionCard title={t('BCSC.Settings.ChangePIN')} onPress={onPressActionTodo} />
+              {onAppSecurity ? (
+                <SettingsActionCard onPress={onAppSecurity} title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')} />
               ) : null}
-              {store.bcscSecure.verified && onEditNickname ? (
+              {showChangePIN ? (
+                <SettingsActionCard title={t('BCSC.Settings.ChangePIN.ButtonTitle')} onPress={onChangePIN} />
+              ) : null}
+              {showEditNickname ? (
                 <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
               ) : null}
               {onAutoLock ? (
                 <SettingsActionCard
                   title={t('BCSC.Settings.AutoLockTime')}
                   onPress={onAutoLock}
-                  endAdornmentText={`${store.preferences.autoLockTime} min`}
+                  endAdornmentText={autoLockTimeText}
                 />
               ) : null}
               {/* TODO: (AR) Keeping this hidden for phase 1 */}
@@ -185,7 +195,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               <SettingsActionCard
                 title={t('BCSC.Settings.AnalyticsOptIn')}
                 onPress={onPressOptInAnalytics}
-                endAdornmentText={store.bcsc.analyticsOptIn ? 'ON' : 'OFF'}
+                endAdornmentText={analyticsOptInText}
               />
             </View>
           </>

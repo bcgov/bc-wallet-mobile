@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CreatePINScreen snapshots renders correctly 1`] = `
+exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
 <View
   style={
     {
@@ -79,7 +79,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.PIN.CreatePIN
+              BCSC.ChangePIN.EnterCurrentPIN
             </Text>
             <View
               style={
@@ -192,165 +192,316 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                 }
               }
             />
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  undefined,
-                ]
-              }
-            >
-              BCSC.PIN.ConfirmPIN
-            </Text>
             <View
               style={
                 {
-                  "alignItems": "center",
-                  "backgroundColor": "#D3D3D3",
-                  "borderColor": "#D3D3D3",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "flexDirection": "row",
-                  "justifyContent": "center",
-                  "marginBottom": 8,
-                  "marginTop": 16,
-                  "padding": 8,
+                  "marginTop": 8,
                 }
               }
             >
-              <TextInput
-                accessibilityHint="Enter your 6-digit PIN"
-                accessibilityLabel=""
-                autoFocus={false}
-                cursorColor="#313132"
-                keyboardType="number-pad"
-                maxFontSizeMultiplier={1}
-                maxLength={6}
-                onBlur={[Function]}
-                onChangeText={[Function]}
-                onFocus={[Function]}
-                secureTextEntry={true}
+              <Text
+                maxFontSizeMultiplier={2}
                 style={
-                  {
-                    "color": "#313132",
-                    "flex": 1,
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 26,
-                    "fontWeight": "bold",
-                    "height": 48,
-                    "letterSpacing": 8,
-                    "textAlignVertical": "center",
-                  }
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
                 }
-                textContentType="password"
-                value=""
-              />
-              <View
-                accessibilityLabel="Show PIN"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onClick={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  {
-                    "opacity": 1,
-                    "padding": 5,
-                  }
-                }
-                testID="com.ariesbifold:id/VisibilityButton"
               >
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontSize": 32,
-                      },
-                      undefined,
-                      {
-                        "fontFamily": "Material Design Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
+                BCSC.ChangePIN.EnterNewPIN
+              </Text>
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "flexDirection": "row",
+                    "justifyContent": "center",
+                    "marginBottom": 8,
+                    "marginTop": 16,
+                    "padding": 8,
                   }
+                }
+              >
+                <TextInput
+                  accessibilityHint="Enter your 6-digit PIN"
+                  accessibilityLabel=""
+                  autoFocus={false}
+                  cursorColor="#313132"
+                  keyboardType="number-pad"
+                  maxFontSizeMultiplier={1}
+                  maxLength={6}
+                  onBlur={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  secureTextEntry={true}
+                  style={
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 26,
+                      "fontWeight": "bold",
+                      "height": 48,
+                      "letterSpacing": 8,
+                      "textAlignVertical": "center",
+                    }
+                  }
+                  textContentType="password"
+                  value=""
+                />
+                <View
+                  accessibilityLabel="Show PIN"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onClick={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "opacity": 1,
+                      "padding": 5,
+                    }
+                  }
+                  testID="com.ariesbifold:id/VisibilityButton"
                 >
-                  󰈉
-                </Text>
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontSize": 32,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Design Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    󰈉
+                  </Text>
+                </View>
               </View>
+              <View
+                style={
+                  {
+                    "justifyContent": "flex-start",
+                    "minHeight": 20,
+                  }
+                }
+              />
             </View>
             <View
               style={
                 {
-                  "justifyContent": "flex-start",
-                  "minHeight": 20,
+                  "marginTop": 8,
                 }
               }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.ChangePIN.ReenterNewPIN
+              </Text>
+              <View
+                style={
                   {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  undefined,
-                ]
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "flexDirection": "row",
+                    "justifyContent": "center",
+                    "marginBottom": 8,
+                    "marginTop": 16,
+                    "padding": 8,
+                  }
+                }
+              >
+                <TextInput
+                  accessibilityHint="Enter your 6-digit PIN"
+                  accessibilityLabel=""
+                  autoFocus={false}
+                  cursorColor="#313132"
+                  keyboardType="number-pad"
+                  maxFontSizeMultiplier={1}
+                  maxLength={6}
+                  onBlur={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  secureTextEntry={true}
+                  style={
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 26,
+                      "fontWeight": "bold",
+                      "height": 48,
+                      "letterSpacing": 8,
+                      "textAlignVertical": "center",
+                    }
+                  }
+                  textContentType="password"
+                  value=""
+                />
+                <View
+                  accessibilityLabel="Show PIN"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onClick={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "opacity": 1,
+                      "padding": 5,
+                    }
+                  }
+                  testID="com.ariesbifold:id/VisibilityButton"
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontSize": 32,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Design Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    󰈉
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={
+                  {
+                    "justifyContent": "flex-start",
+                    "minHeight": 20,
+                  }
+                }
+              />
+            </View>
+            <View
+              style={
+                {
+                  "marginTop": 4,
+                }
               }
             >
-              BCSC.PIN.RememberPIN
-            </Text>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  undefined,
-                ]
-              }
-            >
-              BCSC.PIN.RememberPINDescription
-            </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.ChangePIN.RememberPIN
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.ChangePIN.RememberPINDescription
+              </Text>
+            </View>
           </View>
           <View
             style={
@@ -381,7 +532,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
               }
             >
               <View
-                accessibilityLabel="BCSC.PIN.IUnderstand"
+                accessibilityLabel="BCSC.ChangePIN.IUnderstand"
                 accessibilityRole="checkbox"
                 accessibilityState={
                   {
@@ -474,11 +625,11 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                   ]
                 }
               >
-                BCSC.PIN.IUnderstand
+                BCSC.ChangePIN.IUnderstand
               </Text>
             </View>
             <View
-              accessibilityLabel="Global.Continue"
+              accessibilityLabel="BCSC.ChangePIN.ButtonTitle"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -515,7 +666,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                   "padding": 16,
                 }
               }
-              testID="com.ariesbifold:id/Continue"
+              testID="com.ariesbifold:id/ChangePIN"
             >
               <View
                 style={
@@ -557,7 +708,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                     ]
                   }
                 >
-                  Global.Continue
+                  BCSC.ChangePIN.ButtonTitle
                 </Text>
               </View>
             </View>

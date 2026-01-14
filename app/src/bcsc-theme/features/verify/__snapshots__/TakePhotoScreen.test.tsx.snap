@@ -35,6 +35,12 @@ exports[`TakePhoto renders correctly 1`] = `
           "id": "mock-device",
         }
       }
+      format={
+        {
+          "videoHeight": 480,
+          "videoWidth": 640,
+        }
+      }
       isActive={false}
       onError={[Function]}
       onInitialized={[Function]}

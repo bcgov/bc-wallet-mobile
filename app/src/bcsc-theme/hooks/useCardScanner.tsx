@@ -1,7 +1,10 @@
-import { TOKENS, useServices } from '@bifold/core'
+import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
+import { BCDispatchAction } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
+import { CodeType } from 'react-native-vision-camera'
 import useApi from '../api/hooks/useApi'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
@@ -18,7 +21,7 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
  *
- * API:
+ * API: Includes some oppioniated default handlers for common scanning scenarios.
  * 	- scanCard: Function to handle the scanning of a card.
  * 	- handleScanComboCard: Default function to handle combo card scanning (both BCSC serial and driver's license metadata).
  * 	- handleScanBCServicesCard: Default function to handle BCSC card scanning (BCSC serial only).
@@ -39,6 +42,7 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 export const useCardScanner = () => {
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scannerEnabledRef = useRef(true)
   const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
@@ -108,6 +112,37 @@ export const useCardScanner = () => {
   )
 
   /**
+   * Default handler for driver's license scanning (license metadata only).
+   *
+   * @param license - The driver's license metadata.
+   * @returns A promise that resolves when the scanning process is complete.
+   */
+  const handleScanDriversLicense = useCallback(
+    async (license: DriversLicenseMetadata) => {
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_USER_METADATA,
+        payload: [
+          {
+            name: {
+              first: license.firstName,
+              last: license.lastName,
+              middle: license.middleNames,
+            },
+            address: {
+              streetAddress: license.streetAddress,
+              postalCode: license.postalCode,
+              city: license.city,
+              province: license.province,
+              country: 'CA', // currently we only support Canada licenses
+            },
+          },
+        ],
+      })
+    },
+    [dispatch]
+  )
+
+  /**
    * Starts the scanning process by setting the scan enabled flag.
    * This allows scans to be processed.
    *
@@ -157,11 +192,12 @@ export const useCardScanner = () => {
         const decodedCode = decodeScannedCode(code)
 
         if (!decodedCode) {
-          logger.debug(`Failed to decode scanned barcode`, { failedBarcode: code })
+          // This is usually from a barcode that was partially out of frame
+          logger.debug(`[CardScanner] Failed to decode scanned barcode`, { failedBarcode: code })
           continue
         }
 
-        logger.debug(`Decoded barcode metadata:`, { decodedBarcode: decodedCode })
+        logger.debug(`[CardScanner] Decoded barcode metadata:`, { decodedBarcode: decodedCode })
 
         // Extract the decoded metadata
         switch (decodedCode.kind) {
@@ -190,7 +226,9 @@ export const useCardScanner = () => {
       completeScan,
       handleScanComboCard,
       handleScanBCServicesCard,
+      handleScanDriversLicense,
+      codeTypes: [BC_SERVICES_CARD_BARCODE, OLD_BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE] satisfies CodeType[],
     }),
-    [handleCardScan, handleScanBCServicesCard, handleScanComboCard]
+    [handleCardScan, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
   )
 }
