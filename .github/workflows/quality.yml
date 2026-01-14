@@ -50,7 +50,7 @@ jobs:
       - name: Check lockfiles
         uses: ./.github/workflows/actions/lock-files
         with:
-          files: "yarn.lock app/ios/Podfile.lock app/android/app/gradle.lockfile"
+          files: "yarn.lock app/ios/Podfile.lock app/android/app/gradle.lockfile app/Gemfile.lock"
 
       - name: Run all checks
         run: yarn check
