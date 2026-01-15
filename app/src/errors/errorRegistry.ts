@@ -36,7 +36,7 @@ export enum ErrorCategory {
  * Error definition containing all metadata for an error type
  */
 export interface ErrorDefinition {
-  /** Unique error status statusCode (for support reference) */
+  /** Unique error status code (for support reference) */
   statusCode: number
   /** App event statusCode */
   appEvent: AppEventCode
