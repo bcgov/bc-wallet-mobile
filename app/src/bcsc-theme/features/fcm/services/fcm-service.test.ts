@@ -1,13 +1,20 @@
 import { FcmService } from './fcm-service'
 
-// Store the onMessage callback so we can trigger it in tests
+// Store callbacks so we can trigger them in tests
 let onMessageCallback: ((message: any) => void) | null = null
+let onNotificationOpenedAppCallback: ((message: any) => void) | null = null
+let initialNotification: any = null
 
 // Create stable mock functions that persist across calls
 const mockOnMessage = jest.fn((callback) => {
   onMessageCallback = callback
   return jest.fn() // unsubscribe function
 })
+const mockOnNotificationOpenedApp = jest.fn((callback) => {
+  onNotificationOpenedAppCallback = callback
+  return jest.fn() // unsubscribe function
+})
+const mockGetInitialNotification = jest.fn(() => Promise.resolve(initialNotification))
 const mockSetBackgroundMessageHandler = jest.fn()
 
 // Mock Firebase messaging
@@ -15,6 +22,8 @@ jest.mock('@react-native-firebase/messaging', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     onMessage: mockOnMessage,
+    onNotificationOpenedApp: mockOnNotificationOpenedApp,
+    getInitialNotification: mockGetInitialNotification,
     setBackgroundMessageHandler: mockSetBackgroundMessageHandler,
   })),
 }))
@@ -24,7 +33,11 @@ describe('FcmService', () => {
 
   beforeEach(() => {
     onMessageCallback = null
+    onNotificationOpenedAppCallback = null
+    initialNotification = null
     mockOnMessage.mockClear()
+    mockOnNotificationOpenedApp.mockClear()
+    mockGetInitialNotification.mockClear()
     mockSetBackgroundMessageHandler.mockClear()
     service = new FcmService()
   })
@@ -229,6 +242,99 @@ describe('FcmService', () => {
       onMessageCallback?.(remoteMessage)
 
       expect(handler).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('notification opened from background', () => {
+    it('sets up notification opened listener', async () => {
+      await service.init()
+
+      expect(mockOnNotificationOpenedApp).toHaveBeenCalledTimes(1)
+      expect(onNotificationOpenedAppCallback).not.toBeNull()
+    })
+
+    it('processes notification when user taps from background', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      await service.init()
+
+      const remoteMessage = {
+        data: { bcsc_challenge_request: 'test-jwt' },
+        notification: undefined,
+      }
+
+      onNotificationOpenedAppCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'challenge',
+        data: { jwt: 'test-jwt' },
+      })
+    })
+  })
+
+  describe('initial notification (app launched from killed state)', () => {
+    it('processes initial notification if present', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { bcsc_status_notification: 'approved', title: 'Status', message: 'Approved' },
+        notification: undefined,
+      }
+      initialNotification = remoteMessage
+
+      await service.init()
+
+      expect(mockGetInitialNotification).toHaveBeenCalledTimes(1)
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'approved',
+          title: 'Status',
+          message: 'Approved',
+        },
+      })
+    })
+
+    it('does not call handler when no initial notification', async () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      initialNotification = null
+
+      await service.init()
+
+      expect(mockGetInitialNotification).toHaveBeenCalledTimes(1)
+      expect(handler).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('status message edge cases', () => {
+    beforeEach(async () => {
+      await service.init()
+    })
+
+    it('handles status notification with missing title and message', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+
+      const remoteMessage = {
+        data: { bcsc_status_notification: 'pending' },
+        notification: undefined,
+      }
+
+      onMessageCallback?.(remoteMessage)
+
+      expect(handler).toHaveBeenCalledWith({
+        rawMessage: remoteMessage,
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'pending',
+          title: '',
+          message: '',
+        },
+      })
     })
   })
 })
