@@ -17,7 +17,6 @@ export interface BCSCBannerMessage {
   id: BCSCBanner
   title: string
   description?: string
-  onPress?: (id: string) => void
   type: 'error' | 'warning' | 'info' | 'success'
   dismissible?: boolean
 }

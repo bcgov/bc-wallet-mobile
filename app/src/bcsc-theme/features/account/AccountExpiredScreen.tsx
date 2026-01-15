@@ -44,9 +44,6 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
           accountExpiration: accountContext?.account?.card_expiry,
         })}
         type="warning"
-        onPress={(id: string) => {
-          navigation.navigate(BCSCScreens.AccountRenewalInformation)
-        }}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <HomeHeader

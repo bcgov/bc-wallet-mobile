@@ -1,9 +1,8 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import moment from 'moment'
-import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 // This will display a warning banner to the user (only once)
 
@@ -35,12 +34,10 @@ export const isAccountExpired = (accountExpiration: Date | string, warningPeriod
 export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
-  private readonly navigation: SystemCheckNavigation
 
-  constructor(accountExpiration: Date, utils: SystemCheckUtils, navigation: SystemCheckNavigation) {
+  constructor(accountExpiration: Date, utils: SystemCheckUtils) {
     this.accountExpiration = accountExpiration
     this.utils = utils
-    this.navigation = navigation
   }
 
   runCheck() {
@@ -58,7 +55,7 @@ export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrateg
         {
           id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
           title: this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerTitle', {
-            days: moment(this.accountExpiration).diff(moment(), 'days'),
+            days: Math.ceil(moment(this.accountExpiration).diff(moment(), 'days', true)), // Math ceiling to show full days remaining. ie: 1.2 days = 2 days
           }),
           description: this.utils.translation(
             'BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerDescription',
@@ -69,9 +66,6 @@ export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrateg
           type: 'warning',
           varaint: 'summary',
           dismissible: false,
-          onPress: (id: number) => {
-            this.navigation.navigate(BCSCScreens.AccountRenewalInformation)
-          },
         },
       ],
     })
