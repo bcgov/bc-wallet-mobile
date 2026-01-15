@@ -1,9 +1,14 @@
+import { ErrorRegistry } from '@/errors'
+import { AppError } from '@/errors/appError'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-import { formatAxiosErrorForLogger, formatIasAxiosResponseError } from '../utils/error-utils'
+import {
+  formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
+  getErrorDefinitionFromAxiosError,
+} from '../utils/error-utils'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -46,16 +51,19 @@ interface BCSCEndpoints {
   account: string
 }
 
+type OnErrorFn = (error: AppError) => void | Promise<void>
+
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
+  onError: OnErrorFn
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
 
-  constructor(baseURL: string, logger: RemoteLogger) {
+  constructor(baseURL: string, onError: OnErrorFn, logger: RemoteLogger) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -70,6 +78,7 @@ class BCSCApiClient {
       this.logger.error('BCSCApiClient initialized with empty URL.')
     }
 
+    this.onError = onError
     this.tokensPromise = null
 
     // fallback config
@@ -109,23 +118,25 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      const IASAxiosError = formatIasAxiosResponseError(error)
-
-      const loggerError = formatAxiosErrorForLogger({
-        error: IASAxiosError,
+    this.client.interceptors.response.use(undefined, async (error: AxiosError) => {
+      const errorDefinition = getErrorDefinitionFromAxiosError(error) ?? ErrorRegistry.SERVER_ERROR
+      const simpleError = formatIASAxiosErrorForLogger({
+        error: error,
         suppressStackTrace: __DEV__, // disable stack trace in development
       })
+      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: simpleError })
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
 
       // Only log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
-        this.logger.error('IAS API Error', loggerError)
+        this.logger.error(`BCSCClient Error: [${appError.code}] ${appError.message}`, appError)
       }
 
-      return Promise.reject(IASAxiosError)
+      await this.onError(appError)
+
+      return Promise.reject(appError)
     })
   }
 

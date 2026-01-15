@@ -1,7 +1,9 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import BCSCApiClient from '../api/client'
 import { isNetworkError } from '../utils/error-utils'
 
@@ -39,6 +41,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [store, dispatch] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
+  const { emitErrorAsAlert } = useErrorAlert()
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -46,6 +49,17 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     BCSC_API_CLIENT_SINGLETON = client
     setClient(client)
   }
+
+  const handleApiError = useCallback(
+    (appError: AppError) => {
+      switch (appError.identity.appEvent) {
+        // TODO (MD): Handle specific AppErrors as needed
+        default:
+          emitErrorAsAlert(appError)
+      }
+    },
+    [emitErrorAsAlert]
+  )
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
@@ -65,7 +79,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           !BCSC_API_CLIENT_SINGLETON ||
           BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
         ) {
-          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+          newClient = new BCSCApiClient(
+            store.developer.environment.iasApiBaseUrl,
+            handleApiError,
+            logger as RemoteLogger
+          )
           await newClient.fetchEndpointsAndConfig()
 
           setClientAndSingleton(newClient)
@@ -92,7 +110,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
+  }, [
+    store.stateLoaded,
+    store.developer.environment.name,
+    store.developer.environment.iasApiBaseUrl,
+    logger,
+    dispatch,
+    handleApiError,
+  ])
 
   const contextValue = useMemo(
     () => ({

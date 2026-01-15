@@ -1,3 +1,5 @@
+import { ErrorDefinition } from '@/errors'
+import { getErrorDefinitionFromAppEvent } from '@/errors/errorHandler'
 import { AxiosError } from 'axios'
 
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
@@ -16,44 +18,21 @@ interface LogAxiosErrorOptions {
   suppressStackTrace: boolean
 }
 
-/**
- * Formats AxiosErrors from IAS (Identity and Authentication Service) into a standard format.
- *
- * @see bcsc-theme/api/client.ts
- * @param {AxiosError<any>} error - The original AxiosError to format
- * @returns {*} {AxiosError} The formatted AxiosError with updated code and message
- */
-export const formatIasAxiosResponseError = (error: AxiosError<any>): AxiosError => {
-  // Network error (no response received)
-  if (!error.response) {
-    error.code = NETWORK_ERROR_CODE
-    error.message = NETWORK_ERROR_MESSAGE
-    return error
+export const getErrorDefinitionFromAxiosError = (axiosError: AxiosError<any>): ErrorDefinition | null => {
+  if (
+    typeof axiosError.response?.data?.error !== 'string' ||
+    typeof axiosError.response?.data?.error_description !== 'string'
+  ) {
+    return null
   }
 
-  error.name = 'IASAxiosError'
+  const errorDefinition = getErrorDefinitionFromAppEvent(axiosError.response.data.error)
 
-  // IAS error response
-  if (typeof error.response.data?.error === 'string' && typeof error.response.data?.error_description === 'string') {
-    error.code = `IAS_${error.response.data.error.toUpperCase()}`
-    error.message = error.response.data.error_description
-    return error
+  if (!errorDefinition) {
+    return null
   }
 
-  // Custom error messages for common HTTP status codes
-  if (error.response.status === 503) {
-    error.code = 'IAS_SERVICE_UNAVAILABLE'
-    error.message = 'The external identity service is currently unavailable.'
-  }
-
-  // Add retry information if provided by the server
-  if (error.response.status === 503 && error.response.headers?.['retry-after']) {
-    const seconds = Number(error.response.headers['retry-after'])
-    const minutes = Math.ceil(seconds / 60)
-    error.message += ` Please try again after ${minutes} minute${minutes > 1 ? 's' : ''}.`
-  }
-
-  return error
+  return errorDefinition
 }
 
 /**
