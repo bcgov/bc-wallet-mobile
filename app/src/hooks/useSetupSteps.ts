@@ -1,8 +1,8 @@
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
-import { AccountSetupType, AdditionalEvidenceData, BCState } from '@/store'
+import { AccountSetupType, BCState } from '@/store'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
 
 /**
  * Validates that an evidence item is fully completed.
@@ -10,7 +10,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
  * - It has at least 1 photo | NOTE: Some evidence types may only require a photo (e.g. passport)
  * - It has a document number entered
  */
-const isEvidenceComplete = (evidence: AdditionalEvidenceData): boolean => {
+const isEvidenceComplete = (evidence: EvidenceMetadata): boolean => {
   const hasRequiredPhotos = evidence.metadata.length >= 1
   const hasDocumentNumber = Boolean(evidence.documentNumber)
   return hasRequiredPhotos && hasDocumentNumber
