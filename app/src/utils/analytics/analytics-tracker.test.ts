@@ -1,4 +1,4 @@
-import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
+import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 
 describe('Analytics Tracker', () => {
@@ -147,7 +147,7 @@ describe('Analytics Tracker', () => {
 
         const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-        analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
+        analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
         expect(mockTrackAlert).not.toHaveBeenCalled()
       })
@@ -164,13 +164,13 @@ describe('Analytics Tracker', () => {
 
         await analytics.initializeTracker()
 
-        analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
+        analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
         expect(mockTrackAlert).toHaveBeenCalledWith({
           schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
           data: {
             action: AlertInteractionEvent.ALERT_DISPLAY,
-            text: AlertEvent.ADD_CARD_CAMERA_BROKEN,
+            text: AppEventCode.ADD_CARD_CAMERA_BROKEN,
           },
         })
       })
@@ -186,7 +186,7 @@ describe('Analytics Tracker', () => {
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-      analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
+      analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
       expect(mockTrackAlert).not.toHaveBeenCalled()
     })
@@ -203,13 +203,13 @@ describe('Analytics Tracker', () => {
 
       await analytics.initializeTracker()
 
-      analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
+      analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
       expect(mockTrackAlert).toHaveBeenCalledWith({
         schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
         data: {
           action: AlertInteractionEvent.ALERT_ACTION,
-          text: AlertEvent.ADD_CARD_CAMERA_BROKEN,
+          text: AppEventCode.ADD_CARD_CAMERA_BROKEN,
           message: 'ok',
         },
       })

@@ -1,7 +1,7 @@
 import { extractErrorMessage } from '@/errors'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
-import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
+import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
 import { BifoldError, EventTypes } from '@bifold/core'
@@ -27,7 +27,7 @@ export interface AlertOptions {
   /** Custom actions/buttons for the native alert */
   actions?: AlertAction[]
   /** Optional AlertEvent for analytics tracking */
-  event?: AlertEvent
+  event?: AppEventCode
 }
 
 export interface ErrorAlertContextType {
@@ -88,7 +88,7 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
       const title = i18next.t(definition.titleKey)
       const description = i18next.t(definition.descriptionKey)
 
-      const bifoldError = new BifoldError(title, description, technicalMessage, definition.code)
+      const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
     }
@@ -116,7 +116,7 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    showAlert(title, description, actions, definition.alertEvent)
+    showAlert(title, description, actions, definition.appEvent)
   }, [])
 
   /**

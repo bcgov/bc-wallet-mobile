@@ -4,7 +4,7 @@ import { DeviceEventEmitter } from 'react-native'
 
 import i18next from 'i18next'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../errors/errorRegistry'
-import { AlertEvent } from '../events/alertEvents'
+import { AppEventCode } from '../events/appEventCode'
 import { showAlert } from '../utils/alert'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
@@ -133,10 +133,10 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(ErrorRegistry.CAMERA_BROKEN.code),
-        message: ErrorRegistry.CAMERA_BROKEN.alertEvent,
+        code: String(ErrorRegistry.CAMERA_BROKEN.statusCode),
+        message: ErrorRegistry.CAMERA_BROKEN.appEvent,
       })
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.alertEvent)
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.appEvent)
     })
 
     it('should fallback to GENERAL_ERROR for unknown keys', () => {
@@ -204,7 +204,7 @@ describe('ErrorAlertContext', () => {
         ErrorRegistry.NO_INTERNET.titleKey,
         ErrorRegistry.NO_INTERNET.descriptionKey,
         undefined,
-        ErrorRegistry.NO_INTERNET.alertEvent
+        ErrorRegistry.NO_INTERNET.appEvent
       )
       expect(DeviceEventEmitter.emit).not.toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.anything())
     })
@@ -221,7 +221,7 @@ describe('ErrorAlertContext', () => {
         ErrorRegistry.NO_INTERNET.titleKey,
         ErrorRegistry.NO_INTERNET.descriptionKey,
         actions,
-        ErrorRegistry.NO_INTERNET.alertEvent
+        ErrorRegistry.NO_INTERNET.appEvent
       )
     })
 
@@ -233,10 +233,10 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(ErrorRegistry.SERVER_ERROR.code),
-        message: ErrorRegistry.SERVER_ERROR.alertEvent,
+        code: String(ErrorRegistry.SERVER_ERROR.statusCode),
+        message: ErrorRegistry.SERVER_ERROR.appEvent,
       })
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.SERVER_ERROR.alertEvent)
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.SERVER_ERROR.appEvent)
     })
 
     it('should fallback to GENERAL_ERROR for unknown keys', () => {
@@ -255,14 +255,14 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.alert(i18next.t('Global.General'), i18next.t('Global.General'), { event: AlertEvent.GENERAL })
+        result.current.alert(i18next.t('Global.General'), i18next.t('Global.General'), { event: AppEventCode.GENERAL })
       })
 
       expect(showAlert).toHaveBeenCalledWith(
         i18next.t('Global.General'),
         i18next.t('Global.General'),
         undefined,
-        AlertEvent.GENERAL
+        AppEventCode.GENERAL
       )
     })
   })

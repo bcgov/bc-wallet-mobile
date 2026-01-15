@@ -114,7 +114,12 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       // Track error in analytics (without showing modal since we have custom UI)
       emitError('WALLET_SECRET_NOT_FOUND', { showModal: false })
       setInitError(
-        new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), 'Wallet secret is not found', errorDef.code)
+        new BifoldError(
+          t(errorDef.titleKey),
+          t(errorDef.descriptionKey),
+          'Wallet secret is not found',
+          errorDef.statusCode
+        )
       )
       return
     }
@@ -134,7 +139,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         // Track error in analytics (without showing modal since we have custom UI)
         emitError('AGENT_INITIALIZATION_ERROR', { error: e, showModal: false })
         setInitError(
-          new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), (e as Error)?.message, errorDef.code)
+          new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), (e as Error)?.message, errorDef.statusCode)
         )
       }
     }

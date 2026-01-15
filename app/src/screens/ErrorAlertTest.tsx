@@ -157,7 +157,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                   </Text>
                 </View>
                 <Button
-                  title={`${key} (${definition.code})`}
+                  title={`${key} (${definition.statusCode})`}
                   accessibilityLabel={`Trigger ${key} error`}
                   testID={`error-${key}`}
                   buttonType={ButtonType.Secondary}
