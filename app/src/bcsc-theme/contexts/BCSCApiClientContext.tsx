@@ -1,4 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ErrorRegistry } from '@/errors'
 import { AppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -41,7 +42,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [store, dispatch] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
-  const { emitErrorAsAlert } = useErrorAlert()
+  const { emitErrorAlert } = useErrorAlert()
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -50,15 +51,23 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     setClient(client)
   }
 
-  const handleApiError = useCallback(
+  /**
+   * Handle API errors emitted by the BCSCApiClient instance.
+   *
+   * @param {AppError} appError - The application error to handle.
+   * @returns void
+   */
+  const handleClientAppError = useCallback(
     (appError: AppError) => {
       switch (appError.identity.appEvent) {
-        // TODO (MD): Handle specific AppErrors as needed
+        case ErrorRegistry.NO_INTERNET.appEvent:
+          // noop: No internet errors are handled globally by the InternetDisconnected modal
+          break
         default:
-          emitErrorAsAlert(appError)
+          emitErrorAlert(appError)
       }
     },
-    [emitErrorAsAlert]
+    [emitErrorAlert]
   )
 
   useEffect(() => {
@@ -81,7 +90,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         ) {
           newClient = new BCSCApiClient(
             store.developer.environment.iasApiBaseUrl,
-            handleApiError,
+            handleClientAppError,
             logger as RemoteLogger
           )
           await newClient.fetchEndpointsAndConfig()
@@ -116,7 +125,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     store.developer.environment.iasApiBaseUrl,
     logger,
     dispatch,
-    handleApiError,
+    handleClientAppError,
   ])
 
   const contextValue = useMemo(

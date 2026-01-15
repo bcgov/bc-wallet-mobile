@@ -86,7 +86,11 @@ export function logError(
  * @param appEvent - The application event code to look up.
  * @returns The corresponding ErrorDefinition or null if not found.
  */
-export const getErrorDefinitionFromAppEventCode = (appEvent: string): ErrorDefinition | null => {
+export const getErrorDefinitionFromAppEventCode = (appEvent?: string): ErrorDefinition | null => {
+  if (!appEvent) {
+    return null
+  }
+
   const definitions = Object.values(ErrorRegistry)
 
   for (const definition of definitions) {

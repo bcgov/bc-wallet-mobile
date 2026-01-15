@@ -92,7 +92,7 @@ describe('ErrorAlertContext', () => {
       expect(() => renderHook(() => useErrorAlert())).toThrow('useErrorAlert must be used within an ErrorAlertProvider')
     })
 
-    it('should return context with error, errorAsAlert, alert, and dismiss', () => {
+    it('should return context with emitError, emitAlert, emitErrorAlert, and dismiss', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       expect(result.current).toHaveProperty('emitError')
@@ -188,65 +188,6 @@ describe('ErrorAlertContext', () => {
           severity: ErrorSeverity.ERROR,
         })
       )
-    })
-  })
-
-  describe('errorAsAlert()', () => {
-    it('should show native alert instead of modal', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.errorAsAlert('NO_INTERNET')
-      })
-
-      expect(appLogger.error).toHaveBeenCalled()
-      expect(showAlert).toHaveBeenCalledWith(
-        ErrorRegistry.NO_INTERNET.titleKey,
-        ErrorRegistry.NO_INTERNET.descriptionKey,
-        undefined,
-        ErrorRegistry.NO_INTERNET.appEvent
-      )
-      expect(DeviceEventEmitter.emit).not.toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.anything())
-    })
-
-    it('should show native alert with custom actions', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-      const actions = [{ text: 'Retry', onPress: jest.fn() }]
-
-      act(() => {
-        result.current.errorAsAlert('NO_INTERNET', { actions })
-      })
-
-      expect(showAlert).toHaveBeenCalledWith(
-        ErrorRegistry.NO_INTERNET.titleKey,
-        ErrorRegistry.NO_INTERNET.descriptionKey,
-        actions,
-        ErrorRegistry.NO_INTERNET.appEvent
-      )
-    })
-
-    it('should track analytics for native alerts', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.errorAsAlert('SERVER_ERROR')
-      })
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(ErrorRegistry.SERVER_ERROR.statusCode),
-        message: ErrorRegistry.SERVER_ERROR.appEvent,
-      })
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.SERVER_ERROR.appEvent)
-    })
-
-    it('should fallback to GENERAL_ERROR for unknown keys', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.errorAsAlert('UNKNOWN_KEY' as any)
-      })
-
-      expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key'))
     })
   })
 

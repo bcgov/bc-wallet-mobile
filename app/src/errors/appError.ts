@@ -1,5 +1,6 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { RemoteLogger } from '@bifold/remote-logs'
 import i18next from 'i18next'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
@@ -54,5 +55,19 @@ export class AppError extends Error {
       },
       options
     )
+  }
+
+  /**
+   * Log the error details, including code, message, timestamp, and cause if available.
+   *
+   * @param logger - The RemoteLogger instance to use for logging.
+   * @returns void
+   */
+  log(logger: RemoteLogger): void {
+    logger.error(this.message, {
+      code: this.code,
+      timestamp: this.timestamp,
+      cause: this.cause,
+    })
   }
 }

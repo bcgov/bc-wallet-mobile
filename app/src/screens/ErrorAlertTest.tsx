@@ -13,7 +13,7 @@ interface ErrorAlertTestProps {
 const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
-  const { emitError, errorAsAlert, emitAlert, dismiss } = useErrorAlert()
+  const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
 
   const styles = StyleSheet.create({
     container: {

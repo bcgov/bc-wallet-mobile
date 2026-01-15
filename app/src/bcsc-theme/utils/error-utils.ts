@@ -1,5 +1,3 @@
-import { ErrorDefinition } from '@/errors'
-import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AxiosError } from 'axios'
 
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
@@ -18,21 +16,16 @@ interface LogAxiosErrorOptions {
   suppressStackTrace: boolean
 }
 
-export const getErrorDefinitionFromAxiosError = (axiosError: AxiosError<any>): ErrorDefinition | null => {
+export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosError => {
   if (
-    typeof axiosError.response?.data?.error !== 'string' ||
-    typeof axiosError.response?.data?.error_description !== 'string'
+    typeof axiosError.response?.data?.error === 'string' &&
+    axiosError.response?.data?.error_description === 'string'
   ) {
-    return null
+    axiosError.code = axiosError.response.data.error
+    axiosError.message = axiosError.response.data.error_description
   }
 
-  const errorDefinition = getErrorDefinitionFromAppEventCode(axiosError.response.data.error)
-
-  if (!errorDefinition) {
-    return null
-  }
-
-  return errorDefinition
+  return axiosError
 }
 
 /**

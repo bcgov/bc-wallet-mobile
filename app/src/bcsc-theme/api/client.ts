@@ -1,5 +1,6 @@
 import { ErrorRegistry } from '@/errors'
 import { AppError } from '@/errors/appError'
+import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -7,7 +8,7 @@ import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
-  getErrorDefinitionFromAxiosError,
+  formatIasAxiosResponseError,
 } from '../utils/error-utils'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
@@ -119,7 +120,9 @@ class BCSCApiClient {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, async (error: AxiosError) => {
-      const errorDefinition = getErrorDefinitionFromAxiosError(error) ?? ErrorRegistry.SERVER_ERROR
+      error = formatIasAxiosResponseError(error)
+
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.SERVER_ERROR
       const simpleError = formatIASAxiosErrorForLogger({
         error: error,
         suppressStackTrace: __DEV__, // disable stack trace in development
@@ -131,7 +134,7 @@ class BCSCApiClient {
 
       // Only log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
-        this.logger.error(`BCSCClient Error: [${appError.code}] ${appError.message}`, appError)
+        appError.log(this.logger)
       }
 
       await this.onError(appError)

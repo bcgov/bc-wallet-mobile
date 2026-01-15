@@ -38,11 +38,6 @@ export interface ErrorAlertContextType {
   emitError: (key: ErrorRegistryKey, options?: ErrorOptions) => void
 
   /**
-   * Show error as native alert instead of ErrorModal
-   */
-  errorAsAlert: (key: ErrorRegistryKey, options?: ErrorAlertOptions) => void
-
-  /**
    * Show native alert with title and body
    */
   emitAlert: (title: string, body: string, options?: AlertOptions) => void
@@ -50,7 +45,7 @@ export interface ErrorAlertContextType {
   /**
    * Show error as native alert from an AppError instance
    */
-  emitErrorAsAlert: (error: AppError, options?: ErrorAlertOptions) => void
+  emitErrorAlert: (error: AppError, options?: ErrorAlertOptions) => void
 
   /**
    * Dismiss the currently displayed error modal
@@ -63,6 +58,8 @@ export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(nul
 /**
  * ErrorAlertProvider - Unified error and alert handling for BC Wallet
  *
+ * TODO (MD): Provide state to prevent multiple modals/alerts from stacking
+ *
  * Provides a single entry point for:
  * - Error modals (via BifoldError/ErrorModal)
  * - Native alerts (via React Native Alert)
@@ -74,6 +71,8 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   /**
    * Show error via ErrorModal
    * Uses i18next.t() directly to avoid stale closure issues with useCallback
+   *
+   * TODO (MD): Rename to emitErrorModal to clarify usage
    */
   const emitError = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
     const definition = ErrorRegistry[key]
@@ -101,42 +100,17 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   }, [])
 
   /**
-   * Show error as native alert with translated strings from ErrorRegistry
+   * Show native alert with title and description
    */
-  const errorAsAlert = useCallback((key: ErrorRegistryKey, options: ErrorAlertOptions = {}): void => {
-    const definition = ErrorRegistry[key]
-
-    if (!definition) {
-      appLogger.warn(`Unknown error key: ${key}`)
-      errorAsAlert('GENERAL_ERROR', options)
-      return
-    }
-
-    const { error: originalError, actions, context } = options
-    const technicalMessage = extractErrorMessage(originalError)
-
-    logError(key, definition, technicalMessage, context)
-    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-    // Use pre-translated strings from ErrorRegistry
-    const title = i18next.t(definition.titleKey)
-    const description = i18next.t(definition.descriptionKey)
-
-    showAlert(title, description, actions, definition.appEvent)
+  const emitAlert = useCallback((title: string, body: string, options?: AlertOptions): void => {
+    showAlert(title, body, options?.actions, options?.event)
   }, [])
 
   /**
    * Show error as native alert from an AppError instance
    */
-  const emitErrorAsAlert = useCallback((error: AppError, options: ErrorAlertOptions = {}) => {
-    showAlert(error.title, error.description, options.actions, error.identity.appEvent)
-  }, [])
-
-  /**
-   * Show native alert with title and description
-   */
-  const emitAlert = useCallback((title: string, description: string, options?: AlertOptions): void => {
-    showAlert(title, description, options?.actions, options?.event)
+  const emitErrorAlert = useCallback((error: AppError, options?: { actions?: AlertAction[] }) => {
+    showAlert(error.title, error.description, options?.actions, error.identity.appEvent)
   }, [])
 
   /**
@@ -149,12 +123,11 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   const value: ErrorAlertContextType = useMemo(
     () => ({
       emitError,
-      errorAsAlert,
       emitAlert,
-      emitErrorAsAlert,
+      emitErrorAlert,
       dismiss,
     }),
-    [emitError, errorAsAlert, emitAlert, emitErrorAsAlert, dismiss]
+    [emitError, emitAlert, emitErrorAlert, dismiss]
   )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
