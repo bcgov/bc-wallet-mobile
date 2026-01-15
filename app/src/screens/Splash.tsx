@@ -31,7 +31,7 @@ import TipCarousel from '@components/TipCarousel'
 const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
-  const { error: emitError } = useErrorAlert()
+  const { emitError } = useErrorAlert()
   const { walletSecret } = useAuth()
   const { ColorPalette, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))

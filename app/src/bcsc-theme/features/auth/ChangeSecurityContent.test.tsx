@@ -45,7 +45,7 @@ const mockError = jest.fn()
 
 jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({
-    error: mockError,
+    emitError: mockError,
     clearError: jest.fn(),
   }),
 }))

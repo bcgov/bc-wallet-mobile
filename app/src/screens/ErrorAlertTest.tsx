@@ -13,7 +13,7 @@ interface ErrorAlertTestProps {
 const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
-  const { error, errorAsAlert, alert, dismiss } = useErrorAlert()
+  const { emitError, errorAsAlert, emitAlert, dismiss } = useErrorAlert()
 
   const styles = StyleSheet.create({
     container: {
@@ -108,7 +108,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerError = (key: ErrorRegistryKey) => {
-    error(key, {
+    emitError(key, {
       error: new Error(`Test error triggered for: ${key}`),
       context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },
     })
@@ -125,7 +125,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerAlert = (title: string, body: string) => {
-    alert(title, body, { actions: [{ text: t('Global.Okay'), style: 'default' }] })
+    emitAlert(title, body, { actions: [{ text: t('Global.Okay'), style: 'default' }] })
   }
 
   return (
