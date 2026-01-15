@@ -1,5 +1,5 @@
 import { ErrorDefinition } from '@/errors'
-import { getErrorDefinitionFromAppEvent } from '@/errors/errorHandler'
+import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AxiosError } from 'axios'
 
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
@@ -26,7 +26,7 @@ export const getErrorDefinitionFromAxiosError = (axiosError: AxiosError<any>): E
     return null
   }
 
-  const errorDefinition = getErrorDefinitionFromAppEvent(axiosError.response.data.error)
+  const errorDefinition = getErrorDefinitionFromAppEventCode(axiosError.response.data.error)
 
   if (!errorDefinition) {
     return null
