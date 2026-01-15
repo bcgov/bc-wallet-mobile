@@ -166,8 +166,10 @@ export class FcmViewModel {
   private async handleGenericNotification(data: BasicNotification) {
     const { title, body } = data
 
+    this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
     try {
       await showLocalNotification(title, body)
+      this.logger.info(`[FcmViewModel] Local notification shown successfully`)
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
     }
