@@ -5,11 +5,13 @@ export enum AlertInteractionEvent {
 }
 
 /**
- * Alert events
+ * App event codes
  *
- * TODO (MD): add all mapped values from `bcsc_alerts.json` to translation files
+ * Includes:
+ *    - Alert events
+ *    - Error events
  */
-export enum AlertEvent {
+export enum AppEventCode {
   GENERAL = 'general',
   ADD_CARD_CAMERA_BROKEN = 'add_card_camera_broken',
   ADD_CARD_DYNAMIC_REGISTRATION = 'add_card_dynamic_registration', //being tracked
@@ -160,5 +162,4 @@ export enum AlertEvent {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
-  // ... other alert events go here
 }

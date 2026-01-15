@@ -1,4 +1,4 @@
-import { AlertEvent } from '@/events/alertEvents'
+import { AppEventCode } from '@/events/appEventCode'
 import i18n from 'i18next'
 import { Alert, AlertButton } from 'react-native'
 import { Analytics } from './analytics/analytics-singleton'
@@ -21,7 +21,7 @@ const getDefaultOkAction = (): AlertAction => ({
  * @param actions - Optional array of AlertButton actions. If not provided, a default 'OK' button will be used.
  * @param event - Optional AlertEvent for analytics tracking
  */
-export const showAlert = (title: string, body: string, actions?: AlertAction[], event?: AlertEvent): void => {
+export const showAlert = (title: string, body: string, actions?: AlertAction[], event?: AppEventCode): void => {
   const buttons = (actions ?? [getDefaultOkAction()]).map((action) => ({
     ...action,
     onPress: () => {
