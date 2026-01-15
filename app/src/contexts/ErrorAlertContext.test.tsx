@@ -95,9 +95,9 @@ describe('ErrorAlertContext', () => {
     it('should return context with error, errorAsAlert, alert, and dismiss', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
-      expect(result.current).toHaveProperty('error')
+      expect(result.current).toHaveProperty('emitError')
       expect(result.current).toHaveProperty('errorAsAlert')
-      expect(result.current).toHaveProperty('alert')
+      expect(result.current).toHaveProperty('emitAlert')
       expect(result.current).toHaveProperty('dismiss')
     })
   })
