@@ -12,6 +12,7 @@ import {
   deleteEvidenceMetadata,
   deleteToken,
   EvidenceMetadata,
+  EvidenceType,
   getAccount,
   getAccountFlags,
   getAuthorizationRequest,
@@ -19,6 +20,7 @@ import {
   getEvidenceMetadata,
   getToken,
   NativeAuthorizationRequest,
+  PhotoMetadata,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
@@ -27,11 +29,9 @@ import {
   TokenType,
 } from 'react-native-bcsc-core'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
-import { EvidenceType } from '../api/hooks/useEvidenceApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential } from '../utils/bcsc-credential'
-import { PhotoMetadata } from '../utils/file-info'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -538,25 +538,24 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Helper function to persist current evidence data to native storage
-   */
-  const persistCurrentEvidenceData = useCallback(async () => {
-    const evidenceData = store.bcscSecure.additionalEvidenceData
-    await persistEvidenceData(evidenceData)
-  }, [store.bcscSecure.additionalEvidenceData, persistEvidenceData])
-
-  /**
    * Add a new evidence type to secure state and persist to native storage
    */
   const addEvidenceType = useCallback(
     async (evidenceType: EvidenceType) => {
+      const updatedEvidence = [
+        ...store.bcscSecure.additionalEvidenceData,
+        { evidenceType, metadata: [], documentNumber: '' },
+      ]
+
       dispatch({
-        type: BCDispatchAction.ADD_SECURE_EVIDENCE_TYPE,
-        payload: [evidenceType],
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
       })
-      await persistCurrentEvidenceData()
+
+      // Persist the updated evidence data
+      await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistCurrentEvidenceData]
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
   )
 
   /**
@@ -564,13 +563,18 @@ export const useSecureActions = () => {
    */
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[]) => {
+      const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
+        evidence.evidenceType === evidenceType ? { ...evidence, metadata } : evidence
+      )
+
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-        payload: [{ evidenceType, metadata }],
+        payload: [updatedEvidence],
       })
-      await persistCurrentEvidenceData()
+
+      await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistCurrentEvidenceData]
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
   )
 
   /**
@@ -578,34 +582,50 @@ export const useSecureActions = () => {
    */
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
+      const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
+        evidence.evidenceType === evidenceType ? { ...evidence, documentNumber } : evidence
+      )
+
       dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER,
-        payload: [{ evidenceType, documentNumber }],
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
       })
-      await persistCurrentEvidenceData()
+
+      await persistEvidenceData(updatedEvidence)
     },
-    [dispatch, persistCurrentEvidenceData]
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
   )
 
   /**
    * Remove incomplete evidence entries and persist to native storage
    */
   const removeIncompleteEvidence = useCallback(async () => {
+    // Filter out incomplete evidence (those without photo metadata)
+    const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
+      (evidence) => evidence.metadata && evidence.metadata.length > 0
+    )
+
     dispatch({
-      type: BCDispatchAction.REMOVE_INCOMPLETE_SECURE_EVIDENCE,
+      type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+      payload: [updatedEvidence],
     })
-    await persistCurrentEvidenceData()
-  }, [dispatch, persistCurrentEvidenceData])
+
+    await persistEvidenceData(updatedEvidence)
+  }, [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData])
 
   /**
    * Clear all additional evidence data and persist to native storage
    */
   const clearAdditionalEvidence = useCallback(async () => {
+    // Clear evidence by persisting an empty array
     dispatch({
-      type: BCDispatchAction.CLEAR_SECURE_ADDITIONAL_EVIDENCE,
+      type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+      payload: [[]],
     })
-    await persistCurrentEvidenceData()
-  }, [dispatch, persistCurrentEvidenceData])
+
+    // Persist empty evidence data
+    await persistEvidenceData([])
+  }, [dispatch, persistEvidenceData])
 
   // ============================================================================
   // HYDRATION & CLEARING - Loading and clearing secure state
