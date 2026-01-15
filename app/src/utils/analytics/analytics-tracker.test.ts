@@ -152,7 +152,7 @@ describe('Analytics Tracker', () => {
         expect(mockTrackAlert).not.toHaveBeenCalled()
       })
 
-      it('should track when tracking enabled and valid alert event', async () => {
+      it('should track when tracking enabled and valid app event', async () => {
         const mockTrackAlert = jest.fn()
         const mockAnalyticsClient = {
           newTracker: jest.fn().mockResolvedValue({
@@ -191,7 +191,7 @@ describe('Analytics Tracker', () => {
       expect(mockTrackAlert).not.toHaveBeenCalled()
     })
 
-    it('should track when tracking enabled and valid alert event', async () => {
+    it('should track when tracking enabled and valid app event', async () => {
       const mockTrackAlert = jest.fn()
       const mockAnalyticsClient = {
         newTracker: jest.fn().mockResolvedValue({

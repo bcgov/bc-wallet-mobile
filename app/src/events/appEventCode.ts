@@ -162,5 +162,4 @@ export enum AppEventCode {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
-  // ... other alert events go here
 }
