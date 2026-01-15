@@ -107,7 +107,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('GENERAL_ERROR')
+        result.current.emitError('GENERAL_ERROR')
       })
 
       expect(appLogger.error).toHaveBeenCalled()
@@ -118,7 +118,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('GENERAL_ERROR', { showModal: false })
+        result.current.emitError('GENERAL_ERROR', { showModal: false })
       })
 
       expect(appLogger.error).toHaveBeenCalled()
@@ -129,7 +129,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('CAMERA_BROKEN')
+        result.current.emitError('CAMERA_BROKEN')
       })
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
@@ -143,7 +143,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('UNKNOWN_KEY' as any)
+        result.current.emitError('UNKNOWN_KEY' as any)
       })
 
       expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key'))
@@ -155,7 +155,7 @@ describe('ErrorAlertContext', () => {
       const testError = new Error('Test error message')
 
       act(() => {
-        result.current.error('GENERAL_ERROR', { error: testError })
+        result.current.emitError('GENERAL_ERROR', { error: testError })
       })
 
       expect(appLogger.error).toHaveBeenCalledWith(
@@ -168,7 +168,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('GENERAL_ERROR', { context: { userId: '123' } })
+        result.current.emitError('GENERAL_ERROR', { context: { userId: '123' } })
       })
 
       expect(appLogger.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ userId: '123' }))
@@ -178,7 +178,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.error('NO_INTERNET', { error: new Error('Network failed') })
+        result.current.emitError('NO_INTERNET', { error: new Error('Network failed') })
       })
 
       expect(appLogger.error).toHaveBeenCalledWith(
@@ -255,7 +255,9 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
-        result.current.alert(i18next.t('Global.General'), i18next.t('Global.General'), { event: AppEventCode.GENERAL })
+        result.current.emitAlert(i18next.t('Global.General'), i18next.t('Global.General'), {
+          event: AppEventCode.GENERAL,
+        })
       })
 
       expect(showAlert).toHaveBeenCalledWith(

@@ -16,10 +16,10 @@
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
  *
  * const MyComponent = () => {
- *   const { error, errorAsAlert, alert, dismiss } = useErrorAlert()
+ *   const { emitError, errorAsAlert, emitAlert, dismiss } = useErrorAlert()
  *
  *   // Show error via ErrorModal
- *   error('INVALID_QR_CODE', { error: err })
+ *   emitError('INVALID_QR_CODE', { error: err })
  *
  *   // Show error as native alert with custom buttons
  *   errorAsAlert('NO_INTERNET', {
@@ -27,7 +27,7 @@
  *   })
  *
  *   // Show informational native alert
- *   alert(AlertEvent.DATA_USE_WARNING)
+ *   emitAlert(AlertEvent.DATA_USE_WARNING)
  * }
  * ```
  */
