@@ -105,7 +105,7 @@ class NativeCompatibleStorage(
             return getIssuerNameFromIssuer(issuer)
         }
 
-        Low.w(TAG, "Issuer file not found or unreadable, defaulting to '$DEFAULT_ISSUER'")
+        Log.w(TAG, "Issuer file not found or unreadable, defaulting to '$DEFAULT_ISSUER'")
         return DEFAULT_ISSUER
     }
 
