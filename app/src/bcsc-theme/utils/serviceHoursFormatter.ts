@@ -21,7 +21,9 @@ export const formatServiceHours = (serviceHours: ServiceHours): string => {
 }
 
 export const formatTime12Hour = (time24: string): string => {
-  if (!time24) return time24
+  if (!time24) {
+    return time24
+  }
 
   const [hours, minutes] = time24.split(':').map(Number)
   const period = hours >= 12 ? 'pm' : 'am'
@@ -65,7 +67,9 @@ const getCurrentTimeInTimezone = (timezone: string): Date => {
 
 const parseTimeToMinutes = (timeStr: string): number | null => {
   const [hour, minute] = timeStr.split(':').map(Number)
-  if (isNaN(hour) || isNaN(minute)) return null
+  if (isNaN(hour) || isNaN(minute)) {
+    return null
+  }
   return hour * 60 + minute
 }
 
@@ -97,14 +101,20 @@ export const checkIfWithinServiceHours = (serviceHours: ServiceHours): boolean =
     const startDay = getDayNumber(period.start_day)
     const endDay = getDayNumber(period.end_day)
 
-    if (startDay === -1 || endDay === -1) continue // Skip invalid day formats
+    if (startDay === -1 || endDay === -1) {
+      continue
+    } // Skip invalid day formats
 
-    if (!isCurrentDayInRange(currentDay, startDay, endDay)) continue
+    if (!isCurrentDayInRange(currentDay, startDay, endDay)) {
+      continue
+    }
 
     const startTimeMinutes = parseTimeToMinutes(period.start_time)
     const endTimeMinutes = parseTimeToMinutes(period.end_time)
 
-    if (startTimeMinutes === null || endTimeMinutes === null) continue // Skip invalid times
+    if (startTimeMinutes === null || endTimeMinutes === null) {
+      continue
+    } // Skip invalid times
 
     if (isCurrentTimeInRange(currentTimeInMinutes, startTimeMinutes, endTimeMinutes)) {
       return true

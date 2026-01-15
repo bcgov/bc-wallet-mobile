@@ -25,7 +25,7 @@ const TransferInformationScreen: React.FC = () => {
     />
   )
   return (
-    <ScreenWrapper controls={controls} padded scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInformation.Title')}</ThemedText>
       <ThemedText>{t('BCSC.TransferInformation.Instructions')}</ThemedText>

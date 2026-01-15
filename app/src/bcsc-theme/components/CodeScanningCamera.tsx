@@ -77,9 +77,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   })
   const format = useCameraFormat(device, [
     {
-      videoResolution: 'max',
-    },
-    {
       fps: Platform.OS === 'ios' ? 'max' : 30,
     },
   ])

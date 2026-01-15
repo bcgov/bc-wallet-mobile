@@ -184,12 +184,24 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     // ---- Determine current step ----
     const getCurrentStep = (): SetupStepsResult['currentStep'] => {
-      if (step1Focused) return 'nickname'
-      if (step2Focused) return 'id'
-      if (step3Focused) return 'address'
-      if (step4Focused) return 'email'
-      if (step5Focused) return 'verify'
-      if (step6Focused) return 'transfer'
+      if (step1Focused) {
+        return 'nickname'
+      }
+      if (step2Focused) {
+        return 'id'
+      }
+      if (step3Focused) {
+        return 'address'
+      }
+      if (step4Focused) {
+        return 'email'
+      }
+      if (step5Focused) {
+        return 'verify'
+      }
+      if (step6Focused) {
+        return 'transfer'
+      }
       return null
     }
 

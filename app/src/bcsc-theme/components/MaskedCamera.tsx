@@ -5,15 +5,24 @@ import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CodeScanner,
+  FormatFilter,
+  useCameraDevice,
+  useCameraFormat,
+  useCameraPermission,
+} from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
   navigation: any
   cameraFace: 'front' | 'back'
+  cameraFormatFilter?: FormatFilter[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
 
@@ -23,7 +32,9 @@ const MaskedCamera = ({
   cameraLabel,
   maskLineColor,
   maskType,
+  codeScanner,
   cameraFace = 'back',
+  cameraFormatFilter = [],
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
@@ -36,6 +47,7 @@ const MaskedCamera = ({
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
+  const format = useCameraFormat(device, cameraFormatFilter)
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -156,11 +168,15 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
+        format={format}
         isActive={isFocused && isActive}
         photo={true}
         onInitialized={() => setIsActive(true)}
         onError={onError}
+        codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
+        // Set fps to max supported by the selected format for smoother preview
+        fps={format?.maxFps}
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>

@@ -29,6 +29,13 @@ const translation = {
     "OK": "OK",
     "NoMessage": "No Message",
   },
+  "Screens": {
+    "Preface": "BC Wallet",
+  },
+  "AppUpdate": {
+    "Heading": "Update BC Wallet to the latest version",
+    "Body": "BC Wallet was updated with new improvements. Update your app now to enjoy the latest features and enhancements.",
+  },
   "Credentials": {
     "AddCredential": "Add Credential",
     "AddFirstCredential": "Add your first credential"
@@ -49,6 +56,8 @@ const translation = {
     "Link2": "BC Wallet showcase",
   },
   "PINCreate": {
+    "Header": "BC Wallet",
+    "Subheader": "Secure your wallet",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is:",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again.",

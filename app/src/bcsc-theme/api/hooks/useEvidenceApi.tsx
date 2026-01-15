@@ -99,7 +99,9 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
-    if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
+    if (!code) {
+      throw new Error('Device code is missing. Re install the app and setup try again.')
+    }
     return code
   }, [store.bcscSecure.deviceCode])
 

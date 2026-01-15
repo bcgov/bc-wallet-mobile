@@ -51,7 +51,7 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
 
   return (
     // TODO (bm): the keyboardActive prop is somehow preventing the checkbox from disappearing. without it, the checkbox just vanishes
-    <ScreenWrapper padded keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{`Confirm it's your device`}</ThemedText>
       <ThemedText>{`Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.`}</ThemedText>
       <ThemedText
