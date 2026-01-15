@@ -189,7 +189,7 @@ exports[`AccountExpired renders correctly 1`] = `
               ]
             }
           >
-            Doe, John
+            John Doe
           </Text>
         </View>
       </View>

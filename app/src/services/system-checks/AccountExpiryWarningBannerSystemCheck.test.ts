@@ -50,7 +50,7 @@ describe('AccountExpiryWarningBannerSystemCheck', () => {
 
       const check = new AccountExpiryWarningBannerSystemCheck(date, {
         dispatch: jest.fn(),
-        translation: jest.fn().mockReturnValue('Account expiring soon'),
+        translation: jest.fn().mockReturnValue('Expires in 30 days'),
         logger: {} as any,
       })
 
@@ -61,10 +61,11 @@ describe('AccountExpiryWarningBannerSystemCheck', () => {
         payload: [
           {
             id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
-            title: 'Account expiring soon',
+            title: 'Expires in 30 days',
+            description: 'Expires in 30 days',
             type: 'warning',
             varaint: 'summary',
-            dismissible: true,
+            dismissible: false,
           },
         ],
       })
