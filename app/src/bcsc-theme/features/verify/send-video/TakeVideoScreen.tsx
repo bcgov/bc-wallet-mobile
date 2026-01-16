@@ -1,3 +1,4 @@
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   hitSlop,
@@ -245,47 +246,32 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     }).start()
   }, [prompt, promptOpacity])
 
+  const hasRequestedPermission = useRef(false)
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (hasRequestedPermission.current) {
+        return
+      }
+      hasRequestedPermission.current = true
+
+      if (!hasCameraPermission) {
+        await requestCameraPermission()
+      }
+      if (!hasMicrophonePermission) {
+        await requestMicrophonePermission()
+      }
+    }
+
+    checkPermissions()
+  }, [hasCameraPermission, hasMicrophonePermission, requestCameraPermission, requestMicrophonePermission])
+
   useFocusEffect(
     useCallback(() => {
-      const checkPermissions = async () => {
-        if (!hasCameraPermission) {
-          const permission = await requestCameraPermission()
-          if (!permission) {
-            Alert.alert(
-              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequired'),
-              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
-              [{ text: 'OK', onPress: () => navigation.goBack() }]
-            )
-            return
-          }
-        }
-        if (!hasMicrophonePermission) {
-          const permission = await requestMicrophonePermission()
-          if (!permission) {
-            Alert.alert(
-              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequired'),
-              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
-              [{ text: 'OK', onPress: () => navigation.goBack() }]
-            )
-            return
-          }
-        }
-      }
-
-      checkPermissions()
-      if (isActive) {
+      if (isActive && hasCameraPermission && hasMicrophonePermission) {
         startRecording()
       }
-    }, [
-      startRecording,
-      hasCameraPermission,
-      requestCameraPermission,
-      hasMicrophonePermission,
-      requestMicrophonePermission,
-      navigation,
-      isActive,
-      t,
-    ])
+    }, [startRecording, isActive, hasCameraPermission, hasMicrophonePermission])
   )
 
   // Cleanup timer on unmount
@@ -298,13 +284,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
-    return (
-      <SafeAreaView style={styles.pageContainer}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')}</Text>
-        </View>
-      </SafeAreaView>
-    )
+    const permissionType =
+      !hasCameraPermission && !hasMicrophonePermission
+        ? 'cameraAndMicrophone'
+        : !hasCameraPermission
+          ? 'camera'
+          : 'microphone'
+    return <PermissionDisabled permissionType={permissionType} headerPadding />
   }
 
   if (!device) {

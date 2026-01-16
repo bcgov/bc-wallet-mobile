@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -8,7 +9,6 @@ import {
   MaskType,
   QrCodeScanError,
   ScanCamera,
-  ScreenWrapper,
   SVGOverlay,
   ThemedText,
   useStore,
@@ -16,9 +16,9 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -95,24 +95,19 @@ const TransferQRScannerScreen: React.FC = () => {
     })
   }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo])
 
+  const hasRequestedPermission = useRef(false)
+
   useEffect(() => {
     const checkPermissions = async () => {
-      if (!hasPermission) {
-        const permission = await requestPermission()
-        if (!permission) {
-          Alert.alert(
-            t('BCSC.CameraDisclosure.CameraPermissionRequired'),
-            t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage2'),
-            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigator.goBack() }]
-          )
-          return
-        }
+      if (!hasPermission && !hasRequestedPermission.current) {
+        hasRequestedPermission.current = true
+        await requestPermission()
       }
       setIsLoading(false)
     }
 
     checkPermissions()
-  }, [hasPermission, requestPermission, navigator, t])
+  }, [hasPermission, requestPermission])
 
   useEffect(() => {
     registerDevice()
@@ -191,13 +186,7 @@ const TransferQRScannerScreen: React.FC = () => {
   }
 
   if (!hasPermission) {
-    return (
-      <ScreenWrapper padded={false} scrollable={false}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
-        </View>
-      </ScreenWrapper>
-    )
+    return <PermissionDisabled permissionType="camera" />
   }
   return (
     <View style={styles.container}>
