@@ -726,6 +726,19 @@ export interface EvidenceImageSide {
 }
 
 /**
+ * Photo metadata for evidence documents.
+ */
+export interface PhotoMetadata {
+  label: string;
+  content_type: string;
+  content_length: number;
+  date: number;
+  sha256: string;
+  filename?: string;
+  file_path: string;
+}
+
+/**
  * Evidence type definition - matches the API response structure.
  */
 export interface EvidenceType {
@@ -743,22 +756,13 @@ export interface EvidenceType {
 }
 
 /**
- * Evidence metadata interface for type safety.
- * Matches the AdditionalEvidenceData structure from React Native state.
+ * Matches v3 storage structure as well as additionalEvidenceData field in React Native store
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
   evidenceType: EvidenceType;
-  /** Photo metadata array - matches PhotoMetadata interface from React Native */
-  metadata: {
-    label: string;
-    content_type: string;
-    content_length: number;
-    date: number;
-    sha256: string;
-    filename?: string;
-    file_path: string;
-  }[];
+  /** Photo metadata array */
+  metadata: PhotoMetadata[];
   /** Document number/reference */
   documentNumber: string;
 }

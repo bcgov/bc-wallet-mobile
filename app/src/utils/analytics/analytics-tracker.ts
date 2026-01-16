@@ -1,4 +1,4 @@
-import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
+import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
@@ -148,10 +148,10 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AlertEvent} alertEvent - The alert event to track.
+   * @param {AppEventCode} appEvent - The app event (alert) to track.
    * @returns {*} {void}
    */
-  trackAlertDisplayEvent(alertEvent: AlertEvent): void {
+  trackAlertDisplayEvent(appEvent: AppEventCode): void {
     if (!this.tracker) {
       return
     }
@@ -160,7 +160,7 @@ export class AnalyticsTracker {
       schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
       data: {
         action: AlertInteractionEvent.ALERT_DISPLAY,
-        text: alertEvent,
+        text: appEvent,
       },
     })
   }
@@ -170,11 +170,11 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `action` schema.
    *
-   * @param {AlertEvent} alertEvent - The alert event to track.
+   * @param {AppEventCode} appEvent - The app event (alert) to track.
    * @param {string} actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
    * @returns {*} {void}
    */
-  trackAlertActionEvent(alertEvent: AlertEvent, actionLabel: string): void {
+  trackAlertActionEvent(appEvent: AppEventCode, actionLabel: string): void {
     if (!this.tracker) {
       return
     }
@@ -183,7 +183,7 @@ export class AnalyticsTracker {
       schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
       data: {
         action: AlertInteractionEvent.ALERT_ACTION,
-        text: alertEvent,
+        text: appEvent,
         message: actionLabel,
       },
     })

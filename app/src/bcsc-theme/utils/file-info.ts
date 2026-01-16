@@ -1,19 +1,9 @@
 import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import readFileInChunks from '@/utils/read-file'
 import { BifoldLogger } from '@bifold/core'
-import { hashBase64 } from 'react-native-bcsc-core'
+import { hashBase64, PhotoMetadata } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { VerificationPrompt, VerificationVideoUploadPayload } from '../api/hooks/useEvidenceApi'
-
-export interface PhotoMetadata {
-  label: string
-  content_type: string
-  content_length: number
-  date: number
-  sha256: string // hashed copy of the photo
-  filename?: string
-  file_path: string
-}
 
 export const getFileInfo = async (filePath: string) => {
   const stats = await RNFS.stat(filePath)

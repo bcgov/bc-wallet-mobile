@@ -86,11 +86,11 @@ describe('errorRegistry', () => {
       errorKeys.forEach((key) => {
         const definition = ErrorRegistry[key]
 
-        expect(definition.code).toBeDefined()
-        expect(typeof definition.code).toBe('number')
+        expect(definition.statusCode).toBeDefined()
+        expect(typeof definition.statusCode).toBe('number')
 
-        expect(definition.alertEvent).toBeDefined()
-        expect(typeof definition.alertEvent).toBe('string')
+        expect(definition.appEvent).toBeDefined()
+        expect(typeof definition.appEvent).toBe('string')
 
         expect(definition.titleKey).toBeDefined()
         expect(typeof definition.titleKey).toBe('string')
@@ -108,7 +108,7 @@ describe('errorRegistry', () => {
 
     it('should have unique error codes', () => {
       const errorKeys = Object.keys(ErrorRegistry) as ErrorRegistryKey[]
-      const codes = errorKeys.map((key) => ErrorRegistry[key].code)
+      const codes = errorKeys.map((key) => ErrorRegistry[key].statusCode)
       const uniqueCodes = new Set(codes)
 
       expect(uniqueCodes.size).toBe(codes.length)
@@ -116,52 +116,52 @@ describe('errorRegistry', () => {
 
     it('should have error codes in correct ranges', () => {
       // Camera/Scanning Errors (2000-2099)
-      expect(ErrorRegistry.CAMERA_BROKEN.code).toBeGreaterThanOrEqual(2000)
-      expect(ErrorRegistry.CAMERA_BROKEN.code).toBeLessThan(2100)
+      expect(ErrorRegistry.CAMERA_BROKEN.statusCode).toBeGreaterThanOrEqual(2000)
+      expect(ErrorRegistry.CAMERA_BROKEN.statusCode).toBeLessThan(2100)
 
       // Network Errors (2100-2199)
-      expect(ErrorRegistry.NO_INTERNET.code).toBeGreaterThanOrEqual(2100)
-      expect(ErrorRegistry.NO_INTERNET.code).toBeLessThan(2200)
+      expect(ErrorRegistry.NO_INTERNET.statusCode).toBeGreaterThanOrEqual(2100)
+      expect(ErrorRegistry.NO_INTERNET.statusCode).toBeLessThan(2200)
 
       // Authentication/Login Errors (2200-2299)
-      expect(ErrorRegistry.LOGIN_PARSE_URI.code).toBeGreaterThanOrEqual(2200)
-      expect(ErrorRegistry.LOGIN_PARSE_URI.code).toBeLessThan(2300)
+      expect(ErrorRegistry.LOGIN_PARSE_URI.statusCode).toBeGreaterThanOrEqual(2200)
+      expect(ErrorRegistry.LOGIN_PARSE_URI.statusCode).toBeLessThan(2300)
 
       // Credential/Card Errors (2300-2399)
-      expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE.code).toBeGreaterThanOrEqual(2300)
-      expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE.code).toBeLessThan(2400)
+      expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE.statusCode).toBeGreaterThanOrEqual(2300)
+      expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE.statusCode).toBeLessThan(2400)
 
       // Verification Errors (2400-2499)
-      expect(ErrorRegistry.VERIFY_NOT_COMPLETE.code).toBeGreaterThanOrEqual(2400)
-      expect(ErrorRegistry.VERIFY_NOT_COMPLETE.code).toBeLessThan(2500)
+      expect(ErrorRegistry.VERIFY_NOT_COMPLETE.statusCode).toBeGreaterThanOrEqual(2400)
+      expect(ErrorRegistry.VERIFY_NOT_COMPLETE.statusCode).toBeLessThan(2500)
 
       // Token/Crypto Errors (2500-2599)
-      expect(ErrorRegistry.INVALID_TOKEN.code).toBeGreaterThanOrEqual(2500)
-      expect(ErrorRegistry.INVALID_TOKEN.code).toBeLessThan(2600)
+      expect(ErrorRegistry.INVALID_TOKEN.statusCode).toBeGreaterThanOrEqual(2500)
+      expect(ErrorRegistry.INVALID_TOKEN.statusCode).toBeLessThan(2600)
 
       // Storage Errors (2600-2699)
-      expect(ErrorRegistry.STORAGE_WRITE_ERROR.code).toBeGreaterThanOrEqual(2600)
-      expect(ErrorRegistry.STORAGE_WRITE_ERROR.code).toBeLessThan(2700)
+      expect(ErrorRegistry.STORAGE_WRITE_ERROR.statusCode).toBeGreaterThanOrEqual(2600)
+      expect(ErrorRegistry.STORAGE_WRITE_ERROR.statusCode).toBeLessThan(2700)
 
       // Device Errors (2700-2799)
-      expect(ErrorRegistry.ANDROID_APP_UPDATE_REQUIRED.code).toBeGreaterThanOrEqual(2700)
-      expect(ErrorRegistry.ANDROID_APP_UPDATE_REQUIRED.code).toBeLessThan(2800)
+      expect(ErrorRegistry.ANDROID_APP_UPDATE_REQUIRED.statusCode).toBeGreaterThanOrEqual(2700)
+      expect(ErrorRegistry.ANDROID_APP_UPDATE_REQUIRED.statusCode).toBeLessThan(2800)
 
       // General/Registration Errors (2800-2899)
-      expect(ErrorRegistry.GENERAL_ERROR.code).toBeGreaterThanOrEqual(2800)
-      expect(ErrorRegistry.GENERAL_ERROR.code).toBeLessThan(2900)
+      expect(ErrorRegistry.GENERAL_ERROR.statusCode).toBeGreaterThanOrEqual(2800)
+      expect(ErrorRegistry.GENERAL_ERROR.statusCode).toBeLessThan(2900)
 
       // Wallet/Agent Errors (2900-2999)
-      expect(ErrorRegistry.STATE_LOAD_ERROR.code).toBeGreaterThanOrEqual(2900)
-      expect(ErrorRegistry.STATE_LOAD_ERROR.code).toBeLessThan(3000)
+      expect(ErrorRegistry.STATE_LOAD_ERROR.statusCode).toBeGreaterThanOrEqual(2900)
+      expect(ErrorRegistry.STATE_LOAD_ERROR.statusCode).toBeLessThan(3000)
 
       // Connection/BCID Errors (3000-3099)
-      expect(ErrorRegistry.PARSE_INVITATION_ERROR.code).toBeGreaterThanOrEqual(3000)
-      expect(ErrorRegistry.PARSE_INVITATION_ERROR.code).toBeLessThan(3100)
+      expect(ErrorRegistry.PARSE_INVITATION_ERROR.statusCode).toBeGreaterThanOrEqual(3000)
+      expect(ErrorRegistry.PARSE_INVITATION_ERROR.statusCode).toBeLessThan(3100)
 
       // Attestation Errors (3100-3199)
-      expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.code).toBeGreaterThanOrEqual(3100)
-      expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.code).toBeLessThan(3200)
+      expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeGreaterThanOrEqual(3100)
+      expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeLessThan(3200)
     })
 
     it('should have proper i18n key formats', () => {
@@ -185,7 +185,7 @@ describe('errorRegistry', () => {
       const definition = ErrorRegistry[key]
 
       expect(definition).toBeDefined()
-      expect(definition.code).toBe(2000)
+      expect(definition.statusCode).toBe(2000)
     })
   })
 })

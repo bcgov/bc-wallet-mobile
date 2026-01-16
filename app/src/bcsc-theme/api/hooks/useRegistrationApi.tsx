@@ -61,7 +61,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-  const { error: emitError } = useErrorAlert()
+  const { emitError } = useErrorAlert()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
