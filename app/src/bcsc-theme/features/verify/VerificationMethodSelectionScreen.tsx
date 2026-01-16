@@ -1,7 +1,7 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { ScreenWrapper, ThemedText } from '@bifold/core'
+import { ScreenWrapper, ThemedText, TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,12 +15,12 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const { handlePressSendVideo, handlePressLiveCall, sendVideoLoading, liveCallLoading, verificationOptions } =
     useVerificationMethodModel({ navigation })
 
-  const primaryOption = verificationOptions[0]
-  const remainingOptions = verificationOptions.slice(1)
+  const [primaryOption, ...remainingOptions] = verificationOptions
 
   const headingText = useMemo(() => {
     if (primaryOption === DeviceVerificationOption.SEND_VIDEO) {
@@ -32,8 +32,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     if (primaryOption === DeviceVerificationOption.LIVE_VIDEO_CALL) {
       return t('BCSC.VerificationMethods.CannotVideoCall')
     }
+
+    logger.error(`Unknown primary verification option: ${primaryOption}`)
     return ''
-  }, [primaryOption, t])
+  }, [primaryOption, t, logger])
 
   const renderOption = (option: DeviceVerificationOption, borderBottomWidth?: number) => {
     if (option === DeviceVerificationOption.LIVE_VIDEO_CALL) {
