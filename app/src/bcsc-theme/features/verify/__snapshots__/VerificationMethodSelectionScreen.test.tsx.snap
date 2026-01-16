@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`VerificationMethodSelection renders correctly 1`] = `
+exports[`VerificationMethodSelection renders correctly with in_person as primary option 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -29,7 +29,1542 @@ exports[`VerificationMethodSelection renders correctly 1`] = `
     }
     showsVerticalScrollIndicator={false}
   >
-    <View />
+    <View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰀄
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.InPersonDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.VerificationMethods.CannotMakeItToServiceBC
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": undefined,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰒊
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.SendVideoDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰕧
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.VideoCallDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;
+
+exports[`VerificationMethodSelection renders correctly with send_video as primary option 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        false,
+        undefined,
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰒊
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.SendVideoDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.VerificationMethods.CannotSendVideo
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": undefined,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰕧
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.VideoCallDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰀄
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.InPersonDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;
+
+exports[`VerificationMethodSelection renders correctly with video_call as primary option 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        false,
+        undefined,
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰕧
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.VideoCallDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.VerificationMethods.CannotVideoCall
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": undefined,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰒊
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.SendVideoDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+      <View
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderBottomColor": "#606060",
+            "borderBottomWidth": 1,
+            "borderTopColor": "#606060",
+            "borderTopWidth": 1,
+            "flexDirection": "row",
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+      >
+        <View
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "flexShrink": 1,
+                "marginBottom": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#003366",
+                    "fontSize": 36,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰀄
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              numberOfLines={0}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                    "marginLeft": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonTitle
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            numberOfLines={0}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            BCSC.VerificationMethods.InPersonDescription
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 36,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰅂
+          </Text>
+        </View>
+      </View>
+    </View>
   </RCTScrollView>
 </RNCSafeAreaView>
 `;
