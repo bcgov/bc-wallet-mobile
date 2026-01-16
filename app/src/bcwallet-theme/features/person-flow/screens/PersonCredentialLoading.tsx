@@ -49,7 +49,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
-  const { error: emitError } = useErrorAlert()
+  const { emitError } = useErrorAlert()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const steps: string[] = useMemo(

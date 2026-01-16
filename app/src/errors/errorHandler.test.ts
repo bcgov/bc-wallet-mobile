@@ -1,4 +1,4 @@
-import { AlertInteractionEvent } from '../events/alertEvents'
+import { AlertInteractionEvent } from '../events/appEventCode'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { extractErrorMessage, getErrorDefinition, logError, trackErrorInAnalytics } from './errorHandler'
@@ -78,8 +78,8 @@ describe('errorHandler', () => {
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(definition.code),
-        message: definition.alertEvent,
+        code: String(definition.statusCode),
+        message: definition.appEvent,
       })
     })
 
@@ -88,7 +88,7 @@ describe('errorHandler', () => {
 
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
 
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.alertEvent)
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.appEvent)
     })
 
     it('should not track alert display for non-display events', () => {
@@ -108,7 +108,7 @@ describe('errorHandler', () => {
       expect(appLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(AlertInteractionEvent.ALERT_DISPLAY),
         expect.objectContaining({
-          code: definition.code,
+          code: definition.statusCode,
           category: definition.category,
           severity: definition.severity,
         })
@@ -121,7 +121,7 @@ describe('errorHandler', () => {
       const definition = getErrorDefinition('CAMERA_BROKEN')
 
       expect(definition).toEqual(ErrorRegistry.CAMERA_BROKEN)
-      expect(definition.code).toBe(2000)
+      expect(definition.statusCode).toBe(2000)
       expect(definition.category).toBe(ErrorCategory.CAMERA)
       expect(definition.severity).toBe(ErrorSeverity.ERROR)
     })
@@ -150,7 +150,7 @@ describe('errorHandler', () => {
       expect(appLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('NO_INTERNET'),
         expect.objectContaining({
-          code: definition.code,
+          code: definition.statusCode,
           category: definition.category,
           severity: definition.severity,
           technicalMessage,

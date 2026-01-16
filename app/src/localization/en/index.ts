@@ -902,7 +902,10 @@ const translation = {
       "VideoCallTitle": "Video call",
       "VideoCallDescription": "We will verify your identity during a video call.",
       "InPersonTitle": "In person",
-      "InPersonDescription": "Find out where to go and what to bring."
+      "InPersonDescription": "Find out where to go and what to bring.",
+      "CannotSendVideo": "Cannot send a video?",
+      "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
+      "CannotVideoCall": "Cannot video call?"
     },
   },
   "RemoteLogging": {

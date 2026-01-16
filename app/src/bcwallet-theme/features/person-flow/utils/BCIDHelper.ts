@@ -56,7 +56,7 @@ export const connectToIASAgent = async (
 
   if (!invite) {
     const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
   }
 
   await removeExistingInvitationsById(agent, invite.id)
@@ -65,7 +65,7 @@ export const connectToIASAgent = async (
 
   if (!record) {
     const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
@@ -75,7 +75,7 @@ export const connectToIASAgent = async (
 
   if (!didRepository) {
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
   }
 
   const dids = await didRepository.getAll(agent.context)
@@ -83,7 +83,7 @@ export const connectToIASAgent = async (
 
   if (!didRecord) {
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -91,7 +91,7 @@ export const connectToIASAgent = async (
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
     const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.code)
+    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
   }
 
   return {

@@ -6,15 +6,13 @@ import {
   PersistentStorage,
   ReducerAction,
 } from '@bifold/core'
-
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
-import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 
 export interface IASEnvironment {
   name: string
@@ -143,7 +141,7 @@ export interface BCSCSecureState {
 
   // === from Evidence Data ===
   /** Additional evidence data for non-BCSC verification */
-  additionalEvidenceData: AdditionalEvidenceData[] // initialized as an empty array to prevent ?.length usage
+  additionalEvidenceData: EvidenceMetadata[] // initialized as an empty array to prevent ?.length usage
 
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
@@ -156,12 +154,6 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
-}
-
-export interface AdditionalEvidenceData {
-  evidenceType: EvidenceType
-  metadata: PhotoMetadata[]
-  documentNumber: string
 }
 
 export enum Mode {
@@ -239,11 +231,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
-  ADD_SECURE_EVIDENCE_TYPE = 'bcsc/addSecureEvidenceType',
-  UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateSecureEvidenceMetadata',
-  UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateSecureEvidenceDocumentNumber',
-  REMOVE_INCOMPLETE_SECURE_EVIDENCE = 'bcsc/removeIncompleteSecureEvidence',
-  CLEAR_SECURE_ADDITIONAL_EVIDENCE = 'bcsc/clearSecureAdditionalEvidence',
+  UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
 }
@@ -657,44 +645,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, walletKey }
       return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.ADD_SECURE_EVIDENCE_TYPE: {
-      const evidenceType: EvidenceType = (action?.payload || []).pop()
-      const newEvidenceData: AdditionalEvidenceData = {
-        evidenceType,
-        metadata: [],
-        documentNumber: '',
-      }
-      const additionalEvidenceData = [...state.bcscSecure.additionalEvidenceData, newEvidenceData]
-      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData }
-      return { ...state, bcscSecure }
-    }
     case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA: {
-      const { evidenceType, metadata }: { evidenceType: EvidenceType; metadata: PhotoMetadata[] } =
-        (action?.payload || []).pop() ?? {}
-      const updatedEvidenceData = state.bcscSecure.additionalEvidenceData.map((item) =>
-        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item
-      )
-      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.UPDATE_SECURE_EVIDENCE_DOCUMENT_NUMBER: {
-      const { evidenceType, documentNumber }: { evidenceType: EvidenceType; documentNumber: string } =
-        (action?.payload || []).pop() ?? {}
-      const updatedEvidenceData = state.bcscSecure.additionalEvidenceData.map((item) =>
-        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item
-      )
-      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: updatedEvidenceData }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.REMOVE_INCOMPLETE_SECURE_EVIDENCE: {
-      const completeEvidence = state.bcscSecure.additionalEvidenceData.filter(
-        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
-      )
-      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: completeEvidence }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.CLEAR_SECURE_ADDITIONAL_EVIDENCE: {
-      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData: [] }
+      const additionalEvidenceData: EvidenceMetadata[] = (action?.payload || []).pop()
+      const bcscSecure = { ...state.bcscSecure, additionalEvidenceData }
       return { ...state, bcscSecure }
     }
 

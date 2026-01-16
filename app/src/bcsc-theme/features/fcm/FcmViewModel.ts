@@ -4,6 +4,7 @@ import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
+import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
@@ -24,10 +25,17 @@ export class FcmViewModel {
   private lastJwkBaseUrl: string | null = null
   private initialized = false
 
+  /**
+   * @param fcmService - Firebase Cloud Messaging service
+   * @param logger - Logger instance
+   * @param pairingService - Service for handling pairing requests
+   * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
+   */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService
+    private readonly pairingService: PairingService,
+    private readonly mode: Mode = Mode.BCSC
   ) {}
 
   public initialize() {
@@ -36,6 +44,13 @@ export class FcmViewModel {
       return
     }
     this.initialized = true
+
+    // Early return in BCWallet mode, we don't process FCM
+    // messages the OS handles notifications
+    if (this.mode !== Mode.BCSC) {
+      this.logger.info('[FcmViewModel] Skipping FCM initialization in BCWallet mode - OS handles notifications')
+      return
+    }
 
     this.logger.info('[FcmViewModel] Initializing...')
     // Subscribe BEFORE init so we don't miss any messages
@@ -166,8 +181,10 @@ export class FcmViewModel {
   private async handleGenericNotification(data: BasicNotification) {
     const { title, body } = data
 
+    this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
     try {
       await showLocalNotification(title, body)
+      this.logger.info(`[FcmViewModel] Local notification shown successfully`)
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
     }

@@ -1,7 +1,7 @@
 import { extractErrorMessage } from '@/errors'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
-import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
+import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
 import { BifoldError, EventTypes } from '@bifold/core'
@@ -27,14 +27,14 @@ export interface AlertOptions {
   /** Custom actions/buttons for the native alert */
   actions?: AlertAction[]
   /** Optional AlertEvent for analytics tracking */
-  event?: AlertEvent
+  event?: AppEventCode
 }
 
 export interface ErrorAlertContextType {
   /**
    * Show error via ErrorModal (default display)
    */
-  error: (key: ErrorRegistryKey, options?: ErrorOptions) => void
+  emitError: (key: ErrorRegistryKey, options?: ErrorOptions) => void
 
   /**
    * Show error as native alert instead of ErrorModal
@@ -44,7 +44,7 @@ export interface ErrorAlertContextType {
   /**
    * Show native alert with title and body
    */
-  alert: (title: string, body: string, options?: AlertOptions) => void
+  emitAlert: (title: string, body: string, options?: AlertOptions) => void
 
   /**
    * Dismiss the currently displayed error modal
@@ -69,12 +69,12 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
    * Show error via ErrorModal
    * Uses i18next.t() directly to avoid stale closure issues with useCallback
    */
-  const error = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
+  const emitError = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
     const definition = ErrorRegistry[key]
 
     if (!definition) {
       appLogger.warn(`Unknown error key: ${key}`)
-      error('GENERAL_ERROR', options)
+      emitError('GENERAL_ERROR', options)
       return
     }
 
@@ -88,7 +88,7 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
       const title = i18next.t(definition.titleKey)
       const description = i18next.t(definition.descriptionKey)
 
-      const bifoldError = new BifoldError(title, description, technicalMessage, definition.code)
+      const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
     }
@@ -116,13 +116,13 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    showAlert(title, description, actions, definition.alertEvent)
+    showAlert(title, description, actions, definition.appEvent)
   }, [])
 
   /**
    * Show native alert with title and body
    */
-  const alert = useCallback((title: string, body: string, options?: AlertOptions): void => {
+  const emitAlert = useCallback((title: string, body: string, options?: AlertOptions): void => {
     showAlert(title, body, options?.actions, options?.event)
   }, [])
 
@@ -135,12 +135,12 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
 
   const value: ErrorAlertContextType = useMemo(
     () => ({
-      error,
+      emitError,
       errorAsAlert,
-      alert,
+      emitAlert,
       dismiss,
     }),
-    [error, errorAsAlert, alert, dismiss]
+    [emitError, errorAsAlert, emitAlert, dismiss]
   )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
