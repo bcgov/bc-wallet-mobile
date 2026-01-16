@@ -182,7 +182,8 @@ export class FcmViewModel {
   private async handleGenericNotification(data: BasicNotification) {
     const { title, body } = data
 
-    // In BCWallet mode, the OS handles notifications when the app is in the background
+    // In BCWallet mode, the OS handles notifications when the
+    // app is in the background
     if (this.mode !== Mode.BCSC) {
       this.logger.info(
         '[FcmViewModel] Skipping local notification in BCWallet mode - OS handles background notifications'
