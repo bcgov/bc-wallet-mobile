@@ -542,10 +542,7 @@ export const useSecureActions = () => {
    */
   const addEvidenceType = useCallback(
     async (evidenceType: EvidenceType) => {
-      const updatedEvidence = [
-        ...store.bcscSecure.additionalEvidenceData,
-        { evidenceType, metadata: [], documentNumber: '' },
-      ]
+      const updatedEvidence = [...store.bcscSecure.additionalEvidenceData, { evidenceType, metadata: [] }]
 
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
