@@ -54,6 +54,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('city', value)}
         error={formErrors.city}
         subtext={t('BCSC.Address.CitySubtext')}
+        textInputProps={{ autoCorrect: false }}
       />
 
       <DropdownWithValidation
@@ -74,6 +75,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('postalCode', value)}
         error={formErrors.postalCode}
         subtext={t('BCSC.Address.PostalCodeSubtext')}
+        textInputProps={{ autoCorrect: false, autoCapitalize: 'characters' }}
       />
 
       <View style={{ marginTop: 48, width: '100%' }}>
