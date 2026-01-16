@@ -2,7 +2,6 @@ import { ErrorRegistry } from '@/errors'
 import { AppError } from '@/errors/appError'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { showAlert } from '@/utils/alert'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -25,15 +24,7 @@ declare module 'axios' {
   }
 }
 
-/**
- * Set of event codes that should trigger alerts in the BCSC client
- * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
- */
-const GLOBAL_ALERT_EVENT_CODES = new Set([
-  AppEventCode.UNSECURED_NETWORK,
-  AppEventCode.SERVER_TIMEOUT,
-  AppEventCode.SERVER_ERROR,
-])
+type OnErrorCallback = (appError: AppError) => void
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -72,8 +63,9 @@ class BCSCApiClient {
   baseURL: string
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
+  onError: OnErrorCallback
 
-  constructor(baseURL: string, logger: RemoteLogger) {
+  constructor(baseURL: string, logger: RemoteLogger, onError: OnErrorCallback) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -89,6 +81,7 @@ class BCSCApiClient {
     }
 
     this.tokensPromise = null
+    this.onError = onError
 
     // fallback config
     this.config = {
@@ -128,31 +121,26 @@ class BCSCApiClient {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, async (error: AxiosError) => {
+      // 1. Format the error - update the error.code and error.message properites
       error = formatIasAxiosResponseError(error)
+
+      // 2. Create AppError from the IAS error code
+      // TODO (MD): Replace SERVER_ERROR with a more generic API error ie: UNKNOWN_SERVER_ERROR
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.SERVER_ERROR
+      const simpleError = formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: __DEV__ }) // disable stack trace in development
+      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: simpleError })
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
 
-      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code)
-      const simpleError = formatIASAxiosErrorForLogger({
-        error: error,
-        suppressStackTrace: __DEV__, // disable stack trace in development
-      })
-      const appError = AppError.fromErrorDefinition(errorDefinition ?? ErrorRegistry.SERVER_ERROR, {
-        cause: simpleError,
-      })
-
-      // Show alert for specific matching error codes
-      if (errorDefinition && GLOBAL_ALERT_EVENT_CODES.has(errorDefinition.appEvent)) {
-        // TODO (MD): Inject alerting mechanism into client to avoid direct dependency
-        showAlert(appError.title, appError.description, undefined, appError.appEvent)
-      }
-
-      // Only log if the status code is not in the suppress list
+      // 3. Log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
-        appError.log(this.logger)
+        const simpleAppError = appError.toJSON()
+        this.logger.error(`[ApiClient] ${simpleAppError.message}`, simpleAppError.details)
       }
 
+      // 4. Invoke onError callback and reject promise
+      this.onError(appError)
       return Promise.reject(appError)
     })
   }
@@ -234,6 +222,7 @@ class BCSCApiClient {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
+    throw new AxiosError('test', AppEventCode.NO_TOKENS_RETURNED)
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
     // skip processing if skipBearerAuth is set in the config
@@ -296,6 +285,8 @@ class BCSCApiClient {
   /**
    * Fetches the first JWK from the server's JWKS endpoint.
    * Used for JWT signature verification.
+   *
+   * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
     try {

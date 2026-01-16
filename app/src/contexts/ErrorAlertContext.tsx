@@ -108,7 +108,7 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
    * Show error as native alert from an AppError instance
    */
   const emitErrorAlert = useCallback((error: AppError, options?: { actions?: AlertAction[] }) => {
-    showAlert(error.title, error.description, options?.actions, error.identity.appEvent)
+    showAlert(error.title, error.description, options?.actions, error.appEvent)
   }, [])
 
   /**

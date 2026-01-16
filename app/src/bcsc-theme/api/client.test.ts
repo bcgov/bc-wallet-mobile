@@ -6,7 +6,7 @@ describe('BCSC Client', () => {
     const mockOnError = jest.fn()
     const baseURL = 'https://example.com'
 
-    const client = new BCSCApiClient(baseURL, mockOnError, mockLogger as any)
+    const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
     const axiosGetSpy = jest.spyOn(client.client, 'get').mockRejectedValue({
       data: {
@@ -36,7 +36,7 @@ describe('BCSC Client', () => {
     const mockOnError = jest.fn()
     const baseURL = 'https://example.com'
 
-    const client = new BCSCApiClient(baseURL, mockOnError, mockLogger as any)
+    const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
     const axiosGetSpy = jest.spyOn(client.client, 'get')
 
@@ -64,7 +64,7 @@ describe('BCSC Client', () => {
       const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
 
-      const client = new BCSCApiClient(baseURL, mockOnError, mockLogger as any)
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       const mockPromise = new Promise((resolve) => {
         setTimeout(() => resolve('tokens'), 100)
@@ -83,7 +83,7 @@ describe('BCSC Client', () => {
       const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
 
-      const client = new BCSCApiClient(baseURL, mockOnError, mockLogger as any)
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       const mockTokens = {
         access_token: 'accessToken',
@@ -110,7 +110,7 @@ describe('BCSC Client', () => {
       const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
 
-      const client = new BCSCApiClient(baseURL, mockOnError, mockLogger as any)
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       jest.spyOn(client.client, 'get').mockResolvedValue({ data: 'response' })
 

@@ -1,6 +1,5 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { RemoteLogger } from '@bifold/remote-logs'
 import i18next from 'i18next'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
@@ -23,8 +22,6 @@ export class AppError extends Error {
   description: string // ie: Please check your network connection and try again.
   timestamp: string // ISO timestamp of when the error was created
 
-  private identity: ErrorIdentity // Structured identity of the error
-
   constructor(title: string, description: string, identity: ErrorIdentity, options?: ErrorOptions) {
     super(`${title}: ${description}`, options)
     this.name = this.constructor.name
@@ -33,7 +30,6 @@ export class AppError extends Error {
     this.title = title
     this.appEvent = identity.appEvent
     this.description = description
-    this.identity = identity
     this.timestamp = new Date().toISOString()
 
     // On creation, automatically track the error in analytics
@@ -61,16 +57,30 @@ export class AppError extends Error {
   }
 
   /**
-   * Log the error details, including code, message, timestamp, and cause if available.
+   * Type guard to check if an error is an AppError with a specific AppEventCode.
    *
-   * @param logger - The RemoteLogger instance to use for logging.
-   * @returns void
+   * @param error - The error to check.
+   * @param appEvent - The AppEventCode to match.
+   * @returns True if the error is an AppError with the specified AppEventCode, false otherwise.
    */
-  log(logger: RemoteLogger): void {
-    logger.error(this.message, {
-      code: this.code,
-      timestamp: this.timestamp,
-      cause: this.cause,
-    })
+  static isAppErrorWithEvent(error: unknown, appEvent: AppEventCode): error is AppError & { appEvent: AppEventCode } {
+    return error instanceof AppError && error.appEvent === appEvent
+  }
+
+  /**
+   * Serialize the AppError to a JSON object. Usefull for logging.
+   *
+   * @return An object containing the serialized error details.
+   */
+  toJSON() {
+    return {
+      message: this.message,
+      details: {
+        name: this.name,
+        code: this.code,
+        timestamp: this.timestamp,
+        cause: this.cause,
+      },
+    }
   }
 }
