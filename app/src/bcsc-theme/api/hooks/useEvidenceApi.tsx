@@ -3,7 +3,7 @@ import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
-import { createPreVerificationJWT } from 'react-native-bcsc-core'
+import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -59,25 +59,6 @@ export interface UploadEvidenceResponseData {
   upload_uri: string
 }
 
-export interface EvidenceImageSide {
-  image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
-  image_side_label: string
-  image_side_tip: string
-}
-
-export interface EvidenceType {
-  evidence_type: string
-  has_photo: boolean
-  group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
-  group_sort_order: number
-  sort_order: number
-  collection_order: 'FIRST' | 'SECOND' | 'BOTH'
-  document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
-  document_reference_label: string
-  document_reference_sample: string
-  image_sides: EvidenceImageSide[]
-  evidence_type_label: string
-}
 export interface EvidenceMetadataResponseData {
   processes: {
     process: 'IDIM L3 Remote Non-BCSC Identity Verification' | 'IDIM L3 Remote Non-photo BCSC Identity Verification'
@@ -86,7 +67,7 @@ export interface EvidenceMetadataResponseData {
 }
 export interface EvidenceMetadataPayload {
   type: string
-  number: string
+  number?: string
   images: VerificationPhotoUploadPayload[]
   barcodes?: {
     type: string

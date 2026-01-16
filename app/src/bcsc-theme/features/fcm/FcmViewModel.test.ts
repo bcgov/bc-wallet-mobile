@@ -1,6 +1,7 @@
 import { DeviceEventEmitter } from 'react-native'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
+import { Mode } from '../../../store'
 import { PairingService } from '../pairing'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmMessage, FcmService } from './services/fcm-service'
@@ -71,7 +72,7 @@ describe('FcmViewModel', () => {
     // Mock fetchJwk to return a test JWK
     mockFetchJwk.mockResolvedValue({ kty: 'RSA', n: 'test', e: 'AQAB' })
 
-    viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService)
+    viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService, Mode.BCSC)
   })
 
   describe('initialize', () => {
@@ -429,6 +430,50 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
       expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+    })
+  })
+
+  // TODO: Remove these tests when BCWallet mode is deprecated and only BCSC remains
+  describe('BCWallet mode - FCM service bypassed', () => {
+    let bcWalletFcmService: jest.Mocked<FcmService>
+
+    beforeEach(() => {
+      bcWalletFcmService = {
+        init: jest.fn(),
+        destroy: jest.fn(),
+        subscribe: jest.fn(),
+      } as unknown as jest.Mocked<FcmService>
+    })
+
+    it('does not initialize FCM service in BCWallet mode', () => {
+      const bcWalletViewModel = new FcmViewModel(
+        bcWalletFcmService,
+        mockLogger as any,
+        mockPairingService,
+        Mode.BCWallet
+      )
+
+      bcWalletViewModel.initialize()
+
+      expect(bcWalletFcmService.subscribe).not.toHaveBeenCalled()
+      expect(bcWalletFcmService.init).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping FCM initialization in BCWallet mode')
+      )
+    })
+
+    it('does not fetch JWK in BCWallet mode', async () => {
+      const bcWalletViewModel = new FcmViewModel(
+        bcWalletFcmService,
+        mockLogger as any,
+        mockPairingService,
+        Mode.BCWallet
+      )
+
+      bcWalletViewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      expect(mockFetchJwk).not.toHaveBeenCalled()
     })
   })
 })
