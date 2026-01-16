@@ -181,6 +181,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.CityLabel
             </Text>
             <TextInput
+              autoCorrect={false}
               onChange={[Function]}
               style={
                 [
@@ -389,6 +390,8 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeLabel
             </Text>
             <TextInput
+              autoCapitalize="characters"
+              autoCorrect={false}
               onChange={[Function]}
               style={
                 [

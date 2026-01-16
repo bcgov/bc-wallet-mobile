@@ -258,6 +258,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           onChange={(value) => handleChange('documentNumber', value)}
           error={formErrors.documentNumber}
           subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+          textInputProps={{ autoCorrect: false }}
         />
 
         {additionalEvidenceRequired ? (
