@@ -755,7 +755,7 @@ export interface EvidenceMetadata {
   /** Photo metadata array */
   metadata: PhotoMetadata[];
   /** Document number/reference */
-  documentNumber: string;
+  documentNumber?: string;
 }
 
 /**
