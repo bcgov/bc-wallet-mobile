@@ -360,6 +360,17 @@ const translation = {
       "AccountExpiryWarningDescription": {
         "ExpiringBannerTitle": "Expires in {{days}} days (FR)",
         "ExpiringBannerDescription": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)"
+      },
+      "AccountExpiryWarningAlert": {
+        "Title": "BC Services Card About to Expire (FR)",
+        "Message": "Your mobile card is about to expire, go here to request an extension (FR)",
+        "RenewalInfoButton": "Renewal Information (FR)"
+      },
+      "AccountExpiryAlert": {
+        "Title": "BC Services Card has expired (FR)",
+        "Message": "Your mobile card has expired, you'll need to remove your card and reverify to continue using the app. (FR)",
+        "RenewalInfoButton": "Renewal information (FR)",
+        "DismissButton": "Dismiss (FR)"
       }
     },
     "AccountExpired": {

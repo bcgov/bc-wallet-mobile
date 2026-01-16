@@ -64,7 +64,7 @@ export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrateg
             }
           ),
           type: 'warning',
-          varaint: 'summary',
+          variant: 'summary',
           dismissible: false,
         },
       ],

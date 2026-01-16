@@ -134,6 +134,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
             new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+            // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
             // new AccountExpiryWarningAlertSystemCheck(
             //   accountExpirationDate,
             //   Boolean(store.bcsc.hasDismissedExpiryAlert),

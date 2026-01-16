@@ -6,13 +6,10 @@ import moment from 'moment'
 import { isAccountExpired } from './AccountExpiryWarningBannerSystemCheck'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
-// This will display a warning alert to the user (only once)
-
 /**
  * Checks if the user's account is expiring soon (warning period) and display an alert.
  * The alert will appear while the expiration date is within the warning period, until it has been dismissed by the user.
- *
- *
+ * @warning This check isn't used currently as it is not part of v3 behavior. Finish implementation if needed in future.
  * @class AccountExpiryWarningAlertSystemCheck
  * @implements {SystemCheckStrategy}
  */
@@ -40,28 +37,22 @@ export class AccountExpiryWarningAlertSystemCheck implements SystemCheckStrategy
   }
 
   runCheck() {
-    let showAlert = false
-
     // Don't show alert if it has already been dismissed
     if (!this.hasDismissedAlert) {
-      showAlert = isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
+      return !isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
     }
 
-    return showAlert
+    return true
   }
 
   onFail() {
-    // Account is not expiring soon
-  }
-
-  onSuccess() {
-    // Account is expiring soon
+    // Account is expiring soon and alert hasn't been dismissed
     showAlert(
-      'BC Services Card About to Expire',
-      'Your mobile card is about to expire, go here to request an extension',
+      this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningAlert.Title'),
+      this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningAlert.Message'),
       [
         {
-          text: 'Rewnewal Information',
+          text: this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningAlert.RenewalInfoButton'),
           onPress: () => {
             // Dismissed alert, update store so it doesn't show again
             this.utils.dispatch({
@@ -74,5 +65,9 @@ export class AccountExpiryWarningAlertSystemCheck implements SystemCheckStrategy
         },
       ]
     )
+  }
+
+  onSuccess() {
+    // Do nothing, account is not expiring soon
   }
 }

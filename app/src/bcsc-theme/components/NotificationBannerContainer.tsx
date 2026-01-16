@@ -37,7 +37,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
     // Only dismiss the banner if it is marked as dismissable
-    if (message && message.dismissible) {
+    if (message?.dismissible) {
       // Default action: remove the banner permanently on press
       dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
     }

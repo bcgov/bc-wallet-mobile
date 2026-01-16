@@ -64,7 +64,7 @@ describe('AccountExpiryWarningBannerSystemCheck', () => {
             title: 'Expires in 30 days',
             description: 'Expires in 30 days',
             type: 'warning',
-            varaint: 'summary',
+            variant: 'summary',
             dismissible: false,
           },
         ],
