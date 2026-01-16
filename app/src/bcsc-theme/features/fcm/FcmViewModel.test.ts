@@ -1,6 +1,7 @@
 import { DeviceEventEmitter } from 'react-native'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
+import { Mode } from '../../../store'
 import { PairingService } from '../pairing'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmMessage, FcmService } from './services/fcm-service'
@@ -71,7 +72,7 @@ describe('FcmViewModel', () => {
     // Mock fetchJwk to return a test JWK
     mockFetchJwk.mockResolvedValue({ kty: 'RSA', n: 'test', e: 'AQAB' })
 
-    viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService)
+    viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService, Mode.BCSC)
   })
 
   describe('initialize', () => {
@@ -429,6 +430,69 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
       expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+    })
+  })
+
+  // TODO: Remove these tests when BCWallet mode is deprecated and only BCSC remains
+  describe('BCWallet mode - local notifications disabled', () => {
+    let bcWalletViewModel: FcmViewModel
+    let bcWalletMessageHandler: ((message: FcmMessage) => void) | null = null
+
+    beforeEach(async () => {
+      bcWalletMessageHandler = null
+      const bcWalletFcmService = {
+        init: jest.fn(),
+        destroy: jest.fn(),
+        subscribe: jest.fn((handler) => {
+          bcWalletMessageHandler = handler
+          return jest.fn()
+        }),
+      } as unknown as jest.Mocked<FcmService>
+
+      bcWalletViewModel = new FcmViewModel(bcWalletFcmService, mockLogger as any, mockPairingService, Mode.BCWallet)
+      bcWalletViewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    it('does not show local notification for generic notifications in BCWallet mode', async () => {
+      const message = {
+        type: 'notification',
+        data: { title: 'Hello', body: 'World' },
+      } as FcmMessage
+
+      await bcWalletMessageHandler?.(message)
+
+      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping local notification in BCWallet mode')
+      )
+    })
+
+    it('does not show local notification for status notifications in BCWallet mode', async () => {
+      const message = {
+        type: 'status',
+        data: { bcsc_status_notification: 'approved', title: 'Status', message: 'Done' },
+      } as FcmMessage
+
+      await bcWalletMessageHandler?.(message)
+
+      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping local notification in BCWallet mode')
+      )
+    })
+
+    it('still refreshes tokens for status notifications in BCWallet mode', async () => {
+      mockGetTokensForRefreshToken.mockResolvedValue({})
+
+      const message = {
+        type: 'status',
+        data: { bcsc_status_notification: 'approved', title: 'Status', message: 'Done' },
+      } as FcmMessage
+
+      await bcWalletMessageHandler?.(message)
+
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
     })
   })
 })
