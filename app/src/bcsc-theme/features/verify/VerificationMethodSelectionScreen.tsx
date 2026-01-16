@@ -87,7 +87,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     <ScreenWrapper padded={false}>
       {renderOption(primaryOption, 1)}
       <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}>
-        <ThemedText variant="headingThree">{headingText}</ThemedText>
+        <ThemedText variant="headingFour">{headingText}</ThemedText>
       </View>
       {remainingOptions.map((option, index) => {
         const borderBottomWidth = remainingOptions.length === index + 1 ? 1 : undefined
