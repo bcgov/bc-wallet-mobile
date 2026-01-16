@@ -1,10 +1,7 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { ErrorRegistry } from '@/errors'
-import { AppError } from '@/errors/appError'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useEffect, useMemo, useState } from 'react'
 import BCSCApiClient from '../api/client'
 import { isNetworkError } from '../utils/error-utils'
 
@@ -42,7 +39,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [store, dispatch] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
-  const { emitErrorAlert } = useErrorAlert()
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -50,25 +46,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     BCSC_API_CLIENT_SINGLETON = client
     setClient(client)
   }
-
-  /**
-   * Handle API errors emitted by the BCSCApiClient instance.
-   *
-   * @param {AppError} appError - The application error to handle.
-   * @returns void
-   */
-  const handleClientAppError = useCallback(
-    (appError: AppError) => {
-      switch (appError.identity.appEvent) {
-        case ErrorRegistry.NO_INTERNET.appEvent:
-          // noop: No internet errors are handled globally by the InternetDisconnected modal
-          break
-        default:
-          emitErrorAlert(appError)
-      }
-    },
-    [emitErrorAlert]
-  )
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
@@ -88,11 +65,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           !BCSC_API_CLIENT_SINGLETON ||
           BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
         ) {
-          newClient = new BCSCApiClient(
-            store.developer.environment.iasApiBaseUrl,
-            handleClientAppError,
-            logger as RemoteLogger
-          )
+          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
           await newClient.fetchEndpointsAndConfig()
 
           setClientAndSingleton(newClient)

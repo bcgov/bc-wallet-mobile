@@ -1,6 +1,8 @@
 import { ErrorRegistry } from '@/errors'
 import { AppError } from '@/errors/appError'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
+import { showAlert } from '@/utils/alert'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -22,6 +24,16 @@ declare module 'axios' {
     suppressStatusCodeLogs?: number[]
   }
 }
+
+/**
+ * Set of event codes that should trigger alerts in the BCSC client
+ * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
+ */
+const GLOBAL_ALERT_EVENT_CODES = new Set([
+  AppEventCode.UNSECURED_NETWORK,
+  AppEventCode.SERVER_TIMEOUT,
+  AppEventCode.SERVER_ERROR,
+])
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -52,19 +64,16 @@ interface BCSCEndpoints {
   account: string
 }
 
-type OnErrorFn = (error: AppError) => void | Promise<void>
-
 class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
-  onError: OnErrorFn
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
 
-  constructor(baseURL: string, onError: OnErrorFn, logger: RemoteLogger) {
+  constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -79,7 +88,6 @@ class BCSCApiClient {
       this.logger.error('BCSCApiClient initialized with empty URL.')
     }
 
-    this.onError = onError
     this.tokensPromise = null
 
     // fallback config
@@ -122,22 +130,28 @@ class BCSCApiClient {
     this.client.interceptors.response.use(undefined, async (error: AxiosError) => {
       error = formatIasAxiosResponseError(error)
 
-      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.SERVER_ERROR
+      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+      const statusCode = error.response?.status ?? 0
+
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code)
       const simpleError = formatIASAxiosErrorForLogger({
         error: error,
         suppressStackTrace: __DEV__, // disable stack trace in development
       })
-      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: simpleError })
+      const appError = AppError.fromErrorDefinition(errorDefinition ?? ErrorRegistry.SERVER_ERROR, {
+        cause: simpleError,
+      })
 
-      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
-      const statusCode = error.response?.status ?? 0
+      // Show alert for specific matching error codes
+      if (errorDefinition && GLOBAL_ALERT_EVENT_CODES.has(errorDefinition.appEvent)) {
+        // TODO (MD): Inject alerting mechanism into client to avoid direct dependency
+        showAlert(appError.title, appError.description, undefined, appError.appEvent)
+      }
 
       // Only log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
         appError.log(this.logger)
       }
-
-      await this.onError(appError)
 
       return Promise.reject(appError)
     })

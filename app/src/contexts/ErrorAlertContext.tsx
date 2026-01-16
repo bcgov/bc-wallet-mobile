@@ -1,7 +1,7 @@
 import { extractErrorMessage } from '@/errors'
 import { AppError } from '@/errors/appError'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
-import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
+import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
@@ -83,20 +83,18 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
       return
     }
 
-    const { error: originalError, showModal = (definition as ErrorDefinition).showModal ?? true, context } = options
+    const { error: originalError, context } = options
     const technicalMessage = extractErrorMessage(originalError)
 
     logError(key, definition, technicalMessage, context)
 
-    if (showModal) {
-      // Use i18next.t() directly to ensure translations are always current
-      const title = i18next.t(definition.titleKey)
-      const description = i18next.t(definition.descriptionKey)
+    // Use i18next.t() directly to ensure translations are always current
+    const title = i18next.t(definition.titleKey)
+    const description = i18next.t(definition.descriptionKey)
 
-      const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
-    }
+    const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
+    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
+    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
   }, [])
 
   /**

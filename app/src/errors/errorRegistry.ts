@@ -38,7 +38,7 @@ export enum ErrorCategory {
 export interface ErrorDefinition {
   /** Unique error status code (for support reference) */
   statusCode: number
-  /** App event statusCode */
+  /** App event code */
   appEvent: AppEventCode
   /** i18n key for title */
   titleKey: string
@@ -48,8 +48,6 @@ export interface ErrorDefinition {
   severity: ErrorSeverity
   /** Error category */
   category: ErrorCategory
-  /** Whether to show modal to user (default: true) */
-  showModal?: boolean
 }
 
 /**

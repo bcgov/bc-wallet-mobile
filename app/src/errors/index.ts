@@ -35,6 +35,9 @@
  * ```
  */
 
+// AppError class
+export { AppError } from './appError'
+
 // Error registry and types
 export {
   ErrorCategory,

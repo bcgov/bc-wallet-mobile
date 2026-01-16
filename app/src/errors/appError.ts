@@ -19,9 +19,11 @@ type ErrorIdentity = {
 export class AppError extends Error {
   code: string // ie: network.err_no_internet.2100
   title: string // ie: No Internet
+  appEvent: AppEventCode // ie: no_internet
   description: string // ie: Please check your network connection and try again.
   timestamp: string // ISO timestamp of when the error was created
-  identity: ErrorIdentity // Structured identity of the error
+
+  private identity: ErrorIdentity // Structured identity of the error
 
   constructor(title: string, description: string, identity: ErrorIdentity, options?: ErrorOptions) {
     super(`${title}: ${description}`, options)
@@ -29,6 +31,7 @@ export class AppError extends Error {
 
     this.code = `${identity.category}.${identity.appEvent}.${identity.statusCode}` // ie: network.err_no_internet.2100
     this.title = title
+    this.appEvent = identity.appEvent
     this.description = description
     this.identity = identity
     this.timestamp = new Date().toISOString()
