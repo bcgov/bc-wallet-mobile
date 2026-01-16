@@ -30,7 +30,6 @@ export class FcmViewModel {
    * @param logger - Logger instance
    * @param pairingService - Service for handling pairing requests
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
-   *               TODO: Remove mode parameter when BCWallet mode is deprecated and only BCSC remains.
    */
   constructor(
     private readonly fcmService: FcmService,
@@ -46,8 +45,8 @@ export class FcmViewModel {
     }
     this.initialized = true
 
-    // TODO: Remove mode check when BCWallet mode is deprecated and only BCSC remains
-    // In BCWallet mode, we don't process FCM messages - the OS handles notifications
+    // Early return in BCWallet mode, we don't process FCM
+    // messages the OS handles notifications
     if (this.mode !== Mode.BCSC) {
       this.logger.info('[FcmViewModel] Skipping FCM initialization in BCWallet mode - OS handles notifications')
       return

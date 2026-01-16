@@ -45,7 +45,6 @@ initLanguages(localization)
 // All platform interactions happen in initialize() methods
 const pairingService = new PairingService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
-// TODO(JL): Remove mode parameter when BCWallet mode is deprecated and only BCSC remains
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
 const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, appMode)
 
