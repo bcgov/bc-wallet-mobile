@@ -95,6 +95,7 @@ export class FcmService {
 
   private readonly handlers = new Set<FcmMessageHandler>()
   private foregroundSubscription?: () => void
+  private notificationOpenedSubscription?: () => void
   private initialized = false
 
   public async init(): Promise<void> {
@@ -107,6 +108,17 @@ export class FcmService {
     this.foregroundSubscription = messaging().onMessage((remoteMessage) => {
       this.emit(remoteMessage)
     })
+
+    // Handle when user taps notification while app is in background
+    this.notificationOpenedSubscription = messaging().onNotificationOpenedApp((remoteMessage) => {
+      this.emit(remoteMessage)
+    })
+
+    // Handle when app was killed and user taps notification to launch it
+    const initialNotification = await messaging().getInitialNotification()
+    if (initialNotification) {
+      this.emit(initialNotification)
+    }
 
     // Note: background messages (including potential challenge data) are intentionally
     // not processed here. The OS notification system delivers them to the user and
@@ -121,6 +133,8 @@ export class FcmService {
   public destroy(): void {
     this.foregroundSubscription?.()
     this.foregroundSubscription = undefined
+    this.notificationOpenedSubscription?.()
+    this.notificationOpenedSubscription = undefined
     this.initialized = false
     this.handlers.clear()
   }

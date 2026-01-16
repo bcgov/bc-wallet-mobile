@@ -79,16 +79,16 @@ interface AttestationProofRequestFormat {
 
 // Error codes from the central error registry for consistent tracking
 const AttestationErrorCodes = {
-  BadInvitation: getErrorDefinition('ATTESTATION_BAD_INVITATION').code,
-  ReceiveInvitationError: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
-  GeneralProofError: getErrorDefinition('ATTESTATION_GENERAL_PROOF_ERROR').code,
-  FailedToConnectToAttestationAgent: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').code,
-  FailedToFetchNonceForAttestation: getErrorDefinition('ATTESTATION_NONCE_ERROR').code,
-  FailedToGenerateAttestation: getErrorDefinition('ATTESTATION_GENERATION_ERROR').code,
-  FailedToRequestAttestation: getErrorDefinition('ATTESTATION_REQUEST_ERROR').code,
-  FailedToValidateAttestation: getErrorDefinition('ATTESTATION_VALIDATION_ERROR').code,
-  IntegrityUnavailable: getErrorDefinition('ATTESTATION_INTEGRITY_UNAVAILABLE').code,
-  UnsupportedPlatform: getErrorDefinition('ATTESTATION_UNSUPPORTED_PLATFORM').code,
+  BadInvitation: getErrorDefinition('ATTESTATION_BAD_INVITATION').statusCode,
+  ReceiveInvitationError: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').statusCode,
+  GeneralProofError: getErrorDefinition('ATTESTATION_GENERAL_PROOF_ERROR').statusCode,
+  FailedToConnectToAttestationAgent: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').statusCode,
+  FailedToFetchNonceForAttestation: getErrorDefinition('ATTESTATION_NONCE_ERROR').statusCode,
+  FailedToGenerateAttestation: getErrorDefinition('ATTESTATION_GENERATION_ERROR').statusCode,
+  FailedToRequestAttestation: getErrorDefinition('ATTESTATION_REQUEST_ERROR').statusCode,
+  FailedToValidateAttestation: getErrorDefinition('ATTESTATION_VALIDATION_ERROR').statusCode,
+  IntegrityUnavailable: getErrorDefinition('ATTESTATION_INTEGRITY_UNAVAILABLE').statusCode,
+  UnsupportedPlatform: getErrorDefinition('ATTESTATION_UNSUPPORTED_PLATFORM').statusCode,
 } as const
 
 type Restriction = {

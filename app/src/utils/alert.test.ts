@@ -1,4 +1,4 @@
-import { AlertEvent } from '@/events/alertEvents'
+import { AppEventCode } from '@/events/appEventCode'
 import { showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import i18n from 'i18next'
@@ -45,7 +45,7 @@ describe('showAlert', () => {
     const onPressMock = jest.fn()
     const alertActionAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertActionEvent')
 
-    showAlert('Title', 'Body', [{ text: 'Confirm', onPress: onPressMock }], 'test_event' as AlertEvent)
+    showAlert('Title', 'Body', [{ text: 'Confirm', onPress: onPressMock }], 'test_event' as AppEventCode)
 
     // Simulate button press
     const alertButtons = alertSpy.mock.calls[0][2]
@@ -59,7 +59,7 @@ describe('showAlert', () => {
     const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation()
     const alertDisplayAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertDisplayEvent')
 
-    showAlert('Title', 'Body', undefined, 'test_event' as AlertEvent)
+    showAlert('Title', 'Body', undefined, 'test_event' as AppEventCode)
 
     expect(alertSpy).toHaveBeenCalled()
     expect(alertDisplayAnalyticsSpy).toHaveBeenCalledWith('test_event')

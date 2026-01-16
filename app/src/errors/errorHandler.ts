@@ -1,6 +1,6 @@
 import i18next from 'i18next'
 
-import { AlertInteractionEvent } from '../events/alertEvents'
+import { AlertInteractionEvent } from '../events/appEventCode'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 
@@ -36,17 +36,17 @@ export function extractErrorMessage(error: unknown): string {
 export function trackErrorInAnalytics(definition: ErrorDefinition, interactionType: AlertInteractionEvent): void {
   // Track the error event
   Analytics.trackErrorEvent({
-    code: String(definition.code),
-    message: definition.alertEvent,
+    code: String(definition.statusCode),
+    message: definition.appEvent,
   })
 
   // Track the alert display event
   if (interactionType === AlertInteractionEvent.ALERT_DISPLAY) {
-    Analytics.trackAlertDisplayEvent(definition.alertEvent)
+    Analytics.trackAlertDisplayEvent(definition.appEvent)
   }
 
-  appLogger.debug(`Analytics: ${interactionType} - ${definition.alertEvent}`, {
-    code: definition.code,
+  appLogger.debug(`Analytics: ${interactionType} - ${definition.appEvent}`, {
+    code: definition.statusCode,
     category: definition.category,
     severity: definition.severity,
   })
@@ -72,7 +72,7 @@ export function logError(
   const description = i18next.t(definition.descriptionKey)
 
   appLogger.error(`[${errorKey}] ${title}: ${description}`, {
-    code: definition.code,
+    code: definition.statusCode,
     category: definition.category,
     severity: definition.severity,
     technicalMessage,

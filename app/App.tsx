@@ -57,7 +57,8 @@ setIssuer(issuer)
 // All platform interactions happen in initialize() methods
 const pairingService = new PairingService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
-const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService)
+const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, appMode)
 
 const App = () => {
   const { t } = useTranslation()

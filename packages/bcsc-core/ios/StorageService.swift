@@ -135,7 +135,7 @@ class StorageService {
   ) -> T? { // Added file parameter
     do {
       guard let accountID = self.currentAccountID else {
-        logger.error("currentAccountID is nil. Cannot read data.")
+        logger.error("readData: currentAccountID is nil. Cannot read data for file: \(file.rawValue)")
         return nil
       }
       let rootDirectoryURL = try FileManager.default.url(
@@ -186,7 +186,7 @@ class StorageService {
     do {
       // Get the current account ID first
       guard let accountID = self.currentAccountID else {
-        logger.error("currentAccountID is nil. Cannot write data.")
+        logger.error("writeData: currentAccountID is nil. Cannot write data for file: \(file.rawValue)")
         return false
       }
 
@@ -212,7 +212,7 @@ class StorageService {
       logger.log("Successfully wrote data to file: \(fileUrl.path)")
       return true
     } catch {
-      logger.error("Error writing data: \(error)")
+      logger.error("writeData: Error writing data for file \(file.rawValue): \(error)")
       return false
     }
   }
@@ -317,8 +317,9 @@ class StorageService {
 
     // Prepare the object for archiving
     let objectToArchive: Any
-    if T.self != NSDictionary.self {
-      // Wrap the object in a dictionary with provider key (reverse of decode logic)
+    if !isFoundationCollectionType {
+      // Wrap custom objects in a dictionary with provider key (reverse of decode logic)
+      // Foundation collection types (NSArray, NSDictionary) don't need wrapping
       objectToArchive = [provider: object]
     } else {
       objectToArchive = object

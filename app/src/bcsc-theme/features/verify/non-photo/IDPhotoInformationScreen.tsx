@@ -1,4 +1,3 @@
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
@@ -6,6 +5,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme 
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
+import { EvidenceType } from 'react-native-bcsc-core'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IDPhotoInformation>
