@@ -4,6 +4,7 @@ import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
+import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { PairingService } from '../pairing'
 
@@ -24,10 +25,18 @@ export class FcmViewModel {
   private lastJwkBaseUrl: string | null = null
   private initialized = false
 
+  /**
+   * @param fcmService - Firebase Cloud Messaging service
+   * @param logger - Logger instance
+   * @param pairingService - Service for handling pairing requests
+   * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
+   *               TODO: Remove mode parameter when BCWallet mode is deprecated and only BCSC remains.
+   */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService
+    private readonly pairingService: PairingService,
+    private readonly mode: Mode = Mode.BCSC
   ) {}
 
   public initialize() {
@@ -124,12 +133,19 @@ export class FcmViewModel {
 
     const { title, message } = data
 
-    // Show local notification if we have title and message
+    // Show local notification if we have title and message (BCSC mode only)
+    // In BCWallet mode, the OS handles notifications when the app is in the background
     if (title && message) {
-      try {
-        await showLocalNotification(title, message)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+      if (this.mode === Mode.BCSC) {
+        try {
+          await showLocalNotification(title, message)
+        } catch (error) {
+          this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+        }
+      } else {
+        this.logger.info(
+          '[FcmViewModel] Skipping local notification in BCWallet mode - OS handles background notifications'
+        )
       }
     } else {
       this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
@@ -165,6 +181,14 @@ export class FcmViewModel {
 
   private async handleGenericNotification(data: BasicNotification) {
     const { title, body } = data
+
+    // In BCWallet mode, the OS handles notifications when the app is in the background
+    if (this.mode !== Mode.BCSC) {
+      this.logger.info(
+        '[FcmViewModel] Skipping local notification in BCWallet mode - OS handles background notifications'
+      )
+      return
+    }
 
     this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
     try {
