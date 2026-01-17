@@ -1,30 +1,17 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import BCSCApiClient from '../api/client'
-import { BCSCScreens } from '../types/navigators'
+import BCSCApiClient, { BCSCEndpoints } from '../api/client'
+import { CLIENT_ERROR_HANDLING_POLICIES } from '../api/clientErrorHandlers'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
-
-/**
- * Set of event codes that should trigger alerts in the BCSC client
- * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
- */
-const GLOBAL_ALERT_EVENT_CODES = new Set([
-  //AppEventCode.NO_INTERNET, // Handled explicitly in the InternetDisconnected modal
-  AppEventCode.UNSECURED_NETWORK,
-  AppEventCode.SERVER_TIMEOUT,
-  AppEventCode.SERVER_ERROR,
-  AppEventCode.TOO_MANY_ATTEMPTS, // QUESTION (MD): Should this be alerted globally?
-])
 
 /**
  * Returns the current BCSCApiClient singleton instance.
@@ -67,40 +54,52 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     setClient(client)
   }
 
+  // NOTE (MD): Decide if one large handler is better than explictly handling errors in each API call
+  // would need to handle errors based on the endpoint and the AppEventCode. Possibly a hook
+  // that returns an error handler.
   const handleClientError = useCallback(
-    (error: AppError) => {
-      if (GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)) {
-        return emitErrorAlert(error)
+    (error: AppError, endpoint: string, apiEndpoints: BCSCEndpoints) => {
+      const policy = CLIENT_ERROR_HANDLING_POLICIES.find((policy) => policy.matches(error, { endpoint, apiEndpoints }))
+
+      if (!policy) {
+        logger.info('No error handling policy')
+        return
       }
 
-      /**
-       * Special case: No tokens returned.
-       *
-       * The refresh token request is made internally by the BCSC client and bypasses
-       * our normal API hooks. So handling alert emission here.
-       */
-      if (error.appEvent === AppEventCode.NO_TOKENS_RETURNED) {
-        return emitErrorAlert(error, {
-          actions: [
-            {
-              text: t('Alerts.Actions.Close'),
-              style: 'cancel',
-              onPress: () => {
-                // noop
-              },
-            },
-            {
-              text: t('Alerts.Actions.RemoveAccount'),
-              style: 'destructive',
-              onPress: () => {
-                navigation.navigate(BCSCScreens.RemoveAccountConfirmation as never)
-              },
-            },
-          ],
-        })
-      }
+      policy.handle(error, { emitErrorAlert, navigation, translate: t })
+
+      // if (GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)) {
+      //   return emitErrorAlert(error)
+      // }
+      //
+      // /**
+      //  * Special case: No tokens returned.
+      //  *
+      //  * The refresh token request is made internally by the BCSC client and bypasses
+      //  * our normal API hooks. So handling alert emission here.
+      //  */
+      // if (error.appEvent === AppEventCode.NO_TOKENS_RETURNED) {
+      //   return emitErrorAlert(error, {
+      //     actions: [
+      //       {
+      //         text: t('Alerts.Actions.Close'),
+      //         style: 'cancel',
+      //         onPress: () => {
+      //           // noop
+      //         },
+      //       },
+      //       {
+      //         text: t('Alerts.Actions.RemoveAccount'),
+      //         style: 'destructive',
+      //         onPress: () => {
+      //           navigation.navigate(BCSCScreens.RemoveAccountConfirmation as never)
+      //         },
+      //       },
+      //     ],
+      //   })
+      // }
     },
-    [emitErrorAlert, navigation, t]
+    [emitErrorAlert, logger, navigation, t]
   )
 
   useEffect(() => {

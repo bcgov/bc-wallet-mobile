@@ -34,7 +34,7 @@ interface BCSCConfig {
   attestationTimeToLive: number
 }
 
-interface BCSCEndpoints {
+export interface BCSCEndpoints {
   attestation: string
   issuer: string
   authorization: string
@@ -125,8 +125,7 @@ class BCSCApiClient {
 
       // 2. Create AppError from the IAS error code
       const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
-      const simpleError = formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: __DEV__ }) // disable stack trace in development
-      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: simpleError })
+      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
@@ -134,7 +133,10 @@ class BCSCApiClient {
       // 3. Log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
         const simpleAppError = appError.toJSON()
-        this.logger.error(`[ApiClient] ${simpleAppError.message}`, simpleAppError.details)
+        this.logger.error(`[ApiClient] ${simpleAppError.message}`, {
+          ...simpleAppError.details,
+          cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
+        })
       }
 
       // 4. Invoke onError callback and reject promise

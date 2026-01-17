@@ -45,7 +45,7 @@ export interface ErrorAlertContextType {
   /**
    * Show error as native alert from an AppError instance
    */
-  emitErrorAlert: (error: AppError, options?: ErrorAlertOptions) => void
+  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
 
   /**
    * Dismiss the currently displayed error modal
