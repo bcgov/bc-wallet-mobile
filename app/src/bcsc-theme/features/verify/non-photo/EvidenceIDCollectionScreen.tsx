@@ -1,4 +1,3 @@
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -19,7 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, View } from 'react-native'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import DatePicker from 'react-native-date-picker'
 
 type EvidenceCollectionFormState = {
@@ -259,6 +258,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           onChange={(value) => handleChange('documentNumber', value)}
           error={formErrors.documentNumber}
           subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+          textInputProps={{ autoCorrect: false }}
         />
 
         {additionalEvidenceRequired ? (
