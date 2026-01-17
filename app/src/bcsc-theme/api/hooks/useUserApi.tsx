@@ -20,8 +20,8 @@ export interface UserInfoResponseData {
   card_type: any
   /**
    * Backend team clarification:
+   * This value is **NOT** the physical card expiration date.
    * This value represent the "app expiry date" or "app instance expiration date".
-   * This value **is** independent from the physical card expiration date.
    * Workflows that deal with account expiration or renewal should use this value.
    *
    * Note: Backend team might add additional field: `app_expiry`, which would represent the same value.

@@ -227,6 +227,15 @@ export const deleteToken = async (tokenType: TokenType): Promise<boolean> => {
 };
 
 /**
+ * Sets the issuer in the file system for later reference.
+ * @param issuer The issuer string to set.
+ * @returns A promise that resolves to true if the issuer was set successfully.
+ */
+export const setIssuer = (issuer: string): Promise<boolean> => {
+  return BcscCore.setIssuer(issuer);
+};
+
+/**
  * Sets the current account information.
  * @param account The Account object to set as the current account (without id, which will be generated).
  * @returns A promise that resolves when the account has been successfully set.

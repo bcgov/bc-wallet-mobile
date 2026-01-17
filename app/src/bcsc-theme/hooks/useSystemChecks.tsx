@@ -1,7 +1,7 @@
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useEventListener } from '@/hooks/useEventListener'
-import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
@@ -54,7 +54,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const accountContext = useContext(BCSCAccountContext)
 
   const accountExpirationDate = accountContext?.account?.account_expiration_date
-
   // Internet connectivity event listener
   useEventListener(() => {
     return NetInfo.addEventListener(async (netInfo) => {
@@ -131,11 +130,18 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
           const updateRegistration = () =>
             registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
-
           const startupChecks: SystemCheckStrategy[] = [
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpirySystemCheck(accountExpirationDate, utils),
+            new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+            // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
+            // new AccountExpiryWarningAlertSystemCheck(
+            //   accountExpirationDate,
+            //   Boolean(store.bcsc.hasDismissedExpiryAlert),
+            //   utils,
+            //   navigation
+            // ),
+            // new AccountExpiryAlertSystemCheck(accountExpirationDate, navigation),
           ]
 
           // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)

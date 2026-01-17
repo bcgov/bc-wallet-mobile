@@ -264,6 +264,7 @@ const MainStack: React.FC = () => {
             headerShown: true,
             // This screen has its own banner inside the screen component
             header: createHeaderWithoutBanner,
+            headerLeft: () => null,
           })}
         />
         <Stack.Screen

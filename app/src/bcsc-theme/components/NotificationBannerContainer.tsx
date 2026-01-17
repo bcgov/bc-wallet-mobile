@@ -1,8 +1,11 @@
 import { BCDispatchAction, BCState } from '@/store'
 import { SafeAreaModal, useStore } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
+import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
 import { AppBanner, BCSCBanner } from './AppBanner'
 
 interface NotificationBannerContainerProps {
@@ -19,6 +22,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
   const [store, dispatch] = useStore<BCState>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
   const handleBannerPress = (bannerId: BCSCBanner): void => {
     // Handle other banner types as needed
@@ -27,8 +31,16 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
       return setDevicesModalVisible(true)
     }
 
-    // Default action: remove the banner permanently on press
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
+    if (bannerId === BCSCBanner.ACCOUNT_EXPIRING_SOON) {
+      navigation.navigate(BCSCScreens.AccountRenewalInformation)
+    }
+
+    const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
+    // Only dismiss the banner if it is marked as dismissable
+    if (message?.dismissible) {
+      // Default action: remove the banner permanently on press
+      dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
+    }
   }
 
   const handleCloseDevicesModal = useCallback(({ shouldAnimate }: { shouldAnimate: boolean }) => {
@@ -56,6 +68,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
         messages={store.bcsc.bannerMessages.map((banner) => ({
           id: banner.id,
           title: banner.title,
+          description: banner.description,
           type: banner.type,
           dismissible: banner.dismissible,
           onPress: () => handleBannerPress(banner.id),
