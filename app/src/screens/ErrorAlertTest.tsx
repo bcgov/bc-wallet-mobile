@@ -1,6 +1,11 @@
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { Button, ButtonType, ScreenWrapper, useTheme } from '@bifold/core'
+import { AxiosError } from 'axios'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -13,6 +18,8 @@ interface ErrorAlertTestProps {
 const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
+  const client = useBCSCApiClient()
+  const api = useApi()
   const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
 
   const styles = StyleSheet.create({
@@ -89,6 +96,18 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     { title: 'Rate BC Wallet', body: 'Would you like to rate the app in the store?' },
   ]
 
+  const serverErrorCodeAlertCallbacks = {
+    // should not render alert (InternetDisconnectedModal)
+    no_internet: () => injectErrorCodeIntoAxiosResponse(client, 'no_internet'),
+    unsecured_network: () => injectErrorCodeIntoAxiosResponse(client, 'unsecured_network'),
+    server_timeout: () => injectErrorCodeIntoAxiosResponse(client, 'server_timeout'),
+    server_error: () => injectErrorCodeIntoAxiosResponse(client, 'server_error'),
+    // Must have verification request in progress
+    ios_app_update_required: () => api.evidence.getVerificationRequestStatus(''),
+    // Navigation must be mounted
+    no_tokens_returned: () => injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned'),
+  }
+
   const getCategoryIcon = (category: ErrorCategory): string => {
     const icons: Record<ErrorCategory, string> = {
       [ErrorCategory.CAMERA]: 'camera-alt',
@@ -115,7 +134,9 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerErrorAsAlert = (key: ErrorRegistryKey) => {
-    errorAsAlert(key, {
+    const definition = ErrorRegistry[key]
+    const error = AppError.fromErrorDefinition(definition)
+    emitErrorAlert(error, {
       error: new Error(`Test alert triggered for: ${key}`),
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
@@ -124,12 +145,23 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     })
   }
 
+  const injectErrorCodeIntoAxiosResponse = async (client: BCSCApiClient, errorCode: string) => {
+    client.client.interceptors.request.use((config) => {
+      throw new AxiosError('Injected error message', errorCode, config)
+    })
+    try {
+      await client.get('/test')
+    } catch (error) {
+      // Intentionally empty - error alert is handled by the client interceptor
+    }
+  }
+
   const triggerAlert = (title: string, body: string) => {
     emitAlert(title, body, { actions: [{ text: t('Global.Okay'), style: 'default' }] })
   }
 
   return (
-    <ScreenWrapper padded={false} scrollable={false}>
+    <ScreenWrapper scrollable={false} edges={['top']}>
       <View style={styles.header}>
         <Icon
           name="arrow-back"
@@ -167,6 +199,22 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               </View>
             )
           })}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Server error codes'}</Text>
+          <Text style={styles.description}>{'Known error codes from IAS'}</Text>
+          {Object.keys(serverErrorCodeAlertCallbacks).map((errorCode) => (
+            <View key={errorCode} style={styles.buttonRow}>
+              <Button
+                title={errorCode}
+                accessibilityLabel={`Trigger API error code ${errorCode}`}
+                testID={`api-error-${errorCode}`}
+                buttonType={ButtonType.Secondary}
+                onPress={() => serverErrorCodeAlertCallbacks[errorCode as keyof typeof serverErrorCodeAlertCallbacks]()}
+              />
+            </View>
+          ))}
         </View>
 
         {/* Error as Native Alert Section */}

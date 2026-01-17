@@ -1,7 +1,6 @@
 import { ErrorRegistry } from '@/errors'
 import { AppError } from '@/errors/appError'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
-import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -120,13 +119,12 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, async (error: AxiosError) => {
-      // 1. Format the error - update the error.code and error.message properites
-      error = formatIasAxiosResponseError(error)
+    this.client.interceptors.response.use(undefined, async (_error: AxiosError) => {
+      // 1. Format the error - update error code and message properties from IAS response
+      const error = formatIasAxiosResponseError(_error)
 
       // 2. Create AppError from the IAS error code
-      // TODO (MD): Replace SERVER_ERROR with a more generic API error ie: UNKNOWN_SERVER_ERROR
-      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.SERVER_ERROR
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
       const simpleError = formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: __DEV__ }) // disable stack trace in development
       const appError = AppError.fromErrorDefinition(errorDefinition, { cause: simpleError })
 
@@ -222,7 +220,6 @@ class BCSCApiClient {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    throw new AxiosError('test', AppEventCode.NO_TOKENS_RETURNED)
     this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
     // skip processing if skipBearerAuth is set in the config

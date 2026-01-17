@@ -939,6 +939,7 @@ const translation = {
       "Title": "Connection Error",
       "NoInternet": "No internet connection. Please check your network settings and try again.",
       "ServerError": "A server error occurred. Please try again later.",
+      "UnknownServerError": "An unknown server error occurred. Please try again later.",
       "Timeout": "The request timed out. Please check your connection and try again.",
       "Unsecured": "You are connected to an unsecured network. Please connect to a secure network.",
       "ConnectionProblem": "There was a problem with the connection. Please try again.",
