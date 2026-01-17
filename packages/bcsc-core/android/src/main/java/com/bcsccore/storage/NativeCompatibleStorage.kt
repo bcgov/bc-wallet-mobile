@@ -30,7 +30,9 @@ class NativeCompatibleStorage(
         private const val TAG = "NativeCompatibleStorage"
         private const val ACCOUNTS_FILENAME = "accounts"
         private const val TOKENS_FILENAME = "tokens"
+        private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
+        private const val DEFAULT_ISSUER = "prod"
     }
 
     private val encryption: Encryption by lazy {
@@ -45,6 +47,11 @@ class NativeCompatibleStorage(
     }
 
     // MARK: - Issuer Name Resolution
+
+    fun saveIssuerToFile(issuer: String): Boolean {
+        val file = File(context.filesDir, ISSUER_FILENAME)
+        return writeEncryptedFile(file, issuer)
+    }
 
     /**
      * Gets the issuer name from an issuer URL.
@@ -79,52 +86,30 @@ class NativeCompatibleStorage(
             if (startIndex > 0 && endIndex > startIndex) {
                 issuer.substring(startIndex, endIndex)
             } else {
-                "sit" // Default fallback
+                DEFAULT_ISSUER // Default fallback
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'sit'")
-            "sit"
+            Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'prod'")
+            DEFAULT_ISSUER
         }
     }
 
     /**
-     * Gets the default issuer name based on package name.
-     * Used when no issuer is available yet.
+     * Gets the current isser name by reading the issuer file.
      */
     fun getDefaultIssuerName(): String {
-        val issuerName = getCurrentIssuerName()
+        val issuerFile = File(context.filesDir, ISSUER_FILENAME)
+        val issuer = readEncryptedFile(issuerFile)
 
-        if (issuerName != null) {
-            return issuerName
+        if (issuer != null) {
+            return getIssuerNameFromIssuer(issuer)
         }
 
-        return when (context.packageName) {
-            "ca.bc.gov.id.servicescard" -> "prod"
-            "ca.bc.gov.id.servicescard.dev" -> "sit"
-            "ca.bc.gov.id.servicescard.qa" -> "qa"
-            "ca.bc.gov.id.servicescard.test" -> "test"
-            else -> "sit"
-        }
+        Log.w(TAG, "Issuer file not found or unreadable, defaulting to '$DEFAULT_ISSUER'")
+        return DEFAULT_ISSUER
     }
 
     // MARK: - File Path Helpers
-
-    /**
-     * Attempts to determine the current issuer name by checking existing issuer directories.
-     * Returns the most recently modified known issuer directory name, or null if none found.
-     */
-    private fun getCurrentIssuerName(): String? {
-        val issuerDirs =
-            context.filesDir
-                .listFiles(File::isDirectory)
-                ?.sortedByDescending { it.lastModified() }
-                ?: return null
-        val knownIssuers = listOf("prod", "sit", "qa", "dev", "dev2", "preprod", "test")
-
-        return knownIssuers.firstOrNull { name ->
-            issuerDirs.any { it.name == name }
-        }
-    }
 
     private fun getAccountsFile(issuerName: String): File {
         val path = issuerName + File.separator + ACCOUNTS_FILENAME

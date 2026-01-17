@@ -255,7 +255,7 @@ export const BCDispatchAction = {
   ...ModeDispatchAction,
 }
 
-const getInitialEnvironment = (): IASEnvironment => {
+export const getInitialEnvironment = (): IASEnvironment => {
   if (__DEV__ && Config.BUILD_TARGET === Mode.BCSC) {
     return IASEnvironment.SIT
   }

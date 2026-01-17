@@ -6,7 +6,7 @@ import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
-import { initialState, Mode, reducer } from '@/store'
+import { getInitialEnvironment, initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
 import { appLogger } from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
@@ -29,17 +29,29 @@ import {
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { setIssuer } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
-
-import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { AppContainer } from './container-imp'
 
+const issuer = getInitialEnvironment().iasApiBaseUrl
+
 initLanguages(localization)
+setIssuer(issuer)
+  .then((success) => {
+    appLogger.info('[BCSCCore] initializing issuer:', {
+      issuer: issuer,
+      success: success,
+    })
+  })
+  .catch((error) => {
+    appLogger.error('[BCSCCore] Error setting issuer', error as Error)
+  })
 
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods

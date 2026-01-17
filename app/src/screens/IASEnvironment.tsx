@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useCallback } from 'react'
+import { setIssuer } from 'react-native-bcsc-core'
 import { BCDispatchAction, BCState, IASEnvironment } from '../store'
 import EnvironmentSelector from './EnvironmentSelector'
 
@@ -35,6 +36,13 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         dispatch({
           type: BCDispatchAction.UPDATE_ENVIRONMENT,
           payload: [environment],
+        })
+
+        const success = await setIssuer(environment.iasApiBaseUrl)
+
+        logger.info('[BCSCCore] persisting issuer:', {
+          issuer: environment.iasApiBaseUrl,
+          success: success,
         })
       } catch (error) {
         logger.error('Error during factory reset for environment change:', error as Error)
