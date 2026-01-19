@@ -357,12 +357,24 @@ const translation = {
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available",
       },
-      "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}."
+      "AccountExpiryWarningDescription": {
+        "ExpiringBannerTitle": "Expires in {{days}} days",
+        "ExpiringBannerDescription": "Renew your account on this device before it expires on {{accountExpiration}}."
+      },
+      "AccountExpiryWarningAlert": {
+        "Title": "BC Services Card About to Expire",
+        "Message": "Your mobile card is about to expire, go here to request an extension",
+        "RenewalInfoButton": "Renewal Information"
+      },
+      "AccountExpiryAlert": {
+        "Title": "BC Services Card has expired",
+        "Message": "Your mobile card has expired, you'll need to remove your card and reverify to continue using the app.",
+        "RenewalInfoButton": "Renewal information",
+        "DismissButton": "Dismiss"
       }
     },
     "AccountExpired": {
-      "StaticBannerTitle": "Account expired",
+      "StaticBannerTitle": "Expired",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
       "RenewButton": "Renew account",
       "RemoveButton": "Remove account",
@@ -971,7 +983,10 @@ const translation = {
       "VideoCallTitle": "Video call",
       "VideoCallDescription": "We will verify your identity during a video call.",
       "InPersonTitle": "In person",
-      "InPersonDescription": "Find out where to go and what to bring."
+      "InPersonDescription": "Find out where to go and what to bring.",
+      "CannotSendVideo": "Cannot send a video?",
+      "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
+      "CannotVideoCall": "Cannot video call?"
     },
   },
   "RemoteLogging": {

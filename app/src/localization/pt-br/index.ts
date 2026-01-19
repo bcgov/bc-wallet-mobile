@@ -357,12 +357,24 @@ const translation = {
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
       },
-      "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (PT-BR)"
+      "AccountExpiryWarningDescription": {
+        "ExpiringBannerTitle": "Expires in {{days}} days (PT-BR)",
+        "ExpiringBannerDescription": "Renew your account on this device before it expires on {{accountExpiration}}. (PT-BR)"
       },
+      "AccountExpiryWarningAlert": {
+        "Title": "BC Services Card About to Expire (PT-BR)",
+        "Message": "Your mobile card is about to expire, go here to request an extension (PT-BR)",
+        "RenewalInfoButton": "Renewal Information (PT-BR)"
+      },
+      "AccountExpiryAlert": {
+        "Title": "BC Services Card has expired (PT-BR)",
+        "Message": "Your mobile card has expired, you'll need to remove your card and reverify to continue using the app. (PT-BR)",
+        "RenewalInfoButton": "Renewal information (PT-BR)",
+        "DismissButton": "Dismiss (PT-BR)"
+      }
     },
     "AccountExpired": {
-      "StaticBannerTitle": "Account expired (PT-BR)",
+      "StaticBannerTitle": "Expired (PT-BR)",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
       "RenewButton": "Renew account (PT-BR)",
       "RemoveButton": "Remove account (PT-BR)",
@@ -971,7 +983,10 @@ const translation = {
       "VideoCallTitle": "Video call (PT-BR)",
       "VideoCallDescription": "We will verify your identity during a video call. (PT-BR)",
       "InPersonTitle": "In person (PT-BR)",
-      "InPersonDescription": "Find out where to go and what to bring. (PT-BR)"
+      "InPersonDescription": "Find out where to go and what to bring. (PT-BR)",
+      "CannotSendVideo": "Cannot send a video? (PT-BR)",
+      "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",
+      "CannotVideoCall": "Cannot video call? (PT-BR)"
     },
   },
   "RemoteLogging": {

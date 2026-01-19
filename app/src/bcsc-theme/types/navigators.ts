@@ -1,6 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { EvidenceType } from '../api/hooks/useEvidenceApi'
+import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {

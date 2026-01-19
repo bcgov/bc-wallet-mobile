@@ -11,6 +11,7 @@ let testSearchPathDirectory = FileManager.SearchPathDirectory.cachesDirectory
 // URL components for files
 let accountListURLComponent = "account_list"
 let metadataURLComponent = "metadata"
+let issuerURLComponent = "issuer"
 
 // Available files in the `basePath` directory:
 // account_list
@@ -36,17 +37,8 @@ class StorageService {
     return Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard"
   }
 
-  var currentEnvName: String {
-    switch currentBundleID {
-    case "ca.bc.gov.id.servicescard":
-      return "PROD"
-    case "ca.bc.gov.iddev.servicescard":
-      return "SIT"
-    default:
-      // Fallback to SIT or handle as an
-      // error/unknown state
-      return "SIT"
-    }
+  var productionIssuer: String {
+    return "https://id.gov.bc.ca"
   }
 
   /// Returns the module name for NSKeyedArchiver class mapping
@@ -76,9 +68,10 @@ class StorageService {
         appropriateFor: nil,
         create: false
       )
-      let accountListFileUrl = rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountListURLComponent)
+      let accountListFileUrl =
+        rootDirectoryURL
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
         logger.error("account_list file does not exist at \(accountListFileUrl.path).")
@@ -94,7 +87,8 @@ class StorageService {
         // logger.log("StorageService: Successfully loaded account ID \(firstAccountID) from account_list.")
         return firstAccountID
       } else {
-        logger.error("Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
+        logger.error(
+          "Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
         return nil
       }
     } catch {
@@ -103,11 +97,37 @@ class StorageService {
     }
   }
 
-  var basePath: String {
-    return "\(currentBundleID)/data/accounts_dir/\(currentEnvName)"
+  var issuer: String {
+    let pathDirectory = defaultSearchPathDirectory
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: pathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+
+      let issuerFileURL =
+        rootDirectoryURL
+          .appendingPathComponent("\(currentBundleID)/data")
+          .appendingPathComponent(issuerURLComponent)
+
+      let issuerData = try String(contentsOf: issuerFileURL, encoding: .utf8)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+      return issuerData
+    } catch {
+      logger.error("currentIssuer: Could not access account_list to read issuer: \(error).")
+      return productionIssuer
+    }
   }
 
-  var provider = "https://idsit.gov.bc.ca/device/"
+  var basePath: String {
+    return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
+  }
+
+  var provider: String { "\(issuer)/device/" }
 
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
@@ -115,7 +135,7 @@ class StorageService {
   ) -> T? { // Added file parameter
     do {
       guard let accountID = self.currentAccountID else {
-        logger.error("currentAccountID is nil. Cannot read data.")
+        logger.error("readData: currentAccountID is nil. Cannot read data for file: \(file.rawValue)")
         return nil
       }
       let rootDirectoryURL = try FileManager.default.url(
@@ -124,10 +144,11 @@ class StorageService {
         appropriateFor: nil,
         create: false
       )
-      let fileUrl = rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountID) // Use unwrapped accountID
-        .appendingPathComponent(file.rawValue)
+      let fileUrl =
+        rootDirectoryURL
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountID) // Use unwrapped accountID
+          .appendingPathComponent(file.rawValue)
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
         return nil
@@ -165,7 +186,7 @@ class StorageService {
     do {
       // Get the current account ID first
       guard let accountID = self.currentAccountID else {
-        logger.error("currentAccountID is nil. Cannot write data.")
+        logger.error("writeData: currentAccountID is nil. Cannot write data for file: \(file.rawValue)")
         return false
       }
 
@@ -176,10 +197,11 @@ class StorageService {
         appropriateFor: nil,
         create: false
       )
-      let fileUrl = rootDirectoryURL
-        .appendingPathComponent(self.basePath)
-        .appendingPathComponent(accountID)
-        .appendingPathComponent(file.rawValue)
+      let fileUrl =
+        rootDirectoryURL
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountID)
+          .appendingPathComponent(file.rawValue)
 
       // Encode the object to data
       let encodedData = try encodeArchivedObject(object: data)
@@ -190,7 +212,7 @@ class StorageService {
       logger.log("Successfully wrote data to file: \(fileUrl.path)")
       return true
     } catch {
-      logger.error("Error writing data: \(error)")
+      logger.error("writeData: Error writing data for file \(file.rawValue): \(error)")
       return false
     }
   }
@@ -218,6 +240,28 @@ class StorageService {
       return true
     } catch {
       logger.log("StorageService: Error removing account files: \(error)")
+      return false
+    }
+  }
+
+  func saveIssuerToFile(issuer: String) -> Bool {
+    let pathDirectory = defaultSearchPathDirectory
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+      )
+      let issuerFileURL =
+        rootDirectoryURL
+          .appendingPathComponent("\(currentBundleID)/data")
+          .appendingPathComponent(issuerURLComponent)
+
+      try issuer.write(to: issuerFileURL, atomically: true, encoding: .utf8)
+      logger.log(
+        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path)")
+      return true
+    } catch {
+      logger.log("StorageService: Error saving issuer to file: \(error)")
       return false
     }
   }
@@ -273,8 +317,9 @@ class StorageService {
 
     // Prepare the object for archiving
     let objectToArchive: Any
-    if T.self != NSDictionary.self {
-      // Wrap the object in a dictionary with provider key (reverse of decode logic)
+    if !isFoundationCollectionType {
+      // Wrap custom objects in a dictionary with provider key (reverse of decode logic)
+      // Foundation collection types (NSArray, NSDictionary) don't need wrapping
       objectToArchive = [provider: object]
     } else {
       objectToArchive = object
@@ -320,5 +365,23 @@ class StorageService {
     } else {
       return decoded as? T
     }
+  }
+
+  // https://id.gov.bc.ca -> "prod"
+  // https://iddev.gov.bc.ca -> "dev"
+  private func getIssuerNameFromIssuer(issuer: String) -> String {
+    guard let host = URLComponents(string: issuer)?.host else {
+      return "prod"
+    }
+
+    if host.hasPrefix("id") {
+      let remainder = host.dropFirst(2) // remove "id"
+
+      if let env = remainder.split(separator: ".").first, !env.isEmpty {
+        return String(env) // "dev", "test"
+      }
+    }
+
+    return "prod"
   }
 }

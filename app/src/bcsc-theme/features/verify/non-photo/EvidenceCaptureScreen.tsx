@@ -1,4 +1,3 @@
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
@@ -6,12 +5,13 @@ import { CameraFormat } from '@/bcsc-theme/components/utils/camera-format'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
+import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>

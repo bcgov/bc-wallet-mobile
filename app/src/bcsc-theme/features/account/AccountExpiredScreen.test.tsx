@@ -10,8 +10,18 @@ describe('AccountExpired', () => {
 
   beforeEach(() => {
     mockNavigation = useNavigation()
+
     jest.clearAllMocks()
     jest.useFakeTimers()
+
+    const mockAccountContext = {
+      account: {
+        card_expiry: '2024-12-31',
+        fullname_formatted: 'John Doe',
+      },
+    }
+
+    jest.spyOn(React, 'useContext').mockReturnValue(mockAccountContext)
   })
 
   afterEach(() => {

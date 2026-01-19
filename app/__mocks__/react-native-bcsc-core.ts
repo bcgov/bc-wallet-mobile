@@ -43,6 +43,9 @@ export enum BCSCAccountType {
   NoBcscCard = 'Other - no BC Services Card',
 }
 
+// Issuer Management
+export const setIssuer = jest.fn().mockResolvedValue(true)
+
 // Key Management
 export const getAllKeys = jest.fn().mockResolvedValue([])
 export const getKeyPair = jest.fn().mockResolvedValue({
