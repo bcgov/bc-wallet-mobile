@@ -12,4 +12,4 @@ const RESULTS = {
   GRANTED: 'granted',
 }
 
-export { PERMISSIONS, RESULTS, check, request, openSettings }
+export { PERMISSIONS, RESULTS, check, openSettings, request }

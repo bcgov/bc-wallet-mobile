@@ -38,9 +38,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
         const status = await PushNotifications.status()
 
         // if permission is granted, skip notification screen
-        if (
-          status === PushNotifications.NotificationPermissionStatus.GRANTED
-        ) {
+        if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
           return navigation.navigate(BCSCScreens.OnboardingSecureApp)
         }
 

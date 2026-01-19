@@ -10,8 +10,8 @@ import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
-import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
+import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
