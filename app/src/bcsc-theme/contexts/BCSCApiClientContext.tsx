@@ -3,11 +3,11 @@ import { AppError } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import { useNavigation } from '@react-navigation/native'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import BCSCApiClient, { BCSCEndpoints } from '../api/client'
-import { CLIENT_ERROR_HANDLING_POLICIES } from '../api/clientErrorHandlers'
+import BCSCApiClient from '../api/client'
+import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -47,57 +47,44 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorAlert } = useErrorAlert()
-  const navigation = useNavigation()
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
 
+  /**
+   * Sets both the local state and the singleton instance of the BCSCApiClient.
+   *
+   * @param client - The BCSCApiClient instance to set.
+   * @returns void
+   */
   const setClientAndSingleton = (client: BCSCApiClient | null) => {
     BCSC_API_CLIENT_SINGLETON = client
     setClient(client)
   }
 
-  // NOTE (MD): Decide if one large handler is better than explictly handling errors in each API call
-  // would need to handle errors based on the endpoint and the AppEventCode. Possibly a hook
-  // that returns an error handler.
-  const handleClientError = useCallback(
-    (error: AppError, endpoint: string, apiEndpoints: BCSCEndpoints) => {
-      const policy = CLIENT_ERROR_HANDLING_POLICIES.find((policy) => policy.matches(error, { endpoint, apiEndpoints }))
+  /**
+   * Handles client errors based on predefined error handling policies.
+   *
+   * @param error - The error object to handle.
+   * @param context - The context providing additional information for error handling.
+   * @returns void
+   */
+  const handleApiClientError = useCallback(
+    (error: AppError, context: ErrorMatcherContext) => {
+      const policy = ClientErrorHandlingPolicies.find((policy) =>
+        policy.matches(error, {
+          endpoint: context.endpoint,
+          apiEndpoints: context.apiEndpoints,
+        })
+      )
 
       if (!policy) {
-        logger.info('No error handling policy')
+        logger.info('[ApiClient] No error handling policy for:', {
+          endpoint: context.endpoint,
+          appEvent: error.appEvent,
+        })
         return
       }
 
       policy.handle(error, { emitErrorAlert, navigation, translate: t })
-
-      // if (GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)) {
-      //   return emitErrorAlert(error)
-      // }
-      //
-      // /**
-      //  * Special case: No tokens returned.
-      //  *
-      //  * The refresh token request is made internally by the BCSC client and bypasses
-      //  * our normal API hooks. So handling alert emission here.
-      //  */
-      // if (error.appEvent === AppEventCode.NO_TOKENS_RETURNED) {
-      //   return emitErrorAlert(error, {
-      //     actions: [
-      //       {
-      //         text: t('Alerts.Actions.Close'),
-      //         style: 'cancel',
-      //         onPress: () => {
-      //           // noop
-      //         },
-      //       },
-      //       {
-      //         text: t('Alerts.Actions.RemoveAccount'),
-      //         style: 'destructive',
-      //         onPress: () => {
-      //           navigation.navigate(BCSCScreens.RemoveAccountConfirmation as never)
-      //         },
-      //       },
-      //     ],
-      //   })
-      // }
     },
     [emitErrorAlert, logger, navigation, t]
   )
@@ -123,7 +110,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           newClient = new BCSCApiClient(
             store.developer.environment.iasApiBaseUrl,
             logger as RemoteLogger,
-            handleClientError
+            handleApiClientError
           )
           await newClient.fetchEndpointsAndConfig()
 
@@ -157,7 +144,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     store.developer.environment.iasApiBaseUrl,
     logger,
     dispatch,
-    handleClientError,
+    handleApiClientError,
   ])
 
   const contextValue = useMemo(

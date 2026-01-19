@@ -1,6 +1,7 @@
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction } from '@/utils/alert'
+import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
@@ -10,14 +11,14 @@ import { BCSCEndpoints } from './client'
  * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
  */
 const GLOBAL_ALERT_EVENT_CODES = new Set([
-  //AppEventCode.NO_INTERNET, // Handled explicitly in the InternetDisconnected modal
+  //AppEventCode.NO_INTERNET, // Handled by the InternetDisconnected modal
   AppEventCode.UNSECURED_NETWORK,
   AppEventCode.SERVER_TIMEOUT,
   AppEventCode.SERVER_ERROR,
-  AppEventCode.TOO_MANY_ATTEMPTS, // QUESTION (MD): Should this be alerted globally?
+  AppEventCode.TOO_MANY_ATTEMPTS,
 ])
 
-type ErrorMatcherContext = {
+export type ErrorMatcherContext = {
   endpoint: string // current route name for context
   apiEndpoints: BCSCEndpoints // current API endpoints for context
 }
@@ -25,7 +26,7 @@ type ErrorMatcherContext = {
 type ErrorHandlerContext = {
   translate: TFunction
   emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
-  navigation: any // TODO (MD): Replace with proper NavigationProp type
+  navigation: NavigationProp<ParamListBase>
 }
 
 type ErrorHandlingPolicy = {
@@ -33,6 +34,7 @@ type ErrorHandlingPolicy = {
   handle: (error: AppError, context: ErrorHandlerContext) => void
 }
 
+// Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
     return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
@@ -42,6 +44,7 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Specific error policy for NO_TOKENS_RETURNED event on token endpoint
 export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint === context.apiEndpoints.token
@@ -60,7 +63,7 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
           text: context.translate('Alerts.Actions.RemoveAccount'),
           style: 'destructive',
           onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation as never)
+            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
           },
         },
       ],
@@ -68,7 +71,4 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-export const CLIENT_ERROR_HANDLING_POLICIES: ErrorHandlingPolicy[] = [
-  globalAlertErrorPolicy,
-  noTokensReturnedErrorPolicy,
-]
+export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [globalAlertErrorPolicy, noTokensReturnedErrorPolicy]

@@ -10,6 +10,7 @@ import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
 } from '../utils/error-utils'
+import { ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -23,7 +24,7 @@ declare module 'axios' {
   }
 }
 
-type OnErrorCallback = (appError: AppError) => void
+type BCSCClientOnErrorCallback = (appError: AppError, context: ErrorMatcherContext) => void
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -62,9 +63,9 @@ class BCSCApiClient {
   baseURL: string
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
-  onError: OnErrorCallback
+  onError: BCSCClientOnErrorCallback
 
-  constructor(baseURL: string, logger: RemoteLogger, onError: OnErrorCallback) {
+  constructor(baseURL: string, logger: RemoteLogger, onError: BCSCClientOnErrorCallback) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -140,7 +141,10 @@ class BCSCApiClient {
       }
 
       // 4. Invoke onError callback and reject promise
-      this.onError(appError)
+      this.onError(appError, {
+        endpoint: String(error.config?.url),
+        apiEndpoints: this.endpoints,
+      })
       return Promise.reject(appError)
     })
   }
