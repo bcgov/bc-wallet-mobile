@@ -284,12 +284,14 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
-    const permissionType =
-      !hasCameraPermission && !hasMicrophonePermission
-        ? 'cameraAndMicrophone'
-        : !hasCameraPermission
-          ? 'camera'
-          : 'microphone'
+    let permissionType: 'camera' | 'microphone' | 'cameraAndMicrophone'
+    if (hasCameraPermission) {
+      permissionType = 'microphone'
+    } else if (hasMicrophonePermission) {
+      permissionType = 'camera'
+    } else {
+      permissionType = 'cameraAndMicrophone'
+    }
     return <PermissionDisabled permissionType={permissionType} headerPadding />
   }
 

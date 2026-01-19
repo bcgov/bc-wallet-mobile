@@ -161,8 +161,8 @@ export const PermissionDisabled = ({
       </ThemedText>
       <ThemedText style={styles.description}>{t(keys.description)}</ThemedText>
 
-      {steps.map((stepKey, index) => (
-        <View key={index} style={styles.stepContainer}>
+      {steps.map((stepKey) => (
+        <View key={stepKey} style={styles.stepContainer}>
           <ThemedText style={styles.stepText}>{t(stepKey)}</ThemedText>
         </View>
       ))}
