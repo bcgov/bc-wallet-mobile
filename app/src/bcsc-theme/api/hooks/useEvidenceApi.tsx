@@ -1,10 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
-import { getBCSCAppStoreUrl } from '@/utils/links'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -205,38 +202,19 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        try {
-          const { data } = await apiClient.get<VerificationStatusResponseData>(
-            `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-              skipBearerAuth: true,
-            }
-          )
-          return data
-        } catch (error) {
-          if (
-            AppError.isAppErrorWithEvent(error, AppEventCode.IOS_APP_UPDATE_REQUIRED) ||
-            AppError.isAppErrorWithEvent(error, AppEventCode.ANDROID_APP_UPDATE_REQUIRED)
-          ) {
-            emitErrorAlert(error, {
-              actions: [
-                {
-                  // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
-                  text: t('Alerts.Actions.GoToAppStore'),
-                  onPress: getBCSCAppStoreUrl,
-                },
-              ],
-            })
+        const { data } = await apiClient.get<VerificationStatusResponseData>(
+          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
           }
-
-          throw error
-        }
+        )
+        return data
       })
     },
-    [_getDeviceCode, apiClient, emitErrorAlert, t]
+    [_getDeviceCode, apiClient]
   )
 
   // This is only valid once sendVerificationRequest has been called

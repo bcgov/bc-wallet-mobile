@@ -1,8 +1,10 @@
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction } from '@/utils/alert'
+import { getBCSCAppStoreUrl } from '@/utils/links'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
+import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
@@ -27,6 +29,7 @@ type ErrorHandlerContext = {
   translate: TFunction
   emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
+  linking: typeof Linking
 }
 
 type ErrorHandlingPolicy = {
@@ -44,10 +47,10 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Specific error policy for NO_TOKENS_RETURNED event on token endpoint
+// Error policy for NO_TOKENS_RETURNED event on token endpoint
 export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
-    return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint === context.apiEndpoints.token
+    return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (error, context) => {
     context.emitErrorAlert(error, {
@@ -71,4 +74,34 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [globalAlertErrorPolicy, noTokensReturnedErrorPolicy]
+// Error policy for app <IOS|ANDROID>_APP_UPDATE_REQUIRED required events on evidence endpoint
+export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      (error.appEvent === AppEventCode.IOS_APP_UPDATE_REQUIRED ||
+        error.appEvent === AppEventCode.ANDROID_APP_UPDATE_REQUIRED) &&
+      context.endpoint.includes(context.apiEndpoints.evidence)
+    )
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error, {
+      actions: [
+        {
+          // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
+          text: context.translate('Alerts.Actions.GoToAppStore'),
+          onPress: async () => {
+            const appStoreUrl = getBCSCAppStoreUrl()
+            await context.linking.openURL(appStoreUrl)
+          },
+        },
+      ],
+    })
+  },
+}
+
+// Aggregate of all client error handling policies
+export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
+  globalAlertErrorPolicy,
+  noTokensReturnedErrorPolicy,
+  updateRequiredErrorPolicy,
+]

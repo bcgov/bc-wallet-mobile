@@ -45,8 +45,8 @@ export class AppError extends Error {
    */
   static fromErrorDefinition(definition: ErrorDefinition, options?: ErrorOptions): AppError {
     return new AppError(
-      i18next.t(definition.titleKey),
-      i18next.t(definition.descriptionKey),
+      i18next.t(definition.titleKey) ?? definition.titleKey,
+      i18next.t(definition.descriptionKey) ?? definition.descriptionKey,
       {
         category: definition.category,
         appEvent: definition.appEvent,

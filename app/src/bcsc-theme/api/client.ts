@@ -63,9 +63,9 @@ class BCSCApiClient {
   baseURL: string
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
-  onError: BCSCClientOnErrorCallback
+  onError?: BCSCClientOnErrorCallback
 
-  constructor(baseURL: string, logger: RemoteLogger, onError: BCSCClientOnErrorCallback) {
+  constructor(baseURL: string, logger: RemoteLogger, onError?: BCSCClientOnErrorCallback) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -128,6 +128,8 @@ class BCSCApiClient {
       const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
       const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
 
+      console.log({ errorDefinition, appError })
+
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
 
@@ -140,11 +142,12 @@ class BCSCApiClient {
         })
       }
 
-      // 4. Invoke onError callback and reject promise
-      this.onError(appError, {
+      // 4. Invoke onError callback if provided and reject promise
+      this.onError?.(appError, {
         endpoint: String(error.config?.url),
         apiEndpoints: this.endpoints,
       })
+
       return Promise.reject(appError)
     })
   }

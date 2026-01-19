@@ -1,5 +1,4 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
@@ -19,7 +18,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const api = useApi()
   const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
 
   const styles = StyleSheet.create({
@@ -97,15 +95,17 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   ]
 
   const serverErrorCodeAlertCallbacks = {
-    // should not render alert (InternetDisconnectedModal)
+    // Should not render alert (InternetDisconnectedModal)
     no_internet: () => injectErrorCodeIntoAxiosResponse(client, 'no_internet'),
     unsecured_network: () => injectErrorCodeIntoAxiosResponse(client, 'unsecured_network'),
     server_timeout: () => injectErrorCodeIntoAxiosResponse(client, 'server_timeout'),
     server_error: () => injectErrorCodeIntoAxiosResponse(client, 'server_error'),
-    // Must have verification request in progress
-    ios_app_update_required: () => api.evidence.getVerificationRequestStatus(''),
-    // Navigation must be mounted
-    no_tokens_returned: () => injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned'),
+    ios_app_update_required: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'ios_app_update_required', client.endpoints.evidence),
+    android_app_update_required: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'android_app_update_required', client.endpoints.evidence),
+    // Must be verififed and on the main stack to see this alert
+    no_tokens_returned: () => injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -137,7 +137,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     const definition = ErrorRegistry[key]
     const error = AppError.fromErrorDefinition(definition)
     emitErrorAlert(error, {
-      error: new Error(`Test alert triggered for: ${key}`),
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
         { text: t('Global.Okay'), style: 'default' },
@@ -145,12 +144,12 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     })
   }
 
-  const injectErrorCodeIntoAxiosResponse = async (client: BCSCApiClient, errorCode: string) => {
+  const injectErrorCodeIntoAxiosResponse = async (client: BCSCApiClient, errorCode: string, endpoint?: string) => {
     client.client.interceptors.request.use((config) => {
       throw new AxiosError('Injected error message', errorCode, config)
     })
     try {
-      await client.get('/test')
+      await client.get(endpoint ?? '/any-endpoint')
     } catch (error) {
       // Intentionally empty - error alert is handled by the client interceptor
     }

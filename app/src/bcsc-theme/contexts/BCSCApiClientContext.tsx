@@ -6,6 +6,7 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
@@ -84,7 +85,12 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         return
       }
 
-      policy.handle(error, { emitErrorAlert, navigation, translate: t })
+      logger.info('[ApiClient] Applying error handling policy for:', {
+        endpoint: context.endpoint,
+        appEvent: error.appEvent,
+      })
+
+      policy.handle(error, { emitErrorAlert, navigation, translate: t, linking: Linking })
     },
     [emitErrorAlert, logger, navigation, t]
   )
@@ -121,7 +127,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
          * Special case:
          * If it's a network error, we still want to set the client.
          * This prevents the app from being blocked by a permanent loading state,
-         * while also alowing the Internet Disconnected modal to be displayed.
+         * while also allowing the Internet Disconnected modal to be displayed.
          */
         if (isNetworkError(err)) {
           setClientAndSingleton(newClient)

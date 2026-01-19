@@ -1,6 +1,12 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
+import { localization } from '@/localization'
+import { initLanguages } from '@bifold/core'
 
 describe('BCSC Client', () => {
+  beforeAll(() => {
+    initLanguages(localization)
+  })
+
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
     const mockLogger = { error: jest.fn(), info: jest.fn() }
     const mockOnError = jest.fn()
@@ -52,7 +58,7 @@ describe('BCSC Client', () => {
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'IAS API Error',
+        '[ApiClient] Connection Error: An unknown server error occurred. Please try again later.',
         expect.objectContaining({ name: expect.any(String) })
       )
     }
