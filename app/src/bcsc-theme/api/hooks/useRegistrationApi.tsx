@@ -12,7 +12,6 @@ import {
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
@@ -61,7 +60,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-  const { emitError } = useErrorAlert()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -107,10 +105,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       }
     } catch (err) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
-      emitError('ATTESTATION_GENERATION_ERROR', { error: err })
+      logger.warn('Failed to generate attestation', { error: err })
     }
     return attestation
-  }, [apiClient, isClientReady, logger, emitError])
+  }, [apiClient, isClientReady, logger])
 
   /**
    * Registers a new BCSC client with dynamic client registration.

@@ -1,12 +1,15 @@
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 type ScanSerialScreenProps = {
@@ -16,6 +19,7 @@ type ScanSerialScreenProps = {
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
 
   const styles = StyleSheet.create({
@@ -34,6 +38,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       justifyContent: 'space-between',
     },
   })
+
+  useAutoRequestPermission(hasPermission, requestPermission)
 
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
     await scanner.scanCard(barcodes, async (bcscSerial, license) => {
@@ -55,6 +61,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         return
       }
     })
+  }
+
+  if (!hasPermission) {
+    return <PermissionDisabled permissionType="camera" />
   }
 
   return (

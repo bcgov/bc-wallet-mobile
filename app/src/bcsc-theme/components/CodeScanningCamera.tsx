@@ -41,12 +41,6 @@ export interface CodeScanningCameraProps {
   style?: ViewStyle
 
   /**
-   * Should camera permission be requested
-   * @default true
-   */
-  autoRequestPermission?: boolean
-
-  /**
    * Which camera to use
    * @default 'back'
    */
@@ -57,7 +51,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   codeTypes,
   onCodeScanned,
   style,
-  autoRequestPermission = true,
   cameraType = 'back',
 }) => {
   const { t } = useTranslation()
@@ -99,10 +92,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
 
   useEffect(() => {
-    if (autoRequestPermission && !hasPermission) {
+    if (!hasPermission) {
       requestPermission()
     }
-  }, [hasPermission, requestPermission, autoRequestPermission])
+  }, [hasPermission, requestPermission])
 
   useFocusEffect(
     useCallback(() => {
