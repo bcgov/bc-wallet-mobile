@@ -582,6 +582,76 @@ const translation = {
       "ErrorTakingPhoto": "Failed to take photo. Please try again.",
       "OK": "OK",
     },
+    "PermissionDisabled": {
+      "OpenSettings": "Open Settings",
+      "ContinueWithoutNotifications": "Continue Without Notifications",
+      "CameraTitle": "Camera Disabled",
+      "CameraDescription": "Follow these steps to allow access to your camera to take a photo, record a video, or scan a QR code.",
+      "MicrophoneTitle": "Microphone Disabled",
+      "MicrophoneDescription": "Follow these steps to allow access to your microphone to record audio.",
+      "NotificationsTitle": "Allow Notifications",
+      "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps:",
+      "CameraAndMicrophoneTitle": "Camera & Microphone Disabled",
+      "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video.",
+      "Camera": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Camera'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Camera'",
+          "Step4": "4. Select 'Allow'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
+      "Microphone": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Microphone'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Microphone'",
+          "Step4": "4. Select 'Allow'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
+      "Notifications": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Notifications' and enable 'Allow Notifications'",
+          "Step3": "3. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Notifications'",
+          "Step3": "3. Tap 'App notifications'",
+          "Step4": "4. Enable 'All BC Services Card notifications'",
+          "Step5": "5. Return to the app to continue",
+        },
+      },
+      "CameraAndMicrophone": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Camera'",
+          "Step3": "3. Tap 'Microphone'",
+          "Step4": "4. Return to the app to continue",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below",
+          "Step2": "2. Tap 'Permissions'",
+          "Step3": "3. Tap 'Camera' and select 'Allow'",
+          "Step4": "4. Go back and tap 'Microphone'",
+          "Step5": "5. Select 'Allow'",
+          "Step6": "6. Return to the app to continue",
+        },
+      },
+    },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email",
       "EmailSkip": "Are you sure you don't want to provide it?",
