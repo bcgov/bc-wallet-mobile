@@ -1,5 +1,6 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
 import { AppError } from './appError'
 import { ErrorCategory, ErrorDefinition, ErrorRegistry, ErrorSeverity } from './errorRegistry'
@@ -25,6 +26,18 @@ describe('AppError', () => {
       expect(error.technicalMessage).toBe(message)
       expect(error.cause).toBeInstanceOf(Error)
       expect(error.timestamp).toBeDefined()
+    })
+
+    it('should track error event in analytics upon creation', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
     })
   })
 
