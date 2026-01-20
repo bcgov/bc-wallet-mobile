@@ -1,10 +1,8 @@
 import i18next from 'i18next'
-
-import { AlertInteractionEvent } from '../events/appEventCode'
+import { AlertInteractionEvent, AppEventCode } from '../events/appEventCode'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
-
-import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from './errorRegistry'
+import { ErrorDefinition, ErrorRegistry, ErrorRegistryAppEventMap, ErrorRegistryKey } from './errorRegistry'
 
 /**
  * Extract a meaningful message from an unknown error value
@@ -78,4 +76,14 @@ export function logError(
     technicalMessage,
     ...context,
   })
+}
+
+/**
+ * Get error definition from app event code
+ *
+ * @param appEvent - The application event code to look up.
+ * @returns The corresponding ErrorDefinition or null if not found.
+ */
+export const getErrorDefinitionFromAppEventCode = (appEvent?: string): ErrorDefinition | null => {
+  return ErrorRegistryAppEventMap.get(appEvent as AppEventCode) ?? null
 }

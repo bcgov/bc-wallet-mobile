@@ -1,8 +1,14 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
+import i18next from 'i18next'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
+import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -36,16 +42,69 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
-
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorAlert } = useErrorAlert()
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
 
+  /**
+   * Sets both the local state and the singleton instance of the BCSCApiClient.
+   *
+   * @param client - The BCSCApiClient instance to set.
+   * @returns void
+   */
   const setClientAndSingleton = (client: BCSCApiClient | null) => {
     BCSC_API_CLIENT_SINGLETON = client
     setClient(client)
   }
+
+  /**
+   * Handles client errors based on predefined error handling policies.
+   *
+   * @param error - The error object to handle.
+   * @param context - The context providing additional information for error handling.
+   * @returns void
+   */
+  const handleApiClientError = useCallback(
+    (error: AppError, context: ErrorMatcherContext) => {
+      const policy = ClientErrorHandlingPolicies.find((policy) =>
+        policy.matches(error, {
+          endpoint: context.endpoint,
+          apiEndpoints: context.apiEndpoints,
+        })
+      )
+
+      if (!policy) {
+        logger.info('[ApiClient] No error handling policy for:', {
+          endpoint: context.endpoint,
+          appEvent: error.appEvent,
+        })
+        return
+      }
+
+      logger.info('[ApiClient] Applying error handling policy for:', {
+        endpoint: context.endpoint,
+        appEvent: error.appEvent,
+      })
+
+      /**
+       * Note: Using the translate function from the react i18n hook
+       * causes a downstream memory leak with the BCSCApiClient during tests.
+       */
+      const translate = i18next.t.bind(i18next)
+
+      policy.handle(error, {
+        linking: Linking,
+        emitErrorAlert,
+        navigation,
+        translate,
+        logger,
+      })
+    },
+    [emitErrorAlert, logger, navigation]
+  )
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
@@ -60,22 +119,20 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
-        // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (
-          !BCSC_API_CLIENT_SINGLETON ||
-          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
-        ) {
-          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
-          await newClient.fetchEndpointsAndConfig()
+        newClient = new BCSCApiClient(
+          store.developer.environment.iasApiBaseUrl,
+          logger as RemoteLogger,
+          handleApiClientError
+        )
+        await newClient.fetchEndpointsAndConfig()
 
-          setClientAndSingleton(newClient)
-        }
+        setClientAndSingleton(newClient)
       } catch (err) {
         /**
          * Special case:
          * If it's a network error, we still want to set the client.
          * This prevents the app from being blocked by a permanent loading state,
-         * while also alowing the Internet Disconnected modal to be displayed.
+         * while also allowing the Internet Disconnected modal to be displayed.
          */
         if (isNetworkError(err)) {
           setClientAndSingleton(newClient)
@@ -92,7 +149,13 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
+  }, [
+    handleApiClientError,
+    logger,
+    store.developer.environment.iasApiBaseUrl,
+    store.developer.environment.name,
+    store.stateLoaded,
+  ])
 
   const contextValue = useMemo(
     () => ({
@@ -107,6 +170,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 }
 
 // This function is used to reset the singleton instance in tests
-export function _resetBCSCApiClientSingleton() {
+export const _resetBCSCApiClientSingleton = () => {
   BCSC_API_CLIENT_SINGLETON = null
 }

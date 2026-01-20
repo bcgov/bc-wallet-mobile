@@ -1,7 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { getErrorDefinition } from '@/errors'
+import { AppError, ErrorRegistry } from '@/errors'
 import {
-  BifoldError,
   InfoBox,
   InfoBoxType,
   SplashProps,
@@ -38,7 +37,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const [store] = useStore<BCState>()
   const [progressPercent, setProgressPercent] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
-  const [initError, setInitError] = useState<BifoldError | null>(null)
+  const [initError, setInitError] = useState<AppError | null>(null)
   const [reported, setReported] = useState(false)
   const initializing = useRef(false)
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
@@ -79,7 +78,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(initError)
+      logger.report(initError.toBifoldError())
     }
 
     setReported(true)
@@ -110,17 +109,8 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
     if (!walletSecret) {
       initializing.current = false
-      const errorDef = getErrorDefinition('WALLET_SECRET_NOT_FOUND')
-      // Track error in analytics (without showing modal since we have custom UI)
-      emitError('WALLET_SECRET_NOT_FOUND', { showModal: false })
-      setInitError(
-        new BifoldError(
-          t(errorDef.titleKey),
-          t(errorDef.descriptionKey),
-          'Wallet secret is not found',
-          errorDef.statusCode
-        )
-      )
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.WALLET_SECRET_NOT_FOUND)
+      setInitError(appError)
       return
     }
 
@@ -133,14 +123,10 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         await initializeAgent(walletSecret)
 
         setStep(4)
-      } catch (e: unknown) {
+      } catch (error: unknown) {
         initializing.current = false
-        const errorDef = getErrorDefinition('AGENT_INITIALIZATION_ERROR')
-        // Track error in analytics (without showing modal since we have custom UI)
-        emitError('AGENT_INITIALIZATION_ERROR', { error: e, showModal: false })
-        setInitError(
-          new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), (e as Error)?.message, errorDef.statusCode)
-        )
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: error })
+        setInitError(appError)
       }
     }
 

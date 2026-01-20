@@ -1,9 +1,16 @@
+import { ErrorRegistry } from '@/errors'
+import { AppError } from '@/errors/appError'
+import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-import { formatAxiosErrorForLogger, formatIasAxiosResponseError } from '../utils/error-utils'
+import {
+  formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
+  formatIasAxiosResponseError,
+} from '../utils/error-utils'
+import { ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -17,6 +24,8 @@ declare module 'axios' {
   }
 }
 
+type BCSCClientOnErrorCallback = (appError: AppError, context: ErrorMatcherContext) => void
+
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
   maximumAccountsPerDevice: number
@@ -26,7 +35,7 @@ interface BCSCConfig {
   attestationTimeToLive: number
 }
 
-interface BCSCEndpoints {
+export interface BCSCEndpoints {
   attestation: string
   issuer: string
   authorization: string
@@ -54,8 +63,9 @@ class BCSCApiClient {
   baseURL: string
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
+  onError?: BCSCClientOnErrorCallback
 
-  constructor(baseURL: string, logger: RemoteLogger) {
+  constructor(baseURL: string, logger: RemoteLogger, onError?: BCSCClientOnErrorCallback) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -65,12 +75,13 @@ class BCSCApiClient {
     })
 
     if (this.baseURL) {
-      this.logger.info(`BCSCApiClient initialized with URL: ${this.baseURL}`)
+      this.logger.info(`[BCSCApiClient] initialized with URL: ${this.baseURL}`)
     } else {
-      this.logger.error('BCSCApiClient initialized with empty URL.')
+      this.logger.error('[BCSCApiClient] initialized with empty URL.')
     }
 
     this.tokensPromise = null
+    this.onError = onError
 
     // fallback config
     this.config = {
@@ -109,23 +120,34 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      const IASAxiosError = formatIasAxiosResponseError(error)
+    this.client.interceptors.response.use(undefined, async (_error: AxiosError) => {
+      // 1. Format the error - update error code and message properties from IAS response
+      const error = formatIasAxiosResponseError(_error)
 
-      const loggerError = formatAxiosErrorForLogger({
-        error: IASAxiosError,
-        suppressStackTrace: __DEV__, // disable stack trace in development
-      })
+      // 2. Create AppError from the IAS error code
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
+      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
 
-      // Only log if the status code is not in the suppress list
+      // 3. Log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
-        this.logger.error('IAS API Error', loggerError)
+        const simpleAppError = appError.toJSON()
+        const { message, ...details } = simpleAppError
+        this.logger.error(`[BCSCApiClient] ${message}`, {
+          ...details,
+          cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
+        })
       }
 
-      return Promise.reject(IASAxiosError)
+      // 4. Invoke onError callback if provided and reject promise
+      this.onError?.(appError, {
+        endpoint: String(error.config?.url),
+        apiEndpoints: this.endpoints,
+      })
+
+      return Promise.reject(appError)
     })
   }
 
@@ -174,13 +196,13 @@ class BCSCApiClient {
 
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
-        this.logger.error('BCSCClient: Missing tokens - call getTokensForRefreshToken to initialize tokens')
+        this.logger.error('[BCSCApiClient] Missing tokens - call getTokensForRefreshToken to initialize tokens')
         throw new Error('Client missing tokens')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
         // refresh tokens should not expire
-        this.logger.error('BCSCClient: Refresh token expired - fatal error detected')
+        this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 
@@ -268,6 +290,8 @@ class BCSCApiClient {
   /**
    * Fetches the first JWK from the server's JWKS endpoint.
    * Used for JWT signature verification.
+   *
+   * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
     try {

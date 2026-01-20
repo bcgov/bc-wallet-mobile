@@ -385,7 +385,7 @@ const translation = {
       "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card.",
       "InformationGetNewCardA": "Get a new card",
       "InformationGetNewCardB": "if it is expired.",
-      "InformationPhotoIdSubHeader": "2. Photo ID", 
+      "InformationPhotoIdSubHeader": "2. Photo ID",
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs.",
       "InformationTypesOfAcceptedId": "Types of accepted ID",
       "RenewalTimeHeader": "Time to renew",
@@ -1008,7 +1008,10 @@ const translation = {
   },
 	"Alerts": {
 		"Actions": {
-			"DefaultOK": "OK"
+			"DefaultOK": "OK",
+      "Close": "Close",
+      "GoToAppStore": "Go to App Store",
+      "RemoveAccount": "Remove Account",
 		}
 	},
   "BCWalletError": {
@@ -1021,6 +1024,7 @@ const translation = {
       "Title": "Connection Error",
       "NoInternet": "No internet connection. Please check your network settings and try again.",
       "ServerError": "A server error occurred. Please try again later.",
+      "UnknownServerError": "An unknown server error occurred. Please try again later.",
       "Timeout": "The request timed out. Please check your connection and try again.",
       "Unsecured": "You are connected to an unsecured network. Please connect to a secure network.",
       "ConnectionProblem": "There was a problem with the connection. Please try again.",

@@ -38,7 +38,7 @@ export enum ErrorCategory {
 export interface ErrorDefinition {
   /** Unique error status code (for support reference) */
   statusCode: number
-  /** App event statusCode */
+  /** App event code */
   appEvent: AppEventCode
   /** i18n key for title */
   titleKey: string
@@ -48,8 +48,6 @@ export interface ErrorDefinition {
   severity: ErrorSeverity
   /** Error category */
   category: ErrorCategory
-  /** Whether to show modal to user (default: true) */
-  showModal?: boolean
 }
 
 /**
@@ -176,6 +174,14 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ERR_500_INVALID_URL,
     titleKey: 'BCWalletError.Network.Title',
     descriptionKey: 'BCWalletError.Network.InvalidURL',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+  },
+  UNKNOWN_SERVER_ERROR: {
+    statusCode: 2111,
+    appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+    titleKey: 'BCWalletError.Network.Title',
+    descriptionKey: 'BCWalletError.Network.UnknownServerError',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
@@ -1012,5 +1018,9 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
   },
 } as const
+
+export const ErrorRegistryAppEventMap = new Map<AppEventCode, ErrorDefinition>(
+  Object.values(ErrorRegistry).map((definition) => [definition.appEvent, definition])
+)
 
 export type ErrorRegistryKey = keyof typeof ErrorRegistry

@@ -1,11 +1,18 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
+import { localization } from '@/localization'
+import { initLanguages } from '@bifold/core'
 
 describe('BCSC Client', () => {
+  beforeAll(() => {
+    initLanguages(localization)
+  })
+
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
     const mockLogger = { error: jest.fn(), info: jest.fn() }
+    const mockOnError = jest.fn()
     const baseURL = 'https://example.com'
 
-    const client = new BCSCApiClient(baseURL, mockLogger as any)
+    const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
     const axiosGetSpy = jest.spyOn(client.client, 'get').mockRejectedValue({
       data: {
@@ -32,9 +39,10 @@ describe('BCSC Client', () => {
 
   it('should log error for status codes not in suppressStatusCodeLogs', async () => {
     const mockLogger = { error: jest.fn(), info: jest.fn() }
+    const mockOnError = jest.fn()
     const baseURL = 'https://example.com'
 
-    const client = new BCSCApiClient(baseURL, mockLogger as any)
+    const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
     const axiosGetSpy = jest.spyOn(client.client, 'get')
 
@@ -50,7 +58,7 @@ describe('BCSC Client', () => {
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'IAS API Error',
+        '[BCSCApiClient] Connection Error: An unknown server error occurred. Please try again later.',
         expect.objectContaining({ name: expect.any(String) })
       )
     }
@@ -59,8 +67,10 @@ describe('BCSC Client', () => {
   describe('getTokensForRefreshToken', () => {
     it('should return the promise if already exists', async () => {
       const mockLogger = { info: jest.fn() }
+      const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
-      const client = new BCSCApiClient(baseURL, mockLogger as any)
+
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       const mockPromise = new Promise((resolve) => {
         setTimeout(() => resolve('tokens'), 100)
@@ -76,8 +86,10 @@ describe('BCSC Client', () => {
 
     it('should fetch new tokens if no existing promise', async () => {
       const mockLogger = { info: jest.fn() }
+      const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
-      const client = new BCSCApiClient(baseURL, mockLogger as any)
+
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       const mockTokens = {
         access_token: 'accessToken',
@@ -101,8 +113,10 @@ describe('BCSC Client', () => {
   describe('tokens race condition smoke test', () => {
     it('should never have stale tokens when multiple requests are made simultaneously', async () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
-      const client = new BCSCApiClient(baseURL, mockLogger as any)
+
+      const client = new BCSCApiClient(baseURL, mockLogger as any, mockOnError)
 
       jest.spyOn(client.client, 'get').mockResolvedValue({ data: 'response' })
 

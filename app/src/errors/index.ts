@@ -16,21 +16,27 @@
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
  *
  * const MyComponent = () => {
- *   const { emitError, errorAsAlert, emitAlert, dismiss } = useErrorAlert()
+ *   const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
  *
  *   // Show error via ErrorModal
  *   emitError('INVALID_QR_CODE', { error: err })
  *
  *   // Show error as native alert with custom buttons
- *   errorAsAlert('NO_INTERNET', {
+ *   emitErrorAlert(new AppError(...), {
  *     actions: [{ text: 'Retry', onPress: retry }]
  *   })
  *
  *   // Show informational native alert
- *   emitAlert(AlertEvent.DATA_USE_WARNING)
+ *   emitAlert('Update available', 'A new version is ready', {
+ *    actions: [{ text: 'Update Now', onPress: updateApp }],
+ *    appEvent: AppEventCode.UPDATE_APP_EVENT
+ *   })
  * }
  * ```
  */
+
+// AppError class
+export { AppError } from './appError'
 
 // Error registry and types
 export {

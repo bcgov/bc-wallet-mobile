@@ -301,7 +301,7 @@ const translation = {
         "CancelledByUser": "This device has been removed from your account by a user action. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
-      }  
+      }
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
@@ -1008,7 +1008,10 @@ const translation = {
   },
 	"Alerts": {
 		"Actions": {
-			"DefaultOK": "OK (FR)"
+			"DefaultOK": "OK (FR)",
+      "Close": "Close (FR)",
+      "GoToAppStore": "Go to App Store (FR)",
+      "RemoveAccount": "Remove Account (FR)",
 		}
 	},
   "BCWalletError": {
@@ -1021,6 +1024,7 @@ const translation = {
       "Title": "Connection Error (FR)",
       "NoInternet": "No internet connection. Please check your network settings and try again. (FR)",
       "ServerError": "A server error occurred. Please try again later. (FR)",
+      "UnknownServerError": "An unknown server error occurred. Please try again later. (FR)",
       "Timeout": "The request timed out. Please check your connection and try again. (FR)",
       "Unsecured": "You are connected to an unsecured network. Please connect to a secure network. (FR)",
       "ConnectionProblem": "There was a problem with the connection. Please try again. (FR)",
