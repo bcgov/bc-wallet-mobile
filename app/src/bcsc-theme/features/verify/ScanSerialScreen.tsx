@@ -1,9 +1,10 @@
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -38,18 +39,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     },
   })
 
-  const hasRequestedPermission = useRef(false)
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!hasPermission && !hasRequestedPermission.current) {
-        hasRequestedPermission.current = true
-        await requestPermission()
-      }
-    }
-
-    checkPermissions()
-  }, [hasPermission, requestPermission])
+  useAutoRequestPermission(hasPermission, requestPermission)
 
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
     await scanner.scanCard(barcodes, async (bcscSerial, license) => {

@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   hitSlop,
@@ -246,25 +247,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     }).start()
   }, [prompt, promptOpacity])
 
-  const hasRequestedPermission = useRef(false)
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (hasRequestedPermission.current) {
-        return
-      }
-      hasRequestedPermission.current = true
-
-      if (!hasCameraPermission) {
-        await requestCameraPermission()
-      }
-      if (!hasMicrophonePermission) {
-        await requestMicrophonePermission()
-      }
-    }
-
-    checkPermissions()
-  }, [hasCameraPermission, hasMicrophonePermission, requestCameraPermission, requestMicrophonePermission])
+  useAutoRequestPermission(hasCameraPermission, requestCameraPermission)
+  useAutoRequestPermission(hasMicrophonePermission, requestMicrophonePermission)
 
   useFocusEffect(
     useCallback(() => {

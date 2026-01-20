@@ -6,9 +6,10 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
@@ -124,18 +125,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCurrentPhotoPath(undefined)
   }
 
-  const hasRequestedPermission = useRef(false)
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!hasPermission && !hasRequestedPermission.current) {
-        hasRequestedPermission.current = true
-        await requestPermission()
-      }
-    }
-
-    checkPermissions()
-  }, [hasPermission, requestPermission])
+  useAutoRequestPermission(hasPermission, requestPermission)
 
   if (!currentSide) {
     // needs to throw an error instead...

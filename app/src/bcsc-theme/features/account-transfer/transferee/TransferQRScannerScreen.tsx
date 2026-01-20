@@ -14,9 +14,10 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
@@ -95,19 +96,7 @@ const TransferQRScannerScreen: React.FC = () => {
     })
   }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo])
 
-  const hasRequestedPermission = useRef(false)
-
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!hasPermission && !hasRequestedPermission.current) {
-        hasRequestedPermission.current = true
-        await requestPermission()
-      }
-      setIsLoading(false)
-    }
-
-    checkPermissions()
-  }, [hasPermission, requestPermission])
+  useAutoRequestPermission(hasPermission, requestPermission)
 
   useEffect(() => {
     registerDevice()
