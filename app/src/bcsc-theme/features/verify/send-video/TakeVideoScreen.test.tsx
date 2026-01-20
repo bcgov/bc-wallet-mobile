@@ -64,6 +64,6 @@ describe('TakeVideoScreen', () => {
       </BasicAppContext>
     )
 
-    expect(getByText('BCSC.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')).toBeTruthy()
+    expect(getByText('BCSC.PermissionDisabled.CameraAndMicrophoneTitle')).toBeTruthy()
   })
 })

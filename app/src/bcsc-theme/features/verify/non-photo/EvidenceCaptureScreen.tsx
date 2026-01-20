@@ -1,16 +1,18 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { CameraFormat } from '@/bcsc-theme/components/utils/camera-format'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
-import { useCodeScanner } from 'react-native-vision-camera'
+import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -29,6 +31,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
+  const { hasPermission, requestPermission } = useCameraPermission()
   const { width } = useWindowDimensions()
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -122,9 +125,15 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCurrentPhotoPath(undefined)
   }
 
+  useAutoRequestPermission(hasPermission, requestPermission)
+
   if (!currentSide) {
     // needs to throw an error instead...
     return <></>
+  }
+
+  if (!hasPermission) {
+    return <PermissionDisabled permissionType="camera" />
   }
 
   return (
