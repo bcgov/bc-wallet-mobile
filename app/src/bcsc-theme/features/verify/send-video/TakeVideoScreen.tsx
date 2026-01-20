@@ -1,5 +1,4 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   hitSlop,
@@ -8,6 +7,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'

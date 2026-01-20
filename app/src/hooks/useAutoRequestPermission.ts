@@ -11,10 +11,7 @@ import { useEffect, useRef } from 'react'
  * const { hasPermission, requestPermission } = useCameraPermission()
  * useAutoRequestPermission(hasPermission, requestPermission)
  */
-export const useAutoRequestPermission = (
-  hasPermission: boolean,
-  requestPermission: () => Promise<boolean>
-): void => {
+export const useAutoRequestPermission = (hasPermission: boolean, requestPermission: () => Promise<boolean>): void => {
   const hasRequested = useRef(false)
 
   useEffect(() => {

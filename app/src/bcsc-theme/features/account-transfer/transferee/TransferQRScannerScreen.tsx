@@ -3,6 +3,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import {
   DismissiblePopupModal,
@@ -14,7 +15,6 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
