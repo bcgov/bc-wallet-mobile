@@ -582,6 +582,76 @@ const translation = {
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (FR)",
       "OK": "OK (FR)",
     },
+    "PermissionDisabled": {
+      "OpenSettings": "Open Settings (FR)",
+      "ContinueWithoutNotifications": "Continue Without Notifications (FR)",
+      "CameraTitle": "Camera Disabled (FR)",
+      "CameraDescription": "Follow these steps to allow access to your camera to take a photo, record a video, or scan a QR code. (FR)",
+      "MicrophoneTitle": "Microphone Disabled (FR)",
+      "MicrophoneDescription": "Follow these steps to allow access to your microphone to record audio. (FR)",
+      "NotificationsTitle": "Allow Notifications (FR)",
+      "NotificationsDescription": "It's recommended you update your settings to allow notifications by following these steps: (FR)",
+      "CameraAndMicrophoneTitle": "Camera & Microphone Disabled (FR)",
+      "CameraAndMicrophoneDescription": "Follow these steps to allow access to your camera and microphone to record a video. (FR)",
+      "Camera": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Camera' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Camera' (FR)",
+          "Step4": "4. Select 'Allow' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
+      "Microphone": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Microphone' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Microphone' (FR)",
+          "Step4": "4. Select 'Allow' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
+      "Notifications": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Notifications' and enable 'Allow Notifications' (FR)",
+          "Step3": "3. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Notifications' (FR)",
+          "Step3": "3. Tap 'App notifications' (FR)",
+          "Step4": "4. Enable 'All BC Services Card notifications' (FR)",
+          "Step5": "5. Return to the app to continue (FR)",
+        },
+      },
+      "CameraAndMicrophone": {
+        "iOS": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Camera' (FR)",
+          "Step3": "3. Tap 'Microphone' (FR)",
+          "Step4": "4. Return to the app to continue (FR)",
+        },
+        "Android": {
+          "Step1": "1. Tap 'Open Settings' below (FR)",
+          "Step2": "2. Tap 'Permissions' (FR)",
+          "Step3": "3. Tap 'Camera' and select 'Allow' (FR)",
+          "Step4": "4. Go back and tap 'Microphone' (FR)",
+          "Step5": "5. Select 'Allow' (FR)",
+          "Step6": "6. Return to the app to continue (FR)",
+        },
+      },
+    },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email (FR)",
       "EmailSkip": "Are you sure you don't want to provide it? (FR)",

@@ -1,9 +1,12 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, ScreenWrapper } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { useCameraPermission } from 'react-native-vision-camera'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
@@ -12,6 +15,7 @@ type PhotoInstructionsScreenProps = {
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
   const { t } = useTranslation()
+  const { hasPermission, requestPermission } = useCameraPermission()
 
   const handlePhotoTaken = async (path: string) => {
     // Navigate to photo review screen with the photo data
@@ -19,6 +23,12 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
       photoPath: path,
       forLiveCall: route.params.forLiveCall,
     })
+  }
+
+  useAutoRequestPermission(hasPermission, requestPermission)
+
+  if (!hasPermission) {
+    return <PermissionDisabled permissionType="camera" headerPadding={true} />
   }
 
   return (

@@ -1,10 +1,13 @@
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet } from 'react-native'
+import { useMicrophonePermission } from 'react-native-vision-camera'
 
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
@@ -14,6 +17,10 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
+  const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
+    useMicrophonePermission()
+  const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
+  const hasRequestedPermission = useRef(false)
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -35,8 +42,25 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
-  const onPressStart = () => {
-    navigation.navigate(BCSCScreens.LiveCall)
+  const onPressStart = async () => {
+    if (hasMicrophonePermission) {
+      navigation.navigate(BCSCScreens.LiveCall)
+      return
+    }
+
+    if (!hasRequestedPermission.current) {
+      hasRequestedPermission.current = true
+      const granted = await requestMicrophonePermission()
+      if (granted) {
+        navigation.navigate(BCSCScreens.LiveCall)
+        return
+      }
+    }
+    setShowPermissionDisabled(true)
+  }
+
+  if (showPermissionDisabled) {
+    return <PermissionDisabled permissionType="microphone" />
   }
 
   const controls = (
