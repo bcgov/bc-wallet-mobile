@@ -1,7 +1,7 @@
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCSCScreens } from '../types/navigators'
-import { globalAlertErrorPolicy, noTokensReturnedErrorPolicy } from './clientErrorPolicies'
+import { globalAlertErrorPolicy, noTokensReturnedErrorPolicy, updateRequiredErrorPolicy } from './clientErrorPolicies'
 
 const newError = (code: string) => {
   return new AppError('test error', 'This is a test error', {
@@ -97,6 +97,7 @@ describe('clientErrorPolicies', () => {
           translate: translateMock,
           navigation: { navigate: navigationMock },
         }
+        translateMock.mockReturnValue('close')
         noTokensReturnedErrorPolicy.handle(error, context as any)
 
         expect(emitErrorAlertMock).toHaveBeenCalledTimes(1)
@@ -104,6 +105,9 @@ describe('clientErrorPolicies', () => {
         const alertArgs = emitErrorAlertMock.mock.calls[0]
 
         const alertActions = alertArgs[1]?.actions
+
+        expect(alertActions[0].text).toBeDefined()
+        expect(alertActions[1].text).toBeDefined()
 
         expect(alertActions[0].style).toBe('cancel')
         expect(alertActions[1].style).toBe('destructive')
@@ -115,6 +119,98 @@ describe('clientErrorPolicies', () => {
         // Simulate pressing the "Remove Account" action
         removeAccountOnPressAction()
         expect(navigationMock).toHaveBeenCalledWith(BCSCScreens.RemoveAccountConfirmation)
+      })
+    })
+  })
+
+  describe('updateRequiredErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match IOS_APP_UPDATE_REQUIRED on evidence endpoint', () => {
+        const error = newError('ios_app_update_required')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(updateRequiredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match ANDROID_APP_UPDATE_REQUIRED on evidence endpoint', () => {
+        const error = newError('android_app_update_required')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(updateRequiredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match IOS_APP_UPDATE_REQUIRED on other endpoint', () => {
+        const error = newError('ios_app_update_required')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(updateRequiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match ANDROID_APP_UPDATE_REQUIRED on other endpoint', () => {
+        const error = newError('android_app_update_required')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(updateRequiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other errors on evidence endpoint', () => {
+        const error = newError('some_other_error')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(updateRequiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call emitErrorAlert with update action', () => {
+        const error = newError('ios_app_update_required')
+        const emitErrorAlertMock = jest.fn()
+        const translateMock = jest.fn()
+        const openURLMock = jest.fn()
+        const linkingMock = { openURL: openURLMock }
+        const context = {
+          emitErrorAlert: emitErrorAlertMock,
+          translate: translateMock,
+          linking: linkingMock,
+        }
+        translateMock.mockReturnValue('Go to App Store')
+        updateRequiredErrorPolicy.handle(error, context as any)
+
+        expect(emitErrorAlertMock).toHaveBeenCalledTimes(1)
+
+        const alertArgs = emitErrorAlertMock.mock.calls[0]
+
+        const alertActions = alertArgs[1]?.actions
+
+        expect(alertActions[0].text).toBe('Go to App Store')
+
+        const goToAppStoreOnPressAction = alertActions[0].onPress
+
+        expect(goToAppStoreOnPressAction).toBeDefined()
+
+        // Simulate pressing the "Go to App Store" action
+        goToAppStoreOnPressAction()
+        expect(openURLMock).toHaveBeenCalledWith(expect.any(String))
       })
     })
   })

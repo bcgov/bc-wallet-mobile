@@ -104,7 +104,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       injectErrorCodeIntoAxiosResponse(client, 'ios_app_update_required', client.endpoints.evidence),
     android_app_update_required: () =>
       injectErrorCodeIntoAxiosResponse(client, 'android_app_update_required', client.endpoints.evidence),
-    // Must be verififed and on the main stack to see this alert
+    // Must be verified and on the main stack to see this alert
     no_tokens_returned: () => injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token),
   }
 
