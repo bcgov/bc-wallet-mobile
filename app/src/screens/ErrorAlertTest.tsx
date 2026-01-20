@@ -149,11 +149,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       client.client.interceptors.request.eject(id)
       throw new AxiosError('Injected error message', errorCode, config)
     })
-    try {
-      await client.get(endpoint ?? '/any-endpoint')
-    } catch (error) {
-      // Intentionally empty - error alert is handled by the client interceptor
-    }
+
+    await client.get(endpoint ?? '/any-endpoint')
   }
 
   const triggerAlert = (title: string, body: string) => {

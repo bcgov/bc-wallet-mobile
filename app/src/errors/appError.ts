@@ -17,7 +17,7 @@ export type ErrorIdentity = {
  * @class
  */
 export class AppError extends Error {
-  private identity: ErrorIdentity
+  private readonly identity: ErrorIdentity
 
   code: string // ie: network.err_no_internet.2100
   title: string // ie: No Internet
