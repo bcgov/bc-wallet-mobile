@@ -301,7 +301,7 @@ const translation = {
         "CancelledByUser": "This device has been removed from your account by a user action. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
-      }  
+      }
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -385,7 +385,7 @@ const translation = {
       "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card. (PT-BR)",
       "InformationGetNewCardA": "Get a new card (PT-BR)",
       "InformationGetNewCardB": "if it is expired. (PT-BR)",
-      "InformationPhotoIdSubHeader": "2. Photo ID (PT-BR)", 
+      "InformationPhotoIdSubHeader": "2. Photo ID (PT-BR)",
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (PT-BR)",
       "InformationTypesOfAcceptedId": "Types of accepted ID (PT-BR)",
       "RenewalTimeHeader": "Time to renew (PT-BR)",
@@ -1008,7 +1008,10 @@ const translation = {
   },
 	"Alerts": {
 		"Actions": {
-			"DefaultOK": "OK (PT-BR)"
+			"DefaultOK": "OK (PT-BR)",
+      "Close": "Close (PT-BR)",
+      "GoToAppStore": "Go to App Store (PT-BR)",
+      "RemoveAccount": "Remove Account (PT-BR)",
 		}
 	},
   "BCWalletError": {
@@ -1021,6 +1024,7 @@ const translation = {
       "Title": "Connection Error (PT-BR)",
       "NoInternet": "No internet connection. Please check your network settings and try again. (PT-BR)",
       "ServerError": "A server error occurred. Please try again later. (PT-BR)",
+      "UnknownServerError": "An unknown server error occurred. Please try again later. (PT-BR)",
       "Timeout": "The request timed out. Please check your connection and try again. (PT-BR)",
       "Unsecured": "You are connected to an unsecured network. Please connect to a secure network. (PT-BR)",
       "ConnectionProblem": "There was a problem with the connection. Please try again. (PT-BR)",

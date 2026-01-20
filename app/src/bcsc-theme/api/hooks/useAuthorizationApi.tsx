@@ -1,11 +1,11 @@
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
-import { isAxiosError } from 'axios'
+import { AppError } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { useCallback, useMemo } from 'react'
 import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
-const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 const IAS_SCOPE = 'openid profile address offline_access'
 
 export enum DeviceVerificationOption {
@@ -185,10 +185,8 @@ export default useAuthorizationApi
  */
 function isDeviceRegistered(error: any): boolean {
   return (
-    isAxiosError(error) &&
-    error.response?.status === 400 &&
-    error.response?.data.error === INVALID_REGISTRATION_REQUEST &&
-    // "client is in invalid statue" OR "client is in invalid state"
-    String(error.response?.data.error_description).includes('client is in invalid')
+    error instanceof AppError &&
+    error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST &&
+    Boolean(error.technicalMessage?.includes('client is in invalid'))
   )
 }

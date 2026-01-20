@@ -1,6 +1,7 @@
 import { extractErrorMessage } from '@/errors'
+import { AppError } from '@/errors/appError'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
-import { ErrorDefinition, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
+import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
@@ -12,15 +13,8 @@ import { DeviceEventEmitter } from 'react-native'
 export interface ErrorOptions {
   /** Original error for technical details */
   error?: unknown
-  /** Override the default modal behavior */
-  showModal?: boolean
   /** Additional context for logging */
   context?: Record<string, unknown>
-}
-
-export interface ErrorAlertOptions extends Omit<ErrorOptions, 'showModal'> {
-  /** Custom actions/buttons for the native alert */
-  actions?: AlertAction[]
 }
 
 export interface AlertOptions {
@@ -37,14 +31,14 @@ export interface ErrorAlertContextType {
   emitError: (key: ErrorRegistryKey, options?: ErrorOptions) => void
 
   /**
-   * Show error as native alert instead of ErrorModal
-   */
-  errorAsAlert: (key: ErrorRegistryKey, options?: ErrorAlertOptions) => void
-
-  /**
    * Show native alert with title and body
    */
   emitAlert: (title: string, body: string, options?: AlertOptions) => void
+
+  /**
+   * Show error as native alert from an AppError instance
+   */
+  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
 
   /**
    * Dismiss the currently displayed error modal
@@ -57,6 +51,8 @@ export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(nul
 /**
  * ErrorAlertProvider - Unified error and alert handling for BC Wallet
  *
+ * TODO (MD): Provide state to prevent multiple modals/alerts from stacking
+ *
  * Provides a single entry point for:
  * - Error modals (via BifoldError/ErrorModal)
  * - Native alerts (via React Native Alert)
@@ -68,6 +64,8 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   /**
    * Show error via ErrorModal
    * Uses i18next.t() directly to avoid stale closure issues with useCallback
+   *
+   * TODO (MD): Rename to emitErrorModal to clarify usage
    */
   const emitError = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
     const definition = ErrorRegistry[key]
@@ -78,52 +76,32 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
       return
     }
 
-    const { error: originalError, showModal = (definition as ErrorDefinition).showModal ?? true, context } = options
+    const { error: originalError, context } = options
     const technicalMessage = extractErrorMessage(originalError)
 
     logError(key, definition, technicalMessage, context)
 
-    if (showModal) {
-      // Use i18next.t() directly to ensure translations are always current
-      const title = i18next.t(definition.titleKey)
-      const description = i18next.t(definition.descriptionKey)
-
-      const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
-    }
-  }, [])
-
-  /**
-   * Show error as native alert with translated strings from ErrorRegistry
-   */
-  const errorAsAlert = useCallback((key: ErrorRegistryKey, options: ErrorAlertOptions = {}): void => {
-    const definition = ErrorRegistry[key]
-
-    if (!definition) {
-      appLogger.warn(`Unknown error key: ${key}`)
-      errorAsAlert('GENERAL_ERROR', options)
-      return
-    }
-
-    const { error: originalError, actions, context } = options
-    const technicalMessage = extractErrorMessage(originalError)
-
-    logError(key, definition, technicalMessage, context)
-    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-    // Use pre-translated strings from ErrorRegistry
+    // Use i18next.t() directly to ensure translations are always current
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    showAlert(title, description, actions, definition.appEvent)
+    const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
+    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
+    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
   }, [])
 
   /**
-   * Show native alert with title and body
+   * Show native alert with title and description
    */
   const emitAlert = useCallback((title: string, body: string, options?: AlertOptions): void => {
     showAlert(title, body, options?.actions, options?.event)
+  }, [])
+
+  /**
+   * Show error as native alert from an AppError instance
+   */
+  const emitErrorAlert = useCallback((error: AppError, options?: { actions?: AlertAction[] }) => {
+    showAlert(error.title, error.description, options?.actions, error.appEvent)
   }, [])
 
   /**
@@ -136,11 +114,11 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   const value: ErrorAlertContextType = useMemo(
     () => ({
       emitError,
-      errorAsAlert,
       emitAlert,
+      emitErrorAlert,
       dismiss,
     }),
-    [emitError, errorAsAlert, emitAlert, dismiss]
+    [emitError, emitAlert, emitErrorAlert, dismiss]
   )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
