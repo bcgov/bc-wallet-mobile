@@ -1,3 +1,4 @@
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import notifications from '@assets/img/notifications.png'
 import {
@@ -13,10 +14,12 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
+import { AppState, Image, StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import BulletPoint from '../../components/BulletPoint'
+
 interface NotificationsScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingNotifications>
 }
@@ -31,6 +34,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   const [, dispatch] = useStore()
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [deniedPermission, setDeniedPermission] = useState(false)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -51,6 +55,35 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
     t('BCSC.Onboarding.NotificationsBullet3'),
     t('BCSC.Onboarding.NotificationsBullet4'),
   ]
+
+  const checkPermissions = useCallback(async () => {
+    const status = await PushNotifications.status()
+    if (
+      status === PushNotifications.NotificationPermissionStatus.DENIED ||
+      status === PushNotifications.NotificationPermissionStatus.BLOCKED
+    ) {
+      setDeniedPermission(true)
+    } else {
+      setDeniedPermission(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    checkPermissions()
+  }, [checkPermissions])
+
+  // Re-check permissions when user returns from settings
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkPermissions()
+      }
+    })
+
+    return () => {
+      subscription.remove()
+    }
+  }, [checkPermissions])
 
   /**
    * Prompts the user to enable push notifications and updates the global state based on their response.
@@ -85,6 +118,15 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
       accessibilityLabel={t('Global.Continue')}
     />
   )
+
+  if (deniedPermission) {
+    return (
+      <PermissionDisabled
+        permissionType="notifications"
+        navigateToNextScreen={() => navigation.navigate(BCSCScreens.OnboardingSecureApp)}
+      />
+    )
+  }
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>

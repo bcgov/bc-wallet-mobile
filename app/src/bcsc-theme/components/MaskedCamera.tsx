@@ -1,18 +1,11 @@
 import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useIsFocused } from '@react-navigation/native'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import {
-  Camera,
-  CodeScanner,
-  FormatFilter,
-  useCameraDevice,
-  useCameraFormat,
-  useCameraPermission,
-} from 'react-native-vision-camera'
+import { Camera, CodeScanner, FormatFilter, useCameraDevice, useCameraFormat } from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
   navigation: any
@@ -41,7 +34,6 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const { hasPermission, requestPermission } = useCameraPermission()
   const [isActive, setIsActive] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
@@ -97,35 +89,7 @@ const MaskedCamera = ({
     },
   })
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!hasPermission) {
-        const permission = await requestPermission()
-        if (!permission) {
-          Alert.alert(
-            t('BCSC.CameraDisclosure.CameraPermissionRequired'),
-            t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage'),
-            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
-          )
-          return
-        }
-      }
-    }
-
-    checkPermissions()
-  }, [hasPermission, requestPermission, navigation, t])
-
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
-
-  if (!hasPermission) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
 
   if (!device) {
     return (
