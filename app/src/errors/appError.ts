@@ -85,7 +85,7 @@ export class AppError extends Error {
   }
 
   /**
-   * Serialize the AppError to a JSON object. Usefull for logging.
+   * Serialize the AppError to a JSON object. Useful for logging.
    *
    * @return An object containing the serialized error details.
    */
