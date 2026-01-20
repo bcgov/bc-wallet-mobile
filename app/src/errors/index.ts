@@ -29,7 +29,7 @@
  *   // Show informational native alert
  *   emitAlert('Update available', 'A new version is ready', {
  *    actions: [{ text: 'Update Now', onPress: updateApp }],
- *    appEvent: 'APP_UPDATE_ALERT'
+ *    appEvent: AppEventCode.UPDATE_APP_EVENT
  *   })
  * }
  * ```

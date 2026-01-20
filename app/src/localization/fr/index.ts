@@ -938,7 +938,10 @@ const translation = {
   },
 	"Alerts": {
 		"Actions": {
-			"DefaultOK": "OK (FR)"
+			"DefaultOK": "OK (FR)",
+      "Close": "Close (FR)",
+      "GoToAppStore": "Go to App Store (FR)",
+      "RemoveAccount": "Remove Account (FR)",
 		}
 	},
   "BCWalletError": {
