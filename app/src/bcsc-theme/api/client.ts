@@ -75,9 +75,9 @@ class BCSCApiClient {
     })
 
     if (this.baseURL) {
-      this.logger.info(`BCSCApiClient initialized with URL: ${this.baseURL}`)
+      this.logger.info(`[BCSCApiClient] initialized with URL: ${this.baseURL}`)
     } else {
-      this.logger.error('BCSCApiClient initialized with empty URL.')
+      this.logger.error('[BCSCApiClient] initialized with empty URL.')
     }
 
     this.tokensPromise = null
@@ -135,7 +135,7 @@ class BCSCApiClient {
       if (!suppressStatusCodeLogs.includes(statusCode)) {
         const simpleAppError = appError.toJSON()
         const { message, ...details } = simpleAppError
-        this.logger.error(`[ApiClient] ${message}`, {
+        this.logger.error(`[BCSCApiClient] ${message}`, {
           ...details,
           cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
         })
@@ -196,13 +196,13 @@ class BCSCApiClient {
 
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
-        this.logger.error('BCSCClient: Missing tokens - call getTokensForRefreshToken to initialize tokens')
+        this.logger.error('[BCSCApiClient] Missing tokens - call getTokensForRefreshToken to initialize tokens')
         throw new Error('Client missing tokens')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
         // refresh tokens should not expire
-        this.logger.error('BCSCClient: Refresh token expired - fatal error detected')
+        this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 

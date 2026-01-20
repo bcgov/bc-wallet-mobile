@@ -1,7 +1,13 @@
 import { AlertInteractionEvent } from '../events/appEventCode'
 import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
-import { extractErrorMessage, getErrorDefinition, logError, trackErrorInAnalytics } from './errorHandler'
+import {
+  extractErrorMessage,
+  getErrorDefinition,
+  getErrorDefinitionFromAppEventCode,
+  logError,
+  trackErrorInAnalytics,
+} from './errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 // Mock dependencies
@@ -184,6 +190,33 @@ describe('errorHandler', () => {
           technicalMessage: '',
         })
       )
+    })
+  })
+
+  describe('getErrorDefinitionFromAppEventCode', () => {
+    it('should return correct error definition for known app event code', () => {
+      const definition = getErrorDefinitionFromAppEventCode('general')
+
+      expect(definition).toEqual(ErrorRegistry.GENERAL_ERROR)
+    })
+
+    it('should return null for unknown app event code', () => {
+      const definition = getErrorDefinitionFromAppEventCode('unknown_event_code')
+
+      expect(definition).toBeNull()
+    })
+
+    it('sanity test for all error definitions', () => {
+      Object.values(ErrorRegistry).forEach((definition) => {
+        const fetchedDef = getErrorDefinitionFromAppEventCode(definition.appEvent)
+        expect(fetchedDef).toEqual(definition)
+      })
+    })
+
+    it('shoulf return null for empty app event code', () => {
+      const definition = getErrorDefinitionFromAppEventCode('')
+
+      expect(definition).toBeNull()
     })
   })
 })

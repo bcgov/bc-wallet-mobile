@@ -3,7 +3,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
-import { Button, ButtonType, ScreenWrapper, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
 import { AxiosError } from 'axios'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +19,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
   const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     container: {
@@ -153,7 +154,11 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       throw new AxiosError('Injected error message', errorCode, config)
     })
 
-    await client.get(endpoint ?? '/any-endpoint')
+    try {
+      await client.get(endpoint ?? '/any-endpoint')
+    } catch (error) {
+      logger.debug(`Injected error code ${errorCode} into Axios response`)
+    }
   }
 
   const triggerAlert = (title: string, body: string) => {

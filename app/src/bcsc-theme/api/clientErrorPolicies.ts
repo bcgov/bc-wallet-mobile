@@ -2,6 +2,7 @@ import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction } from '@/utils/alert'
 import { getBCSCAppStoreUrl } from '@/utils/links'
+import { BifoldLogger } from '@bifold/core'
 import { NavigationProp, ParamListBase } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
@@ -30,6 +31,7 @@ type ErrorHandlerContext = {
   emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
+  logger: BifoldLogger
 }
 
 type ErrorHandlingPolicy = {
@@ -90,8 +92,12 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
           // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
           text: context.translate('Alerts.Actions.GoToAppStore'),
           onPress: async () => {
-            const appStoreUrl = getBCSCAppStoreUrl()
-            await context.linking.openURL(appStoreUrl)
+            try {
+              const appStoreUrl = getBCSCAppStoreUrl()
+              await context.linking.openURL(appStoreUrl)
+            } catch (error) {
+              context.logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
+            }
           },
         },
       ],

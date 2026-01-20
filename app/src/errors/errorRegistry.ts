@@ -1019,4 +1019,8 @@ export const ErrorRegistry = {
   },
 } as const
 
+export const ErrorRegistryAppEventMap = new Map<AppEventCode, ErrorDefinition>(
+  Object.values(ErrorRegistry).map((definition) => [definition.appEvent, definition])
+)
+
 export type ErrorRegistryKey = keyof typeof ErrorRegistry

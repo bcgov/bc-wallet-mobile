@@ -100,6 +100,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         emitErrorAlert,
         navigation,
         translate,
+        logger,
       })
     },
     [emitErrorAlert, logger, navigation]
@@ -118,20 +119,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
-        // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (
-          !BCSC_API_CLIENT_SINGLETON ||
-          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
-        ) {
-          newClient = new BCSCApiClient(
-            store.developer.environment.iasApiBaseUrl,
-            logger as RemoteLogger,
-            handleApiClientError
-          )
-          await newClient.fetchEndpointsAndConfig()
+        newClient = new BCSCApiClient(
+          store.developer.environment.iasApiBaseUrl,
+          logger as RemoteLogger,
+          handleApiClientError
+        )
+        await newClient.fetchEndpointsAndConfig()
 
-          setClientAndSingleton(newClient)
-        }
+        setClientAndSingleton(newClient)
       } catch (err) {
         /**
          * Special case:
