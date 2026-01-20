@@ -105,7 +105,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     android_app_update_required: () =>
       injectErrorCodeIntoAxiosResponse(client, 'android_app_update_required', client.endpoints.evidence),
     // Must be verified and on the main stack to see this alert
-    no_tokens_returned: () => injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token),
+    no_tokens_returned: () => {
+      onBack() // close the modal first
+      injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token)
+    },
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
