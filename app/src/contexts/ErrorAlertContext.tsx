@@ -13,15 +13,8 @@ import { DeviceEventEmitter } from 'react-native'
 export interface ErrorOptions {
   /** Original error for technical details */
   error?: unknown
-  /** Override the default modal behavior */
-  showModal?: boolean
   /** Additional context for logging */
   context?: Record<string, unknown>
-}
-
-export interface ErrorAlertOptions extends Omit<ErrorOptions, 'showModal'> {
-  /** Custom actions/buttons for the native alert */
-  actions?: AlertAction[]
 }
 
 export interface AlertOptions {

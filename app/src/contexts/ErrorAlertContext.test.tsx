@@ -96,7 +96,7 @@ describe('ErrorAlertContext', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       expect(result.current).toHaveProperty('emitError')
-      expect(result.current).toHaveProperty('errorAsAlert')
+      expect(result.current).toHaveProperty('emitErrorAlert')
       expect(result.current).toHaveProperty('emitAlert')
       expect(result.current).toHaveProperty('dismiss')
     })
@@ -112,17 +112,6 @@ describe('ErrorAlertContext', () => {
 
       expect(appLogger.error).toHaveBeenCalled()
       expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.any(BifoldError))
-    })
-
-    it('should not show modal when showModal is false', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitError('GENERAL_ERROR', { showModal: false })
-      })
-
-      expect(appLogger.error).toHaveBeenCalled()
-      expect(DeviceEventEmitter.emit).not.toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.anything())
     })
 
     it('should track analytics', () => {

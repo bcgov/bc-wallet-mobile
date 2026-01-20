@@ -145,7 +145,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const injectErrorCodeIntoAxiosResponse = async (client: BCSCApiClient, errorCode: string, endpoint?: string) => {
-    client.client.interceptors.request.use((config) => {
+    const id = client.client.interceptors.request.use((config) => {
+      client.client.interceptors.request.eject(id)
       throw new AxiosError('Injected error message', errorCode, config)
     })
     try {

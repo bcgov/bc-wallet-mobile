@@ -128,16 +128,15 @@ class BCSCApiClient {
       const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
       const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
 
-      console.log({ errorDefinition, appError })
-
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0
 
       // 3. Log if the status code is not in the suppress list
       if (!suppressStatusCodeLogs.includes(statusCode)) {
         const simpleAppError = appError.toJSON()
-        this.logger.error(`[ApiClient] ${simpleAppError.message}`, {
-          ...simpleAppError.details,
+        const { message, ...details } = simpleAppError
+        this.logger.error(`[ApiClient] ${message}`, {
+          ...details,
           cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
         })
       }

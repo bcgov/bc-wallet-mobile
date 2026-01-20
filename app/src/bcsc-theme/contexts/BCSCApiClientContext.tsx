@@ -4,8 +4,8 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
+import i18next from 'i18next'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
@@ -42,8 +42,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -90,9 +89,20 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         appEvent: error.appEvent,
       })
 
-      policy.handle(error, { emitErrorAlert, navigation, translate: t, linking: Linking })
+      /**
+       * Note: Using the translate function from the react i18n hook
+       * causes a downstream memory leak with the BCSCApiClient during tests.
+       */
+      const translate = i18next.t.bind(i18next)
+
+      policy.handle(error, {
+        linking: Linking,
+        emitErrorAlert,
+        navigation,
+        translate,
+      })
     },
-    [emitErrorAlert, logger, navigation, t]
+    [emitErrorAlert, logger, navigation]
   )
 
   useEffect(() => {
@@ -145,12 +155,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
     configureClient()
   }, [
-    store.stateLoaded,
-    store.developer.environment.name,
-    store.developer.environment.iasApiBaseUrl,
-    logger,
-    dispatch,
     handleApiClientError,
+    logger,
+    store.developer.environment.iasApiBaseUrl,
+    store.developer.environment.name,
+    store.stateLoaded,
   ])
 
   const contextValue = useMemo(
@@ -166,6 +175,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 }
 
 // This function is used to reset the singleton instance in tests
-export function _resetBCSCApiClientSingleton() {
+export const _resetBCSCApiClientSingleton = () => {
   BCSC_API_CLIENT_SINGLETON = null
 }

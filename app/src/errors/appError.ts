@@ -1,9 +1,10 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { BifoldError } from '@bifold/core'
 import i18next from 'i18next'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
-type ErrorIdentity = {
+export type ErrorIdentity = {
   category: ErrorCategory
   appEvent: AppEventCode
   statusCode: number
@@ -16,6 +17,8 @@ type ErrorIdentity = {
  * @class
  */
 export class AppError extends Error {
+  private identity: ErrorIdentity
+
   code: string // ie: network.err_no_internet.2100
   title: string // ie: No Internet
   appEvent: AppEventCode // ie: no_internet
@@ -26,6 +29,8 @@ export class AppError extends Error {
     super(`${title}: ${description}`, options)
     this.name = this.constructor.name
 
+    this.identity = identity
+
     this.code = `${identity.category}.${identity.appEvent}.${identity.statusCode}` // ie: network.err_no_internet.2100
     this.title = title
     this.appEvent = identity.appEvent
@@ -34,6 +39,15 @@ export class AppError extends Error {
 
     // On creation, automatically track the error in analytics
     Analytics.trackErrorEvent(this)
+  }
+
+  /**
+   * Get the technical message from the original error, if available.
+   *
+   * @returns The technical message or null if not available.
+   */
+  get technicalMessage(): string | null {
+    return this.cause instanceof Error ? this.cause.message : null
   }
 
   /**
@@ -57,14 +71,17 @@ export class AppError extends Error {
   }
 
   /**
-   * Type guard to check if an error is an AppError with a specific AppEventCode.
+   * Convert the AppError to a BifoldError instance.
    *
-   * @param error - The error to check.
-   * @param appEvent - The AppEventCode to match.
-   * @returns True if the error is an AppError with the specified AppEventCode, false otherwise.
+   * @returns A BifoldError representing the AppError.
    */
-  static isAppErrorWithEvent(error: unknown, appEvent: AppEventCode): error is AppError & { appEvent: AppEventCode } {
-    return error instanceof AppError && error.appEvent === appEvent
+  toBifoldError(): BifoldError {
+    return new BifoldError(
+      this.title,
+      this.description,
+      this.technicalMessage ?? this.message,
+      this.identity.statusCode
+    )
   }
 
   /**
@@ -74,13 +91,12 @@ export class AppError extends Error {
    */
   toJSON() {
     return {
+      name: this.name,
       message: this.message,
-      details: {
-        name: this.name,
-        code: this.code,
-        timestamp: this.timestamp,
-        cause: this.cause,
-      },
+      technicalMessage: this.technicalMessage,
+      code: this.code,
+      timestamp: this.timestamp,
+      cause: this.cause,
     }
   }
 }

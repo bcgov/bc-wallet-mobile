@@ -4,6 +4,7 @@ import {
   BCSCApiClientContext,
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
+import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import * as Bifold from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
@@ -40,7 +41,9 @@ describe('BCSCApiClientProvider', () => {
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -69,7 +72,9 @@ describe('BCSCApiClientProvider', () => {
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -96,7 +101,9 @@ describe('BCSCApiClientProvider', () => {
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -122,7 +129,9 @@ describe('BCSCApiClientProvider', () => {
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result, rerender } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -164,7 +173,9 @@ describe('BCSCApiClientProvider', () => {
       .mockRejectedValue(new Error('Initialization failed'))
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -196,7 +207,9 @@ describe('BCSCApiClientProvider', () => {
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
@@ -231,7 +244,9 @@ describe('BCSCApiClientProvider', () => {
     )
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      <ErrorAlertProvider>
+        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+      </ErrorAlertProvider>
     )
 
     const { result, rerender } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })

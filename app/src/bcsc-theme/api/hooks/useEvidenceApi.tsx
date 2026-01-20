@@ -1,10 +1,8 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -77,10 +75,8 @@ export interface EvidenceMetadataPayload {
 }
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
-  const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { updateVerificationRequest } = useSecureActions()
-  const { emitErrorAlert } = useErrorAlert()
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode

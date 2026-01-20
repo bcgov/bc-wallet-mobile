@@ -19,7 +19,7 @@ interface LogAxiosErrorOptions {
 export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosError => {
   if (
     typeof axiosError.response?.data?.error === 'string' &&
-    axiosError.response?.data?.error_description === 'string'
+    typeof axiosError.response?.data?.error_description === 'string'
   ) {
     axiosError.code = axiosError.response.data.error
     axiosError.message = axiosError.response.data.error_description
