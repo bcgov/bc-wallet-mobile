@@ -23,7 +23,7 @@ type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 /**
  * Renders the account screen component, which displays user information and provides navigation to account-related actions.
  *
- * @returns {*} {JSX.Element} The account screen component.
+ * @returns {*} {React.ReactElement} The account screen component.
  */
 const Account: React.FC = () => {
   const { Spacing } = useTheme()

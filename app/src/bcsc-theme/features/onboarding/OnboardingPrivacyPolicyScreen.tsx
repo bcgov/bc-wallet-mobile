@@ -13,11 +13,11 @@ interface OnboardingPrivacyPolicyScreenProps {
 /**
  * Privacy Policy screen component that informs users about the app's privacy practices.
  *
- * @returns {*} {JSX.Element} The OnboardingPrivacyPolicyScreen component.
+ * @returns {*} {React.ReactElement} The OnboardingPrivacyPolicyScreen component.
  */
 export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScreenProps> = ({
   navigation,
-}: OnboardingPrivacyPolicyScreenProps): JSX.Element => {
+}: OnboardingPrivacyPolicyScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
 

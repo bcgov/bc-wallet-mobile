@@ -27,9 +27,9 @@ interface NotificationsScreenProps {
 /**
  * Renders the notifications screen for the BCSC onboarding process.
  *
- * @returns {*} {JSX.Element} The NotificationsScreen component.
+ * @returns {*} {React.ReactElement} The NotificationsScreen component.
  */
-export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): JSX.Element => {
+export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const { Spacing } = useTheme()

@@ -27,7 +27,7 @@ type DropdownWithValidationProps<T> = {
  * Uses a modal with a scrollable list for consistent behavior on both iOS and Android.
  *
  * @param {DropdownWithValidationProps} props - Dropdown props
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 export const DropdownWithValidation = <T extends string | number>({
   id,

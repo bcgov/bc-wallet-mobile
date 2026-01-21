@@ -26,7 +26,7 @@ export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(n
  * Provides the BCSCAccountContext to child components, managing the loading of user account data.
  *
  * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {JSX.Element} The BCSCAccountProvider component wrapping its children.
+ * @returns {*} {React.ReactElement} The BCSCAccountProvider component wrapping its children.
  */
 export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()

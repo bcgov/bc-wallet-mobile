@@ -2163,7 +2163,7 @@ class BcscCoreModule(
             val title = reason ?: "Authentication Required"
             val subtitle = "Please authenticate to continue"
 
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is androidx.fragment.app.FragmentActivity) {
                 promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return
@@ -2486,7 +2486,7 @@ class BcscCoreModule(
             val account = existingAccounts.first()
             val accountID = account.uuid
 
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is FragmentActivity) {
                 promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return

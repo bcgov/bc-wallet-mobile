@@ -59,13 +59,27 @@ export type JWK = {
   n: string;
 };
 
+export type JWTAddress = {
+  street_address?: string;
+  postal_code?: string;
+  locality?: string;
+  region?: string;
+  country?: string;
+};
+
 export type JWTClaims = {
   iss: string;
   aud: string;
   sub: string;
   iat: number;
   exp: number;
-  [key: string]: any;
+  jti?: string;
+  family_name?: string;
+  given_name?: string;
+  middle_name?: string;
+  birthdate?: string;
+  gender?: string;
+  address?: JWTAddress;
 };
 
 export enum AccountSecurityMethod {
@@ -177,6 +191,16 @@ export type NativeAccount = {
   // with complex structure
 };
 
+export type NativeAccountWithoutId = {
+  issuer: string;
+  clientID: string;
+  securityMethod: AccountSecurityMethod;
+  displayName?: string;
+  didPostNicknameToServer?: boolean;
+  nickname?: string;
+  failedAttemptCount?: number;
+};
+
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
   getKeyPair(label: string): Promise<KeyPair>;
@@ -199,7 +223,7 @@ export interface Spec extends TurboModule {
   deleteToken(tokenType: number): Promise<boolean>;
   setIssuer(issuer: string): Promise<boolean>;
   getAccount(): Promise<NativeAccount | null>;
-  setAccount(account: Omit<NativeAccount, 'id'>): Promise<void>;
+  setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(
     code: string,
@@ -291,7 +315,7 @@ export interface Spec extends TurboModule {
    * Compatible with v3 native app storage for rollback support.
    * @returns Object containing account flags (isEmailVerified, userSkippedEmailVerification, emailAddress, etc.)
    */
-  getAccountFlags(): Promise<Record<string, unknown>>;
+  getAccountFlags(): Promise<Object>;
 
   /**
    * Sets account flags in native storage.
@@ -301,7 +325,7 @@ export interface Spec extends TurboModule {
    * @param flags Object containing flags to set (merges with existing)
    * @returns true if saved successfully
    */
-  setAccountFlags(flags: Record<string, unknown>): Promise<boolean>;
+  setAccountFlags(flags: Object): Promise<boolean>;
 
   /**
    * Deletes all account flags from native storage.
@@ -317,7 +341,7 @@ export interface Spec extends TurboModule {
    * Compatible with v3 native app storage for rollback support.
    * @returns Array of evidence metadata objects
    */
-  getEvidenceMetadata(): Promise<Record<string, unknown>[]>;
+  getEvidenceMetadata(): Promise<Object[]>;
 
   /**
    * Sets evidence metadata in native storage.
@@ -327,7 +351,7 @@ export interface Spec extends TurboModule {
    * @param evidence Array of evidence metadata objects to save
    * @returns true if saved successfully
    */
-  setEvidenceMetadata(evidence: Record<string, unknown>[]): Promise<boolean>;
+  setEvidenceMetadata(evidence: Object[]): Promise<boolean>;
 
   /**
    * Deletes all evidence metadata from native storage.
@@ -343,7 +367,7 @@ export interface Spec extends TurboModule {
    * Compatible with v3 native app storage for verification state detection.
    * @returns The credential object or null if not found
    */
-  getCredential(): Promise<Record<string, unknown> | null>;
+  getCredential(): Promise<Object | null>;
 
   /**
    * Sets credential information in native storage.
@@ -353,7 +377,7 @@ export interface Spec extends TurboModule {
    * @param credential The credential object to save
    * @returns true if saved successfully
    */
-  setCredential(credential: Record<string, unknown>): Promise<boolean>;
+  setCredential(credential: Object): Promise<boolean>;
 
   /**
    * Deletes credential information from native storage.

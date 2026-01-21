@@ -35,7 +35,7 @@ interface WebViewContentProps {
  * Automatically applies accessibility font scaling based on device settings.
  *
  * @param {WebViewContentProps} props - The component props.
- * @returns {*} {JSX.Element} The rendered WebView component.
+ * @returns {*} {React.ReactElement} The rendered WebView component.
  */
 const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript, onLoaded }) => {
   const { ColorPalette } = useTheme()

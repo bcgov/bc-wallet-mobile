@@ -36,7 +36,7 @@ import { useCameraPermission } from 'react-native-vision-camera'
  *  - Device attestation and verification
  *  - Token retrieval and storage
  *
- * @returns {*} {JSX.Element} The rendered TransferQRScannerScreen component.
+ * @returns {*} {React.ReactElement} The rendered TransferQRScannerScreen component.
  */
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()

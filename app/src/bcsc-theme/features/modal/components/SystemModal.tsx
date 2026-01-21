@@ -36,7 +36,7 @@ export interface SystemModalProps {
  * A reusable modal component for system-related messages (device invalidated, internet disconnected, mandatory update, etc.)
  *
  * @param {SystemModalProps} props - The component props
- * @returns {JSX.Element} The SystemModal component
+ * @returns {React.ReactElement} The SystemModal component
  */
 export const SystemModal = ({
   iconName,
@@ -45,7 +45,7 @@ export const SystemModal = ({
   contentText,
   buttonText,
   onButtonPress,
-}: SystemModalProps): JSX.Element => {
+}: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
   const navigation = useNavigation()
 

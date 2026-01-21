@@ -16,7 +16,7 @@ interface NotificationBannerContainerProps {
  * Container component for displaying notification banners and handling their interactions.
  *
  * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
- * @returns {*} {JSX.Element} The NotificationBannerContainer component.
+ * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
 export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()

@@ -39,7 +39,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * just the client using useBCSCApiClient/useBCSCApiClientState hooks.
  *
  * @param {React.ReactNode} children - The child components that will have access to the BCSCApiClient instance.
- * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
+ * @returns {*} {React.ReactElement} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store] = useStore<BCState>()

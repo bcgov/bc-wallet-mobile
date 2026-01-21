@@ -12,7 +12,7 @@ interface SettingsActionCardProps {
 /**
  * A card component used in the settings screen to represent an action the user can take.
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 export const SettingsActionCard = (props: SettingsActionCardProps) => {
   const { Spacing, ColorPalette } = useTheme()

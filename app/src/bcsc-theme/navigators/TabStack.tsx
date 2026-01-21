@@ -18,8 +18,8 @@ type TabBarIconProps = {
   size: number
 }
 
-const createTabBarIcon = (label: string, iconName: string): React.FC<TabBarIconProps> => {
-  const TabBarIconComponent: React.FC<TabBarIconProps> = ({ focused }) => {
+const createTabBarIcon = (label: string, iconName: string) => {
+  const TabBarIconComponent = ({ focused }: TabBarIconProps): React.JSX.Element => {
     const { TabTheme, TextTheme, Spacing } = useTheme()
     const { fontScale } = useWindowDimensions()
     const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18

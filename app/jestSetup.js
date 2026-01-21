@@ -96,7 +96,7 @@ jest.mock('react-native-orientation-locker', () => {
 })
 jest.mock('@bifold/react-native-attestation', () => ({}))
 jest.mock('@hyperledger/anoncreds-react-native', () => ({}))
-jest.mock('@hyperledger/aries-askar-react-native', () => ({}))
+jest.mock('@openwallet-foundation/askar-react-native', () => ({}))
 jest.mock('@hyperledger/indy-vdr-react-native', () => ({}))
 jest.mock('react-native-keyboard-controller', () => {
   const { ScrollView } = jest.requireActual('react-native')

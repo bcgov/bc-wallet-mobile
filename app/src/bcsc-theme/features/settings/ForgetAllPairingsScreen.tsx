@@ -24,9 +24,9 @@ interface ForgetAllPairingsScreenProps {
 /**
  * Forget All Pairings screen component that allows users to unpair their device from all previously paired computers
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
-export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenProps): JSX.Element => {
+export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { pairing } = useApi()
