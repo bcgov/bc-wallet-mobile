@@ -185,6 +185,14 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
+  UNEXPECTED_SERVER_ERROR: {
+    statusCode: 2112,
+    appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+    titleKey: 'BCWalletError.Network.Title',
+    descriptionKey: 'BCWalletError.Network.UnexpectedServerError',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+  },
 
   // ============================================
   // Authentication/Login Errors (2200-2299)

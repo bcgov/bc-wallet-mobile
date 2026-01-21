@@ -144,6 +144,7 @@ class BCSCApiClient {
       // 4. Invoke onError callback if provided and reject promise
       this.onError?.(appError, {
         endpoint: String(error.config?.url),
+        statusCode: error.response?.status ?? 0,
         apiEndpoints: this.endpoints,
       })
 

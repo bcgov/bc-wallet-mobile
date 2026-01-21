@@ -55,6 +55,7 @@ export enum AppEventCode {
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
   SERVER_ERROR = 'server_error',
   UNKNOWN_SERVER_ERROR = 'unknown_server_error', // fallback server app event
+  UNEXPECTED_SERVER_ERROR = 'unexpected_server_error',
   SERVER_TIMEOUT = 'server_timeout',
   UNSECURED_NETWORK = 'unsecured_network',
   USER_INPUT_BIRTHDATE_EMPTY = 'user_input_birthdate_empty',

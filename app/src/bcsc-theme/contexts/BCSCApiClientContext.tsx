@@ -8,7 +8,11 @@ import i18next from 'i18next'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
-import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
+import {
+  ClientErrorHandlingPolicies,
+  ErrorMatcherContext,
+  createExpiredAppSetupErrorPolicy,
+} from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -49,6 +53,23 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const { emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
 
+  const allErrorHandlingPolices = useMemo(() => {
+    const polices = ClientErrorHandlingPolicies
+
+    const resetApplication = async () => {
+      /**
+       * TODO / FIXME (MD): Reset application state
+       * The actual implementation should ensure that the application
+       * is reset and the user can start Setup Steps again.
+       * Waiting on a 'factoryReset' change that persists onboarding state.
+       */
+    }
+
+    polices.push(createExpiredAppSetupErrorPolicy(resetApplication))
+
+    return polices
+  }, [])
+
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
    *
@@ -69,12 +90,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const handleApiClientError = useCallback(
     (error: AppError, context: ErrorMatcherContext) => {
-      const policy = ClientErrorHandlingPolicies.find((policy) =>
-        policy.matches(error, {
-          endpoint: context.endpoint,
-          apiEndpoints: context.apiEndpoints,
-        })
-      )
+      const policy = allErrorHandlingPolices.find((policy) => policy.matches(error, context))
 
       if (!policy) {
         logger.info('[ApiClient] No error handling policy for:', {
@@ -103,7 +119,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         logger,
       })
     },
-    [emitErrorAlert, logger, navigation]
+    [allErrorHandlingPolices, emitErrorAlert, logger, navigation]
   )
 
   useEffect(() => {
