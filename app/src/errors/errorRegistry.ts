@@ -93,7 +93,7 @@ export const ErrorRegistry = {
     statusCode: 2100,
     appEvent: AppEventCode.NO_INTERNET,
     titleKey: 'BCWalletError.Network.Title',
-    descriptionKey: 'BCWalletError.Network.NoInternet',
+    descriptionKey: 'BCWalletError.Network.NoInternetTitle',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
@@ -108,7 +108,7 @@ export const ErrorRegistry = {
   SERVER_TIMEOUT: {
     statusCode: 2102,
     appEvent: AppEventCode.SERVER_TIMEOUT,
-    titleKey: 'BCWalletError.Network.Title',
+    titleKey: 'BCWalletError.Network.ConnectionTitle',
     descriptionKey: 'BCWalletError.Network.Timeout',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
@@ -117,7 +117,7 @@ export const ErrorRegistry = {
     statusCode: 2103,
     appEvent: AppEventCode.UNSECURED_NETWORK,
     titleKey: 'BCWalletError.Network.Title',
-    descriptionKey: 'BCWalletError.Network.Unsecured',
+    descriptionKey: 'BCWalletError.Network.UnsecuredTitle',
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.NETWORK,
   },
@@ -177,6 +177,7 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
+  // BCSC API client fallback error (no IAS mapping)
   UNKNOWN_SERVER_ERROR: {
     statusCode: 2111,
     appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
@@ -185,9 +186,10 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
+  // BCSC API client unexpected error (IAS mapping for status 500, 503)
   UNEXPECTED_SERVER_ERROR: {
     statusCode: 2112,
-    appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+    appEvent: AppEventCode.UNEXPECTED_SERVER_ERROR,
     titleKey: 'BCWalletError.Network.Title',
     descriptionKey: 'BCWalletError.Network.UnexpectedServerError',
     severity: ErrorSeverity.ERROR,

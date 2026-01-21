@@ -9,19 +9,6 @@ import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
-/**
- * TODO (MD): Remove this comment
- *  11. Forget all pairings:
- *  12. Unexpected server error (all endpoints): done
- *  13. Internal server error 500 (verify device): done
- *  14. Too many attempts (all endpoints): done
- *  15. Expired app setup (OIDC token endpoint):
- *  16. Verify incomplete (OIDC token endpoint):
- *    - Not sure when this should happen...
- *  17. URI cant be parsed (verify device):
- *
- *
- */
 
 /**
  * Set of event codes that should trigger alerts in the BCSC client
@@ -111,13 +98,6 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
     return context.statusCode === 500 || context.statusCode === 503
   },
   handle: (error, context) => {
-    // If the error is already a server error, emit it directly
-    if (error.appEvent === AppEventCode.UNEXPECTED_SERVER_ERROR) {
-      context.emitErrorAlert(error)
-      return
-    }
-
-    // Otherwise, create a generic server error, wrap the original error as the cause, and emit that
     const appError = AppError.fromErrorDefinition(ErrorRegistry.UNEXPECTED_SERVER_ERROR, { cause: error })
     context.emitErrorAlert(appError)
   },
@@ -165,6 +145,19 @@ export const verifyDeviceAssertationPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for invalid email verification code on evidence endpoint
+export const emailVerificationCodeInvalidErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.EMAIL_VERIFICATION_CODE_INVALID &&
+      context.endpoint.includes(context.apiEndpoints.evidence)
+    )
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error)
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -200,4 +193,5 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
   verifyDeviceAssertationPolicy,
+  emailVerificationCodeInvalidErrorPolicy,
 ]

@@ -1,7 +1,15 @@
-import { AppError, ErrorCategory } from '@/errors'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCSCScreens } from '../types/navigators'
-import { globalAlertErrorPolicy, noTokensReturnedErrorPolicy, updateRequiredErrorPolicy } from './clientErrorPolicies'
+import {
+  createExpiredAppSetupErrorPolicy,
+  emailVerificationCodeInvalidErrorPolicy,
+  globalAlertErrorPolicy,
+  noTokensReturnedErrorPolicy,
+  unexpectedServerErrorPolicy,
+  updateRequiredErrorPolicy,
+  verifyDeviceAssertationPolicy,
+} from './clientErrorPolicies'
 
 const newError = (code: string) => {
   return new AppError('test error', 'This is a test error', {
@@ -211,6 +219,225 @@ describe('clientErrorPolicies', () => {
         // Simulate pressing the "Go to App Store" action
         goToAppStoreOnPressAction()
         expect(openURLMock).toHaveBeenCalledWith(expect.any(String))
+      })
+    })
+  })
+
+  describe('unexpectedServerErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match 500 http status code', () => {
+        expect(unexpectedServerErrorPolicy.matches({} as any, { statusCode: 500 } as any)).toBeTruthy()
+      })
+
+      it('should match 503 http status code', () => {
+        expect(unexpectedServerErrorPolicy.matches({} as any, { statusCode: 503 } as any)).toBeTruthy()
+      })
+
+      it('should NOT match other http status codes', () => {
+        expect(unexpectedServerErrorPolicy.matches({} as any, { statusCode: 400 } as any)).toBeFalsy()
+        expect(unexpectedServerErrorPolicy.matches({} as any, { statusCode: 404 } as any)).toBeFalsy()
+        expect(unexpectedServerErrorPolicy.matches({} as any, { statusCode: 0 } as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should emit the alert', () => {
+        const originalError = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR)
+        const error = AppError.fromErrorDefinition(ErrorRegistry.UNEXPECTED_SERVER_ERROR, { cause: originalError })
+
+        const emitErrorAlertMock = jest.fn()
+        const context = {
+          emitErrorAlert: emitErrorAlertMock,
+        }
+        unexpectedServerErrorPolicy.handle(originalError, context as any)
+        expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
+        expect(error.cause).toBe(originalError)
+      })
+    })
+  })
+
+  describe('verifyDeviceAssertationPolicy', () => {
+    describe('matches', () => {
+      it('should match LOGIN_SERVER_ERROR on verify device endpoint', () => {
+        const error = newError('login_server_error')
+        const context = {
+          endpoint: '/api/cardTap/v3/mobile/assertion',
+          apiEndpoints: {
+            cardTap: '/api/cardTap',
+          },
+        }
+        expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match LOGIN_PARSE_URI on verify device endpoint', () => {
+        const error = newError('login_parse_uri')
+        const context = {
+          endpoint: '/api/cardTap/v3/mobile/assertion',
+          apiEndpoints: {
+            cardTap: '/api/cardTap',
+          },
+        }
+        expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match INVALID_PAIRING_CODE on verify device endpoint', () => {
+        const error = newError('invalid_pairing_code')
+        const context = {
+          endpoint: '/api/cardTap/v3/mobile/assertion',
+          apiEndpoints: {
+            cardTap: '/api/cardTap',
+          },
+        }
+        expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE on verify device endpoint', () => {})
+      const error = newError('login_same_device_invalid_pairing_code')
+      const context = {
+        endpoint: '/api/cardTap/v3/mobile/assertion',
+        apiEndpoints: {
+          cardTap: '/api/cardTap',
+        },
+      }
+      expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeTruthy()
+    })
+
+    it('should not match invalid endpoint', () => {
+      const error = newError('invalid_pairing_code')
+      const context = {
+        endpoint: '/api/other-endpoint',
+        apiEndpoints: {
+          cardTap: '/api/cardTap',
+        },
+      }
+      expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeFalsy()
+    })
+
+    it('should not match other error codes', () => {
+      const error = newError('some_other_error')
+      const context = {
+        endpoint: '/api/cardTap/v3/mobile/assertion',
+        apiEndpoints: {
+          cardTap: '/api/cardTap',
+        },
+      }
+      expect(verifyDeviceAssertationPolicy.matches(error, context as any)).toBeFalsy()
+    })
+  })
+
+  describe('createExpiredAppSetupErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match USER_INPUT_EXPIRED_VERIFY_REQUEST on token endpoint', () => {
+        const error = newError('user_input_expired_verify_request')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+
+        const resetApplicationMock = jest.fn()
+        const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
+
+        expect(policy).toBeDefined()
+        expect(policy.matches(error, context as any)).toBeTruthy()
+        expect(resetApplicationMock).not.toHaveBeenCalled()
+      })
+
+      it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
+        const error = newError('user_input_expired_verify_request')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+
+        const resetApplicationMock = jest.fn()
+        const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
+
+        expect(policy).toBeDefined()
+        expect(policy.matches(error, context as any)).toBeFalsy()
+        expect(resetApplicationMock).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call resetApplication', async () => {
+        const error = newError('user_input_expired_verify_request')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+          logger: {
+            error: jest.fn(),
+          },
+        }
+
+        const resetApplicationMock = jest.fn().mockResolvedValue(undefined)
+        const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
+
+        await policy.handle(error, context as any)
+
+        expect(resetApplicationMock).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('emailVerificationCodeInvalidErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match EMAIL_VERIFICATION_CODE_INVALID on evidence endpoint', () => {
+        const error = newError('email_verification_code_invalid')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(emailVerificationCodeInvalidErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match EMAIL_VERIFICATION_CODE_INVALID on extended evidence endpoint', () => {
+        const error = newError('email_verification_code_invalid')
+        const context = {
+          endpoint: '/api/evidence/submit',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(emailVerificationCodeInvalidErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match EMAIL_VERIFICATION_CODE_INVALID on other endpoint', () => {
+        const error = newError('email_verification_code_invalid')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(emailVerificationCodeInvalidErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other errors on evidence endpoint', () => {
+        const error = newError('some_other_error')
+        const context = {
+          endpoint: '/api/evidence',
+          apiEndpoints: {
+            evidence: '/api/evidence',
+          },
+        }
+        expect(emailVerificationCodeInvalidErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+    describe('handle', () => {
+      it('should call emitErrorAlert with the error', () => {
+        const error = newError('email_verification_code_invalid')
+        const emitErrorAlert = jest.fn()
+        const context = { emitErrorAlert }
+        emailVerificationCodeInvalidErrorPolicy.handle(error, context as any)
+        expect(emitErrorAlert).toHaveBeenCalledWith(error)
       })
     })
   })
