@@ -58,10 +58,16 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
 
   const checkPermissions = useCallback(async () => {
     const status = await PushNotifications.status()
-    if (
+    const hasPrompted = await PushNotifications.hasPromptedForNotifications()
+
+    // Only show PermissionDisabled if:
+    // 1. We have previously prompted the user (to work around React Native bug where status may be incorrect on fresh install)
+    // 2. The current status is DENIED or BLOCKED
+    const isDeniedOrBlocked =
       status === PushNotifications.NotificationPermissionStatus.DENIED ||
       status === PushNotifications.NotificationPermissionStatus.BLOCKED
-    ) {
+
+    if (hasPrompted && isDeniedOrBlocked) {
       setDeniedPermission(true)
     } else {
       setDeniedPermission(false)

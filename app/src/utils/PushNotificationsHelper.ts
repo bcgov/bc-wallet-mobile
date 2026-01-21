@@ -70,8 +70,8 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
       return NotificationPermissionStatus.GRANTED
     case RESULTS.DENIED:
       return NotificationPermissionStatus.DENIED
-    case RESULTS.BLOCKED: // TODO (MD): Return BLOCKED status when using react-native V0.81.x
-      return NotificationPermissionStatus.DENIED
+    case RESULTS.BLOCKED:
+      return NotificationPermissionStatus.BLOCKED
     default:
       return NotificationPermissionStatus.UNKNOWN
   }
@@ -127,11 +127,21 @@ const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | u
 }
 
 /**
- * Checks wether the user denied permissions on the info modal
+ * Checks if we have previously prompted the user for notification permissions.
+ * This helps work around a React Native bug where permission status may not be
+ * correctly reported on fresh installs.
  * @returns {Promise<boolean>}
  */
-const isUserDenied = async (): Promise<boolean> => {
+const hasPromptedForNotifications = async (): Promise<boolean> => {
   return (await PersistentStorage.fetchValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications)) ?? false
+}
+
+/**
+ * Marks that we have prompted the user for notification permissions.
+ * @returns {Promise<void>}
+ */
+const setHasPromptedForNotifications = async (): Promise<void> => {
+  await PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications, true)
 }
 
 /**
@@ -248,7 +258,12 @@ const status = async (): Promise<NotificationPermissionStatus> => {
 }
 
 const setup = async (): Promise<NotificationPermissionStatus> => {
-  return requestPermission()
+  const result = await requestPermission()
+  // Mark that we have prompted the user, regardless of their response
+  // This helps work around a React Native bug where permission status may not be
+  // correctly reported on fresh installs
+  await setHasPromptedForNotifications()
+  return result
 }
 
 const activate = async (agent: Agent): Promise<void> => {
@@ -258,4 +273,14 @@ const deactivate = async (agent: Agent): Promise<void> => {
   await setDeviceInfo(agent, true)
 }
 
-export { activate, deactivate, isEnabled, isMediatorCapable, isRegistered, isUserDenied, setDeviceInfo, setup, status }
+export {
+  activate,
+  deactivate,
+  hasPromptedForNotifications,
+  isEnabled,
+  isMediatorCapable,
+  isRegistered,
+  setDeviceInfo,
+  setup,
+  status,
+}
