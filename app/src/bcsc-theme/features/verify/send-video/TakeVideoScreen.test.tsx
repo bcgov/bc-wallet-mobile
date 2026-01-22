@@ -55,7 +55,10 @@ describe('TakeVideoScreen', () => {
     // @ts-expect-error - useCameraPermission is mocked
     useCameraPermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn().mockResolvedValue(false) })
     // @ts-expect-error - useMicrophonePermission is mocked
-    useMicrophonePermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn().mockResolvedValue(false) })
+    useMicrophonePermission.mockReturnValue({
+      hasPermission: false,
+      requestPermission: jest.fn().mockResolvedValue(false),
+    })
 
     const navigation = useNavigation()
     const { getByText } = render(
