@@ -7,6 +7,7 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { useCameraPermission } from 'react-native-vision-camera'
+import { LoadingScreenContent } from '../splash-loading/LoadingScreenContent'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
@@ -25,7 +26,11 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
     })
   }
 
-  useAutoRequestPermission(hasPermission, requestPermission)
+  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+
+  if (isLoading) {
+    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
+  }
 
   if (!hasPermission) {
     return <PermissionDisabled permissionType="camera" headerPadding={true} />
