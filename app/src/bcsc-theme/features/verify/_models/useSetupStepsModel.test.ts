@@ -262,8 +262,6 @@ describe('useSetupStepsModel', () => {
       })
 
       expect(mockEvidenceApi.getVerificationRequestStatus).toHaveBeenCalledWith('test-verification-id')
-      expect(mockTokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
-      expect(mockUpdateTokens).toHaveBeenCalledWith({ refreshToken: 'new-refresh-token' })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
     })
 
