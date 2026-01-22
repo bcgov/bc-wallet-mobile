@@ -5,7 +5,7 @@ import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -20,8 +20,9 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { updateTokens, updateVerificationRequest, updateAccountFlags } = useSecureActions()
-  const { evidence, token } = useApi()
+  const { evidence } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -30,38 +31,32 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    * Check the status of a pending verification request
    */
   const handleCheckStatus = useCallback(async () => {
-    if (!store.bcscSecure.verificationRequestId) {
-      throw new Error(t('BCSC.Steps.VerificationIDMissing'))
-    }
-
-    const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
-
-    if (status === 'verified') {
-      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
-        throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+    setIsCheckingStatus(true)
+    try {
+      if (!store.bcscSecure.verificationRequestId) {
+        throw new Error(t('BCSC.Steps.VerificationIDMissing'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
+      const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
 
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
+      if (status === 'verified') {
+        if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+          throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+        }
+
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+      } else {
+        navigation.navigate(BCSCScreens.PendingReview)
       }
-
-      navigation.navigate(BCSCScreens.VerificationSuccess)
-    } else {
-      navigation.navigate(BCSCScreens.PendingReview)
+    } finally {
+      setIsCheckingStatus(false)
     }
   }, [
     store.bcscSecure.verificationRequestId,
     store.bcscSecure.deviceCode,
     store.bcscSecure.userCode,
     evidence,
-    token,
     navigation,
-    updateTokens,
     t,
   ])
 
@@ -158,6 +153,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   return {
     steps,
     stepActions,
+    isCheckingStatus,
     handleCheckStatus,
     handleCancelVerification,
   }
