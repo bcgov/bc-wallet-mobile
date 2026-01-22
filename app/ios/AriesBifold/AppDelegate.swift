@@ -103,20 +103,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       NSLog("Error excluding folder %@ from backup: %@", folderName, error.localizedDescription)
     }
   }
-
-  // Allow notifications to be displayed when app is in foreground
-  func userNotificationCenter(
-    _: UNUserNotificationCenter,
-    willPresent _: UNNotification,
-    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-  ) {
-    // on iOS 14 and up, banner is the proper API, on below it's alert
-    if #available(iOS 14.0, *) {
-      completionHandler([.banner, .sound, .badge])
-    } else {
-      completionHandler([.alert, .sound, .badge])
-    }
-  }
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {

@@ -10,6 +10,7 @@
   "exports": {
     ".": {
       "types": "./lib/typescript/src/index.d.ts",
+      "react-native": "./src/index.ts",
       "default": "./lib/module/index.js"
     },
     "./package.json": "./package.json"
