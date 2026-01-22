@@ -1,5 +1,6 @@
 import { BifoldLogger } from '@bifold/core'
 import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
+import { StatusNotification } from '../features/fcm/services/fcm-service'
 
 /**
  * BCSC event types
@@ -32,6 +33,54 @@ export enum BCSCReason {
   CanceledByAdditionalCard = 'Canceled by Additional Card',
   CanceledByCardTypeChange = 'Canceled by Card Type Change',
   CanceledDueToInactivity = 'Canceled due to Inactivity',
+}
+
+/**
+ * BCSC status notification claims from push notifications.
+ * These are sent when account status changes (verification approved, card canceled, etc.)
+ */
+export type BCSCStatusNotificationClaims = {
+  aud: string
+  iss: string
+  bcsc_reason: string
+  bcsc_event: string
+  exp: number
+  iat: number
+  jti: string
+}
+
+/**
+ * Parses a JSON string containing BCSC status notification claims.
+ * @param jsonString - The JSON string from the status notification
+ * @returns The parsed claims or null if parsing fails or input is empty
+ */
+export function parseStatusNotificationClaims(jsonString: string | undefined): BCSCStatusNotificationClaims | null {
+  if (!jsonString) {
+    return null
+  }
+
+  try {
+    return JSON.parse(jsonString) as BCSCStatusNotificationClaims
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Checks if the status notification claims indicate a verification approval.
+ * Verification approval occurs when bcsc_event is 'Authorization' and bcsc_reason is 'Approved by Agent'.
+ */
+export function isVerificationApproval(claims: BCSCStatusNotificationClaims): boolean {
+  return claims.bcsc_event === BCSCEvent.Authorization && claims.bcsc_reason === BCSCReason.ApprovedByAgent
+}
+
+/**
+ * Checks if the status notification indicates a verification request reviewed.
+ * Verification request reviewed occurs when title is 'Verification Request Reviewed'.
+ */
+export function isVerificationRequestReviewed(data: StatusNotification): boolean {
+  const { title } = data
+  return title === 'Verification Request Reviewed'
 }
 
 /**

@@ -6,7 +6,13 @@ import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-b
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
+import {
+  isVerificationApproval,
+  isVerificationRequestReviewed,
+  parseStatusNotificationClaims,
+} from '../../utils/id-token'
 import { PairingService } from '../pairing'
+import { VerificationApprovalService } from '../verification-approval'
 
 import {
   BasicNotification,
@@ -29,12 +35,14 @@ export class FcmViewModel {
    * @param fcmService - Firebase Cloud Messaging service
    * @param logger - Logger instance
    * @param pairingService - Service for handling pairing requests
+   * @param verificationApprovalService - Service for handling verification approval notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
     private readonly pairingService: PairingService,
+    private readonly verificationApprovalService: VerificationApprovalService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
 
@@ -137,20 +145,41 @@ export class FcmViewModel {
   private async handleStatusNotification(data: StatusNotification) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    const { title, message } = data
+    const { title, message, bcsc_status_notification } = data
 
-    // Show local notification if we have title and message
-    if (title && message) {
-      try {
-        await showLocalNotification(title, message)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
-      }
-    } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+    try {
+      await showLocalNotification(title, message)
+    } catch (error) {
+      this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
     }
 
-    // Always refresh tokens when we receive a status notification
+    // Parse the status notification JSON to check for verification approval
+    const claims = parseStatusNotificationClaims(bcsc_status_notification)
+
+    if (claims) {
+      this.logger.info(
+        `[FcmViewModel] Status notification claims: event=${claims.bcsc_event}, reason=${claims.bcsc_reason}`
+      )
+
+      // Check if this is a verification approval notification
+      if (isVerificationApproval(claims)) {
+        this.logger.info('[FcmViewModel] Verification approval detected, delegating to VerificationApprovalService')
+        // Delegate to the verification approval service (follows same pattern as pairing)
+        // The service will either emit navigation immediately or buffer for cold-start
+        this.verificationApprovalService.handleApproval()
+        // Skip token refresh for verification approval - user hasn't completed OAuth login yet
+        return
+      }
+    }
+
+    // Check if this is a verification request reviewed notification
+    if (isVerificationRequestReviewed(data)) {
+      this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationApprovalService')
+      this.verificationApprovalService.handleRequestReviewed()
+      return
+    }
+
+    // Refresh tokens for other status notifications (e.g., account status changes)
     // This ensures account data is updated regardless of notification display
     await this.refreshTokens()
   }
