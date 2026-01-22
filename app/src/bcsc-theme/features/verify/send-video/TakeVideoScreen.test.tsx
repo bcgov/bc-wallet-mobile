@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -51,11 +51,11 @@ describe('TakeVideoScreen', () => {
     expect(getByText('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')).toBeTruthy()
   })
 
-  test('renders permission required message when permissions are denied', () => {
+  test('renders permission required message when permissions are denied', async () => {
     // @ts-expect-error - useCameraPermission is mocked
-    useCameraPermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn() })
+    useCameraPermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn().mockResolvedValue(false) })
     // @ts-expect-error - useMicrophonePermission is mocked
-    useMicrophonePermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn() })
+    useMicrophonePermission.mockReturnValue({ hasPermission: false, requestPermission: jest.fn().mockResolvedValue(false) })
 
     const navigation = useNavigation()
     const { getByText } = render(
@@ -64,6 +64,9 @@ describe('TakeVideoScreen', () => {
       </BasicAppContext>
     )
 
-    expect(getByText('BCSC.PermissionDisabled.CameraAndMicrophoneTitle')).toBeTruthy()
+    // Wait for the permission request to complete and loading state to resolve
+    await waitFor(() => {
+      expect(getByText('BCSC.PermissionDisabled.CameraAndMicrophoneTitle')).toBeTruthy()
+    })
   })
 })
