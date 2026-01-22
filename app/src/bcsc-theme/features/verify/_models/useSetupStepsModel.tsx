@@ -19,7 +19,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { updateTokens, updateVerificationRequest, updateAccountFlags } = useSecureActions()
+  const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
   const { evidence } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
