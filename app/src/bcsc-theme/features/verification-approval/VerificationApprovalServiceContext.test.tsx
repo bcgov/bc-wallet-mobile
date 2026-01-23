@@ -1,5 +1,5 @@
-import React from 'react'
 import { renderHook } from '@testing-library/react-native'
+import React from 'react'
 
 import { VerificationApprovalService } from './VerificationApprovalService'
 import {

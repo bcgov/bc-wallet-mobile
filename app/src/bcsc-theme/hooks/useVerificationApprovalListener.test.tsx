@@ -358,9 +358,7 @@ describe('useVerificationApprovalListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Unknown event type: unknown_event_type')
-        )
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown event type: unknown_event_type'))
       })
 
       expect(mockDispatch).not.toHaveBeenCalled()

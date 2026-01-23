@@ -63,13 +63,7 @@ const pairingService = new PairingService(appLogger)
 const verificationApprovalService = new VerificationApprovalService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
-const fcmViewModel = new FcmViewModel(
-  new FcmService(),
-  appLogger,
-  pairingService,
-  verificationApprovalService,
-  appMode
-)
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, verificationApprovalService, appMode)
 
 const App = () => {
   const { t } = useTranslation()
