@@ -23,4 +23,3 @@ export type VerificationApprovalNavigationEvent = {
 }
 
 export type VerificationApprovalNavigationListener = (event: VerificationApprovalNavigationEvent) => void
-export type PendingApprovalListener = (hasPending: boolean) => void

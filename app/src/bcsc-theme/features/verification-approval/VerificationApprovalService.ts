@@ -3,7 +3,6 @@ import { AbstractBifoldLogger } from '@bifold/core'
 import { BCSCScreens } from '../../types/navigators'
 
 import {
-  PendingApprovalListener,
   VerificationApprovalNavigationEvent,
   VerificationApprovalNavigationListener,
   VerificationEventType,
@@ -19,13 +18,9 @@ import {
  * - direct_approval: In-person verification approved by agent (can directly fetch tokens)
  * - request_reviewed: Send-video reviewed (need to check status first)
  *
- * Note: Unlike PairingService, this service doesn't store payload data because
- * the deviceCode/userCode are already persisted to secure storage when the user
- * initiates device authorization. The hook reads them from the store.
  */
 export class VerificationApprovalService {
   private readonly navigationListeners = new Set<VerificationApprovalNavigationListener>()
-  private readonly pendingStateListeners = new Set<PendingApprovalListener>()
   private pendingApproval: VerificationEventType | null = null
 
   constructor(private readonly logger: AbstractBifoldLogger) {}
@@ -39,43 +34,10 @@ export class VerificationApprovalService {
   }
 
   /**
-   * Subscribe to pending state changes. Useful for UI indicators.
-   */
-  public onPendingStateChange(listener: PendingApprovalListener): () => void {
-    this.pendingStateListeners.add(listener)
-    // Emit current state immediately upon subscription
-    listener(this.hasPendingApproval)
-    return () => this.pendingStateListeners.delete(listener)
-  }
-
-  /**
    * Check if there's a pending verification approval waiting to be processed.
    */
   public get hasPendingApproval(): boolean {
     return this.pendingApproval !== null
-  }
-
-  /**
-   * Get the type of pending approval, if any.
-   */
-  public get pendingApprovalType(): VerificationEventType | null {
-    return this.pendingApproval
-  }
-
-  /**
-   * Consume the pending approval state.
-   * After calling this, hasPendingApproval will return false.
-   * @returns the event type if there was a pending approval, null otherwise
-   */
-  public consumePendingApproval(): VerificationEventType | null {
-    if (!this.pendingApproval) {
-      return null
-    }
-
-    const eventType = this.pendingApproval
-    this.pendingApproval = null
-    this.notifyPendingStateChange()
-    return eventType
   }
 
   /**
@@ -88,19 +50,10 @@ export class VerificationApprovalService {
       this.logger.info(`[VerificationApprovalService] Processing pending approval: ${this.pendingApproval}`)
       const eventType = this.pendingApproval
       this.pendingApproval = null
-      this.notifyPendingStateChange()
       this.emitNavigation(eventType)
       return eventType
     }
     return null
-  }
-
-  /**
-   * Clear any pending approval without processing it.
-   */
-  public clearPendingApproval() {
-    this.pendingApproval = null
-    this.notifyPendingStateChange()
   }
 
   /**
@@ -121,7 +74,6 @@ export class VerificationApprovalService {
     } else {
       this.logger.info('[VerificationApprovalService] Buffering request_reviewed (no listeners)')
       this.pendingApproval = 'request_reviewed'
-      this.notifyPendingStateChange()
       return false
     }
   }
@@ -144,7 +96,6 @@ export class VerificationApprovalService {
     } else {
       this.logger.info('[VerificationApprovalService] Buffering direct_approval (no listeners)')
       this.pendingApproval = 'direct_approval'
-      this.notifyPendingStateChange()
       return false
     }
   }
@@ -159,10 +110,5 @@ export class VerificationApprovalService {
       eventType,
     }
     this.navigationListeners.forEach((listener) => listener(event))
-  }
-
-  private notifyPendingStateChange() {
-    const hasPending = this.hasPendingApproval
-    this.pendingStateListeners.forEach((listener) => listener(hasPending))
   }
 }

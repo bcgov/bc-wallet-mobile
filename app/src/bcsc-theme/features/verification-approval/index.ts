@@ -4,7 +4,6 @@ export {
   useVerificationApprovalService,
 } from './VerificationApprovalServiceContext'
 export type {
-  PendingApprovalListener,
   VerificationApprovalNavigationEvent,
   VerificationApprovalNavigationListener,
   VerificationEventType,
