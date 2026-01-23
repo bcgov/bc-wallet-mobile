@@ -32,24 +32,12 @@ exports[`StartCall renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
+      <Image
         resizeMode="contain"
         source={
-          [
-            {
-              "uri": "file://undefined",
-            },
-          ]
+          {
+            "uri": "file://undefined",
+          }
         }
         style={
           {
@@ -63,7 +51,6 @@ exports[`StartCall renders correctly 1`] = `
                 "scale": 0.333,
               },
             ],
-            "width": undefined,
           }
         }
       />

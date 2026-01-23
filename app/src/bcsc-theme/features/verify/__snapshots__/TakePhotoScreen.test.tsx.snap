@@ -45,6 +45,11 @@ exports[`TakePhoto renders correctly 1`] = `
       onError={[Function]}
       onInitialized={[Function]}
       photo={true}
+      ref={
+        {
+          "current": null,
+        }
+      }
       style={
         {
           "flex": 1,
@@ -53,8 +58,8 @@ exports[`TakePhoto renders correctly 1`] = `
       torch="off"
     />
     <RNSVGSvgView
-      bbHeight="1334"
-      bbWidth="750"
+      bbHeight={1334}
+      bbWidth={750}
       focusable={false}
       height={1334}
       style={
@@ -93,6 +98,7 @@ exports[`TakePhoto renders correctly 1`] = `
             }
             height="100%"
             maskContentUnits={1}
+            maskType={0}
             maskUnits={0}
             name="overlayMask"
             width="100%"
@@ -106,19 +112,19 @@ exports[`TakePhoto renders correctly 1`] = `
                   "type": 0,
                 }
               }
-              height="1334"
+              height={1334}
               propList={
                 [
                   "fill",
                 ]
               }
-              width="750"
-              x="0"
-              y="0"
+              width={750}
+              x={0}
+              y={0}
             />
             <RNSVGEllipse
-              cx="375"
-              cy="657"
+              cx={375}
+              cy={657}
               fill={
                 {
                   "payload": 4278190080,
@@ -131,8 +137,8 @@ exports[`TakePhoto renders correctly 1`] = `
                   "stroke",
                 ]
               }
-              rx="337.5"
-              ry="373.52000000000004"
+              rx={337.5}
+              ry={373.52000000000004}
               stroke={
                 {
                   "payload": 4284506208,
@@ -150,7 +156,7 @@ exports[`TakePhoto renders correctly 1`] = `
             }
           }
           fillOpacity={0.6}
-          height="1334"
+          height={1334}
           mask="overlayMask"
           propList={
             [
@@ -158,13 +164,13 @@ exports[`TakePhoto renders correctly 1`] = `
               "fillOpacity",
             ]
           }
-          width="750"
-          x="0"
-          y="0"
+          width={750}
+          x={0}
+          y={0}
         />
         <RNSVGEllipse
-          cx="375"
-          cy="657"
+          cx={375}
+          cy={657}
           fill={
             {
               "payload": 0,
@@ -177,8 +183,8 @@ exports[`TakePhoto renders correctly 1`] = `
               "stroke",
             ]
           }
-          rx="337.5"
-          ry="373.52000000000004"
+          rx={337.5}
+          ry={373.52000000000004}
           stroke={
             {
               "payload": 4284506208,

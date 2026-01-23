@@ -32,32 +32,12 @@ exports[`IDPhotoInformation renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
-        resizeMode="cover"
-        source={
-          [
-            {
-              "height": undefined,
-              "uri": undefined,
-              "width": undefined,
-            },
-          ]
-        }
+      <Image
+        source={1}
         style={
           {
             "height": 250,
             "marginBottom": 16,
-            "overflow": "hidden",
             "width": "100%",
           }
         }

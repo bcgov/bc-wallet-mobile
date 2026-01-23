@@ -6,7 +6,10 @@ import 'react-native-gesture-handler/jestSetup'
 import mockRNLocalize from 'react-native-localize/mock'
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
 import 'reflect-metadata'
+
+// React 18+/19: enable proper act() behavior in tests
 global.React = React
+globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 // =============================================================================
 // Console Output Suppression for Cleaner Test Output
@@ -64,8 +67,6 @@ mockRNDeviceInfo.getBuildNumber = jest.fn(() => '1')
 jest.mock('react-native-safe-area-context', () => mockSafeAreaContext)
 jest.mock('@react-native-community/netinfo', () => mockRNCNetInfo)
 jest.mock('react-native-device-info', () => mockRNDeviceInfo)
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper')
-jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter')
 jest.mock('react-native-localize', () => mockRNLocalize)
 jest.mock('react-native-vision-camera', () => {
   return require('./__mocks__/custom/react-native-camera')
@@ -104,17 +105,15 @@ jest.mock('react-native-keyboard-controller', () => {
     KeyboardAwareScrollView: ScrollView,
   }
 })
-jest.mock('react-native/Libraries/Image/Image', () => {
-  const actualImage = jest.requireActual('react-native/Libraries/Image/Image')
-  return {
-    ...actualImage,
-    resolveAssetSource: jest.fn(() => ({
-      uri: 'mocked-image-uri',
-      width: 100,
-      height: 100,
-      scale: 1,
-    })),
-  }
+
+// Mock Image.resolveAssetSource at the module level
+jest.mock('react-native/Libraries/Image/resolveAssetSource', () => {
+  return jest.fn(() => ({
+    uri: 'mocked-image-uri',
+    width: 100,
+    height: 100,
+    scale: 1,
+  }))
 })
 
 jest.mock('./src/bcsc-theme/hooks/useBCSCApiClient', () => ({
