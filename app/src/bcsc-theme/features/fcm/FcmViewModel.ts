@@ -154,6 +154,8 @@ export class FcmViewModel {
       } catch (error) {
         this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
       }
+    } else {
+      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
     }
 
     // Parse the status notification JSON to check for verification approval

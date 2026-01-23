@@ -1,10 +1,5 @@
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 
-import { BCSCStatusNotificationClaims } from '../../../utils/id-token'
-
-// Re-export for consumers that import from fcm-service
-export type { BCSCStatusNotificationClaims }
-
 // ============================================================================
 // Status Notification Types
 // ============================================================================
