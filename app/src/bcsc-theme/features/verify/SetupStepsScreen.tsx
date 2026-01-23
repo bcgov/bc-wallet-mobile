@@ -16,7 +16,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useSetupStepsModel from './_models/useSetupStepsModel'
@@ -46,7 +46,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()
 
-  const { steps, stepActions, handleCheckStatus, handleCancelVerification } = useSetupStepsModel(navigation)
+  const { steps, stepActions, isCheckingStatus, handleCheckStatus, handleCancelVerification } =
+    useSetupStepsModel(navigation)
 
   const styles = StyleSheet.create({
     itemSeparator: {
@@ -220,6 +221,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity
+            disabled={isCheckingStatus}
             style={[
               styles.step,
               styles.titleRow,
@@ -234,7 +236,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               {t('BCSC.Steps.CheckStatus')}
             </ThemedText>
-            <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
+            {isCheckingStatus ? (
+              <ActivityIndicator color={ColorPalette.brand.text} />
+            ) : (
+              <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
+            )}
           </TouchableOpacity>
 
           <View style={styles.itemSeparator} />
