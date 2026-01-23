@@ -36,7 +36,7 @@ import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 describe('FcmViewModel', () => {
   let viewModel: FcmViewModel
   let mockFcmService: jest.Mocked<FcmService>
-  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
+  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock; debug: jest.Mock }
   let mockPairingService: jest.Mocked<PairingService>
   let mockVerificationApprovalService: jest.Mocked<VerificationApprovalService>
   let capturedMessageHandler: ((message: FcmMessage) => void) | null = null
@@ -66,6 +66,7 @@ describe('FcmViewModel', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
+      debug: jest.fn(),
     }
 
     mockPairingService = {
@@ -441,6 +442,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
+      // showLocalNotification should NOT be called when title/message are empty
       expect(showLocalNotification).not.toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
       expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
@@ -547,8 +549,10 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
+      // With empty notification, parseStatusNotificationClaims returns null silently
+      // and no verification approval is triggered
       expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No bcsc_status_notification to parse'))
+      expect(mockVerificationApprovalService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('handles JSON parse failure gracefully', async () => {
@@ -563,10 +567,10 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
+      // With invalid JSON, parseStatusNotificationClaims returns null silently
+      // and no verification approval is triggered
       expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to parse status notification')
-      )
+      expect(mockVerificationApprovalService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('does not refresh tokens when verification approval is detected', async () => {

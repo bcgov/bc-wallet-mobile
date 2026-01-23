@@ -147,10 +147,13 @@ export class FcmViewModel {
 
     const { title, message, bcsc_status_notification } = data
 
-    try {
-      await showLocalNotification(title, message)
-    } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+    // Show local notification if we have title and message
+    if (title && message) {
+      try {
+        await showLocalNotification(title, message)
+      } catch (error) {
+        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+      }
     }
 
     // Parse the status notification JSON to check for verification approval
