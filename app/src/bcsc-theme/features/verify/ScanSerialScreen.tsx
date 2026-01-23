@@ -11,6 +11,7 @@ import { StyleSheet, View } from 'react-native'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
+import { LoadingScreenContent } from '../../features/splash-loading/LoadingScreenContent'
 
 type ScanSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
@@ -39,7 +40,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     },
   })
 
-  useAutoRequestPermission(hasPermission, requestPermission)
+  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
     await scanner.scanCard(barcodes, async (bcscSerial, license) => {
@@ -61,6 +62,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         return
       }
     })
+  }
+
+  if (isLoading) {
+    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
   }
 
   if (!hasPermission) {
