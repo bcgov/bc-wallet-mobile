@@ -143,6 +143,7 @@ describe('useVerificationApprovalListener', () => {
 
     it('should not navigate if deviceCode is missing', async () => {
       // Override the store mock for this test
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { useStore } = require('@bifold/core')
       useStore.mockReturnValueOnce([
         {
@@ -217,6 +218,7 @@ describe('useVerificationApprovalListener', () => {
 
     it('should not proceed if verificationRequestId is missing', async () => {
       // Override the store mock for this test
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { useStore } = require('@bifold/core')
       useStore.mockReturnValueOnce([
         {
@@ -246,6 +248,7 @@ describe('useVerificationApprovalListener', () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
 
       // Override the store mock for this test
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { useStore } = require('@bifold/core')
       useStore.mockReturnValueOnce([
         {
@@ -286,6 +289,81 @@ describe('useVerificationApprovalListener', () => {
       await waitFor(() => {
         expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Request reviewed event received'))
       })
+    })
+
+    it('should handle error when getVerificationRequestStatus fails', async () => {
+      const apiError = new Error('API request failed')
+      mockGetVerificationRequestStatus.mockRejectedValueOnce(apiError)
+
+      renderHook(() => useVerificationApprovalListener())
+
+      act(() => {
+        mockVerificationApprovalService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to handle request reviewed: API request failed')
+        )
+      })
+
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('should handle non-Error objects thrown by getVerificationRequestStatus', async () => {
+      mockGetVerificationRequestStatus.mockRejectedValueOnce('String error')
+
+      renderHook(() => useVerificationApprovalListener())
+
+      act(() => {
+        mockVerificationApprovalService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to handle request reviewed: String error')
+        )
+      })
+
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('unknown event types', () => {
+    it('should log warning for unknown event type', async () => {
+      // Capture the navigation handler that gets registered
+      let navigationHandler: ((event: any) => void) | undefined
+
+      const onNavigationRequestSpy = jest.spyOn(mockVerificationApprovalService, 'onNavigationRequest')
+      onNavigationRequestSpy.mockImplementation((handler) => {
+        navigationHandler = handler
+        return jest.fn() // Return unsubscribe function
+      })
+
+      renderHook(() => useVerificationApprovalListener())
+
+      // Wait for the handler to be captured
+      await waitFor(() => {
+        expect(navigationHandler).toBeDefined()
+      })
+
+      // Call the handler directly with an unknown event type
+      await act(async () => {
+        if (navigationHandler) {
+          await navigationHandler({
+            screen: BCSCScreens.VerificationSuccess,
+            eventType: 'unknown_event_type' as any,
+          })
+        }
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Unknown event type: unknown_event_type')
+        )
+      })
+
+      expect(mockDispatch).not.toHaveBeenCalled()
     })
   })
 })

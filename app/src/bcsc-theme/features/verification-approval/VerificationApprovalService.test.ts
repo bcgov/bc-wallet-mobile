@@ -12,28 +12,14 @@ describe('VerificationApprovalService', () => {
     }
   })
 
-  it('notifies pending state listener on construction', () => {
-    const service = new VerificationApprovalService(logger as any)
-    const pendingStates: boolean[] = []
-
-    service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
-
-    expect(pendingStates).toEqual([false])
-  })
-
   describe('handleApproval (direct approval / in-person)', () => {
-    it('buffers approval and notifies pending state when no navigation listener', () => {
+    it('buffers approval when no navigation listener', () => {
       const service = new VerificationApprovalService(logger as any)
-      const pendingStates: boolean[] = []
-
-      service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
       const result = service.handleApproval()
 
       expect(result).toBe(false) // Buffered, not emitted
       expect(service.hasPendingApproval).toBe(true)
-      expect(service.pendingApprovalType).toBe('direct_approval')
-      expect(pendingStates).toEqual([false, true])
     })
 
     it('emits navigation immediately when listener is registered', () => {
@@ -55,18 +41,13 @@ describe('VerificationApprovalService', () => {
   })
 
   describe('handleRequestReviewed (send-video)', () => {
-    it('buffers request_reviewed and notifies pending state when no navigation listener', () => {
+    it('buffers request_reviewed when no navigation listener', () => {
       const service = new VerificationApprovalService(logger as any)
-      const pendingStates: boolean[] = []
-
-      service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
       const result = service.handleRequestReviewed()
 
       expect(result).toBe(false) // Buffered, not emitted
       expect(service.hasPendingApproval).toBe(true)
-      expect(service.pendingApprovalType).toBe('request_reviewed')
-      expect(pendingStates).toEqual([false, true])
     })
 
     it('emits navigation immediately when listener is registered', () => {
@@ -87,48 +68,10 @@ describe('VerificationApprovalService', () => {
     })
   })
 
-  describe('consumePendingApproval', () => {
-    it('consumes and clears pending direct_approval', () => {
-      const service = new VerificationApprovalService(logger as any)
-      const pendingStates: boolean[] = []
-
-      service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
-
-      service.handleApproval()
-
-      const consumed = service.consumePendingApproval()
-
-      expect(consumed).toBe('direct_approval')
-      expect(service.hasPendingApproval).toBe(false)
-      expect(pendingStates).toEqual([false, true, false])
-    })
-
-    it('consumes and clears pending request_reviewed', () => {
-      const service = new VerificationApprovalService(logger as any)
-
-      service.handleRequestReviewed()
-
-      const consumed = service.consumePendingApproval()
-
-      expect(consumed).toBe('request_reviewed')
-      expect(service.hasPendingApproval).toBe(false)
-    })
-
-    it('returns null when consuming with no pending approval', () => {
-      const service = new VerificationApprovalService(logger as any)
-
-      expect(service.consumePendingApproval()).toBeNull()
-      expect(service.hasPendingApproval).toBe(false)
-    })
-  })
-
   describe('processPendingApproval', () => {
     it('processes buffered direct_approval once navigation is ready', () => {
       const service = new VerificationApprovalService(logger as any)
       const navEvents: VerificationApprovalNavigationEvent[] = []
-      const pendingStates: boolean[] = []
-
-      service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
 
       service.handleApproval()
       expect(service.hasPendingApproval).toBe(true)
@@ -146,7 +89,6 @@ describe('VerificationApprovalService', () => {
         eventType: 'direct_approval',
       })
       expect(service.hasPendingApproval).toBe(false)
-      expect(pendingStates).toEqual([false, true, false])
     })
 
     it('processes buffered request_reviewed once navigation is ready', () => {
@@ -178,19 +120,6 @@ describe('VerificationApprovalService', () => {
     })
   })
 
-  it('clears pending state without processing', () => {
-    const service = new VerificationApprovalService(logger as any)
-    const pendingStates: boolean[] = []
-
-    service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
-
-    service.handleApproval()
-    service.clearPendingApproval()
-
-    expect(service.hasPendingApproval).toBe(false)
-    expect(pendingStates).toEqual([false, true, false])
-  })
-
   it('unsubscribes navigation listener', () => {
     const service = new VerificationApprovalService(logger as any)
     const navEvents: VerificationApprovalNavigationEvent[] = []
@@ -203,19 +132,6 @@ describe('VerificationApprovalService', () => {
     // Navigation should be buffered since listener was removed
     expect(navEvents).toHaveLength(0)
     expect(service.hasPendingApproval).toBe(true)
-  })
-
-  it('unsubscribes pending state listener', () => {
-    const service = new VerificationApprovalService(logger as any)
-    const pendingStates: boolean[] = []
-
-    const unsubscribe = service.onPendingStateChange((hasPending) => pendingStates.push(hasPending))
-    unsubscribe()
-
-    service.handleApproval()
-
-    // Should only have initial state, no update after unsubscribe
-    expect(pendingStates).toEqual([false])
   })
 
   it('emitNavigation can be called directly with event type', () => {

@@ -115,16 +115,28 @@ describe('useVerificationSuccessViewmodel', () => {
       // Initially false
       expect(result.current.isSettingUpAccount).toBe(false)
 
+      // Suppress React's act warning - we need to check intermediate state
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((message) => {
+        // Suppress the act(async) warning which is a false positive when checking intermediate state
+        if (typeof message === 'string' && message.includes('act(async')) {
+          return
+        }
+      })
+
+      // Start the async operation and wait for state to update
       const setupPromise = act(async () => {
         await result.current.handleAccountSetup()
       })
 
-      // Wait a tick to let state update
+      // Wait for state to update to true
       await waitFor(() => {
         expect(result.current.isSettingUpAccount).toBe(true)
       })
 
+      // Wait for the setup to complete
       await setupPromise
+
+      consoleErrorSpy.mockRestore()
 
       // Should be false after completion
       expect(result.current.isSettingUpAccount).toBe(false)
