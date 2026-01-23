@@ -24,7 +24,7 @@ describe('useEventListener', () => {
     const removeListener = jest.fn()
     const addListener = jest.fn(() => removeListener)
 
-    const hook = renderHook(({ condition }) => useEventListener(addListener, condition), {
+    const hook = renderHook(({ condition }: { condition: boolean }) => useEventListener(addListener, condition), {
       initialProps: { condition: false },
     })
 
@@ -66,7 +66,7 @@ describe('useEventListener', () => {
     const removeListener = jest.fn()
     const addListener = jest.fn(() => removeListener)
 
-    const hook = renderHook(({ listener }) => useEventListener(listener, true), {
+    const hook = renderHook(({ listener }: { listener: () => () => void }) => useEventListener(listener, true), {
       initialProps: { listener: addListener },
     })
 
