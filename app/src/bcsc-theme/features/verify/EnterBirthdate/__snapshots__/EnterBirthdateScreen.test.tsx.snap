@@ -106,7 +106,6 @@ exports[`EnterBirthdate renders correctly 1`] = `
       >
         <DatePicker
           date={2025-12-03T00:00:00.000Z}
-          locale="BCSC.LocaleStringFormat"
           mode="date"
           onDateChange={[Function]}
           onStateChange={[Function]}
