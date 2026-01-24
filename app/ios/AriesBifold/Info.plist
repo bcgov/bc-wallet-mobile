@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>BC Wallet</string>
+	<string>BC Services Card</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -32,6 +32,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>didcomm</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ca.bc.gov.id.servicescard</string>
+				<string>ca.bc.gov.iddev.servicescard</string>
+				<string>ca.bc.gov.idqa.servicescard</string>
+				<string>ca.bc.gov.idtest.servicescard</string>
+				<string>ca.bc.gov.idsit.servicescard</string>
 			</array>
 		</dict>
 	</array>
