@@ -162,6 +162,8 @@ class StorageService {
         }
       }
 
+      
+      logger.log("++++++++++++++ FILE READ URL: \(fileUrl)")
       let data = try Data(contentsOf: fileUrl)
       logger.log("Data read from file: \(data)")
 
@@ -197,19 +199,30 @@ class StorageService {
         appropriateFor: nil,
         create: false
       )
-      let fileUrl =
-        rootDirectoryURL
-          .appendingPathComponent(self.basePath)
-          .appendingPathComponent(accountID)
-          .appendingPathComponent(file.rawValue)
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(self.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(file.rawValue)
+
+      // Ensure the directory hierarchy exists before writing
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+        logger.log("StorageService: Created directory at \(directoryUrl.path)")
+      }
 
       // Encode the object to data
       let encodedData = try encodeArchivedObject(object: data)
 
-      // Write the encoded data to file
-      try encodedData.write(to: fileUrl)
-
-      logger.log("Successfully wrote data to file: \(fileUrl.path)")
+      // Write the encoded data to file with atomic and protection options
+      try encodedData.write(
+        to: fileUrl,
+        options: [.atomic]
+      )
+      logger.log("Successfully wrote data to file: \(fileUrl.path) (fileExists: \(FileManager.default.fileExists(atPath: fileUrl.path)))")
       return true
     } catch {
       logger.error("writeData: Error writing data for file \(file.rawValue): \(error)")
@@ -251,14 +264,23 @@ class StorageService {
       let rootDirectoryURL = try FileManager.default.url(
         for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
       )
-      let issuerFileURL =
-        rootDirectoryURL
-          .appendingPathComponent("\(currentBundleID)/data")
-          .appendingPathComponent(issuerURLComponent)
+      let issuerDirectoryURL = rootDirectoryURL.appendingPathComponent("\(currentBundleID)/data")
+      let issuerFileURL = issuerDirectoryURL.appendingPathComponent(issuerURLComponent)
 
+      // Ensure the directory exists before writing issuer file
+      if !FileManager.default.fileExists(atPath: issuerDirectoryURL.path) {
+        try FileManager.default.createDirectory(
+          at: issuerDirectoryURL,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+        logger.log("StorageService: Created issuer directory at \(issuerDirectoryURL.path)")
+      }
+
+      // Write issuer file with atomic option
       try issuer.write(to: issuerFileURL, atomically: true, encoding: .utf8)
       logger.log(
-        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path)")
+        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path) (fileExists: \(FileManager.default.fileExists(atPath: issuerFileURL.path)))")
       return true
     } catch {
       logger.log("StorageService: Error saving issuer to file: \(error)")
@@ -281,6 +303,14 @@ class StorageService {
       "current": accountID,
     ]
 
+    // Ensure base directory exists
+    if !FileManager.default.fileExists(atPath: baseURL.path) {
+      try FileManager.default.createDirectory(
+        at: baseURL, withIntermediateDirectories: true, attributes: nil
+      )
+      logger.log("StorageService: Created base directory at \(baseURL.path)")
+    }
+
     // Create directory with accountID as name if it doesn't exist
     let accountDirectory = baseURL.appendingPathComponent(accountID)
     if !FileManager.default.fileExists(atPath: accountDirectory.path) {
@@ -292,9 +322,10 @@ class StorageService {
       logger.log("StorageService: Account directory already exists at \(accountDirectory.path)")
     }
 
-    // Convert to JSON data and write to file
+    // Convert to JSON data and write to file with atomic option
     let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
-    try jsonData.write(to: accountListPath)
+    try jsonData.write(to: accountListPath, options: [.atomic])
+    logger.log("StorageService: Successfully wrote account_list to \(accountListPath.path) (fileExists: \(FileManager.default.fileExists(atPath: accountListPath.path)))")
   }
 
   private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
