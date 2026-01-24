@@ -10,7 +10,7 @@ One dif presentation bug fix for MDoc / OID4VC
 
 #### @credo-ts-indy-vdr-npm-0.5.19-f8bd108d78.patch
 
-Prevent error on agent restart when same IndyVDR pool is reused. Prevent bug with revocation registry interval
+Prevent error on agent restart when same IndyVDR pool is reused
 
 #### @credo-ts-openid4vc-npm-0.5.19-4d16a6c35e.patch
 
@@ -23,3 +23,11 @@ One patch to fix an edge with signed integers
 #### @sphereon-pex-npm-3.3.3-144d9252ec.patch and @animo-id-pex-npm-4.1.1-alpha.0-f20edfffa2.patch
 
 Fixes local-dev-only bug with yarn install (I don't know why an npm package wants to force pnpm usage, seems like they left this over from their local development)
+
+#### react-native-date-picker-npm-5.0.13-e35e950566.patch
+
+New architecture support and turbomodule fixes. We should swap this library out soon, maintainer is in hiding
+
+#### react-native-fs-npm-2.20.0-a38fe24051.patch
+
+Turbomodule fixes. We should swap this library out soon, hasn't been updated in four years.

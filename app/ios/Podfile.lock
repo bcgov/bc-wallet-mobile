@@ -1918,7 +1918,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (2.12.1):
+  - react-native-attestation (2.12.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -1950,7 +1950,7 @@ PODS:
     - react-native-config/App (= 1.5.5)
   - react-native-config/App (1.5.5):
     - React-Core
-  - react-native-date-picker (5.0.12):
+  - react-native-date-picker (5.0.13):
     - boost
     - DoubleConversion
     - fast_float
@@ -3699,9 +3699,9 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: 51fbdad6cb547e6a3d472279cb3d1fd782cf63e8
+  react-native-attestation: f02e6282d364bbc0d47bca1aafa91027ae7d5c9d
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
-  react-native-date-picker: 9e761de1a6b100b2f61669de1f2c3e5717e2b525
+  react-native-date-picker: 4f4f40f6e65798038bb4b1bff47890c2be69c2e6
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187

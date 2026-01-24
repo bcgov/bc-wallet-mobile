@@ -2844,9 +2844,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:2.12.1":
-  version: 2.12.1
-  resolution: "@bifold/core@npm:2.12.1"
+"@bifold/core@npm:2.12.2":
+  version: 2.12.2
+  resolution: "@bifold/core@npm:2.12.2"
   dependencies:
     "@types/base-64": "npm:^1.0.2"
   peerDependencies:
@@ -2920,38 +2920,38 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
-  checksum: 10c0/fa035f68e2c5f0fad3f00bf4054749dffd2c31b1aaf6b27b9a1fa8af586921335d9e08a88136e7bd0fb0486d4208cac31e4d2661b8119522fb3b244fadae48db
+  checksum: 10c0/0b287b2ab134e4a77db9755b9f642dc0c81cbe2f0b8d793db6019914e4e86822cb0541879a914c3f5baaee828568d5a5609224f632a676d7bd2f677edfca8a29
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:2.12.1":
-  version: 2.12.1
-  resolution: "@bifold/oca@npm:2.12.1"
+"@bifold/oca@npm:2.12.2":
+  version: 2.12.2
+  resolution: "@bifold/oca@npm:2.12.2"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.19"
     "@credo-ts/core": "npm:0.5.19"
     axios: "npm:~1.13.2"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/683a5e020956a0b0f224753db7c55c56d8d30fc5666d46f175d4c62013a141463da089cfb8fa1e15e0d7d815a3670f6f80784227fa176847361280ebc8db4db2
+  checksum: 10c0/71a1187c3bf6bd59d82db4a92c840ba9ab7bb3081f040f722b6f29a2431882aaf6472bdd8d0a5c45eea04502970a627cab222f2b05e5460689a2eab58a5f9c71
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:2.12.1":
-  version: 2.12.1
-  resolution: "@bifold/react-native-attestation@npm:2.12.1"
+"@bifold/react-native-attestation@npm:2.12.2":
+  version: 2.12.2
+  resolution: "@bifold/react-native-attestation@npm:2.12.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/deaab7d54376d95455e10540943f5f4161193972ccad232870f1ed20770727043325f7403021c6be262ac4632f36194d2a94c0798d97db53003d7a8f641fe52c
+  checksum: 10c0/484e7ba6b388df183b1f37b8430c4f51e30eeff749a05b3f94769bc0aeda59cb3333e43123a412db0768fb3c59bc2e39ef104048d79d541c3b0be4c515623996
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:2.12.1":
-  version: 2.12.1
-  resolution: "@bifold/remote-logs@npm:2.12.1"
+"@bifold/remote-logs@npm:2.12.2":
+  version: 2.12.2
+  resolution: "@bifold/remote-logs@npm:2.12.2"
   dependencies:
-    "@bifold/core": "npm:2.12.1"
+    "@bifold/core": "npm:2.12.2"
     "@credo-ts/core": "npm:0.5.19"
     axios: "npm:~1.13.2"
     buffer: "npm:~6.0.3"
@@ -2965,20 +2965,20 @@ __metadata:
     react: ~19.1.4
     react-native: 0.81.5
     react-native-logs: ~5.1.0
-  checksum: 10c0/a95ff64c9e483bfbcfcd3604340a9561c12cb1497cb7b012b253743e859520624b282e529c30036878965e2d87e89f084c7396789affd8d3b1706287772d2242
+  checksum: 10c0/a29e88c5400d107dfd63105d62bd53f856eab4428785116185d8448912b9da4d8747aff68cbb9d9b808461bddff45b20b61cc55ea5949ea17d52df5ed33d2769
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:2.12.1":
-  version: 2.12.1
-  resolution: "@bifold/verifier@npm:2.12.1"
+"@bifold/verifier@npm:2.12.2":
+  version: 2.12.2
+  resolution: "@bifold/verifier@npm:2.12.2"
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.19
     "@credo-ts/core": 0.5.19
     "@credo-ts/react-hooks": 0.6.1
     "@hyperledger/anoncreds-shared": 0.3.4
     react: ~19.1.4
-  checksum: 10c0/79578e8580c2f58f64b0a67599df5bc28229bf78fbedb9250939c2a13dc5ad2e61465004f6d07a65f2a18b5b94ed52737bcc4b1958917e7fd02ba10facea3891
+  checksum: 10c0/cea4a5162edfe804fd9412aee303a7245f6d751d2c25eeca1bd6113853a64aa2445f21d9dc09a86cac6171f2f62eec4aada20955e25958d6d814d4ccd0f028b9
   languageName: node
   linkType: hard
 
@@ -9319,11 +9319,11 @@ __metadata:
     "@babel/core": "npm:~7.28.6"
     "@babel/preset-env": "npm:~7.28.6"
     "@babel/runtime": "npm:~7.28.6"
-    "@bifold/core": "npm:2.12.1"
-    "@bifold/oca": "npm:2.12.1"
-    "@bifold/react-native-attestation": "npm:2.12.1"
-    "@bifold/remote-logs": "npm:2.12.1"
-    "@bifold/verifier": "npm:2.12.1"
+    "@bifold/core": "npm:2.12.2"
+    "@bifold/oca": "npm:2.12.2"
+    "@bifold/react-native-attestation": "npm:2.12.2"
+    "@bifold/remote-logs": "npm:2.12.2"
+    "@bifold/verifier": "npm:2.12.2"
     "@credo-ts/anoncreds": "npm:0.5.19"
     "@credo-ts/askar": "npm:0.5.19"
     "@credo-ts/core": "npm:0.5.19"
@@ -9415,7 +9415,7 @@ __metadata:
     react-native-collapsible: "npm:~1.6.2"
     react-native-config: "npm:~1.5.5"
     react-native-confirmation-code-field: "npm:~7.3.2"
-    react-native-date-picker: "npm:5.0.12"
+    react-native-date-picker: "npm:5.0.13"
     react-native-device-info: "npm:~8.7.1"
     react-native-fs: "npm:~2.20.0"
     react-native-gesture-handler: "npm:~2.28.0"
@@ -19271,13 +19271,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-date-picker@npm:5.0.12":
-  version: 5.0.12
-  resolution: "react-native-date-picker@npm:5.0.12"
+"react-native-date-picker@npm:5.0.13":
+  version: 5.0.13
+  resolution: "react-native-date-picker@npm:5.0.13"
   peerDependencies:
     react: ">= 17.0.1"
     react-native: ">= 0.64.3"
-  checksum: 10c0/d5f49d34cbf631f0240dde2e1ff8fcc3fd8cb982104fe510093b415ae359efe1b49f6b9d850b47cc09f7603da724ed28c8fe8f70f9553ba4334b5cf7f0dec34d
+  checksum: 10c0/197c807ecbf06c0c5366f79daf5d0d1d580e7a4f8b673fe4fb1d5bcc2993ff0147b823082cdb82f526bb43174dc1c6c6d041d032dada770e92ec2e614d4a8655
+  languageName: node
+  linkType: hard
+
+"react-native-date-picker@patch:react-native-date-picker@npm%3A5.0.13#~/.yarn/patches/react-native-date-picker-npm-5.0.13-e35e950566.patch":
+  version: 5.0.13
+  resolution: "react-native-date-picker@patch:react-native-date-picker@npm%3A5.0.13#~/.yarn/patches/react-native-date-picker-npm-5.0.13-e35e950566.patch::version=5.0.13&hash=c64ac6"
+  peerDependencies:
+    react: ">= 17.0.1"
+    react-native: ">= 0.64.3"
+  checksum: 10c0/58cce43a2cb1e9b4ab1877d324b59d7fbb608840b90333f9db9eb5f5346daf301fa39f2b7f9d49178f794d9e8581ab8b9927decf82511cf8a1246a261f87002c
   languageName: node
   linkType: hard
 
@@ -19290,7 +19300,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-fs@npm:~2.20.0":
+"react-native-fs@npm:2.20.0":
   version: 2.20.0
   resolution: "react-native-fs@npm:2.20.0"
   dependencies:
@@ -19303,6 +19313,22 @@ __metadata:
     react-native-windows:
       optional: true
   checksum: 10c0/3722b5568610cd72f319c90f60ba8b019a005d015f27e49017ddd0ea314d1ea6991f79288c28549fdc2964dc81c0fa24f8a5f87a4a6283c97c6ea88d4caa6851
+  languageName: node
+  linkType: hard
+
+"react-native-fs@patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch":
+  version: 2.20.0
+  resolution: "react-native-fs@patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch::version=2.20.0&hash=6622c7"
+  dependencies:
+    base-64: "npm:^0.1.0"
+    utf8: "npm:^3.0.0"
+  peerDependencies:
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 10c0/bfb84f28551378aa22bac974609e382498ab47ee7e6eb653fd0edae46f49b028a08c3ead5c7d09bc5411eca297d0a6e82b0ab74855ffa0d8b5d51669b768746b
   languageName: node
   linkType: hard
 
