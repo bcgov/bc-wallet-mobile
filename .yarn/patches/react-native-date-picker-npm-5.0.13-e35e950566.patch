@@ -59,6 +59,29 @@ index 0fce9a785a6d14a26386fca508541239867288c3..d56b2031e8721e75317d4b748c7d1169
      }
  
      @Override
+diff --git a/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java b/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
+index 46675b40fa13c2d049d848aebe4d2a7ffbc26d67..cd6f95ec0d0ea82bd2a23385de7b71d2de44fb3c 100644
+--- a/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
++++ b/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
+@@ -1,6 +1,7 @@
+ package com.henninghall.date_picker;
+ 
+ 
++import com.facebook.react.bridge.Callback;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReactContextBaseJavaModule;
+ import com.facebook.react.bridge.ReactMethod;
+@@ -26,8 +27,8 @@ public class DatePickerModule extends ReactContextBaseJavaModule {
+     }
+ 
+     @ReactMethod
+-    public void openPicker(ReadableMap props) {
+-        module.openPicker(props);
++    public void openPicker(ReadableMap props, Callback onConfirm, Callback onCancel) {
++        module.openPicker(props, onConfirm, onCancel);
+     }
+     
+     @ReactMethod
 diff --git a/ios/RNDatePickerManager.h b/ios/RNDatePickerManager.h
 index 6a4f206ee31075919fc19999f5601e13efdfb9ce..e7afc25c2dd676af1aac55008e92302bcd98a977 100644
 --- a/ios/RNDatePickerManager.h

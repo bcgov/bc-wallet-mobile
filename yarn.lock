@@ -19283,11 +19283,11 @@ __metadata:
 
 "react-native-date-picker@patch:react-native-date-picker@npm%3A5.0.13#~/.yarn/patches/react-native-date-picker-npm-5.0.13-e35e950566.patch":
   version: 5.0.13
-  resolution: "react-native-date-picker@patch:react-native-date-picker@npm%3A5.0.13#~/.yarn/patches/react-native-date-picker-npm-5.0.13-e35e950566.patch::version=5.0.13&hash=c64ac6"
+  resolution: "react-native-date-picker@patch:react-native-date-picker@npm%3A5.0.13#~/.yarn/patches/react-native-date-picker-npm-5.0.13-e35e950566.patch::version=5.0.13&hash=f07c4c"
   peerDependencies:
     react: ">= 17.0.1"
     react-native: ">= 0.64.3"
-  checksum: 10c0/58cce43a2cb1e9b4ab1877d324b59d7fbb608840b90333f9db9eb5f5346daf301fa39f2b7f9d49178f794d9e8581ab8b9927decf82511cf8a1246a261f87002c
+  checksum: 10c0/4b60e6f161cbad7610cda6577e80250aeef4197f90d86cb4c47c65c7cc01997b88aada0e108ccdeed2f32033438049f6a56f61985ca922f4d1cf4d5dae83d3e6
   languageName: node
   linkType: hard
 
