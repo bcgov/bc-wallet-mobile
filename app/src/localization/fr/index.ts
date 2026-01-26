@@ -549,6 +549,7 @@ const translation = {
       "LimitedAccess": "Limited access to services (FR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
       "ChooseID": "Choose ID (FR)",
+      "OpenAccountServices": "Ouvrir les services du compte",
     },
     "AccountSetup": {
       "Title": "BC Services Card Account (FR)",
@@ -1169,7 +1170,6 @@ const translation = {
     },
   },
   "Accessibility": {
-    "OpenAccountServices": "Ouvrir les services du compte",
     "ToggleBookmark": "Ajouter/supprimer le signet",
     "CloseDropdown": "Fermer le menu déroulant",
   },
