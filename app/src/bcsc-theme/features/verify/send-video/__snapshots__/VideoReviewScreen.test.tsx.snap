@@ -118,6 +118,8 @@ exports[`VideoReview renders correctly 1`] = `
           />
         </View>
         <View
+          accessibilityLabel="BCSC.SendVideo.VideoReview.TogglePlayPause"
+          accessibilityRole="button"
           accessibilityState={
             {
               "busy": undefined,
@@ -157,6 +159,7 @@ exports[`VideoReview renders correctly 1`] = `
               "width": 60,
             }
           }
+          testID="com.ariesbifold:id/TogglePlayPause"
         >
           <Text
             allowFontScaling={false}
