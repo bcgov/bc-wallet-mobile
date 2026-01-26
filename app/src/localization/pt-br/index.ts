@@ -312,6 +312,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
       "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
+      "ViewMessages": "Ver novas mensagens",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
@@ -760,6 +761,7 @@ const translation = {
         "Heading": "Can you see and hear yourself clearly in the video? (PT-BR)",
         "UseVideo": "Use this video (PT-BR)",
         "RetakeVideo": "Retake video (PT-BR)",
+        "TogglePlayPause": "Alternar reprodução/pausa",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long. (PT-BR)",
@@ -1029,8 +1031,6 @@ const translation = {
     // TODO (MD): Fill in translations once all english errors are completed
   },
   "Accessibility": {
-    "ViewMessages": "Ver novas mensagens",
-    "TogglePlayPause": "Alternar reprodução/pausa",
     "OpenAccountServices": "Abrir serviços da conta",
     "ToggleBookmark": "Alternar favorito",
     "CloseDropdown": "Fechar menu suspenso",

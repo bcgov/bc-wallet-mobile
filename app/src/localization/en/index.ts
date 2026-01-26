@@ -312,6 +312,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
       "LogInFromComputerTitle": "Log in from a computer",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
+      "ViewMessages": "View new messages",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -760,6 +761,7 @@ const translation = {
         "Heading": "Can you see and hear yourself clearly in the video?",
         "UseVideo": "Use this video",
         "RetakeVideo": "Retake video",
+        "TogglePlayPause": "Toggle play pause",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
@@ -1183,8 +1185,6 @@ const translation = {
     },
   },
   "Accessibility": {
-    "ViewMessages": "View new messages",
-    "TogglePlayPause": "Toggle play pause",
     "OpenAccountServices": "Open account services",
     "ToggleBookmark": "Toggle bookmark",
     "CloseDropdown": "Close dropdown menu",
