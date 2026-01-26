@@ -1167,10 +1167,6 @@ const translation = {
     },
   },
   "Accessibility": {
-    "DismissMenu": "Fermer le menu",
-    "CancelCamera": "Annuler la caméra",
-    "TakePhoto": "Prendre une photo",
-    "ToggleFlash": "Activer/désactiver le flash",
     "ViewMessages": "Voir les nouveaux messages",
     "TogglePlayPause": "Lecture/Pause",
     "OpenAccountServices": "Ouvrir les services du compte",
