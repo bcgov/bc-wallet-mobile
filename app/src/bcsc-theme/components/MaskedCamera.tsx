@@ -159,7 +159,7 @@ const MaskedCamera = ({
         <TouchableOpacity
           style={{ flex: 1 }}
           onPress={handleCancel}
-          accessibilityLabel={t('Accessibility.CancelCamera')}
+          accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
           accessibilityRole="button"
           testID={testIdWithKey('CancelCamera')}
         >
@@ -168,7 +168,7 @@ const MaskedCamera = ({
         <TouchableOpacity
           style={styles.captureButton}
           onPress={takePhoto}
-          accessibilityLabel={t('Accessibility.TakePhoto')}
+          accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}
         >
@@ -178,7 +178,7 @@ const MaskedCamera = ({
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
             onPress={toggleTorch}
-            accessibilityLabel={t('Accessibility.ToggleFlash')}
+            accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >

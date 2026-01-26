@@ -10,6 +10,7 @@ const translation = {
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",
+    "DismissMenu": "Fermer le menu",
   },
   "Error": {
     "Title2020": "Incapable d'analiser l'invitation.",
@@ -280,6 +281,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
+      "RemoveService": "Supprimer le service enregistré",
+      "OpenService": "Ouvrir le service",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -581,6 +584,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again. (FR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (FR)",
       "OK": "OK (FR)",
+      "CancelCamera": "Annuler la caméra",
+      "TakePhoto": "Prendre une photo",
+      "ToggleFlash": "Activer/désactiver le flash",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (FR)",
@@ -1165,8 +1171,6 @@ const translation = {
     "CancelCamera": "Annuler la caméra",
     "TakePhoto": "Prendre une photo",
     "ToggleFlash": "Activer/désactiver le flash",
-    "RemoveService": "Supprimer le service enregistré",
-    "OpenService": "Ouvrir le service",
     "ViewMessages": "Voir les nouveaux messages",
     "TogglePlayPause": "Lecture/Pause",
     "OpenAccountServices": "Ouvrir les services du compte",
