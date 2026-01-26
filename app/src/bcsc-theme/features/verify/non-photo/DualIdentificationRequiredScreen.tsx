@@ -64,7 +64,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
           <TouchableOpacity
             style={{ marginLeft: Spacing.sm }}
             onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}
-            accessibilityLabel={t('Accessibility.OpenAccountServices')}
+            accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
             accessibilityRole="link"
             testID={testIdWithKey('OpenAccountServices')}
           >

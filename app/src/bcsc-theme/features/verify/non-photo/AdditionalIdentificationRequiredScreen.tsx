@@ -48,7 +48,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
           <TouchableOpacity
             onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}
-            accessibilityLabel={t('Accessibility.OpenAccountServices')}
+            accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
             accessibilityRole="link"
             testID={testIdWithKey('OpenAccountServices')}
           >
