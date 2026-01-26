@@ -188,7 +188,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         <TouchableOpacity
           style={styles.pauseButton}
           onPress={onTogglePause}
-          accessibilityLabel={t('Accessibility.TogglePlayPause')}
+          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
           accessibilityRole="button"
           testID={testIdWithKey('TogglePlayPause')}
         >

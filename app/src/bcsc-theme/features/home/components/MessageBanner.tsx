@@ -38,7 +38,7 @@ const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) 
     <TouchableOpacity
       style={styles.container}
       onPress={handlePress}
-      accessibilityLabel={t('Accessibility.ViewMessages')}
+      accessibilityLabel={t('BCSC.Home.ViewMessages')}
       accessibilityRole="button"
       testID={testIdWithKey('ViewMessages')}
     >
