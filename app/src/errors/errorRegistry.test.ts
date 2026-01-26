@@ -171,7 +171,7 @@ describe('errorRegistry', () => {
         const definition = ErrorRegistry[key]
 
         // Title keys should be in format 'BCWalletError.Category.Title' or 'Error.Title...'
-        expect(definition.titleKey).toMatch(/^(BCWalletError\..+\.Title|Error\.Title\d+)$/)
+        expect(definition.titleKey).toMatch(/^(BCWalletError\..+Title|Error\.Title)$/)
 
         // Description keys should be in format 'BCWalletError.Category.Something'
         expect(definition.descriptionKey).toMatch(/^(BCWalletError\..+\..+|Error\.Message\d+)$/)

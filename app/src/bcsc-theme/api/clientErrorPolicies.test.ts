@@ -372,12 +372,22 @@ describe('clientErrorPolicies', () => {
           logger: {
             error: jest.fn(),
           },
+          emitErrorAlert: jest.fn(),
+          translate: (key: string) => key,
         }
 
         const resetApplicationMock = jest.fn().mockResolvedValue(undefined)
         const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
 
         await policy.handle(error, context as any)
+
+        const alertArgs = context.emitErrorAlert.mock.calls[0]
+
+        const alertActions = alertArgs[1]?.actions
+        const okOnPressAction = alertActions[0].onPress
+
+        // Simulate pressing the "OK" action
+        await okOnPressAction()
 
         expect(resetApplicationMock).toHaveBeenCalled()
       })

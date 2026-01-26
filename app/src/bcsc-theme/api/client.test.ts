@@ -58,7 +58,7 @@ describe('BCSC Client', () => {
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        '[BCSCApiClient] Connection Error: An unknown server error occurred. Please try again later.',
+        '[BCSCApiClient] Server Error: There is a problem with the service. Please try again later. (error 302)',
         expect.objectContaining({ name: expect.any(String) })
       )
     }
