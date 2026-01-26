@@ -54,8 +54,6 @@ export enum AppEventCode {
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
   SERVER_ERROR = 'server_error',
-  UNKNOWN_SERVER_ERROR = 'unknown_server_error', // fallback server app event (no IAS mapping)
-  UNEXPECTED_SERVER_ERROR = 'unexpected_server_error', // unexpected server app event (no IAS mapping status 500, 503)
   SERVER_TIMEOUT = 'server_timeout',
   UNSECURED_NETWORK = 'unsecured_network',
   USER_INPUT_BIRTHDATE_EMPTY = 'user_input_birthdate_empty',
@@ -115,6 +113,7 @@ export enum AppEventCode {
   INCOMPLETE_REMOTE_VERIFICATION = 'incomplete_remote_verification',
   CONFIRM_CANCEL_MOBILE_CARD_SETUP = 'confirm_cancel_mobile_card_setup',
   TOO_MANY_ATTEMPTS = 'too_many_attempts',
+  LOGIN_TOO_MANY_ATTEMPTS = 'login_too_many_attempts',
   INVALID_QR_CODE = 'invalid_qr_code',
   NON_BCSC_ACCEPT_CONDITIONS = 'non_bcsc_accept_conditions',
   NON_BCSC_HAS_BEEN_DISABLED = 'non_bcsc_has_been_disabled',

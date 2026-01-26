@@ -147,8 +147,6 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         'login_same_device_invalid_pairing_code',
         `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
       ),
-    email_verification_code_invalid: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'email_verification_code_invalid', client.endpoints.evidence),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {

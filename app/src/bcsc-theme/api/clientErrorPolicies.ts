@@ -29,6 +29,7 @@ const VERIFY_DEVICE_ASSERTATION_EVENT_CODES = new Set([
   AppEventCode.LOGIN_SERVER_ERROR,
   AppEventCode.LOGIN_PARSE_URI,
   AppEventCode.INVALID_PAIRING_CODE,
+  AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE,
   AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
 ])
 
@@ -92,13 +93,23 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for VERIFY_NOT_COMPLETE event on evidence endpoint
+export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error)
+  },
+}
+
 // Error policy for unexpected server errors (http status: 500, 503)
 export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return context.statusCode === 500 || context.statusCode === 503
   },
   handle: (error, context) => {
-    const appError = AppError.fromErrorDefinition(ErrorRegistry.UNEXPECTED_SERVER_ERROR, { cause: error })
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: error })
     context.emitErrorAlert(appError)
   },
 }
@@ -133,24 +144,11 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
 }
 
 // Error policy for verify device assertation endpoint errors
-export const verifyDeviceAssertationPolicy: ErrorHandlingPolicy = {
+export const verifyDeviceAssertationErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
       VERIFY_DEVICE_ASSERTATION_EVENT_CODES.has(error.appEvent) &&
       context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
-    )
-  },
-  handle: (error, context) => {
-    context.emitErrorAlert(error)
-  },
-}
-
-// Error policy for invalid email verification code on evidence endpoint
-export const emailVerificationCodeInvalidErrorPolicy: ErrorHandlingPolicy = {
-  matches: (error, context) => {
-    return (
-      error.appEvent === AppEventCode.EMAIL_VERIFICATION_CODE_INVALID &&
-      context.endpoint.includes(context.apiEndpoints.evidence)
     )
   },
   handle: (error, context) => {
@@ -176,12 +174,21 @@ export const createExpiredAppSetupErrorPolicy = (resetApplication: () => Promise
         context.endpoint === context.apiEndpoints.token
       )
     },
-    handle: async (_, context) => {
-      try {
-        await resetApplication()
-      } catch (error) {
-        context.logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
-      }
+    handle: async (error, context) => {
+      context.emitErrorAlert(error, {
+        actions: [
+          {
+            text: context.translate('Alerts.Actions.DefaultOK'),
+            onPress: async () => {
+              try {
+                await resetApplication()
+              } catch (error) {
+                context.logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
+              }
+            },
+          },
+        ],
+      })
     },
   }
 }
@@ -192,6 +199,6 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   unexpectedServerErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
-  verifyDeviceAssertationPolicy,
-  emailVerificationCodeInvalidErrorPolicy,
+  verifyNotCompletedErrorPolicy,
+  verifyDeviceAssertationErrorPolicy,
 ]

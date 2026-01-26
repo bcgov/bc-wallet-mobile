@@ -54,7 +54,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
 
   const allErrorHandlingPolices = useMemo(() => {
-    const polices = ClientErrorHandlingPolicies
+    const errorPolicies = ClientErrorHandlingPolicies
 
     const resetApplication = async () => {
       /**
@@ -63,12 +63,13 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
        * is reset and the user can start Setup Steps again.
        * Waiting on a 'factoryReset' change that persists onboarding state.
        */
+      logger.info('[BCSCApiClientProvider] resetApplication called - implement application reset logic here')
     }
 
-    polices.push(createExpiredAppSetupErrorPolicy(resetApplication))
+    errorPolicies.push(createExpiredAppSetupErrorPolicy(resetApplication))
 
-    return polices
-  }, [])
+    return errorPolicies
+  }, [logger])
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.

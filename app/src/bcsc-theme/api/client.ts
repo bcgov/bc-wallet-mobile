@@ -125,7 +125,7 @@ class BCSCApiClient {
       const error = formatIasAxiosResponseError(_error)
 
       // 2. Create AppError from the IAS error code
-      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
+      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.SERVER_ERROR
       const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
