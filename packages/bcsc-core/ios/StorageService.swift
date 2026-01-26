@@ -162,8 +162,6 @@ class StorageService {
         }
       }
 
-      
-      logger.log("++++++++++++++ FILE READ URL: \(fileUrl)")
       let data = try Data(contentsOf: fileUrl)
       logger.log("Data read from file: \(data)")
 
@@ -222,7 +220,10 @@ class StorageService {
         to: fileUrl,
         options: [.atomic]
       )
-      logger.log("Successfully wrote data to file: \(fileUrl.path) (fileExists: \(FileManager.default.fileExists(atPath: fileUrl.path)))")
+      logger
+        .log(
+          "Successfully wrote data to file: \(fileUrl.path) (fileExists: \(FileManager.default.fileExists(atPath: fileUrl.path)))"
+        )
       return true
     } catch {
       logger.error("writeData: Error writing data for file \(file.rawValue): \(error)")
@@ -325,7 +326,10 @@ class StorageService {
     // Convert to JSON data and write to file with atomic option
     let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
     try jsonData.write(to: accountListPath, options: [.atomic])
-    logger.log("StorageService: Successfully wrote account_list to \(accountListPath.path) (fileExists: \(FileManager.default.fileExists(atPath: accountListPath.path)))")
+    logger
+      .log(
+        "StorageService: Successfully wrote account_list to \(accountListPath.path) (fileExists: \(FileManager.default.fileExists(atPath: accountListPath.path)))"
+      )
   }
 
   private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
