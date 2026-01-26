@@ -9,6 +9,7 @@ You are an expert mobile developer specializing in clean architecture, performan
 This project follows the MVVM architecture pattern. Always structure code according to these principles:
 
 #### Model
+
 - Represents the data and business logic
 - Independent of the UI
 - Handles data validation, storage, and retrieval
@@ -17,18 +18,23 @@ This project follows the MVVM architecture pattern. Always structure code accord
 ```typescript
 // models/User.ts
 export interface User {
-  id: string;
-  name: string;
-  email: string;
+  id: string
+  name: string
+  email: string
 }
 
 export class UserRepository {
-  async getUser(id: string): Promise<User> { /* ... */ }
-  async saveUser(user: User): Promise<void> { /* ... */ }
+  async getUser(id: string): Promise<User> {
+    /* ... */
+  }
+  async saveUser(user: User): Promise<void> {
+    /* ... */
+  }
 }
 ```
 
 #### View
+
 - Presents data to the user
 - Handles UI rendering and user interactions
 - Observes ViewModel for state changes
@@ -38,7 +44,7 @@ export class UserRepository {
 // views/UserProfile.tsx
 export const UserProfile: React.FC = () => {
   const viewModel = useUserProfileViewModel();
-  
+
   return (
     <div>
       <h1>{viewModel.displayName}</h1>
@@ -49,6 +55,7 @@ export const UserProfile: React.FC = () => {
 ```
 
 #### ViewModel
+
 - Acts as intermediary between View and Model
 - Exposes data and commands for the View
 - Contains presentation logic
@@ -58,21 +65,22 @@ export const UserProfile: React.FC = () => {
 ```typescript
 // viewmodels/UserProfileViewModel.ts
 export class UserProfileViewModel {
-  private user: User;
-  
+  private user: User
+
   get displayName(): string {
-    return `${this.user.name} (${this.user.email})`;
+    return `${this.user.name} (${this.user.email})`
   }
-  
+
   handleSave = async () => {
-    await this.repository.saveUser(this.user);
-  };
+    await this.repository.saveUser(this.user)
+  }
 }
 ```
 
 ### ViewModel Adapter Pattern
 
 Use adapters to transform data between layers, especially when:
+
 - Converting API responses to domain models
 - Transforming domain models to ViewModel state
 - Handling different data formats between layers
@@ -86,71 +94,104 @@ export class UserAdapter {
       id: response.user_id,
       name: response.full_name,
       email: response.email_address,
-    };
+    }
   }
-  
+
   // Model -> ViewModel
   static toViewModel(user: User): UserViewModel {
     return {
       displayName: `${user.name} (${user.email})`,
       initials: this.getInitials(user.name),
       avatarUrl: this.generateAvatarUrl(user.id),
-    };
+    }
   }
-  
+
   // ViewModel -> Model (for updates)
   static fromViewModel(vm: UserViewModel, originalUser: User): User {
     return {
       ...originalUser,
       name: vm.editedName || originalUser.name,
-    };
+    }
   }
-  
-  private static getInitials(name: string): string { /* ... */ }
-  private static generateAvatarUrl(id: string): string { /* ... */ }
+
+  private static getInitials(name: string): string {
+    /* ... */
+  }
+  private static generateAvatarUrl(id: string): string {
+    /* ... */
+  }
 }
 ```
 
 ### Directory Structure
 
-Organize code according to architectural layers:
+This codebase uses a **feature-based structure** where each feature contains its own screens, components, ViewModels, and models. This promotes cohesion within features while maintaining separation of concerns.
 
 ```
-/src
-  /models           # Domain models and business logic
-    User.ts
-    UserRepository.ts
-  /viewmodels       # ViewModels for each feature
-    UserProfileViewModel.ts
-  /views            # UI components
-    /components     # Reusable UI components
-    /screens        # Full screen views
-  /adapters         # Data transformation layers
-    UserAdapter.ts
-  /services         # External service integrations
-    ApiService.ts
-  /utils            # Utility functions
+/app/src
+  /bcsc-theme                    # BC Services Card app theme
+    /api                         # API clients and services
+    /components                  # Shared UI components across features
+    /contexts                    # React contexts
+    /features                    # Feature modules
+      /auth                      # Authentication feature
+      /home                      # Home screen feature
+        Home.tsx                 # Screen component
+        /components              # Feature-specific components
+      /verify                    # Identity verification feature
+        VerificationMethodSelectionScreen.tsx
+        SetupStepsScreen.tsx
+        /_models                 # ViewModels for this feature
+          useVerificationMethodModel.tsx
+          useSetupStepsModel.tsx
+        /components              # Feature-specific components
+        /send-video              # Sub-feature
+        /live-call               # Sub-feature
+      /pairing                   # Device pairing feature
+      /settings                  # Settings feature
+    /hooks                       # Shared hooks
+    /navigators                  # Navigation configuration
+    /types                       # TypeScript types
+    /utils                       # Utility functions
+  /bcwallet-theme                # BC Wallet app theme (similar structure)
+  /components                    # App-wide shared components
+  /constants.ts                  # App constants
+  /localization                  # i18n translations
+  /services                      # Shared services
+  /store                         # State management
+  /utils                         # Shared utilities
 ```
+
+**Key conventions:**
+
+- ViewModels live in `_models/` folders within their feature
+- Tests are co-located with their source files (e.g., `Screen.tsx` + `Screen.test.tsx`)
+- Feature-specific components stay within the feature folder
+- Shared components are elevated to `/components` at the appropriate level
 
 ### Guidelines
 
 1. **Separation of Concerns**
+
    - Models should never import from ViewModels or Views
    - ViewModels should never import UI components
    - Views should only import ViewModels and UI components
 
 2. **Data Flow**
+
    - One-way data flow: Model → Adapter → ViewModel → View
    - User actions flow back: View → ViewModel → Model
    - Use adapters at boundaries between layers
 
 3. **Testing**
+
    - Models: Test business logic in isolation
    - ViewModels: Test presentation logic with mocked repositories
    - Adapters: Test transformations in both directions
    - Views: Test UI interactions and rendering
 
 4. **State Management**
+
    - ViewModel owns the state for its View
    - Use observables/reactive patterns for state updates
    - Keep state immutable when possible
@@ -190,6 +231,7 @@ When suggesting commit messages or pull request titles, always follow the [Conve
 ### Scope
 
 The scope should be the name of the architectural layer or component affected:
+
 - `model`: Changes to domain models
 - `viewmodel`: Changes to ViewModels
 - `view`: Changes to Views/UI
@@ -213,6 +255,7 @@ Pull request titles should follow the same conventional commit format to maintai
 ## General Guidance
 
 ### Commit Messages
+
 - Keep descriptions concise and under 72 characters when possible
 - Use the imperative mood ("add" not "added" or "adds")
 - Do not capitalize the first letter of the description
@@ -221,6 +264,7 @@ Pull request titles should follow the same conventional commit format to maintai
 - Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) for clarity
 
 ### Code Quality
+
 - Always maintain clear separation between layers
 - Use adapters when transforming data between layers
 - Write unit tests for each layer independently
