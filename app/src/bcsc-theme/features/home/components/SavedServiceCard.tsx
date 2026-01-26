@@ -54,7 +54,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
                 onPress={props.onRemove}
                 accessibilityLabel={`${t('BCSC.Services.Remove')} ${props.title}`}
                 accessibilityRole="button"
-                testID={testIdWithKey('RemoveService')}
+                testID={testIdWithKey(`RemoveService-${props.title}`)}
               >
                 <Icon name="delete" size={40} />
               </TouchableOpacity>
