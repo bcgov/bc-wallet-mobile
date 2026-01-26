@@ -285,8 +285,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
-      "RemoveService": "Remove saved service (FR)",
-      "OpenService": "Open service (FR)",
+      "Remove": "Remove (FR)",
+      "Open": "Open (FR)",
     },
     "Modals": {
       "InternetDisconnected": {

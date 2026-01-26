@@ -52,7 +52,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
             <Animated.View style={[styles.rightAction, { transform: [{ translateX: translateX }] }]}>
               <TouchableOpacity
                 onPress={props.onRemove}
-                accessibilityLabel={t('BCSC.Services.RemoveService')}
+                accessibilityLabel={`${t('BCSC.Services.Remove')} ${props.title}`}
                 accessibilityRole="button"
                 testID={testIdWithKey('RemoveService')}
               >
@@ -66,7 +66,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
           delayPressIn={50}
           style={styles.serviceContainer}
           onPress={props.onPress}
-          accessibilityLabel={`${t('BCSC.Services.OpenService')}: ${props.title}`}
+          accessibilityLabel={`${t('BCSC.Services.Open')} ${props.title}`}
           accessibilityRole="button"
           testID={testIdWithKey(`OpenService-${props.title}`)}
         >
