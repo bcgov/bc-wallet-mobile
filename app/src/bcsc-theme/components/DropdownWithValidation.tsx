@@ -192,7 +192,7 @@ export const DropdownWithValidation = <T extends string | number>({
         <Pressable
           style={styles.modalOverlay}
           onPress={handleClose}
-          accessibilityLabel={t('Accessibility.CloseDropdown')}
+          accessibilityLabel={t('BCSC.Components.CloseDropdown')}
           accessibilityRole="button"
           testID={testIdWithKey(`${id}-modal-overlay`)}
         >
