@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
+import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -125,11 +126,15 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCurrentPhotoPath(undefined)
   }
 
-  useAutoRequestPermission(hasPermission, requestPermission)
+  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   if (!currentSide) {
     // needs to throw an error instead...
     return <></>
+  }
+
+  if (isLoading) {
+    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
   }
 
   if (!hasPermission) {
