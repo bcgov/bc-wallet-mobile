@@ -8,11 +8,30 @@ import { PINEntryForm } from './PINEntryForm'
 
 jest.mock('react-native-bcsc-core', () => ({
   setPIN: jest.fn(),
+  canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
+  AccountSecurityMethod: {
+    PinNoDeviceAuth: 'app_pin_no_device_authn',
+    PinWithDeviceAuth: 'app_pin_has_device_authn',
+    DeviceAuth: 'device_authentication',
+  },
 }))
 
-const mockSetPIN = jest.mocked(setPIN)
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
+  useBCSCApiClientState: () => ({
+    client: {},
+    isClientReady: true,
+  }),
+}))
+
+jest.mock('@/bcsc-theme/api/hooks/useRegistrationApi', () => ({
+  __esModule: true,
+  default: () => ({
+    register: jest.fn().mockResolvedValue(undefined),
+  }),
+}))
 
 describe('PINEntryForm', () => {
+  const mockSetPIN = jest.mocked(setPIN)
   const mockOnSuccess = jest.fn()
 
   beforeEach(() => {

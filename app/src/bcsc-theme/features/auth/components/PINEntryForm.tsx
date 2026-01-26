@@ -132,7 +132,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix]
+    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register]
   )
 
   const onPressContinue = useCallback(async () => {
