@@ -11,6 +11,7 @@ const translation = {
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
+    "DismissMenu": "Dismiss menu",
   },
   "Error": {
     "Title2020": "Unable to parse invitation",
@@ -281,6 +282,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service",
       "SavedServices": "Saved Services",
       "NoSavedServices": "No saved services",
+      "RemoveService": "Remove saved service",
+      "OpenService": "Open service",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -582,6 +585,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again.",
       "ErrorTakingPhoto": "Failed to take photo. Please try again.",
       "OK": "OK",
+      "CancelCamera": "Cancel camera",
+      "TakePhoto": "Take photo",
+      "ToggleFlash": "Toggle flash",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -1181,8 +1187,6 @@ const translation = {
     "CancelCamera": "Cancel camera",
     "TakePhoto": "Take photo",
     "ToggleFlash": "Toggle flash",
-    "RemoveService": "Remove saved service",
-    "OpenService": "Open service",
     "ViewMessages": "View new messages",
     "TogglePlayPause": "Toggle play pause",
     "OpenAccountServices": "Open account services",
