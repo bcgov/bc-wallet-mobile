@@ -50,7 +50,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
         <TouchableOpacity
           hitSlop={hitSlop}
           onPress={handleBookmarkPress}
-          accessibilityLabel={t('Accessibility.ToggleBookmark')}
+          accessibilityLabel={t('BCSC.ManualPairing.ToggleBookmark')}
           accessibilityRole="button"
           testID={testIdWithKey('ToggleBookmark')}
         >

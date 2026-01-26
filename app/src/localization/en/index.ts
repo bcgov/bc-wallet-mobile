@@ -155,6 +155,9 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "Components": {
+      "CloseDropdown": "Close dropdown menu",
+    },
     "Title": "BC Services Card",
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
@@ -450,6 +453,7 @@ const translation = {
       "CompletionTitle": "You're done in this app",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
       "BookmarkService": "Save link to:",
+      "ToggleBookmark": "Toggle bookmark",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -1168,10 +1172,6 @@ const translation = {
       "RequestError": "There was a problem with the attestation request.",
       "UnsupportedPlatform": "Attestation is not supported on this platform.",
     },
-  },
-  "Accessibility": {
-    "ToggleBookmark": "Toggle bookmark",
-    "CloseDropdown": "Close dropdown menu",
   },
 }
 
