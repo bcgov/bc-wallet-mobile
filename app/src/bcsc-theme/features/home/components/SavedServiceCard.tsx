@@ -1,4 +1,5 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 import { Animated, StyleSheet, TouchableOpacity } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Swipeable from 'react-native-gesture-handler/Swipeable'
@@ -18,6 +19,7 @@ interface SavedServiceCardProps {
  */
 export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedServiceCardProps) => {
   const { ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     serviceContainer: {
@@ -48,14 +50,26 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
 
           return (
             <Animated.View style={[styles.rightAction, { transform: [{ translateX: translateX }] }]}>
-              <TouchableOpacity onPress={props.onRemove}>
+              <TouchableOpacity
+                onPress={props.onRemove}
+                accessibilityLabel={t('Accessibility.RemoveService')}
+                accessibilityRole="button"
+                testID={testIdWithKey('RemoveService')}
+              >
                 <Icon name="delete" size={40} />
               </TouchableOpacity>
             </Animated.View>
           )
         }}
       >
-        <TouchableOpacity delayPressIn={50} style={styles.serviceContainer} onPress={props.onPress}>
+        <TouchableOpacity
+          delayPressIn={50}
+          style={styles.serviceContainer}
+          onPress={props.onPress}
+          accessibilityLabel={`${t('Accessibility.OpenService')}: ${props.title}`}
+          accessibilityRole="button"
+          testID={testIdWithKey(`OpenService-${props.title}`)}
+        >
           <ThemedText>{props.title}</ThemedText>
         </TouchableOpacity>
       </Swipeable>

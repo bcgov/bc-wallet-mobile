@@ -1022,6 +1022,19 @@ const translation = {
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed
   },
+  "Accessibility": {
+    "DismissMenu": "Fechar menu",
+    "CancelCamera": "Cancelar câmera",
+    "TakePhoto": "Tirar foto",
+    "ToggleFlash": "Alternar flash",
+    "RemoveService": "Remover serviço salvo",
+    "OpenService": "Abrir serviço",
+    "ViewMessages": "Ver novas mensagens",
+    "TogglePlayPause": "Alternar reprodução/pausa",
+    "OpenAccountServices": "Abrir serviços da conta",
+    "ToggleBookmark": "Alternar favorito",
+    "CloseDropdown": "Fechar menu suspenso",
+  },
 }
 
 export default translation

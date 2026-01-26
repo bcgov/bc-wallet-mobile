@@ -1,4 +1,4 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 
@@ -7,9 +7,10 @@ interface SectionButtonProps {
   description?: string
   style?: ViewStyle
   onPress?: () => void
+  testID?: string
 }
 
-const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style, onPress }) => {
+const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style, onPress, testID }) => {
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
@@ -30,7 +31,13 @@ const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style
   })
 
   return (
-    <TouchableOpacity style={[styles.container, style]} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.container, style]}
+      onPress={onPress}
+      accessibilityLabel={title}
+      accessibilityRole="button"
+      testID={testID ?? testIdWithKey(`SectionButton-${title}`)}
+    >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
       </ThemedText>

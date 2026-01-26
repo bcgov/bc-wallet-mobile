@@ -46,7 +46,12 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
       <View style={{ marginBottom: Spacing.lg }}>
         <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
           <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
-          <TouchableOpacity onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}
+            accessibilityLabel={t('Accessibility.OpenAccountServices')}
+            accessibilityRole="link"
+            testID={testIdWithKey('OpenAccountServices')}
+          >
             <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
           </TouchableOpacity>
         </View>
