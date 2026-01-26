@@ -227,5 +227,5 @@ Pull request titles should follow the same conventional commit format to maintai
 - Keep ViewModels framework-agnostic (no UI dependencies)
 - Document complex business logic in Models
 - Keep Views thin—move logic to ViewModels
-- Keep tets close to the code they are testing
+- Keep tests close to the code they are testing
 - Follow established naming conventions for clarity
