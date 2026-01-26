@@ -1160,6 +1160,19 @@ const translation = {
       "UnsupportedPlatform": "Attestation is not supported on this platform. (PT-BR)",
     },
   },
+  "Accessibility": {
+    "DismissMenu": "Fechar menu",
+    "CancelCamera": "Cancelar câmera",
+    "TakePhoto": "Tirar foto",
+    "ToggleFlash": "Alternar flash",
+    "RemoveService": "Remover serviço salvo",
+    "OpenService": "Abrir serviço",
+    "ViewMessages": "Ver novas mensagens",
+    "TogglePlayPause": "Alternar reprodução/pausa",
+    "OpenAccountServices": "Abrir serviços da conta",
+    "ToggleBookmark": "Alternar favorito",
+    "CloseDropdown": "Fechar menu suspenso",
+  },
 }
 
 export default translation

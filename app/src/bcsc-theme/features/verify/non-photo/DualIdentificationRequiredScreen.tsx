@@ -61,7 +61,13 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
       <View>
         <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
           <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
-          <TouchableOpacity style={{ marginLeft: Spacing.sm }} onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}>
+          <TouchableOpacity
+            style={{ marginLeft: Spacing.sm }}
+            onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}
+            accessibilityLabel={t('Accessibility.OpenAccountServices')}
+            accessibilityRole="link"
+            testID={testIdWithKey('OpenAccountServices')}
+          >
             <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
           </TouchableOpacity>
         </View>

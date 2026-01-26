@@ -1,4 +1,4 @@
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -30,6 +30,10 @@ export interface SystemModalProps {
    * Callback function when the button is pressed
    */
   onButtonPress: () => void | Promise<void>
+  /**
+   * Optional testID for the button
+   */
+  testID?: string
 }
 
 /**
@@ -45,6 +49,7 @@ export const SystemModal = ({
   contentText,
   buttonText,
   onButtonPress,
+  testID,
 }: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
   const navigation = useNavigation()
@@ -106,7 +111,13 @@ export const SystemModal = ({
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Button title={buttonText} buttonType={ButtonType.Primary} onPress={onButtonPress} />
+        <Button
+          title={buttonText}
+          buttonType={ButtonType.Primary}
+          onPress={onButtonPress}
+          accessibilityLabel={buttonText}
+          testID={testID ?? testIdWithKey('SystemModalButton')}
+        />
       </View>
     </SafeAreaView>
   )

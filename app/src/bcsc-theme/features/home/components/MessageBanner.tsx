@@ -1,5 +1,6 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -15,6 +16,7 @@ interface MessageBannerProps {
 
 const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) => {
   const { Spacing, ColorPalette } = useTheme()
+  const { t } = useTranslation()
 
   if (!messages || messages.length <= 0) {
     return null
@@ -33,7 +35,13 @@ const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) 
   })
 
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={handlePress}
+      accessibilityLabel={t('Accessibility.ViewMessages')}
+      accessibilityRole="button"
+      testID={testIdWithKey('ViewMessages')}
+    >
       <Icon name="information" size={24} color={ColorPalette.brand.secondaryBackground} style={styles.icon} />
       <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.secondaryBackground }}>
         {messages.length} new {messages.length === 1 ? 'message' : 'messages'}
