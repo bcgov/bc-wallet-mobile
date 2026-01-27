@@ -19,8 +19,8 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
-  const { evidence } = useApi()
+  const { updateVerificationRequest, updateAccountFlags, updateTokens } = useSecureActions()
+  const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
 
@@ -42,6 +42,17 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       if (status === 'verified') {
         if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
           throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+        }
+
+        if (store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
+          const { refresh_token } = await token.checkDeviceCodeStatus(
+            store.bcscSecure.deviceCode,
+            store.bcscSecure.userCode
+          )
+
+          if (refresh_token) {
+            await updateTokens({ refreshToken: refresh_token })
+          }
         }
 
         navigation.navigate(BCSCScreens.VerificationSuccess)
