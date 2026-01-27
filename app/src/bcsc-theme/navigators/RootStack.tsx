@@ -64,6 +64,24 @@ const BCSCRootStack: React.FC = () => {
     asyncEffect()
   }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
 
+  useEffect(() => {
+    console.warn('RootStack variables:', {
+      stateLoaded: store.stateLoaded,
+      isClientReady,
+      hasAccount: store.bcscSecure.hasAccount,
+      didAuthenticate: store.authentication.didAuthenticate,
+      isVerified: store.bcscSecure.verified,
+      loading,
+    })
+  }, [
+    store.stateLoaded,
+    isClientReady,
+    store.bcscSecure.hasAccount,
+    store.authentication.didAuthenticate,
+    store.bcscSecure.verified,
+    loading,
+  ])
+
   // Show loading screen if state or API client or account status not ready yet
   if (!store.stateLoaded || !isClientReady || loading) {
     return <LoadingScreenContent />

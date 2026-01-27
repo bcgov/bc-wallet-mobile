@@ -335,7 +335,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
 }
 
-const bcscState: BCSCState = {
+export const initialBCSCState: BCSCState = {
   appVersion: getVersion(),
   nicknames: [],
   selectedNickname: undefined,
@@ -362,7 +362,7 @@ export const initialState: BCState = {
   preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
-  bcsc: bcscState,
+  bcsc: initialBCSCState,
   bcscSecure: initialBCSCSecureState,
   mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
 }
@@ -521,12 +521,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     // Secure state management - not persisted to AsyncStorage
     case BCSCDispatchAction.HYDRATE_SECURE_STATE: {
-      const secureData: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
-      const bcscSecure = { ...state.bcscSecure, ...secureData, isHydrated: true }
+      const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
+      const bcscSecure = { ...state.bcscSecure, ...partialSecureState, isHydrated: true }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.CLEAR_SECURE_STATE: {
-      const bcscSecure = { ...initialBCSCSecureState }
+      // Optionally accept a partial BCSCSecure state to merge with the initial state
+      const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
+      const bcscSecure = { ...initialBCSCSecureState, ...partialSecureState }
       return { ...state, bcscSecure }
     }
     // batched state update to prevent re-renders
@@ -654,9 +656,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
       const partialBcscState = (action?.payload || []).pop()
-      const bcsc = partialBcscState ? { ...bcscState, ...partialBcscState } : bcscState
-      const bcscSecure = { ...initialBCSCSecureState } // Also clear secure state
-      const newState = { ...state, bcsc, bcscSecure }
+      const bcsc = partialBcscState ? { ...initialBCSCState, ...partialBcscState } : initialBCSCState
+      const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
