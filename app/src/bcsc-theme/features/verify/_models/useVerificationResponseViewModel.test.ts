@@ -16,14 +16,12 @@ jest.mock('@bifold/core', () => {
 
 const mockUpdateVerified = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
-const mockUpdateTokens = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateVerified: mockUpdateVerified,
     updateUserMetadata: mockUpdateUserMetadata,
-    updateTokens: mockUpdateTokens,
   })),
 }))
 
@@ -47,10 +45,6 @@ describe('useVerificationResponseViewModel', () => {
     },
   }
 
-  const mockTokenApi = {
-    checkDeviceCodeStatus: jest.fn(),
-  }
-
   const mockRegistrationApi = {
     updateRegistration: jest.fn(),
   }
@@ -59,13 +53,10 @@ describe('useVerificationResponseViewModel', () => {
     jest.clearAllMocks()
     mockUpdateVerified.mockClear()
     mockUpdateUserMetadata.mockClear()
-    mockUpdateTokens.mockClear()
-    mockTokenApi.checkDeviceCodeStatus.mockClear()
     mockRegistrationApi.updateRegistration.mockClear()
 
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
-      token: mockTokenApi,
       registration: mockRegistrationApi,
     } as any)
 
@@ -85,9 +76,6 @@ describe('useVerificationResponseViewModel', () => {
 
   describe('handleAccountSetup', () => {
     it('should complete account setup successfully with all operations', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -97,17 +85,12 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       // Should have called all the setup operations in sequence
-      expect(mockTokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
-      expect(mockUpdateTokens).toHaveBeenCalledWith({ refreshToken: 'new-refresh-token' })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockRegistrationApi.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -143,7 +126,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should set isSettingUpAccount to false even when an error occurs', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockRejectedValue(new Error('Device code error'))
+      mockRegistrationApi.updateRegistration.mockRejectedValue(new Error('Device code error'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -157,7 +140,7 @@ describe('useVerificationResponseViewModel', () => {
 
     it('should log error if checkDeviceCodeStatus fails', async () => {
       const errorMessage = 'Device code validation failed'
-      mockTokenApi.checkDeviceCodeStatus.mockRejectedValue(new Error(errorMessage))
+      mockRegistrationApi.updateRegistration.mockRejectedValue(new Error(errorMessage))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -165,11 +148,12 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to clean up verification process'))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`Failed to update registration: ${errorMessage}`)
+      )
     })
 
     it('should handle missing refresh token gracefully', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({})
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -184,38 +168,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockRegistrationApi.updateRegistration).toHaveBeenCalled()
     })
 
-    it('should call updateTokens only if refresh_token is present', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockUpdateTokens).toHaveBeenCalledWith({ refreshToken: 'new-refresh-token' })
-    })
-
-    it('should not call updateTokens if refresh_token is missing', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({})
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockUpdateTokens).not.toHaveBeenCalled()
-    })
-
     it('should mark account as verified', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -228,9 +181,6 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should clean up user metadata by setting it to null', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -243,9 +193,6 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should update registration with token and nickname', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -258,9 +205,6 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should handle error when updateRegistration fails', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       const registrationError = new Error('Registration update failed')
       mockRegistrationApi.updateRegistration.mockRejectedValue(registrationError)
 
@@ -275,7 +219,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should handle non-Error objects thrown as exceptions', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockRejectedValue('String error')
+      mockRegistrationApi.updateRegistration.mockRejectedValue('String error')
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -284,12 +228,12 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to clean up verification process: String error')
+        expect.stringContaining('Failed to update registration: String error')
       )
     })
 
     it('should handle error with no message gracefully', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockRejectedValue({})
+      mockRegistrationApi.updateRegistration.mockRejectedValue({})
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -301,9 +245,6 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should not throw when updateVerified fails', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
       mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -318,10 +259,6 @@ describe('useVerificationResponseViewModel', () => {
 
   describe('Complex scenarios', () => {
     it('should complete full account setup flow successfully', async () => {
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
-      mockUpdateTokens.mockResolvedValue(undefined)
       mockUpdateVerified.mockResolvedValue(undefined)
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
@@ -334,8 +271,6 @@ describe('useVerificationResponseViewModel', () => {
 
       // Verify all operations were called in order
       const calls = [
-        mockTokenApi.checkDeviceCodeStatus.mock.invocationCallOrder[0],
-        mockUpdateTokens.mock.invocationCallOrder[0],
         mockUpdateVerified.mock.invocationCallOrder[0],
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
         mockRegistrationApi.updateRegistration.mock.invocationCallOrder[0],
@@ -417,10 +352,6 @@ describe('useVerificationResponseViewModel', () => {
 
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithoutNickname as BCState, mockDispatch])
-
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 

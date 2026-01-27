@@ -7,22 +7,9 @@ import { useCallback, useState } from 'react'
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { registration, token } = useApi()
-  const { updateVerified, updateUserMetadata, updateTokens } = useSecureActions()
+  const { registration } = useApi()
+  const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
-
-  const updateTokensForNewUser = useCallback(async () => {
-    if (store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
-
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
-      }
-    }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, updateTokens])
 
   const handleUpdateRegistration = useCallback(async () => {
     try {
@@ -50,8 +37,6 @@ const useVerificationResponseViewModel = () => {
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)
     try {
-      // this fetches new tokens for the user
-      await updateTokensForNewUser()
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
       // this cleans up old metadata from the verification process (photos, address info)
@@ -64,7 +49,7 @@ const useVerificationResponseViewModel = () => {
     } finally {
       setIsSettingUpAccount(false)
     }
-  }, [updateTokensForNewUser, updateVerified, updateUserMetadata, handleUpdateRegistration, logger])
+  }, [updateVerified, updateUserMetadata, handleUpdateRegistration, logger])
   return {
     isSettingUpAccount,
     handleAccountSetup,
