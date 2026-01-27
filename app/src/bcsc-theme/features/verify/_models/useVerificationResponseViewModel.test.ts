@@ -323,10 +323,6 @@ describe('useVerificationResponseViewModel', () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithoutToken as BCState, mockDispatch])
 
-      mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({
-        refresh_token: 'new-refresh-token',
-      })
-
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
