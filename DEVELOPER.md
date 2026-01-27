@@ -8,7 +8,8 @@ Local patches for configuring the app against the BCSC dev environment. These ar
 | ---------------------------------------- | ------------------------------------------------------------ |
 | `0001-chore-android-app-to-bcsc-dev`     | Android: BCSC package ID, Firebase config, app icons         |
 | `0002-chore-ios-app-to-bcsc-dev`         | iOS: BCSC bundle ID, Firebase config, app icon, URL schemes  |
-| `0003-chore-api-versioning-for-bcsc-dev` | Version numbers (4.0.0/3654) + bundle IDs for API validation |
+| `android-local-dev`                      | Version numbers (4.0.0/3654) local environment Android (id.servicescard.dev)|
+| `ios-local-dev`                          | Version numbers (4.0.0/3654) local environment iOS (iddev.servicescard)|
 
 ### Apply / Revert
 
@@ -26,10 +27,13 @@ git apply -R patch/<patch-name>.patch
 # Apply all
 git apply patch/0001-chore-android-app-to-bcsc-dev.patch
 git apply patch/0002-chore-ios-app-to-bcsc-dev.patch
-git apply patch/0003-chore-api-versioning-for-bcsc-dev.patch
+git apply patch/local/android-local-dev.patch
+git apply patch/local/ios-local-dev.patch
+
 
 # Revert all (reverse order)
-git apply -R patch/0003-chore-api-versioning-for-bcsc-dev.patch
+git apply -R patch/local/ios-local-dev.patch
+git apply -R patch/local/android-local-dev.patch
 git apply -R patch/0002-chore-ios-app-to-bcsc-dev.patch
 git apply -R patch/0001-chore-android-app-to-bcsc-dev.patch
 ```

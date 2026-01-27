@@ -24,6 +24,7 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
+import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -247,8 +248,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     }).start()
   }, [prompt, promptOpacity])
 
-  useAutoRequestPermission(hasCameraPermission, requestCameraPermission)
-  useAutoRequestPermission(hasMicrophonePermission, requestMicrophonePermission)
+  const { isLoading: isCameraLoading } = useAutoRequestPermission(hasCameraPermission, requestCameraPermission)
+  // Only request microphone permission after camera permission is resolved (to avoid dialog conflicts)
+  const { isLoading: isMicrophoneLoading } = useAutoRequestPermission(
+    hasMicrophonePermission,
+    requestMicrophonePermission,
+    !isCameraLoading
+  )
 
   useFocusEffect(
     useCallback(() => {
@@ -266,6 +272,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       }
     }
   }, [])
+
+  if (isCameraLoading || isMicrophoneLoading) {
+    return <LoadingScreenContent loading={isCameraLoading || isMicrophoneLoading} onLoaded={() => {}} />
+  }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     let permissionType: 'camera' | 'microphone' | 'cameraAndMicrophone'

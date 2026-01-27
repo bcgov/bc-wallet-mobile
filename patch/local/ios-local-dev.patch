@@ -1,0 +1,132 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kjartan Einarsson <kjartanreinarsson@gmail.com>
+Date: Mon, 20 Jan 2026 12:00:00 +0000
+Subject: [PATCH] chore: minimal ios config for bcsc dev
+
+Essential changes only - bundle identifier, Firebase config, and URL schemes.
+No cosmetic changes (icons, app name, target renaming).
+
+Signed-off-by: Kjartan Einarsson <kjartanreinarsson@gmail.com>
+---
+ app/ios/AriesBifold.xcodeproj/project.pbxproj | 12 ++++++------
+ app/ios/AriesBifold/Info.plist                | 10 ++++++++++
+ app/ios/GoogleService-Info.plist              | 14 ++++++++------
+ 3 files changed, 24 insertions(+), 12 deletions(-)
+
+diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
+index 7cbd6bc4..a1b2c3d4 100644
+--- a/app/ios/AriesBifold.xcodeproj/project.pbxproj
++++ b/app/ios/AriesBifold.xcodeproj/project.pbxproj
+@@ -537,8 +537,8 @@
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+ 				CLANG_ENABLE_MODULES = YES;
+ 				CODE_SIGN_ENTITLEMENTS = AriesBifold/AriesBifold.entitlements;
+-				CURRENT_PROJECT_VERSION = 444;
++				CURRENT_PROJECT_VERSION = 3654;
+ 				DEVELOPMENT_TEAM = L796QSLV3E;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+@@ -550,13 +550,13 @@
+ 					"$(inherited)",
+ 					"$(SDKROOT)/usr/lib/swift",
+ 				);
+-				MARKETING_VERSION = 1.0.1;
++				MARKETING_VERSION = 4.0.0;
+ 				OTHER_LDFLAGS = (
+ 					"$(inherited)",
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.iddev.servicescard;
+ 				PRODUCT_NAME = BCWallet;
+ 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+ 				SUPPORTS_MACCATALYST = NO;
+@@ -576,8 +576,8 @@
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+ 				CLANG_ENABLE_MODULES = YES;
+ 				CODE_SIGN_ENTITLEMENTS = AriesBifold/AriesBifold.entitlements;
+-				CURRENT_PROJECT_VERSION = 1;
++				CURRENT_PROJECT_VERSION = 3654;
+ 				DEVELOPMENT_TEAM = L796QSLV3E;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+@@ -589,13 +589,13 @@
+ 					"$(inherited)",
+ 					"$(SDKROOT)/usr/lib/swift",
+ 				);
+-				MARKETING_VERSION = 1.0.1;
++				MARKETING_VERSION = 4.0.0;
+ 				OTHER_LDFLAGS = (
+ 					"$(inherited)",
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.iddev.servicescard;
+ 				PRODUCT_NAME = BCWallet;
+ 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+ 				SUPPORTS_MACCATALYST = NO;
+diff --git a/app/ios/AriesBifold/Info.plist b/app/ios/AriesBifold/Info.plist
+index 77e0b0d5..b8c4e5f6 100644
+--- a/app/ios/AriesBifold/Info.plist
++++ b/app/ios/AriesBifold/Info.plist
+@@ -34,6 +34,16 @@
+ 				<string>didcomm</string>
+ 			</array>
+ 		</dict>
++		<dict>
++			<key>CFBundleURLSchemes</key>
++			<array>
++				<string>ca.bc.gov.id.servicescard</string>
++				<string>ca.bc.gov.iddev.servicescard</string>
++				<string>ca.bc.gov.idqa.servicescard</string>
++				<string>ca.bc.gov.idtest.servicescard</string>
++				<string>ca.bc.gov.idsit.servicescard</string>
++			</array>
++		</dict>
+ 	</array>
+ 	<key>CFBundleVersion</key>
+ 	<string>$(CURRENT_PROJECT_VERSION)</string>
+diff --git a/app/ios/GoogleService-Info.plist b/app/ios/GoogleService-Info.plist
+index 0d2b4e52..506abd7c 100644
+--- a/app/ios/GoogleService-Info.plist
++++ b/app/ios/GoogleService-Info.plist
+@@ -3,17 +3,17 @@
+ <plist version="1.0">
+ <dict>
+ 	<key>API_KEY</key>
+-	<string>AIzaSyCL37I5zpWEauPopROBm6d64bGDiimAvZE</string>
++	<string>AIzaSyBYE9-AFaGgXjS9wMXxkQcvR0gb-1L36ak</string>
+ 	<key>GCM_SENDER_ID</key>
+-	<string>1008044298583</string>
++	<string>27280337469</string>
+ 	<key>PLIST_VERSION</key>
+ 	<string>1</string>
+ 	<key>BUNDLE_ID</key>
+-	<string>ca.bc.gov.BCWallet</string>
++	<string>ca.bc.gov.iddev.servicescard</string>
+ 	<key>PROJECT_ID</key>
+-	<string>bc-wallet-mobile</string>
++	<string>bcsc-ios-app</string>
+ 	<key>STORAGE_BUCKET</key>
+-	<string>bc-wallet-mobile.appspot.com</string>
++	<string>bcsc-ios-app.firebasestorage.app</string>
+ 	<key>IS_ADS_ENABLED</key>
+ 	<false></false>
+ 	<key>IS_ANALYTICS_ENABLED</key>
+@@ -25,6 +25,8 @@
+ 	<key>IS_SIGNIN_ENABLED</key>
+ 	<true></true>
+ 	<key>GOOGLE_APP_ID</key>
+-	<string>1:1008044298583:ios:76bfc02e8a3c04f844ae12</string>
++	<string>1:27280337469:ios:d17c95af9612ae764dd854</string>
++	<key>DATABASE_URL</key>
++	<string>https://bcsc-ios-app.firebaseio.com</string>
+ </dict>
+ </plist>
+\ No newline at end of file
+-- 
+2.50.1
