@@ -151,17 +151,15 @@ export class FcmViewModel {
     const isAppInForeground = AppState.currentState === 'active'
     if (isAppInForeground) {
       this.logger.info('[FcmViewModel] App is in foreground, skipping local notification display')
-    } else {
+    } else if (title && message) {
       // Show local notification if we have title and message
-      if (title && message) {
-        try {
-          await showLocalNotification(title, message)
-        } catch (error) {
-          this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
-        }
-      } else {
-        this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+      try {
+        await showLocalNotification(title, message)
+      } catch (error) {
+        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
       }
+    } else {
+      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
     }
 
     // Parse the status notification JSON to check for verification approval
