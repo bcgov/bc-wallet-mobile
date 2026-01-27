@@ -42,12 +42,18 @@ jest.mock('@bifold/core', () => ({
 const mockGetVerificationRequestStatus = jest.fn().mockResolvedValue({
   status: 'verified',
 })
+const mockCheckDeviceCodeStatus = jest.fn().mockResolvedValue({
+  refresh_token: 'test-refresh-token',
+})
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   __esModule: true,
   default: () => ({
     evidence: {
       getVerificationRequestStatus: mockGetVerificationRequestStatus,
+    },
+    token: {
+      checkDeviceCodeStatus: mockCheckDeviceCodeStatus,
     },
   }),
 }))
@@ -67,6 +73,9 @@ jest.mock('@/bcsc-theme/features/verification-response', () => {
 describe('useVerificationResponseListener', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Reset API mocks
+    mockGetVerificationRequestStatus.mockResolvedValue({ status: 'verified' })
+    mockCheckDeviceCodeStatus.mockResolvedValue({ refresh_token: 'test-refresh-token' })
     // Create a fresh service for each test
     mockVerificationResponseService = new VerificationResponseService(mockLogger as any)
   })
@@ -237,16 +246,14 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Missing verificationRequestId'))
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('verificationRequestId undefined'))
       })
 
       expect(mockGetVerificationRequestStatus).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalled()
     })
 
-    it('should not navigate if deviceCode is missing after status verified', async () => {
-      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
-
+    it('should not proceed if deviceCode is missing', async () => {
       // Override the store mock for this test
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { useStore } = require('@bifold/core')
@@ -266,14 +273,12 @@ describe('useVerificationResponseListener', () => {
         mockVerificationResponseService.handleRequestReviewed()
       })
 
+      // Validation happens before API call, so getVerificationRequestStatus should NOT be called
       await waitFor(() => {
-        expect(mockGetVerificationRequestStatus).toHaveBeenCalledWith('test-verification-request-id')
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Missing deviceCode undefined'))
       })
 
-      await waitFor(() => {
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Missing deviceCode or userCode'))
-      })
-
+      expect(mockGetVerificationRequestStatus).not.toHaveBeenCalled()
       expect(mockDispatch).not.toHaveBeenCalled()
     })
 
@@ -293,11 +298,12 @@ describe('useVerificationResponseListener', () => {
 
     it('should handle error when getVerificationRequestStatus fails', async () => {
       const apiError = new Error('API request failed')
-      mockGetVerificationRequestStatus.mockRejectedValueOnce(apiError)
+      mockGetVerificationRequestStatus.mockReset()
+      mockGetVerificationRequestStatus.mockRejectedValue(apiError)
 
       renderHook(() => useVerificationResponseListener())
 
-      act(() => {
+      await act(async () => {
         mockVerificationResponseService.handleRequestReviewed()
       })
 
@@ -311,11 +317,12 @@ describe('useVerificationResponseListener', () => {
     })
 
     it('should handle non-Error objects thrown by getVerificationRequestStatus', async () => {
-      mockGetVerificationRequestStatus.mockRejectedValueOnce('String error')
+      mockGetVerificationRequestStatus.mockReset()
+      mockGetVerificationRequestStatus.mockRejectedValue('String error')
 
       renderHook(() => useVerificationResponseListener())
 
-      act(() => {
+      await act(async () => {
         mockVerificationResponseService.handleRequestReviewed()
       })
 
