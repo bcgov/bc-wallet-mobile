@@ -24,6 +24,20 @@ jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
+  useBCSCApiClientState: () => ({
+    client: {},
+    isClientReady: true,
+  }),
+}))
+
+jest.mock('@/bcsc-theme/api/hooks/useRegistrationApi', () => ({
+  __esModule: true,
+  default: () => ({
+    register: jest.fn().mockResolvedValue(undefined),
+  }),
+}))
+
 const mockSetPIN = jest.mocked(setPIN)
 const mockVerifyPIN = jest.mocked(verifyPIN)
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
