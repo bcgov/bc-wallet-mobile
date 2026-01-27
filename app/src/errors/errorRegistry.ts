@@ -177,8 +177,16 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
   },
+  UNKNOWN_SERVER_ERROR: {
+    statusCode: 2111,
+    appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+    titleKey: 'BCWalletError.Network.Title',
+    descriptionKey: 'BCWalletError.Network.UnknownServerErrorDescription',
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+  },
   TOO_MANY_ATTEMPTS: {
-    statusCode: 2211,
+    statusCode: 2112,
     appEvent: AppEventCode.TOO_MANY_ATTEMPTS,
     titleKey: 'BCWalletError.Network.TooManyAttemptsTitle',
     descriptionKey: 'BCWalletError.Network.TooManyAttemptsDescription',
@@ -192,7 +200,7 @@ export const ErrorRegistry = {
   LOGIN_PARSE_URI: {
     statusCode: 2200,
     appEvent: AppEventCode.LOGIN_PARSE_URI,
-    titleKey: 'BCWalletError.Login.ParseErrorTitle',
+    titleKey: 'BCWalletError.Login.ProblemWithLoginTitle',
     descriptionKey: 'BCWalletError.Login.ParseErrorDescription',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.AUTHENTICATION,
@@ -224,7 +232,7 @@ export const ErrorRegistry = {
   LOGIN_SERVER_ERROR: {
     statusCode: 2204,
     appEvent: AppEventCode.LOGIN_SERVER_ERROR,
-    titleKey: 'BCWalletError.Login.ServerErrorTitle',
+    titleKey: 'BCWalletError.Login.ProblemWithLoginTitle',
     descriptionKey: 'BCWalletError.Login.ServerErrorDescription',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.AUTHENTICATION,

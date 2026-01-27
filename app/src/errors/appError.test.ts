@@ -10,7 +10,7 @@ describe('AppError', () => {
     it('should create an AppError with correct properties', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const title = 'Test Error'
@@ -32,7 +32,7 @@ describe('AppError', () => {
       const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const error = new AppError('Title', 'Description', identity)
@@ -45,7 +45,7 @@ describe('AppError', () => {
     it('should return null if there is no cause', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const error = new AppError('Title', 'Description', identity)
@@ -56,7 +56,7 @@ describe('AppError', () => {
     it('should return null if cause is not an Error', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const error = new AppError('Title', 'Description', identity, { cause: 'Not an error' as any })
@@ -100,7 +100,7 @@ describe('AppError', () => {
     it('should convert AppError to BifoldError', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const error = new AppError('Title', 'Description', identity, { cause: new Error('Technical message') })
@@ -115,7 +115,7 @@ describe('AppError', () => {
     it('should use message if technicalMessage is null', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const error = new AppError('Title', 'Description', identity)
@@ -131,7 +131,7 @@ describe('AppError', () => {
 
       const identity = {
         category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.SERVER_ERROR,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
       const cause = new Error('Technical message')

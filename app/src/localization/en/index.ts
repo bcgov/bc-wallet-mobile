@@ -1022,6 +1022,7 @@ const translation = {
     },
     "Network": {
       "Title": "Server Error",
+      "UnknownServerErrorDescription": "An unknown server error occurred. Please try again later.",
       "NoInternetTitle": "No Internet Connection",
       "NoInternetDescription": "No internet connection. Please check your network settings and try again.",
       "ServerErrorDescription": "There is a problem with the service. Please try again later. (error 302)",
@@ -1040,7 +1041,7 @@ const translation = {
     },
     "Login": {
       "Title": "Login Error",
-      "ParseErrorTitle": "Problem with Login",
+      "ProblemWithLoginTitle": "Problem with Login",
       "ParseErrorDescription": "Please try again later. (error 304)",
       "Rejected": "Your login request was rejected. Please try again.",
       "Unauthorized": "You are not authorized to access this service.",

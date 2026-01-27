@@ -113,10 +113,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     },
     unexpected_server_error_500: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 500),
     unexpected_server_error_503: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 503),
-    internal_server_error: () =>
+    login_server_error: () =>
       injectErrorCodeIntoAxiosResponse(
         client,
-        'internal_server_error',
+        'login_server_error',
         `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
       ),
     too_many_attempts: () => injectErrorCodeIntoAxiosResponse(client, 'too_many_attempts'),
