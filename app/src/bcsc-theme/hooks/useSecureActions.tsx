@@ -186,7 +186,7 @@ export const useSecureActions = () => {
           type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
           payload: [tokens.refreshToken],
         })
-        if (isClientReady && apiClient) {
+        if (isClientReady && apiClient && tokens.accessToken === undefined) {
           promises.push(apiClient.getTokensForRefreshToken(tokens.refreshToken))
         }
       }

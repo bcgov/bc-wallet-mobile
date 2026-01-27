@@ -57,8 +57,15 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           skipBearerAuth: true,
         })
 
-        await updateTokens({ refreshToken: data.refresh_token })
-        apiClient.tokens = data
+        try {
+          // Pass both refreshToken and accessToken to avoid duplicate API call in updateTokens
+          await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
+          apiClient.tokens = data
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens: ${message}`)
+          throw error
+        }
 
         return apiClient.tokens
       })
