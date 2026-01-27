@@ -13,6 +13,7 @@ import {
   ErrorMatcherContext,
   createExpiredAppSetupErrorPolicy,
 } from '../api/clientErrorPolicies'
+import { useVerificationReset } from '../api/hooks/useVerificationReset'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -52,24 +53,24 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const verificationReset = useVerificationReset()
 
   const allErrorHandlingPolices = useMemo(() => {
     const errorPolicies = ClientErrorHandlingPolicies
 
     const resetApplication = async () => {
-      /**
-       * TODO / FIXME (MD): Reset application state
-       * The actual implementation should ensure that the application
-       * is reset and the user can start Setup Steps again.
-       * Waiting on a 'factoryReset' change that persists onboarding state.
-       */
-      logger.info('[BCSCApiClientProvider] resetApplication called - implement application reset logic here')
+      const result = await verificationReset()
+      if (!result.success) {
+        logger.error('Failed to reset application during expired app setup error handling:', {
+          error: result.error,
+        })
+      }
     }
 
     errorPolicies.push(createExpiredAppSetupErrorPolicy(resetApplication))
 
     return errorPolicies
-  }, [logger])
+  }, [logger, verificationReset])
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -173,6 +174,27 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     store.developer.environment.name,
     store.stateLoaded,
   ])
+
+  useEffect(() => {
+    // When a new refresh token is updated, refresh the client tokens
+    const refreshEffect = async () => {
+      if (
+        store.stateLoaded &&
+        client &&
+        store.bcscSecure.refreshToken &&
+        client.tokens?.refresh_token !== store.bcscSecure.refreshToken
+      ) {
+        try {
+          logger.info('Refreshing BCSC API client tokens using updated refresh token')
+          await client.getTokensForRefreshToken(store.bcscSecure.refreshToken)
+        } catch (error) {
+          logger.error('Error refreshing BCSC API client tokens:', { error })
+        }
+      }
+    }
+
+    refreshEffect()
+  }, [store.bcscSecure.refreshToken, store.stateLoaded, client, logger])
 
   const contextValue = useMemo(
     () => ({
