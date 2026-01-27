@@ -3,7 +3,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bif
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, BackHandler, StyleSheet } from 'react-native'
-import useVerificationSuccessViewmodel from './_models/useVerificationSuccessViewModel'
+import useVerificationSuccessViewmodel from './_models/useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()

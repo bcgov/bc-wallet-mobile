@@ -1,7 +1,7 @@
-import { VerificationApprovalService } from './VerificationApprovalService'
-import { VerificationApprovalNavigationEvent } from './types'
+import { VerificationResponseService } from './VerificationResponseService'
+import { VerificationResponseNavigationEvent } from './types'
 
-describe('VerificationApprovalService', () => {
+describe('VerificationResponseService', () => {
   let logger: { info: jest.Mock; debug: jest.Mock; warn: jest.Mock }
 
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('VerificationApprovalService', () => {
 
   describe('handleApproval (direct approval / in-person)', () => {
     it('buffers approval when no navigation listener', () => {
-      const service = new VerificationApprovalService(logger as any)
+      const service = new VerificationResponseService(logger as any)
 
       const result = service.handleApproval()
 
@@ -23,8 +23,8 @@ describe('VerificationApprovalService', () => {
     })
 
     it('emits navigation immediately when listener is registered', () => {
-      const service = new VerificationApprovalService(logger as any)
-      const navEvents: VerificationApprovalNavigationEvent[] = []
+      const service = new VerificationResponseService(logger as any)
+      const navEvents: VerificationResponseNavigationEvent[] = []
 
       service.onNavigationRequest((event) => navEvents.push(event))
 
@@ -42,7 +42,7 @@ describe('VerificationApprovalService', () => {
 
   describe('handleRequestReviewed (send-video)', () => {
     it('buffers request_reviewed when no navigation listener', () => {
-      const service = new VerificationApprovalService(logger as any)
+      const service = new VerificationResponseService(logger as any)
 
       const result = service.handleRequestReviewed()
 
@@ -51,8 +51,8 @@ describe('VerificationApprovalService', () => {
     })
 
     it('emits navigation immediately when listener is registered', () => {
-      const service = new VerificationApprovalService(logger as any)
-      const navEvents: VerificationApprovalNavigationEvent[] = []
+      const service = new VerificationResponseService(logger as any)
+      const navEvents: VerificationResponseNavigationEvent[] = []
 
       service.onNavigationRequest((event) => navEvents.push(event))
 
@@ -70,8 +70,8 @@ describe('VerificationApprovalService', () => {
 
   describe('processPendingApproval', () => {
     it('processes buffered direct_approval once navigation is ready', () => {
-      const service = new VerificationApprovalService(logger as any)
-      const navEvents: VerificationApprovalNavigationEvent[] = []
+      const service = new VerificationResponseService(logger as any)
+      const navEvents: VerificationResponseNavigationEvent[] = []
 
       service.handleApproval()
       expect(service.hasPendingApproval).toBe(true)
@@ -92,8 +92,8 @@ describe('VerificationApprovalService', () => {
     })
 
     it('processes buffered request_reviewed once navigation is ready', () => {
-      const service = new VerificationApprovalService(logger as any)
-      const navEvents: VerificationApprovalNavigationEvent[] = []
+      const service = new VerificationResponseService(logger as any)
+      const navEvents: VerificationResponseNavigationEvent[] = []
 
       service.handleRequestReviewed()
       expect(service.hasPendingApproval).toBe(true)
@@ -112,7 +112,7 @@ describe('VerificationApprovalService', () => {
     })
 
     it('returns null when processing with no pending approval', () => {
-      const service = new VerificationApprovalService(logger as any)
+      const service = new VerificationResponseService(logger as any)
 
       const result = service.processPendingApproval()
 
@@ -121,8 +121,8 @@ describe('VerificationApprovalService', () => {
   })
 
   it('unsubscribes navigation listener', () => {
-    const service = new VerificationApprovalService(logger as any)
-    const navEvents: VerificationApprovalNavigationEvent[] = []
+    const service = new VerificationResponseService(logger as any)
+    const navEvents: VerificationResponseNavigationEvent[] = []
 
     const unsubscribe = service.onNavigationRequest((event) => navEvents.push(event))
     unsubscribe()
@@ -135,8 +135,8 @@ describe('VerificationApprovalService', () => {
   })
 
   it('emitNavigation can be called directly with event type', () => {
-    const service = new VerificationApprovalService(logger as any)
-    const navEvents: VerificationApprovalNavigationEvent[] = []
+    const service = new VerificationResponseService(logger as any)
+    const navEvents: VerificationResponseNavigationEvent[] = []
 
     service.onNavigationRequest((event) => navEvents.push(event))
 

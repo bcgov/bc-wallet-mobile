@@ -12,7 +12,7 @@ import {
   parseStatusNotificationClaims,
 } from '../../utils/id-token'
 import { PairingService } from '../pairing'
-import { VerificationApprovalService } from '../verification-approval'
+import { VerificationResponseService } from '../verification-response'
 
 import {
   BasicNotification,
@@ -35,14 +35,14 @@ export class FcmViewModel {
    * @param fcmService - Firebase Cloud Messaging service
    * @param logger - Logger instance
    * @param pairingService - Service for handling pairing requests
-   * @param verificationApprovalService - Service for handling verification approval notifications
+   * @param verificationResponseService - Service for handling verification response notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
     private readonly pairingService: PairingService,
-    private readonly verificationApprovalService: VerificationApprovalService,
+    private readonly verificationResponseService: VerificationResponseService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
 
@@ -168,10 +168,10 @@ export class FcmViewModel {
 
       // Check if this is a verification approval notification
       if (isVerificationApproval(claims)) {
-        this.logger.info('[FcmViewModel] Verification approval detected, delegating to VerificationApprovalService')
+        this.logger.info('[FcmViewModel] Verification approval detected, delegating to VerificationResponseService')
         // Delegate to the verification approval service (follows same pattern as pairing)
         // The service will either emit navigation immediately or buffer for cold-start
-        this.verificationApprovalService.handleApproval()
+        this.verificationResponseService.handleApproval()
         // Skip token refresh for verification approval - user hasn't completed OAuth login yet
         return
       }
@@ -179,8 +179,8 @@ export class FcmViewModel {
 
     // Check if this is a verification request reviewed notification
     if (isVerificationRequestReviewed(data)) {
-      this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationApprovalService')
-      this.verificationApprovalService.handleRequestReviewed()
+      this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
+      this.verificationResponseService.handleRequestReviewed()
       return
     }
 

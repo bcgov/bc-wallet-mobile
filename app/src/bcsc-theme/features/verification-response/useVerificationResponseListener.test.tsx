@@ -1,8 +1,8 @@
-import { VerificationApprovalService } from '@/bcsc-theme/features/verification-approval'
+import { VerificationResponseService } from '@/bcsc-theme/features/verification-response'
 import { CommonActions } from '@react-navigation/native'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
-import { BCSCScreens } from '../types/navigators'
-import { useVerificationApprovalListener } from './useVerificationApprovalListener'
+import { BCSCScreens } from '../../types/navigators'
+import { useVerificationResponseListener } from './useVerificationResponseListener'
 
 // Mock react-navigation
 const mockDispatch = jest.fn()
@@ -53,37 +53,37 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
 }))
 
 // Create a real service for testing - prefixed with 'mock' to allow jest.mock() access
-let mockVerificationApprovalService: VerificationApprovalService
+let mockVerificationResponseService: VerificationResponseService
 
 // Mock the service context
-jest.mock('@/bcsc-theme/features/verification-approval', () => {
-  const actual = jest.requireActual('@/bcsc-theme/features/verification-approval')
+jest.mock('@/bcsc-theme/features/verification-response', () => {
+  const actual = jest.requireActual('@/bcsc-theme/features/verification-response')
   return {
     ...actual,
-    useVerificationApprovalService: () => mockVerificationApprovalService,
+    useVerificationResponseService: () => mockVerificationResponseService,
   }
 })
 
-describe('useVerificationApprovalListener', () => {
+describe('useVerificationResponseListener', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     // Create a fresh service for each test
-    mockVerificationApprovalService = new VerificationApprovalService(mockLogger as any)
+    mockVerificationResponseService = new VerificationResponseService(mockLogger as any)
   })
 
   it('should subscribe to navigation events on mount', () => {
-    const onNavigationRequestSpy = jest.spyOn(mockVerificationApprovalService, 'onNavigationRequest')
+    const onNavigationRequestSpy = jest.spyOn(mockVerificationResponseService, 'onNavigationRequest')
 
-    renderHook(() => useVerificationApprovalListener())
+    renderHook(() => useVerificationResponseListener())
 
     expect(onNavigationRequestSpy).toHaveBeenCalledWith(expect.any(Function))
   })
 
   it('should unsubscribe from service on unmount', () => {
     const unsubscribeMock = jest.fn()
-    jest.spyOn(mockVerificationApprovalService, 'onNavigationRequest').mockReturnValue(unsubscribeMock)
+    jest.spyOn(mockVerificationResponseService, 'onNavigationRequest').mockReturnValue(unsubscribeMock)
 
-    const { unmount } = renderHook(() => useVerificationApprovalListener())
+    const { unmount } = renderHook(() => useVerificationResponseListener())
 
     unmount()
 
@@ -92,15 +92,15 @@ describe('useVerificationApprovalListener', () => {
 
   it('should process pending approval on mount if one exists', async () => {
     // Buffer an approval before the hook mounts (simulating cold-start)
-    mockVerificationApprovalService.handleApproval()
-    expect(mockVerificationApprovalService.hasPendingApproval).toBe(true)
+    mockVerificationResponseService.handleApproval()
+    expect(mockVerificationResponseService.hasPendingApproval).toBe(true)
 
     // Now mount the hook
-    renderHook(() => useVerificationApprovalListener())
+    renderHook(() => useVerificationResponseListener())
 
     // The pending approval should be processed and navigation should occur
     await waitFor(() => {
-      expect(mockVerificationApprovalService.hasPendingApproval).toBe(false)
+      expect(mockVerificationResponseService.hasPendingApproval).toBe(false)
     })
 
     expect(mockDispatch).toHaveBeenCalled()
@@ -112,11 +112,11 @@ describe('useVerificationApprovalListener', () => {
 
   describe('direct_approval (in-person verification)', () => {
     it('should navigate to VerificationSuccess screen', async () => {
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       // Trigger the service to emit direct_approval
       act(() => {
-        mockVerificationApprovalService.handleApproval()
+        mockVerificationResponseService.handleApproval()
       })
 
       // Navigation should happen immediately (no token fetch)
@@ -130,10 +130,10 @@ describe('useVerificationApprovalListener', () => {
     })
 
     it('should log when direct approval event is received', async () => {
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleApproval()
+        mockVerificationResponseService.handleApproval()
       })
 
       await waitFor(() => {
@@ -154,10 +154,10 @@ describe('useVerificationApprovalListener', () => {
         },
       ])
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleApproval()
+        mockVerificationResponseService.handleApproval()
       })
 
       await waitFor(() => {
@@ -172,11 +172,11 @@ describe('useVerificationApprovalListener', () => {
     it('should check status and navigate if verified', async () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       // Trigger the service to emit request_reviewed
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       // Wait for the status check
@@ -197,10 +197,10 @@ describe('useVerificationApprovalListener', () => {
     it('should not navigate if status is not verified', async () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'pending' })
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -230,10 +230,10 @@ describe('useVerificationApprovalListener', () => {
         },
       ])
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -260,10 +260,10 @@ describe('useVerificationApprovalListener', () => {
         },
       ])
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -280,10 +280,10 @@ describe('useVerificationApprovalListener', () => {
     it('should log when request reviewed event is received', async () => {
       mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'verified' })
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -295,10 +295,10 @@ describe('useVerificationApprovalListener', () => {
       const apiError = new Error('API request failed')
       mockGetVerificationRequestStatus.mockRejectedValueOnce(apiError)
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -313,10 +313,10 @@ describe('useVerificationApprovalListener', () => {
     it('should handle non-Error objects thrown by getVerificationRequestStatus', async () => {
       mockGetVerificationRequestStatus.mockRejectedValueOnce('String error')
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       act(() => {
-        mockVerificationApprovalService.handleRequestReviewed()
+        mockVerificationResponseService.handleRequestReviewed()
       })
 
       await waitFor(() => {
@@ -334,13 +334,13 @@ describe('useVerificationApprovalListener', () => {
       // Capture the navigation handler that gets registered
       let navigationHandler: ((event: any) => void) | undefined
 
-      const onNavigationRequestSpy = jest.spyOn(mockVerificationApprovalService, 'onNavigationRequest')
+      const onNavigationRequestSpy = jest.spyOn(mockVerificationResponseService, 'onNavigationRequest')
       onNavigationRequestSpy.mockImplementation((handler) => {
         navigationHandler = handler
         return jest.fn() // Return unsubscribe function
       })
 
-      renderHook(() => useVerificationApprovalListener())
+      renderHook(() => useVerificationResponseListener())
 
       // Wait for the handler to be captured
       await waitFor(() => {

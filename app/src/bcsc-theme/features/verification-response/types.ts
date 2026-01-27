@@ -11,15 +11,15 @@ import { BCSCScreens } from '../../types/navigators'
  *   The notification title is 'Verification Request Reviewed' but doesn't indicate approval/rejection.
  *   We need to check the verification status first before proceeding.
  */
-export type VerificationEventType = 'direct_approval' | 'request_reviewed'
+export type VerificationResponseEventType = 'direct_approval' | 'request_reviewed'
 
 /**
- * Navigation event emitted when verification approval navigation should occur
+ * Navigation event emitted when verification response navigation should occur
  */
-export type VerificationApprovalNavigationEvent = {
+export type VerificationResponseNavigationEvent = {
   screen: typeof BCSCScreens.VerificationSuccess
-  /** Type of verification event that triggered this navigation */
-  eventType: VerificationEventType
+  /** Type of verification response event that triggered this navigation */
+  eventType: VerificationResponseEventType
 }
 
-export type VerificationApprovalNavigationListener = (event: VerificationApprovalNavigationEvent) => void
+export type VerificationResponseNavigationListener = (event: VerificationResponseNavigationEvent) => void

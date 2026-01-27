@@ -3,7 +3,7 @@ import { DeviceEventEmitter } from 'react-native'
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { PairingService } from '../pairing'
-import { VerificationApprovalService } from '../verification-approval'
+import { VerificationResponseService } from '../verification-response'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmMessage, FcmService } from './services/fcm-service'
 
@@ -38,7 +38,7 @@ describe('FcmViewModel', () => {
   let mockFcmService: jest.Mocked<FcmService>
   let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock; debug: jest.Mock }
   let mockPairingService: jest.Mocked<PairingService>
-  let mockVerificationApprovalService: jest.Mocked<VerificationApprovalService>
+  let mockVerificationResponseService: jest.Mocked<VerificationResponseService>
   let capturedMessageHandler: ((message: FcmMessage) => void) | null = null
 
   beforeEach(() => {
@@ -73,10 +73,10 @@ describe('FcmViewModel', () => {
       handlePairing: jest.fn(),
     } as unknown as jest.Mocked<PairingService>
 
-    mockVerificationApprovalService = {
+    mockVerificationResponseService = {
       handleApproval: jest.fn(),
       handleRequestReviewed: jest.fn(),
-    } as unknown as jest.Mocked<VerificationApprovalService>
+    } as unknown as jest.Mocked<VerificationResponseService>
 
     // Mock fetchJwk to return a test JWK
     mockFetchJwk.mockResolvedValue({ kty: 'RSA', n: 'test', e: 'AQAB' })
@@ -85,7 +85,7 @@ describe('FcmViewModel', () => {
       mockFcmService,
       mockLogger as any,
       mockPairingService,
-      mockVerificationApprovalService,
+      mockVerificationResponseService,
       Mode.BCSC
     )
   })
@@ -484,7 +484,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleApproval).toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).toHaveBeenCalled()
     })
 
     it('does not call VerificationApprovalService for non-Authorization events', async () => {
@@ -509,7 +509,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
     })
 
     it('does not call VerificationApprovalService for Authorization with non-approval reason', async () => {
@@ -534,7 +534,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
     })
 
     it('handles missing bcsc_status_notification gracefully', async () => {
@@ -551,8 +551,8 @@ describe('FcmViewModel', () => {
 
       // With empty notification, parseStatusNotificationClaims returns null silently
       // and no verification approval is triggered
-      expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
-      expect(mockVerificationApprovalService.handleRequestReviewed).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('handles JSON parse failure gracefully', async () => {
@@ -569,8 +569,8 @@ describe('FcmViewModel', () => {
 
       // With invalid JSON, parseStatusNotificationClaims returns null silently
       // and no verification approval is triggered
-      expect(mockVerificationApprovalService.handleApproval).not.toHaveBeenCalled()
-      expect(mockVerificationApprovalService.handleRequestReviewed).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('does not refresh tokens when verification approval is detected', async () => {
@@ -596,7 +596,7 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       // Verification approval should call service and skip token refresh
-      expect(mockVerificationApprovalService.handleApproval).toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleApproval).toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
     })
@@ -627,7 +627,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleRequestReviewed).toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).toHaveBeenCalled()
     })
 
     it('does not refresh tokens when verification request reviewed is detected', async () => {
@@ -642,7 +642,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleRequestReviewed).toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).toHaveBeenCalled()
       expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
       expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
     })
@@ -659,7 +659,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationApprovalService.handleRequestReviewed).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
       // Should still refresh tokens for non-verification status notifications
       expect(mockGetTokensForRefreshToken).toHaveBeenCalled()
     })
@@ -682,7 +682,7 @@ describe('FcmViewModel', () => {
         bcWalletFcmService,
         mockLogger as any,
         mockPairingService,
-        mockVerificationApprovalService,
+        mockVerificationResponseService,
         Mode.BCWallet
       )
 
@@ -700,7 +700,7 @@ describe('FcmViewModel', () => {
         bcWalletFcmService,
         mockLogger as any,
         mockPairingService,
-        mockVerificationApprovalService,
+        mockVerificationResponseService,
         Mode.BCWallet
       )
 

@@ -1,16 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
-  useVerificationApprovalService,
-  VerificationApprovalNavigationEvent,
-} from '@/bcsc-theme/features/verification-approval'
+  useVerificationResponseService,
+  VerificationResponseNavigationEvent,
+} from '@/bcsc-theme/features/verification-response'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect } from 'react'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCScreens } from '../../types/navigators'
 
 /**
- * Hook that listens for verification approval push notifications and navigates to the success screen.
+ * Hook that listens for verification response push notifications and navigates to the success screen.
  *
  * This hook should be used in the VerifyStack navigator to handle the case where a user
  * receives a push notification indicating their verification has been approved.
@@ -28,18 +28,18 @@ import { BCSCScreens } from '../types/navigators'
  * The VerificationSuccessScreen handles all cleanup (token fetching, marking verified, etc.)
  * This follows the same pattern as the "Check Status" button in SetupStepsScreen.
  */
-export const useVerificationApprovalListener = () => {
+export const useVerificationResponseListener = () => {
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   const { evidence } = useApi()
-  const verificationApprovalService = useVerificationApprovalService()
+  const verificationResponseService = useVerificationResponseService()
 
   /**
    * Navigate to the success screen using a reset to prevent back navigation.
    */
   const navigateToSuccess = useCallback(() => {
-    logger.info('[useVerificationApprovalListener] Navigating to success screen')
+    logger.info('[useVerificationResponseListener] Navigating to success screen')
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
@@ -54,12 +54,12 @@ export const useVerificationApprovalListener = () => {
    * The VerificationSuccessScreen will handle token fetching and cleanup.
    */
   const handleDirectApproval = useCallback(() => {
-    logger.info('[useVerificationApprovalListener] Direct approval event received (in-person)')
+    logger.info('[useVerificationResponseListener] Direct approval event received (in-person)')
 
     const { deviceCode, userCode } = store.bcscSecure
 
     if (!deviceCode || !userCode) {
-      logger.error('[useVerificationApprovalListener] Missing deviceCode or userCode')
+      logger.error('[useVerificationResponseListener] Missing deviceCode or userCode')
       return
     }
 
@@ -72,29 +72,29 @@ export const useVerificationApprovalListener = () => {
    * This mirrors the "Check Status" button behavior in SetupStepsScreen.
    */
   const handleRequestReviewed = useCallback(async () => {
-    logger.info('[useVerificationApprovalListener] Request reviewed event received (send-video)')
+    logger.info('[useVerificationResponseListener] Request reviewed event received (send-video)')
 
     try {
       const { verificationRequestId, deviceCode, userCode } = store.bcscSecure
 
       if (!verificationRequestId) {
-        logger.error('[useVerificationApprovalListener] Missing verificationRequestId')
+        logger.error('[useVerificationResponseListener] Missing verificationRequestId')
         return
       }
 
       // Check the verification request status (same as Check Status button)
-      logger.info('[useVerificationApprovalListener] Checking verification request status')
+      logger.info('[useVerificationResponseListener] Checking verification request status')
       const { status } = await evidence.getVerificationRequestStatus(verificationRequestId)
 
       if (status !== 'verified') {
-        logger.info(`[useVerificationApprovalListener] Verification status is '${status}', not navigating`)
+        logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         // Status is not verified - user should check manually via the UI
         return
       }
 
       // Status is verified - validate we have the device codes needed for token fetch
       if (!deviceCode || !userCode) {
-        logger.error('[useVerificationApprovalListener] Missing deviceCode or userCode')
+        logger.error('[useVerificationResponseListener] Missing deviceCode or userCode')
         return
       }
 
@@ -102,7 +102,7 @@ export const useVerificationApprovalListener = () => {
       navigateToSuccess()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      logger.error(`[useVerificationApprovalListener] Failed to handle request reviewed: ${message}`)
+      logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
   }, [logger, store.bcscSecure, evidence, navigateToSuccess])
 
@@ -110,7 +110,7 @@ export const useVerificationApprovalListener = () => {
    * Route the event to the appropriate handler based on event type.
    */
   const handleNavigationEvent = useCallback(
-    async (event: VerificationApprovalNavigationEvent) => {
+    async (event: VerificationResponseNavigationEvent) => {
       switch (event.eventType) {
         case 'direct_approval':
           await handleDirectApproval()
@@ -119,7 +119,7 @@ export const useVerificationApprovalListener = () => {
           await handleRequestReviewed()
           break
         default:
-          logger.warn(`[useVerificationApprovalListener] Unknown event type: ${event.eventType}`)
+          logger.warn(`[useVerificationResponseListener] Unknown event type: ${event.eventType}`)
       }
     },
     [handleDirectApproval, handleRequestReviewed, logger]
@@ -127,15 +127,15 @@ export const useVerificationApprovalListener = () => {
 
   useEffect(() => {
     // Subscribe to navigation events from the service
-    const unsubscribe = verificationApprovalService.onNavigationRequest(handleNavigationEvent)
+    const unsubscribe = verificationResponseService.onNavigationRequest(handleNavigationEvent)
 
     // Process any pending approval that was buffered before this hook mounted
     // (e.g., cold-start from push notification)
-    if (verificationApprovalService.hasPendingApproval) {
-      logger.info('[useVerificationApprovalListener] Processing pending approval from cold-start')
-      verificationApprovalService.processPendingApproval()
+    if (verificationResponseService.hasPendingApproval) {
+      logger.info('[useVerificationResponseListener] Processing pending approval from cold-start')
+      verificationResponseService.processPendingApproval()
     }
 
     return unsubscribe
-  }, [verificationApprovalService, handleNavigationEvent, logger])
+  }, [verificationResponseService, handleNavigationEvent, logger])
 }

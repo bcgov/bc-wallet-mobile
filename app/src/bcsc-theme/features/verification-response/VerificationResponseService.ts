@@ -3,9 +3,9 @@ import { AbstractBifoldLogger } from '@bifold/core'
 import { BCSCScreens } from '../../types/navigators'
 
 import {
-  VerificationApprovalNavigationEvent,
-  VerificationApprovalNavigationListener,
-  VerificationEventType,
+  VerificationResponseEventType,
+  VerificationResponseNavigationEvent,
+  VerificationResponseNavigationListener,
 } from './types'
 
 /**
@@ -19,16 +19,16 @@ import {
  * - request_reviewed: Send-video reviewed (need to check status first)
  *
  */
-export class VerificationApprovalService {
-  private readonly navigationListeners = new Set<VerificationApprovalNavigationListener>()
-  private pendingApproval: VerificationEventType | null = null
+export class VerificationResponseService {
+  private readonly navigationListeners = new Set<VerificationResponseNavigationListener>()
+  private pendingApproval: VerificationResponseEventType | null = null
 
   constructor(private readonly logger: AbstractBifoldLogger) {}
 
   /**
    * Subscribe to navigation events. Called when verification approval should trigger screen navigation.
    */
-  public onNavigationRequest(listener: VerificationApprovalNavigationListener): () => void {
+  public onNavigationRequest(listener: VerificationResponseNavigationListener): () => void {
     this.navigationListeners.add(listener)
     return () => this.navigationListeners.delete(listener)
   }
@@ -45,9 +45,9 @@ export class VerificationApprovalService {
    * Used when the app becomes ready to handle navigation.
    * @returns the event type if there was a pending approval to process, null otherwise
    */
-  public processPendingApproval(): VerificationEventType | null {
+  public processPendingApproval(): VerificationResponseEventType | null {
     if (this.pendingApproval) {
-      this.logger.info(`[VerificationApprovalService] Processing pending approval: ${this.pendingApproval}`)
+      this.logger.info(`[VerificationResponseService] Processing pending approval: ${this.pendingApproval}`)
       const eventType = this.pendingApproval
       this.pendingApproval = null
       this.emitNavigation(eventType)
@@ -65,14 +65,14 @@ export class VerificationApprovalService {
    * @returns true if navigation was emitted immediately, false if buffered
    */
   public handleRequestReviewed(): boolean {
-    this.logger.info('[VerificationApprovalService] Verification request reviewed (send-video)')
+    this.logger.info('[VerificationResponseService] Verification request reviewed (send-video)')
 
     if (this.navigationListeners.size > 0) {
-      this.logger.info('[VerificationApprovalService] Emitting request_reviewed event')
+      this.logger.info('[VerificationResponseService] Emitting request_reviewed event')
       this.emitNavigation('request_reviewed')
       return true
     } else {
-      this.logger.info('[VerificationApprovalService] Buffering request_reviewed (no listeners)')
+      this.logger.info('[VerificationResponseService] Buffering request_reviewed (no listeners)')
       this.pendingApproval = 'request_reviewed'
       return false
     }
@@ -87,14 +87,14 @@ export class VerificationApprovalService {
    * @returns true if navigation was emitted immediately, false if buffered
    */
   public handleApproval(): boolean {
-    this.logger.info('[VerificationApprovalService] Direct verification approval received (in-person)')
+    this.logger.info('[VerificationResponseService] Direct verification approval received (in-person)')
 
     if (this.navigationListeners.size > 0) {
-      this.logger.info(`[VerificationApprovalService] Emitting direct_approval to ${BCSCScreens.VerificationSuccess}`)
+      this.logger.info(`[VerificationResponseService] Emitting direct_approval to ${BCSCScreens.VerificationSuccess}`)
       this.emitNavigation('direct_approval')
       return true
     } else {
-      this.logger.info('[VerificationApprovalService] Buffering direct_approval (no listeners)')
+      this.logger.info('[VerificationResponseService] Buffering direct_approval (no listeners)')
       this.pendingApproval = 'direct_approval'
       return false
     }
@@ -104,8 +104,8 @@ export class VerificationApprovalService {
    * Emit navigation event to success screen.
    * @param eventType - The type of verification event triggering navigation
    */
-  public emitNavigation(eventType: VerificationEventType) {
-    const event: VerificationApprovalNavigationEvent = {
+  public emitNavigation(eventType: VerificationResponseEventType) {
+    const event: VerificationResponseNavigationEvent = {
       screen: BCSCScreens.VerificationSuccess,
       eventType,
     }
