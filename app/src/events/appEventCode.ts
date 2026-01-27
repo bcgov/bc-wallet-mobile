@@ -113,7 +113,6 @@ export enum AppEventCode {
   INCOMPLETE_REMOTE_VERIFICATION = 'incomplete_remote_verification',
   CONFIRM_CANCEL_MOBILE_CARD_SETUP = 'confirm_cancel_mobile_card_setup',
   TOO_MANY_ATTEMPTS = 'too_many_attempts',
-  LOGIN_TOO_MANY_ATTEMPTS = 'login_too_many_attempts',
   INVALID_QR_CODE = 'invalid_qr_code',
   NON_BCSC_ACCEPT_CONDITIONS = 'non_bcsc_accept_conditions',
   NON_BCSC_HAS_BEEN_DISABLED = 'non_bcsc_has_been_disabled',

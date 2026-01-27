@@ -8,6 +8,7 @@ import {
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
   verifyDeviceAssertationErrorPolicy,
+  verifyNotCompletedErrorPolicy,
 } from './clientErrorPolicies'
 
 const newError = (code: string) => {
@@ -322,6 +323,18 @@ describe('clientErrorPolicies', () => {
       }
       expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeFalsy()
     })
+
+    describe('handle', () => {
+      it('should emit the alert', () => {
+        const error = newError('invalid_pairing_code')
+        const emitErrorAlertMock = jest.fn()
+        const context = {
+          emitErrorAlert: emitErrorAlertMock,
+        }
+        verifyDeviceAssertationErrorPolicy.handle(error, context as any)
+        expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
+      })
+    })
   })
 
   describe('createExpiredAppSetupErrorPolicy', () => {
@@ -379,7 +392,7 @@ describe('clientErrorPolicies', () => {
         const resetApplicationMock = jest.fn().mockResolvedValue(undefined)
         const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
 
-        await policy.handle(error, context as any)
+        policy.handle(error, context as any)
 
         const alertArgs = context.emitErrorAlert.mock.calls[0]
 
@@ -390,6 +403,55 @@ describe('clientErrorPolicies', () => {
         await okOnPressAction()
 
         expect(resetApplicationMock).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('verifyNotCompletedErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match VERIFY_NOT_COMPLETE on token endpoint', () => {
+        const error = newError('verify_not_complete')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
+        const error = newError('verify_not_complete')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other error codes', () => {
+        const error = newError('some_other_error')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should emit the alert', () => {
+        const error = newError('verify_not_complete')
+        const emitErrorAlertMock = jest.fn()
+        const context = {
+          emitErrorAlert: emitErrorAlertMock,
+        }
+        verifyNotCompletedErrorPolicy.handle(error, context as any)
+        expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
       })
     })
   })

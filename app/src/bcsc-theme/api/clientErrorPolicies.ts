@@ -49,7 +49,7 @@ type ErrorHandlerContext = {
 
 type ErrorHandlingPolicy = {
   matches: (error: AppError, context: ErrorMatcherContext) => boolean
-  handle: (error: AppError, context: ErrorHandlerContext) => void | Promise<void>
+  handle: (error: AppError, context: ErrorHandlerContext) => void
 }
 
 // ----------------------------------------
@@ -161,7 +161,7 @@ export const verifyDeviceAssertationErrorPolicy: ErrorHandlingPolicy = {
 // ----------------------------------------
 
 /**
- * Error policy for expired app setup during token exchange
+ * Error policy factory for expired app setup during token exchange
  *
  * @param resetApplication - Function to reset the application state to "Setup Steps"
  * @returns ErrorHandlingPolicy
