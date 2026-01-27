@@ -21,8 +21,8 @@ describe('AppError', () => {
       expect(error.title).toBe(title)
       expect(error.description).toBe(description)
       expect(error.message).toBe(`${title}: ${description}`)
-      expect(error.code).toBe('general.server_error.1234')
-      expect(error.appEvent).toBe('server_error')
+      expect(error.code).toBe('general.unknown_server_error.1234')
+      expect(error.appEvent).toBe('unknown_server_error')
       expect(error.technicalMessage).toBe(message)
       expect(error.cause).toBeInstanceOf(Error)
       expect(error.timestamp).toBeDefined()
@@ -142,7 +142,7 @@ describe('AppError', () => {
         name: 'AppError',
         message: 'Title: Description',
         technicalMessage: 'Technical message',
-        code: 'general.server_error.1234',
+        code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
         cause: cause,
       })
