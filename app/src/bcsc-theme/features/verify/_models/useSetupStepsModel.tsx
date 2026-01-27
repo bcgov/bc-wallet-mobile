@@ -69,6 +69,8 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     evidence,
     navigation,
     t,
+    token,
+    updateTokens,
   ])
 
   /**

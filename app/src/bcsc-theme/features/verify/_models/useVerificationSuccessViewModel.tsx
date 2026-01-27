@@ -7,8 +7,8 @@ import { useCallback, useState } from 'react'
 const useVerificationSuccessViewmodel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { registration, token } = useApi()
-  const { updateVerified, updateUserMetadata, updateTokens } = useSecureActions()
+  const { registration } = useApi()
+  const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
   const handleUpdateRegistration = useCallback(async () => {
