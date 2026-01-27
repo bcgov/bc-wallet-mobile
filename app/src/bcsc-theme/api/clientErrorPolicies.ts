@@ -174,7 +174,7 @@ export const createExpiredAppSetupErrorPolicy = (resetApplication: () => Promise
         context.endpoint === context.apiEndpoints.token
       )
     },
-    handle: async (error, context) => {
+    handle: (error, context) => {
       context.emitErrorAlert(error, {
         actions: [
           {
