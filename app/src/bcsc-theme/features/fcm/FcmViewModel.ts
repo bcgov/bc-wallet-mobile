@@ -1,6 +1,6 @@
 import { AbstractBifoldLogger } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { DeviceEventEmitter } from 'react-native'
+import { AppState, DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
@@ -147,15 +147,21 @@ export class FcmViewModel {
 
     const { title, message, bcsc_status_notification } = data
 
-    // Show local notification if we have title and message
-    if (title && message) {
-      try {
-        await showLocalNotification(title, message)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
-      }
+    // Only show local notification when app is not in foreground to avoid double rendering
+    const isAppInForeground = AppState.currentState === 'active'
+    if (isAppInForeground) {
+      this.logger.info('[FcmViewModel] App is in foreground, skipping local notification display')
     } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+      // Show local notification if we have title and message
+      if (title && message) {
+        try {
+          await showLocalNotification(title, message)
+        } catch (error) {
+          this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+        }
+      } else {
+        this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
+      }
     }
 
     // Parse the status notification JSON to check for verification approval
@@ -177,7 +183,8 @@ export class FcmViewModel {
       }
     }
 
-    // Check if this is a verification request reviewed notification
+    // Check if this is a verification request reviewed notification (send-video)
+    // note: this also catches live call notifications (verification approval)
     if (isVerificationRequestReviewed(data)) {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()
