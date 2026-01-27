@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useVerificationResponseViewmodel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
+import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
@@ -27,7 +27,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   })),
 }))
 
-describe('useVerificationResponseViewmodel', () => {
+describe('useVerificationResponseViewModel', () => {
   const mockDispatch = jest.fn()
   const mockLogger = {
     error: jest.fn(),
@@ -76,7 +76,7 @@ describe('useVerificationResponseViewmodel', () => {
 
   describe('Initial state', () => {
     it('should return initial state with handleAccountSetup function', () => {
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       expect(result.current.isSettingUpAccount).toBe(false)
       expect(result.current.handleAccountSetup).toBeDefined()
@@ -90,7 +90,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -110,7 +110,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       // Initially false
       expect(result.current.isSettingUpAccount).toBe(false)
@@ -145,7 +145,7 @@ describe('useVerificationResponseViewmodel', () => {
     it('should set isSettingUpAccount to false even when an error occurs', async () => {
       mockTokenApi.checkDeviceCodeStatus.mockRejectedValue(new Error('Device code error'))
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -159,7 +159,7 @@ describe('useVerificationResponseViewmodel', () => {
       const errorMessage = 'Device code validation failed'
       mockTokenApi.checkDeviceCodeStatus.mockRejectedValue(new Error(errorMessage))
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -172,7 +172,7 @@ describe('useVerificationResponseViewmodel', () => {
       mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({})
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -190,7 +190,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -203,7 +203,7 @@ describe('useVerificationResponseViewmodel', () => {
       mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({})
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -218,7 +218,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -233,7 +233,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -248,7 +248,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -264,7 +264,7 @@ describe('useVerificationResponseViewmodel', () => {
       const registrationError = new Error('Registration update failed')
       mockRegistrationApi.updateRegistration.mockRejectedValue(registrationError)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -277,7 +277,7 @@ describe('useVerificationResponseViewmodel', () => {
     it('should handle non-Error objects thrown as exceptions', async () => {
       mockTokenApi.checkDeviceCodeStatus.mockRejectedValue('String error')
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -291,7 +291,7 @@ describe('useVerificationResponseViewmodel', () => {
     it('should handle error with no message gracefully', async () => {
       mockTokenApi.checkDeviceCodeStatus.mockRejectedValue({})
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -306,7 +306,7 @@ describe('useVerificationResponseViewmodel', () => {
       })
       mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await expect(
         act(async () => {
@@ -326,7 +326,7 @@ describe('useVerificationResponseViewmodel', () => {
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -362,7 +362,7 @@ describe('useVerificationResponseViewmodel', () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithoutDeviceCode as BCState, mockDispatch])
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -392,7 +392,7 @@ describe('useVerificationResponseViewmodel', () => {
         refresh_token: 'new-refresh-token',
       })
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
@@ -422,7 +422,7 @@ describe('useVerificationResponseViewmodel', () => {
         refresh_token: 'new-refresh-token',
       })
 
-      const { result } = renderHook(() => useVerificationResponseViewmodel())
+      const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()

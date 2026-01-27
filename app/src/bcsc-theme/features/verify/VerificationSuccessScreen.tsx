@@ -3,12 +3,12 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bif
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, BackHandler, StyleSheet } from 'react-native'
-import useVerificationSuccessViewmodel from './_models/useVerificationResponseViewModel'
+import useVerificationResponseViewModel from './_models/useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
-  const { isSettingUpAccount, handleAccountSetup } = useVerificationSuccessViewmodel()
+  const { isSettingUpAccount, handleAccountSetup } = useVerificationResponseViewModel()
 
   const styles = StyleSheet.create({
     contentContainer: {

@@ -3,9 +3,9 @@ import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-l
 import { FcmService, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import {
-  VerificationApprovalService,
-  VerificationApprovalServiceProvider,
-} from '@/bcsc-theme/features/verification-approval'
+  VerificationResponseService,
+  VerificationResponseServiceProvider,
+} from '@/bcsc-theme/features/verification-response'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -60,10 +60,10 @@ setIssuer(issuer)
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods
 const pairingService = new PairingService(appLogger)
-const verificationApprovalService = new VerificationApprovalService(appLogger)
+const verificationResponseService = new VerificationResponseService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
-const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, verificationApprovalService, appMode)
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, verificationResponseService, appMode)
 
 const App = () => {
   const { t } = useTranslation()
@@ -101,7 +101,7 @@ const App = () => {
           >
             <NavigationContainerProvider>
               <PairingServiceProvider service={pairingService}>
-                <VerificationApprovalServiceProvider service={verificationApprovalService}>
+                <VerificationResponseServiceProvider service={verificationResponseService}>
                   <AnimatedComponentsProvider value={animatedComponents}>
                     <AuthProvider>
                       <NetworkProvider>
@@ -123,7 +123,7 @@ const App = () => {
                       </NetworkProvider>
                     </AuthProvider>
                   </AnimatedComponentsProvider>
-                </VerificationApprovalServiceProvider>
+                </VerificationResponseServiceProvider>
               </PairingServiceProvider>
             </NavigationContainerProvider>
           </ThemeProvider>

@@ -462,7 +462,7 @@ describe('FcmViewModel', () => {
       emitSpy.mockRestore()
     })
 
-    it('calls VerificationApprovalService when status notification indicates approval', async () => {
+    it('calls VerificationResponseService when status notification indicates approval', async () => {
       const statusClaims = {
         bcsc_event: BCSCEvent.Authorization,
         bcsc_reason: BCSCReason.ApprovedByAgent,
@@ -487,7 +487,7 @@ describe('FcmViewModel', () => {
       expect(mockVerificationResponseService.handleApproval).toHaveBeenCalled()
     })
 
-    it('does not call VerificationApprovalService for non-Authorization events', async () => {
+    it('does not call VerificationResponseService for non-Authorization events', async () => {
       const statusClaims = {
         bcsc_event: BCSCEvent.Renewal,
         bcsc_reason: BCSCReason.Renew,
@@ -512,7 +512,7 @@ describe('FcmViewModel', () => {
       expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
     })
 
-    it('does not call VerificationApprovalService for Authorization with non-approval reason', async () => {
+    it('does not call VerificationResponseService for Authorization with non-approval reason', async () => {
       const statusClaims = {
         bcsc_event: BCSCEvent.Authorization,
         bcsc_reason: BCSCReason.CanceledByAgent,

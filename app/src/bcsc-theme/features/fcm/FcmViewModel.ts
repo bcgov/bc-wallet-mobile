@@ -169,7 +169,7 @@ export class FcmViewModel {
       // Check if this is a verification approval notification
       if (isVerificationApproval(claims)) {
         this.logger.info('[FcmViewModel] Verification approval detected, delegating to VerificationResponseService')
-        // Delegate to the verification approval service (follows same pattern as pairing)
+        // Delegate to VerificationResponseService (follows same pattern as pairing)
         // The service will either emit navigation immediately or buffer for cold-start
         this.verificationResponseService.handleApproval()
         // Skip token refresh for verification approval - user hasn't completed OAuth login yet
