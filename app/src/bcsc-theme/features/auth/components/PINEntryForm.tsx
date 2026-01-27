@@ -1,5 +1,7 @@
+import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import {
   Button,
   ButtonType,
@@ -14,7 +16,7 @@ import {
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TextInput } from 'react-native'
-import { setPIN as setNativePIN } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
   success: boolean
@@ -64,6 +66,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage1, setErrorMessage1] = useState<string | undefined>(undefined)
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { client, isClientReady } = useBCSCApiClientState()
+  const { register } = useRegistrationApi(client, isClientReady)
 
   const pin2Ref = useRef<TextInput>(null)
 
@@ -104,6 +108,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         // All validations passed, show a full screen loading indicator
         startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
 
+        // Register with the appropriate security method
+        const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
+        await register(
+          isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
+        )
+
         // Set the PIN using native module
         const { success, walletKey } = await setNativePIN(pin1)
 
@@ -122,7 +132,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix]
+    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register]
   )
 
   const onPressContinue = useCallback(async () => {
