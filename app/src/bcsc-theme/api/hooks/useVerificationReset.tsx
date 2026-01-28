@@ -57,8 +57,7 @@ export const useVerificationReset = () => {
       // This fixes a bug where the account nickname persists even after verification reset
       if (account && securityMethod) {
         await setAccount({
-          clientID: account.clientID,
-          issuer: account.issuer,
+          ...account,
           securityMethod: securityMethod,
           nickname: '', // FIXME (MD): bcsc-core will ignore undefined values for nickname
         })

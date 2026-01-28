@@ -109,7 +109,6 @@ describe('BCSC Client', () => {
   describe('tokens race condition smoke test', () => {
     it('should never have stale tokens when multiple requests are made simultaneously', async () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }
-      const mockOnError = jest.fn()
       const baseURL = 'https://example.com'
 
       const client = new BCSCApiClient(baseURL, mockLogger as any)
