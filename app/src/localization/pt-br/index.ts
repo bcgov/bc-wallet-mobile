@@ -10,6 +10,7 @@ const translation = {
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
+    "DismissMenu": "Dismiss menu (PT-BR)",
   },
   "Error": {
     "Title2020": "Unable to parse invitation (PT-BR)",
@@ -154,6 +155,9 @@ const translation = {
     "ScanQRCode": "Scan a QR code (PT-BR)",
   },
   "BCSC": {
+    "Components": {
+      "CloseDropdown": "Close dropdown menu (PT-BR)",
+    },
     "Title": "BC Services Card (PT-BR)",
     "FullTitle": "BC Services Card App (PT-BR)",
     "LocaleStringFormat": "pt-BR",
@@ -280,6 +284,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service (PT-BR)",
       "SavedServices": "Saved Services (PT-BR)",
       "NoSavedServices": "No saved services (PT-BR)",
+      "Remove": "Remove (PT-BR)",
+      "Open": "Open (PT-BR)",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -308,6 +314,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
       "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
+      "ViewMessages": "View new messages (PT-BR)",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
@@ -446,6 +453,7 @@ const translation = {
       "CompletionTitle": "You're done in this app (PT-BR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
       "BookmarkService": "Save link to: (PT-BR)",
+      "ToggleBookmark": "Toggle bookmark (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
@@ -545,6 +553,7 @@ const translation = {
       "LimitedAccess": "Limited access to services (PT-BR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
       "ChooseID": "Choose ID (PT-BR)",
+      "OpenAccountServices": "Open account services (PT-BR)",
     },
     "AccountSetup": {
       "Title": "BC Services Card Account (PT-BR)",
@@ -581,6 +590,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again. (PT-BR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (PT-BR)",
       "OK": "OK (PT-BR)",
+      "CancelCamera": "Cancel camera (PT-BR)",
+      "TakePhoto": "Take photo (PT-BR)",
+      "ToggleFlash": "Toggle flash (PT-BR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (PT-BR)",
@@ -753,6 +765,7 @@ const translation = {
         "Heading": "Can you see and hear yourself clearly in the video? (PT-BR)",
         "UseVideo": "Use this video (PT-BR)",
         "RetakeVideo": "Retake video (PT-BR)",
+        "TogglePlayPause": "Toggle play pause (PT-BR)",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long. (PT-BR)",

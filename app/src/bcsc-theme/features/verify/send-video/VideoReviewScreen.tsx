@@ -185,7 +185,13 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           onLoad={(data) => onVideoLoad(data)}
           disableAudioSessionManagement
         />
-        <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
+        <TouchableOpacity
+          style={styles.pauseButton}
+          onPress={onTogglePause}
+          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
+          accessibilityRole="button"
+          testID={testIdWithKey('TogglePlayPause')}
+        >
           <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
         </TouchableOpacity>
       </View>
