@@ -155,7 +155,7 @@ This codebase uses a **feature-based structure** where each feature contains its
 
 3. **Testing**
 
-   - Model hooks: Test with `renderHook` from `@testing-library/react-hooks`
+   - Model hooks: Test with `renderHook` from `@testing-library/react-native`
    - Views: Test UI interactions and rendering with mocked hooks
    - Co-locate tests with source files (e.g., `useSetupStepsModel.test.ts`)
 
