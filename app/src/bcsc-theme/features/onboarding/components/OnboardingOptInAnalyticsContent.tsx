@@ -10,11 +10,11 @@ interface OnboardingOptInAnalyticsContentProps {
 }
 /**
  * Analytics Opt In content that informs users about the app's data collection practices.
- * @returns {*} {JSX.Element} The OnboardingOptInAnalyticsContent component.
+ * @returns {*} {React.ReactElement} The OnboardingOptInAnalyticsContent component.
  */
 export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsContentProps> = ({
   onPress,
-}: OnboardingOptInAnalyticsContentProps): JSX.Element => {
+}: OnboardingOptInAnalyticsContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
   const [, dispatch] = useStore<BCState>()

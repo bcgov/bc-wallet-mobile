@@ -9,11 +9,11 @@ interface OnboardingOptInAnalyticsScreenProps {
 
 /**
  * Opt-In Analytics screen component that allows users to choose whether to participate in analytics data collection.
- * @returns {*} {JSX.Element} The OnboardingOptInAnalyticsScreen component.
+ * @returns {*} {React.ReactElement} The OnboardingOptInAnalyticsScreen component.
  */
 export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsScreenProps> = ({
   navigation,
-}: OnboardingOptInAnalyticsScreenProps): JSX.Element => {
+}: OnboardingOptInAnalyticsScreenProps): React.ReactElement => {
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
   }

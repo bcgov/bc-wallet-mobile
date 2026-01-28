@@ -14,7 +14,7 @@ interface SavedServiceCardProps {
  * Renders the card for a saved service on the home screen.
  *
  * @param {SavedServiceCardProps} props - The props for the component.
- * @returns {*} {JSX.Element} The rendered component.
+ * @returns {*} {React.ReactElement} The rendered component.
  */
 export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedServiceCardProps) => {
   const { ColorPalette, Spacing } = useTheme()

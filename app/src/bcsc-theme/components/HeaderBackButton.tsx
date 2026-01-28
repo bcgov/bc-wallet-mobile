@@ -5,7 +5,7 @@ import { Platform } from 'react-native'
 /**
  * Shared Header Back Button component that navigates back on press.
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 export const HeaderBackButton = (props: HeaderBackButtonProps) => {
   return (
@@ -22,7 +22,7 @@ export const HeaderBackButton = (props: HeaderBackButtonProps) => {
 /**
  * Creates a Header Back Button component.
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 export const createHeaderBackButton = (props: HeaderBackButtonProps) => {
   return <HeaderBackButton {...props} />

@@ -535,6 +535,49 @@ class BcscCore: NSObject {
     resolve(saved)
   }
 
+  /// Gets the issuer URL from persistent storage.
+  /// - Parameters:
+  ///   - resolve: Called with the issuer URL string if found, otherwise nil.
+  ///   - reject: Called with an error if reading fails.
+  func getIssuer(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+    let issuer = storage.issuer
+
+    // If issuer equals production issuer (the default fallback), check if file exists
+    if issuer == storage.productionIssuer {
+      let pathDirectory = defaultSearchPathDirectory
+
+      do {
+        let rootDirectoryURL = try FileManager.default.url(
+          for: pathDirectory,
+          in: .userDomainMask,
+          appropriateFor: nil,
+          create: false
+        )
+
+        let issuerFileURL =
+          rootDirectoryURL
+            .appendingPathComponent("\(storage.currentBundleID)/data")
+            .appendingPathComponent(issuerURLComponent)
+
+        // If file doesn't exist, return nil to indicate no issuer has been set
+        if !FileManager.default.fileExists(atPath: issuerFileURL.path) {
+          resolve(nil)
+          return
+        }
+      } catch {
+        // If we can't check, return nil
+        resolve(nil)
+        return
+      }
+    }
+
+    resolve(issuer)
+  }
+
   func setAccount(
     _ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock

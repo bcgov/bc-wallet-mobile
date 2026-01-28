@@ -105,7 +105,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       <View style={{ flex: 1, alignItems: 'center' }}>
         <DatePicker
           theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
-          locale={t('BCSC.LocaleStringFormat')}
           mode={'date'}
           date={date}
           onDateChange={onDateChange}

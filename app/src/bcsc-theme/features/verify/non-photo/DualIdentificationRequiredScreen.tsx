@@ -17,7 +17,7 @@ type DualIdentificationRequiredScreenProps = {
  * Renders an instructions screen, when users are registering non-bcsc cards.
  * It explains, what access the user will have and what types of cards are required during the setup.
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScreenProps> = ({
   navigation,

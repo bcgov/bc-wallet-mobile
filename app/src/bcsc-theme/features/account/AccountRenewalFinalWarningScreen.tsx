@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next'
 /**
  * Renders the Account Renewal Final Warning screen, informing users about the consequences of renewing their account.
  *
- * @returns {*} {JSX.Element} The AccountRenewalFinalWarningScreen component.
+ * @returns {*} {React.ReactElement} The AccountRenewalFinalWarningScreen component.
  */
-export const AccountRenewalFinalWarningScreen = (): JSX.Element => {
+export const AccountRenewalFinalWarningScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()

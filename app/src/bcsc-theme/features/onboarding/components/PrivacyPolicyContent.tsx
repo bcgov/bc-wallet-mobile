@@ -12,11 +12,11 @@ interface PrivacyPolicyContentProps {
  *
  * onLearnMore: function to be called when the Learn More button is pressed.
  *
- * @returns {*} {JSX.Element} The PrivacyPolicyContent component.
+ * @returns {*} {React.ReactElement} The PrivacyPolicyContent component.
  */
 export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
   onLearnMore,
-}: PrivacyPolicyContentProps): JSX.Element => {
+}: PrivacyPolicyContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
 

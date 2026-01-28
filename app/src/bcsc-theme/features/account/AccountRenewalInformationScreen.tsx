@@ -13,9 +13,11 @@ interface AccountRenewalInformationScreenProps {
 /**
  * Renders the Account Renewal Information screen, providing users with information about renewing their account.
  *
- * @returns {*} {JSX.Element} The AccountRenewalInformationScreen component.
+ * @returns {*} {React.ReactElement} The AccountRenewalInformationScreen component.
  */
-export const AccountRenewalInformationScreen = ({ navigation }: AccountRenewalInformationScreenProps): JSX.Element => {
+export const AccountRenewalInformationScreen = ({
+  navigation,
+}: AccountRenewalInformationScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
 

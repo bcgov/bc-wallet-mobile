@@ -13,7 +13,7 @@ type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 /**
  * Screen that confirms the user's intent to remove their account.
  *
- * @returns {*} {JSX.Element} The RemoveAccountConfirmationScreen component.
+ * @returns {*} {React.ReactElement} The RemoveAccountConfirmationScreen component.
  */
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { Spacing } = useTheme()

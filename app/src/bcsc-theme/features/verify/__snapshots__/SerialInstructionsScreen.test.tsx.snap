@@ -35,31 +35,18 @@ exports[`SerialInstructions renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
+      <Image
         resizeMode="contain"
         source={
-          [
-            {
-              "uri": "mocked-image-uri",
-            },
-          ]
+          {
+            "uri": "mocked-image-uri",
+          }
         }
         style={
           {
             "alignSelf": "center",
             "height": 438.18,
             "marginBottom": 24,
-            "overflow": "hidden",
             "padding": 24,
             "width": 654,
           }

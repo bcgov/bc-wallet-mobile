@@ -9,9 +9,9 @@ import { SystemModal } from './components/SystemModal'
 /**
  * Component displayed when the device is disconnected from the internet.
  *
- * @returns {*} {JSX.Element} The InternetDisconnected component.
+ * @returns {*} {React.ReactElement} The InternetDisconnected component.
  */
-export const InternetDisconnected = (): JSX.Element => {
+export const InternetDisconnected = (): React.ReactElement => {
   const { t } = useTranslation()
   const navigation = useNavigation()
   const netInfo = useNetInfo()

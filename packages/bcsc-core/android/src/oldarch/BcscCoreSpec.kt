@@ -36,6 +36,8 @@ abstract class BcscCoreSpec internal constructor(
         promise: Promise,
     )
 
+    abstract fun getIssuer(promise: Promise)
+
     abstract fun setAccount(
         account: com.facebook.react.bridge.ReadableMap,
         promise: Promise,

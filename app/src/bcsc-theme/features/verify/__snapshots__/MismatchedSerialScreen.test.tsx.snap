@@ -120,30 +120,17 @@ exports[`MismatchedSerial renders correctly 1`] = `
       >
         BCSC.MismatchedSerial.Description2
       </Text>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
+      <Image
         resizeMode="contain"
         source={
-          [
-            {
-              "uri": "mocked-image-uri",
-            },
-          ]
+          {
+            "uri": "mocked-image-uri",
+          }
         }
         style={
           {
             "height": 481.06,
             "marginBottom": 24,
-            "overflow": "hidden",
             "width": 718,
           }
         }

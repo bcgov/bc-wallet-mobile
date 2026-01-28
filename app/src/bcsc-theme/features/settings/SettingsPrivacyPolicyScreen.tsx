@@ -12,11 +12,11 @@ interface SettingsPrivacyPolicyScreenProps {
  * Privacy Policy screen component that informs users about the app's privacy practices,
  * to be shown in the Settings section of the app with no continue button.
  *
- * @returns {*} {JSX.Element} The SettingsPrivacyPolicyScreen component.
+ * @returns {*} {React.ReactElement} The SettingsPrivacyPolicyScreen component.
  */
 export const SettingsPrivacyPolicyScreen: React.FC<SettingsPrivacyPolicyScreenProps> = ({
   navigation,
-}: SettingsPrivacyPolicyScreenProps): JSX.Element => {
+}: SettingsPrivacyPolicyScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
 

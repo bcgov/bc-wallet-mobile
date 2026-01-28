@@ -126,7 +126,7 @@ class NativeCompatibleStorage(
 
     // MARK: - Low-level I/O with Encryption
 
-    private fun readEncryptedFile(file: File): String? {
+    internal fun readEncryptedFile(file: File): String? {
         if (!file.exists() || !file.isFile) {
             return null
         }
