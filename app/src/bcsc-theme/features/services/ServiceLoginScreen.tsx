@@ -202,7 +202,7 @@ const ServiceLoginDefaultView = ({
 /**
  * Renders the service details screen component, which displays information about a specific serviceClient.
  *
- * @returns {*} {JSX.Element} The service screen component or null if not implemented.
+ * @returns {*} {React.ReactElement} The service screen component or null if not implemented.
  */
 export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,

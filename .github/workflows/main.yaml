@@ -180,7 +180,7 @@ jobs:
             app/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock ') }}
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}
           restore-keys: |
             ${{ runner.os }}-pods-
 
@@ -201,6 +201,7 @@ jobs:
         working-directory: app/ios
         run: |
           echo "export NODE_BINARY=$(which node)" > .xcode.env.local
+          echo "export PATH=\"$(dirname $(which node)):\$PATH\"" >> .xcode.env.local
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'

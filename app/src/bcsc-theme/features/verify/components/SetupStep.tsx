@@ -21,7 +21,7 @@ interface SetupStepProps {
  *  4. Additional children can be provided to be rendered below the subtext. ie: stepHeader->subtext->children
  *
  *  @param {PropsWithChildren<SetupStepProps>} props - The SetupStep props
- *  @returns {*} {JSX.Element}
+ *  @returns {*} {React.ReactElement}
  */
 export const SetupStep = (props: PropsWithChildren<SetupStepProps>) => {
   const { TextTheme, ColorPalette } = useTheme()

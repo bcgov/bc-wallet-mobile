@@ -34,31 +34,15 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
-        resizeMode="cover"
+      <Image
         source={
-          [
-            {
-              "uri": "mock-notification-image",
-            },
-          ]
+          {
+            "uri": "mock-notification-image",
+          }
         }
         style={
           {
             "alignItems": "center",
-            "height": undefined,
-            "overflow": "hidden",
-            "width": undefined,
           }
         }
       />

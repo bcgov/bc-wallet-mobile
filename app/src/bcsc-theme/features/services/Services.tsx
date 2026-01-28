@@ -23,7 +23,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
  * Services screen component that displays a list of services accessible
  * with the user's BCSC card.
  *
- * @return {*} {JSX.Element} The Services screen component.
+ * @return {*} {React.ReactElement} The Services screen component.
  */
 const Services: React.FC = () => {
   const { token } = useApi()

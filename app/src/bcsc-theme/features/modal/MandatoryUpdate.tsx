@@ -7,9 +7,9 @@ import { SystemModal } from './components/SystemModal'
 /**
  * Component displayed when a mandatory app update is required.
  *
- * @returns {*} {JSX.Element} The MandatoryUpdate component.
+ * @returns {*} {React.ReactElement} The MandatoryUpdate component.
  */
-export const MandatoryUpdate = (): JSX.Element => {
+export const MandatoryUpdate = (): React.ReactElement => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 

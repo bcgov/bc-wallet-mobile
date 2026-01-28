@@ -99,7 +99,7 @@ const Developer: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
+  const SectionHeader = ({ icon, title }: { icon: string; title: string }): React.ReactElement => (
     <View style={[styles.section, styles.sectionHeader]}>
       <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
       <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
@@ -110,9 +110,9 @@ const Developer: React.FC = () => {
     title: string
     accessibilityLabel?: string
     testID?: string
-    children: JSX.Element
+    children: React.ReactElement
     showRowSeparator?: boolean
-    subContent?: JSX.Element
+    subContent?: React.ReactElement
     onPress?: () => void
   }
   const SectionRow = ({

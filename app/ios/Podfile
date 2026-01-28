@@ -1,6 +1,9 @@
 source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
+# prevents location usage from react-native-vision-camera
+$VCEnableLocation = false
+
 # From RNP docs here: https://www.npmjs.com/package/react-native-permissions/v/4.0.1
 def node_require(script)
   # Resolve script with node to allow for hoisting
@@ -41,17 +44,6 @@ setup_permissions([
   # 'StoreKit',
 ])
 
-# If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
-# because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
-#
-# To fix this you can also exclude `react-native-flipper` using a `react-native.config.js`
-# ```js
-# module.exports = {
-#   dependencies: {
-#     ...(process.env.NO_FLIPPER ? { 'react-native-flipper': { platforms: { ios: null } } } : {}),
-# ```
-flipper_config = FlipperConfiguration.disabled
-
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -65,6 +57,7 @@ target 'AriesBifold' do
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
+  pod 'CatCrypto', :modular_headers => true
 
   #permissions_path = '../node_modules/react-native-permissions/ios'
   #pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
@@ -77,11 +70,6 @@ target 'AriesBifold' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'AriesBifoldTests' do
-    inherit! :complete
-    # Pods for testing
-  end
-
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
@@ -89,5 +77,16 @@ target 'AriesBifold' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # Fix CatCrypto module paths for RNArgon2 (this is a bit ugly but we will be removing this package soon anyway)
+    installer.pods_project.targets.each do |target|
+      if target.name == 'RNArgon2'
+        target.build_configurations.each do |config|
+          catcrypto_path = "#{installer.sandbox.root}/CatCrypto/Sources/ModuleMaps"
+          current_paths = config.build_settings['SWIFT_INCLUDE_PATHS'] || '$(inherited)'
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = "#{current_paths} \"#{catcrypto_path}/Argon2\" \"#{catcrypto_path}/MD6\" \"#{catcrypto_path}/SHA3\""
+        end
+      end
+    end
   end
 end

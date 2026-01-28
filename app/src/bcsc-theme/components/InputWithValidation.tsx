@@ -25,7 +25,7 @@ type InputWithValidationProps = {
  * Note: This also includes the equivalent styling props for each section for customization.
  *
  * @param {InputWithValidationProps} props - Input props
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette } = useTheme()

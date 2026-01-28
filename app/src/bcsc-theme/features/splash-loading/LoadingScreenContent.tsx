@@ -44,7 +44,7 @@ type LoadingScreenContentProps = LoadingScreenContentPropsA | LoadingScreenConte
  *
  * Note: Props `loading` + `onLoaded` are optional, but must be provided together.
  *
- * @returns {*} {JSX.Element} The LoadingScreenContent component.
+ * @returns {*} {React.ReactElement} The LoadingScreenContent component.
  */
 export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScreenContentProps) => {
   const { t } = useTranslation()

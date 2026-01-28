@@ -26,9 +26,9 @@ import { getDefaultModalOptions } from './stack-utils'
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
  *
- * @returns {*} {JSX.Element} The OnboardingStack component.
+ * @returns {*} {React.ReactElement} The OnboardingStack component.
  */
-const OnboardingStack = (): JSX.Element => {
+const OnboardingStack = (): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCOnboardingStackParams>()

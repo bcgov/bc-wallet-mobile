@@ -16,9 +16,9 @@ interface TermsOfUseScreenProps {
 /**
  * Terms of Use screen component that presents the application's terms of use to the user.
  *
- * @returns {*} {JSX.Element} The TermsOfUseScreen component.
+ * @returns {*} {React.ReactElement} The TermsOfUseScreen component.
  */
-export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Element => {
+export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)

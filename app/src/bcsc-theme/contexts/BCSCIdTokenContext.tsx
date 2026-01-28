@@ -16,7 +16,7 @@ export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> 
  * Provides the BCSCIdTokenContext to child components, managing the loading of ID token data.
  *
  * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {JSX.Element} The BCSCIdTokenProvider component wrapping its children.
+ * @returns {*} {React.ReactElement} The BCSCIdTokenProvider component wrapping its children.
  */
 export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
