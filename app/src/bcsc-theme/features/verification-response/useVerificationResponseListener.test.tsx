@@ -128,7 +128,10 @@ describe('useVerificationResponseListener', () => {
         mockVerificationResponseService.handleApproval()
       })
 
-      // Navigation should happen immediately (no token fetch)
+      // Token fetch happens first, then navigation
+      await waitFor(() => {
+        expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+      })
       await waitFor(() => {
         expect(CommonActions.reset).toHaveBeenCalledWith({
           index: 0,
@@ -175,6 +178,43 @@ describe('useVerificationResponseListener', () => {
 
       expect(mockDispatch).not.toHaveBeenCalled()
     })
+
+    it('should not navigate when checkDeviceCodeStatus fails during direct approval', async () => {
+      mockCheckDeviceCodeStatus.mockRejectedValueOnce(new Error('Token exchange failed'))
+
+      renderHook(() => useVerificationResponseListener())
+
+      await act(async () => {
+        mockVerificationResponseService.handleApproval()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to handle direct approval: Token exchange failed')
+        )
+      })
+
+      expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('should handle non-Error thrown by checkDeviceCodeStatus during direct approval', async () => {
+      mockCheckDeviceCodeStatus.mockRejectedValueOnce('String error')
+
+      renderHook(() => useVerificationResponseListener())
+
+      await act(async () => {
+        mockVerificationResponseService.handleApproval()
+      })
+
+      await waitFor(() => {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to handle direct approval: String error')
+        )
+      })
+
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
   })
 
   describe('request_reviewed (send-video verification)', () => {
@@ -193,7 +233,10 @@ describe('useVerificationResponseListener', () => {
         expect(mockGetVerificationRequestStatus).toHaveBeenCalledWith('test-verification-request-id')
       })
 
-      // Should navigate to success screen (token fetch happens in VerificationSuccessScreen)
+      // Token fetch happens in the listener before navigation
+      await waitFor(() => {
+        expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
+      })
       await waitFor(() => {
         expect(CommonActions.reset).toHaveBeenCalledWith({
           index: 0,

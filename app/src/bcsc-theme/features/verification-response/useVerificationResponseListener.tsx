@@ -18,14 +18,15 @@ import { BCSCScreens } from '../../types/navigators'
  * Handles two types of verification events:
  *
  * 1. Direct approval (in-person): The notification contains explicit approval claims.
- *    - Navigates directly to success screen (notification confirms approval)
+ *    - Fetches tokens via checkDeviceCodeStatus, then navigates to success screen
  *
  * 2. Request reviewed (send-video): The notification indicates the video was reviewed.
  *    - First checks verification status via API
- *    - If status is 'verified', navigates to success screen
+ *    - If status is 'verified', fetches tokens via checkDeviceCodeStatus, then navigates to success
  *    - If not verified, does not navigate (user should check manually)
  *
- * The VerificationSuccessScreen handles all cleanup (token fetching, marking verified, etc.)
+ * Token fetching happens in this hook before navigation. VerificationSuccessScreen handles
+ * final account setup (marking verified, metadata cleanup, registration update).
  * This follows the same pattern as the "Check Status" button in SetupStepsScreen.
  */
 export const useVerificationResponseListener = () => {
@@ -50,8 +51,9 @@ export const useVerificationResponseListener = () => {
 
   /**
    * Handle direct approval (in-person verification).
-   * The notification contains explicit approval, so we navigate directly to success.
-   * The VerificationSuccessScreen will handle token fetching and cleanup.
+   * The notification contains explicit approval claims. We fetch tokens here via
+   * checkDeviceCodeStatus, then navigate to success. VerificationSuccessScreen
+   * handles final account setup (marking verified, metadata cleanup, registration update).
    */
   const handleDirectApproval = useCallback(async () => {
     logger.info('[useVerificationResponseListener] Direct approval event received (in-person)')
@@ -100,7 +102,7 @@ export const useVerificationResponseListener = () => {
       if (status === 'verified') {
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
-        // Navigate to success screen - it will handle token fetching and cleanup
+        // Navigate to success screen - tokens have been fetched; it will handle final account setup and cleanup
         navigateToSuccess()
         return
       }
@@ -136,6 +138,7 @@ export const useVerificationResponseListener = () => {
           break
         default:
           logger.warn(`[useVerificationResponseListener] Unknown event type: ${event.eventType}`)
+          break
       }
     },
     [handleDirectApproval, handleRequestReviewed, logger]

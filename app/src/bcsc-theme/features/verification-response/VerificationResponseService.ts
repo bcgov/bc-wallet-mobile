@@ -21,6 +21,15 @@ import {
  */
 export class VerificationResponseService {
   private readonly navigationListeners = new Set<VerificationResponseNavigationListener>()
+
+  /**
+   * Stores at most one pending approval event when no navigation listeners are registered.
+   *
+   * NOTE: This is intentionally a single value, not a queue. If multiple verification
+   * approval notifications arrive while there are no listeners (e.g., during cold start),
+   * each new event overwrites the previous one and only the most recent pending approval
+   * will be processed by `processPendingApproval()`.
+   */
   private pendingApproval: VerificationResponseEventType | null = null
 
   constructor(private readonly logger: AbstractBifoldLogger) {}
