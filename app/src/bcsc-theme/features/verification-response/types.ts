@@ -7,7 +7,7 @@ import { BCSCScreens } from '../../types/navigators'
  *   The notification contains bcsc_event='Authorization' and bcsc_reason='Approved by Agent'.
  *   We can directly fetch tokens and navigate to success.
  *
- * - 'request_reviewed': Send-video verification request was reviewed.
+ * - 'request_reviewed': Send-video verification request was reviewed. (send-video/live call)
  *   The notification title is 'Verification Request Reviewed' but doesn't indicate approval/rejection.
  *   We need to check the verification status first before proceeding.
  */
