@@ -67,6 +67,16 @@ export class DeepLinkService {
   private parseUrl(rawUrl: string): DeepLinkPayload {
     try {
       const url = new URL(rawUrl)
+
+      // new URL() may "succeed" for custom schemes but return empty/invalid host
+      // In that case, fall back to custom scheme parsing
+      if (!url.host) {
+        const fallback = this.parseCustomScheme(rawUrl)
+        if (fallback) {
+          return fallback
+        }
+      }
+
       return {
         rawUrl,
         host: url.host,
