@@ -15,7 +15,7 @@ This project follows a **React-adapted MVVM pattern** using hooks. The tradition
 - Returns state values and action handlers for the View to consume
 - Should not contain any TSX or UI components
 
-> **Note:** Despite the `Model` suffix in the naming convention, these hooks function as ViewModels. The actual Model layer consists of `useStore`, API hooks (`useApi`), and services.
+> **Note:** These hooks are named with a `Model` suffix (e.g., `useSetupStepsModel`) for brevity and consistency, but they *function as the ViewModel* layer in our MVVM architecture. The actual **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services, which the model hooks consume and orchestrate.
 
 ```typescript
 // useSetupStepsModel.tsx
