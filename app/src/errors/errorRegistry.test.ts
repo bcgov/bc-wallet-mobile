@@ -28,7 +28,7 @@ describe('errorRegistry', () => {
   })
 
   describe('ErrorRegistry', () => {
-    it('should contain no dupliate codes', () => {
+    it('should contain no duplicate codes', () => {
       const codes = Object.values(ErrorRegistry).map((error) => error.statusCode)
       const uniqueCodes = new Set(codes)
       expect(uniqueCodes.size).toBe(codes.length)
