@@ -36,7 +36,7 @@ export const useVerificationReset = () => {
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
   /**
-   * Performs a factory reset of the BCSC account and state.
+   * Performs a verification reset by clearing relevant secure and plain state.
    *
    * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
    * @returns {Promise<VerificationResetResult>} A promise that resolves to the result of the factory reset operation.
@@ -45,8 +45,6 @@ export const useVerificationReset = () => {
     try {
       const resetBcscState: BCSCState = {
         ...initialBCSCState,
-        nicknames: store.bcsc.nicknames,
-        selectedNickname: store.bcsc.selectedNickname,
         analyticsOptIn: store.bcsc.analyticsOptIn,
       }
 
@@ -58,11 +56,14 @@ export const useVerificationReset = () => {
         verified: false,
         walletKey: store.bcscSecure.walletKey,
       }
+
       logger.info('[VerificationReset]: Deleting verification data in native storage...')
       await deleteVerificationData()
+
       logger.info('[VerificationReset]: Resetting secure and plain BCSC state...')
       dispatch({ type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [resetBcscSecureState] })
       dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [resetBcscState] })
+
       logger.info('[VerificationReset]: BCSC verification reset completed successfully')
       return { success: true }
     } catch (error) {
@@ -71,7 +72,15 @@ export const useVerificationReset = () => {
 
       return { success: false, error: factoryResetError }
     }
-  }, [logger, dispatch, deleteVerificationData, store.bcsc, store.bcscSecure])
+  }, [
+    store.bcsc.analyticsOptIn,
+    store.bcscSecure.isHydrated,
+    store.bcscSecure.registrationAccessToken,
+    store.bcscSecure.walletKey,
+    logger,
+    deleteVerificationData,
+    dispatch,
+  ])
 
   return verificationReset
 }
