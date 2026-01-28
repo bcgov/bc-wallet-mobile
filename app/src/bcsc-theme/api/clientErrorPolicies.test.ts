@@ -291,16 +291,16 @@ describe('clientErrorPolicies', () => {
         expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
-      it('should match LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE on verify device endpoint', () => {})
-      const error = newError('login_same_device_invalid_pairing_code')
-      const context = {
-        endpoint: '/api/cardTap/v3/mobile/assertion',
-        apiEndpoints: {
-          cardTap: '/api/cardTap',
-        },
-      }
-      expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
-    })
+      it('should match LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE on verify device endpoint', () => {
+        const error = newError('login_same_device_invalid_pairing_code')
+        const context = {
+          endpoint: '/api/cardTap/v3/mobile/assertion',
+          apiEndpoints: {
+            cardTap: '/api/cardTap',
+          },
+        }
+        expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
 
     it('should not match invalid endpoint', () => {
       const error = newError('invalid_pairing_code')
