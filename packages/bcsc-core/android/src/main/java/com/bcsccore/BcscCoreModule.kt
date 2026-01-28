@@ -661,6 +661,25 @@ class BcscCoreModule(
     }
 
     @ReactMethod
+    override fun getIssuer(promise: Promise) {
+        Log.d(NAME, "getIssuer called")
+        try {
+            val issuerFile = File(reactApplicationContext.filesDir, "issuer")
+            if (!issuerFile.exists()) {
+                // No issuer file exists, return null
+                promise.resolve(null)
+                return
+            }
+
+            val issuer = nativeStorage.readEncryptedFile(issuerFile)
+            promise.resolve(issuer)
+        } catch (e: Exception) {
+            Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
+            promise.resolve(null)
+        }
+    }
+
+    @ReactMethod
     override fun setAccount(
         account: ReadableMap,
         promise: Promise,
@@ -2163,7 +2182,7 @@ class BcscCoreModule(
             val title = reason ?: "Authentication Required"
             val subtitle = "Please authenticate to continue"
 
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is androidx.fragment.app.FragmentActivity) {
                 promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return
@@ -2486,7 +2505,7 @@ class BcscCoreModule(
             val account = existingAccounts.first()
             val accountID = account.uuid
 
-            val activity = currentActivity
+            val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is FragmentActivity) {
                 promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return

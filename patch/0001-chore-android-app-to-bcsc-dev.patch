@@ -1,6 +1,6 @@
-From fbe9fcd1763a40da87b70c4040cfa5d571b29268 Mon Sep 17 00:00:00 2001
+From 1c448f9128a9c0efdd4a817c83738a22c5549e47 Mon Sep 17 00:00:00 2001
 From: Bryce McMath <bryce.j.mcmath@gmail.com>
-Date: Tue, 2 Dec 2025 16:03:59 -0800
+Date: Fri, 23 Jan 2026 16:53:37 -0800
 Subject: [PATCH] chore: android app to bcsc dev
 
 Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
@@ -48,7 +48,8 @@ Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
  .../mipmap-xxxhdpi/ic_launcher_mono_round.webp | Bin 0 -> 7468 bytes
  .../res/mipmap-xxxhdpi/ic_launcher_round.png   | Bin 12903 -> 0 bytes
  .../app/src/main/res/values/strings.xml        |   2 +-
- 43 files changed, 29 insertions(+), 30 deletions(-)
+ app/react-native.config.js                     |   2 +-
+ 44 files changed, 30 insertions(+), 31 deletions(-)
  create mode 100644 app/android/app/src/main/ic_launcher_mono-playstore.png
  delete mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
  create mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_mono.xml
@@ -105,10 +106,10 @@ index 9e2f136e..5d0333df 100644
  )
  
 diff --git a/app/android/app/build.gradle b/app/android/app/build.gradle
-index f552ceb7..12914cd9 100644
+index f6758ac4..fe17abd6 100644
 --- a/app/android/app/build.gradle
 +++ b/app/android/app/build.gradle
-@@ -97,7 +97,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
+@@ -100,7 +100,7 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
  def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
  
  android {
@@ -117,7 +118,7 @@ index f552ceb7..12914cd9 100644
      ndkVersion rootProject.ext.ndkVersion
      compileSdkVersion rootProject.ext.compileSdkVersion
      buildToolsVersion rootProject.ext.buildToolsVersion
-@@ -116,7 +116,7 @@ android {
+@@ -119,7 +119,7 @@ android {
      }
  
      defaultConfig {
@@ -127,7 +128,7 @@ index f552ceb7..12914cd9 100644
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
 diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
-index a3a58790..8643db07 100644
+index a1407c70..d1fcccb8 100644
 --- a/app/android/app/google-services.json
 +++ b/app/android/app/google-services.json
 @@ -1,33 +1,34 @@
@@ -174,7 +175,7 @@ index a3a58790..8643db07 100644
              }
            ]
 diff --git a/app/android/app/src/main/AndroidManifest.xml b/app/android/app/src/main/AndroidManifest.xml
-index cd4c656c..dc895efe 100644
+index c19e6dc1..3690f892 100644
 --- a/app/android/app/src/main/AndroidManifest.xml
 +++ b/app/android/app/src/main/AndroidManifest.xml
 @@ -1,4 +1,4 @@
@@ -504,7 +505,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
-index 8c3ac436..4893cd29 100644
+index 191b0f8e..9269b9a3 100644
 --- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
 @@ -1,4 +1,4 @@
@@ -514,7 +515,7 @@ index 8c3ac436..4893cd29 100644
  import android.content.Intent
  import android.content.res.Configuration
 diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
-index b124e4f7..ea4b0efc 100644
+index 182dd279..a4fd0ed6 100644
 --- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
 @@ -1,4 +1,4 @@
@@ -3093,5 +3094,19 @@ index 33b1443a..dc20330f 100644
 -    <string name="app_name">BC Wallet</string>
 +    <string name="app_name">BC Services Card</string>
  </resources>
+diff --git a/app/react-native.config.js b/app/react-native.config.js
+index 9934acc6..76822fe4 100644
+--- a/app/react-native.config.js
++++ b/app/react-native.config.js
+@@ -2,7 +2,7 @@ module.exports = {
+   assets: ['./src/assets/fonts'],
+   project: {
+     android: {
+-      packageName: 'ca.bc.gov.BCWallet',
++      packageName: 'ca.bc.gov.id.servicescard.dev',
+     },
+   },
+ }
 -- 
 2.50.1
+

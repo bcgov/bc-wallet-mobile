@@ -14,7 +14,7 @@ module.exports = {
     '@credo-ts/core': require.resolve('@credo-ts/core'),
     '@credo-ts/anoncreds': require.resolve('@credo-ts/anoncreds'),
     '@bifold/core': require.resolve('@bifold/core'),
-    '@hyperledger/aries-askar-react-native': require.resolve('@hyperledger/aries-askar-react-native'),
+    '@openwallet-foundation/askar-react-native': require.resolve('@openwallet-foundation/askar-react-native'),
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',

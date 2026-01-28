@@ -34,32 +34,19 @@ exports[`TransferInformation renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
+      <Image
         resizeMode="contain"
         source={
-          [
-            {
-              "height": 100,
-              "scale": 1,
-              "uri": "mocked-image-uri",
-              "width": 100,
-            },
-          ]
+          {
+            "height": 100,
+            "scale": 1,
+            "uri": "mocked-image-uri",
+            "width": 100,
+          }
         }
         style={
           {
             "height": 300,
-            "overflow": "hidden",
             "width": "auto",
           }
         }

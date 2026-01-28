@@ -11,9 +11,11 @@ interface AccountRenewalFirstWarningProps {
 /**
  * Renders the Account Renewal First Warning screen, alerting users about the impending expiration of their account.
  *
- * @returns {*} {JSX.Element} The AccountRenewalFirstWarningScreen component.
+ * @returns {*} {React.ReactElement} The AccountRenewalFirstWarningScreen component.
  */
-export const AccountRenewalFirstWarningScreen = ({ navigation }: AccountRenewalFirstWarningProps): JSX.Element => {
+export const AccountRenewalFirstWarningScreen = ({
+  navigation,
+}: AccountRenewalFirstWarningProps): React.ReactElement => {
   const { t } = useTranslation()
 
   return (

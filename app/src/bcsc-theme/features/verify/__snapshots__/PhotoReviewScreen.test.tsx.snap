@@ -21,29 +21,15 @@ exports[`PhotoReview renders correctly 1`] = `
   }
 >
   <View>
-    <RCTImageView
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": undefined,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      internal_analyticTag={null}
-      resizeMode="cover"
+    <Image
       source={
-        [
-          {
-            "uri": "file://file://test.jpg",
-          },
-        ]
+        {
+          "uri": "file://file://test.jpg",
+        }
       }
       style={
         {
           "height": "100%",
-          "overflow": "hidden",
           "resizeMode": "cover",
           "width": "auto",
         }

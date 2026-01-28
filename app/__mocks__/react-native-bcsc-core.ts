@@ -45,6 +45,7 @@ export enum BCSCAccountType {
 
 // Issuer Management
 export const setIssuer = jest.fn().mockResolvedValue(true)
+export const getIssuer = jest.fn().mockResolvedValue(null)
 
 // Key Management
 export const getAllKeys = jest.fn().mockResolvedValue([])

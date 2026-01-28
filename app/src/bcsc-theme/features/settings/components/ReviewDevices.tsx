@@ -26,7 +26,7 @@ interface ReviewDevicesProps {
  * Renders the content for the Review Devices modal, allowing users to manage their registered devices.
  *
  * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
- * @returns {*} {JSX.Element} The ReviewDevices component.
+ * @returns {*} {React.ReactElement} The ReviewDevices component.
  */
 export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevices }: ReviewDevicesProps) => {
   const [, dispatch] = useStore()

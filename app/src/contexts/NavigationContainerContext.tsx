@@ -14,13 +14,13 @@ export const NavigationContainerContext = createContext<NavigationContainerConte
 /**
  * NavigationContainerProvider component that wraps the app's navigation container.
  *
- * @returns {*} {JSX.Element}
+ * @returns {*} {React.ReactElement}
  */
-export const NavigationContainerProvider = ({ children }: PropsWithChildren) => {
+export const NavigationContainerProvider = ({ children }: PropsWithChildren): React.JSX.Element => {
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
   const screenTransitionKeyRef = useRef<string>('')
-  const routeNameRef = useRef<string | undefined>()
+  const routeNameRef = useRef<string | undefined>(undefined)
 
   const navigationContext = useMemo(
     () => ({

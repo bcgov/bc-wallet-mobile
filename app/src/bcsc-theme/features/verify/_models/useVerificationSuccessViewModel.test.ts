@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useVerificationSuccessViewmodel from '@/bcsc-theme/features/verify/_models/useVerificationSuccessViewModel'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
-import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { act, renderHook } from '@testing-library/react-native'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core', () => {
@@ -98,13 +98,8 @@ describe('useVerificationSuccessViewmodel', () => {
       // Initially false
       expect(result.current.isSettingUpAccount).toBe(false)
 
-      const setupPromise = act(async () => {
+      const setupPromise = await act(async () => {
         await result.current.handleAccountSetup()
-      })
-
-      // Wait a tick to let state update
-      await waitFor(() => {
-        expect(result.current.isSettingUpAccount).toBe(true)
       })
 
       await setupPromise

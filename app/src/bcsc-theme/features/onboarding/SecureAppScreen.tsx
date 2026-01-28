@@ -20,7 +20,7 @@ interface SecureAppScreenProps {
  * Provides options for securing the app using biometric authentication or a PIN.
  * Uses the shared SecurityMethodSelector component.
  */
-export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Element => {
+export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()

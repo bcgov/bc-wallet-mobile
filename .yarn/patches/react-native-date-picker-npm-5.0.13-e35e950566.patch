@@ -1,0 +1,256 @@
+diff --git a/android/src/main/java/com/henninghall/date_picker/DatePickerModuleImpl.java b/android/src/main/java/com/henninghall/date_picker/DatePickerModuleImpl.java
+index b8a2a800da92e0b67996eb6f2fea68ae6b57f0aa..736a20ce73b441fa2231a2481936b5f942442092 100644
+--- a/android/src/main/java/com/henninghall/date_picker/DatePickerModuleImpl.java
++++ b/android/src/main/java/com/henninghall/date_picker/DatePickerModuleImpl.java
+@@ -30,23 +30,29 @@ public class DatePickerModuleImpl {
+         ApplicationStarter.initialize(context, false); // false = no need to prefetch on time data background tread
+     }
+ 
+-    public void openPicker(ReadableMap props){
++    public void openPicker(ReadableMap props, Callback onConfirm, Callback onCancel){
+         final PickerView picker = createPicker(props);
+-        Callback onConfirm = new Callback() {
++        Callback onConfirmCallback = new Callback() {
+             @Override
+             public void invoke(Object... objects) {
+                 Emitter.onConfirm(picker.getDate(), picker.getPickerId());
++                if (onConfirm != null) {
++                    onConfirm.invoke(picker.getDate());
++                }
+             }
+         };
+ 
+-        Callback onCancel = new Callback() {
++        Callback onCancelCallback = new Callback() {
+             @Override
+             public void invoke(Object... objects) {
+                 Emitter.onCancel(picker.getPickerId());
++                if (onCancel != null) {
++                    onCancel.invoke();
++                }
+             }
+         };
+ 
+-        dialog = createDialog(props, picker, onConfirm, onCancel);
++        dialog = createDialog(props, picker, onConfirmCallback, onCancelCallback);
+         dialog.show();
+     }
+ 
+diff --git a/android/src/newarch/java/com/henninghall/date_picker/DatePickerModule.java b/android/src/newarch/java/com/henninghall/date_picker/DatePickerModule.java
+index 0fce9a785a6d14a26386fca508541239867288c3..d56b2031e8721e75317d4b748c7d1169cbecc577 100644
+--- a/android/src/newarch/java/com/henninghall/date_picker/DatePickerModule.java
++++ b/android/src/newarch/java/com/henninghall/date_picker/DatePickerModule.java
+@@ -2,6 +2,7 @@ package com.henninghall.date_picker;
+ 
+ import androidx.annotation.NonNull;
+ 
++import com.facebook.react.bridge.Callback;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReadableMap;
+ 
+@@ -28,8 +29,8 @@ public class DatePickerModule extends NativeRNDatePickerSpec {
+     }
+ 
+     @Override
+-    public void openPicker(ReadableMap props){
+-        module.openPicker(props);
++    public void openPicker(ReadableMap props, Callback onConfirm, Callback onCancel){
++        module.openPicker(props, onConfirm, onCancel);
+     }
+ 
+     @Override
+diff --git a/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java b/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
+index 46675b40fa13c2d049d848aebe4d2a7ffbc26d67..cd6f95ec0d0ea82bd2a23385de7b71d2de44fb3c 100644
+--- a/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
++++ b/android/src/oldarch/java/com/henninghall/date_picker/DatePickerModule.java
+@@ -1,6 +1,7 @@
+ package com.henninghall.date_picker;
+ 
+ 
++import com.facebook.react.bridge.Callback;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReactContextBaseJavaModule;
+ import com.facebook.react.bridge.ReactMethod;
+@@ -26,8 +27,8 @@ public class DatePickerModule extends ReactContextBaseJavaModule {
+     }
+ 
+     @ReactMethod
+-    public void openPicker(ReadableMap props) {
+-        module.openPicker(props);
++    public void openPicker(ReadableMap props, Callback onConfirm, Callback onCancel) {
++        module.openPicker(props, onConfirm, onCancel);
+     }
+     
+     @ReactMethod
+diff --git a/ios/RNDatePickerManager.h b/ios/RNDatePickerManager.h
+index 6a4f206ee31075919fc19999f5601e13efdfb9ce..e7afc25c2dd676af1aac55008e92302bcd98a977 100644
+--- a/ios/RNDatePickerManager.h
++++ b/ios/RNDatePickerManager.h
+@@ -8,7 +8,14 @@
+ #import <React/RCTConvert.h>
+ #import <React/RCTViewManager.h>
+ 
++#ifdef RCT_NEW_ARCH_ENABLED
++#import <RNDatePickerSpecs/RNDatePickerSpecs.h>
++#endif
++
+ @interface RNDatePickerManager : RCTViewManager
++#ifdef RCT_NEW_ARCH_ENABLED
++<NativeRNDatePickerSpec>
++#endif
+ 
+ @property (strong, nonatomic) UIViewController *topViewController;
+ 
+diff --git a/ios/RNDatePickerManager.mm b/ios/RNDatePickerManager.mm
+index da42873cad53e841becb743de6e0d733ab982ce1..77700f7df4bf994ee140423884f145d12cd2beaa 100644
+--- a/ios/RNDatePickerManager.mm
++++ b/ios/RNDatePickerManager.mm
+@@ -234,6 +234,22 @@ RCT_EXPORT_METHOD(closePicker)
+     return 216;
+ }
+ 
++// New Architecture support - provide module instance to TurboModule system
+++ (BOOL)requiresMainQueueSetup {
++    return NO;
++}
++
++#ifdef RCT_NEW_ARCH_ENABLED
++// Implement the Spec protocol methods required by TurboModule
++- (void)getConstants:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
++    resolve(@{});
++}
++
++- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
++    return std::make_shared<facebook::react::NativeRNDatePickerSpecJSI>(params);
++}
++#endif
++
+ @end
+ 
+ 
+diff --git a/src/DatePickerAndroid.js b/src/DatePickerAndroid.js
+index a8a1e71cbafffad8fc0042233ebf1451df4ca531..187d9dffdf3a3c82288dae6c0066a9b85b1cc93f 100644
+--- a/src/DatePickerAndroid.js
++++ b/src/DatePickerAndroid.js
+@@ -27,7 +27,7 @@ export const DatePickerAndroid = React.memo((props) => {
+       if (props.onDateChange) props.onDateChange(jsDate)
+       if (props.onDateStringChange) props.onDateStringChange(dateString)
+     },
+-    [props, thisId]
++    [props, thisId],
+   )
+ 
+   const onSpinnerStateChanged = useCallback(
+@@ -41,7 +41,7 @@ export const DatePickerAndroid = React.memo((props) => {
+       if (newArch && id !== thisId) return
+       props.onStateChange && props.onStateChange(spinnerState)
+     },
+-    [props, thisId]
++    [props, thisId],
+   )
+ 
+   useEffect(() => {
+@@ -67,9 +67,10 @@ export const DatePickerAndroid = React.memo((props) => {
+     onStateChange: onSpinnerStateChanged,
+   }
+ 
+-  useModal({ props: modifiedProps, id: thisId })
+-
+-  if (props.modal) return null
++  if (props.modal) {
++    useModal({ props: modifiedProps, id: thisId })
++    return null
++  }
+ 
+   return <NativeComponent {...modifiedProps} />
+ })
+diff --git a/src/DatePickerIOS.js b/src/DatePickerIOS.js
+index 987cbcac091975f771219fd4427b9be331362351..a98d49a35cc1c69eadc42fd491ec9abba3fd83dc 100644
+--- a/src/DatePickerIOS.js
++++ b/src/DatePickerIOS.js
+@@ -13,7 +13,7 @@ export const DatePickerIOS = (props) => {
+       const nativeTimeStamp = event.nativeEvent.timestamp
+       if (props.onDateChange) props.onDateChange(new Date(nativeTimeStamp))
+     },
+-    [props]
++    [props],
+   )
+ 
+   /** @type {NativeProps}  */
+@@ -23,14 +23,19 @@ export const DatePickerIOS = (props) => {
+     style: [styles.datePickerIOS, props.style],
+     date: props.date ? props.date.toISOString() : undefined,
+     locale: props.locale ? props.locale : undefined,
+-    maximumDate: props.maximumDate ? props.maximumDate.toISOString() : undefined,
+-    minimumDate: props.minimumDate ? props.minimumDate.toISOString() : undefined,
++    maximumDate: props.maximumDate
++      ? props.maximumDate.toISOString()
++      : undefined,
++    minimumDate: props.minimumDate
++      ? props.minimumDate.toISOString()
++      : undefined,
+     theme: props.theme ? props.theme : 'auto',
+   }
+ 
+-  useModal({ props: modifiedProps, id: undefined })
+-
+-  if (props.modal) return null
++  if (props.modal) {
++    useModal({ props: modifiedProps, id: undefined })
++    return null
++  }
+ 
+   return (
+     <NativeComponent
+diff --git a/src/fabric/NativeRNDatePicker.ts b/src/fabric/NativeRNDatePicker.ts
+index 1633d7a190b6278e5a9dace8a3680eef11fef795..1a63885ac1bd80cc70263446f00fd1bb1e1e89c8 100644
+--- a/src/fabric/NativeRNDatePicker.ts
++++ b/src/fabric/NativeRNDatePicker.ts
+@@ -5,7 +5,11 @@ import { Double, UnsafeObject } from 'react-native/Libraries/Types/CodegenTypes'
+ export interface Spec extends TurboModule {
+   readonly getConstants: () => {}
+   closePicker(): void
+-  openPicker(props: UnsafeObject): void
++  openPicker(
++    props: UnsafeObject,
++    onConfirm: (result: UnsafeObject) => void,
++    onCancel: () => void,
++  ): void
+   removeListeners(type: Double): void
+   addListener(eventName: string): void
+ }
+diff --git a/src/modal.js b/src/modal.js
+index fe02e33e7e9788b1e60e2e0cf79c5ea0a05fde24..fb80864e17533fa3b682022c664477d03c246799 100644
+--- a/src/modal.js
++++ b/src/modal.js
+@@ -60,7 +60,7 @@ export const useModal = ({ props, id }) => {
+       })
+       if (props.onConfirm) props.onConfirm(new Date(date))
+     },
+-    [id, props]
++    [id, props],
+   )
+ 
+   const onCancel = useCallback(
+@@ -69,19 +69,14 @@ export const useModal = ({ props, id }) => {
+       closing.current = true
+       if (props.onCancel) props.onCancel()
+     },
+-    [id, props]
++    [id, props],
+   )
+ 
+   // open
+   useEffect(() => {
+     if (shouldOpenModal(props, previousProps)) {
+       closing.current = false
+-      const params = Platform.select({
+-        android: [props],
+-        ios: [props, onConfirm, onCancel],
+-      })
+-      if (!params) throw Error('Unsupported platform')
+-      NativeModule.openPicker(...params)
++      NativeModule.openPicker(props, onConfirm, onCancel)
+     }
+   }, [onCancel, onConfirm, previousProps, props])
+ 

@@ -98,18 +98,23 @@ const StartPage = (theme: ITheme['OnboardingTheme']) => {
 }
 
 const guides: Array<{
-  image: React.FC<SvgProps>
+  image: (props: SvgProps) => React.JSX.Element
   title: string
   body: string
 }> = [
   {
-    image: CredentialList,
+    image: (props) => <CredentialList {...props} />,
     title: 'Onboarding.DigitalCredentialsHeading',
     body: 'Onboarding.DigitalCredentialsParagraph',
   },
 ]
 
-const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: ITheme['OnboardingTheme']) => {
+const CreatePageWith = (
+  image: (props: SvgProps) => React.JSX.Element,
+  title: string,
+  body: string,
+  theme: ITheme['OnboardingTheme']
+) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)

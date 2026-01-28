@@ -22,7 +22,7 @@ type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCS
 /**
  * Screen for collecting residential address information from the user.
  *
- * @returns {*} {JSX.Element} The ResidentialAddressScreen component.
+ * @returns {*} {React.ReactElement} The ResidentialAddressScreen component.
  */
 export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScreenProps) => {
   const { t } = useTranslation()

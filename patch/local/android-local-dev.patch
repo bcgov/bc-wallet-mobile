@@ -1,25 +1,23 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Kjartan Einarsson <kjartanreinarsson@gmail.com>
-Date: Mon, 19 Jan 2026 12:00:00 +0000
+From 3582e1a6dbefeec6329a18d784186b3c0807cf76 Mon Sep 17 00:00:00 2001
+From: Bryce McMath <bryce.j.mcmath@gmail.com>
+Date: Mon, 26 Jan 2026 20:46:25 -0800
 Subject: [PATCH] chore: minimal android config for bcsc dev
 
-Essential changes only - namespace, applicationId, package declarations,
-Firebase config, and version numbers. No cosmetic changes (icons, app name).
-
-Signed-off-by: Kjartan Einarsson <kjartanreinarsson@gmail.com>
+Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
- app/android/app/build.gradle                       |  6 +++---
- app/android/app/google-services.json               | 17 +++++++++--------
- app/android/app/src/main/AndroidManifest.xml       |  2 +-
- .../java/ca/bc/gov/BCWallet/MainActivity.kt        |  2 +-
- .../java/ca/bc/gov/BCWallet/MainApplication.kt     |  2 +-
- 5 files changed, 16 insertions(+), 15 deletions(-)
+ app/android/app/build.gradle                    |  8 ++++----
+ app/android/app/google-services.json            | 17 +++++++++--------
+ app/android/app/src/main/AndroidManifest.xml    |  2 +-
+ .../java/ca/bc/gov/BCWallet/MainActivity.kt     |  2 +-
+ .../java/ca/bc/gov/BCWallet/MainApplication.kt  |  2 +-
+ app/react-native.config.js                      |  2 +-
+ 6 files changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/app/android/app/build.gradle b/app/android/app/build.gradle
-index f552ceb7..12914cd9 100644
+index f6758ac4..9be539c6 100644
 --- a/app/android/app/build.gradle
 +++ b/app/android/app/build.gradle
-@@ -97,7 +97,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
+@@ -100,7 +100,7 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
  def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
  
  android {
@@ -28,7 +26,7 @@ index f552ceb7..12914cd9 100644
      ndkVersion rootProject.ext.ndkVersion
      compileSdkVersion rootProject.ext.compileSdkVersion
      buildToolsVersion rootProject.ext.buildToolsVersion
-@@ -116,11 +116,11 @@ android {
+@@ -119,11 +119,11 @@ android {
      }
  
      defaultConfig {
@@ -44,7 +42,7 @@ index f552ceb7..12914cd9 100644
          missingDimensionStrategy 'react-native-camera', 'general'
          ndk {
 diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
-index a3a58790..8643db07 100644
+index a1407c70..d1fcccb8 100644
 --- a/app/android/app/google-services.json
 +++ b/app/android/app/google-services.json
 @@ -1,33 +1,34 @@
@@ -91,7 +89,7 @@ index a3a58790..8643db07 100644
              }
            ]
 diff --git a/app/android/app/src/main/AndroidManifest.xml b/app/android/app/src/main/AndroidManifest.xml
-index cd4c656c..dc895efe 100644
+index c19e6dc1..a228b91f 100644
 --- a/app/android/app/src/main/AndroidManifest.xml
 +++ b/app/android/app/src/main/AndroidManifest.xml
 @@ -1,4 +1,4 @@
@@ -101,7 +99,7 @@ index cd4c656c..dc895efe 100644
    <uses-feature android:name="android.hardware.camera" />
    <uses-feature android:name="android.hardware.camera.autofocus" />
 diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
-index 1234567..abcdefg 100644
+index 191b0f8e..9269b9a3 100644
 --- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
 @@ -1,4 +1,4 @@
@@ -111,7 +109,7 @@ index 1234567..abcdefg 100644
  import android.content.Intent
  import android.content.res.Configuration
 diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
-index 1234567..abcdefg 100644
+index 182dd279..a4fd0ed6 100644
 --- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
 @@ -1,4 +1,4 @@
@@ -120,3 +118,19 @@ index 1234567..abcdefg 100644
  
  import android.app.Application
  import com.facebook.react.PackageList
+diff --git a/app/react-native.config.js b/app/react-native.config.js
+index 9934acc6..76822fe4 100644
+--- a/app/react-native.config.js
++++ b/app/react-native.config.js
+@@ -2,7 +2,7 @@ module.exports = {
+   assets: ['./src/assets/fonts'],
+   project: {
+     android: {
+-      packageName: 'ca.bc.gov.BCWallet',
++      packageName: 'ca.bc.gov.id.servicescard.dev',
+     },
+   },
+ }
+-- 
+2.50.1
+

@@ -42,9 +42,9 @@ interface CardProps {
  * A customizable card button component with title, optional subtext, and an optional end icon.
  *
  * @param {CardProps} props - Props for the CardButton component
- * @returns {*} {JSX.Element} The rendered CardButton component
+ * @returns {*} {React.ReactElement} The rendered CardButton component
  */
-export const CardButton = (props: CardProps): JSX.Element => {
+export const CardButton = (props: CardProps): React.ReactElement => {
   const theme = useTheme()
 
   const styles = StyleSheet.create({
