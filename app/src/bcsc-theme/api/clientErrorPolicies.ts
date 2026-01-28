@@ -23,9 +23,9 @@ const GLOBAL_ALERT_EVENT_CODES = new Set([
 ])
 
 /**
- * Set of event codes for verify device assertation endpoint
+ * Set of event codes for verify device assertion endpoint
  */
-const VERIFY_DEVICE_ASSERTATION_EVENT_CODES = new Set([
+const VERIFY_DEVICE_ASSERTION_EVENT_CODES = new Set([
   AppEventCode.LOGIN_SERVER_ERROR,
   AppEventCode.LOGIN_PARSE_URI,
   AppEventCode.INVALID_PAIRING_CODE,
@@ -143,11 +143,11 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for verify device assertation endpoint errors
-export const verifyDeviceAssertationErrorPolicy: ErrorHandlingPolicy = {
+// Error policy for verify device assertion endpoint errors
+export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
-      VERIFY_DEVICE_ASSERTATION_EVENT_CODES.has(error.appEvent) &&
+      VERIFY_DEVICE_ASSERTION_EVENT_CODES.has(error.appEvent) &&
       context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
     )
   },
@@ -200,5 +200,5 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
-  verifyDeviceAssertationErrorPolicy,
+  verifyDeviceAssertionErrorPolicy,
 ]

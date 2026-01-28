@@ -4,8 +4,8 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
-import i18next from 'i18next'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import {
@@ -40,6 +40,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {React.ReactElement} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
@@ -96,21 +97,15 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         appEvent: error.appEvent,
       })
 
-      /**
-       * Note: Using the translate function from the react i18n hook
-       * causes a downstream memory leak with the BCSCApiClient during tests.
-       */
-      const translate = i18next.t.bind(i18next)
-
       policy.handle(error, {
         linking: Linking,
         emitErrorAlert,
         navigation,
-        translate,
+        translate: t,
         logger,
       })
     },
-    [allErrorHandlingPolicies, emitErrorAlert, logger, navigation]
+    [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
   )
 
   useEffect(() => {

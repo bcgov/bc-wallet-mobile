@@ -7,7 +7,7 @@ import {
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
-  verifyDeviceAssertationErrorPolicy,
+  verifyDeviceAssertionErrorPolicy,
   verifyNotCompletedErrorPolicy,
 } from './clientErrorPolicies'
 
@@ -256,7 +256,7 @@ describe('clientErrorPolicies', () => {
     })
   })
 
-  describe('verifyDeviceAssertationPolicy', () => {
+  describe('verifyDeviceAssertionPolicy', () => {
     describe('matches', () => {
       it('should match LOGIN_SERVER_ERROR on verify device endpoint', () => {
         const error = newError('login_server_error')
@@ -266,7 +266,7 @@ describe('clientErrorPolicies', () => {
             cardTap: '/api/cardTap',
           },
         }
-        expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should match LOGIN_PARSE_URI on verify device endpoint', () => {
@@ -277,7 +277,7 @@ describe('clientErrorPolicies', () => {
             cardTap: '/api/cardTap',
           },
         }
-        expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should match INVALID_PAIRING_CODE on verify device endpoint', () => {
@@ -288,7 +288,7 @@ describe('clientErrorPolicies', () => {
             cardTap: '/api/cardTap',
           },
         }
-        expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should match LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE on verify device endpoint', () => {})
@@ -299,7 +299,7 @@ describe('clientErrorPolicies', () => {
           cardTap: '/api/cardTap',
         },
       }
-      expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeTruthy()
+      expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
     })
 
     it('should not match invalid endpoint', () => {
@@ -310,7 +310,7 @@ describe('clientErrorPolicies', () => {
           cardTap: '/api/cardTap',
         },
       }
-      expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeFalsy()
+      expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeFalsy()
     })
 
     it('should not match other error codes', () => {
@@ -321,7 +321,7 @@ describe('clientErrorPolicies', () => {
           cardTap: '/api/cardTap',
         },
       }
-      expect(verifyDeviceAssertationErrorPolicy.matches(error, context as any)).toBeFalsy()
+      expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeFalsy()
     })
 
     describe('handle', () => {
@@ -331,7 +331,7 @@ describe('clientErrorPolicies', () => {
         const context = {
           emitErrorAlert: emitErrorAlertMock,
         }
-        verifyDeviceAssertationErrorPolicy.handle(error, context as any)
+        verifyDeviceAssertionErrorPolicy.handle(error, context as any)
         expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
       })
     })
