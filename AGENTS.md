@@ -6,122 +6,91 @@ You are an expert mobile developer specializing in React Native, clean architect
 
 ### MVVM (Model-View-ViewModel)
 
-This project follows the MVVM architecture pattern. Always structure code according to these principles:
+This project follows a **React-adapted MVVM pattern** using hooks. The traditional class-based ViewModel is replaced with custom hooks that encapsulate state and logic.
 
-#### Model
+#### Model Hook (`useXxxModel`)
 
-- Represents the data and business logic
-- Independent of the UI
-- Handles data validation, storage, and retrieval
-- Should not know about ViewModels or Views
+- Custom React hook that encapsulates reactive logic, state, and business operations
+- Returns state values and action handlers for the View to consume
+- Should not contain any JSX or UI components
 
 ```typescript
-// models/User.ts
-export interface User {
-  id: string
-  name: string
-  email: string
+// useSetupStepsModel.tsx
+const useSetupStepsModel = (navigation: StackNavigationProp<...>) => {
+  const { t } = useTranslation()
+  const [store] = useStore<BCState>()
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
+
+  // Derived state
+  const steps = useSetupSteps(store)
+
+  // Action handlers
+  const handleCheckStatus = useCallback(async () => {
+    setIsCheckingStatus(true)
+    try {
+      // Business logic here
+      navigation.navigate(BCSCScreens.VerificationSuccess)
+    } finally {
+      setIsCheckingStatus(false)
+    }
+  }, [navigation])
+
+  const stepActions = useMemo(() => ({
+    nickname: () => navigation.navigate(BCSCScreens.NicknameAccount),
+    id: () => navigation.navigate(BCSCScreens.IdentitySelection),
+  }), [navigation])
+
+  return {
+    steps,
+    stepActions,
+    isCheckingStatus,
+    handleCheckStatus,
+  }
 }
 
-export class UserRepository {
-  async getUser(id: string): Promise<User> {
-    /* ... */
-  }
-  async saveUser(user: User): Promise<void> {
-    /* ... */
-  }
-}
+export default useSetupStepsModel
 ```
 
-#### View
+#### View (Screen/Component)
 
-- Presents data to the user
+- React component that consumes the model hook
 - Handles UI rendering and user interactions
-- Observes ViewModel for state changes
-- Should contain minimal logic (only UI-specific)
+- Should contain minimal logic—delegate to the model hook
+- Focus on layout, styling, and presenting data
 
 ```typescript
-// views/UserProfile.tsx
-export const UserProfile: React.FC = () => {
-  const viewModel = useUserProfileViewModel();
+// SetupStepsScreen.tsx
+const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
+  const { Spacing, ColorPalette } = useTheme()
+
+  // Consume the model hook
+  const { steps, stepActions, isCheckingStatus, handleCheckStatus } =
+    useSetupStepsModel(navigation)
 
   return (
-    <div>
-      <h1>{viewModel.displayName}</h1>
-      <button onClick={viewModel.handleSave}>Save</button>
-    </div>
-  );
-};
-```
-
-#### ViewModel
-
-- Acts as intermediary between View and Model
-- Exposes data and commands for the View
-- Contains presentation logic
-- Transforms Model data into View-friendly format
-- Should not reference UI components directly
-
-```typescript
-// viewmodels/UserProfileViewModel.ts
-export class UserProfileViewModel {
-  private user: User
-
-  get displayName(): string {
-    return `${this.user.name} (${this.user.email})`
-  }
-
-  handleSave = async () => {
-    await this.repository.saveUser(this.user)
-  }
+    <ScreenWrapper>
+      <SetupStep
+        title={t('BCSC.Steps.Nickname')}
+        completed={steps.nickname.completed}
+        onPress={stepActions.nickname}
+      />
+      <Button
+        title={t('BCSC.Steps.CheckStatus')}
+        onPress={handleCheckStatus}
+        loading={isCheckingStatus}
+      />
+    </ScreenWrapper>
+  )
 }
 ```
 
-### ViewModel Adapter Pattern
+#### Pattern Benefits
 
-Use adapters to transform data between layers, especially when:
-
-- Converting API responses to domain models
-- Transforming domain models to ViewModel state
-- Handling different data formats between layers
-
-```typescript
-// adapters/UserAdapter.ts
-export class UserAdapter {
-  // API -> Model
-  static fromApiResponse(response: ApiUserResponse): User {
-    return {
-      id: response.user_id,
-      name: response.full_name,
-      email: response.email_address,
-    }
-  }
-
-  // Model -> ViewModel
-  static toViewModel(user: User): UserViewModel {
-    return {
-      displayName: `${user.name} (${user.email})`,
-      initials: this.getInitials(user.name),
-      avatarUrl: this.generateAvatarUrl(user.id),
-    }
-  }
-
-  // ViewModel -> Model (for updates)
-  static fromViewModel(vm: UserViewModel, originalUser: User): User {
-    return {
-      ...originalUser,
-      name: vm.editedName || originalUser.name,
-    }
-  }
-
-  private static getInitials(name: string): string {
-    /* ... */
-  }
-  private static generateAvatarUrl(id: string): string {
-    /* ... */
-  }
-}
-```
+- **Separation of concerns**: Logic in hooks, rendering in components
+- **Testability**: Model hooks can be tested independently with `renderHook`
+- **Reusability**: Model hooks can be shared across multiple views if needed
+- **React-native**: Leverages React's built-in reactivity (`useState`, `useMemo`, `useCallback`)
 
 ### Directory Structure
 
@@ -141,9 +110,8 @@ This codebase uses a **feature-based structure** where each feature contains its
       /verify                    # Identity verification feature
         VerificationMethodSelectionScreen.tsx
         SetupStepsScreen.tsx
-        /_models                 # ViewModels for this feature
-          useVerificationMethodModel.tsx
-          useSetupStepsModel.tsx
+        useVerificationMethodModel.tsx
+        useSetupStepsModel.tsx
         /components              # Feature-specific components
         /send-video              # Sub-feature
         /live-call               # Sub-feature
@@ -164,7 +132,6 @@ This codebase uses a **feature-based structure** where each feature contains its
 
 **Key conventions:**
 
-- ViewModels live in `_models/` folders within their feature
 - Tests are co-located with their source files (e.g., `Screen.tsx` + `Screen.test.tsx`)
 - Feature-specific components stay within the feature folder
 - Shared components are elevated to `/components` at the appropriate level
@@ -173,34 +140,31 @@ This codebase uses a **feature-based structure** where each feature contains its
 
 1. **Separation of Concerns**
 
-   - Models should never import from ViewModels or Views
-   - ViewModels should never import UI components
-   - Views should only import ViewModels and UI components
+   - Model hooks should not contain JSX or UI components
+   - Views should delegate logic to model hooks
+   - Keep styling and layout in Views, business logic in hooks
 
 2. **Data Flow**
 
-   - One-way data flow: Model → Adapter → ViewModel → View
-   - User actions flow back: View → ViewModel → Model
-   - Use adapters at boundaries between layers
+   - Model hook manages state and exposes it to the View
+   - User actions call handlers returned by the model hook
+   - Use `useMemo` for derived state, `useCallback` for stable handlers
 
 3. **Testing**
 
-   - Models: Test business logic in isolation
-   - ViewModels: Test presentation logic with mocked repositories
-   - Adapters: Test transformations in both directions
-   - Views: Test UI interactions and rendering
+   - Model hooks: Test with `renderHook` from `@testing-library/react-hooks`
+   - Views: Test UI interactions and rendering with mocked hooks
+   - Co-locate tests with source files (e.g., `useSetupStepsModel.test.ts`)
 
 4. **State Management**
 
-   - ViewModel owns the state for its View
-   - Use observables/reactive patterns for state updates
-   - Keep state immutable when possible
+   - Model hook owns the state for its View
+   - Use React hooks (`useState`, `useMemo`, `useCallback`) for reactivity
+   - Access global state via `useStore` or context hooks
 
 5. **Naming Conventions**
-   - Models: Nouns (`User`, `Order`, `Product`)
-   - ViewModels: `[Feature]ViewModel` (`UserProfileViewModel`)
-   - Adapters: `[Model]Adapter` (`UserAdapter`)
-   - Views: Descriptive component names (`UserProfile`, `OrderList`)
+   - Model hooks: `use[Feature]Model` (e.g., `useSetupStepsModel`)
+   - Views: `[Feature]Screen` or descriptive component names
 
 ## Commit Message and PR Title Formatting
 
