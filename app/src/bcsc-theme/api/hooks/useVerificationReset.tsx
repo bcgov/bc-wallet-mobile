@@ -32,7 +32,6 @@ export const useVerificationReset = () => {
   /**
    * Performs a verification reset by clearing relevant secure and plain state.
    *
-   * @param {Partial<BCSCState>} [state] - Optional partial state to preserve during the reset
    * @returns {Promise<VerificationResetResult>} A promise that resolves to the result of the factory reset operation.
    */
   const verificationReset = useCallback(async (): Promise<VerificationResetResult> => {
