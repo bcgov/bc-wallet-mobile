@@ -248,7 +248,7 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  * Retrieves the current account information.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
-export const getAccount = async (): Promise<NativeAccount | null> => {
+export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'> | null> => {
   return BcscCore.getAccount();
 };
 

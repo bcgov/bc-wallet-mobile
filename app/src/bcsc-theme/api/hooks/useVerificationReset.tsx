@@ -1,14 +1,8 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import {
-  BCDispatchAction,
-  BCSCSecureState,
-  BCSCState,
-  BCState,
-  initialBCSCSecureState,
-  initialBCSCState,
-} from '@/store'
+import { BCDispatchAction, BCSCSecureState, BCSCState, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
+import { getAccount, getAccountSecurityMethod, setAccount } from 'react-native-bcsc-core'
 
 type VerificationResetResult =
   | {
@@ -43,13 +37,7 @@ export const useVerificationReset = () => {
    */
   const verificationReset = useCallback(async (): Promise<VerificationResetResult> => {
     try {
-      const resetBcscState: BCSCState = {
-        ...initialBCSCState,
-        analyticsOptIn: store.bcsc.analyticsOptIn,
-      }
-
-      const resetBcscSecureState: BCSCSecureState = {
-        ...initialBCSCSecureState,
+      const resetBcscSecureState: Partial<BCSCSecureState> = {
         isHydrated: store.bcscSecure.isHydrated,
         hasAccount: true,
         registrationAccessToken: store.bcscSecure.registrationAccessToken,
@@ -57,8 +45,24 @@ export const useVerificationReset = () => {
         walletKey: store.bcscSecure.walletKey,
       }
 
+      const resetBcscState: Partial<BCSCState> = {
+        analyticsOptIn: store.bcsc.analyticsOptIn,
+      }
+
       logger.info('[VerificationReset]: Deleting verification data in native storage...')
       await deleteVerificationData()
+
+      logger.info('[VerificationReset]: Resetting native account...')
+      const [account, securityMethod] = await Promise.all([getAccount(), getAccountSecurityMethod()])
+      // This fixes a bug where the account nickname persists even after verification reset
+      if (account && securityMethod) {
+        await setAccount({
+          clientID: account.clientID,
+          issuer: account.issuer,
+          securityMethod: securityMethod,
+          nickname: '', // FIXME (MD): bcsc-core will ignore undefined values for nickname
+        })
+      }
 
       logger.info('[VerificationReset]: Resetting secure and plain BCSC state...')
       dispatch({ type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [resetBcscSecureState] })
@@ -73,10 +77,10 @@ export const useVerificationReset = () => {
       return { success: false, error: factoryResetError }
     }
   }, [
-    store.bcsc.analyticsOptIn,
     store.bcscSecure.isHydrated,
     store.bcscSecure.registrationAccessToken,
     store.bcscSecure.walletKey,
+    store.bcsc.analyticsOptIn,
     logger,
     deleteVerificationData,
     dispatch,

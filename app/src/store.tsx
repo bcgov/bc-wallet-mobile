@@ -655,8 +655,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
-      const partialBcscState = (action?.payload || []).pop()
-      const bcsc = partialBcscState ? { ...initialBCSCState, ...partialBcscState } : initialBCSCState
+      const partialBcscState = (action?.payload || []).pop() ?? {}
+      const bcsc = { ...initialBCSCState, ...partialBcscState }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
