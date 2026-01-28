@@ -13,7 +13,7 @@ This project follows a **React-adapted MVVM pattern** using hooks. The tradition
 - Custom React hook that serves as the **ViewModel** layer in MVVM
 - Consumes the Model layer (stores, API hooks, services) and exposes state/actions to the View
 - Returns state values and action handlers for the View to consume
-- Should not contain any JSX or UI components
+- Should not contain any TSX or UI components
 
 > **Note:** Despite the `Model` suffix in the naming convention, these hooks function as ViewModels. The actual Model layer consists of `useStore`, API hooks (`useApi`), and services.
 
