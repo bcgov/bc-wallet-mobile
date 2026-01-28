@@ -1,5 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
@@ -110,6 +111,42 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       onBack() // close the modal first
       injectErrorCodeIntoAxiosResponse(client, 'no_tokens_returned', client.endpoints.token)
     },
+    unexpected_server_error_500: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 500),
+    unexpected_server_error_503: () => injectErrorCodeIntoAxiosResponse(client, '', undefined, 503),
+    login_server_error: () =>
+      injectErrorCodeIntoAxiosResponse(
+        client,
+        'login_server_error',
+        `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+      ),
+    too_many_attempts: () => injectErrorCodeIntoAxiosResponse(client, 'too_many_attempts'),
+    user_input_expired_verify_request: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'user_input_expired_verify_request', client.endpoints.token),
+    verify_not_complete: () => injectErrorCodeIntoAxiosResponse(client, 'verify_not_complete', client.endpoints.token),
+    login_parse_uri: () =>
+      injectErrorCodeIntoAxiosResponse(
+        client,
+        'login_parse_uri',
+        `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+      ),
+    invalid_pairing_code: () =>
+      injectErrorCodeIntoAxiosResponse(
+        client,
+        'invalid_pairing_code',
+        `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+      ),
+    login_remembered_device_invalid_pairing_code: () =>
+      injectErrorCodeIntoAxiosResponse(
+        client,
+        'login_remembered_device_invalid_pairing_code',
+        `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+      ),
+    login_same_device_invalid_pairing_code: () =>
+      injectErrorCodeIntoAxiosResponse(
+        client,
+        'login_same_device_invalid_pairing_code',
+        `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+      ),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -148,10 +185,21 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     })
   }
 
-  const injectErrorCodeIntoAxiosResponse = async (client: BCSCApiClient, errorCode: string, endpoint?: string) => {
+  const injectErrorCodeIntoAxiosResponse = async (
+    client: BCSCApiClient,
+    errorCode: string,
+    endpoint?: string,
+    status?: number
+  ) => {
     const id = client.client.interceptors.request.use((config) => {
       client.client.interceptors.request.eject(id)
-      throw new AxiosError('Injected error message', errorCode, config)
+      throw new AxiosError('Injected error message', errorCode, config, undefined, {
+        data: {},
+        status: status ?? 0,
+        statusText: 'Error',
+        headers: {},
+        config,
+      })
     })
 
     try {

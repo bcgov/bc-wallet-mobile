@@ -21,7 +21,7 @@ const NicknameAccountScreen: React.FC = () => {
         await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
         // Don't throw error to allow navigation to proceed even if API call fails (nickname in registration is not critical)
-        logger.error('Failed to update registration', { error: apiError })
+        logger.error('Failed to update registration', apiError as Error)
       }
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },

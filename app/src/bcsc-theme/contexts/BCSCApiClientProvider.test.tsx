@@ -6,13 +6,17 @@ import {
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import * as Bifold from '@bifold/core'
+import { MockLogger } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useContext } from 'react'
+import * as VerificationReset from '../api/hooks/useVerificationReset'
 
 jest.mock('@/bcsc-theme/api/client')
 
 jest.mock('@bifold/core')
+
+jest.mock('../api/hooks/useVerificationReset')
 
 describe('BCSCApiClientProvider', () => {
   beforeEach(() => {
@@ -23,6 +27,7 @@ describe('BCSCApiClientProvider', () => {
   it('should initialize the client', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -31,10 +36,15 @@ describe('BCSCApiClientProvider', () => {
           iasApiBaseUrl: 'https://example.com',
         },
       },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
-    const mockLogger: any = {}
+
+    const mockLogger = new MockLogger()
     const dispatchMock = jest.fn()
 
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -60,12 +70,18 @@ describe('BCSCApiClientProvider', () => {
   it('should not initialize if store.stateLoaded is false', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: false,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
+
     const dispatchMock = jest.fn()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -89,12 +105,17 @@ describe('BCSCApiClientProvider', () => {
   it('should not initialize if iasApiBaseUrl is missing', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: '' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
     const dispatchMock = jest.fn()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -117,13 +138,20 @@ describe('BCSCApiClientProvider', () => {
   it('should use the singleton instance', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
+
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    const mockLogger = new MockLogger()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
@@ -159,13 +187,19 @@ describe('BCSCApiClientProvider', () => {
   it('should handle initialization errors', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    const mockLogger = new MockLogger()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest
@@ -192,13 +226,19 @@ describe('BCSCApiClientProvider', () => {
   it('should handle network errors gracefully during initialization', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
 
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    const mockLogger = new MockLogger()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     const mockError: any = new AxiosError()
@@ -225,20 +265,27 @@ describe('BCSCApiClientProvider', () => {
   it('should re-attempt initialization if iasApiBaseUrl changes', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const verificationResetMock = jest.mocked(VerificationReset)
     const fetchMock = jest.fn()
 
     let store: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    const mockLogger = new MockLogger()
+    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockImplementation(() => [store, dispatchMock])
 
     bcscApiClientMock.mockImplementation(
       () =>
         ({
           fetchEndpointsAndConfig: fetchMock,
+          setErrorHandler: jest.fn(),
           baseURL: store.developer.environment.iasApiBaseUrl,
         }) as any
     )
@@ -260,6 +307,9 @@ describe('BCSCApiClientProvider', () => {
     store = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://new.com' } },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+      },
     }
 
     rerender({})

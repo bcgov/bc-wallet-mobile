@@ -102,3 +102,6 @@ export const DEFAULT_HEADER_TITLE_CONTAINER_STYLE: ViewStyle = { flexShrink: 1, 
 export const BC_SERVICES_CARD_BARCODE = 'code-39'
 export const OLD_BC_SERVICES_CARD_BARCODE = 'code-128'
 export const DRIVERS_LICENSE_BARCODE = 'pdf-417'
+
+// Endpoint path constants
+export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'

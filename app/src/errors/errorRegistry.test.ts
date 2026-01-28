@@ -28,6 +28,18 @@ describe('errorRegistry', () => {
   })
 
   describe('ErrorRegistry', () => {
+    it('should contain no duplicate codes', () => {
+      const codes = Object.values(ErrorRegistry).map((error) => error.statusCode)
+      const uniqueCodes = new Set(codes)
+      expect(uniqueCodes.size).toBe(codes.length)
+    })
+
+    it('should contain no duplicate app events', () => {
+      const appEvents = Object.values(ErrorRegistry).map((error) => error.appEvent)
+      const uniqueAppEvents = new Set(appEvents)
+      expect(uniqueAppEvents.size).toBe(appEvents.length)
+    })
+
     it('should contain all expected error keys', () => {
       // Camera errors
       expect(ErrorRegistry.CAMERA_BROKEN).toBeDefined()
@@ -171,7 +183,7 @@ describe('errorRegistry', () => {
         const definition = ErrorRegistry[key]
 
         // Title keys should be in format 'BCWalletError.Category.Title' or 'Error.Title...'
-        expect(definition.titleKey).toMatch(/^(BCWalletError\..+\.Title|Error\.Title\d+)$/)
+        expect(definition.titleKey).toMatch(/^(BCWalletError\..+Title|Error\.Title)$/)
 
         // Description keys should be in format 'BCWalletError.Category.Something'
         expect(definition.descriptionKey).toMatch(/^(BCWalletError\..+\..+|Error\.Message\d+)$/)
