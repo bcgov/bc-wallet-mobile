@@ -236,6 +236,14 @@ export const setIssuer = (issuer: string): Promise<boolean> => {
 };
 
 /**
+ * Gets the issuer from the file system.
+ * @returns A promise that resolves to the issuer string if found, otherwise null.
+ */
+export const getIssuer = (): Promise<string | null> => {
+  return BcscCore.getIssuer();
+};
+
+/**
  * Sets the current account information.
  * @param account The Account object to set as the current account (without id, which will be generated).
  * @returns A promise that resolves when the account has been successfully set.

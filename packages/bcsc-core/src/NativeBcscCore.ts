@@ -222,6 +222,7 @@ export interface Spec extends TurboModule {
    */
   deleteToken(tokenType: number): Promise<boolean>;
   setIssuer(issuer: string): Promise<boolean>;
+  getIssuer(): Promise<string | null>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
