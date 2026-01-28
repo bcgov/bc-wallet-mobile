@@ -1,6 +1,6 @@
 import { AbstractBifoldLogger } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { AppState, DeviceEventEmitter } from 'react-native'
+import { AppState, AppStateStatus, DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
@@ -30,6 +30,10 @@ export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
   private initialized = false
+
+  /** Tracked via AppState listener to avoid stale reads from AppState.currentState during rapid transitions. */
+  private appState: AppStateStatus = AppState.currentState
+  private appStateSubscription: { remove: () => void } | null = null
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -61,6 +65,11 @@ export class FcmViewModel {
     }
 
     this.logger.info('[FcmViewModel] Initializing...')
+    // Track app state reactively; AppState.currentState can be stale during rapid transitions
+    this.appState = AppState.currentState
+    this.appStateSubscription = AppState.addEventListener('change', (state) => {
+      this.appState = state
+    })
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
@@ -147,8 +156,9 @@ export class FcmViewModel {
 
     const { title, message, bcsc_status_notification } = data
 
-    // Only show local notification when app is not in foreground to avoid double rendering
-    const isAppInForeground = AppState.currentState === 'active'
+    // Only show local notification when app is not in foreground to avoid double rendering.
+    // Uses reactively tracked appState (see initialize) rather than AppState.currentState.
+    const isAppInForeground = this.appState === 'active'
     if (isAppInForeground) {
       this.logger.info('[FcmViewModel] App is in foreground, skipping local notification display')
     } else if (title && message) {
