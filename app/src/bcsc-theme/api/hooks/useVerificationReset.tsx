@@ -89,7 +89,7 @@ export const useVerificationReset = () => {
 }
 
 /**
- * Formats errors that occur during the factory reset process.
+ * Formats errors that occur during the verification reset process.
  *
  * @param {unknown} error - The error to format.
  * @returns {*} {Error} The formatted error.
