@@ -11,12 +11,12 @@ import { SystemModal } from './components/SystemModal'
 /**
  * Component displayed when the device has been invalidated.
  *
- * @returns {*} {JSX.Element} The DeviceInvalidated component.
+ * @returns {*} {React.ReactElement} The DeviceInvalidated component.
  */
 
 type DeviceInvalidatedProps = StackScreenProps<BCSCMainStackParams, BCSCModals.DeviceInvalidated>
 
-export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): JSX.Element => {
+export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.ReactElement => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const invalidationReason = route.params?.invalidationReason

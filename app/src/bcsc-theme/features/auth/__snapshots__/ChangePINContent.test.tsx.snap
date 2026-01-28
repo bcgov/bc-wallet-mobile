@@ -650,7 +650,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
               }
               accessible={true}
               collapsable={false}
-              focusable={true}
+              focusable={false}
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}
@@ -1219,7 +1219,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
               }
               accessible={true}
               collapsable={false}
-              focusable={true}
+              focusable={false}
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}

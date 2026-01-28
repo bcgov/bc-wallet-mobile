@@ -169,31 +169,18 @@ exports[`IdentitySelection renders correctly 1`] = `
             >
               BCSC.ChooseYourID.CombinedCardDescription
             </Text>
-            <RCTImageView
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              internal_analyticTag={null}
+            <Image
               resizeMode="contain"
               source={
-                [
-                  {
-                    "uri": "mocked-image-uri",
-                  },
-                ]
+                {
+                  "uri": "mocked-image-uri",
+                }
               }
               style={
                 {
                   "flex": 1,
                   "height": 100,
                   "marginTop": 16,
-                  "overflow": "hidden",
                   "width": 150,
                 }
               }
@@ -294,31 +281,18 @@ exports[`IdentitySelection renders correctly 1`] = `
             >
               BCSC.ChooseYourID.PhotoCardDescription
             </Text>
-            <RCTImageView
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              internal_analyticTag={null}
+            <Image
               resizeMode="contain"
               source={
-                [
-                  {
-                    "uri": "mocked-image-uri",
-                  },
-                ]
+                {
+                  "uri": "mocked-image-uri",
+                }
               }
               style={
                 {
                   "flex": 1,
                   "height": 100,
                   "marginTop": 16,
-                  "overflow": "hidden",
                   "width": 150,
                 }
               }
@@ -419,31 +393,18 @@ exports[`IdentitySelection renders correctly 1`] = `
             >
               BCSC.ChooseYourID.NoPhotoCardDescription
             </Text>
-            <RCTImageView
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              internal_analyticTag={null}
+            <Image
               resizeMode="contain"
               source={
-                [
-                  {
-                    "uri": "mocked-image-uri",
-                  },
-                ]
+                {
+                  "uri": "mocked-image-uri",
+                }
               }
               style={
                 {
                   "flex": 1,
                   "height": 100,
                   "marginTop": 16,
-                  "overflow": "hidden",
                   "width": 150,
                 }
               }

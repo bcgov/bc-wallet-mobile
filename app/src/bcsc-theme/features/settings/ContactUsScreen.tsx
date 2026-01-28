@@ -8,7 +8,7 @@ import { Linking } from 'react-native'
  * Contact us screen
  * Pure content component with no navigation dependencies.
  */
-export const ContactUsScreen = (): JSX.Element => {
+export const ContactUsScreen = (): React.ReactElement => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 

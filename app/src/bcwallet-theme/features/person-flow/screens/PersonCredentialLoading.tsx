@@ -39,7 +39,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const { ColorPalette, TextTheme, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
-  const timer = useRef<NodeJS.Timeout>()
+  const timer = useRef<NodeJS.Timeout>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
   const [stepText, setStepText] = useState<string>('Starting process...')

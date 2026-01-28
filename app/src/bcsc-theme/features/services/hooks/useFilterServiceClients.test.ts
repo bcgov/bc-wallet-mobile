@@ -226,8 +226,8 @@ describe('useFilterServiceClients', () => {
       expect(hook.result.current.isLoading).toBe(true)
       await waitFor(() => {
         expect(hook.result.current.serviceClients).toHaveLength(0)
+        expect(hook.result.current.isLoading).toBe(false)
       })
-      expect(hook.result.current.isLoading).toBe(false)
     })
 
     it('should return no service clients when partial name words are not contiguous', async () => {
@@ -246,8 +246,8 @@ describe('useFilterServiceClients', () => {
       expect(hook.result.current.isLoading).toBe(true)
       await waitFor(() => {
         expect(hook.result.current.serviceClients).toHaveLength(0)
+        expect(hook.result.current.isLoading).toBe(false)
       })
-      expect(hook.result.current.isLoading).toBe(false)
     })
   })
 
@@ -301,8 +301,8 @@ describe('useFilterServiceClients', () => {
       expect(hook.result.current.isLoading).toBe(true)
       await waitFor(() => {
         expect(hook.result.current.serviceClients).toHaveLength(0)
+        expect(hook.result.current.isLoading).toBe(false)
       })
-      expect(hook.result.current.isLoading).toBe(false)
     })
   })
 })

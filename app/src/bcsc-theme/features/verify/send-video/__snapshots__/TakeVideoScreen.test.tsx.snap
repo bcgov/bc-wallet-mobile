@@ -44,6 +44,11 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       isActive={false}
       onError={[Function]}
       onInitialized={[Function]}
+      ref={
+        {
+          "current": null,
+        }
+      }
       style={
         {
           "flex": 1,

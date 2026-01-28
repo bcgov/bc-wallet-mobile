@@ -98,7 +98,10 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         setErrorMessage(undefined)
 
         // Wait for UI to update before running native methods that block the JS thread
-        await InteractionManager.runAfterInteractions()
+        // This ensures loading indicators are visible
+        await new Promise<void>((resolve) => {
+          InteractionManager.runAfterInteractions(() => resolve())
+        })
 
         if (pin.length < PIN_LENGTH) {
           setErrorMessage('PIN must be 6 digits')

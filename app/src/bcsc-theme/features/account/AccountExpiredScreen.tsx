@@ -17,9 +17,9 @@ interface AccountExpiredScreenProps {
 /**
  * Renders the Account Expired screen, informing users that their account has expired and providing options to renew or remove the account.
  *
- * @returns {*} {JSX.Element} The AccountExpiredScreen component.
+ * @returns {*} {React.ReactElement} The AccountExpiredScreen component.
  */
-export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps): JSX.Element => {
+export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const accountContext = useContext(BCSCAccountContext)

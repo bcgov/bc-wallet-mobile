@@ -13,7 +13,7 @@ interface MainStackLoadingScreenProps {
 /**
  * Renders the Main Stack Loading Screen, which checks the account status and navigates accordingly.
  *
- * @returns {*} {JSX.Element} The MainLoadingScreen component.
+ * @returns {*} {React.ReactElement} The MainLoadingScreen component.
  */
 export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) => {
   const context = useContext(BCSCAccountContext)

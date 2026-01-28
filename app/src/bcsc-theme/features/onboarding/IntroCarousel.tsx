@@ -38,9 +38,9 @@ type CarouselPageData = {
  *   - Info on proving your identity online
  *   - What you can't use this app for
  *
- * @returns {*} {JSX.Element} The IntroCarouselScreen component.
+ * @returns {*} {React.ReactElement} The IntroCarouselScreen component.
  */
-export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): JSX.Element => {
+export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [carouselIndex, setCarouselIndex] = useState(0)

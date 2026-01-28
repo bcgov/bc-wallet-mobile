@@ -25,7 +25,7 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
  *   loadingScreen.stopLoading();
  *
  * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {JSX.Element} The BCSCLoadingProvider component wrapping its children.
+ * @returns {*} {React.ReactElement} The BCSCLoadingProvider component wrapping its children.
  */
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   const [isLoading, setIsLoading] = useState(false)

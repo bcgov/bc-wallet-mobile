@@ -32,30 +32,16 @@ exports[`PhotoInstructions renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <RCTImageView
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        internal_analyticTag={null}
-        resizeMode="cover"
+      <Image
         source={
-          [
-            {
-              "uri": "mocked-image-uri",
-            },
-          ]
+          {
+            "uri": "mocked-image-uri",
+          }
         }
         style={
           {
             "height": 200,
             "marginBottom": 16,
-            "overflow": "hidden",
             "width": "100%",
           }
         }

@@ -41,30 +41,10 @@ exports[`Notifications renders correctly 1`] = `
           }
         }
       >
-        <RCTImageView
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          internal_analyticTag={null}
-          resizeMode="cover"
+        <Image
           source={
-            [
-              {
-                "uri": "mock-notification-image",
-              },
-            ]
-          }
-          style={
             {
-              "height": undefined,
-              "overflow": "hidden",
-              "width": undefined,
+              "uri": "mock-notification-image",
             }
           }
         />

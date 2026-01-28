@@ -37,7 +37,7 @@ type SetupStepsScreenProps = {
  *    5. Transfer account flow
  *
  * @param {SetupStepsScreenProps} props - The props for the component, including navigation.
- * @returns {*} {JSX.Element} The rendered SetupStepsScreen component.
+ * @returns {*} {React.ReactElement} The rendered SetupStepsScreen component.
  */
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
