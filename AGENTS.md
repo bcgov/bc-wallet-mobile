@@ -166,7 +166,7 @@ This codebase uses a **feature-based structure** where each feature contains its
    - Access global state via `useStore` or context hooks
 
 5. **Naming Conventions**
-   - Model hooks: `use[Feature]Model` (e.g., `useSetupStepsModel`)
+   - Model hooks: Prefer `use[Feature]Model` (e.g., `useSetupStepsModel`) for new and updated code. Some legacy hooks may use `use[Feature]ViewModel` (e.g., `useVerificationSuccessViewModel`); these should be gradually renamed to the `Model` suffix as the codebase is standardized.
    - Views: `[Feature]Screen` or descriptive component names
 
 ## Commit Message and PR Title Formatting
