@@ -24,7 +24,7 @@
   "scripts": {
     "android": "react-native run-android --active-arch-only",
     "ios": "react-native run-ios",
-    "start": "react-native start --reset-cache --client-logs",
+    "start": "react-native start --reset-cache",
     "test": "TZ=GMT jest --config ./jest.config.js",
     "test:watch": "TZ=GMT jest --config ./jest.config.js --watch",
     "test:coverage": "TZ=GMT jest --config ./jest.config.js --coverage",
