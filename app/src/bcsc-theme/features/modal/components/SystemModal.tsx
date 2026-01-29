@@ -9,7 +9,7 @@ export interface SystemModalProps {
   /**
    * Name of the MaterialIcons icon to display
    */
-  iconName: string
+  iconName?: string
   /**
    * Size of the icon (default: 200)
    */
@@ -99,7 +99,7 @@ export const SystemModal = ({
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
-        <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} />
+        {iconName && <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} />}
         <View style={styles.textContainer}>
           <ThemedText variant="headingThree">{headerText}</ThemedText>
           {contentText.filter(Boolean).map((text) => (
