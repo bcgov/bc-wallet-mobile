@@ -59,7 +59,7 @@ export const ChangeSecurityContent = ({
       } catch (err) {
         const errMessage = err instanceof Error ? err.message : String(err)
         logger.error(`Error loading security method: ${errMessage}`)
-        emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.LoadMethodFailedMessage'))
+        emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
       }
     }
 
