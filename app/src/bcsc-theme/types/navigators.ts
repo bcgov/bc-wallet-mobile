@@ -41,6 +41,7 @@ export enum BCSCScreens {
   VideoReview = 'BCSCVideoReview',
   VideoTooLong = 'BCSCVideoTooLong',
   PendingReview = 'BCSCPendingReview',
+  CancelledReview = 'BCSCCancelledReview',
   SuccessfullySent = 'BCSCSuccessfullySent',
   VerificationSuccess = 'BCSCVerificationSuccess',
   ManualPairingCode = 'BCSCManualPairingCode',
@@ -157,6 +158,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
   [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
+  [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
   [BCSCScreens.DualIdentificationRequired]: undefined
