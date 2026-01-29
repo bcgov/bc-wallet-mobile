@@ -50,7 +50,7 @@ describe('AccountExpiryWarningBannerSystemCheck', () => {
 
       const check = new AccountExpiryWarningBannerSystemCheck(date, {
         dispatch: jest.fn(),
-        translation: jest.fn().mockReturnValue('Expires in 30 days'),
+        translation: jest.fn().mockReturnValue('Expires in 30 days') as any,
         logger: {} as any,
       })
 
@@ -80,7 +80,7 @@ describe('AccountExpiryWarningBannerSystemCheck', () => {
 
       const check = new AccountExpiryWarningBannerSystemCheck(date, {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: {} as any,
       })
 

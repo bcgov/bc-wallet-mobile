@@ -15,7 +15,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockNavigation = {} as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
 
@@ -37,7 +37,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockNavigation = {} as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
 
@@ -59,7 +59,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockNavigation = {} as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
 
@@ -83,7 +83,7 @@ describe('UpdateAppSystemCheck', () => {
       } as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
 
@@ -105,7 +105,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockNavigation = { navigate: jest.fn() } as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn().mockReturnValue('Update available'),
+        translation: jest.fn().mockReturnValue('Update available') as any,
         logger: new MockLogger(),
       }
 
@@ -137,7 +137,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockNavigation = {} as any
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
 

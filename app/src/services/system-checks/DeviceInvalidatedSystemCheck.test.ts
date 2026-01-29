@@ -45,7 +45,7 @@ describe('DeviceInvalidatedSystemCheck', () => {
 
     mockUtils = {
       dispatch: jest.fn(),
-      translation: jest.fn(),
+      translation: jest.fn() as any,
       logger: {
         error: jest.fn(),
         warn: jest.fn(),

@@ -2675,15 +2675,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.14.5, @babel/runtime@npm:^7.17.2":
-  version: 7.23.1
-  resolution: "@babel/runtime@npm:7.23.1"
-  dependencies:
-    regenerator-runtime: "npm:^0.14.0"
-  checksum: 10c0/e57ab1436d4845efe67c3f76d578508bb584173690ecfeac105bc4e09d64b2aa6a53c1e03bca3c97cc238e5390a804e5a4ded211e6350243b735905ca45a4822
-  languageName: node
-  linkType: hard
-
 "@babel/runtime@npm:^7.25.0":
   version: 7.26.10
   resolution: "@babel/runtime@npm:7.26.10"
@@ -2693,7 +2684,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:~7.28.6":
+"@babel/runtime@npm:^7.28.4, @babel/runtime@npm:~7.28.6":
   version: 7.28.6
   resolution: "@babel/runtime@npm:7.28.6"
   checksum: 10c0/358cf2429992ac1c466df1a21c1601d595c46930a13c1d4662fde908d44ee78ec3c183aaff513ecb01ef8c55c3624afe0309eeeb34715672dbfadb7feedb2c0d
@@ -9393,7 +9384,7 @@ __metadata:
     eslint-plugin-react: "npm:~7.35.2"
     eslint-plugin-react-hooks: "npm:~4.6.2"
     fast-text-encoding: "npm:~1.0.6"
-    i18next: "npm:~21.6.16"
+    i18next: "npm:~25.8.0"
     jest: "npm:~29.6.4"
     jwt-decode: "npm:~4.0.0"
     lodash.merge: "npm:~4.6.2"
@@ -9405,7 +9396,7 @@ __metadata:
     prettier-plugin-organize-imports: "npm:^4.3.0"
     query-string: "npm:~7.1.3"
     react: "npm:~19.1.4"
-    react-i18next: "npm:~11.17.1"
+    react-i18next: "npm:~16.5.4"
     react-native: "npm:0.81.5"
     react-native-animated-pagination-dots: "npm:~0.1.73"
     react-native-argon2: "npm:~2.0.1"
@@ -14183,7 +14174,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-escaper@npm:^2.0.0, html-escaper@npm:^2.0.2":
+"html-escaper@npm:^2.0.0":
   version: 2.0.2
   resolution: "html-escaper@npm:2.0.2"
   checksum: 10c0/208e8a12de1a6569edbb14544f4567e6ce8ecc30b9394fcaa4e7bb1e60c12a7c9a1ed27e31290817157e8626f3a4f29e76c8747030822eb84a6abb15c255f0a0
@@ -14310,12 +14301,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next@npm:~21.6.16":
-  version: 21.6.16
-  resolution: "i18next@npm:21.6.16"
+"i18next@npm:~25.8.0":
+  version: 25.8.0
+  resolution: "i18next@npm:25.8.0"
   dependencies:
-    "@babel/runtime": "npm:^7.17.2"
-  checksum: 10c0/d116bf02de3878e1541945bdcdd7af8646a3b7a50849957efa925c9e14174683a4be66e03a55490459c13f820e2a4b516e1be591cde4ea9cd5a73cb2616efdeb
+    "@babel/runtime": "npm:^7.28.4"
+  peerDependencies:
+    typescript: ^5
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/20451fcaa86584b7395ee0375d2038270cce84e1541ec154bacfa32efbb420a2bafd1c71184242927f0eb8be6ec379ea132850f847b39b2eebcea6a49d746cac
   languageName: node
   linkType: hard
 
@@ -19070,22 +19066,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@npm:~11.17.1":
-  version: 11.17.4
-  resolution: "react-i18next@npm:11.17.4"
+"react-i18next@npm:~16.5.4":
+  version: 16.5.4
+  resolution: "react-i18next@npm:16.5.4"
   dependencies:
-    "@babel/runtime": "npm:^7.14.5"
-    html-escaper: "npm:^2.0.2"
+    "@babel/runtime": "npm:^7.28.4"
     html-parse-stringify: "npm:^3.0.1"
+    use-sync-external-store: "npm:^1.6.0"
   peerDependencies:
-    i18next: ">= 19.0.0"
+    i18next: ">= 25.6.2"
     react: ">= 16.8.0"
+    typescript: ^5
   peerDependenciesMeta:
     react-dom:
       optional: true
     react-native:
       optional: true
-  checksum: 10c0/67d62abff126719b97d931edeb4e083604187050938dcca424984f2a2643472dde9c490c23506ca30c56a1232b46cae316be61bbae473aaca7f0ba8658e557ba
+    typescript:
+      optional: true
+  checksum: 10c0/41d0b76873addfa3abe0c6b8a10a796e01f205f3636bc2d090d0078b42222f2949c4303f18d7a80cc26cf1298918cb6220d96e39ae2b8644abfdbec3bb504b37
   languageName: node
   linkType: hard
 
@@ -22794,7 +22793,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-sync-external-store@npm:^1.2.2":
+"use-sync-external-store@npm:^1.2.2, use-sync-external-store@npm:^1.6.0":
   version: 1.6.0
   resolution: "use-sync-external-store@npm:1.6.0"
   peerDependencies:

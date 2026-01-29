@@ -59,7 +59,7 @@ export const ChangeSecurityContent = ({
       } catch (err) {
         const errMessage = err instanceof Error ? err.message : String(err)
         logger.error(`Error loading security method: ${errMessage}`)
-        emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        // emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
       }
     }
 
@@ -72,7 +72,7 @@ export const ChangeSecurityContent = ({
       const { success } = await setupDeviceSecurity()
       if (!success) {
         logger.error('Device security setup failed')
-        emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        // emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
         return
       }
 
@@ -91,9 +91,9 @@ export const ChangeSecurityContent = ({
     } catch (err) {
       const errMessage = err instanceof Error ? err.message : String(err)
       logger.error(`Error setting account security method: ${errMessage}`)
-      emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+      // emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [emitError, logger, t, deviceAuthMethodName, onDeviceAuthSuccess])
+  }, [logger, t, deviceAuthMethodName, onDeviceAuthSuccess])
 
   return (
     <SecurityMethodSelector
