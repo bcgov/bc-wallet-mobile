@@ -1,23 +1,25 @@
 import { useNavigation } from '@react-navigation/native'
-import React from 'react'
+import React, { useEffect } from 'react'
 
+import { BCDispatchAction, BCState } from '@/store'
+import { useStore } from '@bifold/core'
 import { SystemModal } from '../../modal/components/SystemModal'
 
-const CancelledReview: React.FC = () => {
+const CancelledReview: React.FC<{ agent_reason?: string }> = ({ agent_reason }) => {
   const navigation = useNavigation()
+  const [_, dispatch] = useStore<BCState>()
 
-  const handleReturnHome = () => {
-    navigation.navigate('Home' as never)
-  }
+  useEffect(() => {
+    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+  }, [])
 
   return (
     <SystemModal
-      iconName="phonelink-erase"
-      headerText="Butts"
-      contentText={['Where does this go', 'What about this one']}
+      headerText="Your identity couldn't be verified"
+      contentText={[`Details from Service BC agent: ${agent_reason ?? 'No reason provided'}`]}
       buttonText="OK"
       onButtonPress={() => {
-        console.log('OK WAS PRESSED')
+        navigation.goBack()
       }}
     />
   )
