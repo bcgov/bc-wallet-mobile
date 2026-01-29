@@ -4,7 +4,7 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useState } from 'react'
 
-const useVerificationSuccessViewmodel = () => {
+const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { registration } = useApi()
@@ -56,4 +56,4 @@ const useVerificationSuccessViewmodel = () => {
   }
 }
 
-export default useVerificationSuccessViewmodel
+export default useVerificationResponseViewModel

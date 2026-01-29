@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -28,7 +27,6 @@ type VerifyInPersonScreenProps = {
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { updateTokens } = useSecureActions()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const { token } = useApi()
@@ -54,18 +52,10 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
+      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
 
-        navigation.navigate(BCSCScreens.VerificationSuccess)
-      } else {
-        setError(true)
-        logger.error('Device verification failed, no refresh token received.')
-      }
+      navigation.navigate(BCSCScreens.VerificationSuccess)
     } catch (e) {
       logger.error(`Error completing device verification: ${e}`)
       setError(true)
