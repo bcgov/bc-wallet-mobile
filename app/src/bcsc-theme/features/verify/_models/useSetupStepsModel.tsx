@@ -37,8 +37,10 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         throw new Error(t('BCSC.Steps.VerificationIDMissing'))
       }
 
-      const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
-
+      const { status, status_message } = await evidence.getVerificationRequestStatus(
+        store.bcscSecure.verificationRequestId
+      )
+      console.log('VERIFICATION STATUS: ', status)
       if (status === 'verified') {
         if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
           throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
@@ -50,6 +52,13 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         }
 
         navigation.navigate(BCSCScreens.VerificationSuccess)
+      } else if (status === 'cancelled') {
+        // navigate to a canclled screen
+        // clean up collected evidence
+        // open a modal
+        navigation.navigate(BCSCScreens.CancelledReview, {
+          agentReason: status_message ?? 'Verification request denied',
+        })
       } else {
         navigation.navigate(BCSCScreens.PendingReview)
       }
