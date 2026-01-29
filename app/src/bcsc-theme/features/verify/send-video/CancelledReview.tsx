@@ -1,11 +1,13 @@
-import { useNavigation } from '@react-navigation/native'
 import React, { useEffect } from 'react'
 
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { SystemModal } from '../../modal/components/SystemModal'
 
 interface CancelledReviewProps {
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CancelledReview>
   route: {
     params: {
       agentReason?: string
@@ -13,9 +15,8 @@ interface CancelledReviewProps {
   }
 }
 
-const CancelledReview = ({ route }: CancelledReviewProps) => {
+const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
   const { agentReason } = route.params
-  const navigation = useNavigation()
   const [_, dispatch] = useStore<BCState>()
 
   useEffect(() => {
