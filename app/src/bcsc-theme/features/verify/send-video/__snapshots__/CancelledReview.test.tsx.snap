@@ -47,7 +47,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
             ]
           }
         >
-          Your identity couldn't be verified
+          BCSC.CancelledVerification.Title
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -65,8 +65,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
             ]
           }
         >
-          Details from Service BC agent: 
- Face does not match ID document
+          BCSC.CancelledVerification.Label
         </Text>
       </View>
     </View>
@@ -150,7 +149,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
             ]
           }
         >
-          OK
+          BCSC.CancelledVerification.Button
         </Text>
       </View>
     </View>

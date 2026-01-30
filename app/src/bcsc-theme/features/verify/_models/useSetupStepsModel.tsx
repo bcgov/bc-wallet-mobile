@@ -40,7 +40,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       const { status, status_message } = await evidence.getVerificationRequestStatus(
         store.bcscSecure.verificationRequestId
       )
-      console.log('VERIFICATION STATUS: ', status)
       if (status === 'verified') {
         if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
           throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))

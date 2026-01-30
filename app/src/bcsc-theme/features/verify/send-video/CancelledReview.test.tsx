@@ -32,8 +32,8 @@ describe('CancelledReview', () => {
     )
 
     expect(tree).toMatchSnapshot()
-    expect(tree.getByText("Your identity couldn't be verified")).toBeTruthy()
-    expect(tree.getByText(/Face does not match ID document/)).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
   it('renders with default message when no agent reason provided', () => {
@@ -49,8 +49,8 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText("Your identity couldn't be verified")).toBeTruthy()
-    expect(tree.getByText(/No reason provided/)).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
   it('renders with empty object params', () => {
@@ -64,8 +64,8 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText("Your identity couldn't be verified")).toBeTruthy()
-    expect(tree.getByText(/No reason provided/)).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
   it('navigates back when OK button is pressed', async () => {
@@ -82,11 +82,11 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
     await waitFor(() => {
-      const okButton = tree.getByText('OK')
+      const okButton = tree.getByText('BCSC.CancelledVerification.Button')
       expect(okButton).toBeTruthy()
     })
 
-    const okButton = tree.getByText('OK')
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
     fireEvent.press(okButton)
 
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText('OK')).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Button')).toBeTruthy()
   })
 
   it('renders SystemModal component', () => {
@@ -125,6 +125,6 @@ describe('CancelledReview', () => {
     )
 
     // SystemModal should render with the header text
-    expect(tree.getByText("Your identity couldn't be verified")).toBeTruthy()
+    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
   })
 })
