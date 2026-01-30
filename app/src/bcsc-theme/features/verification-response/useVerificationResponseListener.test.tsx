@@ -100,8 +100,8 @@ describe('useVerificationResponseListener', () => {
   })
 
   it('should process pending approval on mount if one exists', async () => {
-    // Buffer an approval before the hook mounts (simulating cold-start)
-    mockVerificationResponseService.handleApproval()
+    // Buffer a request_reviewed before the hook mounts (simulating cold-start)
+    mockVerificationResponseService.handleRequestReviewed()
     expect(mockVerificationResponseService.hasPendingApproval).toBe(true)
 
     // Now mount the hook
@@ -116,104 +116,6 @@ describe('useVerificationResponseListener', () => {
     expect(CommonActions.reset).toHaveBeenCalledWith({
       index: 0,
       routes: [{ name: BCSCScreens.VerificationSuccess }],
-    })
-  })
-
-  describe('direct_approval (in-person verification)', () => {
-    it('should navigate to VerificationSuccess screen', async () => {
-      renderHook(() => useVerificationResponseListener())
-
-      // Trigger the service to emit direct_approval
-      act(() => {
-        mockVerificationResponseService.handleApproval()
-      })
-
-      // Token fetch happens first, then navigation
-      await waitFor(() => {
-        expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
-      })
-      await waitFor(() => {
-        expect(CommonActions.reset).toHaveBeenCalledWith({
-          index: 0,
-          routes: [{ name: BCSCScreens.VerificationSuccess }],
-        })
-      })
-      expect(mockDispatch).toHaveBeenCalled()
-    })
-
-    it('should log when direct approval event is received', async () => {
-      renderHook(() => useVerificationResponseListener())
-
-      act(() => {
-        mockVerificationResponseService.handleApproval()
-      })
-
-      await waitFor(() => {
-        expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Direct approval event received'))
-      })
-    })
-
-    it('should not navigate if deviceCode is missing', async () => {
-      // Override the store mock for this test
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { useStore } = require('@bifold/core')
-      useStore.mockReturnValueOnce([
-        {
-          bcscSecure: {
-            deviceCode: undefined,
-            userCode: 'test-user-code',
-          },
-        },
-      ])
-
-      renderHook(() => useVerificationResponseListener())
-
-      act(() => {
-        mockVerificationResponseService.handleApproval()
-      })
-
-      await waitFor(() => {
-        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Missing deviceCode or userCode'))
-      })
-
-      expect(mockDispatch).not.toHaveBeenCalled()
-    })
-
-    it('should not navigate when checkDeviceCodeStatus fails during direct approval', async () => {
-      mockCheckDeviceCodeStatus.mockRejectedValueOnce(new Error('Token exchange failed'))
-
-      renderHook(() => useVerificationResponseListener())
-
-      await act(async () => {
-        mockVerificationResponseService.handleApproval()
-      })
-
-      await waitFor(() => {
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to handle direct approval: Token exchange failed')
-        )
-      })
-
-      expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
-      expect(mockDispatch).not.toHaveBeenCalled()
-    })
-
-    it('should handle non-Error thrown by checkDeviceCodeStatus during direct approval', async () => {
-      mockCheckDeviceCodeStatus.mockRejectedValueOnce('String error')
-
-      renderHook(() => useVerificationResponseListener())
-
-      await act(async () => {
-        mockVerificationResponseService.handleApproval()
-      })
-
-      await waitFor(() => {
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to handle direct approval: String error')
-        )
-      })
-
-      expect(mockDispatch).not.toHaveBeenCalled()
     })
   })
 

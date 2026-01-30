@@ -74,7 +74,6 @@ describe('FcmViewModel', () => {
     } as unknown as jest.Mocked<PairingService>
 
     mockVerificationResponseService = {
-      handleApproval: jest.fn(),
       handleRequestReviewed: jest.fn(),
     } as unknown as jest.Mocked<VerificationResponseService>
 
@@ -157,11 +156,35 @@ describe('FcmViewModel', () => {
       const message = {
         type: 'status',
         data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        rawMessage: { data: {}, notification: undefined },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(showLocalNotification).toHaveBeenCalledWith('Status Update', 'Approved!')
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
+      expect(showLocalNotification).not.toHaveBeenCalled()
+    })
+
+    it('does not show local notification for status when FCM payload has notification block', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'approved',
+          title: 'App Setup Complete',
+          message: 'Identity verified and the app is ready to use.',
+        },
+        rawMessage: {
+          data: {},
+          notification: { title: 'App Setup Complete', body: 'Identity verified and the app is ready to use.' },
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
+      expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
@@ -449,7 +472,7 @@ describe('FcmViewModel', () => {
     })
   })
 
-  describe('verification approval detection', () => {
+  describe('status notification (non-request-reviewed)', () => {
     let emitSpy: jest.SpyInstance
 
     beforeEach(() => {
@@ -460,31 +483,6 @@ describe('FcmViewModel', () => {
 
     afterEach(() => {
       emitSpy.mockRestore()
-    })
-
-    it('calls VerificationResponseService when status notification indicates approval', async () => {
-      const statusClaims = {
-        bcsc_event: BCSCEvent.Authorization,
-        bcsc_reason: BCSCReason.ApprovedByAgent,
-        aud: 'test',
-        iss: 'test',
-        exp: 12345,
-        iat: 12345,
-        jti: 'test-jti',
-      }
-
-      const message = {
-        type: 'status',
-        data: {
-          bcsc_status_notification: JSON.stringify(statusClaims),
-          title: 'Verification Approved',
-          message: 'Your identity has been verified',
-        },
-      } as FcmMessage
-
-      await capturedMessageHandler?.(message)
-
-      expect(mockVerificationResponseService.handleApproval).toHaveBeenCalled()
     })
 
     it('does not call VerificationResponseService for non-Authorization events', async () => {
@@ -509,7 +507,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('does not call VerificationResponseService for Authorization with non-approval reason', async () => {
@@ -534,7 +532,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
     it('handles missing bcsc_status_notification gracefully', async () => {
@@ -550,8 +548,7 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       // With empty notification, parseStatusNotificationClaims returns null silently
-      // and no verification approval is triggered
-      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      // and no verification response is triggered
       expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
@@ -568,37 +565,8 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       // With invalid JSON, parseStatusNotificationClaims returns null silently
-      // and no verification approval is triggered
-      expect(mockVerificationResponseService.handleApproval).not.toHaveBeenCalled()
+      // and no verification response is triggered
       expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
-    })
-
-    it('does not refresh tokens when verification approval is detected', async () => {
-      const statusClaims = {
-        bcsc_event: BCSCEvent.Authorization,
-        bcsc_reason: BCSCReason.ApprovedByAgent,
-        aud: 'test',
-        iss: 'test',
-        exp: 12345,
-        iat: 12345,
-        jti: 'test-jti',
-      }
-
-      const message = {
-        type: 'status',
-        data: {
-          bcsc_status_notification: JSON.stringify(statusClaims),
-          title: 'Verification Approved',
-          message: 'Your identity has been verified',
-        },
-      } as FcmMessage
-
-      await capturedMessageHandler?.(message)
-
-      // Verification approval should call service and skip token refresh
-      expect(mockVerificationResponseService.handleApproval).toHaveBeenCalled()
-      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
-      expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
     })
   })
 
