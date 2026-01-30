@@ -1,4 +1,5 @@
-import { AppError } from '@/errors'
+import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction } from '@/utils/alert'
 import { getBCSCAppStoreUrl } from '@/utils/links'
@@ -21,8 +22,20 @@ const GLOBAL_ALERT_EVENT_CODES = new Set([
   AppEventCode.TOO_MANY_ATTEMPTS,
 ])
 
+/**
+ * Set of event codes for verify device assertion endpoint
+ */
+const VERIFY_DEVICE_ASSERTION_EVENT_CODES = new Set([
+  AppEventCode.LOGIN_SERVER_ERROR,
+  AppEventCode.LOGIN_PARSE_URI,
+  AppEventCode.INVALID_PAIRING_CODE,
+  AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE,
+  AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
+])
+
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
+  statusCode: number // HTTP status code for context
   apiEndpoints: BCSCEndpoints // current API endpoints for context
 }
 
@@ -38,6 +51,10 @@ type ErrorHandlingPolicy = {
   matches: (error: AppError, context: ErrorMatcherContext) => boolean
   handle: (error: AppError, context: ErrorHandlerContext) => void
 }
+
+// ----------------------------------------
+// Error Handling Policies
+// ----------------------------------------
 
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
@@ -76,6 +93,27 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for VERIFY_NOT_COMPLETE event on evidence endpoint
+export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error)
+  },
+}
+
+// Error policy for unexpected server errors (http status: 500, 503)
+export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 500 || context.statusCode === 503
+  },
+  handle: (error, context) => {
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: error })
+    context.emitErrorAlert(appError)
+  },
+}
+
 // Error policy for app <IOS|ANDROID>_APP_UPDATE_REQUIRED required events on evidence endpoint
 export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
@@ -105,9 +143,62 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for verify device assertion endpoint errors
+export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      VERIFY_DEVICE_ASSERTION_EVENT_CODES.has(error.appEvent) &&
+      context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
+    )
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error)
+  },
+}
+
+// ----------------------------------------
+// Error Handling Policy Factories
+// ----------------------------------------
+
+/**
+ * Error policy factory for expired app setup during token exchange
+ *
+ * @param resetApplication - Function to reset the application state to "Setup Steps"
+ * @returns ErrorHandlingPolicy
+ */
+export const createExpiredAppSetupErrorPolicy = (resetApplication: () => Promise<void>): ErrorHandlingPolicy => {
+  return {
+    matches: (error, context) => {
+      return (
+        error.appEvent === AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST &&
+        context.endpoint === context.apiEndpoints.token
+      )
+    },
+    handle: (error, context) => {
+      context.emitErrorAlert(error, {
+        actions: [
+          {
+            text: context.translate('Alerts.Actions.DefaultOK'),
+            onPress: async () => {
+              try {
+                await resetApplication()
+              } catch (error) {
+                context.logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
+              }
+            },
+          },
+        ],
+      })
+    },
+  }
+}
+
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   globalAlertErrorPolicy,
+  unexpectedServerErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
+  verifyNotCompletedErrorPolicy,
+  verifyDeviceAssertionErrorPolicy,
 ]

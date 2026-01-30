@@ -4,22 +4,20 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
-import i18next from 'i18next'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
-import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
+import {
+  ClientErrorHandlingPolicies,
+  ErrorMatcherContext,
+  createExpiredAppSetupErrorPolicy,
+} from '../api/clientErrorPolicies'
+import { useVerificationReset } from '../api/hooks/useVerificationReset'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
-
-/**
- * Returns the current BCSCApiClient singleton instance.
- * Can be used outside of React components (e.g., in ViewModels).
- * Returns null if the client hasn't been initialized yet.
- */
-export const getBCSCApiClient = (): BCSCApiClient | null => BCSC_API_CLIENT_SINGLETON
 
 export interface BCSCApiClientContextType {
   client: BCSCApiClient | null
@@ -42,12 +40,27 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {React.ReactElement} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const verificationReset = useVerificationReset()
+
+  // Combine client error handling policies with policy factories
+  const allErrorHandlingPolicies = useMemo(() => {
+    return [
+      ...ClientErrorHandlingPolicies,
+      createExpiredAppSetupErrorPolicy(async () => {
+        const result = await verificationReset()
+        if (!result.success) {
+          logger.error('[VerificationReset] Error while resetting', result.error)
+        }
+      }),
+    ]
+  }, [logger, verificationReset])
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -69,41 +82,30 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const handleApiClientError = useCallback(
     (error: AppError, context: ErrorMatcherContext) => {
-      const policy = ClientErrorHandlingPolicies.find((policy) =>
-        policy.matches(error, {
-          endpoint: context.endpoint,
-          apiEndpoints: context.apiEndpoints,
-        })
-      )
+      const policy = allErrorHandlingPolicies.find((policy) => policy.matches(error, context))
 
       if (!policy) {
-        logger.info('[ApiClient] No error handling policy for:', {
+        logger.info('[BCSCApiClient] No error handling policy for:', {
           endpoint: context.endpoint,
           appEvent: error.appEvent,
         })
         return
       }
 
-      logger.info('[ApiClient] Applying error handling policy for:', {
+      logger.info('[BCSCApiClient] Applying error handling policy for:', {
         endpoint: context.endpoint,
         appEvent: error.appEvent,
       })
-
-      /**
-       * Note: Using the translate function from the react i18n hook
-       * causes a downstream memory leak with the BCSCApiClient during tests.
-       */
-      const translate = i18next.t.bind(i18next)
 
       policy.handle(error, {
         linking: Linking,
         emitErrorAlert,
         navigation,
-        translate,
+        translate: t,
         logger,
       })
     },
-    [emitErrorAlert, logger, navigation]
+    [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
   )
 
   useEffect(() => {
@@ -119,11 +121,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
-        newClient = new BCSCApiClient(
-          store.developer.environment.iasApiBaseUrl,
-          logger as RemoteLogger,
-          handleApiClientError
-        )
+        newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
         await newClient.fetchEndpointsAndConfig()
 
         setClientAndSingleton(newClient)
@@ -149,13 +147,39 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [
-    handleApiClientError,
-    logger,
-    store.developer.environment.iasApiBaseUrl,
-    store.developer.environment.name,
-    store.stateLoaded,
-  ])
+  }, [logger, store.developer.environment.iasApiBaseUrl, store.developer.environment.name, store.stateLoaded])
+
+  useEffect(() => {
+    // Update the client's error handler whenever it or the handler changes
+    if (!client) {
+      return
+    }
+
+    client.setErrorHandler(handleApiClientError)
+    setClientAndSingleton(client)
+  }, [client, handleApiClientError])
+
+  useEffect(() => {
+    // When a new refresh token is updated, refresh the client tokens
+    const refreshEffect = async () => {
+      if (
+        store.stateLoaded &&
+        client &&
+        store.bcscSecure.refreshToken &&
+        client.tokens?.refresh_token !== store.bcscSecure.refreshToken
+      ) {
+        try {
+          logger.info('[BCSCApiClient] Refreshing BCSC API client tokens using updated refresh token')
+          await client.getTokensForRefreshToken(store.bcscSecure.refreshToken)
+          setClientAndSingleton(client)
+        } catch (error) {
+          logger.error('[BCSCApiClient] Error refreshing BCSC API client tokens:', { error })
+        }
+      }
+    }
+
+    refreshEffect()
+  }, [store.bcscSecure.refreshToken, store.stateLoaded, client, logger])
 
   const contextValue = useMemo(
     () => ({
@@ -170,6 +194,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 }
 
 // This function is used to reset the singleton instance in tests
-export const _resetBCSCApiClientSingleton = () => {
+export const _resetBCSCApiClientSingleton = (): void => {
   BCSC_API_CLIENT_SINGLETON = null
 }
+
+/**
+ * Returns the current BCSCApiClient singleton instance.
+ * Can be used outside of React components (e.g., in ViewModels).
+ *
+ * @returns The BCSCApiClient instance or null if not initialized.
+ */
+export const getBCSCApiClient = (): BCSCApiClient | null => BCSC_API_CLIENT_SINGLETON
