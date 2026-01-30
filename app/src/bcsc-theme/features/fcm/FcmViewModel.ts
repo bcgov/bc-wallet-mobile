@@ -1,10 +1,8 @@
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
-import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
-import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
@@ -150,29 +148,6 @@ export class FcmViewModel {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()
       return
-    }
-  }
-
-  /**
-   * Refreshes OAuth tokens using the current refresh token.
-   * Emits a TOKENS_REFRESHED event so React components can update their state.
-   */
-  private async refreshTokens(): Promise<void> {
-    try {
-      const apiClient = getBCSCApiClient()
-
-      if (!apiClient?.tokens?.refresh_token) {
-        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
-        return
-      }
-
-      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
-
-      // Emit event so React components (e.g., BCSCAccountProvider) can refresh their data
-      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
-    } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
     }
   }
 
