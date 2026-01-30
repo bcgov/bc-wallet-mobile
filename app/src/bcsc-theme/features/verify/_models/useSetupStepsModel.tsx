@@ -53,7 +53,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } else if (status === 'cancelled') {
         navigation.navigate(BCSCScreens.CancelledReview, {
-          agentReason: status_message ?? 'Verification request denied',
+          agentReason: status_message,
         })
       } else {
         navigation.navigate(BCSCScreens.PendingReview)
