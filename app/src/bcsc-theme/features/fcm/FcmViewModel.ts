@@ -1,5 +1,6 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
+import { getApp } from '@react-native-firebase/app'
+import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
@@ -71,7 +72,8 @@ export class FcmViewModel {
 
   private async logFcmToken(): Promise<void> {
     try {
-      const token = await messaging().getToken()
+      const messagingInstance = getMessaging(getApp())
+      const token = await getToken(messagingInstance)
       this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -149,10 +151,6 @@ export class FcmViewModel {
       this.verificationResponseService.handleRequestReviewed()
       return
     }
-
-    // Refresh tokens for other status notifications (e.g., account status changes)
-    // This ensures account data is updated regardless of notification display
-    await this.refreshTokens()
   }
 
   /**

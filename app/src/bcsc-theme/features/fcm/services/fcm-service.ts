@@ -1,4 +1,12 @@
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
+import { getApp } from '@react-native-firebase/app'
+import {
+  FirebaseMessagingTypes,
+  getInitialNotification,
+  getMessaging,
+  onMessage,
+  onNotificationOpenedApp,
+  setBackgroundMessageHandler,
+} from '@react-native-firebase/messaging'
 
 // ============================================================================
 // Status Notification Types
@@ -94,18 +102,21 @@ export class FcmService {
     }
     this.initialized = true
 
+    const app = getApp()
+    const messagingInstance = getMessaging(app)
+
     // Handle foreground messages
-    this.foregroundSubscription = messaging().onMessage((remoteMessage) => {
+    this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
       this.emit(remoteMessage)
     })
 
     // Handle when user taps notification while app is in background
-    this.notificationOpenedSubscription = messaging().onNotificationOpenedApp((remoteMessage) => {
+    this.notificationOpenedSubscription = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
       this.emit(remoteMessage)
     })
 
     // Handle when app was killed and user taps notification to launch it
-    const initialNotification = await messaging().getInitialNotification()
+    const initialNotification = await getInitialNotification(messagingInstance)
     if (initialNotification) {
       this.emit(initialNotification)
     }
@@ -114,7 +125,7 @@ export class FcmService {
     // not processed here. The OS notification system delivers them to the user and
     // any challenge/status handling is performed only when the app is brought to the
     // foreground and messages are received via the foreground listener above.
-    messaging().setBackgroundMessageHandler(async () => {
+    setBackgroundMessageHandler(messagingInstance, async () => {
       // Intentionally left as a no-op: do not process challenge/status data while the
       // app is in the background; rely on the foreground flow for handling.
     })
