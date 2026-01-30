@@ -1,16 +1,12 @@
 import { AbstractBifoldLogger } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { AppState, AppStateStatus, DeviceEventEmitter } from 'react-native'
+import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
-import {
-  isVerificationApproval,
-  isVerificationRequestReviewed,
-  parseStatusNotificationClaims,
-} from '../../utils/id-token'
+import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
 import { VerificationResponseService } from '../verification-response'
 
@@ -30,10 +26,6 @@ export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
   private initialized = false
-
-  /** Tracked via AppState listener to avoid stale reads from AppState.currentState during rapid transitions. */
-  private appState: AppStateStatus = AppState.currentState
-  private appStateSubscription: { remove: () => void } | null = null
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -65,11 +57,7 @@ export class FcmViewModel {
     }
 
     this.logger.info('[FcmViewModel] Initializing...')
-    // Track app state reactively; AppState.currentState can be stale during rapid transitions
-    this.appState = AppState.currentState
-    this.appStateSubscription = AppState.addEventListener('change', (state) => {
-      this.appState = state
-    })
+
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
@@ -99,6 +87,7 @@ export class FcmViewModel {
         await this.handleChallengeRequest(message.data)
         break
       case 'status':
+        this.logger.info(`[FcmViewModel] Message: ${JSON.stringify(message)}`)
         await this.handleStatusNotification(message.data)
         break
       case 'notification':
@@ -154,45 +143,7 @@ export class FcmViewModel {
   private async handleStatusNotification(data: StatusNotification) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    const { title, message, bcsc_status_notification } = data
-
-    // Only show local notification when app is not in foreground to avoid double rendering.
-    // Uses reactively tracked appState (see initialize) rather than AppState.currentState.
-    const isAppInForeground = this.appState === 'active'
-    if (isAppInForeground) {
-      this.logger.info('[FcmViewModel] App is in foreground, skipping local notification display')
-    } else if (title && message) {
-      // Show local notification if we have title and message
-      try {
-        await showLocalNotification(title, message)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
-      }
-    } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
-    }
-
-    // Parse the status notification JSON to check for verification approval
-    const claims = parseStatusNotificationClaims(bcsc_status_notification)
-
-    if (claims) {
-      this.logger.info(
-        `[FcmViewModel] Status notification claims: event=${claims.bcsc_event}, reason=${claims.bcsc_reason}`
-      )
-
-      // Check if this is a verification approval notification
-      if (isVerificationApproval(claims)) {
-        this.logger.info('[FcmViewModel] Verification approval detected, delegating to VerificationResponseService')
-        // Delegate to VerificationResponseService (follows same pattern as pairing)
-        // The service will either emit navigation immediately or buffer for cold-start
-        this.verificationResponseService.handleApproval()
-        // Skip token refresh for verification approval - user hasn't completed OAuth login yet
-        return
-      }
-    }
-
     // Check if this is a verification request reviewed notification (send-video)
-    // note: this also catches live call notifications (verification approval)
     if (isVerificationRequestReviewed(data)) {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()

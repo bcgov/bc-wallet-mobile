@@ -14,8 +14,7 @@ import {
  *
  * This follows the same pattern as PairingService for consistency.
  *
- * Supports two types of verification events:
- * - direct_approval: In-person verification approved by agent (can directly fetch tokens)
+ * Supports one type of verification event:
  * - request_reviewed: Send-video reviewed (need to check status first)
  *
  */
@@ -83,28 +82,6 @@ export class VerificationResponseService {
     } else {
       this.logger.info('[VerificationResponseService] Buffering request_reviewed (no listeners)')
       this.pendingApproval = 'request_reviewed'
-      return false
-    }
-  }
-
-  /**
-   * Handle a direct verification approval from FCM (in-person).
-   * The notification contains explicit approval, so we can directly fetch tokens.
-   * If navigation listeners are registered, emits navigation immediately.
-   * Otherwise, buffers the request as pending for when a listener is added.
-   *
-   * @returns true if navigation was emitted immediately, false if buffered
-   */
-  public handleApproval(): boolean {
-    this.logger.info('[VerificationResponseService] Direct verification approval received (in-person)')
-
-    if (this.navigationListeners.size > 0) {
-      this.logger.info(`[VerificationResponseService] Emitting direct_approval to ${BCSCScreens.VerificationSuccess}`)
-      this.emitNavigation('direct_approval')
-      return true
-    } else {
-      this.logger.info('[VerificationResponseService] Buffering direct_approval (no listeners)')
-      this.pendingApproval = 'direct_approval'
       return false
     }
   }

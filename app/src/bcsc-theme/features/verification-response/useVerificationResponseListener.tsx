@@ -15,12 +15,9 @@ import { BCSCScreens } from '../../types/navigators'
  * This hook should be used in the VerifyStack navigator to handle the case where a user
  * receives a push notification indicating their verification has been approved.
  *
- * Handles two types of verification events:
+ * Handles verification response events:
  *
- * 1. Direct approval (in-person): The notification contains explicit approval claims.
- *    - Fetches tokens via checkDeviceCodeStatus, then navigates to success screen
- *
- * 2. Request reviewed (send-video): The notification indicates the video was reviewed.
+ * Request reviewed (send-video): The notification indicates the video was reviewed.
  *    - First checks verification status via API
  *    - If status is 'verified', fetches tokens via checkDeviceCodeStatus, then navigates to success
  *    - If not verified, does not navigate (user should check manually)
@@ -48,32 +45,6 @@ export const useVerificationResponseListener = () => {
       })
     )
   }, [logger, navigation])
-
-  /**
-   * Handle direct approval (in-person verification).
-   * The notification contains explicit approval claims. We fetch tokens here via
-   * checkDeviceCodeStatus, then navigate to success. VerificationSuccessScreen
-   * handles final account setup (marking verified, metadata cleanup, registration update).
-   */
-  const handleDirectApproval = useCallback(async () => {
-    logger.info('[useVerificationResponseListener] Direct approval event received (in-person)')
-
-    try {
-      const { deviceCode, userCode } = store.bcscSecure
-
-      if (!deviceCode || !userCode) {
-        logger.error('[useVerificationResponseListener] Missing deviceCode or userCode')
-        return
-      }
-
-      // fetch and update tokens
-      await token.checkDeviceCodeStatus(deviceCode, userCode)
-      navigateToSuccess()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      logger.error(`[useVerificationResponseListener] Failed to handle direct approval: ${message}`)
-    }
-  }, [logger, store.bcscSecure, navigateToSuccess, token])
 
   /**
    * Handle request reviewed (send-video verification or live call).
@@ -130,9 +101,6 @@ export const useVerificationResponseListener = () => {
   const handleNavigationEvent = useCallback(
     async (event: VerificationResponseNavigationEvent) => {
       switch (event.eventType) {
-        case 'direct_approval':
-          await handleDirectApproval()
-          break
         case 'request_reviewed':
           await handleRequestReviewed()
           break
@@ -141,7 +109,7 @@ export const useVerificationResponseListener = () => {
           break
       }
     },
-    [handleDirectApproval, handleRequestReviewed, logger]
+    [handleRequestReviewed, logger]
   )
 
   useEffect(() => {
