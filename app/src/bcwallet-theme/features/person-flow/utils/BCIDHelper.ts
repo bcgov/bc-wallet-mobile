@@ -7,7 +7,7 @@ import {
   removeExistingInvitationsById,
 } from '@bifold/core'
 import { DidRepository } from '@credo-ts/core'
-import { TFunction } from 'react-i18next'
+import { TFunction } from 'i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
