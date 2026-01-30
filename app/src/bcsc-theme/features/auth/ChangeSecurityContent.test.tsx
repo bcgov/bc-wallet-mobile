@@ -41,11 +41,11 @@ jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
 
-const mockError = jest.fn()
+const mockAlert = jest.fn()
 
 jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({
-    emitError: mockError,
+    emitAlert: mockAlert,
     clearError: jest.fn(),
   }),
 }))
@@ -250,7 +250,7 @@ describe('ChangeSecurityContent', () => {
       )
 
       await waitFor(() => {
-        expect(mockError).toHaveBeenCalledWith(
+        expect(mockAlert).toHaveBeenCalledWith(
           'BCSC.Settings.AppSecurity.ErrorTitle',
           'BCSC.Settings.AppSecurity.SetupFailedMessage'
         )
@@ -338,7 +338,7 @@ describe('ChangeSecurityContent', () => {
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
-        expect(mockError).toHaveBeenCalledWith(
+        expect(mockAlert).toHaveBeenCalledWith(
           'BCSC.Settings.AppSecurity.ErrorTitle',
           'BCSC.Settings.AppSecurity.SetupFailedMessage'
         )
@@ -374,7 +374,7 @@ describe('ChangeSecurityContent', () => {
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
-        expect(mockError).toHaveBeenCalledWith(
+        expect(mockAlert).toHaveBeenCalledWith(
           'BCSC.Settings.AppSecurity.ErrorTitle',
           'BCSC.Settings.AppSecurity.SetupFailedMessage'
         )

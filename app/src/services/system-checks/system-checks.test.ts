@@ -101,7 +101,7 @@ describe('System Checks', () => {
       it('should return true when device count is within limit', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const getIdToken = jest.fn().mockResolvedValue({
@@ -120,7 +120,7 @@ describe('System Checks', () => {
       it('should return false when device count exceeds limit', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const getIdToken = jest.fn().mockResolvedValue({
@@ -139,7 +139,7 @@ describe('System Checks', () => {
       it('should return false when device count is equal to limit', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const getIdToken = jest.fn().mockResolvedValue({
@@ -160,7 +160,7 @@ describe('System Checks', () => {
       it('should dispatch a warning banner message', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Device limit reached'),
+          translation: jest.fn().mockReturnValue('Device limit reached') as any,
           logger: {} as any,
         }
         const getIdToken = jest.fn()
@@ -189,7 +189,7 @@ describe('System Checks', () => {
       it('should dispatch action to remove the banner message', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const getIdToken = jest.fn()
@@ -212,7 +212,7 @@ describe('System Checks', () => {
       it('should return true when server status ok', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const serverStatus: any = { status: 'ok' }
@@ -227,7 +227,7 @@ describe('System Checks', () => {
       it('should return false when server status not ok', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
         const serverStatus: any = { status: 'unknown' }
@@ -244,7 +244,7 @@ describe('System Checks', () => {
       it('should dispatch an error banner message', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Server unavailable'),
+          translation: jest.fn().mockReturnValue('Server unavailable') as any,
           logger: {} as any,
         }
         const serverStatus: any = { status: 'ok' }
@@ -271,7 +271,7 @@ describe('System Checks', () => {
       it('should use server status message if available', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Server unavailable'),
+          translation: jest.fn().mockReturnValue('Server unavailable') as any,
           logger: {} as any,
         }
 
@@ -304,7 +304,7 @@ describe('System Checks', () => {
       it('should dispatch action to remove the banner message', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
 
@@ -324,7 +324,7 @@ describe('System Checks', () => {
       it('should dispatch info banner if server status message exists', async () => {
         const mockUtils = {
           dispatch: jest.fn(),
-          translation: jest.fn(),
+          translation: jest.fn() as any,
           logger: {} as any,
         }
 
