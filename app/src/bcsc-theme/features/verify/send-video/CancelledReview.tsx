@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react'
 
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
+import useCancelledReviewViewModel from './CancelledRerivewViewModel'
 
 interface CancelledReviewProps {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CancelledReview>
@@ -16,21 +14,21 @@ interface CancelledReviewProps {
     }
   }
 }
-
+/**
+ * A SystemModal wrapper that displays a cancellation message when a video verification request is cancelled.
+ * This component will also clean up related values (video path, metadata, prompts, etc.) from the store.
+ *
+ * @param agentReason - A reason provided by the reviewing agent on why the verification request was cancelled
+ * @returns
+ */
 const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
   const { agentReason } = route.params
   const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
-  const { updateAccountFlags } = useSecureActions()
+  const { cleanUpVerificationData } = useCancelledReviewViewModel()
 
   useEffect(() => {
-    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO,
-      payload: [false],
-    })
-    updateAccountFlags({ userSubmittedVerificationVideo: false })
-  }, [dispatch, updateAccountFlags])
+    cleanUpVerificationData()
+  }, [cleanUpVerificationData])
 
   return (
     <SystemModal

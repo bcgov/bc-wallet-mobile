@@ -59,7 +59,6 @@ import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
-
 import CancelledReview from '../features/verify/send-video/CancelledReview'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
