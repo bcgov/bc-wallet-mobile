@@ -291,7 +291,7 @@ describe('useSetupStepsModel', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PendingReview)
     })
 
-    it('should throw error when verificationRequestId is missing', async () => {
+    it('should log error when verificationRequestId is missing', async () => {
       const storeWithoutRequestId = {
         bcsc: {
           cardType: BCSCCardType.ComboCard,
@@ -307,10 +307,15 @@ describe('useSetupStepsModel', () => {
 
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-      await expect(result.current.handleCheckStatus()).rejects.toThrow()
+      await act(async () => {
+        await result.current.handleCheckStatus()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
 
-    it('should throw error when deviceCode is missing and status is verified', async () => {
+    it('should log error when deviceCode is missing and status is verified', async () => {
       const storeWithoutDeviceCode = {
         bcsc: {
           cardType: BCSCCardType.ComboCard,
@@ -327,7 +332,12 @@ describe('useSetupStepsModel', () => {
 
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-      await expect(result.current.handleCheckStatus()).rejects.toThrow()
+      await act(async () => {
+        await result.current.handleCheckStatus()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to check status'))
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
   })
 

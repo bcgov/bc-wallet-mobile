@@ -1,6 +1,16 @@
 import { PersistentStorage } from '@bifold/core'
 import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
+import { getApp } from '@react-native-firebase/app'
+import {
+  AuthorizationStatus,
+  FirebaseMessagingTypes,
+  getMessaging,
+  getToken,
+  hasPermission,
+  isDeviceRegisteredForRemoteMessages,
+  registerDeviceForRemoteMessages,
+  requestPermission as requestMessagingPermission,
+} from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
@@ -53,11 +63,11 @@ const requestNotificationPermission = async (): Promise<PermissionStatus> => {
 
 const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
   switch (permission) {
-    case messaging.AuthorizationStatus.AUTHORIZED:
+    case AuthorizationStatus.AUTHORIZED:
       return NotificationPermissionStatus.GRANTED
-    case messaging.AuthorizationStatus.DENIED:
+    case AuthorizationStatus.DENIED:
       return NotificationPermissionStatus.DENIED
-    case messaging.AuthorizationStatus.PROVISIONAL:
+    case AuthorizationStatus.PROVISIONAL:
       return NotificationPermissionStatus.GRANTED
     default:
       return NotificationPermissionStatus.UNKNOWN
@@ -80,7 +90,8 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
 const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   // IOS doesn't need the extra permission logic like android
   if (Platform.OS === 'ios') {
-    const permission = await messaging().requestPermission()
+    const messagingInstance = getMessaging(getApp())
+    const permission = await requestMessagingPermission(messagingInstance)
     return formatPermissionIos(permission)
   }
 
@@ -182,12 +193,13 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
  * @returns {Promise<boolean>}
  */
 const isRegistered = async (): Promise<boolean> => {
-  const authorized = (await messaging().hasPermission()) === messaging.AuthorizationStatus.AUTHORIZED
+  const messagingInstance = getMessaging(getApp())
+  const authorized = (await hasPermission(messagingInstance)) === AuthorizationStatus.AUTHORIZED
   const tokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
 
   // Need to register for push notification capability on iOS
-  if (Platform.OS === 'ios' && !messaging().isDeviceRegisteredForRemoteMessages) {
-    await messaging().registerDeviceForRemoteMessages()
+  if (Platform.OS === 'ios' && !isDeviceRegisteredForRemoteMessages(messagingInstance)) {
+    await registerDeviceForRemoteMessages(messagingInstance)
   }
 
   if (authorized && tokenValue !== null) {
@@ -202,8 +214,9 @@ const isRegistered = async (): Promise<boolean> => {
  */
 const isEnabled = async (): Promise<boolean> => {
   try {
+    const messagingInstance = getMessaging(getApp())
     const deviceTokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
-    const messageTokenValue = await messaging().getToken()
+    const messageTokenValue = await getToken(messagingInstance)
 
     return messageTokenValue === deviceTokenValue
   } catch (error) {
@@ -222,7 +235,8 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
   if (blankDeviceToken) {
     token = ''
   } else {
-    token = await messaging().getToken()
+    const messagingInstance = getMessaging(getApp())
+    token = await getToken(messagingInstance)
   }
 
   const mediator = await getMediatorConnection(agent)
@@ -248,7 +262,8 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
 
 const status = async (): Promise<NotificationPermissionStatus> => {
   if (Platform.OS === 'ios') {
-    const permission = await messaging().hasPermission()
+    const messagingInstance = getMessaging(getApp())
+    const permission = await hasPermission(messagingInstance)
     return formatPermissionIos(permission)
   } else if (Platform.OS === 'android') {
     const { status } = await checkNotifications()

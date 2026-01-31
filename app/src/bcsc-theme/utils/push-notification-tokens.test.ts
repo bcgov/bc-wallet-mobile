@@ -1,22 +1,25 @@
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { Platform } from 'react-native'
 
-// Mock the messaging module
+// Mock the messaging module (modular API)
 const mockGetToken = jest.fn()
 const mockGetAPNSToken = jest.fn()
 const mockRegisterDeviceForRemoteMessages = jest.fn()
 const mockIsDeviceRegisteredForRemoteMessages = jest.fn()
 
-jest.mock('@react-native-firebase/messaging', () => {
-  return jest.fn(() => ({
-    getToken: mockGetToken,
-    getAPNSToken: mockGetAPNSToken,
-    registerDeviceForRemoteMessages: mockRegisterDeviceForRemoteMessages,
-    get isDeviceRegisteredForRemoteMessages() {
-      return mockIsDeviceRegisteredForRemoteMessages()
-    },
-  }))
-})
+const mockMessagingInstance = {}
+
+jest.mock('@react-native-firebase/app', () => ({
+  getApp: jest.fn(() => ({})),
+}))
+
+jest.mock('@react-native-firebase/messaging', () => ({
+  getMessaging: jest.fn(() => mockMessagingInstance),
+  getToken: jest.fn((_messaging) => mockGetToken()),
+  getAPNSToken: jest.fn((_messaging) => mockGetAPNSToken()),
+  isDeviceRegisteredForRemoteMessages: jest.fn((_messaging) => mockIsDeviceRegisteredForRemoteMessages()),
+  registerDeviceForRemoteMessages: jest.fn((_messaging) => mockRegisterDeviceForRemoteMessages()),
+}))
 
 // Mock Platform
 jest.mock('react-native', () => ({
