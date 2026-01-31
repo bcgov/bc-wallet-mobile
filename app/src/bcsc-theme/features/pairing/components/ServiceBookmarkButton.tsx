@@ -1,6 +1,6 @@
 import { hitSlop } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -47,7 +47,13 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
           <ThemedText variant={'bold'}>{t('BCSC.ManualPairing.BookmarkService')}</ThemedText>
           <ThemedText variant={'bold'}>{serviceName}</ThemedText>
         </View>
-        <TouchableOpacity hitSlop={hitSlop} onPress={handleBookmarkPress}>
+        <TouchableOpacity
+          hitSlop={hitSlop}
+          onPress={handleBookmarkPress}
+          accessibilityLabel={t('BCSC.ManualPairing.ToggleBookmark')}
+          accessibilityRole="button"
+          testID={testIdWithKey('ToggleBookmark')}
+        >
           <Icon size={32} color={ColorPalette.brand.icon} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />
         </TouchableOpacity>
       </View>
