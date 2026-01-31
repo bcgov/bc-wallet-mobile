@@ -80,42 +80,43 @@ To install pod dependencies:
    yarn run ios:setup
 ```
 
+## Linking Bifold for development
 To work on changes to BC Wallet in Bifold (the underlying Aries project) you will also need to do the following:
 
+Next steps assume this directory structure:
+
+```
+  bc-wallet-mobile/
+  bifold/
+```
+
+Clone Bifold (once)
+
 ```sh
-# from bc-wallet-mobile
 git clone https://github.com/openwallet-foundation/bifold-wallet.git bifold
 ```
 
-Then navigate to the packages within Bifold, depending on the work being done you may need to update multiple `package.json` files. In this example we will show setup for the core package.
-
-In an editor navigate to the `~/bifold/packages/core/package.json`
-Then modify the value in the `react-native` field to point to the typescript index, shown below.
-
-![Hot reload setup](docs/hot-reload-link-2.png)
+Link Bifold (once per linking session)
 
 ```sh
-cd bifold
+# from: bc-wallet-mobile/
+yarn link:bifold
+```
+Note: Metro connection will need to be reloaded (R) or restarted after linking.
 
-yarn install
+Build new Bifold changes (as needed)
 
+```sh
+# from: bifold/
 yarn build
-
-cd ..
-
-yarn link bifold --all --relative
-
-yarn install
 ```
 
 Once you are happy with your changes to Bifold and have made the relevant PR there, do the following:
 
 ```sh
-# in bc-wallet-mobile
+# from: bc-wallet-mobile/
 yarn unlink --all
 ```
-
-Revert the changes made in the `package.json`. The Bifold packages no longer include the typescript files when publishing, so if the `react-native` points to the `index.ts` the published package will fail.
 
 Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@bifold/core`, `@bifold/verifier`, `@bifold/oca`, `@bifold/remote-logs`, and `@bifold/react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
 

@@ -16,7 +16,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
       const updateRegistrationMock = jest.fn()
@@ -35,7 +35,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
       const updateRegistrationMock = jest.fn()
@@ -55,7 +55,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
       const updateRegistrationMock = jest.fn()
@@ -71,7 +71,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
-        translation: jest.fn(),
+        translation: jest.fn() as any,
         logger: new MockLogger(),
       }
       const error = new Error('Registration failed')

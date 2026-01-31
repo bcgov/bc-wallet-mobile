@@ -32,7 +32,7 @@ export const ChangeSecurityContent = ({
 }: ChangeSecurityContentProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitError } = useErrorAlert()
+  const { emitAlert } = useErrorAlert()
   const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(null)
   const [deviceAuthMethodName, setDeviceAuthMethodName] = useState('')
 
@@ -59,12 +59,12 @@ export const ChangeSecurityContent = ({
       } catch (err) {
         const errMessage = err instanceof Error ? err.message : String(err)
         logger.error(`Error loading security method: ${errMessage}`)
-        emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
       }
     }
 
     loadCurrentMethod()
-  }, [logger, emitError, t])
+  }, [logger, t, emitAlert])
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -72,7 +72,7 @@ export const ChangeSecurityContent = ({
       const { success } = await setupDeviceSecurity()
       if (!success) {
         logger.error('Device security setup failed')
-        emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+        emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
         return
       }
 
@@ -91,9 +91,9 @@ export const ChangeSecurityContent = ({
     } catch (err) {
       const errMessage = err instanceof Error ? err.message : String(err)
       logger.error(`Error setting account security method: ${errMessage}`)
-      emitError(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
+      emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [emitError, logger, t, deviceAuthMethodName, onDeviceAuthSuccess])
+  }, [logger, t, deviceAuthMethodName, onDeviceAuthSuccess, emitAlert])
 
   return (
     <SecurityMethodSelector
