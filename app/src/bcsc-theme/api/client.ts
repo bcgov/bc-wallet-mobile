@@ -157,7 +157,7 @@ class BCSCApiClient {
       }
 
       // 5b. If handled, return empty response to early return from caller
-      return Promise.resolve({ data: null })
+      return { data: null }
     })
   }
 
