@@ -1,5 +1,4 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -8,7 +7,7 @@ import i18next from 'i18next'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
-import { ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
+import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -65,10 +64,10 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    *
    * @param error - The error object to handle.
    * @param context - The context providing additional information for error handling.
-   * @returns void
+   * @returns boolean - True if the error was handled by a policy, false otherwise
    */
   const handleApiClientError = useCallback(
-    (error: AppError, context: ErrorMatcherContext) => {
+    (error: AxiosAppError, context: ErrorMatcherContext): boolean => {
       const policy = ClientErrorHandlingPolicies.find((policy) =>
         policy.matches(error, {
           endpoint: context.endpoint,
@@ -81,7 +80,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           endpoint: context.endpoint,
           appEvent: error.appEvent,
         })
-        return
+        return false
       }
 
       logger.info('[ApiClient] Applying error handling policy for:', {
@@ -102,6 +101,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         translate,
         logger,
       })
+
+      return true
     },
     [emitErrorAlert, logger, navigation]
   )

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
 
+import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
 import MismatchedSerialScreen from '../features/verify/MismatchedSerialScreen'
@@ -134,6 +135,7 @@ const VerifyStack = () => {
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
+      <Stack.Screen name={BCSCScreens.BirthdateLockout} component={BirthdateLockoutScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
       <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
       <Stack.Screen

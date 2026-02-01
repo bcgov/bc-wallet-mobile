@@ -1,14 +1,25 @@
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
+import { AxiosError } from 'axios'
 import { BCSCScreens } from '../types/navigators'
-import { globalAlertErrorPolicy, noTokensReturnedErrorPolicy, updateRequiredErrorPolicy } from './clientErrorPolicies'
+import {
+  alreadyRegisteredErrorPolicy,
+  AxiosAppError,
+  birthdateLockoutErrorPolicy,
+  ClientErrorHandlingPolicies,
+  globalAlertErrorPolicy,
+  noTokensReturnedErrorPolicy,
+  updateRequiredErrorPolicy,
+} from './clientErrorPolicies'
 
-const newError = (code: string) => {
-  return new AppError('test error', 'This is a test error', {
+const newError = (code: string): AxiosAppError => {
+  const err = new AppError('test error', 'This is a test error', {
     appEvent: code as AppEventCode,
     category: ErrorCategory.NETWORK,
     statusCode: 5000,
   })
+  err.cause = { code: 'ERR_TEST', status: 5000 } as AxiosError
+  return err as AxiosAppError
 }
 
 describe('clientErrorPolicies', () => {
@@ -211,6 +222,196 @@ describe('clientErrorPolicies', () => {
         // Simulate pressing the "Go to App Store" action
         goToAppStoreOnPressAction()
         expect(openURLMock).toHaveBeenCalledWith(expect.any(String))
+      })
+    })
+  })
+
+  describe('alreadyRegisteredErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_501_INVALID_REGISTRATION_REQUEST with "client is in invalid" on deviceAuthorization endpoint', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match ERR_501_INVALID_REGISTRATION_REQUEST without "client is in invalid" message', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('some other message')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match ERR_501_INVALID_REGISTRATION_REQUEST on different endpoint', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other error codes on deviceAuthorization endpoint', () => {
+        const error = newError('some_other_error')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(alreadyRegisteredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should reset navigation to SetupSteps screen', () => {
+        const error = newError('err_501_invalid_registration_request')
+        const dispatchMock = jest.fn()
+        const loggerMock = { info: jest.fn() }
+        const context = {
+          navigation: { dispatch: dispatchMock },
+          logger: loggerMock,
+        }
+        alreadyRegisteredErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[AlreadyRegisteredErrorPolicy] Device already registered, navigating to SetupSteps screen'
+        )
+        expect(dispatchMock).toHaveBeenCalledTimes(1)
+
+        const dispatchArgs = dispatchMock.mock.calls[0][0]
+        expect(dispatchArgs.type).toBe('RESET')
+        expect(dispatchArgs.payload.index).toBe(0)
+        expect(dispatchArgs.payload.routes).toEqual([{ name: BCSCScreens.SetupSteps }])
+      })
+    })
+  })
+
+  describe('birthdateLockoutErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match 503 status on deviceAuthorization endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('unknown server error', undefined, undefined, undefined, { status: 503 } as any)
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(birthdateLockoutErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match 503 status on different endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('unknown server error', undefined, undefined, undefined, { status: 503 } as any)
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(birthdateLockoutErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match different status code on deviceAuthorization endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('unknown server error', undefined, undefined, undefined, { status: 500 } as any)
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(birthdateLockoutErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should reset navigation to BirthdateLockout screen with SetupSteps in stack', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('unknown server error', undefined, undefined, undefined, { status: 503 } as any)
+        const dispatchMock = jest.fn()
+        const loggerMock = { info: jest.fn() }
+        const context = {
+          navigation: { dispatch: dispatchMock },
+          logger: loggerMock,
+        }
+        birthdateLockoutErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith('[BirthdateLockoutErrorPolicy] Lockout with error:', {
+          error,
+        })
+        expect(dispatchMock).toHaveBeenCalledTimes(1)
+
+        const dispatchArgs = dispatchMock.mock.calls[0][0]
+        expect(dispatchArgs.type).toBe('RESET')
+        expect(dispatchArgs.payload.index).toBe(1)
+        expect(dispatchArgs.payload.routes).toEqual([
+          { name: BCSCScreens.SetupSteps },
+          { name: BCSCScreens.BirthdateLockout },
+        ])
+      })
+    })
+  })
+
+  describe('ClientErrorHandlingPolicies', () => {
+    describe('policy order', () => {
+      it('should respect policy order when multiple policies match', () => {
+        // Create an error that would match both alreadyRegisteredErrorPolicy and globalAlertErrorPolicy
+        // if we artificially make globalAlertErrorPolicy match on ERR_501
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+
+        // Find the first matching policy
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+
+        // Should be alreadyRegisteredErrorPolicy (first in array) not globalAlertErrorPolicy
+        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
+      })
+
+      it('should use the first matching policy in the array', () => {
+        const error = newError('server_error') // Matches globalAlertErrorPolicy
+        const context = {
+          endpoint: '/api/some-endpoint',
+          apiEndpoints: {} as any,
+        }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+
+        // Should be globalAlertErrorPolicy
+        expect(matchedPolicy).toBe(globalAlertErrorPolicy)
+      })
+
+      it('should have alreadyRegisteredErrorPolicy before other policies', () => {
+        const indexOfAlreadyRegistered = ClientErrorHandlingPolicies.indexOf(alreadyRegisteredErrorPolicy)
+        const indexOfBirthdateLockout = ClientErrorHandlingPolicies.indexOf(birthdateLockoutErrorPolicy)
+        const indexOfGlobalAlert = ClientErrorHandlingPolicies.indexOf(globalAlertErrorPolicy)
+
+        // alreadyRegisteredErrorPolicy should come before birthdateLockoutErrorPolicy
+        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfBirthdateLockout)
+
+        // alreadyRegisteredErrorPolicy should come before globalAlertErrorPolicy
+        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfGlobalAlert)
       })
     })
   })

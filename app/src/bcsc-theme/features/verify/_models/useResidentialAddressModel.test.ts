@@ -338,27 +338,7 @@ describe('useResidentialAddressModel', () => {
         await result.current.handleSubmit()
       })
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Device has already been registered')
-      expect(mockNavigation.dispatch).toHaveBeenCalled()
-    })
-
-    it('should throw error when device returns null and no deviceCode in store', async () => {
-      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
-
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-
-      await act(async () => {
-        await result.current.handleSubmit()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found'
-      )
-      expect(Toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'error',
-        })
-      )
+      expect(Toast.show).not.toHaveBeenCalled()
     })
 
     it('should set isSubmitting during authorization', async () => {

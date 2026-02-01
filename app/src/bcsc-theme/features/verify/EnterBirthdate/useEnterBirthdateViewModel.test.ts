@@ -2,7 +2,7 @@ import { CommonActions } from '@react-navigation/native'
 import { renderHook, waitFor } from '@testing-library/react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/EnterBirthdateViewModel'
+import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/useEnterBirthdateViewModel'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as Bifold from '@bifold/core'
@@ -80,7 +80,7 @@ describe('EnterBirthdateViewModel', () => {
   })
 
   describe('authorizeDevice - device already authorized (null response)', () => {
-    it('should navigate to SetupSteps when device is already authorized', async () => {
+    it('should early return and let error policies handle', async () => {
       const { result } = renderHook(() => useEnterBirthdateViewModel(mockNavigation))
 
       await result.current.authorizeDevice(mockSerial, mockBirthdate)
@@ -88,13 +88,8 @@ describe('EnterBirthdateViewModel', () => {
       await waitFor(() => {
         expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
         expect(mockAuthorizeDevice).toHaveBeenCalledWith(mockSerial, mockBirthdate)
-        expect(mockLogger.info).toHaveBeenCalledWith('Device already authorized, navigating to SetupSteps screen')
-        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
-        )
+        expect(mockLogger.info).not.toHaveBeenCalled()
+        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
       })
     })
   })

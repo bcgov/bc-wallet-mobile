@@ -3,7 +3,8 @@ import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction } from '@/utils/alert'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { BifoldLogger } from '@bifold/core'
-import { NavigationProp, ParamListBase } from '@react-navigation/native'
+import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
+import { AxiosError } from 'axios'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
@@ -34,9 +35,13 @@ type ErrorHandlerContext = {
   logger: BifoldLogger
 }
 
+export interface AxiosAppError extends AppError {
+  cause: AxiosError
+}
+
 type ErrorHandlingPolicy = {
-  matches: (error: AppError, context: ErrorMatcherContext) => boolean
-  handle: (error: AppError, context: ErrorHandlerContext) => void
+  matches: (error: AxiosAppError, context: ErrorMatcherContext) => boolean
+  handle: (error: AxiosAppError, context: ErrorHandlerContext) => void
 }
 
 // Global alert policy for predefined app event codes
@@ -105,8 +110,47 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for already registered device on device authorization endpoint
+export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST &&
+      Boolean(error.technicalMessage?.includes('client is in invalid')) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[AlreadyRegisteredErrorPolicy] Device already registered, navigating to SetupSteps screen')
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
+      })
+    )
+  },
+}
+
+// Error policy for device authorization endpoint (too many birthdate + serial attempts)
+// Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
+export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.cause.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+  },
+  handle: (error, context) => {
+    context.logger.info(`[BirthdateLockoutErrorPolicy] Lockout with error:`, { error })
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.BirthdateLockout }],
+      })
+    )
+  },
+}
+
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
+  alreadyRegisteredErrorPolicy,
+  birthdateLockoutErrorPolicy,
   globalAlertErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,

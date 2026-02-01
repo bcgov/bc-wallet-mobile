@@ -11,7 +11,7 @@ import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
- * EnterBirthdateViewmodel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
+ * useEnterBirthdateViewModel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
  */
 export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
@@ -26,15 +26,8 @@ export const useEnterBirthdateViewModel = (
       await updateUserInfo({ birthdate: date })
       const deviceAuth = await authorization.authorizeDevice(serial, date)
 
-      // Device already authorized
-      if (deviceAuth === null) {
-        logger.info('Device already authorized, navigating to SetupSteps screen')
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
-        )
+      // null if handled by error policies
+      if (!deviceAuth) {
         return
       }
 

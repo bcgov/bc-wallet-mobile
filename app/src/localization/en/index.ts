@@ -6,7 +6,8 @@ const translation = {
     "Continue": "Continue",
     "Back": "Back",
     "GoBack": "Go Back",
-    "Loading": "Loading..."
+    "Loading": "Loading...",
+    "Close": "Close",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
@@ -774,6 +775,10 @@ const translation = {
       "Description2": "Check your card is a BC Services Card by looking at the front of your card:",
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
+    },
+    "BirthdateLockout": {
+      "Heading": "Sorry, you've tried too many times",
+      "Message": "Please try again later.",
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",

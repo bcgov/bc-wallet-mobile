@@ -65,24 +65,24 @@ export const useCardScanner = () => {
 
       try {
         const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
-
-        if (deviceAuth) {
-          await updateUserInfo({
-            email: deviceAuth.verified_email,
-            isEmailVerified: !!deviceAuth.verified_email,
-          })
-
-          await updateDeviceCodes({
-            deviceCode: deviceAuth.device_code,
-            userCode: deviceAuth.user_code,
-            deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
-          })
-
-          await updateCardProcess(deviceAuth.process)
-          await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
-        } else {
-          logger.warn('Device authorization returned no data')
+        // null if handled by error policies
+        if (!deviceAuth) {
+          return
         }
+
+        await updateUserInfo({
+          email: deviceAuth.verified_email,
+          isEmailVerified: !!deviceAuth.verified_email,
+        })
+
+        await updateDeviceCodes({
+          deviceCode: deviceAuth.device_code,
+          userCode: deviceAuth.user_code,
+          deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+        })
+
+        await updateCardProcess(deviceAuth.process)
+        await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
         navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
       } catch (error) {

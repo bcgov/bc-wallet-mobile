@@ -10,7 +10,7 @@ import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
 } from '../utils/error-utils'
-import { ErrorMatcherContext } from './clientErrorPolicies'
+import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -19,12 +19,13 @@ import { withAccount } from './hooks/withAccountGuard'
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
+    skipPolicyHandlers?: boolean
     // Note: Useful for endpoints that return expected error codes
     suppressStatusCodeLogs?: number[]
   }
 }
 
-type BCSCClientOnErrorCallback = (appError: AppError, context: ErrorMatcherContext) => void
+type BCSCClientOnErrorCallback = (appError: AxiosAppError, context: ErrorMatcherContext) => boolean
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -141,13 +142,22 @@ class BCSCApiClient {
         })
       }
 
-      // 4. Invoke onError callback if provided and reject promise
-      this.onError?.(appError, {
-        endpoint: String(error.config?.url),
-        apiEndpoints: this.endpoints,
-      })
+      // 4. Invoke onError callback if provided (unless skipPolicyHandlers is set to true)
+      const skipPolicyHandlers = error.config?.skipPolicyHandlers ?? false
+      const handled =
+        !skipPolicyHandlers &&
+        this.onError?.(appError as AxiosAppError, {
+          endpoint: String(error.config?.url),
+          apiEndpoints: this.endpoints,
+        })
 
-      return Promise.reject(appError)
+      // 5a. Only reject if the error was not handled by a policy
+      if (!handled) {
+        return Promise.reject(appError)
+      }
+
+      // 5b. If handled, return empty response to early return from caller
+      return Promise.resolve({ data: null })
     })
   }
 
