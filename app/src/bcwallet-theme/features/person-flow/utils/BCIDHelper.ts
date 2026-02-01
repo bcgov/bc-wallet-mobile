@@ -7,7 +7,7 @@ import {
   removeExistingInvitationsById,
 } from '@bifold/core'
 import { DidRepository } from '@credo-ts/core'
-import { TFunction } from 'react-i18next'
+import { TFunction } from 'i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
@@ -48,7 +48,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
 export const connectToIASAgent = async (
   agent: Agent,
   iasAgentInviteUrl: string,
-  t: TFunction<'translation', undefined>
+  t: TFunction
 ): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.

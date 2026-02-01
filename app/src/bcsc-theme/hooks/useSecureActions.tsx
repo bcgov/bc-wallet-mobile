@@ -32,7 +32,6 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential } from '../utils/bcsc-credential'
-import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
  * Hook to manage secure state and actions for sensitive data.
@@ -69,7 +68,6 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
   // ============================================================================
   // PERSISTENCE LAYER - Direct native storage operations, not for external use
@@ -89,7 +87,7 @@ export const useSecureActions = () => {
         const promises: Promise<boolean | TokenResponse>[] = []
 
         if (refreshToken) {
-          logger.info(`Persisting refresh token and updating api client`)
+          logger.info(`Persisting refresh token`)
           promises.push(setToken(TokenType.Refresh, refreshToken))
         }
 
@@ -175,7 +173,7 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Update tokens in state, in API client, and persist to native storage
+   * Update tokens in state and persist to native storage
    */
   const updateTokens = useCallback(
     async (tokens: { refreshToken?: string; registrationAccessToken?: string; accessToken?: string }) => {
@@ -186,9 +184,6 @@ export const useSecureActions = () => {
           type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
           payload: [tokens.refreshToken],
         })
-        if (isClientReady && apiClient) {
-          promises.push(apiClient.getTokensForRefreshToken(tokens.refreshToken))
-        }
       }
 
       if (tokens.registrationAccessToken !== undefined) {
@@ -208,7 +203,7 @@ export const useSecureActions = () => {
       promises.push(persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken))
       await Promise.all(promises)
     },
-    [dispatch, persistTokens, apiClient, isClientReady]
+    [dispatch, persistTokens]
   )
 
   /**
@@ -381,33 +376,32 @@ export const useSecureActions = () => {
         return
       }
 
-      // Map cardProcess to proper enums
-      const cardProcess = store.bcscSecure.cardProcess
-      let cardType: BCSCCardType
-      let accountType: BCSCAccountType
-
-      if (cardProcess === BCSCCardProcess.BCSCPhoto) {
-        cardType = BCSCCardType.PhotoCard
-        accountType = BCSCAccountType.PhotoCard
-      } else if (cardProcess === BCSCCardProcess.BCSCNonPhoto) {
-        cardType = BCSCCardType.NonPhotoCard
-        accountType = BCSCAccountType.NonPhotoCard
-      } else if (cardProcess === BCSCCardProcess.NonBCSC) {
-        cardType = BCSCCardType.NonBcsc
-        accountType = BCSCAccountType.NoBcscCard
-      } else {
-        // Default to non-bcsc if process is unknown
-        cardType = BCSCCardType.NonBcsc
-        accountType = BCSCAccountType.NoBcscCard
-      }
-
-      // Create minimal credential for v3 compatibility
-      const credential = createMinimalCredential(account.issuer, account.clientID, cardType, accountType)
-
       // Persist credential state for v3 rollback compatibility
       if (verified) {
+        // Map cardProcess to proper enums
+        const cardProcess = store.bcscSecure.cardProcess
+        let cardType: BCSCCardType
+        let accountType: BCSCAccountType
+
+        if (cardProcess === BCSCCardProcess.BCSCPhoto) {
+          cardType = BCSCCardType.PhotoCard
+          accountType = BCSCAccountType.PhotoCard
+        } else if (cardProcess === BCSCCardProcess.BCSCNonPhoto) {
+          cardType = BCSCCardType.NonPhotoCard
+          accountType = BCSCAccountType.NonPhotoCard
+        } else if (cardProcess === BCSCCardProcess.NonBCSC) {
+          cardType = BCSCCardType.NonBcsc
+          accountType = BCSCAccountType.NoBcscCard
+        } else {
+          // Default to non-bcsc if process is unknown
+          cardType = BCSCCardType.NonBcsc
+          accountType = BCSCAccountType.NoBcscCard
+        }
+
+        // Create minimal credential for v3 compatibility
+        const credential = createMinimalCredential(account.issuer, account.clientID, cardType, accountType)
         await setCredential(credential)
-      } else if (!verified) {
+      } else {
         await deleteCredential()
       }
     },
@@ -782,6 +776,25 @@ export const useSecureActions = () => {
   }, [logger])
 
   /**
+   *  Deletes all verification artifacts from native storage but preserves tokens.
+   *  Use this when resetting verification but not account.
+   */
+  const deleteVerificationData = useCallback(async () => {
+    try {
+      await Promise.all([
+        deleteAuthorizationRequest(),
+        deleteAccountFlags(),
+        deleteEvidenceMetadata(),
+        deleteCredential(),
+      ])
+      logger.info('Verification data deleted from native storage')
+    } catch (error) {
+      logger.error('Failed to delete verification data:', error as Error)
+      throw error
+    }
+  }, [logger])
+
+  /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
@@ -819,6 +832,7 @@ export const useSecureActions = () => {
     clearSecureState,
     logout,
     deleteSecureData,
+    deleteVerificationData,
   }
 }
 

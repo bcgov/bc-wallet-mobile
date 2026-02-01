@@ -66,7 +66,7 @@ class BCSCApiClient {
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
   onError?: BCSCClientOnErrorCallback
 
-  constructor(baseURL: string, logger: RemoteLogger, onError?: BCSCClientOnErrorCallback) {
+  constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
@@ -82,7 +82,6 @@ class BCSCApiClient {
     }
 
     this.tokensPromise = null
-    this.onError = onError
 
     // fallback config
     this.config = {
@@ -148,6 +147,7 @@ class BCSCApiClient {
         !skipPolicyHandlers &&
         this.onError?.(appError as AxiosAppError, {
           endpoint: String(error.config?.url),
+          statusCode: error.response?.status ?? 0,
           apiEndpoints: this.endpoints,
         })
 
@@ -159,6 +159,10 @@ class BCSCApiClient {
       // 5b. If handled, return empty response to early return from caller
       return Promise.resolve({ data: null })
     })
+  }
+
+  setErrorHandler(callback: BCSCClientOnErrorCallback) {
+    this.onError = callback
   }
 
   async fetchEndpointsAndConfig() {
