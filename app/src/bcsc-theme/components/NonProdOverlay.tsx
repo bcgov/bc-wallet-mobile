@@ -3,7 +3,7 @@ import { ThemedText, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
-const TRIANGLE_SIZE = 120
+const TRIANGLE_SIZE = 90
 const DIAGONAL = 1.414 // sqrt(2)
 const HALF_DIAGONAL = DIAGONAL / 2
 
@@ -12,8 +12,7 @@ const NonProdOverlay: React.FC = () => {
   const { Spacing } = useTheme()
   const envName = store.developer.environment.name.split(' ')[0].toUpperCase()
 
-  // Only show if not production (or preprod)
-  const isProd = envName.includes('PROD')
+  const isProd = envName.includes('PROD') && !envName.includes('PREPROD')
 
   const styles = StyleSheet.create({
     container: {
@@ -30,12 +29,13 @@ const NonProdOverlay: React.FC = () => {
       height: TRIANGLE_SIZE * DIAGONAL,
       bottom: -TRIANGLE_SIZE * HALF_DIAGONAL,
       right: -TRIANGLE_SIZE * HALF_DIAGONAL,
-      // Close  to BCSC primary colour but different enough to avoid confusion
-      backgroundColor: '#717171b0',
+      backgroundColor: '#aeaeae49',
       transform: [{ rotate: '45deg' }],
     },
     text: {
       position: 'absolute',
+      fontWeight: 'bold',
+      fontSize: 14,
       width: TRIANGLE_SIZE,
       top: TRIANGLE_SIZE / DIAGONAL - Spacing.md,
       right: TRIANGLE_SIZE / DIAGONAL,
@@ -51,7 +51,7 @@ const NonProdOverlay: React.FC = () => {
   return (
     <View style={styles.container} pointerEvents="none">
       <View style={styles.triangle}>
-        <ThemedText variant={'headingFour'} style={styles.text} maxFontSizeMultiplier={1}>
+        <ThemedText style={styles.text} maxFontSizeMultiplier={1}>
           {envName}
         </ThemedText>
       </View>
