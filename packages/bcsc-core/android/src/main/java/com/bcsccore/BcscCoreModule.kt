@@ -2955,6 +2955,13 @@ class BcscCoreModule(
                 result.putString("emailAddress", prefs.getString("email_address", null))
             }
 
+            if (prefs.contains("user_submitted_verification_video")) {
+                result.putBoolean(
+                    "userSubmittedVerificationVideo",
+                    prefs.getBoolean("user_submitted_verification_video", false),
+                )
+            }
+
             Log.d(NAME, "getAccountFlags: Successfully read account flags")
             promise.resolve(result)
         } catch (e: Exception) {
@@ -3011,6 +3018,9 @@ class BcscCoreModule(
                         } else {
                             editor.remove("email_address")
                         }
+                    }
+                    "userSubmittedVerificationVideo" -> {
+                        editor.putBoolean("user_submitted_verification_video", flags.getBoolean(key))
                     }
                     // Add more flag mappings as needed
                 }
