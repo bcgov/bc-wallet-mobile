@@ -15,10 +15,10 @@ jest.mock('@react-native-firebase/app', () => ({
 
 jest.mock('@react-native-firebase/messaging', () => ({
   getMessaging: jest.fn(() => mockMessagingInstance),
-  getToken: jest.fn((_messaging) => mockGetToken()),
-  getAPNSToken: jest.fn((_messaging) => mockGetAPNSToken()),
-  isDeviceRegisteredForRemoteMessages: jest.fn((_messaging) => mockIsDeviceRegisteredForRemoteMessages()),
-  registerDeviceForRemoteMessages: jest.fn((_messaging) => mockRegisterDeviceForRemoteMessages()),
+  getToken: jest.fn(() => mockGetToken()),
+  getAPNSToken: jest.fn(() => mockGetAPNSToken()),
+  isDeviceRegisteredForRemoteMessages: jest.fn(() => mockIsDeviceRegisteredForRemoteMessages()),
+  registerDeviceForRemoteMessages: jest.fn(() => mockRegisterDeviceForRemoteMessages()),
 }))
 
 // Mock Platform

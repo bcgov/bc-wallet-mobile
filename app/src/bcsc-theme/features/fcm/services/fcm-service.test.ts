@@ -34,7 +34,10 @@ jest.mock('@react-native-firebase/messaging', () => {
   }
 })
 
+import * as messaging from '@react-native-firebase/messaging'
 import { FcmService } from './fcm-service'
+
+const messagingMock = messaging as jest.Mocked<typeof messaging>
 
 const mockState = (globalThis as any).__fcmServiceTestMockState as {
   onMessageCallback: ((m: unknown) => void) | null
@@ -49,12 +52,11 @@ describe('FcmService', () => {
     mockState.onMessageCallback = null
     mockState.onNotificationOpenedAppCallback = null
     mockState.initialNotification = null
-    const messaging = require('@react-native-firebase/messaging')
-    messaging.onMessage.mockClear()
-    messaging.onNotificationOpenedApp.mockClear()
-    messaging.getInitialNotification.mockClear()
-    messaging.setBackgroundMessageHandler.mockClear()
-    messaging.getMessaging.mockClear()
+    messagingMock.onMessage.mockClear()
+    messagingMock.onNotificationOpenedApp.mockClear()
+    messagingMock.getInitialNotification.mockClear()
+    messagingMock.setBackgroundMessageHandler.mockClear()
+    messagingMock.getMessaging.mockClear()
     service = new FcmService()
   })
 
@@ -90,12 +92,11 @@ describe('FcmService', () => {
     })
 
     it('is idempotent - calling init multiple times only initializes once', async () => {
-      const { onMessage } = require('@react-native-firebase/messaging')
       await service.init()
       await service.init()
       await service.init()
 
-      expect(onMessage).toHaveBeenCalledTimes(1)
+      expect(messagingMock.onMessage).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -108,10 +109,9 @@ describe('FcmService', () => {
       service.destroy()
 
       // After destroy, a new init should work (proving initialized was reset)
-      const { onMessage } = require('@react-native-firebase/messaging')
-      onMessage.mockClear()
+      messagingMock.onMessage.mockClear()
       await service.init()
-      expect(onMessage).toHaveBeenCalledTimes(1)
+      expect(messagingMock.onMessage).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -285,8 +285,7 @@ describe('FcmService', () => {
     it('sets up notification opened listener', async () => {
       await service.init()
 
-      const { onNotificationOpenedApp } = require('@react-native-firebase/messaging')
-      expect(onNotificationOpenedApp).toHaveBeenCalledTimes(1)
+      expect(messagingMock.onNotificationOpenedApp).toHaveBeenCalledTimes(1)
       expect(mockState.onNotificationOpenedAppCallback).not.toBeNull()
     })
 
@@ -326,8 +325,7 @@ describe('FcmService', () => {
 
       await service.init()
 
-      const { getInitialNotification } = require('@react-native-firebase/messaging')
-      expect(getInitialNotification).toHaveBeenCalledTimes(1)
+      expect(messagingMock.getInitialNotification).toHaveBeenCalledTimes(1)
       expect(handler).toHaveBeenCalledWith(
         {
           rawMessage: remoteMessage,
@@ -349,8 +347,7 @@ describe('FcmService', () => {
 
       await service.init()
 
-      const { getInitialNotification } = require('@react-native-firebase/messaging')
-      expect(getInitialNotification).toHaveBeenCalledTimes(1)
+      expect(messagingMock.getInitialNotification).toHaveBeenCalledTimes(1)
       expect(handler).not.toHaveBeenCalled()
     })
   })
