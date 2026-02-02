@@ -78,7 +78,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    *
    * @param error - The error object to handle.
    * @param context - The context providing additional information for error handling.
-   * @returns boolean - True if the error was handled by a policy, false otherwise
    */
   const handleApiClientError = useCallback(
     (error: AxiosAppError, context: ErrorMatcherContext) => {
@@ -89,7 +88,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           endpoint: context.endpoint,
           appEvent: error.appEvent,
         })
-        return false
+        return
       }
 
       logger.info('[BCSCApiClient] Applying error handling policy for:', {
@@ -105,7 +104,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         logger,
       })
 
-      return true
+      error.handled = true
     },
     [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
   )

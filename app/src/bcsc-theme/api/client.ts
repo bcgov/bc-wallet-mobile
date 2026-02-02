@@ -19,13 +19,12 @@ import { withAccount } from './hooks/withAccountGuard'
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
-    skipPolicyHandlers?: boolean
     // Note: Useful for endpoints that return expected error codes
     suppressStatusCodeLogs?: number[]
   }
 }
 
-type BCSCClientOnErrorCallback = (appError: AxiosAppError, context: ErrorMatcherContext) => boolean
+type BCSCClientOnErrorCallback = (appError: AxiosAppError, context: ErrorMatcherContext) => void
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -141,23 +140,14 @@ class BCSCApiClient {
         })
       }
 
-      // 4. Invoke onError callback if provided (unless skipPolicyHandlers is set to true)
-      const skipPolicyHandlers = error.config?.skipPolicyHandlers ?? false
-      const handled =
-        !skipPolicyHandlers &&
-        this.onError?.(appError as AxiosAppError, {
-          endpoint: String(error.config?.url),
-          statusCode: error.response?.status ?? 0,
-          apiEndpoints: this.endpoints,
-        })
+      // 4. Invoke onError callback if provided which marks as handled
+      this.onError?.(appError as AxiosAppError, {
+        endpoint: String(error.config?.url),
+        statusCode: error.response?.status ?? 0,
+        apiEndpoints: this.endpoints,
+      })
 
-      // 5a. Only reject if the error was not handled by a policy
-      if (!handled) {
-        return Promise.reject(appError)
-      }
-
-      // 5b. If handled, return empty response to early return from caller
-      return { data: null }
+      return Promise.reject(appError)
     })
   }
 

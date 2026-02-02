@@ -26,11 +26,6 @@ export const useEnterBirthdateViewModel = (
       await updateUserInfo({ birthdate: date })
       const deviceAuth = await authorization.authorizeDevice(serial, date)
 
-      // null if handled by error policies
-      if (!deviceAuth) {
-        return
-      }
-
       // Store authorization data
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
       await updateUserInfo({

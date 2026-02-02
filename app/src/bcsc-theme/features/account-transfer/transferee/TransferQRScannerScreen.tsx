@@ -3,6 +3,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import {
@@ -78,10 +79,7 @@ const TransferQRScannerScreen: React.FC = () => {
     }
 
     try {
-      const deviceAuth = await authorization.authorizeDevice(undefined, undefined, true)
-      if (!deviceAuth) {
-        return
-      }
+      const deviceAuth = await authorization.authorizeDevice()
 
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
 
@@ -96,6 +94,10 @@ const TransferQRScannerScreen: React.FC = () => {
         deviceCodeExpiresAt: expiresAt,
       })
     } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
       logger.error('[TransferQRScannerScreen]: Device registration failed', { error })
     }
   }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])

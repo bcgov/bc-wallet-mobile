@@ -318,29 +318,6 @@ describe('useResidentialAddressModel', () => {
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
     })
 
-    it('should handle device already registered (null response)', async () => {
-      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
-
-      // Store with existing device code
-      const storeWithDeviceCode = {
-        ...mockStore,
-        bcscSecure: {
-          ...mockStore.bcscSecure,
-          deviceCode: 'existing-device-code',
-        },
-      }
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode, mockDispatch])
-
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-
-      await act(async () => {
-        await result.current.handleSubmit()
-      })
-
-      expect(Toast.show).not.toHaveBeenCalled()
-    })
-
     it('should set isSubmitting during authorization', async () => {
       let resolveAuth: (value: any) => void
       const authPromise = new Promise((resolve) => {

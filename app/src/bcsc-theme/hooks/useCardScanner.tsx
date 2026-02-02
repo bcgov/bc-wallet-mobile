@@ -1,4 +1,5 @@
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { BCDispatchAction } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -65,10 +66,6 @@ export const useCardScanner = () => {
 
       try {
         const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
-        // null if handled by error policies
-        if (!deviceAuth) {
-          return
-        }
 
         await updateUserInfo({
           email: deviceAuth.verified_email,
@@ -86,6 +83,10 @@ export const useCardScanner = () => {
 
         navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
       } catch (error) {
+        if (isHandledAppError(error)) {
+          return
+        }
+
         logger.error('Device authorization failed during combo card scan', error as Error)
         // TODO (MD): Use a different screen for device authorization errors. For now, use the mismatched serial screen.
         navigation.reset({

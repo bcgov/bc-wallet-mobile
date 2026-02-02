@@ -16,6 +16,7 @@ import DatePicker from 'react-native-date-picker'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
@@ -67,6 +68,10 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
       await vm.authorizeDevice(vm.serial, dateRef.current)
     } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
       logger.error('CSN and birthdate mismatch, card not found', { error })
       navigation.navigate(BCSCScreens.MismatchedSerial)
     } finally {

@@ -79,21 +79,6 @@ describe('EnterBirthdateViewModel', () => {
     jest.clearAllMocks()
   })
 
-  describe('authorizeDevice - device already authorized (null response)', () => {
-    it('should early return and let error policies handle', async () => {
-      const { result } = renderHook(() => useEnterBirthdateViewModel(mockNavigation))
-
-      await result.current.authorizeDevice(mockSerial, mockBirthdate)
-
-      await waitFor(() => {
-        expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
-        expect(mockAuthorizeDevice).toHaveBeenCalledWith(mockSerial, mockBirthdate)
-        expect(mockLogger.info).not.toHaveBeenCalled()
-        expect(mockNavigation.dispatch).not.toHaveBeenCalled()
-      })
-    })
-  })
-
   describe('authorizeDevice - BCSCPhoto process', () => {
     it('should navigate to SetupSteps for BCSCPhoto process', async () => {
       const mockDeviceAuth = {

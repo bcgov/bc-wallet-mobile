@@ -50,16 +50,11 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
    * @param {string?} serial - BCSC serial number
    * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
-   * @param {boolean?} skipPolicyHandlers - If true, error policy handlers will not be applied to this request
-   * @returns {*} {DeviceAuthorizationResponse | null}
+   * @returns {*} {DeviceAuthorizationResponse}
    */
   const authorizeDevice = useCallback(
-    async (
-      serial?: string,
-      birthdate?: Date,
-      skipPolicyHandlers?: boolean
-    ): Promise<DeviceAuthorizationResponse | null> => {
-      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
+    async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse> => {
+      return withAccount<DeviceAuthorizationResponse>(async (account) => {
         if (serial && !birthdate) {
           throw new Error('Birthdate is required when providing a serial number')
         }
@@ -77,7 +72,6 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             skipBearerAuth: true,
-            skipPolicyHandlers,
           }
         )
 
@@ -95,11 +89,11 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
-   * @returns {*} {DeviceAuthorizationResponse | null} - Returns the response data or null if caught by an error policy
+   * @returns {*} {DeviceAuthorizationResponse} - Returns the response data or null if caught by an error policy
    */
   const authorizeDeviceWithUnknownBCSC = useCallback(
-    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse | null> => {
-      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
+    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse> => {
+      return withAccount<DeviceAuthorizationResponse>(async (account) => {
         const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
