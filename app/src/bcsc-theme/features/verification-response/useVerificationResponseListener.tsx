@@ -24,7 +24,7 @@ import { BCSCScreens } from '../../types/navigators'
  *
  * Token fetching happens in this hook before navigation. VerificationSuccessScreen handles
  * final account setup (marking verified, metadata cleanup, registration update).
- * This follows the same pattern as the "Check Status" button in SetupStepsScreen.
+ * This follows the same pattern as the "Check Status" button in SetupStepsScreen
  */
 export const useVerificationResponseListener = () => {
   const navigation = useNavigation()
