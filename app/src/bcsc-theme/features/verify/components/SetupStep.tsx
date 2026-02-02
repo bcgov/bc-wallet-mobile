@@ -9,24 +9,37 @@ interface SetupStepProps {
   onPress: (event: GestureResponderEvent) => void
   isComplete: boolean
   isFocused: boolean
+  isDisabled: boolean
+}
+
+/**
+ * A helper function to determine if a Setup Step should be disabled.
+ *
+ * @param isComplete
+ * @param isFocused
+ * @returns
+ */
+export const shouldStepBeDisabled = (isComplete: boolean, isFocused: boolean): boolean => {
+  return isComplete || !isFocused
 }
 
 /**
  * Renders a Setup Step component.
  *
  * Rules:
- *  1. When the Step is focused is can be pressed
+ *  1. When the Step is focused is will be highlited
  *  2. When the Step is complete is can not be pressed, and a green check will appear
  *  3. Subtext will be rendered below the Step header
  *  4. Additional children can be provided to be rendered below the subtext. ie: stepHeader->subtext->children
+ *  5. When the Step is disabled, it will not be pressable
  *
  *  @param {PropsWithChildren<SetupStepProps>} props - The SetupStep props
  *  @returns {*} {React.ReactElement}
  */
-export const SetupStep = (props: PropsWithChildren<SetupStepProps>) => {
+export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) => {
   const { TextTheme, ColorPalette } = useTheme()
 
-  const canBeFocused = props.isFocused && !props.isComplete
+  const canBeFocused = props.isFocused
   const backgroundColor = canBeFocused ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground
   const textColor = canBeFocused ? ColorPalette.brand.text : TextTheme.headingFour.color
 
@@ -35,7 +48,7 @@ export const SetupStep = (props: PropsWithChildren<SetupStepProps>) => {
       onPress={props.onPress}
       testID={testIdWithKey(props.title)}
       accessibilityLabel={props.title}
-      disabled={props.isComplete || !props.isFocused}
+      disabled={props.isDisabled}
       style={{
         paddingVertical: 24,
         paddingHorizontal: 24,
