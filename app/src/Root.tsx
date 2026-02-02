@@ -1,6 +1,7 @@
 import { BCState, Mode } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
 import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
+import NonProdOverlay from './bcsc-theme/components/NonProdOverlay'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
 import { BCSCLoadingProvider } from './bcsc-theme/contexts/BCSCLoadingContext'
 
@@ -11,6 +12,7 @@ const Root: React.FC = () => {
     <BCSCApiClientProvider>
       <BCSCLoadingProvider>
         <BCSCRootStack />
+        <NonProdOverlay />
       </BCSCLoadingProvider>
     </BCSCApiClientProvider>
   ) : (
