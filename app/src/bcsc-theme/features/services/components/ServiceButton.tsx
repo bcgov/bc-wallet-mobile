@@ -29,7 +29,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
       style={styles.container}
       accessibilityLabel={title}
       accessibilityRole="button"
-      testID={testID ?? testIdWithKey(`ServiceButton-${title}`)}
+      testID={testID ?? testIdWithKey(`ServiceButton-${title.replaceAll(/\s+/g, '')}`)}
     >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
