@@ -166,6 +166,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         store.stateLoaded &&
         client &&
         store.bcscSecure.refreshToken &&
+        // client.tokens?.refresh_token &&
         client.tokens?.refresh_token !== store.bcscSecure.refreshToken
       ) {
         try {
