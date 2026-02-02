@@ -33,6 +33,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential } from '../utils/bcsc-credential'
 import { useBCSCApiClientState } from './useBCSCApiClient'
+
 /**
  * Hook to manage secure state and actions for sensitive data.
  *
@@ -69,6 +70,7 @@ export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
+
   // ============================================================================
   // PERSISTENCE LAYER - Direct native storage operations, not for external use
   // ============================================================================
