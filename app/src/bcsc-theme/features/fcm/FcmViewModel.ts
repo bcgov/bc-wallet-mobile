@@ -157,7 +157,6 @@ export class FcmViewModel {
     if (isVerificationRequestReviewed(data)) {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()
-      return
     }
   }
 

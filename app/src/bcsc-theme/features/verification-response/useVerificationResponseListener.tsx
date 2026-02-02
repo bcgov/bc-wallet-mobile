@@ -100,13 +100,10 @@ export const useVerificationResponseListener = () => {
    */
   const handleNavigationEvent = useCallback(
     async (event: VerificationResponseNavigationEvent) => {
-      switch (event.eventType) {
-        case 'request_reviewed':
-          await handleRequestReviewed()
-          break
-        default:
-          logger.warn(`[useVerificationResponseListener] Unknown event type: ${event.eventType}`)
-          break
+      if (event.eventType === 'request_reviewed') {
+        await handleRequestReviewed()
+      } else {
+        logger.warn(`[useVerificationResponseListener] Unknown event type: ${event.eventType}`)
       }
     },
     [handleRequestReviewed, logger]

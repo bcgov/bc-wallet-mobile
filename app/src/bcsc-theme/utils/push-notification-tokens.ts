@@ -24,7 +24,8 @@ export interface NotificationTokens {
  */
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
   const messagingInstance = getMessaging(getApp())
-  if (!isDeviceRegisteredForRemoteMessages(messagingInstance)) {
+
+  if (isDeviceRegisteredForRemoteMessages(messagingInstance) === false) {
     try {
       logger.debug('[PushTokens] Attempting to register device for remote messages...')
       await registerDeviceForRemoteMessages(messagingInstance)
