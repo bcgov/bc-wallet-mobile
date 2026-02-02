@@ -9,9 +9,11 @@ import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
 import { VerificationResponseService } from '../verification-response'
 
+import { Platform } from 'react-native'
 import {
   BasicNotification,
   ChallengeNotification,
+  FcmDeliveryContext,
   FcmMessage,
   FcmService,
   StatusNotification,
@@ -79,7 +81,7 @@ export class FcmViewModel {
     }
   }
 
-  private async handleMessage(message: FcmMessage) {
+  private async handleMessage(message: FcmMessage, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Received FCM message: type=${message.type}`)
 
     switch (message.type) {
@@ -88,7 +90,7 @@ export class FcmViewModel {
         break
       case 'status':
         this.logger.info(`[FcmViewModel] Message: ${JSON.stringify(message)}`)
-        await this.handleStatusNotification(message.data)
+        await this.handleStatusNotification(message.data, delivery)
         break
       case 'notification':
         this.logger.info(`[FcmViewModel] Handling generic notification`)
@@ -140,8 +142,16 @@ export class FcmViewModel {
     }
   }
 
-  private async handleStatusNotification(data: StatusNotification) {
+  private async handleStatusNotification(data: StatusNotification, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
+
+    if (Platform.OS === 'android' && delivery?.source === 'foreground' && data.title && data.message) {
+      try {
+        await showLocalNotification(data.title, data.message)
+      } catch (error) {
+        this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
+      }
+    }
 
     // Check if this is a verification request reviewed notification (send-video)
     if (isVerificationRequestReviewed(data)) {

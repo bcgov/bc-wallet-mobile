@@ -81,7 +81,9 @@ export type FcmUnknownMessage = FcmMessageBase & {
 
 export type FcmMessage = FcmChallengeMessage | FcmStatusMessage | FcmNotificationMessage | FcmUnknownMessage
 
-export type FcmMessageHandler = (message: FcmMessage) => void
+export type FcmMessageHandler = (message: FcmMessage, delivery?: FcmDeliveryContext) => void
+
+export type FcmDeliveryContext = { source: 'foreground' } | { source: 'background' }
 
 /**
  * Lightweight pub-sub wrapper around Firebase Cloud Messaging so screens/view models
@@ -107,7 +109,7 @@ export class FcmService {
 
     // Handle foreground messages
     this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
-      this.emit(remoteMessage)
+      this.emit(remoteMessage, { source: 'foreground' })
     })
 
     // Handle when user taps notification while app is in background
@@ -145,9 +147,9 @@ export class FcmService {
     return () => this.handlers.delete(handler)
   }
 
-  private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage): void {
+  private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage, delivery?: FcmDeliveryContext): void {
     const message = this.parseMessage(remoteMessage)
-    this.handlers.forEach((handler) => handler(message))
+    this.handlers.forEach((handler) => handler(message, delivery))
   }
 
   private parseMessage(remoteMessage: FirebaseMessagingTypes.RemoteMessage): FcmMessage {

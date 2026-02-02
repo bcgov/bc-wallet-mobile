@@ -131,11 +131,14 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'challenge',
-        data: { jwt: 'test-jwt-token' },
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'challenge',
+          data: { jwt: 'test-jwt-token' },
+        },
+        { source: 'foreground' }
+      )
     })
 
     it('parses status message type', () => {
@@ -149,15 +152,18 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'status',
-        data: {
-          bcsc_status_notification: 'approved',
-          title: 'Status Update',
-          message: 'Your account is approved',
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'status',
+          data: {
+            bcsc_status_notification: 'approved',
+            title: 'Status Update',
+            message: 'Your account is approved',
+          },
         },
-      })
+        { source: 'foreground' }
+      )
     })
 
     it('parses notification message type (notification only)', () => {
@@ -171,11 +177,14 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'notification',
-        data: { title: 'Test Title', body: 'Test Body' },
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'notification',
+          data: { title: 'Test Title', body: 'Test Body' },
+        },
+        { source: 'foreground' }
+      )
     })
 
     it('parses notification message type (with data)', () => {
@@ -189,11 +198,14 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'notification',
-        data: { title: 'Test', body: 'Body' },
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'notification',
+          data: { title: 'Test', body: 'Body' },
+        },
+        { source: 'foreground' }
+      )
     })
 
     it('parses unknown message type when no data or notification', () => {
@@ -207,10 +219,13 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'unknown',
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'unknown',
+        },
+        { source: 'foreground' }
+      )
     })
 
     it('parses unknown message type for data-only without recognized keys', () => {
@@ -224,10 +239,13 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'unknown',
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'unknown',
+        },
+        { source: 'foreground' }
+      )
     })
 
     it('notifies all subscribed handlers', () => {
@@ -284,11 +302,14 @@ describe('FcmService', () => {
 
       mockState.onNotificationOpenedAppCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'challenge',
-        data: { jwt: 'test-jwt' },
-      })
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'challenge',
+          data: { jwt: 'test-jwt' },
+        },
+        undefined
+      )
     })
   })
 
@@ -307,15 +328,18 @@ describe('FcmService', () => {
 
       const { getInitialNotification } = require('@react-native-firebase/messaging')
       expect(getInitialNotification).toHaveBeenCalledTimes(1)
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'status',
-        data: {
-          bcsc_status_notification: 'approved',
-          title: 'Status',
-          message: 'Approved',
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'status',
+          data: {
+            bcsc_status_notification: 'approved',
+            title: 'Status',
+            message: 'Approved',
+          },
         },
-      })
+        undefined
+      )
     })
 
     it('does not call handler when no initial notification', async () => {
@@ -347,15 +371,18 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.(remoteMessage)
 
-      expect(handler).toHaveBeenCalledWith({
-        rawMessage: remoteMessage,
-        type: 'status',
-        data: {
-          bcsc_status_notification: 'pending',
-          title: '',
-          message: '',
+      expect(handler).toHaveBeenCalledWith(
+        {
+          rawMessage: remoteMessage,
+          type: 'status',
+          data: {
+            bcsc_status_notification: 'pending',
+            title: '',
+            message: '',
+          },
         },
-      })
+        { source: 'foreground' }
+      )
     })
   })
 })
