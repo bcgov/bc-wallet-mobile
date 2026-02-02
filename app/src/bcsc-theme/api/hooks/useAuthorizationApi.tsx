@@ -50,7 +50,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
    * @param {string?} serial - BCSC serial number
    * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
-   * @returns {*} {DeviceAuthorizationResponse}
+   * @returns {Promise<DeviceAuthorizationResponse>}
    */
   const authorizeDevice = useCallback(
     async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse> => {
@@ -84,12 +84,9 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   /**
    * Authorize a device with an unknown BCSC card.
    *
-   * Note: This request will return null if called multiple times for the same device.
-   * First response will return the Verification response, which must be stored and persisted.
-   *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
-   * @returns {*} {DeviceAuthorizationResponse} - Returns the response data or null if caught by an error policy
+   * @returns {Promise<DeviceAuthorizationResponse>}
    */
   const authorizeDeviceWithUnknownBCSC = useCallback(
     async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse> => {
