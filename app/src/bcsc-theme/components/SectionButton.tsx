@@ -36,7 +36,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style
       onPress={onPress}
       accessibilityLabel={title}
       accessibilityRole="button"
-      testID={testID ?? testIdWithKey(`SectionButton-${title}`)}
+      testID={testID ?? testIdWithKey(`SectionButton-${title.replace(/\s+/g, '')}`)}
     >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}

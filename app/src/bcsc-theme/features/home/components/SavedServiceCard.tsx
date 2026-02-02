@@ -54,7 +54,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
                 onPress={props.onRemove}
                 accessibilityLabel={`${t('BCSC.Services.Remove')} ${props.title}`}
                 accessibilityRole="button"
-                testID={testIdWithKey(`RemoveService-${props.title}`)}
+                testID={testIdWithKey(`RemoveService-${props.title.replace(/\s+/g, '')}`)}
               >
                 <Icon name="delete" size={40} />
               </TouchableOpacity>
@@ -68,7 +68,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
           onPress={props.onPress}
           accessibilityLabel={`${t('BCSC.Services.Open')} ${props.title}`}
           accessibilityRole="button"
-          testID={testIdWithKey(`OpenService-${props.title}`)}
+          testID={testIdWithKey(`OpenService-${props.title.replace(/\s+/g, '')}`)}
         >
           <ThemedText>{props.title}</ThemedText>
         </TouchableOpacity>
