@@ -110,6 +110,6 @@ export class AppError extends Error {
  * @param error - The error to check
  * @returns True if the error is an AppError and has been handled
  */
-export function isHandledAppError(error: unknown): boolean {
+export function isHandledAppError(error: unknown): error is AppError {
   return error instanceof AppError && error.handled
 }
