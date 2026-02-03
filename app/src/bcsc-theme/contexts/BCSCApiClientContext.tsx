@@ -160,28 +160,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     setClientAndSingleton(client)
   }, [client, handleApiClientError])
 
-  useEffect(() => {
-    // When a new refresh token is updated, refresh the client tokens
-    const refreshEffect = async () => {
-      if (
-        store.stateLoaded &&
-        client &&
-        store.bcscSecure.refreshToken &&
-        client.tokens?.refresh_token !== store.bcscSecure.refreshToken
-      ) {
-        try {
-          logger.info('[BCSCApiClient] Refreshing BCSC API client tokens using updated refresh token')
-          await client.getTokensForRefreshToken(store.bcscSecure.refreshToken)
-          setClientAndSingleton(client)
-        } catch (error) {
-          logger.error('[BCSCApiClient] Error refreshing BCSC API client tokens:', { error })
-        }
-      }
-    }
-
-    refreshEffect()
-  }, [store.bcscSecure.refreshToken, store.stateLoaded, client, logger])
-
   const contextValue = useMemo(
     () => ({
       client: client,
