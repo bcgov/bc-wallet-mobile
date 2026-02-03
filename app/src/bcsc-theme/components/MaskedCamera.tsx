@@ -1,4 +1,4 @@
-import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useIsFocused } from '@react-navigation/native'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -156,14 +156,32 @@ const MaskedCamera = ({
         )}
       </View>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={handleCancel}
+          accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
+          accessibilityRole="button"
+          testID={testIdWithKey('CancelCamera')}
+        >
           <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
+        <TouchableOpacity
+          style={styles.captureButton}
+          onPress={takePhoto}
+          accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
+          accessibilityRole="button"
+          testID={testIdWithKey('TakePhoto')}
+        >
           <View style={styles.captureButtonInner} />
         </TouchableOpacity>
         {hasTorch ? (
-          <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={toggleTorch}>
+          <TouchableOpacity
+            style={{ flex: 1, alignItems: 'flex-end' }}
+            onPress={toggleTorch}
+            accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
+            accessibilityRole="button"
+            testID={testIdWithKey('ToggleFlash')}
+          >
             <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (

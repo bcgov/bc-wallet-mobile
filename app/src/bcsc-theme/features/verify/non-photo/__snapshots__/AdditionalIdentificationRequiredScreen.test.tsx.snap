@@ -325,6 +325,8 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
             BCSC.AdditionalEvidence.LimitedAccess
           </Text>
           <View
+            accessibilityLabel="BCSC.AdditionalEvidence.OpenAccountServices"
+            accessibilityRole="link"
             accessibilityState={
               {
                 "busy": undefined,
@@ -357,6 +359,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
                 "opacity": 1,
               }
             }
+            testID="com.ariesbifold:id/OpenAccountServices"
           >
             <Text
               allowFontScaling={false}

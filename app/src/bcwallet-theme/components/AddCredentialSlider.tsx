@@ -110,7 +110,13 @@ export default function AddCredentialSlider() {
       visible={addCredentialPressed}
       onRequestClose={deactivateSlider}
     >
-      <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
+      <TouchableOpacity
+        style={styles.outsideListener}
+        onPress={deactivateSlider}
+        accessibilityLabel={t('BCID.DismissMenu')}
+        accessibilityRole="button"
+        testID={testIdWithKey('DismissAddCredentialSlider')}
+      />
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <TouchableOpacity

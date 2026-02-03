@@ -114,6 +114,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddressLabel
             </Text>
             <TextInput
+              accessibilityLabel="BCSC.Address.StreetAddressLabel"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -181,6 +182,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.CityLabel
             </Text>
             <TextInput
+              accessibilityLabel="BCSC.Address.CityLabel"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -390,6 +392,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeLabel
             </Text>
             <TextInput
+              accessibilityLabel="BCSC.Address.PostalCodeLabel"
               autoCapitalize="characters"
               autoCorrect={false}
               onChange={[Function]}

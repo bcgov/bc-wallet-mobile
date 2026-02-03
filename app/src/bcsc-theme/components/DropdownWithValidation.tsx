@@ -1,5 +1,6 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FlatList, Modal, Pressable, SafeAreaView, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -43,6 +44,7 @@ export const DropdownWithValidation = <T extends string | number>({
   errorProps,
 }: DropdownWithValidationProps<T>) => {
   const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const selectedOption = options.find((opt) => opt.value === value)
@@ -187,7 +189,13 @@ export const DropdownWithValidation = <T extends string | number>({
       ) : null}
 
       <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
-        <Pressable style={styles.modalOverlay} onPress={handleClose}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={handleClose}
+          accessibilityLabel={t('BCSC.Components.CloseDropdown')}
+          accessibilityRole="button"
+          testID={testIdWithKey(`${id}-modal-overlay`)}
+        >
           <SafeAreaView>
             <Pressable
               style={styles.modalContent}
