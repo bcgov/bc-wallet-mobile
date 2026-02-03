@@ -3018,6 +3018,7 @@ class BcscCoreModule(
                             editor.remove("email_address")
                         }
                     }
+
                     "userSubmittedVerificationVideo" -> {
                         editor.putBoolean("user_submitted_verification_video", flags.getBoolean(key))
                     }
