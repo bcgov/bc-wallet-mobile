@@ -475,7 +475,6 @@ jobs:
           find . -type f -name '*.aab'
 
       - name: Upload Android AAB artifact
-        #if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}.aab
@@ -484,7 +483,6 @@ jobs:
           retention-days: 7
 
       - name: Upload Android APK artifact
-        #if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}.apk
