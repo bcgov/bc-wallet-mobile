@@ -3,7 +3,7 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
-  - askar (0.4.3):
+  - askar (0.5.0-alpha-20260121132554):
     - React
     - React-callinvoker
     - React-Core
@@ -36,7 +36,6 @@ PODS:
     - SocketRocket
     - Yoga
   - boost (1.84.0)
-  - CatCrypto (0.3.2)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - fast_float (8.0.0)
@@ -1918,7 +1917,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (2.12.4):
+  - react-native-attestation (2.12.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -2789,9 +2788,6 @@ PODS:
     - SocketRocket
   - ReactNativeIncallManager (4.2.1):
     - React-Core
-  - RNArgon2 (2.0.1):
-    - CatCrypto
-    - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -2942,8 +2938,34 @@ PODS:
     - Yoga
   - RNInAppBrowser (3.7.0):
     - React-Core
-  - RNKeychain (8.1.3):
+  - RNKeychain (10.0.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - RNLocalize (2.2.6):
     - React-Core
   - RNPermissions (5.4.2):
@@ -3284,7 +3306,6 @@ DEPENDENCIES:
   - "askar (from `../node_modules/@openwallet-foundation/askar-react-native`)"
   - BcscCore (from `../node_modules/react-native-bcsc-core`)
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - CatCrypto
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -3376,7 +3397,6 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeIncallManager (from `../node_modules/react-native-incall-manager`)
-  - RNArgon2 (from `../node_modules/react-native-argon2`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
@@ -3398,7 +3418,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - CatCrypto
     - CocoaAsyncSocket
     - Firebase
     - FirebaseAnalytics
@@ -3600,8 +3619,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeIncallManager:
     :path: "../node_modules/react-native-incall-manager"
-  RNArgon2:
-    :path: "../node_modules/react-native-argon2"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
@@ -3639,10 +3656,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   anoncreds: d48fc0f3bde44f97aef5bb907f6821bf9191d758
-  askar: 2bbf4b40a242b330d7995cd73ed99b177b489ff9
+  askar: e4600f17f3067e57dca7324b5baaa1b66c3efd23
   BcscCore: bca6318f371f8a7849e197fa5493aa0d953f581b
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
@@ -3699,7 +3715,7 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: 1f15ceecab609d1229a534117e448d85d157bd0e
+  react-native-attestation: 47d43624a4852e0dfb6eec6732b29e0a057c9e53
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-date-picker: 4f4f40f6e65798038bb4b1bff47890c2be69c2e6
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
@@ -3745,7 +3761,6 @@ SPEC CHECKSUMS:
   ReactCodegen: 6c26f8c25d0b5ae66f86a1cce1777076ac8bcbd8
   ReactCommon: 5f0e5c09a64a2717215dd84380e1a747810406f2
   ReactNativeIncallManager: dccd3e7499caa3bb73d3acfedf4fb0360f1a87d5
-  RNArgon2: 708e188b7a4d4ec8baf62463927c47abef453a94
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6
@@ -3754,9 +3769,9 @@ SPEC CHECKSUMS:
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
   RNInAppBrowser: 6d3eb68d471b9834335c664704719b8be1bfdb20
-  RNKeychain: c497f7844b24577523bb84a6e8af9d217957972f
+  RNKeychain: a2c134ab796272c3d605e035ab727591000b30f3
   RNLocalize: 8bf466de4c92d4721b254aabe1ff0a1456e7b9f4
-  RNPermissions: b07b9c6c05a5842a1d5d1e7025d95d9903b2ab51
+  RNPermissions: a68965160e800e02426ae116e975e1ee7d2ea1af
   RNReanimated: 9af1b9f7d221d1cc2f99d935bab08419cae7c1ce
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNSVG: 6f39605a4c4d200b11435c35bd077553c6b5963a
@@ -3766,6 +3781,6 @@ SPEC CHECKSUMS:
   VisionCamera: b51af005669c6642dd1b4fca434eda4c1778de87
   Yoga: 728df40394d49f3f471688747cf558158b3a3bd1
 
-PODFILE CHECKSUM: e7547e3c17fc2d1e455800ba695eb08a9e5d9aba
+PODFILE CHECKSUM: 89c739ece017b97fe663b0b7a4d4c58b9412fd74
 
 COCOAPODS: 1.14.3
