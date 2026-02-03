@@ -1,4 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
@@ -21,6 +22,7 @@ const BCSCRootStack: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitError } = useErrorAlert()
+  const navigationContainer = useNavigationContainer()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const BCSCRootStack: React.FC = () => {
   }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
 
   // Show loading screen if state or API client or account status not ready yet
-  if (!store.stateLoaded || !isClientReady || loading) {
+  if (!store.stateLoaded || !isClientReady || loading || !navigationContainer.isNavigationReady) {
     return <LoadingScreenContent />
   }
 
