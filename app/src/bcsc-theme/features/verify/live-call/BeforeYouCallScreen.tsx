@@ -1,9 +1,10 @@
+import { HelpCentreUrl } from '@/constants'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -38,8 +39,15 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     })
   }
 
+  const navigateToWebView = useCallback(
+    (url: string, title: string) => {
+      navigation.navigate(BCSCScreens.VerifyWebView, { url, title })
+    },
+    [navigation]
+  )
+
   const onPressAssistance = () => {
-    // TODO (bm): webview or external link here presumeably
+    navigateToWebView(HelpCentreUrl.VERIFY_CALL, t('HelpCentre.Title'))
   }
 
   return (

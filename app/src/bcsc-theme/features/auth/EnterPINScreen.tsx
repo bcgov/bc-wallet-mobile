@@ -2,7 +2,7 @@ import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { PIN_LENGTH } from '@/constants'
+import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
 import {
   Button,
   ButtonType,
@@ -138,9 +138,16 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     await verifyPINAndContinue(currentPIN)
   }, [currentPIN, verifyPINAndContinue])
 
+  const navigateToWebView = useCallback(
+    (url: string, title: string) => {
+      navigation.navigate(BCSCScreens.AuthWebView, { url, title })
+    },
+    [navigation]
+  )
+
   const onPressGetHelp = useCallback(() => {
-    // TODO: implement Get Help action
-  }, [])
+    navigateToWebView(HelpCentreUrl.FORGOT_PIN, t('HelpCentre.Title'))
+  }, [navigateToWebView, t])
 
   const handlePINChange = useCallback((pin: string) => {
     setErrorMessage(undefined)

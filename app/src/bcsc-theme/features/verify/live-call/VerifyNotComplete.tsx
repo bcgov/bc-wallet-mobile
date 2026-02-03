@@ -1,7 +1,9 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -13,8 +15,15 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
 
+  const navigateToWebView = useCallback(
+    (url: string, title: string) => {
+      navigation.navigate(BCSCScreens.VerifyWebView, { url, title })
+    },
+    [navigation]
+  )
+
   const onPressTrouble = () => {
-    // TODO (bm): Help webview here, not sure which url
+    navigateToWebView(HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING, t('HelpCentre.Title'))
   }
 
   const onPressSendVideo = () => {
