@@ -48,7 +48,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
 export const connectToIASAgent = async (
   agent: Agent,
   iasAgentInviteUrl: string,
-  t: TFunction<'translation', undefined>
+  t: TFunction
 ): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.

@@ -3,6 +3,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import {
@@ -12,6 +13,8 @@ import {
   ScanCamera,
   SVGOverlay,
   ThemedText,
+  TOKENS,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
@@ -47,6 +50,7 @@ const TransferQRScannerScreen: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
   const { updateUserInfo, updateDeviceCodes } = useSecureActions()
@@ -74,28 +78,29 @@ const TransferQRScannerScreen: React.FC = () => {
       return
     }
 
-    const deviceAuth = await authorization.authorizeDevice()
-    // device already authorized
-    if (deviceAuth === null) {
-      return
+    try {
+      const deviceAuth = await authorization.authorizeDevice()
+
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+
+      await updateUserInfo({
+        email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
+        isEmailVerified: !!deviceAuth.verified_email,
+      })
+
+      await updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: expiresAt,
+      })
+    } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
+      logger.error('[TransferQRScannerScreen]: Device registration failed', { error })
     }
-
-    // New device registered, store
-    const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-
-    // Update user information
-    await updateUserInfo({
-      email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
-      isEmailVerified: !!deviceAuth.verified_email,
-    })
-
-    // Update secure store with device codes
-    await updateDeviceCodes({
-      deviceCode: deviceAuth.device_code,
-      userCode: deviceAuth.user_code,
-      deviceCodeExpiresAt: expiresAt,
-    })
-  }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo])
+  }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])
 
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 

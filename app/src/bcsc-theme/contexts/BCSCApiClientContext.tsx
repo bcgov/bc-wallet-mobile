@@ -1,5 +1,4 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -9,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import {
+  AxiosAppError,
   ClientErrorHandlingPolicies,
   ErrorMatcherContext,
   createExpiredAppSetupErrorPolicy,
@@ -78,10 +78,9 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    *
    * @param error - The error object to handle.
    * @param context - The context providing additional information for error handling.
-   * @returns void
    */
   const handleApiClientError = useCallback(
-    (error: AppError, context: ErrorMatcherContext) => {
+    (error: AxiosAppError, context: ErrorMatcherContext) => {
       const policy = allErrorHandlingPolicies.find((policy) => policy.matches(error, context))
 
       if (!policy) {
@@ -104,6 +103,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         translate: t,
         logger,
       })
+
+      error.handled = true
     },
     [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
   )
@@ -158,28 +159,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     client.setErrorHandler(handleApiClientError)
     setClientAndSingleton(client)
   }, [client, handleApiClientError])
-
-  useEffect(() => {
-    // When a new refresh token is updated, refresh the client tokens
-    const refreshEffect = async () => {
-      if (
-        store.stateLoaded &&
-        client &&
-        store.bcscSecure.refreshToken &&
-        client.tokens?.refresh_token !== store.bcscSecure.refreshToken
-      ) {
-        try {
-          logger.info('[BCSCApiClient] Refreshing BCSC API client tokens using updated refresh token')
-          await client.getTokensForRefreshToken(store.bcscSecure.refreshToken)
-          setClientAndSingleton(client)
-        } catch (error) {
-          logger.error('[BCSCApiClient] Error refreshing BCSC API client tokens:', { error })
-        }
-      }
-    }
-
-    refreshEffect()
-  }, [store.bcscSecure.refreshToken, store.stateLoaded, client, logger])
 
   const contextValue = useMemo(
     () => ({

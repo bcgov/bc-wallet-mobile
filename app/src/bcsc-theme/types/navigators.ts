@@ -28,6 +28,7 @@ export enum BCSCScreens {
   ScanSerial = 'BCSCScanSerial',
   EnterBirthdate = 'BCSCEnterBirthdate',
   MismatchedSerial = 'BCSCMismatchedSerial',
+  BirthdateLockout = 'BCSCBirthdateLockout',
   EnterEmail = 'BCSCEnterEmail',
   EmailConfirmation = 'BCSCEmailConfirmation',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
@@ -138,6 +139,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.MismatchedSerial]: undefined
+  [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
   [BCSCScreens.VerificationMethodSelection]: undefined

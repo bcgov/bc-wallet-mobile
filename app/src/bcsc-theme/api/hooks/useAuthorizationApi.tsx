@@ -1,6 +1,4 @@
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
-import { AppError } from '@/errors'
-import { AppEventCode } from '@/events/appEventCode'
 import { useCallback, useMemo } from 'react'
 import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -52,11 +50,11 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
    * @param {string?} serial - BCSC serial number
    * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
-   * @returns {*} {DeviceAuthorizationResponse | null}
+   * @returns {Promise<DeviceAuthorizationResponse>}
    */
   const authorizeDevice = useCallback(
-    async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse | null> => {
-      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
+    async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse> => {
+      return withAccount<DeviceAuthorizationResponse>(async (account) => {
         if (serial && !birthdate) {
           throw new Error('Birthdate is required when providing a serial number')
         }
@@ -68,29 +66,16 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           scope: IAS_SCOPE,
         }
 
-        try {
-          const { data } = await apiClient.post<DeviceAuthorizationResponse>(
-            apiClient.endpoints.deviceAuthorization,
-            body,
-            {
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              skipBearerAuth: true,
-            }
-          )
-
-          return data
-        } catch (error) {
-          /**
-           * if already registered, return null for workflow convienience
-           * useful to be able to determine if the request failed or if the device
-           * has previously been registered
-           */
-          if (isDeviceRegistered(error)) {
-            return null
+        const { data } = await apiClient.post<DeviceAuthorizationResponse>(
+          apiClient.endpoints.deviceAuthorization,
+          body,
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            skipBearerAuth: true,
           }
+        )
 
-          throw error
-        }
+        return data
       })
     },
     [apiClient]
@@ -99,16 +84,13 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   /**
    * Authorize a device with an unknown BCSC card.
    *
-   * Note: This request will return null if called multiple times for the same device.
-   * First response will return the Verification response, which must be stored and persisted.
-   *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
-   * @returns {*} {DeviceAuthorizationResponse | null} - Returns the response data or null if already registered
+   * @returns {Promise<DeviceAuthorizationResponse>}
    */
   const authorizeDeviceWithUnknownBCSC = useCallback(
-    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse | null> => {
-      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
+    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse> => {
+      return withAccount<DeviceAuthorizationResponse>(async (account) => {
         const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
@@ -136,29 +118,16 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           }),
         }
 
-        try {
-          const { data } = await apiClient.post<DeviceAuthorizationResponse>(
-            apiClient.endpoints.deviceAuthorization,
-            body,
-            {
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              skipBearerAuth: true,
-            }
-          )
-
-          return data
-        } catch (error) {
-          /**
-           * if already registered, return null for workflow convienience
-           * useful to be able to determine if the request failed or if the device
-           * has previously been registered
-           */
-          if (isDeviceRegistered(error)) {
-            return null
+        const { data } = await apiClient.post<DeviceAuthorizationResponse>(
+          apiClient.endpoints.deviceAuthorization,
+          body,
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            skipBearerAuth: true,
           }
+        )
 
-          throw error
-        }
+        return data
       })
     },
     [apiClient]
@@ -174,19 +143,3 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
 }
 
 export default useAuthorizationApi
-
-// Helper functions
-
-/**
- * Checks if an error matches the structure of when a device is registered.
- *
- * @param {any} error - The error to check
- * @returns {*} {boolean}
- */
-function isDeviceRegistered(error: any): boolean {
-  return (
-    error instanceof AppError &&
-    error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST &&
-    Boolean(error.technicalMessage?.includes('client is in invalid'))
-  )
-}

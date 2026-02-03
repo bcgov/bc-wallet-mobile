@@ -10,7 +10,7 @@ import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
 } from '../utils/error-utils'
-import { ErrorMatcherContext } from './clientErrorPolicies'
+import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
@@ -24,7 +24,7 @@ declare module 'axios' {
   }
 }
 
-type BCSCClientOnErrorCallback = (appError: AppError, context: ErrorMatcherContext) => void
+type BCSCClientOnErrorCallback = (appError: AxiosAppError, context: ErrorMatcherContext) => void
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -140,8 +140,8 @@ class BCSCApiClient {
         })
       }
 
-      // 4. Invoke onError callback if provided and reject promise
-      this.onError?.(appError, {
+      // 4. Invoke onError callback if provided which marks as handled
+      this.onError?.(appError as AxiosAppError, {
         endpoint: String(error.config?.url),
         statusCode: error.response?.status ?? 0,
         apiEndpoints: this.endpoints,

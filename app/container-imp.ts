@@ -79,14 +79,14 @@ const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private readonly logger: RemoteLogger
-  private t: TFunction<'translation', undefined>
+  private t: TFunction
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
   readonly setSurveyVisible: (visible: boolean) => void
 
   public constructor(
     bifoldContainer: Container,
-    t: TFunction<'translation', undefined>,
+    t: TFunction,
     navigate: (stack: never, params: never) => void,
     setSurveyVisible: (visible: boolean) => void,
     logger: RemoteLogger = createAppLogger()

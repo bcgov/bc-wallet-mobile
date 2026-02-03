@@ -318,49 +318,6 @@ describe('useResidentialAddressModel', () => {
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
     })
 
-    it('should handle device already registered (null response)', async () => {
-      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
-
-      // Store with existing device code
-      const storeWithDeviceCode = {
-        ...mockStore,
-        bcscSecure: {
-          ...mockStore.bcscSecure,
-          deviceCode: 'existing-device-code',
-        },
-      }
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithDeviceCode, mockDispatch])
-
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-
-      await act(async () => {
-        await result.current.handleSubmit()
-      })
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Device has already been registered')
-      expect(mockNavigation.dispatch).toHaveBeenCalled()
-    })
-
-    it('should throw error when device returns null and no deviceCode in store', async () => {
-      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(null)
-
-      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-
-      await act(async () => {
-        await result.current.handleSubmit()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found'
-      )
-      expect(Toast.show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'error',
-        })
-      )
-    })
-
     it('should set isSubmitting during authorization', async () => {
       let resolveAuth: (value: any) => void
       const authPromise = new Promise((resolve) => {
