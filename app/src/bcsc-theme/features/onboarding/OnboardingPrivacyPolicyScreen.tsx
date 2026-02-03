@@ -1,9 +1,10 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ContentGradient, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -19,7 +20,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   navigation,
 }: OnboardingPrivacyPolicyScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
 
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
@@ -34,21 +35,26 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   }
 
   const controls = (
-    <Button
-      title={t('Global.Continue')}
-      buttonType={ButtonType.Primary}
-      onPress={onPress}
-      testID={testIdWithKey('Continue')}
-      accessibilityLabel={t('Global.Continue')}
-    />
+    <View style={{ width: '100%' }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={onPress}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+      />
+    </View>
   )
 
-  const scrollContentStyle = {
-    gap: theme.Spacing.lg,
-  }
+  const styles = StyleSheet.create({
+    scrollViewContainerStyle: {
+      gap: Spacing.lg,
+    },
+  })
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={scrollContentStyle}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollViewContainerStyle}>
       <PrivacyPolicyContent onLearnMore={handleLearnMore} />
     </ScreenWrapper>
   )

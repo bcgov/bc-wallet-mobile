@@ -40,15 +40,13 @@ exports[`TermsOfUse renders correctly 1`] = `
         bounces={false}
         domStorageEnabled={true}
         injectedJavaScriptBeforeContentLoaded="
-    (function() {
+    document.addEventListener('DOMContentLoaded', function() {
+      const style = document.createElement('style');
+      
       const fontScale = 2;
       document.documentElement.style.fontSize = (16 * fontScale) + 'px';
       document.body.style.fontSize = (16 * fontScale) + 'px';
-    })();
-  
-    document.addEventListener('DOMContentLoaded', function() {
-      const style = document.createElement('style');
-
+    
       document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '#F2F2F2';
       document.body.style.color = '#FFFFFFFF';
