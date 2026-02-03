@@ -13,6 +13,7 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import {
   Camera,
   CameraCaptureError,
@@ -25,15 +26,29 @@ import {
   useCodeScanner,
 } from 'react-native-vision-camera'
 
+/**
+ * Extended Code interface with position and orientation metadata
+ */
+export interface EnhancedCode extends Code {
+  /**
+   * Position of the barcode in the camera frame
+   */
+  position?: { x: number; y: number; width: number; height: number }
+  /**
+   * Orientation of the barcode (horizontal or vertical)
+   */
+  orientation?: 'horizontal' | 'vertical'
+}
+
 export interface CodeScanningCameraProps {
   codeTypes: CodeType[]
 
   /**
    * Callback function called when a code is successfully scanned
-   * @param codes Array of scanned codes
+   * @param codes Array of scanned codes with position and orientation metadata
    * @param frame The camera frame information
    */
-  onCodeScanned: (codes: Code[], frame: CodeScannerFrame) => void
+  onCodeScanned: (codes: EnhancedCode[], frame: CodeScannerFrame) => void
 
   /**
    * Custom style for the camera container
@@ -45,6 +60,37 @@ export interface CodeScanningCameraProps {
    * @default 'back'
    */
   cameraType?: 'front' | 'back'
+
+  /**
+   * Enable/disable barcode highlight overlay
+   * When enabled, shows visual feedback for detected barcodes
+   * @default false
+   */
+  showBarcodeHighlight?: boolean
+
+  /**
+   * Enable/disable pinch-to-zoom gesture
+   * @default true
+   */
+  enableZoom?: boolean
+
+  /**
+   * Initial zoom level
+   * @default 1.0
+   */
+  initialZoom?: number
+
+  /**
+   * Minimum zoom level
+   * @default 1.0
+   */
+  minZoom?: number
+
+  /**
+   * Maximum zoom level (will be constrained by device capabilities)
+   * @default 4.0
+   */
+  maxZoom?: number
 }
 
 const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
@@ -52,32 +98,142 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   onCodeScanned,
   style,
   cameraType = 'back',
+  showBarcodeHighlight = false,
+  enableZoom = true,
+  initialZoom = 1.0,
+  minZoom = 1.0,
+  maxZoom = 4.0,
 }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
-  const { width } = useWindowDimensions()
+  const { width, height } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
+
+  // Zoom state management
+  const [zoom, setZoom] = useState(initialZoom)
+  const zoomOffset = useRef(initialZoom)
+
+  // Barcode highlight state
+  const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
+  const highlightFadeAnim = useRef(new Animated.Value(0)).current
+
+  /**
+   * Select the optimal camera device for barcode scanning
+   * Prioritizes devices with better focus capabilities
+   */
   const device = useCameraDevice(cameraType, {
     physicalDevices: Platform.select({
-      // Note: Unable to focus camera on iOS without ultra-wide angle camera
-      ios: ['ultra-wide-angle-camera'],
+      // On iOS, prefer ultra-wide-angle camera for better focus control
+      // This is particularly important for scanning small barcodes
+      ios: ['ultra-wide-angle-camera', 'wide-angle-camera'],
+      // On Android, prefer wide-angle camera
+      android: ['wide-angle-camera'],
     }),
   })
+
+  /**
+   * Optimize camera format for small barcode scanning
+   * Higher resolution and frame rate improve detection accuracy
+   */
   const format = useCameraFormat(device, [
+    // Higher FPS for better barcode detection on small codes
     {
-      fps: Platform.OS === 'ios' ? 'max' : 30,
+      fps: Platform.OS === 'ios' ? 'max' : 60,
+    },
+    // High photo resolution for better barcode recognition
+    {
+      photoResolution: { width: 1920, height: 1080 },
+    },
+    // Prefer formats with better video stabilization
+    {
+      videoStabilizationMode: 'auto',
     },
   ])
+
+  /**
+   * Calculate barcode orientation based on dimensions
+   * @param corners Corner points of the detected barcode
+   * @returns 'horizontal' or 'vertical'
+   */
+  const calculateOrientation = (corners?: { x: number; y: number }[]): 'horizontal' | 'vertical' => {
+    if (!corners || corners.length < 2) {
+      return 'horizontal'
+    }
+
+    // Calculate width and height from corners
+    const width = Math.abs(corners[1].x - corners[0].x)
+    const height = Math.abs(corners[2].y - corners[0].y)
+
+    // If width > height, it's horizontal, otherwise vertical
+    return width > height ? 'horizontal' : 'vertical'
+  }
+
+  /**
+   * Enhanced code scanner with position and orientation metadata
+   */
   const codeScanner = useCodeScanner({
     codeTypes,
     onCodeScanned: (codes, frame) => {
       if (codes.length > 0) {
-        onCodeScanned(codes, frame)
+        // Enhance codes with position and orientation metadata
+        const enhancedCodes: EnhancedCode[] = codes.map((code) => {
+          const corners = code.corners
+
+          // Calculate bounding box from corners if available
+          let position: { x: number; y: number; width: number; height: number } | undefined
+          if (corners && corners.length >= 4) {
+            const xs = corners.map((c) => c.x)
+            const ys = corners.map((c) => c.y)
+            const minX = Math.min(...xs)
+            const maxX = Math.max(...xs)
+            const minY = Math.min(...ys)
+            const maxY = Math.max(...ys)
+
+            position = {
+              x: minX,
+              y: minY,
+              width: maxX - minX,
+              height: maxY - minY,
+            }
+          }
+
+          const orientation = calculateOrientation(corners)
+
+          return {
+            ...code,
+            position,
+            orientation,
+          }
+        })
+
+        // Update detected codes for highlight overlay
+        if (showBarcodeHighlight) {
+          setDetectedCodes(enhancedCodes)
+          // Fade in the highlight
+          Animated.timing(highlightFadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }).start()
+
+          // Fade out after 2 seconds
+          setTimeout(() => {
+            Animated.timing(highlightFadeAnim, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: true,
+            }).start(() => {
+              setDetectedCodes([])
+            })
+          }, 2000)
+        }
+
+        onCodeScanned(enhancedCodes, frame)
       }
     },
   })
@@ -91,23 +247,47 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const scanSize = Math.min(width - 80, 300)
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
 
-  useEffect(() => {
-    if (!hasPermission) {
-      requestPermission()
-    }
-  }, [hasPermission, requestPermission])
-
   useFocusEffect(
     useCallback(() => {
+      // Reset zoom when screen loses focus
       return () => {
         setTorchEnabled(false)
+        setZoom(initialZoom)
+        zoomOffset.current = initialZoom
       }
-    }, [])
+    }, [initialZoom])
   )
 
   const toggleTorch = () => {
     setTorchEnabled((prev) => !prev)
   }
+
+  /**
+   * Constrain zoom level to device capabilities and configured limits
+   */
+  const constrainZoom = (value: number): number => {
+    const deviceMinZoom = device?.minZoom ?? 1
+    const deviceMaxZoom = device?.maxZoom ?? 1
+    const effectiveMinZoom = Math.max(minZoom, deviceMinZoom)
+    const effectiveMaxZoom = Math.min(maxZoom, deviceMaxZoom)
+    return Math.max(effectiveMinZoom, Math.min(value, effectiveMaxZoom))
+  }
+
+  /**
+   * Pinch-to-zoom gesture handler
+   * Allows users to zoom in on small barcodes for better scanning
+   */
+  const pinchGesture = Gesture.Pinch()
+    .enabled(enableZoom)
+    .onUpdate((event) => {
+      // Calculate new zoom level based on pinch scale
+      const newZoom = constrainZoom(zoomOffset.current * event.scale)
+      setZoom(newZoom)
+    })
+    .onEnd(() => {
+      // Save the current zoom level as the new offset
+      zoomOffset.current = zoom
+    })
 
   const styles = StyleSheet.create({
     container: {
@@ -153,10 +333,33 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       borderColor: ColorPalette.grayscale.white,
       backgroundColor: 'transparent',
     },
+    barcodeHighlight: {
+      position: 'absolute',
+      borderWidth: 2,
+      borderColor: '#00FF00',
+      backgroundColor: 'rgba(0, 255, 0, 0.1)',
+    },
+    zoomIndicator: {
+      position: 'absolute',
+      bottom: 100,
+      alignSelf: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    zoomText: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
   })
 
+  /**
+   * Enhanced tap-to-focus handler
+   * Allows precise focus on small barcodes
+   */
   const drawFocusTap = (point: { x: number; y: number }): void => {
-    // Draw a focus tap indicator on the camera preview
     setFocusPoint(point)
 
     focusOpacity.setValue(1)
@@ -211,21 +414,29 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <Camera
-        ref={camera}
-        style={styles.camera}
-        device={device}
-        format={format}
-        isActive={hasPermission}
-        codeScanner={codeScanner}
-        torch={torchEnabled ? 'on' : 'off'}
-      />
+      <GestureDetector gesture={pinchGesture}>
+        <View style={{ flex: 1 }}>
+          <Camera
+            ref={camera}
+            style={styles.camera}
+            device={device}
+            format={format}
+            isActive={hasPermission}
+            codeScanner={codeScanner}
+            torch={torchEnabled ? 'on' : 'off'}
+            zoom={zoom}
+          />
+        </View>
+      </GestureDetector>
+
       <Pressable
         style={StyleSheet.absoluteFill}
         onPressIn={(e) => {
           handleFocusTap(e)
         }}
       />
+
+      {/* Focus indicator */}
       {focusPoint && (
         <Animated.View
           style={[
@@ -240,12 +451,41 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         />
       )}
 
-      {/* scan area cutout */}
+      {/* Barcode highlight overlay */}
+      {showBarcodeHighlight &&
+        detectedCodes.map((code, index) => {
+          if (!code.position) return null
+
+          return (
+            <Animated.View
+              key={`${code.type}-${index}`}
+              style={[
+                styles.barcodeHighlight,
+                {
+                  left: code.position.x,
+                  top: code.position.y,
+                  width: code.position.width,
+                  height: code.position.height,
+                  opacity: highlightFadeAnim,
+                },
+              ]}
+            />
+          )
+        })}
+
+      {/* Scan area guide */}
       <View style={styles.overlayContainer} pointerEvents="none">
         <View style={styles.overlayOpening} />
       </View>
 
-      {/* reuse qrscannertorch from bifold */}
+      {/* Zoom level indicator */}
+      {enableZoom && zoom > minZoom && (
+        <View style={styles.zoomIndicator}>
+          <Text style={styles.zoomText}>{zoom.toFixed(1)}x</Text>
+        </View>
+      )}
+
+      {/* Torch toggle button */}
       <View style={styles.torchContainer}>
         <QRScannerTorch active={torchEnabled} onPress={toggleTorch} />
       </View>
