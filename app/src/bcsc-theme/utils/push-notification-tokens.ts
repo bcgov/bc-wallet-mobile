@@ -1,5 +1,12 @@
 import { BifoldLogger } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
+import { getApp } from '@react-native-firebase/app'
+import {
+  getAPNSToken,
+  getMessaging,
+  getToken,
+  isDeviceRegisteredForRemoteMessages,
+  registerDeviceForRemoteMessages,
+} from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 
 // Define a structured return type for clarity
@@ -16,10 +23,12 @@ export interface NotificationTokens {
  * unless it fails in which case it returns a dummy fcmDeviceToken and null deviceToken
  */
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
-  if (!messaging().isDeviceRegisteredForRemoteMessages) {
+  const messagingInstance = getMessaging(getApp())
+
+  if (isDeviceRegisteredForRemoteMessages(messagingInstance) === false) {
     try {
       logger.debug('[PushTokens] Attempting to register device for remote messages...')
-      await messaging().registerDeviceForRemoteMessages()
+      await registerDeviceForRemoteMessages(messagingInstance)
       logger.debug('[PushTokens] Device successfully registered for remote messages')
     } catch (error) {
       // This is the extremely rare case react-native-firebase fails to register
@@ -38,7 +47,7 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
 
   const fetchFcmToken = async (): Promise<string> => {
     try {
-      const token = await messaging().getToken()
+      const token = await getToken(messagingInstance)
       if (!token) {
         throw new Error('FCM token is null or undefined')
       }
@@ -56,7 +65,7 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
     }
 
     try {
-      const token = await messaging().getAPNSToken()
+      const token = await getAPNSToken(messagingInstance)
       // treat all falsey values including empty strings as null
       return token || null
     } catch (error) {

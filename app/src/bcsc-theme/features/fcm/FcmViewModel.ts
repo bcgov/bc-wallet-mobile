@@ -1,16 +1,19 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
-import { DeviceEventEmitter } from 'react-native'
+import { getApp } from '@react-native-firebase/app'
+import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 
-import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
+import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
+import { VerificationResponseService } from '../verification-response'
 
+import { Platform } from 'react-native'
 import {
   BasicNotification,
   ChallengeNotification,
+  FcmDeliveryContext,
   FcmMessage,
   FcmService,
   StatusNotification,
@@ -29,12 +32,14 @@ export class FcmViewModel {
    * @param fcmService - Firebase Cloud Messaging service
    * @param logger - Logger instance
    * @param pairingService - Service for handling pairing requests
+   * @param verificationResponseService - Service for handling verification response notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
     private readonly pairingService: PairingService,
+    private readonly verificationResponseService: VerificationResponseService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
 
@@ -53,6 +58,7 @@ export class FcmViewModel {
     }
 
     this.logger.info('[FcmViewModel] Initializing...')
+
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
@@ -66,7 +72,8 @@ export class FcmViewModel {
 
   private async logFcmToken(): Promise<void> {
     try {
-      const token = await messaging().getToken()
+      const messagingInstance = getMessaging(getApp())
+      const token = await getToken(messagingInstance)
       this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -74,7 +81,7 @@ export class FcmViewModel {
     }
   }
 
-  private async handleMessage(message: FcmMessage) {
+  private async handleMessage(message: FcmMessage, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Received FCM message: type=${message.type}`)
 
     switch (message.type) {
@@ -82,7 +89,8 @@ export class FcmViewModel {
         await this.handleChallengeRequest(message.data)
         break
       case 'status':
-        await this.handleStatusNotification(message.data)
+        this.logger.info(`[FcmViewModel] Message: ${JSON.stringify(message)}`)
+        await this.handleStatusNotification(message.data, delivery)
         break
       case 'notification':
         this.logger.info(`[FcmViewModel] Handling generic notification`)
@@ -134,47 +142,21 @@ export class FcmViewModel {
     }
   }
 
-  private async handleStatusNotification(data: StatusNotification) {
+  private async handleStatusNotification(data: StatusNotification, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    const { title, message } = data
-
-    // Show local notification if we have title and message
-    if (title && message) {
+    if (Platform.OS === 'android' && delivery?.source === 'foreground' && data.title && data.message) {
       try {
-        await showLocalNotification(title, message)
+        await showLocalNotification(data.title, data.message)
       } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+        this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
       }
-    } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
     }
 
-    // Always refresh tokens when we receive a status notification
-    // This ensures account data is updated regardless of notification display
-    await this.refreshTokens()
-  }
-
-  /**
-   * Refreshes OAuth tokens using the current refresh token.
-   * Emits a TOKENS_REFRESHED event so React components can update their state.
-   */
-  private async refreshTokens(): Promise<void> {
-    try {
-      const apiClient = getBCSCApiClient()
-
-      if (!apiClient?.tokens?.refresh_token) {
-        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
-        return
-      }
-
-      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
-
-      // Emit event so React components (e.g., BCSCAccountProvider) can refresh their data
-      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
-    } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
+    // Check if this is a verification request reviewed notification (send-video)
+    if (isVerificationRequestReviewed(data)) {
+      this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
+      this.verificationResponseService.handleRequestReviewed()
     }
   }
 

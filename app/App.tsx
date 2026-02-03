@@ -2,6 +2,10 @@ import Root from '@/Root'
 import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-linking'
 import { FcmService, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
+import {
+  VerificationResponseService,
+  VerificationResponseServiceProvider,
+} from '@/bcsc-theme/features/verification-response'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -65,9 +69,10 @@ getIssuer()
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods
 const pairingService = new PairingService(appLogger)
+const verificationResponseService = new VerificationResponseService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
-const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, appMode)
+const fcmViewModel = new FcmViewModel(new FcmService(), appLogger, pairingService, verificationResponseService, appMode)
 
 const App = () => {
   const { t } = useTranslation()
@@ -105,27 +110,29 @@ const App = () => {
           >
             <NavigationContainerProvider>
               <PairingServiceProvider service={pairingService}>
-                <AnimatedComponentsProvider value={animatedComponents}>
-                  <AuthProvider>
-                    <NetworkProvider>
-                      <ErrorModal enableReport />
-                      <WebDisplay
-                        destinationUrl={surveyMonkeyUrl}
-                        exitUrl={surveyMonkeyExitUrl}
-                        visible={surveyVisible}
-                        onClose={() => setSurveyVisible(false)}
-                      />
-                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                        <ErrorAlertProvider>
-                          <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
-                            <Root />
-                          </KeyboardProvider>
-                        </ErrorAlertProvider>
-                      </TourProvider>
-                      <Toast topOffset={15} config={toastConfig} />
-                    </NetworkProvider>
-                  </AuthProvider>
-                </AnimatedComponentsProvider>
+                <VerificationResponseServiceProvider service={verificationResponseService}>
+                  <AnimatedComponentsProvider value={animatedComponents}>
+                    <AuthProvider>
+                      <NetworkProvider>
+                        <ErrorModal enableReport />
+                        <WebDisplay
+                          destinationUrl={surveyMonkeyUrl}
+                          exitUrl={surveyMonkeyExitUrl}
+                          visible={surveyVisible}
+                          onClose={() => setSurveyVisible(false)}
+                        />
+                        <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                          <ErrorAlertProvider>
+                            <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                              <Root />
+                            </KeyboardProvider>
+                          </ErrorAlertProvider>
+                        </TourProvider>
+                        <Toast topOffset={15} config={toastConfig} />
+                      </NetworkProvider>
+                    </AuthProvider>
+                  </AnimatedComponentsProvider>
+                </VerificationResponseServiceProvider>
               </PairingServiceProvider>
             </NavigationContainerProvider>
           </ThemeProvider>

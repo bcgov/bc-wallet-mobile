@@ -1,18 +1,16 @@
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
+import { getApp } from '@react-native-firebase/app'
+import {
+  FirebaseMessagingTypes,
+  getInitialNotification,
+  getMessaging,
+  onMessage,
+  onNotificationOpenedApp,
+  setBackgroundMessageHandler,
+} from '@react-native-firebase/messaging'
 
 // ============================================================================
 // Status Notification Types
 // ============================================================================
-
-export type BCSCStatusNotificationClaims = {
-  aud: string
-  iss: string
-  bcsc_reason: string
-  bcsc_event: string
-  exp: number
-  iat: number
-  jti: string
-}
 
 export type StatusNotification = {
   bcsc_status_notification: string // JSON string of BCSCStatusNotificationClaims
@@ -83,7 +81,9 @@ export type FcmUnknownMessage = FcmMessageBase & {
 
 export type FcmMessage = FcmChallengeMessage | FcmStatusMessage | FcmNotificationMessage | FcmUnknownMessage
 
-export type FcmMessageHandler = (message: FcmMessage) => void
+export type FcmMessageHandler = (message: FcmMessage, delivery?: FcmDeliveryContext) => void
+
+export type FcmDeliveryContext = { source: 'foreground' } | { source: 'background' }
 
 /**
  * Lightweight pub-sub wrapper around Firebase Cloud Messaging so screens/view models
@@ -104,18 +104,21 @@ export class FcmService {
     }
     this.initialized = true
 
+    const app = getApp()
+    const messagingInstance = getMessaging(app)
+
     // Handle foreground messages
-    this.foregroundSubscription = messaging().onMessage((remoteMessage) => {
-      this.emit(remoteMessage)
+    this.foregroundSubscription = onMessage(messagingInstance, (remoteMessage) => {
+      this.emit(remoteMessage, { source: 'foreground' })
     })
 
     // Handle when user taps notification while app is in background
-    this.notificationOpenedSubscription = messaging().onNotificationOpenedApp((remoteMessage) => {
+    this.notificationOpenedSubscription = onNotificationOpenedApp(messagingInstance, (remoteMessage) => {
       this.emit(remoteMessage)
     })
 
     // Handle when app was killed and user taps notification to launch it
-    const initialNotification = await messaging().getInitialNotification()
+    const initialNotification = await getInitialNotification(messagingInstance)
     if (initialNotification) {
       this.emit(initialNotification)
     }
@@ -124,7 +127,7 @@ export class FcmService {
     // not processed here. The OS notification system delivers them to the user and
     // any challenge/status handling is performed only when the app is brought to the
     // foreground and messages are received via the foreground listener above.
-    messaging().setBackgroundMessageHandler(async () => {
+    setBackgroundMessageHandler(messagingInstance, async () => {
       // Intentionally left as a no-op: do not process challenge/status data while the
       // app is in the background; rely on the foreground flow for handling.
     })
@@ -144,9 +147,9 @@ export class FcmService {
     return () => this.handlers.delete(handler)
   }
 
-  private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage): void {
+  private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage, delivery?: FcmDeliveryContext): void {
     const message = this.parseMessage(remoteMessage)
-    this.handlers.forEach((handler) => handler(message))
+    this.handlers.forEach((handler) => handler(message, delivery))
   }
 
   private parseMessage(remoteMessage: FirebaseMessagingTypes.RemoteMessage): FcmMessage {

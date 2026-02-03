@@ -2,6 +2,7 @@ import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBan
 import { createVerifyHelpHeaderButton } from '@/bcsc-theme/components/HelpHeaderButton'
 import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
+import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
@@ -65,6 +66,9 @@ const VerifyStack = () => {
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
+
+  // Listen for verification approval push notifications and navigate to success screen
+  useVerificationResponseListener()
 
   return (
     <Stack.Navigator
