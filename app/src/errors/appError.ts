@@ -24,6 +24,7 @@ export class AppError extends Error {
   appEvent: AppEventCode // ie: no_internet
   description: string // ie: Please check your network connection and try again.
   timestamp: string // ISO timestamp of when the error was created
+  handled: boolean // Whether this error has been handled by a policy
 
   constructor(title: string, description: string, identity: ErrorIdentity, options?: ErrorOptions) {
     super(`${title}: ${description}`, options)
@@ -36,6 +37,7 @@ export class AppError extends Error {
     this.appEvent = identity.appEvent
     this.description = description
     this.timestamp = new Date().toISOString()
+    this.handled = false
 
     // On creation, automatically track the error in analytics
     Analytics.trackErrorEvent(this)
@@ -96,7 +98,18 @@ export class AppError extends Error {
       technicalMessage: this.technicalMessage,
       code: this.code,
       timestamp: this.timestamp,
+      handled: this.handled,
       cause: this.cause,
     }
   }
+}
+
+/**
+ * Check if an error is an AppError that has already been handled by an error policy.
+ *
+ * @param error - The error to check
+ * @returns True if the error is an AppError and has been handled
+ */
+export function isHandledAppError(error: unknown): error is AppError {
+  return error instanceof AppError && error.handled
 }

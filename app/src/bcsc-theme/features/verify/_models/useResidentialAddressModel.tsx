@@ -158,10 +158,9 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         },
       })
 
-      // device previously registered, but no deviceCode found in store
-      if (deviceAuth === null && !store.bcscSecure.deviceCode) {
-        logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
-        throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
+      // null if handled by error policies
+      if (!deviceAuth) {
+        return
       }
 
       Toast.show({
@@ -171,13 +170,6 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         autoHide: true,
         visibilityTime: 1500,
       })
-
-      // device has already been registered
-      if (deviceAuth === null) {
-        logger.info(`Device has already been registered`)
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
-        return
-      }
 
       logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
 

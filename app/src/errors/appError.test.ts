@@ -26,6 +26,7 @@ describe('AppError', () => {
       expect(error.technicalMessage).toBe(message)
       expect(error.cause).toBeInstanceOf(Error)
       expect(error.timestamp).toBeDefined()
+      expect(error.handled).toBe(false)
     })
 
     it('should track error event in analytics upon creation', () => {
@@ -145,6 +146,7 @@ describe('AppError', () => {
         code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
         cause: cause,
+        handled: false,
       })
 
       jest.useRealTimers()

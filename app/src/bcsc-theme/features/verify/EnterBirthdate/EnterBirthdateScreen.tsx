@@ -9,15 +9,16 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEnterBirthdateViewModel } from './EnterBirthdateViewModel'
+import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
@@ -30,13 +31,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  // Load view model
   const vm = useEnterBirthdateViewModel(navigation)
 
-  // UI State management
   const [loading, setLoading] = useState(false)
   const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [date, setDate] = useState(vm.initialDate ?? today)
+  const dateRef = useRef(vm.initialDate ?? today)
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -54,6 +54,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     const day = date.getDate()
     const realDate = new Date(year, month, day, 12, 0, 0, 0)
     setDate(realDate)
+    dateRef.current = realDate
   }
 
   const handleSubmit = async () => {
@@ -65,8 +66,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         return null
       }
 
-      await vm.authorizeDevice(vm.serial, date)
+      await vm.authorizeDevice(vm.serial, dateRef.current)
     } catch (error) {
+      if (isHandledAppError(error)) {
+        return
+      }
+
       logger.error('CSN and birthdate mismatch, card not found', { error })
       navigation.navigate(BCSCScreens.MismatchedSerial)
     } finally {
