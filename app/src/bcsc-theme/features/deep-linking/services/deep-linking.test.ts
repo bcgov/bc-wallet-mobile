@@ -211,11 +211,13 @@ describe('DeepLinkService', () => {
     await service.init()
 
     // Mock URL to return empty host for this specific URL pattern
-    const originalURL = global.URL
+    // Type assertion helper to avoid ESLint no-extra-semi issues
+    const globalWithURL = global as unknown as { URL: typeof URL }
+    const originalURL = globalWithURL.URL
     const customSchemeUrl =
       'ca.bc.gov.id.servicescard://pair/https%3A%2F%2Fexample.com%2Fdevice%2FTest+Service%2FABC123'
 
-    global.URL = class extends originalURL {
+    globalWithURL.URL = class extends originalURL {
       constructor(url: string) {
         super(url)
         // Simulate the behavior where custom schemes parse but return empty host
@@ -239,7 +241,7 @@ describe('DeepLinkService', () => {
         })
       )
     } finally {
-      global.URL = originalURL
+      globalWithURL.URL = originalURL
     }
   })
 })
