@@ -2954,7 +2954,6 @@ class BcscCoreModule(
             if (prefs.contains("email_address")) {
                 result.putString("emailAddress", prefs.getString("email_address", null))
             }
-
             if (prefs.contains("user_submitted_verification_video")) {
                 result.putBoolean(
                     "userSubmittedVerificationVideo",
