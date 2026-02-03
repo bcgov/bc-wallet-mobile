@@ -1,7 +1,7 @@
-import { HelpCentreUrl } from '@/constants'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BasicAppContext } from '@mocks/helpers/app'
+import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import {

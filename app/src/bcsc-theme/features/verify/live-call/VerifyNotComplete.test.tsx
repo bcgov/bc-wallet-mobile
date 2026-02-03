@@ -1,5 +1,5 @@
-import { HelpCentreUrl } from '@/constants'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
