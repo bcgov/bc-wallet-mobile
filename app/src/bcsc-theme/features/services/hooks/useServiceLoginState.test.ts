@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 
 import { useServiceLoginState } from './useServiceLoginState'
 
@@ -23,6 +23,8 @@ jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
 
 let mockHasPendingPairing = false
 const mockConsumePending = jest.fn()
+const mockOnNavigationRequest = jest.fn()
+let navigationCallback: ((event: { params: { serviceTitle: string; pairingCode: string } }) => void) | null = null
 
 jest.mock('../../pairing', () => ({
   usePairingService: jest.fn(() => ({
@@ -30,6 +32,11 @@ jest.mock('../../pairing', () => ({
       return mockHasPendingPairing
     },
     consumePendingPairing: mockConsumePending,
+    onNavigationRequest: (callback: (event: { params: { serviceTitle: string; pairingCode: string } }) => void) => {
+      navigationCallback = callback
+      mockOnNavigationRequest(callback)
+      return jest.fn() // unsubscribe function
+    },
   })),
 }))
 
@@ -40,6 +47,8 @@ describe('useServiceLoginState', () => {
     mockLoad = jest.fn()
     mockHasPendingPairing = false
     mockConsumePending.mockReset()
+    mockOnNavigationRequest.mockReset()
+    navigationCallback = null
     logger.info.mockReset()
     logger.debug.mockReset()
     logger.error.mockReset()
@@ -235,5 +244,46 @@ describe('useServiceLoginState', () => {
     await waitFor(() => expect(result.current.state.pairingCode).toBeUndefined())
     expect(mockConsumePending).toHaveBeenCalledTimes(1)
     expect(result.current.serviceHydrated).toBe(false)
+  })
+
+  it('subscribes to live pairing events on mount', () => {
+    const metadata = { getClientMetadata: jest.fn() }
+
+    renderHook(() =>
+      useServiceLoginState({
+        metadata,
+        logger,
+      })
+    )
+
+    expect(mockOnNavigationRequest).toHaveBeenCalledTimes(1)
+    expect(typeof mockOnNavigationRequest.mock.calls[0][0]).toBe('function')
+  })
+
+  it('updates state when live pairing event is received', async () => {
+    const metadata = { getClientMetadata: jest.fn() }
+
+    const { result } = renderHook(() =>
+      useServiceLoginState({
+        metadata,
+        logger,
+      })
+    )
+
+    expect(result.current.state.pairingCode).toBeUndefined()
+    expect(result.current.state.serviceTitle).toBeUndefined()
+
+    // Simulate a deep link arriving while the screen is mounted
+    act(() => {
+      navigationCallback?.({
+        params: {
+          serviceTitle: 'BC Parks',
+          pairingCode: 'DEEP-LINK-123',
+        },
+      })
+    })
+
+    await waitFor(() => expect(result.current.state.pairingCode).toBe('DEEP-LINK-123'))
+    expect(result.current.state.serviceTitle).toBe('BC Parks')
   })
 })
