@@ -2,6 +2,22 @@
 
 This document catalogs all components, screens, and utilities using `react-native-vision-camera` (v4.7.3) in the BC Wallet Mobile application.
 
+> **Note**: For a focused list of components specifically used for **barcode/QR code scanning**, see [BARCODE_QR_SCANNING_COMPONENTS.md](./BARCODE_QR_SCANNING_COMPONENTS.md)
+
+## Quick Reference Table
+
+| Component/Screen | Camera Usage | Barcode/QR Scanning |
+|-----------------|--------------|---------------------|
+| CodeScanningCamera | ✅ Core scanning | ✅ Yes |
+| MaskedCamera | ✅ Photo capture | ⚠️ Optional |
+| ScanSerialScreen | ✅ Barcode scanning | ✅ Yes |
+| EvidenceCaptureScreen | ✅ Photo + scanning | ✅ Yes |
+| TransferQRScannerScreen | ✅ QR scanning | ✅ Yes |
+| TakePhotoScreen | ✅ Photo capture | ❌ No |
+| TakeVideoScreen | ✅ Video recording | ❌ No |
+| StartCallScreen | ✅ Microphone only | ❌ No |
+| useCardScanner | 🔧 Hook | ✅ Barcode processing |
+
 ## Core Camera Components
 
 ### CodeScanningCamera
