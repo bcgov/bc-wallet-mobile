@@ -32,6 +32,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential } from '../utils/bcsc-credential'
+import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
  * Hook to manage secure state and actions for sensitive data.
@@ -68,6 +69,7 @@ import { createMinimalCredential } from '../utils/bcsc-credential'
 export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
   // ============================================================================
   // PERSISTENCE LAYER - Direct native storage operations, not for external use
@@ -184,6 +186,11 @@ export const useSecureActions = () => {
           type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
           payload: [tokens.refreshToken],
         })
+
+        // Only sync to apiClient if client is ready AND we have a valid refresh token
+        if (isClientReady && apiClient && tokens.refreshToken) {
+          promises.push(apiClient.getTokensForRefreshToken(tokens.refreshToken))
+        }
       }
 
       if (tokens.registrationAccessToken !== undefined) {
@@ -203,7 +210,7 @@ export const useSecureActions = () => {
       promises.push(persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken))
       await Promise.all(promises)
     },
-    [dispatch, persistTokens]
+    [dispatch, persistTokens, apiClient, isClientReady]
   )
 
   /**
