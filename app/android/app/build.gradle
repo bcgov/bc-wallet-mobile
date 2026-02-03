@@ -104,6 +104,11 @@ android {
     ndkVersion rootProject.ext.ndkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+    
+    androidResources {
+        noCompress += ["bundle"]
+    }
+
     externalNativeBuild {
         cmake {
             version "3.22.1"
@@ -183,8 +188,6 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
     implementation platform('com.google.firebase:firebase-bom:33.7.0')
-
-    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
     
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
