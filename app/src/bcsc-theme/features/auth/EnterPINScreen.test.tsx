@@ -1,5 +1,8 @@
+import { HelpCentreUrl } from '@/constants'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, waitFor } from '@testing-library/react-native'
+import { testIdWithKey } from '@bifold/core'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import {
   AccountSecurityMethod,
@@ -194,6 +197,25 @@ describe('EnterPINScreen', () => {
 
       await waitFor(() => {
         expect(tree.getByText('Get Help')).toBeTruthy()
+      })
+    })
+
+    it('navigates to AuthWebView with forgot PIN help when Get Help is pressed', async () => {
+      const tree = render(
+        <BasicAppContext>
+          <EnterPINScreen navigation={mockNavigation} />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('Get Help')).toBeTruthy()
+      })
+
+      fireEvent.press(tree.getByTestId(testIdWithKey('GetHelp')))
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AuthWebView, {
+        url: HelpCentreUrl.FORGOT_PIN,
+        title: expect.any(String),
       })
     })
 
