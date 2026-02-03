@@ -2,8 +2,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '@mocks/helpers/app'
-import CodeScanningCamera, { EnhancedCode } from './CodeScanningCamera'
-import { CodeScannerFrame } from 'react-native-vision-camera'
+import CodeScanningCamera from './CodeScanningCamera'
 
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => ({
@@ -84,6 +83,7 @@ describe('CodeScanningCamera', () => {
       </BasicAppContext>
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useCodeScanner } = require('react-native-vision-camera')
     expect(useCodeScanner).toHaveBeenCalledWith(
       expect.objectContaining({

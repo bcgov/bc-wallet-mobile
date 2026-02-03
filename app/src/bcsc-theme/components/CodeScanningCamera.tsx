@@ -108,7 +108,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { ColorPalette, Spacing } = useTheme()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
-  const { width, height } = useWindowDimensions()
+  const { width } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
@@ -454,7 +454,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       {/* Barcode highlight overlay */}
       {showBarcodeHighlight &&
         detectedCodes.map((code, index) => {
-          if (!code.position) return null
+          if (!code.position) {
+            return null
+          }
 
           return (
             <Animated.View
