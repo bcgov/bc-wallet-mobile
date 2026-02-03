@@ -19,7 +19,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest, updateAccountFlags, updateTokens } = useSecureActions()
+  const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
@@ -45,20 +45,17 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         }
 
         if (store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
-          const { refresh_token } = await token.checkDeviceCodeStatus(
-            store.bcscSecure.deviceCode,
-            store.bcscSecure.userCode
-          )
-
-          if (refresh_token) {
-            await updateTokens({ refreshToken: refresh_token })
-          }
+          // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+          await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
         }
 
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } else {
         navigation.navigate(BCSCScreens.PendingReview)
       }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[useSetupStepsModel] Failed to check status: ${message}`)
     } finally {
       setIsCheckingStatus(false)
     }
@@ -70,7 +67,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     navigation,
     t,
     token,
-    updateTokens,
+    logger,
   ])
 
   /**

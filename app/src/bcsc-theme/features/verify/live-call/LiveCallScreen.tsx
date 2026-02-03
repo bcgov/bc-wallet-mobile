@@ -19,7 +19,6 @@ import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
 import CallProcessingView from './components/CallProcessingView'
 
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { CROP_DELAY_MS } from '@/constants'
 import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
@@ -42,7 +41,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
-  const { updateTokens } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // check if verified, save token if so, and then navigate accordingly
@@ -52,14 +50,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
-
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
-      }
+      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
 
       navigation.dispatch(
         CommonActions.reset({
@@ -83,7 +75,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, updateTokens, navigation, logger, t])
+  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
