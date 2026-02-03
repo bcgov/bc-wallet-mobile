@@ -1,7 +1,16 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useDeveloperMode, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useDeveloperMode,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -59,7 +68,13 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
 
   return (
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>
-      <Pressable onPress={incrementDeveloperMenuCounter} style={styles.pressableArea}>
+      <Pressable
+        onPress={incrementDeveloperMenuCounter}
+        style={styles.pressableArea}
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no-hide-descendants"
+        testID={testIdWithKey('DeveloperCounter')}
+      >
         <View style={styles.contentContainer}>
           <GenericCardImage />
           <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
@@ -69,11 +84,19 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       </Pressable>
 
       <View style={styles.controlsContainer}>
-        <Button buttonType={ButtonType.Primary} title={t('BCSC.AccountSetup.AddAccount')} onPress={handleAddAccount} />
+        <Button
+          buttonType={ButtonType.Primary}
+          title={t('BCSC.AccountSetup.AddAccount')}
+          onPress={handleAddAccount}
+          accessibilityLabel={t('BCSC.AccountSetup.AddAccount')}
+          testID={testIdWithKey('AddAccount')}
+        />
         <Button
           buttonType={ButtonType.Secondary}
           title={t('BCSC.AccountSetup.TransferAccount')}
           onPress={handleTransferAccount}
+          accessibilityLabel={t('BCSC.AccountSetup.TransferAccount')}
+          testID={testIdWithKey('TransferAccount')}
         />
       </View>
     </ScreenWrapper>

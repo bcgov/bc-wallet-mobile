@@ -11,6 +11,7 @@ const translation = {
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",
+    "DismissMenu": "Dismiss menu (FR)",
   },
   "Error": {
     "Title2020": "Incapable d'analiser l'invitation.",
@@ -155,6 +156,9 @@ const translation = {
     "ScanQRCode": "Scanner un code QR",
   },
   "BCSC": {
+    "Components": {
+      "CloseDropdown": "Close dropdown menu (FR)",
+    },
     "Title": "BC Services Card (FR)",
     "FullTitle": "BC Services Card App (FR)",
     "LocaleStringFormat": "fr-CA",
@@ -281,6 +285,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
+      "Remove": "Remove (FR)",
+      "Open": "Open (FR)",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -309,6 +315,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from a computer (FR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
+      "ViewMessages": "View new messages (FR)",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)",
@@ -447,6 +454,7 @@ const translation = {
       "CompletionTitle": "You're done in this app (FR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
       "BookmarkService": "Save link to: (FR)",
+      "ToggleBookmark": "Toggle bookmark (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
@@ -546,6 +554,7 @@ const translation = {
       "LimitedAccess": "Limited access to services (FR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
       "ChooseID": "Choose ID (FR)",
+      "OpenAccountServices": "Open account services (FR)",
     },
     "AccountSetup": {
       "Title": "BC Services Card Account (FR)",
@@ -582,6 +591,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again. (FR)",
       "ErrorTakingPhoto": "Failed to take photo. Please try again. (FR)",
       "OK": "OK (FR)",
+      "CancelCamera": "Cancel camera (FR)",
+      "TakePhoto": "Take photo (FR)",
+      "ToggleFlash": "Toggle flash (FR)",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings (FR)",
@@ -754,6 +766,7 @@ const translation = {
         "Heading": "Can you see and hear yourself clearly in the video? (FR)",
         "UseVideo": "Use this video (FR)",
         "RetakeVideo": "Retake video (FR)",
+        "TogglePlayPause": "Toggle play pause (FR)",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long. (FR)",

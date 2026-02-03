@@ -53,6 +53,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           props.onChange(e.nativeEvent.text)
         }}
         onFocus={props.onFocus}
+        accessibilityLabel={props.label}
         testID={testIdWithKey(`${props.id}-input`)}
         {...props.textInputProps}
       />

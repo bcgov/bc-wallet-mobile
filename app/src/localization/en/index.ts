@@ -11,6 +11,7 @@ const translation = {
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
+    "DismissMenu": "Dismiss menu",
   },
   "Error": {
     "Title2020": "Unable to parse invitation",
@@ -155,6 +156,9 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "Components": {
+      "CloseDropdown": "Close dropdown menu",
+    },
     "Title": "BC Services Card",
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
@@ -281,6 +285,8 @@ const translation = {
       "LoginErrorTitle": "Unable to quick login to service",
       "SavedServices": "Saved Services",
       "NoSavedServices": "No saved services",
+      "Remove": "Remove",
+      "Open": "Open",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -309,6 +315,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
       "LogInFromComputerTitle": "Log in from a computer",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
+      "ViewMessages": "View new messages",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -447,6 +454,7 @@ const translation = {
       "CompletionTitle": "You're done in this app",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
       "BookmarkService": "Save link to:",
+      "ToggleBookmark": "Toggle bookmark",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -546,6 +554,7 @@ const translation = {
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
       "ChooseID": "Choose ID",
+      "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {
       "Title": "BC Services Card Account",
@@ -582,6 +591,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again.",
       "ErrorTakingPhoto": "Failed to take photo. Please try again.",
       "OK": "OK",
+      "CancelCamera": "Cancel camera",
+      "TakePhoto": "Take photo",
+      "ToggleFlash": "Toggle flash",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -754,6 +766,7 @@ const translation = {
         "Heading": "Can you see and hear yourself clearly in the video?",
         "UseVideo": "Use this video",
         "RetakeVideo": "Retake video",
+        "TogglePlayPause": "Toggle play pause",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
