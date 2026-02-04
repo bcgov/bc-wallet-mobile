@@ -78,6 +78,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
     }
   >
     <View
+      accessibilityLabel="BCSC.CancelledVerification.Button"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -114,6 +115,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
           "padding": 16,
         }
       }
+      testID="com.ariesbifold:id/SystemModalButton"
     >
       <View
         style={
