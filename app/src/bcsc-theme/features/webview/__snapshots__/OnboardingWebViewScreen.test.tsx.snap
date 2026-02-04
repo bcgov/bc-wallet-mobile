@@ -26,6 +26,11 @@ exports[`OnboardingWebView renders correctly 1`] = `
     }
   }
   startInLoadingState={true}
+  style={
+    {
+      "backgroundColor": "#F2F2F2",
+    }
+  }
   testID="mocked-webview"
   thirdPartyCookiesEnabled={true}
   userAgent="Single App"

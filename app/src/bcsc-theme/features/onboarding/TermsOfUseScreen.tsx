@@ -1,13 +1,16 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createTermsOfUseWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ContentGradient, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { WebViewContent } from '../webview/WebViewContent'
+
+// Slightly larger height than default to make more obvious given terms of use font size
+const TERMS_CONTENT_GRADIENT_HEIGHT = 60
 
 interface TermsOfUseScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUse>
@@ -31,23 +34,26 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   })
 
   const controls = (
-    <Button
-      title={t('BCSC.Onboarding.AcceptAndContinueButton')}
-      buttonType={ButtonType.Primary}
-      onPress={async () => {
-        const status = await PushNotifications.status()
+    <View style={{ width: '100%' }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} height={TERMS_CONTENT_GRADIENT_HEIGHT} />
+      <Button
+        title={t('BCSC.Onboarding.AcceptAndContinueButton')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          const status = await PushNotifications.status()
 
-        // if permission is granted, skip notification screen
-        if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
-          return navigation.navigate(BCSCScreens.OnboardingSecureApp)
-        }
+          // if permission is granted, skip notification screen
+          if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
+            return navigation.navigate(BCSCScreens.OnboardingSecureApp)
+          }
 
-        navigation.navigate(BCSCScreens.OnboardingNotifications)
-      }}
-      testID={testIdWithKey('AcceptAndContinue')}
-      accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
-      disabled={!webViewIsLoaded}
-    />
+          navigation.navigate(BCSCScreens.OnboardingNotifications)
+        }}
+        testID={testIdWithKey('AcceptAndContinue')}
+        accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
+        disabled={!webViewIsLoaded}
+      />
+    </View>
   )
 
   return (
