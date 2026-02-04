@@ -66,8 +66,7 @@ class JWS {
       throw JOSEException("The JWS object must be in a signed or verified state to serialize")
     }
 
-    let compact = try header.serialize() + "." + Base64URL.encode((jwtPayload?.toJSONString())!) + "." + signature
-    return compact
+    return try header.serialize() + "." + Base64URL.encode((jwtPayload?.toJSONString())!) + "." + signature
   }
 
   func getJwtClaimsSet() throws -> JWTClaimsSet? {
