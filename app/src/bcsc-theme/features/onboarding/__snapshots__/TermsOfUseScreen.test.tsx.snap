@@ -83,6 +83,11 @@ exports[`TermsOfUse renders correctly 1`] = `
           }
         }
         startInLoadingState={true}
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+          }
+        }
         testID="mocked-webview"
         thirdPartyCookiesEnabled={true}
         userAgent="Single App"
@@ -104,87 +109,179 @@ exports[`TermsOfUse renders correctly 1`] = `
     }
   >
     <View
-      accessibilityLabel="BCSC.Onboarding.AcceptAndContinueButton"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": true,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={false}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#757575",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
+          "width": "100%",
         }
       }
-      testID="com.ariesbifold:id/AcceptAndContinue"
     >
       <View
         style={
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
+            "height": 60,
+            "position": "absolute",
+            "top": -60,
+            "width": "100%",
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <RNSVGSvgView
+          bbHeight="60"
+          bbWidth="100%"
+          focusable={false}
+          height="60"
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
               },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-              ],
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "flex": 0,
+                "height": 60,
+                "width": "100%",
+              },
             ]
           }
+          width="100%"
         >
-          BCSC.Onboarding.AcceptAndContinueButton
-        </Text>
+          <RNSVGGroup
+            fill={
+              {
+                "payload": 4278190080,
+                "type": 0,
+              }
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGLinearGradient
+                gradient={
+                  [
+                    0,
+                    15921906,
+                    1,
+                    -855310,
+                  ]
+                }
+                gradientTransform={null}
+                gradientUnits={0}
+                name="gradient"
+                x1="0%"
+                x2="0%"
+                y1="0%"
+                y2="100%"
+              />
+            </RNSVGDefs>
+            <RNSVGRect
+              fill={
+                {
+                  "brushRef": "gradient",
+                  "type": 1,
+                }
+              }
+              height="60"
+              propList={
+                [
+                  "fill",
+                ]
+              }
+              width="100%"
+              x={0}
+              y={0}
+            />
+          </RNSVGGroup>
+        </RNSVGSvgView>
+      </View>
+      <View
+        accessibilityLabel="BCSC.Onboarding.AcceptAndContinueButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": true,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={false}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#757575",
+            "borderRadius": 4,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/AcceptAndContinue"
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                ],
+              ]
+            }
+          >
+            BCSC.Onboarding.AcceptAndContinueButton
+          </Text>
+        </View>
       </View>
     </View>
   </View>

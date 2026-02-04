@@ -65,7 +65,7 @@ protocol KeyPairManagerProtocol {
  */
 class KeyPairManager: KeyPairManagerProtocol {
   // private let log = Logger(source: "KeyPairManager")
-  /**
+  /*
    Returns true if a public / private key pair in the KeyChain with the given `label` can be found.
 
    - Parameter label: The unique `kSecAttrApplicationTag` attribute used to find the key.
@@ -130,9 +130,7 @@ class KeyPairManager: KeyPairManagerProtocol {
       return nil
     }
 
-    let pk = makePrivateKeyInfo(dictionary: result as! [String: Any])
-
-    return pk
+    return makePrivateKeyInfo(dictionary: result as! [String: Any])
   }
 
   private func makePrivateKeyInfo(dictionary: [String: Any]) -> PrivateKeyInfo? {

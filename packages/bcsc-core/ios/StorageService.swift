@@ -54,10 +54,10 @@ class StorageService {
     }
   }
 
-  // NOTE: While the system reads an 'accounts' array from the account_list file,
-  // and could theoretically support multiple accounts, the current implementation
-  // only uses the *first* account ID found. For current practical purposes,
-  // there should only be one account ID present in the 'accounts' array.
+  /// NOTE: While the system reads an 'accounts' array from the account_list file,
+  /// and could theoretically support multiple accounts, the current implementation
+  /// only uses the *first* account ID found. For current practical purposes,
+  /// there should only be one account ID present in the 'accounts' array.
   var currentAccountID: String? {
     let pathDirectory = defaultSearchPathDirectory
 
@@ -88,7 +88,8 @@ class StorageService {
         return firstAccountID
       } else {
         logger.error(
-          "Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
+          "Failed to parse account_list JSON or accounts array is empty/first ID is empty."
+        )
         return nil
       }
     } catch {
@@ -113,10 +114,8 @@ class StorageService {
           .appendingPathComponent("\(currentBundleID)/data")
           .appendingPathComponent(issuerURLComponent)
 
-      let issuerData = try String(contentsOf: issuerFileURL, encoding: .utf8)
+      return try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-
-      return issuerData
     } catch {
       logger.error("currentIssuer: Could not access account_list to read issuer: \(error).")
       return productionIssuer
@@ -127,7 +126,9 @@ class StorageService {
     return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
   }
 
-  var provider: String { "\(issuer)/device/" }
+  var provider: String {
+    "\(issuer)/device/"
+  }
 
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
@@ -246,7 +247,8 @@ class StorageService {
       if fileManager.fileExists(atPath: accountDirectoryUrl.path) {
         try fileManager.removeItem(atPath: accountDirectoryUrl.path)
         logger.log(
-          "StorageService: Successfully removed account files for account: \(accountID)")
+          "StorageService: Successfully removed account files for account: \(accountID)"
+        )
       } else {
         logger.log("StorageService: Account files for account: \(accountID) not found")
       }
@@ -281,7 +283,8 @@ class StorageService {
       // Write issuer file with atomic option
       try issuer.write(to: issuerFileURL, atomically: true, encoding: .utf8)
       logger.log(
-        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path) (fileExists: \(FileManager.default.fileExists(atPath: issuerFileURL.path)))")
+        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path) (fileExists: \(FileManager.default.fileExists(atPath: issuerFileURL.path)))"
+      )
       return true
     } catch {
       logger.log("StorageService: Error saving issuer to file: \(error)")
@@ -402,8 +405,8 @@ class StorageService {
     }
   }
 
-  // https://id.gov.bc.ca -> "prod"
-  // https://iddev.gov.bc.ca -> "dev"
+  /// https://id.gov.bc.ca -> "prod"
+  /// https://iddev.gov.bc.ca -> "dev"
   private func getIssuerNameFromIssuer(issuer: String) -> String {
     guard let host = URLComponents(string: issuer)?.host else {
       return "prod"

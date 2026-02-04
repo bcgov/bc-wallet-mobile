@@ -87,6 +87,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       domStorageEnabled={true}
       allowsBackForwardNavigationGestures={true}
       bounces={false}
+      style={{ backgroundColor: ColorPalette.brand.primaryBackground }}
       renderLoading={() => (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size={'large'} />
