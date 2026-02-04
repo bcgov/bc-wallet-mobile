@@ -65,7 +65,7 @@ protocol KeyPairManagerProtocol {
  */
 class KeyPairManager: KeyPairManagerProtocol {
   // private let log = Logger(source: "KeyPairManager")
-  /* 
+  /*
    Returns true if a public / private key pair in the KeyChain with the given `label` can be found.
 
    - Parameter label: The unique `kSecAttrApplicationTag` attribute used to find the key.
