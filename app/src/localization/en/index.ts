@@ -1034,9 +1034,15 @@ const translation = {
 		"Actions": {
 			"DefaultOK": "OK",
       "Close": "Close",
+      "Cancel": "Cancel",
       "GoToAppStore": "Go to App Store",
       "RemoveAccount": "Remove Account",
-		}
+      "UseData": "Use Data",
+		},
+    "CellularDetected": {
+      "Title": "Data Use",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
+    }
 	},
   "BCWalletError": {
     "Camera": {
