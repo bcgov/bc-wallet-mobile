@@ -40,11 +40,13 @@ type UseGetSystemChecksReturn = Record<
 >
 
 /**
- * Hook to get system checks for different app scopes and their readiness.
+ * Hook to create system checks to be used by useSystemChecks hook.
+ *
+ * @see useSystemChecks.tsx
  *
  * @returns Object containing system check getters and readiness for each scope
  */
-export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
+export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -58,6 +60,7 @@ export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
 
   const defaultReadiness = isNavigationReady && client && isClientReady
+  const accountExpirationDate = accountContext?.account?.account_expiration_date
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
   /**
@@ -87,8 +90,6 @@ export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    const accountExpirationDate = accountContext?.account?.account_expiration_date
-
     if (!accountExpirationDate) {
       throw new Error('Account expiration date undefined. Did you forget to check isReady?')
     }
@@ -102,13 +103,8 @@ export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
       new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-      // new AccountExpiryWarningAlertSystemCheck(
-      //   accountExpirationDate,
-      //   Boolean(store.bcsc.hasDismissedExpiryAlert),
-      //   utils,
-      //   navigation
-      // ),
-      // new AccountExpiryAlertSystemCheck(accountExpirationDate, navigation),
+      // AccountExpiryWarningAlertSystemCheck
+      // AccountExpiryAlertSystemCheck
     ]
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
@@ -118,7 +114,7 @@ export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
 
     return systemChecks
   }, [
-    accountContext?.account?.account_expiration_date,
+    accountExpirationDate,
     isBCServicesCardBundle,
     navigation,
     registrationApi,
@@ -129,16 +125,23 @@ export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
     utils,
   ])
 
-  return {
-    [SystemCheckScope.STARTUP]: {
-      getSystemChecks: getStartupSystemChecks,
-      isReady: Boolean(defaultReadiness && store.stateLoaded),
-    },
-    [SystemCheckScope.MAIN_STACK]: {
-      getSystemChecks: getMainSystemChecks,
-      isReady: Boolean(
-        defaultReadiness && store.bcscSecure.isHydrated && accountContext?.account?.account_expiration_date
-      ),
-    },
-  }
+  return useMemo(() => {
+    return {
+      [SystemCheckScope.STARTUP]: {
+        getSystemChecks: getStartupSystemChecks,
+        isReady: Boolean(defaultReadiness && store.stateLoaded),
+      },
+      [SystemCheckScope.MAIN_STACK]: {
+        getSystemChecks: getMainSystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && accountExpirationDate),
+      },
+    }
+  }, [
+    accountExpirationDate,
+    defaultReadiness,
+    getMainSystemChecks,
+    getStartupSystemChecks,
+    store.bcscSecure.isHydrated,
+    store.stateLoaded,
+  ])
 }

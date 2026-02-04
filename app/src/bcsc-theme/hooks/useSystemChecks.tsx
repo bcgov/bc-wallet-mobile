@@ -12,7 +12,7 @@ import { AppState, DeviceEventEmitter } from 'react-native'
 import BCSCApiClient from '../api/client'
 import useTokenApi from '../api/hooks/useTokens'
 import { useBCSCApiClientState } from './useBCSCApiClient'
-import { useGetSystemChecks } from './useGetSystemChecks'
+import { useCreateSystemChecks } from './useCreateSystemChecks'
 
 export enum SystemCheckScope {
   STARTUP = 'STARTUP',
@@ -37,7 +37,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
-  const systemChecks = useGetSystemChecks()
+  const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
 
   // Get system checks for the specified scope (useGetSystemChecks)
@@ -111,15 +111,17 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       try {
         const systemCheckStrategies = await scopeSystemCheck.getSystemChecks()
 
-        const systemCheckStrategyNames = systemCheckStrategies.map(
-          (check) => check?.constructor?.name ?? 'UnknownSystemCheck'
+        const results = await runSystemChecks(systemCheckStrategies)
+
+        const systemCheckResults = systemCheckStrategies.reduce<Record<string, string>>((acc, check, index) => {
+          acc[check.constructor.name] = results[index] ? 'NO_ACTION' : 'ACTION_TAKEN'
+          return acc
+        }, {})
+
+        logger.info(
+          `[useSystemChecks]: Ran ${systemCheckStrategies.length} system checks on ${scope}`,
+          systemCheckResults
         )
-
-        logger.info(`[useSystemChecks]: Running ${systemCheckStrategies.length} system checks for scope: ${scope}`, {
-          systemChecks: systemCheckStrategyNames,
-        })
-
-        await runSystemChecks(systemCheckStrategies)
       } catch (error) {
         logger.error(`[useSystemChecks]: Error running system checks for scope: ${scope}:`, error as Error)
       }

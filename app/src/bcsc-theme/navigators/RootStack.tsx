@@ -22,7 +22,7 @@ const BCSCRootStack: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitError } = useErrorAlert()
-  const navigationContainer = useNavigationContainer()
+  const { isNavigationReady } = useNavigationContainer()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   useEffect(() => {
@@ -39,6 +39,8 @@ const BCSCRootStack: React.FC = () => {
   }, [dispatch, loadState, emitError, store.stateLoaded])
 
   // Check for existing account on initial load - only runs after state is loaded
+  // FIXME: This logic appears slightly too complex for the RootStack
+  // consider moving to a system check ie: V3AccountRequiresMigrationSystemCheck
   useEffect(() => {
     if (!store.stateLoaded || !loading) {
       return
@@ -66,8 +68,8 @@ const BCSCRootStack: React.FC = () => {
     asyncEffect()
   }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
 
-  // Show loading screen if state or API client or account status not ready yet
-  if (!store.stateLoaded || !isClientReady || loading || !navigationContainer.isNavigationReady) {
+  // Show loading screen if state, API client or navigation is not ready
+  if (!store.stateLoaded || !isClientReady || loading || !isNavigationReady) {
     return <LoadingScreenContent />
   }
 
