@@ -27,7 +27,7 @@ export const shouldStepBeDisabled = (isComplete: boolean, isFocused: boolean): b
  * Renders a Setup Step component.
  *
  * Rules:
- *  1. When the Step is focused is will be highlited
+ *  1. When the Step is focused is will be highlighted
  *  2. When the Step is complete is can not be pressed, and a green check will appear
  *  3. Subtext will be rendered below the Step header
  *  4. Additional children can be provided to be rendered below the subtext. ie: stepHeader->subtext->children
