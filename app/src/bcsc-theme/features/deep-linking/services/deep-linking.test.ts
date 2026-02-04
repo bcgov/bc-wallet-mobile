@@ -200,4 +200,48 @@ describe('DeepLinkService', () => {
     )
     expect(handler).toHaveBeenCalledWith(expect.not.objectContaining({ pairingCode: expect.any(String) }))
   })
+
+  it('falls back to custom scheme parsing when URL constructor returns empty host', async () => {
+    // This test covers the edge case where new URL() "succeeds" for custom schemes
+    // like ca.bc.gov.id.servicescard:// but returns an empty host, requiring fallback
+    // to the custom scheme parser
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    // Mock URL to return empty host for this specific URL pattern
+    // Type assertion helper to avoid ESLint no-extra-semi issues
+    const globalWithURL = global as unknown as { URL: typeof URL }
+    const originalURL = globalWithURL.URL
+    const customSchemeUrl =
+      'ca.bc.gov.id.servicescard://pair/https%3A%2F%2Fexample.com%2Fdevice%2FTest+Service%2FABC123'
+
+    globalWithURL.URL = class extends originalURL {
+      constructor(url: string) {
+        super(url)
+        // Simulate the behavior where custom schemes parse but return empty host
+        if (url.startsWith('ca.bc.gov.id.servicescard://')) {
+          Object.defineProperty(this, 'host', { value: '', writable: false })
+        }
+      }
+    } as typeof URL
+
+    try {
+      const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+      eventHandler?.({ url: customSchemeUrl })
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          rawUrl: customSchemeUrl,
+          host: 'pair',
+          path: '/https%3A%2F%2Fexample.com%2Fdevice%2FTest+Service%2FABC123',
+          serviceTitle: 'Test Service',
+          pairingCode: 'ABC123',
+        })
+      )
+    } finally {
+      globalWithURL.URL = originalURL
+    }
+  })
 })
