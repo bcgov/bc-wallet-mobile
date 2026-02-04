@@ -24,12 +24,27 @@ import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
 
+type UseGetSystemChecksReturn = Record<
+  SystemCheckScope,
+  {
+    /**
+     * Callback to get system checks for the scope
+     * @return Array of system check strategies
+     */
+    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    /**
+     * Indicates if the system checks for the scope are ready to be run
+     */
+    isReady: boolean
+  }
+>
+
 /**
  * Hook to get system checks for different app scopes and their readiness.
  *
  * @returns Object containing system check getters and readiness for each scope
  */
-export const useGetSystemChecks = () => {
+export const useGetSystemChecks = (): UseGetSystemChecksReturn => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -117,12 +132,13 @@ export const useGetSystemChecks = () => {
   return {
     [SystemCheckScope.STARTUP]: {
       getSystemChecks: getStartupSystemChecks,
-      isReady: defaultReadiness && store.stateLoaded,
+      isReady: Boolean(defaultReadiness && store.stateLoaded),
     },
     [SystemCheckScope.MAIN_STACK]: {
       getSystemChecks: getMainSystemChecks,
-      isReady:
-        defaultReadiness && store.bcscSecure.isHydrated && Boolean(accountContext?.account?.account_expiration_date),
+      isReady: Boolean(
+        defaultReadiness && store.bcscSecure.isHydrated && accountContext?.account?.account_expiration_date
+      ),
     },
   }
 }

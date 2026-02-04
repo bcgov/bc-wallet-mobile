@@ -1,5 +1,4 @@
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { useEventListener } from '@/hooks/useEventListener'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { runSystemChecks } from '@/services/system-checks/system-checks'
@@ -9,7 +8,7 @@ import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
+import { AppState, DeviceEventEmitter } from 'react-native'
 import BCSCApiClient from '../api/client'
 import useTokenApi from '../api/hooks/useTokens'
 import { useBCSCApiClientState } from './useBCSCApiClient'
@@ -38,18 +37,42 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
-
   const systemChecks = useGetSystemChecks()
+  const appStateRef = useRef(AppState.currentState)
 
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
 
-  // Internet connectivity event listener
-  useEventListener(() => {
-    return NetInfo.addEventListener(async (netInfo) => {
-      await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+  // Internet connectivity listener
+  useEffect(() => {
+    if (scope !== SystemCheckScope.STARTUP) {
+      return
+    }
+
+    const unsubscribeNetInfo = NetInfo.addEventListener(async ({ isConnected, isInternetReachable }) => {
+      // false negatives on iOS happen when app is in background/suspended state
+      if (appStateRef.current !== 'active') {
+        return
+      }
+
+      await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
     })
-  }, scope === SystemCheckScope.STARTUP)
+
+    const appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
+      appStateRef.current = nextAppState
+
+      // When app becomes active, refresh network state to ensure accurate status
+      if (nextAppState === 'active') {
+        const { isConnected, isInternetReachable } = await NetInfo.refresh()
+        await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
+      }
+    })
+
+    return () => {
+      unsubscribeNetInfo()
+      appStateSubscription.remove()
+    }
+  }, [scope, logger, navigation])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
@@ -79,11 +102,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   useEffect(() => {
     const runSystemChecksByScope = async () => {
       if (ranSystemChecksRef.current || !scopeSystemCheck.isReady) {
-        return
-      }
-
-      if (!scopeSystemCheck) {
-        logger.warn(`[useSystemChecks]: No system checks defined for scope: ${scope}`)
+        // Only run if not already run and system checks for the scope are ready
         return
       }
 
@@ -92,7 +111,13 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       try {
         const systemCheckStrategies = await scopeSystemCheck.getSystemChecks()
 
-        logger.info(`[useSystemChecks]: Running ${systemCheckStrategies.length} system checks for scope: ${scope}`)
+        const systemCheckStrategyNames = systemCheckStrategies.map(
+          (check) => check?.constructor?.name ?? 'UnknownSystemCheck'
+        )
+
+        logger.info(`[useSystemChecks]: Running ${systemCheckStrategies.length} system checks for scope: ${scope}`, {
+          systemChecks: systemCheckStrategyNames,
+        })
 
         await runSystemChecks(systemCheckStrategies)
       } catch (error) {

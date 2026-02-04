@@ -5,13 +5,6 @@ exports[`AuthWebView renders correctly 1`] = `
   allowsBackForwardNavigationGestures={true}
   bounces={false}
   domStorageEnabled={true}
-  injectedJavaScriptBeforeContentLoaded="
-    (function() {
-      const fontScale = 2;
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    })();
-  "
   javaScriptEnabled={true}
   mixedContentMode="compatibility"
   onError={[Function]}

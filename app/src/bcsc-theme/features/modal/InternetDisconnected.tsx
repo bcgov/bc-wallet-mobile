@@ -2,7 +2,7 @@ import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStat
 import { TOKENS, useServices } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from './components/SystemModal'
 
@@ -14,8 +14,8 @@ import { SystemModal } from './components/SystemModal'
 export const InternetDisconnected = (): React.ReactElement => {
   const { t } = useTranslation()
   const navigation = useNavigation()
-  const netInfo = useNetInfo()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { isConnected, isInternetReachable } = useNetInfo()
 
   /**
    * Handler for the retry button press to re-check internet connectivity.
@@ -25,13 +25,17 @@ export const InternetDisconnected = (): React.ReactElement => {
    *
    * @returns {void}
    */
-  const handleRetry = useCallback(() => {
-    const internetStatusCheck = new InternetStatusSystemCheck(netInfo, navigation, logger)
+  const handleRetry = useCallback(async () => {
+    const internetStatusCheck = new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)
 
     if (internetStatusCheck.runCheck()) {
       internetStatusCheck.onSuccess()
     }
-  }, [logger, navigation, netInfo])
+  }, [isConnected, isInternetReachable, logger, navigation])
+
+  useEffect(() => {
+    handleRetry()
+  }, [handleRetry])
 
   return (
     <SystemModal

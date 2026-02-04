@@ -4,6 +4,7 @@ import notifications from '@assets/img/notifications.png'
 import {
   Button,
   ButtonType,
+  ContentGradient,
   DispatchAction,
   ScreenWrapper,
   testIdWithKey,
@@ -32,7 +33,7 @@ interface NotificationsScreenProps {
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [deniedPermission, setDeniedPermission] = useState(false)
 
@@ -113,16 +114,19 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   }
 
   const controls = (
-    <Button
-      title={t('Global.Continue')}
-      buttonType={ButtonType.Primary}
-      onPress={async () => {
-        await activatePushNotifications()
-        navigation.navigate(BCSCScreens.OnboardingSecureApp)
-      }}
-      testID={testIdWithKey('Continue')}
-      accessibilityLabel={t('Global.Continue')}
-    />
+    <View style={{ width: '100%' }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          await activatePushNotifications()
+          navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+      />
+    </View>
   )
 
   if (deniedPermission) {

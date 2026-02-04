@@ -1,9 +1,19 @@
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import analytics from '@assets/img/analytics.png'
-import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ContentGradient,
+  ScreenWrapper,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
 
 interface OnboardingOptInAnalyticsContentProps {
   onPress: () => void
@@ -16,13 +26,13 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   onPress,
 }: OnboardingOptInAnalyticsContentProps): React.ReactElement => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     sectionContainer: {
-      gap: theme.Spacing.lg,
+      gap: Spacing.lg,
     },
     imageContainer: {
       alignItems: 'center',
@@ -55,7 +65,8 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   }
 
   const controls = (
-    <>
+    <View style={{ width: '100%', gap: Spacing.md }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
       <Button
         title={t('BCSC.Onboarding.AcceptAnalytics')}
         buttonType={ButtonType.Primary}
@@ -66,7 +77,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         buttonType={ButtonType.Secondary}
         onPress={handleDeniedPressed}
       />
-    </>
+    </View>
   )
 
   return (
