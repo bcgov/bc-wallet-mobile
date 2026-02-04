@@ -113,13 +113,14 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
         const results = await runSystemChecks(systemCheckStrategies)
 
-        const systemCheckResults = systemCheckStrategies.reduce<Record<string, string>>((acc, check, index) => {
-          acc[check.constructor.name] = results[index] ? 'NO_ACTION' : 'ACTION_TAKEN'
+        const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
+          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningBannerSystemCheck: false }
+          acc[check.constructor.name] = results[index]
           return acc
         }, {})
 
         logger.info(
-          `[useSystemChecks]: Ran ${systemCheckStrategies.length} system checks on ${scope}`,
+          `[useSystemChecks]: Ran ${systemCheckStrategies.length} system checks on scope: ${scope}`,
           systemCheckResults
         )
       } catch (error) {
