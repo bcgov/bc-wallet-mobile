@@ -475,19 +475,17 @@ jobs:
           find . -type f -name '*.aab'
 
       - name: Upload Android AAB artifact
-        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}-aab
+          name: ${{ matrix.artifact_name }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
 
       - name: Upload Android APK artifact
-        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}-apk
+          name: ${{ matrix.artifact_name }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
