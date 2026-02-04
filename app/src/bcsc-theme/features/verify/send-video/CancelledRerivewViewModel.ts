@@ -12,10 +12,6 @@ const useCancelledReviewViewModel = () => {
   const { updateAccountFlags } = useSecureActions()
   const cleanUpVerificationData = useCallback(() => {
     dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO,
-      payload: [false],
-    })
     updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags])
   return {
