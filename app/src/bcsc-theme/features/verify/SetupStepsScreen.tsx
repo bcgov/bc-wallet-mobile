@@ -20,7 +20,7 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useSetupStepsModel from './_models/useSetupStepsModel'
-import { SetupStep } from './components/SetupStep'
+import { SetupStep, shouldStepBeDisabled } from './components/SetupStep'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>
@@ -86,6 +86,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       subtext={steps.nickname.subtext}
       isComplete={steps.nickname.completed}
       isFocused={steps.nickname.focused}
+      isDisabled={shouldStepBeDisabled(steps.nickname.completed, steps.nickname.focused)}
       onPress={stepActions.nickname}
     />
   )
@@ -96,6 +97,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       subtext={steps.id.subtext}
       isComplete={steps.id.completed}
       isFocused={steps.id.focused}
+      isDisabled={shouldStepBeDisabled(steps.id.completed, steps.id.focused)}
       onPress={stepActions.id}
     >
       {
@@ -125,6 +127,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       subtext={steps.address.subtext}
       isComplete={steps.address.completed}
       isFocused={steps.address.focused}
+      isDisabled={shouldStepBeDisabled(steps.address.completed, steps.address.focused)}
       onPress={stepActions.address}
     />
   )
@@ -135,6 +138,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       subtext={steps.email.subtext}
       isComplete={steps.email.completed}
       isFocused={steps.email.focused}
+      isDisabled={shouldStepBeDisabled(steps.email.completed, steps.email.focused)}
       onPress={stepActions.email}
     >
       {
@@ -173,8 +177,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <SetupStep
       title={t('BCSC.Steps.Step5')}
       subtext={steps.verify.subtext}
-      isComplete={steps.verify.completed}
+      isComplete={false} // The user won't see this step completed, they'll be veriified or need to re submit
       isFocused={steps.verify.focused}
+      isDisabled={!steps.email.completed || Boolean(store.bcscSecure.userSubmittedVerificationVideo)}
       onPress={stepActions.verify}
     />
   )
@@ -185,6 +190,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       subtext={steps.transfer.subtext}
       isComplete={steps.transfer.completed}
       isFocused={steps.transfer.focused}
+      isDisabled={shouldStepBeDisabled(steps.transfer.completed, steps.transfer.focused)}
       onPress={stepActions.transfer}
     />
   )

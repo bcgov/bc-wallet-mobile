@@ -841,6 +841,12 @@ const translation = {
       "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (FR)",
       "ButtonText": "Ok (FR)"
     },
+    "CancelledVerification": {
+      "Title": "Your identity couldn't be verified (FR)",
+      "Label": "Details from Service BC agent: \n {{reason}} (FR)",
+      "Button": "Ok (FR)",
+      "NoReason": "No reason provided (FR)"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (FR)",
       "Description": "It's needed to verify your identity. (FR)",

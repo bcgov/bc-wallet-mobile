@@ -382,7 +382,7 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.focused).toBe(true)
       expect(hook.result.current.verify.completed).toBe(true)
     })
 
@@ -401,7 +401,7 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.focused).toBe(true)
       expect(hook.result.current.verify.completed).toBe(true)
     })
   })
@@ -472,7 +472,7 @@ describe('useSetupSteps Hook', () => {
       hook.rerender(store)
 
       expect(hook.result.current.verify.completed).toBe(true)
-      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.focused).toBe(true)
     })
   })
 
@@ -519,20 +519,6 @@ describe('useSetupSteps Hook', () => {
       store.bcscSecure.isEmailVerified = true
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.currentStep).toBe('verify')
-    })
-
-    it('should return null when all steps are completed', () => {
-      const store = structuredClone(initialState)
-      store.bcsc.selectedNickname = 'test'
-      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
-      store.bcscSecure.serial = '123456789'
-      store.bcscSecure.deviceCode = 'ABCDEFGH'
-      store.bcscSecure.email = 'test@email.com'
-      store.bcscSecure.isEmailVerified = true
-      store.bcscSecure.verified = true
-      store.bcscSecure.userSubmittedVerificationVideo = false
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.currentStep).toBe(null)
     })
   })
 

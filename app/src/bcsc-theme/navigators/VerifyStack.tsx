@@ -59,6 +59,7 @@ import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
+import CancelledReview from '../features/verify/send-video/CancelledReview'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
 const VerifyStack = () => {
@@ -169,6 +170,7 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
+      <Stack.Screen name={BCSCScreens.CancelledReview} component={CancelledReview} />
       <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name={BCSCScreens.SuccessfullySent}
