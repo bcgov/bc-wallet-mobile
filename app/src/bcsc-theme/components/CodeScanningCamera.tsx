@@ -263,25 +263,26 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /**
-   * Constrain zoom level to device capabilities and configured limits
-   */
-  const constrainZoom = (value: number): number => {
-    const deviceMinZoom = device?.minZoom ?? 1
-    const deviceMaxZoom = device?.maxZoom ?? 1
-    const effectiveMinZoom = Math.max(minZoom, deviceMinZoom)
-    const effectiveMaxZoom = Math.min(maxZoom, deviceMaxZoom)
-    return Math.max(effectiveMinZoom, Math.min(value, effectiveMaxZoom))
-  }
-
-  /**
    * Pinch-to-zoom gesture handler
    * Allows users to zoom in on small barcodes for better scanning
+   * 
+   * Note: All logic must be inline within the gesture callbacks
+   * to ensure it runs in the worklet context (react-native-reanimated)
    */
   const pinchGesture = Gesture.Pinch()
     .enabled(enableZoom)
     .onUpdate((event) => {
       // Calculate new zoom level based on pinch scale
-      const newZoom = constrainZoom(zoomOffset.current * event.scale)
+      const rawZoom = zoomOffset.current * event.scale
+      
+      // Constrain zoom level to device capabilities and configured limits
+      // This logic must be inline to work in the worklet context
+      const deviceMinZoom = device?.minZoom ?? 1
+      const deviceMaxZoom = device?.maxZoom ?? 1
+      const effectiveMinZoom = Math.max(minZoom, deviceMinZoom)
+      const effectiveMaxZoom = Math.min(maxZoom, deviceMaxZoom)
+      const newZoom = Math.max(effectiveMinZoom, Math.min(rawZoom, effectiveMaxZoom))
+      
       setZoom(newZoom)
     })
     .onEnd(() => {
