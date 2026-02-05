@@ -1,8 +1,10 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +22,9 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
+  const { emitErrorAlert } = useErrorAlert()
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -74,7 +78,17 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
   return (
     <ScreenWrapper controls={controls}>
-      <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
+      <Image
+        source={{ uri: `file://${store.bcsc.photoPath}` }}
+        resizeMode={'contain'}
+        style={styles.image}
+        onError={(error) => {
+          const appError = AppError.fromErrorDefinition(ErrorRegistry.LIVE_CALL_FILE_UPLOAD_ERROR, { cause: error })
+
+          logger.error('[StartCallScreen] Error loading user photo for live call', appError)
+          emitErrorAlert(appError)
+        }}
+      />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}
       </ThemedText>

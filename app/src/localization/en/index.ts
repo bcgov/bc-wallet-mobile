@@ -1101,6 +1101,8 @@ const translation = {
       "VideoServiceHoursNull": "Video service hours could not be retrieved. Please try again later.",
       "VerifyRequestExpiredTitle": "Setup Expired",
       "VerifyRequestExpiredDescription": "You must start set up again.",
+      "LiveCallFileUploadErrorTitle": "Problem with Connection",
+      "LiveCallFileUploadErrorDescription": "Please try again.",
     },
     "Token": {
       "Title": "Authentication Error",
