@@ -222,7 +222,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             useNativeDriver: true,
           }).start()
 
-          // Fade out after 2 seconds
+          // Keep highlight visible for 10 seconds to match navigation delay, then fade out
           setTimeout(() => {
             Animated.timing(highlightFadeAnim, {
               toValue: 0,
@@ -231,7 +231,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             }).start(() => {
               setDetectedCodes([])
             })
-          }, 2000)
+          }, 10000)
         }
 
         onCodeScanned(enhancedCodes, frame)

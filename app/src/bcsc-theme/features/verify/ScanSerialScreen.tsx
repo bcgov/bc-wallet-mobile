@@ -61,6 +61,11 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
     await scanner.scanCard(barcodes, async (bcscSerial, license) => {
+      // If barcode highlight is enabled, add a 10-second delay to allow users to see the highlight
+      if (showBarcodeHighlight) {
+        await new Promise(resolve => setTimeout(resolve, 10000))
+      }
+
       if (bcscSerial && license) {
         scanner.completeScan()
         await scanner.handleScanComboCard(bcscSerial, license)
