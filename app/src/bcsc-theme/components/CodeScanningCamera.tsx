@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
 } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { runOnJS } from 'react-native-reanimated'
 import {
   Camera,
   CameraCaptureError,
@@ -268,6 +269,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * 
    * Note: All logic must be inline within the gesture callbacks
    * to ensure it runs in the worklet context (react-native-reanimated)
+   * State updates must be wrapped with runOnJS to call from worklet
    */
   const pinchGesture = Gesture.Pinch()
     .enabled(enableZoom)
@@ -283,7 +285,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       const effectiveMaxZoom = Math.min(maxZoom, deviceMaxZoom)
       const newZoom = Math.max(effectiveMinZoom, Math.min(rawZoom, effectiveMaxZoom))
       
-      setZoom(newZoom)
+      // Must use runOnJS to call React state setter from worklet
+      runOnJS(setZoom)(newZoom)
     })
     .onEnd(() => {
       // Save the current zoom level as the new offset
