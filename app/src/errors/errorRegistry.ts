@@ -424,8 +424,8 @@ export const ErrorRegistry = {
   LIVE_CALL_FILE_UPLOAD_ERROR: {
     statusCode: 2410,
     appEvent: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
-    titleKey: 'BCWalletError.Verification.FileUploadErrorTitle',
-    descriptionKey: 'BCWalletError.Verification.FileUploadErrorDescription',
+    titleKey: 'BCWalletError.Verification.LiveCallFileUploadErrorTitle',
+    descriptionKey: 'BCWalletError.Verification.LiveCallFileUploadErrorDescription',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
   },

@@ -5,10 +5,11 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet } from 'react-native'
+import { Image, ImageErrorEvent, StyleSheet } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 
 type StartCallScreenProps = {
@@ -63,6 +64,30 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     setShowPermissionDisabled(true)
   }
 
+  const handleFileUploadError = (error: ImageErrorEvent) => {
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.LIVE_CALL_FILE_UPLOAD_ERROR, { cause: error })
+
+    logger.error('[StartCallScreen] Error loading user photo for live call', appError)
+
+    emitErrorAlert(appError, {
+      // Note: The documented flow has no action for the OK button other than dismissing the alert.
+      // But does state: "On 'Call Now' if the photos could not be uploaded the video call will not be created."
+      actions: [
+        {
+          text: t('Global.Okay'),
+          onPress: () => {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 1,
+                routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+              })
+            )
+          },
+        },
+      ],
+    })
+  }
+
   if (showPermissionDisabled) {
     return <PermissionDisabled permissionType="microphone" />
   }
@@ -82,12 +107,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         source={{ uri: `file://${store.bcsc.photoPath}` }}
         resizeMode={'contain'}
         style={styles.image}
-        onError={(error) => {
-          const appError = AppError.fromErrorDefinition(ErrorRegistry.LIVE_CALL_FILE_UPLOAD_ERROR, { cause: error })
-
-          logger.error('[StartCallScreen] Error loading user photo for live call', appError)
-          emitErrorAlert(appError)
-        }}
+        onError={handleFileUploadError}
       />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}
