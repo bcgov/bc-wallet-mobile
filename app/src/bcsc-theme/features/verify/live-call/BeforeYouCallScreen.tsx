@@ -1,5 +1,6 @@
 import { HelpCentreUrl } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorRegistry } from '@/errors'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import NetInfo, { useNetInfo } from '@react-native-community/netinfo'
@@ -18,7 +19,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
-  const { emitAlert } = useErrorAlert()
+  const { emitErrorAlert } = useErrorAlert()
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
@@ -45,7 +46,9 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     const netInfo = await NetInfo.refresh()
 
     if (netInfo.type === 'cellular') {
-      emitAlert(t('Alerts.CellularDetected.Title'), t('Alerts.CellularDetected.Description'), {
+      // Note: Intentionally not tracking error event, only tracking the alert event.
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.VIDEO_CALL_DATA_USE_WARNING, { track: false })
+      emitErrorAlert(appError, {
         actions: [
           {
             text: t('Alerts.Actions.Cancel'),

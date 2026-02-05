@@ -421,6 +421,14 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
   },
+  VIDEO_CALL_DATA_USE_WARNING: {
+    statusCode: 2410,
+    appEvent: AppEventCode.DATA_USE_WARNING,
+    titleKey: 'BCWalletError.Verification.VideoCallCellularDetectedTitle',
+    descriptionKey: 'BCWalletError.Verification.VideoCallCellularDetectedDescription',
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.VERIFICATION,
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)

@@ -1039,10 +1039,6 @@ const translation = {
       "RemoveAccount": "Remove Account",
       "UseData": "Use Data",
 		},
-    "CellularDetected": {
-      "Title": "Data Use",
-      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
-    }
 	},
   "BCWalletError": {
     "Camera": {
@@ -1107,6 +1103,8 @@ const translation = {
       "VideoServiceHoursNull": "Video service hours could not be retrieved. Please try again later.",
       "VerifyRequestExpiredTitle": "Setup Expired",
       "VerifyRequestExpiredDescription": "You must start set up again.",
+      "VideoCallCellularDetectedTitle": "Data Use",
+      "VideoCallCellularDetectedDescription": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
     },
     "Token": {
       "Title": "Authentication Error",
