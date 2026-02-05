@@ -109,7 +109,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     }
 
     /**
-     * Combo card or dual barcode - (ie: serial + birthdate)
+     * Combo card
      * Additional evidence: Not needed
      * Next Step: Navigate to setup steps verification
      */
@@ -122,7 +122,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     }
 
     /**
-     * BC Services card - (ie: serial)
+     * BC Services card
      * Additional evidence: Not needed
      * Next Step: Navigate to birthdate entry -> setup steps verification
      */
@@ -132,7 +132,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     }
 
     /**
-     * Driver's License - (ie: birthdate)
+     * Driver's License
      * Additional evidence: Required
      * Next Step: Navigate to evidence ID collection (after all photos captured)
      */
