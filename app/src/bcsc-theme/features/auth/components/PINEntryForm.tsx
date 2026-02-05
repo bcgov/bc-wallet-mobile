@@ -13,10 +13,15 @@ import {
   useAnimatedComponents,
   useServices,
 } from '@bifold/core'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TextInput } from 'react-native'
-import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  canPerformDeviceAuthentication,
+  isThirdPartyKeyboardActive,
+  setPIN as setNativePIN,
+} from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
   success: boolean
@@ -70,6 +75,14 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const { register } = useRegistrationApi(client, isClientReady)
 
   const pin2Ref = useRef<TextInput>(null)
+
+  useEffect(() => {
+    const temp = async () => {
+      console.log('IS THIRD PARTY KEYBOARD ACTIVE: ', await isThirdPartyKeyboardActive())
+    }
+
+    temp()
+  }, [])
 
   // Helper to get translation with prefix
   const tWithPrefix = useCallback((key: string) => t(`${translationPrefix}.${key}`), [t, translationPrefix])

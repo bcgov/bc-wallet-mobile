@@ -1,20 +1,20 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
-  type NativeAccount,
   type JWK,
   type JWTClaims,
-  type NativeAuthorizationRequest,
   type LoginChallengeResult,
+  type NativeAccount,
+  type NativeAuthorizationRequest,
 } from './NativeBcscCore';
+export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
+  JWK,
   LoginChallenge,
   LoginChallengeResult,
   NativeAccount,
-  JWK,
-  NativeAuthorizationRequest,
   NativeAddress,
+  NativeAuthorizationRequest,
 } from './NativeBcscCore';
-export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
   type: TokenType;
@@ -437,13 +437,13 @@ export const removeAccount = async (): Promise<void> => {
 // MARK: - Authentication Methods
 
 // Export authentication types
-export type {
-  PINVerificationResult,
-  AccountLockStatus,
-  PINSetupResult,
-  DeviceSecurityUnlockResult,
-} from './NativeBcscCore';
 export { BiometricType } from './NativeBcscCore';
+export type {
+  AccountLockStatus,
+  DeviceSecurityUnlockResult,
+  PINSetupResult,
+  PINVerificationResult,
+} from './NativeBcscCore';
 
 /**
  * Sets a user-created PIN for the current account.
@@ -871,4 +871,8 @@ export async function hasCredential(): Promise<boolean> {
  */
 export const showLocalNotification = async (title: string, message: string): Promise<void> => {
   return BcscCore.showLocalNotification(title, message);
+};
+
+export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
+  return BcscCore.isThirdPartyKeyboardActive();
 };

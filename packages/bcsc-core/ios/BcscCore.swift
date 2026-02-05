@@ -2799,6 +2799,12 @@ class BcscCore: NSObject {
       }
     }
   }
+  
+  func isThirdPartyKeyboardActive(_ resolver: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // iOS doesn't provide a public API to reliably detect third party keyboards
+    // returning false to not interupt the user
+    resolver(false)
+  }
 
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
