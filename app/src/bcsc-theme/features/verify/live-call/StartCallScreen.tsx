@@ -104,7 +104,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   return (
     <ScreenWrapper controls={controls}>
       <Image
-        source={{ uri: `file://${store.bcsc.photoPath}/incorrectPath` }}
+        source={{ uri: `file://${store.bcsc.photoPath}` }}
         resizeMode={'contain'}
         style={styles.image}
         onError={handleFileUploadError}
