@@ -1,8 +1,9 @@
-import { render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-
+import * as AutoRequestPermissionHook from '@/hooks/useAutoRequestPermission'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render, waitFor } from '@testing-library/react-native'
+import React from 'react'
 import EvidenceCaptureScreen from './EvidenceCaptureScreen'
 
 describe('EvidenceCapture', () => {
@@ -11,11 +12,6 @@ describe('EvidenceCapture', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
-    jest.useFakeTimers()
-  })
-
-  afterEach(() => {
-    jest.useRealTimers()
   })
 
   it('renders correctly', async () => {
@@ -53,5 +49,62 @@ describe('EvidenceCapture', () => {
     })
 
     expect(tree).toMatchSnapshot()
+  })
+
+  it('renders nothing when no current side to capture', async () => {
+    const tree = render(
+      <BasicAppContext>
+        <EvidenceCaptureScreen
+          navigation={mockNavigation as never}
+          route={
+            {
+              params: {
+                cardType: {
+                  image_sides: [],
+                },
+              },
+            } as never
+          }
+        />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      const testId = tree.queryByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))
+      const photoReviewId = tree.queryByTestId(testIdWithKey('RetakePhoto'))
+      expect(testId).toBeNull()
+      expect(photoReviewId).toBeNull()
+    })
+  })
+
+  it('renders loading screen when permissions are loading', async () => {
+    jest.spyOn(AutoRequestPermissionHook, 'useAutoRequestPermission').mockReturnValue({ isLoading: true })
+
+    const tree = render(
+      <BasicAppContext>
+        <EvidenceCaptureScreen
+          navigation={mockNavigation as never}
+          route={
+            {
+              params: {
+                cardType: {
+                  image_sides: [
+                    {
+                      side: 'FRONT',
+                      label: 'Front of Passport',
+                    },
+                  ],
+                },
+              },
+            } as never
+          }
+        />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      const testId = tree.getByTestId(testIdWithKey('LoadingScreenContent'))
+      expect(testId).toBeDefined()
+    })
   })
 })
