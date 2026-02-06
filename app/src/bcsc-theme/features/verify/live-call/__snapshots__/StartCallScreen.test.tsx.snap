@@ -33,6 +33,7 @@ exports[`StartCall renders correctly 1`] = `
   >
     <View>
       <Image
+        onError={[Function]}
         resizeMode="contain"
         source={
           {
