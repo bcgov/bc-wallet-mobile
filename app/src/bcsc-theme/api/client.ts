@@ -155,6 +155,11 @@ class BCSCApiClient {
     this.onError = callback
   }
 
+  clearTokens() {
+    this.tokens = undefined
+    this.tokensPromise = null
+  }
+
   async fetchEndpointsAndConfig() {
     const response = await this.get<any>(`${this.baseURL}/device/.well-known/openid-configuration`, {
       skipBearerAuth: true,

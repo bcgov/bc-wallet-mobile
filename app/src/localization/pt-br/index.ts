@@ -306,6 +306,7 @@ const translation = {
         "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (PT-BR)",
         "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (PT-BR)",
         "CancelledByUser": "This device has been removed from your account by a user action. (PT-BR)",
+        "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
       }
