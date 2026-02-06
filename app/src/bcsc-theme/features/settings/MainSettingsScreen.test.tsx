@@ -1,4 +1,3 @@
-import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
@@ -16,9 +15,7 @@ describe('MainSettings', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <ErrorAlertProvider>
-          <MainSettingsScreen navigation={mockNavigation as never} />
-        </ErrorAlertProvider>
+        <MainSettingsScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 
