@@ -1036,7 +1036,17 @@ const translation = {
       "Close": "Close (FR)",
       "GoToAppStore": "Go to App Store (FR)",
       "RemoveAccount": "Remove Account (FR)",
-		}
+		},
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent (FR)",
+      "Description": "Please try again later. (FR)",
+    },
+    "DataUseWarning": {
+      "Title": "Data Use (FR)",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",
+      "Action1": "Cancel (FR)",
+      "Action2": "Use Data (FR)",
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed
