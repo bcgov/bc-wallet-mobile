@@ -421,14 +421,6 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
   },
-  LIVE_CALL_FILE_UPLOAD_ERROR: {
-    statusCode: 2410,
-    appEvent: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
-    titleKey: 'BCWalletError.Verification.LiveCallFileUploadErrorTitle',
-    descriptionKey: 'BCWalletError.Verification.LiveCallFileUploadErrorDescription',
-    severity: ErrorSeverity.ERROR,
-    category: ErrorCategory.VERIFICATION,
-  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)

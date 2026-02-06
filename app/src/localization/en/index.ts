@@ -1036,7 +1036,11 @@ const translation = {
       "Close": "Close",
       "GoToAppStore": "Go to App Store",
       "RemoveAccount": "Remove Account",
-		}
+		},
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent",
+      "Description": "Please try again later.",
+    },
 	},
   "BCWalletError": {
     "Camera": {
@@ -1101,8 +1105,6 @@ const translation = {
       "VideoServiceHoursNull": "Video service hours could not be retrieved. Please try again later.",
       "VerifyRequestExpiredTitle": "Setup Expired",
       "VerifyRequestExpiredDescription": "You must start set up again.",
-      "LiveCallFileUploadErrorTitle": "Problem with Connection",
-      "LiveCallFileUploadErrorDescription": "Please try again.",
     },
     "Token": {
       "Title": "Authentication Error",

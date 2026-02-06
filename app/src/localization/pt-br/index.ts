@@ -1036,7 +1036,11 @@ const translation = {
       "Close": "Close (PT-BR)",
       "GoToAppStore": "Go to App Store (PT-BR)",
       "RemoveAccount": "Remove Account (PT-BR)",
-		}
+		},
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent (PT-BR)",
+      "Description": "Please try again later. (PT-BR)",
+    },
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

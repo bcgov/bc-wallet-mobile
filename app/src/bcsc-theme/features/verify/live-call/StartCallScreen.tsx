@@ -2,7 +2,6 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -25,7 +24,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
-  const { emitErrorAlert } = useErrorAlert()
+  const { emitAlert } = useErrorAlert()
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -64,17 +63,18 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     setShowPermissionDisabled(true)
   }
 
-  const handleFileUploadError = (error: ImageErrorEvent) => {
-    const appError = AppError.fromErrorDefinition(ErrorRegistry.LIVE_CALL_FILE_UPLOAD_ERROR, { cause: error })
+  const handleImageError = (error: ImageErrorEvent) => {
+    logger.error('[StartCallScreen] Error loading user photo for live call', { error })
 
-    logger.error('[StartCallScreen] Error loading user photo for live call', appError)
-
-    emitErrorAlert(appError, {
-      // Note: The documented flow has no action for the OK button other than dismissing the alert.
-      // But does state: "On 'Call Now' if the photos could not be uploaded the video call will not be created."
+    emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
+      /**
+       * Note: Documentation states 'OK' just closes the alert, but also states:
+       * "On 'Call Now' if the photos could not be uploaded the video call will not be created."
+       *  So we navigate back to the verification method selection screen to restart the flow.
+       */
       actions: [
         {
-          text: t('Global.Okay'),
+          text: t('Alerts.Actions.DefaultOK'),
           onPress: () => {
             navigation.dispatch(
               CommonActions.reset({
@@ -104,10 +104,10 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   return (
     <ScreenWrapper controls={controls}>
       <Image
-        source={{ uri: `file://${store.bcsc.photoPath}` }}
+        source={{ uri: `file://${store.bcsc.photoPath}/bad` }}
         resizeMode={'contain'}
         style={styles.image}
-        onError={handleFileUploadError}
+        onError={handleImageError}
       />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}
