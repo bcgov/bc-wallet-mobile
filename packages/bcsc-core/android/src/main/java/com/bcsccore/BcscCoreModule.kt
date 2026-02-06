@@ -3813,6 +3813,12 @@ class BcscCoreModule(
 
     }
 
+    @ReactMethod
+    override fun openKeyboardSelector() {
+        val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.showInputMethodPicker()
+    }
+
     /**
      * Verifies the JWT signature using the provided JWK.
      * Returns true if verification succeeds, false otherwise.

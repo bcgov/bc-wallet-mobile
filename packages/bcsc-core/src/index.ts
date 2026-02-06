@@ -876,3 +876,7 @@ export const showLocalNotification = async (title: string, message: string): Pro
 export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
   return BcscCore.isThirdPartyKeyboardActive();
 };
+
+export const openKeyboardSelector = async (): Promise<void> => {
+  return BcscCore.openKeyboardSelector();
+};

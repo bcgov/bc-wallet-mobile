@@ -4,7 +4,7 @@ import { useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Platform } from 'react-native'
-import { isThirdPartyKeyboardActive } from 'react-native-bcsc-core'
+import { isThirdPartyKeyboardActive, openKeyboardSelector } from 'react-native-bcsc-core'
 
 const useThirdPartyKeyboardWarning = () => {
   const { t } = useTranslation()
@@ -32,7 +32,7 @@ const useThirdPartyKeyboardWarning = () => {
                   text: 'Continue',
                   style: 'cancel',
                 },
-                { text: 'Change Keyboard', style: 'destructive', onPress: () => console.log('Good choice soilder') },
+                { text: 'Change Keyboard', style: 'destructive', onPress: () => openKeyboardSelector() },
               ],
             }
           )

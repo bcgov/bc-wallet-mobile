@@ -215,4 +215,5 @@ abstract class BcscCoreSpec internal constructor(
     )
 
     abstract fun isThirdPartyKeyboardActive(promise: Promise)
+    abstract fun openKeyboardSelector()
 }

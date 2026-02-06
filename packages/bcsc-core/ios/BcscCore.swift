@@ -2806,6 +2806,12 @@ class BcscCore: NSObject {
     resolve(false)
   }
 
+  func openKeyboardSelector(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // iOS doesn't provide a public API to open the keyboard selector
+    // rejecting the promise to indicate failure
+    reject("E_UNSUPPORTED", "Opening keyboard selector is not supported on iOS", nil)
+  }
+
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
     @objc

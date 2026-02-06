@@ -402,6 +402,12 @@ export interface Spec extends TurboModule {
    * @returns true if a third party keyboard is active, otherwise this returns false
    */
   isThirdPartyKeyboardActive(): Promise<boolean>;
+
+  /**
+   * Opens the native keyboard selector on Android.
+   * iOS does not support programmatically opening the keyboard selector.
+   */
+  openKeyboardSelector(): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');
