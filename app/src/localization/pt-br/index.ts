@@ -1041,6 +1041,12 @@ const translation = {
       "Title": "Problem Calling Agent (PT-BR)",
       "Description": "Please try again later. (PT-BR)",
     },
+    "DataUseWarning": {
+      "Title": "Data Use (PT-BR)",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
+      "Action1": "Cancel (PT-BR)",
+      "Action2": "Use Data (PT-BR)",
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed
