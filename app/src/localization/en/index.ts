@@ -231,6 +231,7 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
+      "RemoveAccount": "Remove account",
       "AppSecurity": {
         "ScreenTitle": "App Security",
         "ChangeAppSecurity": "Change App Security",

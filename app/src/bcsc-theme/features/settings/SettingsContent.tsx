@@ -1,5 +1,8 @@
+import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
@@ -46,6 +49,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
+  const resetVerification = useVerificationReset()
+  const { emitAlert } = useErrorAlert()
 
   const styles = StyleSheet.create({
     container: {
@@ -145,6 +150,32 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
+  const onPressRemoveAccount = () => {
+    emitAlert(t('Alerts.CancelMobileCardSetup.Title'), t('Alerts.CancelMobileCardSetup.Description'), {
+      event: AppEventCode.CANCEL_MOBILE_CARD_SETUP,
+      actions: [
+        {
+          text: t('Alerts.CancelMobileCardSetup.Action1'),
+          style: 'cancel',
+        },
+        {
+          text: t('Alerts.CancelMobileCardSetup.Action2'),
+          style: 'destructive',
+          onPress: async () => {
+            const result = await resetVerification()
+
+            if (!result.success) {
+              logger.error('[RemoveAccount] Error removing account from settings', result.error)
+              return
+            }
+
+            logger.info('[RemoveAccount] Account removed successfully from settings')
+          },
+        },
+      ],
+    })
+  }
+
   // Pre-compute conditional values
   const isAuthenticated = store.authentication.didAuthenticate
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
@@ -212,6 +243,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
           <SettingsActionCard title={t('BCSC.Settings.Analytics')} onPress={onPressAnalytics} />
+          <SettingsActionCard title={t('BCSC.Settings.RemoveAccount')} onPress={onPressRemoveAccount} />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
           ) : null}
