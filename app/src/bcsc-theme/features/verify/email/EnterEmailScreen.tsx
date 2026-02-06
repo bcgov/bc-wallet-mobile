@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/usethirdPartyKeyboardWarning'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -13,7 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -39,10 +40,15 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const { showThirdPartyKeyboardWarning } = useThirdPartyKeyboardWarning()
 
   const handleChangeEmail = (em: string) => {
     setEmail(em)
   }
+
+  useEffect(() => {
+    showThirdPartyKeyboardWarning()
+  }, [showThirdPartyKeyboardWarning])
 
   const handleSubmit = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {

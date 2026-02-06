@@ -73,6 +73,7 @@ export interface BCSCState {
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
   hasDismissedExpiryAlert?: boolean
+  hasDismissedThirdPartyKeyboardAlert?: boolean
 }
 
 /**
@@ -234,6 +235,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
+  DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
 }
 
 enum ModeDispatchAction {
@@ -709,6 +711,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT: {
+      // this should use the date as a key, so this variable is always up to date...
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

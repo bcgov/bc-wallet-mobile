@@ -8,10 +8,11 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/usethirdPartyKeyboardWarning'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
@@ -43,6 +44,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
     visible: false,
     description: '',
   })
+  const { showThirdPartyKeyboardWarning } = useThirdPartyKeyboardWarning()
 
   const styles = StyleSheet.create({
     image: {
@@ -56,6 +58,10 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       color: ColorPalette.semantic.error,
     },
   })
+
+  useEffect(() => {
+    showThirdPartyKeyboardWarning()
+  }, [showThirdPartyKeyboardWarning])
 
   const handleChangeText = useCallback((text: string) => {
     setSerial(text.replace(/\s/g, ''))
