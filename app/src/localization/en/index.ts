@@ -1041,6 +1041,12 @@ const translation = {
       "Title": "Problem Calling Agent",
       "Description": "Please try again later.",
     },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure?",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again.",
+      "Action1": "Cancel",
+      "Action2": "Reset App"
+    }
 	},
   "BCWalletError": {
     "Camera": {
