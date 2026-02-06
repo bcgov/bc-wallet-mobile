@@ -1040,8 +1040,8 @@ const translation = {
     "DataUseWarning": {
       "Title": "Data Use",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
-      "Primary": "Cancel",
-      "Secondary": "Use Data",
+      "Action1": "Cancel",
+      "Action2": "Use Data",
     }
 	},
   "BCWalletError": {
