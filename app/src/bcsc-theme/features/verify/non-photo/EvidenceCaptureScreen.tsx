@@ -5,11 +5,12 @@ import { CameraFormat } from '@/bcsc-theme/components/utils/camera-format'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { MaskType, TOKENS, useServices, useTheme } from '@bifold/core'
+import { MaskType, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
@@ -27,7 +28,7 @@ enum CaptureState {
 
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
-  const { updateEvidenceMetadata } = useSecureActions()
+  const { clearAdditionalEvidence, updateEvidenceMetadata } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -37,6 +38,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
+  const bcscSerialRef = useRef<string | null>(null)
+  const licenseRef = useRef<DriversLicenseMetadata | null>(null)
+  const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const codeScanner = useCodeScanner({
     codeTypes: scanner.codeTypes,
     onCodeScanned: async (codes) => {
@@ -44,23 +48,18 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         return
       }
 
-      await scanner.scanCard(codes, async (bcscSerial, license) => {
-        if (bcscSerial && license) {
-          scanner.completeScan()
-          await scanner.handleScanComboCard(bcscSerial, license)
-          return
-        }
+      // If we have already captured both values, no need to keep scanning
+      if (bcscSerialRef.current && licenseRef.current) {
+        return
+      }
 
+      await scanner.scanCard(codes, async (bcscSerial, license) => {
         if (bcscSerial) {
-          scanner.completeScan()
-          await scanner.handleScanBCServicesCard(bcscSerial)
-          return
+          bcscSerialRef.current = bcscSerial
         }
 
         if (license) {
-          scanner.completeScan()
-          scanner.handleScanDriversLicense(license)
-          return
+          licenseRef.current = license
         }
       })
     },
@@ -99,9 +98,46 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCaptureState(CaptureState.REVIEWING)
   }
 
+  /**
+   * Handles accepting the captured photo and proceeding to the next step.
+   *
+   * @returns A promise that resolves when the process is complete.
+   */
   const handleAcceptPhoto = async () => {
     if (!currentPhotoPath || !currentSide) {
       return
+    }
+
+    /**
+     * Combo card
+     * Additional evidence: Not needed
+     * Next Step: Navigate to setup steps verification
+     */
+    if (bcscSerialRef.current && licenseRef.current) {
+      await Promise.all([
+        clearAdditionalEvidence(),
+        scanner.handleScanComboCard(bcscSerialRef.current, licenseRef.current),
+      ])
+      return
+    }
+
+    /**
+     * BC Services card
+     * Additional evidence: Not needed
+     * Next Step: Navigate to birthdate entry -> setup steps verification
+     */
+    if (bcscSerialRef.current) {
+      await Promise.all([clearAdditionalEvidence(), scanner.handleScanBCServicesCard(bcscSerialRef.current)])
+      return
+    }
+
+    /**
+     * Driver's License
+     * Additional evidence: Required
+     * Next Step: Navigate to evidence ID collection (after all photos captured)
+     */
+    if (licenseRef.current) {
+      scanner.handleScanDriversLicense(licenseRef.current)
     }
 
     const photoMetadata = await getPhotoMetadata(currentPhotoPath, logger)
@@ -113,12 +149,13 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       await updateEvidenceMetadata(route.params.cardType, newPhotos)
       // All photos captured, navigate to form screen
       navigation.navigate(BCSCScreens.EvidenceIDCollection, { cardType })
-    } else {
-      // Move to next side
-      setCurrentIndex((prev) => prev + 1)
-      setCaptureState(CaptureState.CAPTURING)
-      setCurrentPhotoPath(undefined)
+      return
     }
+
+    // Move to next side
+    setCurrentIndex((prev) => prev + 1)
+    setCaptureState(CaptureState.CAPTURING)
+    setCurrentPhotoPath(undefined)
   }
 
   const handleRetakePhoto = () => {
@@ -126,15 +163,13 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCurrentPhotoPath(undefined)
   }
 
-  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-
   if (!currentSide) {
     // needs to throw an error instead...
     return <></>
   }
 
-  if (isLoading) {
-    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
+  if (isCameraLoading) {
+    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => {}} />
   }
 
   if (!hasPermission) {
@@ -144,7 +179,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   return (
     <>
       {captureState === CaptureState.CAPTURING ? (
-        <View style={styles.container}>
+        <View style={styles.container} testID={testIdWithKey('EvidenceCaptureScreenMaskedCamera')}>
           <MaskedCamera
             navigation={navigation}
             cameraFace={'back'}

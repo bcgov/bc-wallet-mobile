@@ -33,6 +33,13 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const handleCheckStatus = useCallback(async () => {
     setIsCheckingStatus(true)
     try {
+      if (store.bcscSecure.refreshToken) {
+        // If we have a refresh token we can assume verification is complete
+        // Scenario: user checked their status but closed the app before completing VerificationSuccess
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+        return
+      }
+
       if (!store.bcscSecure.verificationRequestId) {
         throw new Error(t('BCSC.Steps.VerificationIDMissing'))
       }
@@ -65,6 +72,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       setIsCheckingStatus(false)
     }
   }, [
+    store.bcscSecure.refreshToken,
     store.bcscSecure.verificationRequestId,
     store.bcscSecure.deviceCode,
     store.bcscSecure.userCode,
