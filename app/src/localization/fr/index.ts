@@ -327,9 +327,6 @@ const translation = {
       "Step5": "Step 5 (FR)",
       "VerificationIDMissing": "Verification request ID is missing (FR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
-      "AreYouSure": "Are you sure? (FR)",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
-      "DeleteVerifyRequest": "Delete Verify Request (FR)",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }}) (FR)",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }}) (FR)",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used (FR)",
@@ -1042,6 +1039,16 @@ const translation = {
       "Title": "Problem Calling Agent (FR)",
       "Description": "Please try again later. (FR)",
     },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure? (FR)",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again. (FR)",
+      "Action1": "Reset App (FR)"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure? (FR)",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
+      "Action1": "Delete Verify Request (FR)",
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

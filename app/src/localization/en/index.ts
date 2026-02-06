@@ -327,9 +327,6 @@ const translation = {
       "Step5": "Step 5",
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
-      "AreYouSure": "Are you sure?",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
-      "DeleteVerifyRequest": "Delete Verify Request",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }})",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }})",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used",
@@ -1045,8 +1042,12 @@ const translation = {
     "CancelMobileCardSetup": {
       "Title": "Are you sure?",
       "Description": "This will delete all information you entered to set up the app. You will have to start again.",
-      "Action1": "Cancel",
-      "Action2": "Reset App"
+      "Action1": "Reset App"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure?",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
+      "Action1": "Delete Verify Request",
     }
 	},
   "BCWalletError": {

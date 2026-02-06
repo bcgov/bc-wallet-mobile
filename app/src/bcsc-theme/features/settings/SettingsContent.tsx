@@ -155,11 +155,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       event: AppEventCode.CANCEL_MOBILE_CARD_SETUP,
       actions: [
         {
-          text: t('Alerts.CancelMobileCardSetup.Action1'),
+          text: t('Global.Cancel'),
           style: 'cancel',
         },
         {
-          text: t('Alerts.CancelMobileCardSetup.Action2'),
+          text: t('Alerts.CancelMobileCardSetup.Action1'),
           style: 'destructive',
           onPress: async () => {
             const result = await resetVerification()
