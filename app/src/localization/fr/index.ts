@@ -1048,6 +1048,12 @@ const translation = {
       "Title": "Are you sure? (FR)",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
       "Action1": "Delete Verify Request (FR)",
+    },
+    "DataUseWarning": {
+      "Title": "Data Use (FR)",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",
+      "Action1": "Cancel (FR)",
+      "Action2": "Use Data (FR)",
     }
 	},
   "BCWalletError": {
