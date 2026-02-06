@@ -1037,6 +1037,10 @@ const translation = {
       "GoToAppStore": "Go to App Store",
       "RemoveAccount": "Remove Account",
 		},
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent",
+      "Description": "Please try again later.",
+    },
     "DataUseWarning": {
       "Title": "Data Use",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
