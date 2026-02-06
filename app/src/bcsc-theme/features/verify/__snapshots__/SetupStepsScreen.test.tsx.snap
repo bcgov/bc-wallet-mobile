@@ -632,7 +632,7 @@ exports[`SetupSteps renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.Steps.ResetData
+              BCSC.Steps.ResetData (DEV)
             </Text>
           </View>
         </View>

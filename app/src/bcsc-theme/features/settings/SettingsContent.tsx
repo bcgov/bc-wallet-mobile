@@ -163,6 +163,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           style: 'destructive',
           onPress: async () => {
             const result = await resetVerification()
+            logout()
 
             if (!result.success) {
               logger.error('[RemoveAccount] Error removing account from settings', result.error)
@@ -228,6 +229,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 onPress={onPressOptInAnalytics}
                 endAdornmentText={analyticsOptInText}
               />
+
+              <SettingsActionCard
+                title={t('BCSC.Settings.RemoveAccount')}
+                onPress={onPressRemoveAccount}
+                textStyle={{ color: ColorPalette.semantic.error }}
+              />
             </View>
           </>
         ) : null}
@@ -243,7 +250,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
           <SettingsActionCard title={t('BCSC.Settings.Analytics')} onPress={onPressAnalytics} />
-          <SettingsActionCard title={t('BCSC.Settings.RemoveAccount')} onPress={onPressRemoveAccount} />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
           ) : null}
