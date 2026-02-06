@@ -1,7 +1,9 @@
 import { HelpCentreUrl } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useNetInfo } from '@react-native-community/netinfo'
+import NetInfo, { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
@@ -17,6 +19,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
+  const { emitAlert } = useErrorAlert()
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
@@ -30,13 +33,37 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     },
   })
 
-  const onPressContinue = async () => {
+  const navigateToCamera = () => {
     navigation.navigate(BCSCScreens.TakePhoto, {
       forLiveCall: true,
       deviceSide: 'front',
       cameraInstructions: '',
       cameraLabel: '',
     })
+  }
+
+  const onPressContinue = async () => {
+    const netInfo = await NetInfo.refresh()
+
+    if (netInfo.type === 'cellular') {
+      emitAlert(t('Alerts.DataUseWarning.Title'), t('Alerts.DataUseWarning.Description'), {
+        event: AppEventCode.DATA_USE_WARNING,
+        actions: [
+          {
+            text: t('Alerts.DataUseWarning.Action1'),
+            style: 'cancel',
+          },
+          {
+            text: t('Alerts.DataUseWarning.Action2'),
+            onPress: navigateToCamera,
+            style: 'destructive',
+          },
+        ],
+      })
+      return
+    }
+
+    navigateToCamera()
   }
 
   const navigateToWebView = useCallback(
