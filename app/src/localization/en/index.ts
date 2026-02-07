@@ -1046,7 +1046,12 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
       "Action1": "Cancel",
       "Action2": "Use Data",
-    }
+    },
+    "LiveCallHavingTrouble": {
+      "Title": "Having trouble?",
+      "Description": "Please end your call to get additional help and troubleshooting tips.",
+      "Action1": "End Call",
+    },
 	},
   "BCWalletError": {
     "Camera": {
