@@ -63,13 +63,9 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
     if (data) {
       const tokenData = tokenToCredentialMetadata(data)
       if (store.bcsc.credentialMetadata) {
-        console.log('HAS BOTH OF THESE THINGS... ')
         const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
 
-        console.log('SHOULD DISPLAY AN ALERT: ', !dataUpdated)
         if (!dataUpdated) {
-          // if (true) {
-          console.log('Detected changes in account metadata, dispatching alert reasoning')
           dispatch({
             type: BCDispatchAction.ALERT_REASONING,
             payload: [{ event: data.bcsc_event, state: data.bcsc_reason }],
