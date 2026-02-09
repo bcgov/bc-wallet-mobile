@@ -13,7 +13,7 @@ import {
   ErrorMatcherContext,
   createExpiredAppSetupErrorPolicy,
 } from '../api/clientErrorPolicies'
-import { useFactoryReset } from '../api/hooks/useFactoryReset'
+import { useVerificationReset } from '../api/hooks/useVerificationReset'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -47,20 +47,20 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const factoryReset = useFactoryReset()
+  const verificationReset = useVerificationReset(client)
 
   // Combine client error handling policies with policy factories
   const allErrorHandlingPolicies = useMemo(() => {
     return [
       ...ClientErrorHandlingPolicies,
       createExpiredAppSetupErrorPolicy(async () => {
-        const result = await factoryReset()
+        const result = await verificationReset()
         if (!result.success) {
           logger.error('[VerificationReset] Error while resetting', result.error)
         }
       }),
     ]
-  }, [logger, factoryReset])
+  }, [logger, verificationReset])
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.

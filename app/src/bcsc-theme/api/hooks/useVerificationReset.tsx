@@ -1,8 +1,10 @@
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCDispatchAction, BCSCSecureState, BCSCState, BCState } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
-import { getAccount, getAccountSecurityMethod, setAccount } from 'react-native-bcsc-core'
+import { getAccountSecurityMethod } from 'react-native-bcsc-core'
+import BCSCApiClient from '../client'
+import { useFactoryReset } from './useFactoryReset'
+import useRegistrationApi from './useRegistrationApi'
 
 type VerificationResetResult =
   | {
@@ -14,90 +16,62 @@ type VerificationResetResult =
     }
 
 /**
- * Hook to remove verified status and credential while preserving account and nickname.
- * This should get the application as close as possible to a fresh install state.
- * *
- * This includes:
- *  - Deleting all secure data stored in native storage EXCEPT for the account.
+ * Custom hook that provides a function to reset the application to the start of
+ * the verification flow without requiring the user to repeat onboarding.
  *
+ * This includes:
+ *  - Performing a factory reset to clear verification-related data while preserving onboarding state.
+ *  - Re-registering the device with the same authentication method to ensure a seamless user experience.
+ *
+ * @param client - An instance of the BCSCApiClient used for registration. Prevents circular dependency with BCSCApiClientContext.
  * @returns {Function} A function that performs the factory reset when called.
  */
-export const useVerificationReset = () => {
-  const [store, dispatch] = useStore<BCState>()
+export const useVerificationReset = (client: BCSCApiClient | null) => {
+  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { deleteVerificationData } = useSecureActions()
-
-  // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
+  const registration = useRegistrationApi(client, Boolean(client))
+  const factoryReset = useFactoryReset()
 
   /**
-   * Performs a verification reset by clearing relevant secure and plain state.
+   * Resets the application to the start of the verification flow without requiring the user to repeat onboarding.
    *
-   * @returns {Promise<VerificationResetResult>} A promise that resolves to the result of the factory reset operation.
+   * @returns {Promise<VerificationResetResult>} A promise that resolves to the result of the verification reset operation.
    */
   const verificationReset = useCallback(async (): Promise<VerificationResetResult> => {
     try {
-      const resetBcscSecureState: Partial<BCSCSecureState> = {
-        isHydrated: store.bcscSecure.isHydrated,
-        hasAccount: true,
-        registrationAccessToken: store.bcscSecure.registrationAccessToken,
-        verified: false,
-        walletKey: store.bcscSecure.walletKey,
+      logger.info('[VerificationReset]: Starting BCSC verification reset')
+
+      // Get device auth method before factory reset
+      const deviceAuthMethod = await getAccountSecurityMethod()
+
+      const result = await factoryReset(
+        // BCSC state to persist
+        {
+          appVersion: store.bcsc.appVersion,
+          analyticsOptIn: store.bcsc.analyticsOptIn,
+        },
+        // BCSC Secure state to persist
+        {
+          hasAccount: true,
+          walletKey: store.bcscSecure.walletKey,
+        }
+      )
+
+      // Re-register the device with the same device auth method
+      await registration.register(deviceAuthMethod)
+
+      if (!result.success) {
+        logger.error('[VerificationReset]: Factory reset failed', result.error)
       }
-
-      const resetBcscState: Partial<BCSCState> = {
-        analyticsOptIn: store.bcsc.analyticsOptIn,
-      }
-
-      logger.info('[VerificationReset]: Deleting verification data in native storage...')
-      await deleteVerificationData()
-
-      logger.info('[VerificationReset]: Resetting native account...')
-      const [account, securityMethod] = await Promise.all([getAccount(), getAccountSecurityMethod()])
-      // This fixes a bug where the account nickname persists even after verification reset
-      if (account && securityMethod) {
-        await setAccount({
-          ...account,
-          securityMethod: securityMethod,
-          nickname: '', // FIXME (MD): bcsc-core will ignore undefined values for nickname
-        })
-      }
-
-      logger.info('[VerificationReset]: Resetting secure and plain BCSC state...')
-      dispatch({ type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [resetBcscSecureState] })
-      dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [resetBcscState] })
 
       logger.info('[VerificationReset]: BCSC verification reset completed successfully')
       return { success: true }
     } catch (error) {
-      const factoryResetError = _formatVerificationResetError(error)
-      logger.error(factoryResetError.message)
+      logger.error('[VerificationReset]: An error occurred during verification reset', error as Error)
 
-      return { success: false, error: factoryResetError }
+      return { success: false, error: error as Error }
     }
-  }, [
-    store.bcscSecure.isHydrated,
-    store.bcscSecure.registrationAccessToken,
-    store.bcscSecure.walletKey,
-    store.bcsc.analyticsOptIn,
-    logger,
-    deleteVerificationData,
-    dispatch,
-  ])
+  }, [logger, factoryReset, store.bcsc.appVersion, store.bcsc.analyticsOptIn, store.bcscSecure.walletKey, registration])
 
   return verificationReset
-}
-
-/**
- * Formats errors that occur during the verification reset process.
- *
- * @param {unknown} error - The error to format.
- * @returns {*} {Error} The formatted error.
- */
-function _formatVerificationResetError(error: unknown): Error {
-  if (error instanceof Error) {
-    error.message = `VerificationResetError: ${error.message}`
-    return error
-  }
-
-  return new Error(`VerificationResetUnknownError: ${JSON.stringify(error, null, 2)}`)
 }

@@ -61,6 +61,7 @@ export const useFactoryReset = () => {
         logger.warn('FactoryReset: Failed to delete IAS account from server')
       }
     } catch (error) {
+      console.log(error)
       logger.warn('FactoryReset: Error occurred while deleting IAS account from server', { error })
     }
 
@@ -107,7 +108,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [removeAccountArtifacts, logger, dispatch, client]
+    [client, removeAccountArtifacts, logger, dispatch]
   )
 
   return factoryReset
@@ -126,25 +127,4 @@ function _formatFactoryResetError(error: unknown): Error {
   }
 
   return new Error(`FactoryResetUnknownError: ${JSON.stringify(error, null, 2)}`)
-}
-
-/**
- * Gets the state to be preserved during a verification reset,
- *
- * @param store - The current global state of the application.
- * @returns Starte to preserve during a verification reset.
- */
-export const getVerificationResetState = (
-  store: BCState
-): { bcsc: Partial<BCSCState>; secure: Partial<BCSCSecureState> } => {
-  return {
-    bcsc: {
-      appVersion: store.bcsc.appVersion,
-      analyticsOptIn: store.bcsc.analyticsOptIn,
-    },
-    secure: {
-      hasAccount: true,
-      walletKey: store.bcscSecure.walletKey,
-    },
-  }
 }

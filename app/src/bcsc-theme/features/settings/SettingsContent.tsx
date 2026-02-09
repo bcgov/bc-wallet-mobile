@@ -1,5 +1,5 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { getVerificationResetState, useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -50,8 +50,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
-  const factoryReset = useFactoryReset()
-  const { registration } = useApi()
+  const { client } = useBCSCApiClientState()
+  const verificationReset = useVerificationReset(client)
   const { emitAlert } = useErrorAlert()
 
   const styles = StyleSheet.create({
@@ -165,16 +165,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              const state = getVerificationResetState(store)
-              const deviceAuth = accountSecurityMethod ?? (await getAccountSecurityMethod())
-              const result = await factoryReset(state.bcsc, state.secure)
+              const result = await verificationReset()
 
               if (!result.success) {
                 logger.error('[RemoveAccount] Error removing account from settings', result.error)
                 return
               }
-
-              await registration.register(deviceAuth)
 
               logger.info('[RemoveAccount] Account removed successfully from settings')
             } catch (error) {
