@@ -79,6 +79,10 @@ jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => 
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
 }))
 
+jest.mock('@services/system-checks/ServerClockSkewSystemCheck', () => ({
+  ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
+}))
+
 describe('useGetSystemChecks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
