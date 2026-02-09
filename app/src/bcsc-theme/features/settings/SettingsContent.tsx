@@ -1,4 +1,5 @@
-import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { getVerificationResetState, useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -49,7 +50,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
-  const resetVerification = useVerificationReset()
+  const factoryReset = useFactoryReset()
+  const { registration } = useApi()
   const { emitAlert } = useErrorAlert()
 
   const styles = StyleSheet.create({
@@ -162,15 +164,22 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           text: t('Alerts.CancelMobileCardSetup.Action1'),
           style: 'destructive',
           onPress: async () => {
-            const result = await resetVerification()
-            logout()
+            try {
+              const state = getVerificationResetState(store)
+              const deviceAuth = accountSecurityMethod ?? (await getAccountSecurityMethod())
+              const result = await factoryReset(state.bcsc, state.secure)
 
-            if (!result.success) {
-              logger.error('[RemoveAccount] Error removing account from settings', result.error)
-              return
+              if (!result.success) {
+                logger.error('[RemoveAccount] Error removing account from settings', result.error)
+                return
+              }
+
+              await registration.register(deviceAuth)
+
+              logger.info('[RemoveAccount] Account removed successfully from settings')
+            } catch (error) {
+              logger.error('[RemoveAccount] Failed to remove account from settings', error as Error)
             }
-
-            logger.info('[RemoveAccount] Account removed successfully from settings')
           },
         },
       ],
