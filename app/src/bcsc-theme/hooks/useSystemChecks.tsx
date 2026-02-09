@@ -1,3 +1,4 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { useEventListener } from '@/hooks/useEventListener'
@@ -5,6 +6,7 @@ import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
+import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/services/system-checks/system-checks'
@@ -52,7 +54,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const ranSystemChecksRef = useRef(false)
   const accountContext = useContext(BCSCAccountContext)
-
+  const { emitAlert } = useErrorAlert()
   const accountExpirationDate = accountContext?.account?.account_expiration_date
   // Internet connectivity event listener
   useEventListener(() => {
@@ -99,7 +101,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       if (ranSystemChecksRef.current || !isClientReady || !client || !navigation) {
         return
       }
-
       const utils = { dispatch, translation: t, logger }
       const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
@@ -134,6 +135,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
             new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+            new InformativeBCSCAlertsSystemCheck(store.bcsc.alertReasoning, emitAlert, utils),
             // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
             // new AccountExpiryWarningAlertSystemCheck(
             //   accountExpirationDate,
@@ -164,6 +166,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     client,
     configApi,
     dispatch,
+    emitAlert,
     isClientReady,
     logger,
     registrationApi,
@@ -172,6 +175,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     store.bcsc.appVersion,
     store.bcsc.selectedNickname,
     store.bcsc.analyticsOptIn,
+    store.bcsc.alertReasoning,
     store.bcscSecure.registrationAccessToken,
     t,
     tokenApi,

@@ -1,5 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -23,20 +23,20 @@ const useThirdPartyKeyboardWarning = () => {
       if (Platform.OS === 'android') {
         const isthirdPartyKeyboard = await isThirdPartyKeyboardActive()
         if (isthirdPartyKeyboard) {
-          emitAlert(
-            'Warning',
-            'This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard?',
-            {
-              actions: [
-                {
-                  text: 'Continue',
-                  style: 'cancel',
-                },
-                { text: 'Change Keyboard', style: 'destructive', onPress: () => openKeyboardSelector() },
-              ],
-            }
-          )
-          //   dispatch({ type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT, payload: [true] })
+          emitAlert(t('BCSC.ThirdPartyKeyboard.Title'), t('BCSC.ThirdPartyKeyboard.Message'), {
+            actions: [
+              {
+                text: t('BCSC.ThirdPartyKeyboard.ContinueButton'),
+                style: 'cancel',
+              },
+              {
+                text: t('BCSC.ThirdPartyKeyboard.ChangeButton'),
+                style: 'destructive',
+                onPress: () => openKeyboardSelector(),
+              },
+            ],
+          })
+          dispatch({ type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT, payload: [true] })
         }
       }
     }

@@ -382,6 +382,17 @@ const translation = {
         "DismissButton": "Dismiss (FR)"
       }
     },
+    "AccountUpdated": {
+      "Title": "Account Updated (FR)",
+      "Message": "Your account has been automatically updated with information from your new BC Services Card. (FR)",
+      "Button": "Ok (FR)"
+    },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning (FR)",
+      "Message": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard? (FR)",
+      "ContinueButton": "Continue (FR)",
+      "ChangeButton": "Change Keyboard (FR)"
+    },
     "AccountExpired": {
       "StaticBannerTitle": "Expired (FR)",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",

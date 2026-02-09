@@ -1,4 +1,5 @@
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState, CredentialMetadata } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
@@ -8,6 +9,30 @@ export interface BCSCIdTokenContextType<T> {
   isLoading: boolean
   data: T | null
   refreshData: () => void
+}
+
+export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
+  const fullName = `${token.given_name} ${token.family_name}`
+
+  return {
+    fullName,
+    bcscReason: token.bcsc_reason,
+    deviceCount: token.bcsc_devices_count,
+    deviceLimit: token.bcsc_max_devices,
+    cardType: token.bcsc_card_type,
+    lastUpdated: token.bcsc_status_date,
+  } as CredentialMetadata
+}
+
+export const compareCredentialMetadata = (c1: CredentialMetadata, c2: CredentialMetadata): boolean => {
+  return (
+    c1.fullName === c2.fullName &&
+    c1.bcscReason === c2.bcscReason &&
+    c1.deviceCount === c2.deviceCount &&
+    c1.deviceLimit === c2.deviceLimit &&
+    c1.cardType === c2.cardType &&
+    c1.lastUpdated === c2.lastUpdated
+  )
 }
 
 export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> | null>(null)
@@ -21,8 +46,9 @@ export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> 
 export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store, dispatch] = useStore<BCState>()
 
-  const { data, load, isLoading, refresh } = useDataLoader(
+  const { data, load, isLoading, refresh, isReady } = useDataLoader(
     () => api.token.getCachedIdTokenMetadata({ refreshCache: true }),
     {
       onError: (error) => logger.error('BCSCIdTokenProvider: Failed to load ID Token metadata', error as Error),
@@ -32,6 +58,27 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (data) {
+      const tokenData = tokenToCredentialMetadata(data)
+      if (store.bcsc.credentialMetadata) {
+        console.log('HAS BOTH OF THESE THINGS... ')
+        const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
+
+        console.log('SHOULD DISPLAY AN ALERT: ', !dataUpdated)
+        if (!dataUpdated) {
+          // if (true) {
+          console.log('Detected changes in account metadata, dispatching alert reasoning')
+          dispatch({
+            type: BCDispatchAction.ALERT_REASONING,
+            payload: [{ event: data.bcsc_event, state: data.bcsc_reason }],
+          })
+        }
+      }
+      dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [tokenData] })
+    }
+  }, [data, isReady, dispatch])
 
   const contextValue = useMemo(() => {
     if (!data) {
