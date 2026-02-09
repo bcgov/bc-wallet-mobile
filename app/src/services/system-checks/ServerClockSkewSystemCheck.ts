@@ -16,8 +16,7 @@ export class ServerClockSkewSystemCheck implements SystemCheckStrategy {
     private readonly serverTimestamp: Date,
     private readonly deviceTimestamp: Date,
     private readonly emitAlert: ErrorAlertContextType['emitAlert'],
-    private readonly utils: SystemCheckUtils,
-    private readonly skewThresholdSeconds: number = FIVE_MINUTES_IN_SECONDS
+    private readonly utils: SystemCheckUtils
   ) {}
 
   private getClockSkewInSeconds() {
@@ -25,14 +24,15 @@ export class ServerClockSkewSystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    return this.getClockSkewInSeconds() < this.skewThresholdSeconds
+    return this.getClockSkewInSeconds() < FIVE_MINUTES_IN_SECONDS
   }
 
   onFail() {
     this.utils.logger.warn('[ServerClockSkewSystemCheck] Server clock skew detected', {
       serverTimestamp: this.serverTimestamp.toISOString(),
       deviceTimestamp: this.deviceTimestamp.toISOString(),
-      skewInSeconds: this.getClockSkewInSeconds(),
+      maxAllowedSkewSeconds: FIVE_MINUTES_IN_SECONDS,
+      observedSkewSeconds: this.getClockSkewInSeconds(),
     })
 
     // Emit an alert to the user about the clock skew issue with an option to open device settings
