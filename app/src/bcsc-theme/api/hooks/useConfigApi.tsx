@@ -9,6 +9,7 @@ export interface ServerStatusResponseData {
   supportedVersions: string[]
   service: string
   status: 'ok' | 'unavailable'
+  serverTimestamp: Date
   statusMessage?: string
   contactLink: string
   controlNumber: number
@@ -27,13 +28,17 @@ const useConfigApi = (apiClient: BCSCApiClient) => {
    * @returns {*} {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
    */
   const getServerStatus = useCallback(async () => {
-    const { data } = await apiClient.get<ServerStatusResponseData>(
+    const { data, headers } = await apiClient.get<ServerStatusResponseData>(
       `${apiClient.endpoints.cardTap}/v3/status/${Platform.OS}/mobile_card`,
       {
         skipBearerAuth: true, // this endpoint does not require an access token
       }
     )
-    return data
+
+    return {
+      ...data,
+      serverTimestamp: new Date(headers.date),
+    }
   }, [apiClient])
 
   const getTermsOfUse = useCallback(async () => {
