@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
@@ -15,7 +16,9 @@ describe('AuthSettings', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <AuthSettingsScreen navigation={mockNavigation as never} />
+        <BCSCLoadingProvider>
+          <AuthSettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
