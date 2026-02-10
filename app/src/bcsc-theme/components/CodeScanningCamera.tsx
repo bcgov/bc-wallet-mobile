@@ -1,10 +1,12 @@
-import { QRScannerTorch, useTheme } from '@bifold/core'
+import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  Alert,
   Animated,
   GestureResponderEvent,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -13,8 +15,6 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import { runOnJS } from 'react-native-reanimated'
 import {
   Camera,
   CameraCaptureError,
@@ -26,6 +26,8 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera'
+
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 
 /**
  * Extended Code interface with position and orientation metadata
@@ -39,6 +41,34 @@ export interface EnhancedCode extends Code {
    * Orientation of the barcode (horizontal or vertical)
    */
   orientation?: 'horizontal' | 'vertical'
+  /**
+   * Whether the code is aligned with the scan zone
+   */
+  isAligned?: boolean
+  /**
+   * Whether the code has been validated through consecutive readings
+   */
+  isValidated?: boolean
+  /**
+   * Number of consecutive identical readings for this code
+   */
+  readingCount?: number
+}
+
+/**
+ * A saved scan zone describing where a barcode is expected on a card.
+ * Coordinates are normalized (0-1) relative to the camera container.
+ */
+export interface ScanZone {
+  /** Barcode format types expected in this zone (e.g. ['code-39'], ['pdf-417']) */
+  types: string[]
+  /** Normalized bounding box (0-1) relative to the camera container */
+  box: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
 }
 
 export interface CodeScanningCameraProps {
@@ -70,29 +100,31 @@ export interface CodeScanningCameraProps {
   showBarcodeHighlight?: boolean
 
   /**
-   * Enable/disable pinch-to-zoom gesture
-   * @default true
+   * Enable scan zone tracking and saving (dev/debug feature).
+   * When enabled and locked, shows Save Scan Zones + Continue Scanning buttons.
+   * When disabled and locked, shows a Confirm button that calls onCodeScanned.
+   * @default false
    */
-  enableZoom?: boolean
+  enableScanZones?: boolean
+
+  /**
+   * Pre-defined scan zones describing expected barcode positions on the card.
+   * When provided, these replace the default centered scan zone overlay.
+   * Coordinates are normalized (0-1) relative to the camera container.
+   * Use the output of "Save Scan Zones" to populate this prop.
+   */
+  scanZones?: ScanZone[]
 
   /**
    * Initial zoom level
-   * @default 1.0
+   * @default 2.0
    */
   initialZoom?: number
-
-  /**
-   * Minimum zoom level
-   * @default 1.0
-   */
-  minZoom?: number
-
-  /**
-   * Maximum zoom level (will be constrained by device capabilities)
-   * @default 4.0
-   */
-  maxZoom?: number
 }
+
+/** Feature flag: when true, shows Confirm/Try Again buttons on lock.
+ *  When false (default), automatically confirms and proceeds with the scan. */
+const ENABLE_MANUAL_CONFIRM = false
 
 const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   codeTypes,
@@ -100,61 +132,130 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   style,
   cameraType = 'back',
   showBarcodeHighlight = false,
-  enableZoom = true,
-  initialZoom = 1.0,
-  minZoom = 1.0,
-  maxZoom = 4.0,
+  enableScanZones = false,
+  scanZones,
+  initialZoom = 2.0,
 }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
-  const { width } = useWindowDimensions()
+  const { width, height: windowHeight } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
 
-  // Zoom state management
-  const [zoom, setZoom] = useState(initialZoom)
-  const zoomOffset = useRef(initialZoom)
+  // Zoom management - start at 1.0, will be updated to initialZoom in onInitialized
+  const [zoom, setZoom] = useState(1.0)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
   const highlightFadeAnim = useRef(new Animated.Value(0)).current
+  
+  // Track if we're currently processing a scan to prevent multiple callbacks
+  const isProcessingScan = useRef(false)
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Track locked state inside scanner callback closure (React state is stale in callback)
+  const isLockedRef = useRef(false)
+  // Store locked codes and frame for deferred callback when user taps "Continue"
+  const lockedScanRef = useRef<{ codes: EnhancedCode[]; frame: CodeScannerFrame } | null>(null)
+
+  // --- Configurable highlight thresholds ---
+  // Minimum number of identified codes (with a decoded value) to show "aligned" (green, no border)
+  // Derived from the number of scan zones provided, so each zone must have a matching code
+  const MIN_CODES_FOR_ALIGNED = scanZones?.length ?? 2
+  // Consecutive identical readings required per code for "locked" state (green with border)
+  const LOCK_READING_THRESHOLD = 5
+  // Alignment tolerance for scan zone matching (proportional to zone size)
+  const ALIGNMENT_MARGIN_FACTOR = 0.05
+
+  // Track consecutive readings for validation
+  // iOS detects reliably at full resolution — use higher threshold for certainty
+  // Android detects less frequently — lower threshold to reduce user frustration
+  const barcodeReadings = useRef<Map<string, { value: string; type: CodeType | 'unknown'; count: number }>>(new Map())
+  const VALIDATION_THRESHOLD = Platform.OS === 'ios' ? 5 : 3
+
+  // Collective scan state: 'scanning' → 'aligned' → 'locked'
+  const [scanState, setScanState] = useState<'scanning' | 'aligned' | 'locked'>('scanning')
+
+  // Scan-and-accumulate: track validated codes across frames within a time window.
+  // This allows PDF-417 and Code-39 to be detected in separate frames rather than
+  // requiring both in the same frame — a huge improvement on Android where the lower
+  // resolution and ML Kit processing make simultaneous detection unreliable.
+  const accumulatedCodes = useRef<Map<string, { code: EnhancedCode; timestamp: number }>>(new Map())
+  const ACCUMULATION_WINDOW_MS = Platform.OS === 'ios' ? 2000 : 3000
+
+  // Track camera container and preview dimensions for coordinate transformation
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
+  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
+  
+  // Track scan zone position for alignment detection
+  const [scanZoneBounds, setScanZoneBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+
+  // Frozen camera preview — stores a snapshot URI when scanning is locked
+  const [frozenFrameUri, setFrozenFrameUri] = useState<string | null>(null)
 
   /**
    * Select the optimal camera device for barcode scanning
-   * Prioritizes devices with better focus capabilities
+   * Prioritizes devices with better focus capabilities and macro support for dense PDF-417 codes
    */
   const device = useCameraDevice(cameraType, {
     physicalDevices: Platform.select({
-      // On iOS, prefer ultra-wide-angle camera for better focus control
-      // This is particularly important for scanning small barcodes
-      ios: ['ultra-wide-angle-camera', 'wide-angle-camera'],
+      // On iOS, prefer telephoto for better zoom/focus on dense barcodes, then ultra-wide for focus control
+      ios: ['telephoto-camera', 'ultra-wide-angle-camera', 'wide-angle-camera'],
       // On Android, prefer wide-angle camera
       android: ['wide-angle-camera'],
     }),
   })
 
   /**
-   * Optimize camera format for small barcode scanning
-   * Higher resolution and frame rate improve detection accuracy
+   * Optimize camera format for barcode scanning including dense PDF-417
+   *
+   * Key considerations:
+   * - 1080p (1920x1080) provides sufficient resolution for PDF-417 barcodes
+   *   (Google ML Kit recommends >=1156px width for dense PDF-417)
+   * - 30 FPS gives 3x more scanning opportunities than 10 FPS, increasing the
+   *   chance of capturing both barcodes in the time window
+   * - On Android, the patched native code now uses this videoResolution for the
+   *   code scanner's ImageAnalysis pipeline (previously defaulted to ~640x480)
+   * - On iOS, AVFoundation uses the full active format resolution regardless
    */
   const format = useCameraFormat(device, [
-    // Higher FPS for better barcode detection on small codes
+    // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
+    // processing fast on Android. The native patch ensures this resolution is
+    // actually used by the code scanner's ImageAnalysis pipeline.
     {
-      fps: Platform.OS === 'ios' ? 'max' : 60,
+      videoResolution: { width: 1920, height: 1080 },
     },
-    // High photo resolution for better barcode recognition
+    // 30 FPS provides more scan attempts per second — critical for catching both
+    // PDF-417 and Code-39 within the accumulation window
     {
-      photoResolution: { width: 1920, height: 1080 },
+      fps: 30,
     },
     // Prefer formats with better video stabilization
     {
       videoStabilizationMode: 'auto',
     },
   ])
+
+  // Track format video dimensions for debug overlay and coordinate transform verification.
+  // The Preview use case on Android targets format.videoSize — comparing this with
+  // CodeScannerFrame dimensions reveals aspect ratio mismatches that cause overlay misalignment.
+
+  // Calculate effective zoom based on device capabilities
+  const getEffectiveZoom = useCallback((targetZoom: number) => {
+    if (!device) {
+      return targetZoom
+    }
+    const deviceMinZoom = device.minZoom ?? 1
+    const deviceMaxZoom = device.maxZoom ?? 10
+    return Math.max(deviceMinZoom, Math.min(targetZoom, deviceMaxZoom))
+  }, [device])
 
   /**
    * Calculate barcode orientation based on dimensions
@@ -175,66 +276,434 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /**
+   * Transform coordinates from CodeScannerFrame space to preview container space.
+   *
+   * Key platform differences (from VisionCamera v4 native source code):
+   *
+   * **iOS** (`CameraSession+CodeScanner.swift`):
+   *   - `CodeScannerFrame` = `device.activeFormat.videoDimensions` → always LANDSCAPE (e.g., 1920×1080)
+   *   - `code.frame` = `AVMetadataObject.bounds` (normalized 0-1) × videoDimensions
+   *   - `AVMetadataObject.bounds` are already orientation-corrected by AVFoundation:
+   *     bounds.x = horizontal fraction (left→right), bounds.y = vertical fraction (top→bottom)
+   *   - BUT VisionCamera scales them by landscape dims: x*1920, y*1080
+   *   - This creates coordinates that are positionally correct but in a mismatched aspect ratio
+   *   - Fix: Normalize back to 0-1 fractions, then remap to portrait frame dimensions
+   *
+   * **Android** (`CodeScannerPipeline.kt`):
+   *   - `CodeScannerFrame` = `InputImage.width/height` → RAW (unrotated) dimensions (e.g., 640×480)
+   *   - `code.frame` = ML Kit `Barcode.boundingBox` → in ROTATED (portrait) space (e.g., 480×640)
+   *   - ML Kit applies `rotationDegrees` internally, returning bounding boxes in upright coords
+   *   - But `InputImage.width/height` returns pre-rotation dimensions
+   *   - Fix: Swap frame dimensions only (coordinates are already in portrait space)
+   *
+   * With resizeMode="cover", the camera preview fills the container while maintaining
+   * aspect ratio, center-cropping any overflow. We use Math.max(scaleX, scaleY) for
+   * the uniform scale and compute centering offsets for the cropped dimension.
+   */
+  const transformCoordinates = (
+    frame: { x: number; y: number; width: number; height: number },
+    cameraFrameWidth: number,
+    cameraFrameHeight: number,
+    containerWidth: number,
+    containerHeight: number
+  ): { x: number; y: number; width: number; height: number } => {
+    let fw = cameraFrameWidth
+    let fh = cameraFrameHeight
+    let fx = frame.x
+    let fy = frame.y
+    let fWidth = frame.width
+    let fHeight = frame.height
+
+    // Use WINDOW dimensions to detect device orientation, not container dimensions.
+    // The camera container may be wider than tall (e.g., 411×377) even in portrait mode
+    // due to UI chrome (nav bars, buttons) consuming vertical space.
+    const isDevicePortrait = windowHeight > width
+    const isFrameLandscape = fw > fh
+
+    if (isDevicePortrait) {
+      if (Platform.OS === 'ios') {
+        // iOS: AVMetadataObject.bounds are in RAW landscape sensor space.
+        // VisionCamera scales normalized bounds (0-1) by videoDimensions:
+        //   code.x = bounds.x * size.width  (sensor long/short axis)
+        //   code.y = bounds.y * size.height  (sensor short/long axis)
+        //
+        // Normalizing by the SAME dimensions recovers the original 0-1 bounds,
+        // regardless of whether size.width > size.height or vice versa.
+        //
+        // For portrait display, from empirical testing:
+        //   bounds.x (sensor "X") corresponds to physical VERTICAL (top-to-bottom)
+        //   bounds.y (sensor "Y") corresponds to physical HORIZONTAL (right-to-left, inverted)
+        //
+        // Portrait mapping - sensor coordinates to display coordinates:
+        //   Empirically: boundsY maps to display X (but mirrored: 1-Y-H)
+        //                boundsX maps to display Y
+        const normX = fx / cameraFrameWidth    // recovers bounds.x
+        const normY = fy / cameraFrameHeight   // recovers bounds.y
+        const normW = fWidth / cameraFrameWidth
+        const normH = fHeight / cameraFrameHeight
+
+        // Portrait frame: short axis = width, long axis = height
+        fw = Math.min(cameraFrameWidth, cameraFrameHeight)
+        fh = Math.max(cameraFrameWidth, cameraFrameHeight)
+
+        // Swap axes: sensor Y → display X (mirrored), sensor X → display Y
+        fx = (1 - normY - normH) * fw
+        fy = normX * fh
+        fWidth = normH * fw
+        fHeight = normW * fh
+      } else if (isFrameLandscape) {
+        // Android: ML Kit applies rotationDegrees internally and returns boundingBox
+        // in portrait coordinate space (e.g., 480×640), but InputImage.width/height
+        // (used for CodeScannerFrame) returns raw unrotated dimensions (e.g., 640×480).
+        // Just swap frame dimensions to match the bounding box coordinate space.
+        fw = cameraFrameHeight
+        fh = cameraFrameWidth
+      }
+    }
+
+    // Cover mode scaling: use the larger scale factor to fill the container
+    const scaleX = containerWidth / fw
+    const scaleY = containerHeight / fh
+    const scale = Math.max(scaleX, scaleY)
+
+    // Centering offset for the dimension that overflows the container
+    const offsetX = (containerWidth - fw * scale) / 2
+    const offsetY = (containerHeight - fh * scale) / 2
+
+    const result = {
+      x: fx * scale + offsetX,
+      y: fy * scale + offsetY,
+      width: fWidth * scale,
+      height: fHeight * scale,
+    }
+
+    // Debug log the transformation
+    if (showBarcodeHighlight) {
+      // Compare ImageAnalysis (frame) vs Preview (format) aspect ratios
+      /*
+      const iaAspect = fw / fh
+      const fmtW = formatVideoWidth ?? 0
+      const fmtH = formatVideoHeight ?? 0
+      const previewAspect = fmtH > 0 ? Math.min(fmtW, fmtH) / Math.max(fmtW, fmtH) : 0
+      const containerAspect = containerWidth / containerHeight
+      logger.debug('Transform', {
+        platform: Platform.OS,
+        rawFrameSize: { w: cameraFrameWidth, h: cameraFrameHeight },
+        adjustedFrameSize: { w: fw, h: fh },
+        formatVideoSize: { w: fmtW, h: fmtH },
+        containerSize: { w: containerWidth.toFixed(1), h: containerHeight.toFixed(1) },
+        windowSize: { w: width, h: windowHeight },
+        aspectRatios: { 
+          imageAnalysis: iaAspect.toFixed(4),
+          format: previewAspect.toFixed(4),
+          container: containerAspect.toFixed(4),
+          iaMismatch: previewAspect > 0 ? Math.abs(iaAspect - previewAspect).toFixed(4) : 'n/a',
+        },
+        isDevicePortrait,
+        isFrameLandscape,
+        scaleX: scaleX.toFixed(3),
+        scaleY: scaleY.toFixed(3),
+        scale: scale.toFixed(3),
+        offset: { x: offsetX.toFixed(1), y: offsetY.toFixed(1) },
+        inputRaw: frame,
+        inputTransformed: { x: Math.round(fx), y: Math.round(fy), w: Math.round(fWidth), h: Math.round(fHeight) },
+        output: {
+          x: Math.round(result.x),
+          y: Math.round(result.y),
+          w: Math.round(result.width),
+          h: Math.round(result.height)
+        }
+      })
+      */
+    }
+
+    return result
+  }
+
+  /**
    * Enhanced code scanner with position and orientation metadata
+   * Pauses scanning while processing detected codes to prevent multiple callbacks
+   * Requires at least 2 codes to proceed (barcode + license or combo card detection)
    */
   const codeScanner = useCodeScanner({
     codeTypes,
     onCodeScanned: (codes, frame) => {
+      // Capture frame dimensions on first scan
+      if (!frameSize) {
+        setFrameSize({ width: frame.width, height: frame.height })
+      }
+
+      // When locked, completely pause scanning — highlights are frozen on screen
+      if (isLockedRef.current) {
+        return
+      }
+
+      // Debug logging for barcode detection
+      /* 
+      if (showBarcodeHighlight && codes.length > 0) {
+        logger.debug('Codes detected', { count: codes.length, frame: { width: frame.width, height: frame.height }, container: containerSize })
+        codes.forEach((code, idx) => {
+          logger.debug(`Code ${idx}`, { type: code.type, frame: code.frame })
+        })
+      } */
+
+      // Always update displayed codes for visual feedback
       if (codes.length > 0) {
+        // Track current scan's codes for validation
+        const currentScanKeys = new Set<string>()
+
         // Enhance codes with position and orientation metadata
         const enhancedCodes: EnhancedCode[] = codes.map((code) => {
-          const corners = code.corners
-
-          // Calculate bounding box from corners if available
           let position: { x: number; y: number; width: number; height: number } | undefined
-          if (corners && corners.length >= 4) {
-            const xs = corners.map((c) => c.x)
-            const ys = corners.map((c) => c.y)
-            const minX = Math.min(...xs)
-            const maxX = Math.max(...xs)
-            const minY = Math.min(...ys)
-            const maxY = Math.max(...ys)
 
-            position = {
-              x: minX,
-              y: minY,
-              width: maxX - minX,
-              height: maxY - minY,
-            }
+          // Use the frame property which is already relative to the Camera Preview
+          if (code.frame && containerSize && frameSize) {
+            // Transform coordinates from camera sensor space to container space
+            position = transformCoordinates(
+              code.frame,
+              frameSize.width,
+              frameSize.height,
+              containerSize.width,
+              containerSize.height
+            )
+            /* 
+            logger.debug('Position transformation', {
+              input: code.frame,
+              output: position,
+              frameSize,
+              containerSize
+            }) */
+          } else if (code.frame) {
+            // Fallback to untransformed coordinates if we don't have dimensions yet
+            position = code.frame
           }
 
+          const corners = code.corners
           const orientation = calculateOrientation(corners)
+
+          // Check if code is aligned with scan zone (pass type for custom zone matching)
+          const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
+
+          // Debug alignment check on iOS to diagnose coordinate issues
+          if (showBarcodeHighlight && position && containerSize && Platform.OS === 'ios') {
+            const normPos = {
+              x: +(position.x / containerSize.width).toFixed(4),
+              y: +(position.y / containerSize.height).toFixed(4),
+              width: +(position.width / containerSize.width).toFixed(4),
+              height: +(position.height / containerSize.height).toFixed(4),
+            }
+            logger.debug(`iOS alignment check [${code.type}]`, {
+              aligned: isAligned,
+              codeNorm: normPos,
+              codeAbs: { x: Math.round(position.x), y: Math.round(position.y), w: Math.round(position.width), h: Math.round(position.height) },
+              margin: ALIGNMENT_MARGIN_FACTOR,
+            })
+          }
+
+          // Validate through consecutive readings (only if aligned)
+          const key = `${code.type}-${code.value}`
+          currentScanKeys.add(key)
+          let readingCount = 1
+          let isValidated = false
+
+          // Always track consecutive readings for any code with a value —
+          // this drives the visual lock state (readingCount >= LOCK_READING_THRESHOLD).
+          // But only mark as "validated" (for triggering the scan callback) when also aligned.
+          if (code.value) {
+            const existing = barcodeReadings.current.get(key)
+            if (existing && existing.value === code.value && existing.type === code.type) {
+              // Same code detected consecutively - increment count
+              readingCount = existing.count + 1
+              barcodeReadings.current.set(key, { value: code.value, type: code.type, count: readingCount })
+            } else {
+              // New code or changed value - reset count
+              barcodeReadings.current.set(key, { value: code.value, type: code.type, count: 1 })
+            }
+            // Only validated (for callback) if ALSO aligned with scan zone
+            isValidated = isAligned && readingCount >= VALIDATION_THRESHOLD
+
+            /* if (showBarcodeHighlight) {
+              logger.debug('Barcode validation', {
+                type: code.type,
+                value: code.value?.substring(0, 20),
+                readingCount,
+                isAligned,
+                isValidated,
+                threshold: VALIDATION_THRESHOLD
+              })
+            } */
+          }
 
           return {
             ...code,
             position,
             orientation,
+            isAligned,
+            isValidated,
+            readingCount,
           }
         })
 
-        // Update detected codes for highlight overlay
+        // Clean up readings for codes that are no longer detected
+        const keysToDelete: string[] = []
+        barcodeReadings.current.forEach((_, key) => {
+          if (!currentScanKeys.has(key)) {
+            keysToDelete.push(key)
+          }
+        })
+        keysToDelete.forEach(key => barcodeReadings.current.delete(key))
+
+        // Update per-zone detection tracking for focus cycling prioritisation
+        if (scanZones && scanZones.length > 0 && containerSize) {
+          const newDetected = new Set<number>()
+          for (const code of enhancedCodes) {
+            if (!code.isAligned || !code.position) {
+              continue
+            }
+            // Determine which zone index this aligned code belongs to
+            for (let zi = 0; zi < scanZones.length; zi++) {
+              const zone = scanZones[zi]
+              if (code.type && zone.types.length > 0 && !zone.types.includes(code.type)) {
+                continue
+              }
+              const absX = zone.box.x * containerSize.width
+              const absY = zone.box.y * containerSize.height
+              const absW = zone.box.width * containerSize.width
+              const absH = zone.box.height * containerSize.height
+              const mx = absW * ALIGNMENT_MARGIN_FACTOR
+              const my = absH * ALIGNMENT_MARGIN_FACTOR
+              if (
+                code.position.x >= absX - mx &&
+                code.position.y >= absY - my &&
+                code.position.x + code.position.width <= absX + absW + mx &&
+                code.position.y + code.position.height <= absY + absH + my
+              ) {
+                newDetected.add(zi)
+                break
+              }
+            }
+          }
+          detectedZoneIndices.current = newDetected
+        }
+
+        // Determine collective scan state based on identified codes
+        const identifiedCodes = enhancedCodes.filter(c => c.value && c.value.length > 0)
+
+        // In production mode (enableScanZones OFF), only codes aligned with scan zones
+        // (and matching barcode types) drive state transitions. This ensures highlights
+        // only turn green / lock when barcodes are in the expected positions.
+        // In dev/calibration mode (enableScanZones ON), all identified codes count —
+        // this allows capturing scan zones from any position.
+        const qualifyingCodes = enableScanZones
+          ? identifiedCodes
+          : identifiedCodes.filter(c => c.isAligned)
+
+        const qualifyingCount = qualifyingCodes.length
+        const allLocked = qualifyingCount >= MIN_CODES_FOR_ALIGNED &&
+          qualifyingCodes.every(c => (c.readingCount ?? 0) >= LOCK_READING_THRESHOLD)
+        const newScanState = allLocked ? 'locked' :
+          qualifyingCount >= MIN_CODES_FOR_ALIGNED ? 'aligned' : 'scanning'
+        setScanState(newScanState)
+
+        // Always show highlight boxes for all detected codes
         if (showBarcodeHighlight) {
-          setDetectedCodes(enhancedCodes)
-          // Fade in the highlight
+          // Clear any pending clear timeout since we have detected codes
+          if (clearHighlightTimeoutRef.current) {
+            clearTimeout(clearHighlightTimeoutRef.current)
+            clearHighlightTimeoutRef.current = null
+          }
+
+          // Update if codes changed OR if position changed (for real-time tracking as camera moves)
+          const codesChanged = 
+            detectedCodes.length !== enhancedCodes.length ||
+            enhancedCodes.some((code, idx) => 
+              !detectedCodes[idx] || 
+              detectedCodes[idx].value !== code.value ||
+              detectedCodes[idx].type !== code.type ||
+              // Track position changes for live updates as camera moves
+              (code.position && detectedCodes[idx].position && 
+                (Math.abs(code.position.x - detectedCodes[idx].position!.x) > 5 ||
+                 Math.abs(code.position.y - detectedCodes[idx].position!.y) > 5 ||
+                 Math.abs(code.position.width - detectedCodes[idx].position!.width) > 5 ||
+                 Math.abs(code.position.height - detectedCodes[idx].position!.height) > 5))
+            )
+
+          if (codesChanged) {
+            setDetectedCodes(enhancedCodes)
+
+            // Fade in the highlight
+            Animated.timing(highlightFadeAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }).start()
+          }
+
+          // Set a timeout to clear highlights if no codes are detected for 500ms
+          // Skip when locked — highlights should persist until user action
+          if (newScanState !== 'locked') {
+            clearHighlightTimeoutRef.current = setTimeout(() => {
+              setDetectedCodes([])
+              Animated.timing(highlightFadeAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+              }).start()
+            }, 500)
+          }
+        }
+
+        // Accumulate validated+aligned codes across frames within a time window.
+        // This allows PDF-417 and Code-39 to be detected separately rather than
+        // requiring both in the exact same frame.
+        const now = Date.now()
+        const newlyValidated = enhancedCodes.filter(code => code.isAligned && code.isValidated)
+
+        // Add/update validated codes in the accumulator
+        newlyValidated.forEach(code => {
+          const key = `${code.type}-${code.value}`
+          accumulatedCodes.current.set(key, { code, timestamp: now })
+        })
+
+        // Expire old detections outside the accumulation window
+        accumulatedCodes.current.forEach((entry, key) => {
+          if (now - entry.timestamp > ACCUMULATION_WINDOW_MS) {
+            accumulatedCodes.current.delete(key)
+          }
+        })
+
+        // Collect all accumulated codes (from current + recent frames)
+
+        // When locked, freeze scanning and store codes for user confirmation.
+        // Always require user to tap "Confirm" before proceeding.
+        if (newScanState === 'locked' && !isLockedRef.current) {
+          // Freeze scanning — user must tap "Confirm" or "Try Again"
+          // newScanState === 'locked' already guarantees ≥2 qualifying codes with ≥5 consecutive readings each
+          isLockedRef.current = true
+          lockedScanRef.current = { codes: qualifyingCodes, frame }
+          // Cancel any clear timeout so highlights persist
+          if (clearHighlightTimeoutRef.current) {
+            clearTimeout(clearHighlightTimeoutRef.current)
+            clearHighlightTimeoutRef.current = null
+          }
+        }
+      } else if (!isLockedRef.current) {
+        // Clear highlights and validation readings when no codes are detected
+        // (but never reset if locked — highlights are frozen)
+        detectedZoneIndices.current = new Set()
+        setScanState('scanning')
+        if (showBarcodeHighlight && detectedCodes.length > 0) {
+          setDetectedCodes([])
+          // Fade out the highlight
           Animated.timing(highlightFadeAnim, {
-            toValue: 1,
+            toValue: 0,
             duration: 200,
             useNativeDriver: true,
           }).start()
-
-          // Keep highlight visible for 10 seconds to match navigation delay, then fade out
-          setTimeout(() => {
-            Animated.timing(highlightFadeAnim, {
-              toValue: 0,
-              duration: 500,
-              useNativeDriver: true,
-            }).start(() => {
-              setDetectedCodes([])
-            })
-          }, 10000)
         }
-
-        onCodeScanned(enhancedCodes, frame)
+        // Clear validation readings when no codes detected (but keep accumulated codes —
+        // they expire via the time window, allowing brief gaps in detection)
+        barcodeReadings.current.clear()
       }
     },
   })
@@ -243,20 +712,248 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     if (!hasPermission) {
       requestPermission()
     }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+        highlightTimeoutRef.current = null
+      }
+      if (clearHighlightTimeoutRef.current) {
+        clearTimeout(clearHighlightTimeoutRef.current)
+        clearHighlightTimeoutRef.current = null
+      }
+      if (focusCycleTimerRef.current) {
+        clearInterval(focusCycleTimerRef.current)
+        focusCycleTimerRef.current = null
+      }
+    }
   }, [hasPermission, requestPermission])
+
+  // Auto-confirm: when manual confirm is disabled, immediately fire the callback on lock
+  useEffect(() => {
+    if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked' && lockedScanRef.current) {
+      onCodeScanned(lockedScanRef.current.codes, lockedScanRef.current.frame)
+    }
+  }, [scanState, onCodeScanned])
+
+  // Capture a snapshot to freeze the camera preview when scanning locks
+  useEffect(() => {
+    if (scanState === 'locked' && camera.current && !frozenFrameUri) {
+      camera.current
+        .takeSnapshot({ quality: 85 })
+        .then((photo) => {
+          setFrozenFrameUri(`file://${photo.path}`)
+        })
+        .catch((err) => {
+          // On failure, the camera will simply be deactivated (isActive=false)
+          // which retains the last frame on iOS. On Android the preview may go black.
+          logger.debug('Could not capture frozen frame snapshot', { error: String(err) })
+        })
+    }
+  }, [scanState, frozenFrameUri, logger])
 
   const scanSize = Math.min(width - 80, 300)
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
 
+  const getHighlightPosition = useCallback(
+    (position: { x: number; y: number; width: number; height: number }) => {
+      if (Platform.OS !== 'android') {
+        return position
+      }
+
+      // Android: ML Kit's boundingBox is a tight fit that excludes quiet zones.
+      // Pad only the rendered highlight (not alignment math).
+      const pad = 8
+      return {
+        x: position.x - pad,
+        y: position.y - pad,
+        width: position.width + pad * 2,
+        height: position.height + pad * 2,
+      }
+    },
+    []
+  )
+
+  /**
+   * Check if a code's box falls within a scan zone (with proportional margin).
+   * When custom `scanZones` are provided, checks against those (with type matching).
+   * Otherwise falls back to the default centered scan zone overlay.
+   *
+   * Uses a box-in-zone check for alignment, with proportional expansion by
+   * `marginFactor` on each side. This keeps highlights closely matched to
+   * the scan zone while allowing a small tolerance when needed.
+   *
+   * @param codePosition The detected code's position in container coordinates
+   * @param codeType Optional barcode type for type-aware matching with custom zones
+   * @param marginFactor Proportional expansion of zone bounds (default 0.3 = 30%)
+   * @returns true if the code box is within any matching scan zone (± margin)
+   */
+  const isCodeAlignedWithScanZone = useCallback(
+    (
+      codePosition: { x: number; y: number; width: number; height: number },
+      codeType?: string,
+      marginFactor: number = 0,
+    ): boolean => {
+      if (!containerSize) {
+        return false
+      }
+
+      const isFullyWithinBounds = (
+        bounds: { x: number; y: number; width: number; height: number },
+        margin: { x: number; y: number }
+      ): boolean => (
+        codePosition.x >= bounds.x - margin.x &&
+        codePosition.y >= bounds.y - margin.y &&
+        codePosition.x + codePosition.width <= bounds.x + bounds.width + margin.x &&
+        codePosition.y + codePosition.height <= bounds.y + bounds.height + margin.y
+      )
+
+      // When custom scan zones are provided, check against each one
+      if (scanZones && scanZones.length > 0) {
+        return scanZones.some((zone) => {
+          // If zone specifies types, only match compatible barcode types
+          if (codeType && zone.types.length > 0 && !zone.types.includes(codeType)) {
+            return false
+          }
+          // Convert normalized (0-1) box to absolute container coordinates
+          const absX = zone.box.x * containerSize.width
+          const absY = zone.box.y * containerSize.height
+          const absW = zone.box.width * containerSize.width
+          const absH = zone.box.height * containerSize.height
+
+          // Expand zone bounds proportionally for tolerance
+          const marginX = absW * marginFactor
+          const marginY = absH * marginFactor
+
+          const aligned = isFullyWithinBounds(
+            { x: absX, y: absY, width: absW, height: absH },
+            { x: marginX, y: marginY }
+          )
+
+          // Debug iOS zone matching to diagnose coordinate issues
+          if (showBarcodeHighlight && Platform.OS === 'ios' && codeType) {
+            logger.debug(`iOS zone check [${codeType}]`, {
+              aligned,
+              zone: { x: zone.box.x, y: zone.box.y, w: zone.box.width, h: zone.box.height },
+              zoneAbs: { x: Math.round(absX), y: Math.round(absY), w: Math.round(absW), h: Math.round(absH) },
+              codeAbs: { x: Math.round(codePosition.x), y: Math.round(codePosition.y), w: Math.round(codePosition.width), h: Math.round(codePosition.height) },
+              margin: { x: Math.round(marginX), y: Math.round(marginY), factor: marginFactor },
+            })
+          }
+
+          return aligned
+        })
+      }
+
+      // Fallback: check against default scan zone overlay bounds
+      if (!scanZoneBounds) {
+        return false
+      }
+
+      const marginX = scanZoneBounds.width * marginFactor
+      const marginY = scanZoneBounds.height * marginFactor
+
+      return isFullyWithinBounds(scanZoneBounds, { x: marginX, y: marginY })
+    },
+    [containerSize, scanZones, scanZoneBounds, showBarcodeHighlight, logger]
+  )
+
+  // Track which scan zone indices currently have aligned barcode detections.
+  // Updated every scan frame so focus cycling can prioritise empty zones.
+  const detectedZoneIndices = useRef<Set<number>>(new Set())
+
+  // Auto-focus cycling: periodically focus on scan zone centers
+  const focusCycleIndex = useRef(0)
+  const focusCycleTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const FOCUS_CYCLE_INTERVAL_MS = 2500 // Cycle focus every 2.5 seconds
+
+  const startFocusCycling = useCallback(() => {
+    if (!scanZones || scanZones.length === 0 || !containerSize || !device?.supportsFocus) {
+      return
+    }
+
+    // Clear any existing timer
+    if (focusCycleTimerRef.current) {
+      clearInterval(focusCycleTimerRef.current)
+    }
+
+    const doFocus = () => {
+      if (!camera.current || isLockedRef.current || !containerSize) {
+        return
+      }
+
+      // Prefer zones that have NOT yet detected a barcode
+      const undetectedIndices = scanZones
+        .map((_, i) => i)
+        .filter(i => !detectedZoneIndices.current.has(i))
+
+      let zoneIndex: number
+      if (undetectedIndices.length > 0) {
+        // Cycle through undetected zones
+        zoneIndex = undetectedIndices[focusCycleIndex.current % undetectedIndices.length]
+      } else {
+        // All zones have detections — fall back to normal round-robin
+        zoneIndex = focusCycleIndex.current % scanZones.length
+      }
+
+      const zone = scanZones[zoneIndex]
+
+      // Focus on the center of the scan zone (in container coordinates)
+      const focusX = (zone.box.x + zone.box.width / 2) * containerSize.width
+      const focusY = (zone.box.y + zone.box.height / 2) * containerSize.height
+
+      camera.current.focus({ x: focusX, y: focusY }).catch((err) => {
+        // Silently ignore focus errors (canceled, not supported, etc.)
+        if (!(err instanceof CameraCaptureError && err.code === 'capture/focus-canceled')) {
+          logger.debug('Auto-focus cycle error', { zone: zoneIndex, undetected: undetectedIndices, error: String(err) })
+        }
+      })
+
+      focusCycleIndex.current += 1
+    }
+
+    // Focus immediately on first zone, then cycle
+    doFocus()
+    focusCycleTimerRef.current = setInterval(doFocus, FOCUS_CYCLE_INTERVAL_MS)
+  }, [scanZones, containerSize, device, logger])
+
+  const stopFocusCycling = useCallback(() => {
+    if (focusCycleTimerRef.current) {
+      clearInterval(focusCycleTimerRef.current)
+      focusCycleTimerRef.current = null
+    }
+  }, [])
+
+  // Start/stop focus cycling based on scan state
+  useEffect(() => {
+    if (scanState === 'locked') {
+      stopFocusCycling()
+    } else if (containerSize && device?.supportsFocus) {
+      startFocusCycling()
+    }
+    return stopFocusCycling
+  }, [scanState, containerSize, startFocusCycling, stopFocusCycling, device])
+
   useFocusEffect(
     useCallback(() => {
-      // Reset zoom when screen loses focus
+      // Pause inactivity timeout while camera is active to prevent auto-lock during scanning
+      pauseActivityTracking()
+      
+      // Reset zoom when screen comes into focus
+      const targetZoom = getEffectiveZoom(initialZoom)
+      logger.debug('Screen focused, applying zoom', { zoom: targetZoom })
+      setZoom(targetZoom)
+
+      // Reset zoom and resume activity tracking when screen loses focus
       return () => {
         setTorchEnabled(false)
-        setZoom(initialZoom)
-        zoomOffset.current = initialZoom
+        stopFocusCycling()
+        const resetZoom = getEffectiveZoom(initialZoom)
+        setZoom(resetZoom)
+        resumeActivityTracking()
       }
-    }, [initialZoom])
+    }, [pauseActivityTracking, getEffectiveZoom, initialZoom, logger, stopFocusCycling, resumeActivityTracking])
   )
 
   const toggleTorch = () => {
@@ -264,40 +961,119 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /**
-   * Pinch-to-zoom gesture handler
-   * Allows users to zoom in on small barcodes for better scanning
-   * 
-   * Note: All logic must be inline within the gesture callbacks
-   * to ensure it runs in the worklet context (react-native-reanimated)
-   * State updates must be wrapped with runOnJS to call from worklet
+   * Handler for camera initialization
+   * Sets the zoom level once the camera is fully initialized and ready
    */
-  const pinchGesture = Gesture.Pinch()
-    .enabled(enableZoom)
-    .onUpdate((event) => {
-      // Calculate new zoom level based on pinch scale
-      const rawZoom = zoomOffset.current * event.scale
-      
-      // Constrain zoom level to device capabilities and configured limits
-      // This logic must be inline to work in the worklet context
-      const deviceMinZoom = device?.minZoom ?? 1
-      const deviceMaxZoom = device?.maxZoom ?? 1
-      const effectiveMinZoom = Math.max(minZoom, deviceMinZoom)
-      const effectiveMaxZoom = Math.min(maxZoom, deviceMaxZoom)
-      const newZoom = Math.max(effectiveMinZoom, Math.min(rawZoom, effectiveMaxZoom))
-      
-      // Must use runOnJS to call React state setter from worklet
-      runOnJS(setZoom)(newZoom)
+  const handleCameraInitialized = useCallback(() => {
+    const targetZoom = getEffectiveZoom(initialZoom)
+    logger.debug('Camera initialized', { 
+      minZoom: device?.minZoom, 
+      maxZoom: device?.maxZoom,
+      requestedZoom: initialZoom,
+      effectiveZoom: targetZoom,
+      formatVideo: format ? `${format.videoWidth}×${format.videoHeight}` : 'none',
+      formatPhoto: format ? `${format.photoWidth}×${format.photoHeight}` : 'none',
     })
-    .onEnd(() => {
-      // Save the current zoom level as the new offset
-      zoomOffset.current = zoom
-    })
+    setZoom(targetZoom)
+    logger.debug('Zoom applied after initialization', { zoom: targetZoom })
+  }, [initialZoom, getEffectiveZoom, logger, device, format])
+
+  const handleSaveScanZones = useCallback(() => {
+    if (!containerSize || !frameSize) {
+      Alert.alert('Not Ready', 'Camera dimensions not available yet.')
+      return
+    }
+
+    const scanZones = detectedCodes
+      .filter(c => c.value && c.position)
+      .map(c => ({
+        types: [c.type],
+        // Normalized coordinates (0-1) relative to container — platform agnostic
+        box: {
+          x: +(c.position!.x / containerSize.width).toFixed(4),
+          y: +(c.position!.y / containerSize.height).toFixed(4),
+          width: +(c.position!.width / containerSize.width).toFixed(4),
+          height: +(c.position!.height / containerSize.height).toFixed(4),
+        },
+      }))
+
+    const data = {
+      timestamp: new Date().toISOString(),
+      platform: Platform.OS,
+      containerDimensions: containerSize,
+      scanZones,
+    }
+
+    logger.info('Saved scan zone coordinates', data)
+
+    // Log to Metro console for easy copy-paste
+    // eslint-disable-next-line no-console
+    console.log('\n=== SCAN ZONE COORDINATES ===')
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(data, null, 2))
+    // eslint-disable-next-line no-console
+    console.log('=== END SCAN ZONE COORDINATES ===\n')
+
+    Alert.alert(
+      'Scan Zones Saved',
+      `Captured ${scanZones.length} barcode(s).\nCoordinates logged to Metro console.\n\n` +
+        scanZones.map(b => `${b.types.join(',')}: (${b.box.x}, ${b.box.y}) ${b.box.width}\u00D7${b.box.height}`).join('\n'),
+      [{ text: 'OK' }]
+    )
+  }, [detectedCodes, containerSize, frameSize, logger])
+
+  const resetScanningState = useCallback(() => {
+    isLockedRef.current = false
+    lockedScanRef.current = null
+    isProcessingScan.current = false
+    setFrozenFrameUri(null)
+    setScanState('scanning')
+    barcodeReadings.current.clear()
+    accumulatedCodes.current.clear()
+    setDetectedCodes([])
+
+    // Clean up any pending timeouts
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current)
+      highlightTimeoutRef.current = null
+    }
+    if (clearHighlightTimeoutRef.current) {
+      clearTimeout(clearHighlightTimeoutRef.current)
+      clearHighlightTimeoutRef.current = null
+    }
+
+    // Fade out highlights
+    Animated.timing(highlightFadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start()
+  }, [highlightFadeAnim])
+
+  /** Resume scanning without firing the callback (used in scan zone mode) */
+  const handleContinueScanning = useCallback(() => {
+    resetScanningState()
+  }, [resetScanningState])
+
+  /** Confirm the locked scan — fires the parent callback without resuming the camera.
+   *  The parent is expected to navigate away; if it doesn't, the user can tap "Try Again". */
+  const handleConfirmScan = useCallback(() => {
+    const locked = lockedScanRef.current
+    if (locked) {
+      onCodeScanned(locked.codes, locked.frame)
+    }
+  }, [onCodeScanned])
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
       position: 'relative',
+    },
+    cameraContainer: {
+      flex: 1,
+      position: 'relative',
+      overflow: 'hidden',
     },
     camera: {
       flex: 1,
@@ -340,21 +1116,86 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     barcodeHighlight: {
       position: 'absolute',
       borderWidth: 2,
+    },
+    barcodeHighlightScanning: {
+      borderColor: '#FF6600',
+      backgroundColor: 'rgba(255, 102, 0, 0.15)',
+    },
+    barcodeHighlightAligned: {
+      borderWidth: 0,
+      backgroundColor: 'rgba(0, 255, 0, 0.15)',
+    },
+    barcodeHighlightLocked: {
       borderColor: '#00FF00',
-      backgroundColor: 'rgba(0, 255, 0, 0.1)',
+      borderWidth: 3,
+      backgroundColor: 'rgba(0, 255, 0, 0.25)',
+    },
+    saveButton: {
+      backgroundColor: 'rgba(0, 180, 0, 0.9)',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    saveButtonText: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    lockedButtonsContainer: {
+      position: 'absolute',
+      top: 20,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 10,
+      zIndex: 10,
+    },
+    continueButton: {
+      backgroundColor: 'rgba(0, 120, 255, 0.9)',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    continueButtonText: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: 'bold',
+    },
+    confirmButton: {
+      backgroundColor: 'rgba(0, 120, 255, 0.9)',
+      paddingHorizontal: 28,
+      paddingVertical: 14,
+      borderRadius: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    confirmButtonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: 'bold',
     },
     zoomIndicator: {
       position: 'absolute',
-      bottom: 100,
-      alignSelf: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      paddingHorizontal: 12,
+      bottom: Spacing.md,
+      right: Spacing.md,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      paddingHorizontal: 10,
       paddingVertical: 6,
-      borderRadius: 16,
+      borderRadius: 8,
+      minWidth: 60,
+      alignItems: 'center',
     },
     zoomText: {
       color: 'white',
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: 'bold',
     },
   })
@@ -418,78 +1259,305 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <GestureDetector gesture={pinchGesture}>
-        <View style={{ flex: 1 }}>
+      <View 
+        style={styles.cameraContainer}
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout
+          setContainerSize({ width, height })
+          logger.debug('Camera container size', { width, height })
+        }}
+      >
+          {/* 
+            resizeMode="cover" fills the container without black bars by cropping the camera feed.
+            The coordinate transformation logic accounts for the cropped portion to ensure
+            highlight boxes align correctly with visible barcodes.
+          */}
           <Camera
             ref={camera}
             style={styles.camera}
             device={device}
             format={format}
-            isActive={hasPermission}
+            isActive={hasPermission && !frozenFrameUri}
+            video={true}
             codeScanner={codeScanner}
+            enableZoomGesture={true}
             torch={torchEnabled ? 'on' : 'off'}
             zoom={zoom}
+            onInitialized={handleCameraInitialized}
+            resizeMode="cover"
           />
+
+          {/* Frozen frame overlay — shows last camera frame when scanning is locked */}
+          {frozenFrameUri && (
+            <Image
+              source={{ uri: frozenFrameUri }}
+              style={[StyleSheet.absoluteFill, { zIndex: 1 }]}
+              resizeMode="cover"
+            />
+          )}
+
+          {/* Overlay container for highlights and focus indicator */}
+          <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none', zIndex: 2 }]}>
+            {/* Debug: Scan zone outlines — shows where we expect barcodes (iOS diagnostic) */}
+            {showBarcodeHighlight && enableScanZones && scanZones && containerSize && scanZones.map((zone, idx) => (
+              <View
+                key={`debug-zone-${idx}`}
+                style={{
+                  position: 'absolute',
+                  left: zone.box.x * containerSize.width,
+                  top: zone.box.y * containerSize.height,
+                  width: zone.box.width * containerSize.width,
+                  height: zone.box.height * containerSize.height,
+                  borderWidth: 2,
+                  borderColor: '#00FFFF',
+                  borderStyle: 'dashed',
+                  backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                }}
+              />
+            ))}
+
+            {/* Debug: Center crosshair diagnostic — maps image center through our transform.
+                If transform is correct, this yellow crosshair should be at the exact center
+                of the camera preview. Any offset reveals a coordinate mapping error. */}
+            {showBarcodeHighlight && enableScanZones && frameSize && containerSize && (() => {
+              // Map the center of the ImageAnalysis frame through our transform
+              const centerFrame = {
+                x: 0, y: 0,
+                // Use a small rect at center of the portrait-oriented frame
+                width: 4, height: 4,
+              }
+              // In portrait space, center is at (fw/2, fh/2)
+              // where fw=min(frameW,frameH), fh=max(frameW,frameH)
+              const fw = Math.min(frameSize.width, frameSize.height)
+              const fh = Math.max(frameSize.width, frameSize.height)
+              centerFrame.x = fw / 2 - 2
+              centerFrame.y = fh / 2 - 2
+
+              const scaleX = containerSize.width / fw
+              const scaleY = containerSize.height / fh
+              const scale = Math.max(scaleX, scaleY)
+              const offsetX = (containerSize.width - fw * scale) / 2
+              const offsetY = (containerSize.height - fh * scale) / 2
+
+              const cx = centerFrame.x * scale + offsetX
+              const cy = centerFrame.y * scale + offsetY
+
+              // Also compute 25% and 75% reference points
+              const q1x = (fw * 0.25) * scale + offsetX
+              const q1y = (fh * 0.25) * scale + offsetY
+              const q3x = (fw * 0.75) * scale + offsetX
+              const q3y = (fh * 0.75) * scale + offsetY
+
+              return (
+                <>
+                  {/* Center crosshair — should be at exact center of preview */}
+                  <View style={{ position: 'absolute', left: cx - 15, top: cy - 1, width: 30, height: 2, backgroundColor: 'yellow' }} />
+                  <View style={{ position: 'absolute', left: cx - 1, top: cy - 15, width: 2, height: 30, backgroundColor: 'yellow' }} />
+                  {/* 25% marker (top-left quadrant) */}
+                  <View style={{ position: 'absolute', left: q1x - 5, top: q1y - 1, width: 10, height: 2, backgroundColor: 'cyan' }} />
+                  <View style={{ position: 'absolute', left: q1x - 1, top: q1y - 5, width: 2, height: 10, backgroundColor: 'cyan' }} />
+                  {/* 75% marker (bottom-right quadrant) */}
+                  <View style={{ position: 'absolute', left: q3x - 5, top: q3y - 1, width: 10, height: 2, backgroundColor: 'magenta' }} />
+                  <View style={{ position: 'absolute', left: q3x - 1, top: q3y - 5, width: 2, height: 10, backgroundColor: 'magenta' }} />
+                </>
+              )
+            })()}
+
+            {/* Barcode highlight overlay - rendered inside camera view for correct positioning */}
+            {showBarcodeHighlight &&
+              detectedCodes.map((code, index) => {
+                if (!code.position) {
+                  return null
+                }
+
+                // Highlight style is based on COLLECTIVE scan state, not per-code
+                const highlightStyle = scanState === 'locked' ? styles.barcodeHighlightLocked :
+                  scanState === 'aligned' ? styles.barcodeHighlightAligned : styles.barcodeHighlightScanning
+
+                // Show decoded value inside highlight for 1D barcodes (code-39, code-128)
+                const show1DValue = (code.type === 'code-39' || code.type === 'code-128') && code.value
+                // Scale font to fit: use box height as baseline, shrink if text is too wide
+                const maxFontForHeight = Math.max(8, Math.min(code.position.height * 0.6, 16))
+                // Estimate chars that fit at this font size (~0.6 char-width ratio for monospace)
+                const charsAtMaxFont = code.position.width / (maxFontForHeight * 0.6)
+                const valueLen = code.value?.length ?? 1
+                const fontSize1D = valueLen > charsAtMaxFont
+                  ? Math.max(6, code.position.width / (valueLen * 0.6))
+                  : maxFontForHeight
+
+                const highlightPosition = getHighlightPosition(code.position)
+                const showDebugRawBox = enableScanZones && Platform.OS === 'android'
+
+                return (
+                  <Animated.View
+                    key={`${code.type}-${index}`}
+                    style={[
+                      styles.barcodeHighlight,
+                      highlightStyle,
+                      {
+                        left: highlightPosition.x,
+                        top: highlightPosition.y,
+                        width: highlightPosition.width,
+                        height: highlightPosition.height,
+                        opacity: highlightFadeAnim,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                      },
+                    ]}
+                  >
+                    {showDebugRawBox && (
+                      <View
+                        pointerEvents="none"
+                        style={{
+                          position: 'absolute',
+                          left: highlightPosition.x - code.position.x,
+                          top: highlightPosition.y - code.position.y,
+                          width: code.position.width,
+                          height: code.position.height,
+                          borderWidth: 1,
+                          borderColor: '#FF00FF',
+                          borderStyle: 'dashed',
+                        }}
+                      />
+                    )}
+                    {show1DValue && (
+                      <Text
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.5}
+                        style={{
+                          color: '#FFFFFF',
+                          fontSize: fontSize1D,
+                          fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                          fontWeight: 'bold',
+                          textAlign: 'center',
+                          textShadowColor: 'rgba(0,0,0,0.8)',
+                          textShadowOffset: { width: 1, height: 1 },
+                          textShadowRadius: 2,
+                          paddingHorizontal: 2,
+                        }}
+                      >
+                        {code.value}
+                      </Text>
+                    )}
+                  </Animated.View>
+                )
+              })}
+
+            {/* Focus indicator - rendered inside camera view for correct positioning */}
+            {focusPoint && (
+              <Animated.View
+                style={[
+                  styles.focusIndicator,
+                  {
+                    left: focusPoint.x - 40,
+                    top: focusPoint.y - 40,
+                    opacity: focusOpacity,
+                    transform: [{ scale: focusScale }],
+                  },
+                ]}
+              />
+            )}
+          </View>
         </View>
-      </GestureDetector>
 
       <Pressable
         style={StyleSheet.absoluteFill}
         onPressIn={(e) => {
           handleFocusTap(e)
         }}
+        // Disable touch interceptor when locked so Save/Continue buttons are tappable
+        pointerEvents={scanState === 'locked' ? 'none' : 'auto'}
       />
 
-      {/* Focus indicator */}
-      {focusPoint && (
-        <Animated.View
-          style={[
-            styles.focusIndicator,
-            {
-              left: focusPoint.x - 40,
-              top: focusPoint.y - 40,
-              opacity: focusOpacity,
-              transform: [{ scale: focusScale }],
-            },
-          ]}
-        />
-      )}
-
-      {/* Barcode highlight overlay */}
-      {showBarcodeHighlight &&
-        detectedCodes.map((code, index) => {
-          if (!code.position) {
-            return null
-          }
-
-          return (
-            <Animated.View
-              key={`${code.type}-${index}`}
-              style={[
-                styles.barcodeHighlight,
-                {
-                  left: code.position.x,
-                  top: code.position.y,
-                  width: code.position.width,
-                  height: code.position.height,
-                  opacity: highlightFadeAnim,
-                },
-              ]}
-            />
-          )
-        })}
-
-      {/* Scan area guide */}
-      <View style={styles.overlayContainer} pointerEvents="none">
-        <View style={styles.overlayOpening} />
+      {/* Scan area guide — custom zones or default centered zone */}
+      <View style={styles.overlayContainer} pointerEvents="none" testID='scan-zone'>
+        {scanZones && scanZones.length > 0 && containerSize ? (
+          // Render custom scan zones from saved coordinates
+          scanZones.map((zone, idx) => {
+            const zoneColor = scanState === 'locked' ? '#00FF00' :
+              scanState === 'aligned' ? '#00CC00' : ColorPalette.brand.primary
+            return (
+              <View
+                key={`scan-zone-${idx}`}
+                style={{
+                  position: 'absolute',
+                  left: zone.box.x * containerSize.width,
+                  top: zone.box.y * containerSize.height,
+                  width: zone.box.width * containerSize.width,
+                  height: zone.box.height * containerSize.height,
+                  borderRadius: 4,
+                  borderColor: zoneColor,
+                  borderWidth: 4,
+                  borderStyle: 'solid',
+                }}
+              />
+            )
+          })
+        ) : (
+          // Default centered scan zone
+          <View 
+            style={styles.overlayOpening}
+            onLayout={(event) => {
+              const { x, y, width, height } = event.nativeEvent.layout
+              setScanZoneBounds({ x, y, width, height })
+              logger.debug('Scan zone bounds', { x, y, width, height })
+            }}
+          />
+        )}
       </View>
 
-      {/* Zoom level indicator */}
-      {enableZoom && zoom > minZoom && (
-        <View style={styles.zoomIndicator}>
-          <Text style={styles.zoomText}>{zoom.toFixed(1)}x</Text>
+      {/* Locked state action buttons — scanning is paused, user must confirm */}
+      {scanState === 'locked' && (ENABLE_MANUAL_CONFIRM || enableScanZones) && (
+        <View style={styles.lockedButtonsContainer}>
+          {enableScanZones ? (
+            <>
+              <Pressable
+                style={styles.saveButton}
+                onPress={handleSaveScanZones}
+                testID="save-scan-zones-button"
+              >
+                <Text style={styles.saveButtonText}>{"\uD83D\uDCD0"} Save Scan Zones</Text>
+              </Pressable>
+              <Pressable
+                style={styles.continueButton}
+                onPress={handleContinueScanning}
+                testID="continue-scanning-button"
+              >
+                <Text style={styles.continueButtonText}>{"\u25B6"} Continue Scanning</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Pressable
+                style={styles.confirmButton}
+                onPress={handleConfirmScan}
+                testID="confirm-scan-button"
+              >
+                <Text style={styles.confirmButtonText}>{"\u2714"} Confirm</Text>
+              </Pressable>
+              <Pressable
+                style={styles.continueButton}
+                onPress={handleContinueScanning}
+                testID="try-again-button"
+              >
+                <Text style={styles.continueButtonText}>{"\uD83D\uDD04"} Try Again</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       )}
+
+      {/* Zoom level indicator - always visible */}
+      <View style={styles.zoomIndicator}>
+        <Text style={styles.zoomText}>Zoom: {zoom.toFixed(2)}x</Text>
+        {device && (
+          <Text style={[styles.zoomText, { fontSize: 8 }]}>
+            ({device.minZoom?.toFixed(1)}-{device.maxZoom?.toFixed(1)})
+          </Text>
+        )}
+      </View>
 
       {/* Torch toggle button */}
       <View style={styles.torchContainer}>

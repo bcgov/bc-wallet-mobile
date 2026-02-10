@@ -190,6 +190,7 @@ export const useCardScanner = () => {
       let bcscSerial: string | null = null
 
       for (const code of barcodes) {
+        logger.debug(`[CardScanner] decoding barcode`, { code: code })
         const decodedCode = decodeScannedCode(code)
 
         if (!decodedCode) {
