@@ -8,7 +8,10 @@ import { isThirdPartyKeyboardActive, openKeyboardSelector } from 'react-native-b
 
 jest.mock('@/contexts/ErrorAlertContext')
 jest.mock('@bifold/core')
-jest.mock('react-native-bcsc-core')
+jest.mock('react-native-bcsc-core', () => ({
+  isThirdPartyKeyboardActive: jest.fn(),
+  openKeyboardSelector: jest.fn(),
+}))
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))

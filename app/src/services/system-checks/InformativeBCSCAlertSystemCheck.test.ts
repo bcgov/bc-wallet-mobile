@@ -2,7 +2,7 @@ import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
 import { SystemCheckUtils } from '@/services/system-checks/system-checks'
-import { BCDispatchAction, BCSCAlertEvent } from '@/store'
+import { BCSCAlertEvent } from '@/store'
 
 describe('InformativeBCSCAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
@@ -56,13 +56,13 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           event: AppEventCode.CARD_STATUS_UPDATED,
           actions: [
             {
+              onPress: expect.any(Function),
               text: 'BCSC.AccountUpdated.Button',
               style: 'cancel',
             },
           ],
         })
       )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
     })
 
     it('should emit CARD_TYPE_CHANGED for Replace', () => {
@@ -78,13 +78,13 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           event: AppEventCode.CARD_TYPE_CHANGED,
           actions: [
             {
+              onPress: expect.any(Function),
               text: 'BCSC.AccountUpdated.Button',
               style: 'cancel',
             },
           ],
         })
       )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
     })
 
     it('should emit GENERAL for other reasons', () => {
@@ -100,13 +100,13 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           event: AppEventCode.GENERAL,
           actions: [
             {
+              onPress: expect.any(Function),
               text: 'BCSC.AccountUpdated.Button',
               style: 'cancel',
             },
           ],
         })
       )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
     })
   })
 
