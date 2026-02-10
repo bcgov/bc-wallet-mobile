@@ -2,6 +2,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Alert } from 'react-native'
 
+import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -50,10 +51,12 @@ describe('EnterEmailScreen', () => {
     it('should render correctly', () => {
       const { getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -64,10 +67,12 @@ describe('EnterEmailScreen', () => {
     it('should display description for non-Other card types i.e BCSCPhoto', () => {
       const { getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -77,7 +82,12 @@ describe('EnterEmailScreen', () => {
     it('should not display description for Other card type', () => {
       const { queryByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }} />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -87,10 +97,12 @@ describe('EnterEmailScreen', () => {
     it('should display Skip button for non-Other card types i.e BCSCPhoto', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -100,7 +112,12 @@ describe('EnterEmailScreen', () => {
     it('should not display Skip button for Other card type', () => {
       const { queryByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }} />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -112,10 +129,12 @@ describe('EnterEmailScreen', () => {
     it('should show error when submitting empty email', async () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -132,10 +151,12 @@ describe('EnterEmailScreen', () => {
     it('should show error when submitting invalid email format', async () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -159,10 +180,12 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText, queryByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -199,10 +222,12 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -229,10 +254,12 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -263,10 +290,12 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -290,10 +319,12 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -319,10 +350,12 @@ describe('EnterEmailScreen', () => {
     it('should show alert when Skip button is pressed', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -344,10 +377,12 @@ describe('EnterEmailScreen', () => {
     it('should not navigate when alert is cancelled', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 
@@ -368,10 +403,12 @@ describe('EnterEmailScreen', () => {
     it('should navigate back when skip is confirmed', async () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-          />
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
         </BasicAppContext>
       )
 

@@ -21,7 +21,7 @@ describe('useFactoryReset', () => {
   beforeEach(() => {
     jest.resetAllMocks()
 
-    const mockClient = { tokens: undefined } as BCSCApiClient
+    const mockClient = { tokens: undefined, clearTokens: jest.fn() } as unknown as BCSCApiClient
 
     const useBCSCApiClientMock = jest.mocked(useBCSCApiClient)
     useBCSCApiClientMock.mockReturnValue(mockClient)
@@ -75,6 +75,7 @@ describe('useFactoryReset', () => {
     await act(async () => {
       const result = await hook.result.current()
       if (!result.success) {
+        console.log(result.error.message)
         throw new Error(`Factory reset failed: ${result.error?.message}`)
       }
       expect(result.success).toBe(true)
