@@ -67,4 +67,4 @@ runs:
         --form "payload=@$ARTIFACT_NAME" \
         --form "name=$SAUCE_LABS_NAME" \
         --form "description=$SAUCE_LABS_DESCRIPTION" \
-        --form "tags=${{ steps.set_tags.outputs.tags }}"
+        --form 'tags=${{ steps.set_tags.outputs.tags }}'
