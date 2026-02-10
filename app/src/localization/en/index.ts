@@ -1034,9 +1034,61 @@ const translation = {
 		"Actions": {
 			"DefaultOK": "OK",
       "Close": "Close",
-      "GoToAppStore": "Go to App Store",
-      "RemoveAccount": "Remove Account",
 		},
+    "UnsecuredNetwork": {
+      "Title": "Unsecured Network",
+      "Description": "A secure internet connection is required. Please check your network or try another network."
+    },
+    "ServerTimeout": {
+      "Title": "Connection Error",
+      "Description": "Please try again later."
+    },
+    "ServerError": {
+      "Title": "Server Error",
+      "Description": "There is a problem with the service. Please try again later. (error 302)"
+    },
+    "AppUpdateRequired": {
+      "Title": "App Update Required",
+      "Description": "You must update this app to continue.",
+      "Action1": "Go To App Store"
+    },
+    "ProblemWithAccount": {
+      "Title": "Problem with Account",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error 214)",
+      "Action1": "Remove Account",
+    },
+    "ForgetPairings": {
+      "Title": "Success",
+      "Description": "You have successfully unpaired your device."
+    },
+    "LoginServerError": {
+      "Title": "Problem with Login",
+      "Description": "Please try again later. (error 303)"
+    },
+    "TooManyAttempts": {
+      "Title": "Sorry, You've Tried Too Many Times",
+      "Description": "Please try again later."
+    },
+    "SetupExpired": {
+      "Title": "Setup Expired",
+      "Description": "You must start set up again."
+    },
+    "VerificationNotComplete": {
+      "Title": "Verify Not Complete",
+      "Description": "Go to a Service BC location to verify your identity."
+    },
+    "ProblemWithLogin": {
+      "Title": "Problem with Login",
+      "Description": "Please try again later. (error 304)"
+    },
+    "InvalidPairingCode": {
+      "Title": "Invalid Pairing Code",
+      "Description": "You've entered an invalid pairing code. Please re-enter your pairing code and try again."
+    },
+    "InvalidPairingCodeSameDevice": {
+      "Title": "Invalid Login",
+      "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
+    },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent",
       "Description": "Please try again later.",

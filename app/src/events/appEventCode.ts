@@ -128,6 +128,8 @@ export enum AppEventCode {
   EMAIL_VERIFICATION_CODE_INVALID = 'email_verification_code_invalid',
   EMAIL_ADDRESS_INVALID = 'email_address_invalid',
   CONFIRM_SKIP_EMAIL_ADDRESS = 'confirm_skip_email_address',
+  FORGET_ALL_PAIRINGS = 'forget_all_pairings',
+  LIVE_CALL_FILE_UPLOAD_ERROR = 'live_call_file_upload_error',
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',

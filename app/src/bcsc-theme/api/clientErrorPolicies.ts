@@ -1,8 +1,8 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
-import { AppError, ErrorRegistry } from '@/errors'
+import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
+import { AppAlerts, getAppEventAlert } from '@/hooks/useAlerts'
 import { AlertAction } from '@/utils/alert'
-import { getBCSCAppStoreUrl } from '@/utils/links'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
@@ -43,6 +43,7 @@ export type ErrorMatcherContext = {
 type ErrorHandlerContext = {
   translate: TFunction
   emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
+  alerts: AppAlerts
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
@@ -67,7 +68,14 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
     return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error)
+    const alert = getAppEventAlert(error.appEvent, context.alerts)
+
+    if (!alert) {
+      context.logger.info('[GlobalAlertErrorPolicy] No alert found for app event:', { appEvent: error.appEvent })
+      return
+    }
+
+    alert()
   },
 }
 
@@ -76,25 +84,8 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          text: context.translate('Alerts.Actions.Close'),
-          style: 'cancel',
-          onPress: () => {
-            // noop
-          },
-        },
-        {
-          text: context.translate('Alerts.Actions.RemoveAccount'),
-          style: 'destructive',
-          onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
+  handle: (_error, context) => {
+    context.alerts.problemWithAccountAlert()
   },
 }
 
@@ -103,8 +94,8 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error)
+  handle: (_error, context) => {
+    context.alerts.verificationNotCompleteAlert()
   },
 }
 
@@ -113,9 +104,8 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return context.statusCode === 500 || context.statusCode === 503
   },
-  handle: (error, context) => {
-    const appError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: error })
-    context.emitErrorAlert(appError)
+  handle: (_error, context) => {
+    context.alerts.serverErrorAlert()
   },
 }
 
@@ -128,23 +118,8 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
       context.endpoint.includes(context.apiEndpoints.evidence)
     )
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
-          text: context.translate('Alerts.Actions.GoToAppStore'),
-          onPress: async () => {
-            try {
-              const appStoreUrl = getBCSCAppStoreUrl()
-              await context.linking.openURL(appStoreUrl)
-            } catch (error) {
-              context.logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
-            }
-          },
-        },
-      ],
-    })
+  handle: (_error, context) => {
+    context.alerts.appUpdateRequiredAlert()
   },
 }
 
@@ -194,46 +169,39 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error)
+    const alert = getAppEventAlert(error.appEvent, context.alerts)
+
+    if (!alert) {
+      context.logger.info('[VerifyDeviceAssertionErrorPolicy] No alert found for app event:', {
+        appEvent: error.appEvent,
+      })
+      return
+    }
+
+    alert()
+  },
+}
+
+/**
+ * Error policy for expired verify request during app setup (user input error)
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST &&
+      context.endpoint === context.apiEndpoints.token
+    )
+  },
+  handle: (_error, context) => {
+    context.alerts.setupExpiredAlert()
   },
 }
 
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
-
-/**
- * Error policy factory for expired app setup during token exchange
- *
- * @param resetApplication - Function to reset the application state to "Setup Steps"
- * @returns ErrorHandlingPolicy
- */
-export const createExpiredAppSetupErrorPolicy = (resetApplication: () => Promise<void>): ErrorHandlingPolicy => {
-  return {
-    matches: (error, context) => {
-      return (
-        error.appEvent === AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST &&
-        context.endpoint === context.apiEndpoints.token
-      )
-    },
-    handle: (error, context) => {
-      context.emitErrorAlert(error, {
-        actions: [
-          {
-            text: context.translate('Alerts.Actions.DefaultOK'),
-            onPress: async () => {
-              try {
-                await resetApplication()
-              } catch (error) {
-                context.logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
-              }
-            },
-          },
-        ],
-      })
-    },
-  }
-}
 
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [

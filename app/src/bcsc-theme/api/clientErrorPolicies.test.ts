@@ -7,7 +7,6 @@ import {
   AxiosAppError,
   birthdateLockoutErrorPolicy,
   ClientErrorHandlingPolicies,
-  createExpiredAppSetupErrorPolicy,
   globalAlertErrorPolicy,
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
@@ -530,76 +529,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
-        })
-      })
-    })
-
-    describe('createExpiredAppSetupErrorPolicy', () => {
-      describe('matches', () => {
-        it('should match USER_INPUT_EXPIRED_VERIFY_REQUEST on token endpoint', () => {
-          const error = newError('user_input_expired_verify_request')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-
-          const resetApplicationMock = jest.fn()
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
-
-          expect(policy).toBeDefined()
-          expect(policy.matches(error, context as any)).toBeTruthy()
-          expect(resetApplicationMock).not.toHaveBeenCalled()
-        })
-
-        it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
-          const error = newError('user_input_expired_verify_request')
-          const context = {
-            endpoint: '/api/other',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-
-          const resetApplicationMock = jest.fn()
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
-
-          expect(policy).toBeDefined()
-          expect(policy.matches(error, context as any)).toBeFalsy()
-          expect(resetApplicationMock).not.toHaveBeenCalled()
-        })
-      })
-
-      describe('handle', () => {
-        it('should call resetApplication', async () => {
-          const error = newError('user_input_expired_verify_request')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-            logger: {
-              error: jest.fn(),
-            },
-            emitErrorAlert: jest.fn(),
-            translate: (key: string) => key,
-          }
-
-          const resetApplicationMock = jest.fn().mockResolvedValue(undefined)
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
-
-          policy.handle(error, context as any)
-
-          const alertArgs = context.emitErrorAlert.mock.calls[0]
-
-          const alertActions = alertArgs[1]?.actions
-          const okOnPressAction = alertActions[0].onPress
-
-          // Simulate pressing the "OK" action
-          await okOnPressAction()
-
-          expect(resetApplicationMock).toHaveBeenCalled()
         })
       })
     })

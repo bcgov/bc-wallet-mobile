@@ -1,6 +1,5 @@
 import { HelpCentreUrl } from '@/constants'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import NetInfo, { useNetInfo } from '@react-native-community/netinfo'
@@ -19,7 +18,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
-  const { emitAlert } = useErrorAlert()
+  const { dataUseWarningAlert } = useAlerts(navigation)
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
@@ -33,37 +32,20 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     },
   })
 
-  const navigateToCamera = () => {
+  const onPressContinue = async () => {
+    const netInfo = await NetInfo.refresh()
+
+    if (netInfo.type === 'cellular') {
+      dataUseWarningAlert()
+      return
+    }
+
     navigation.navigate(BCSCScreens.TakePhoto, {
       forLiveCall: true,
       deviceSide: 'front',
       cameraInstructions: '',
       cameraLabel: '',
     })
-  }
-
-  const onPressContinue = async () => {
-    const netInfo = await NetInfo.refresh()
-
-    if (netInfo.type === 'cellular') {
-      emitAlert(t('Alerts.DataUseWarning.Title'), t('Alerts.DataUseWarning.Description'), {
-        event: AppEventCode.DATA_USE_WARNING,
-        actions: [
-          {
-            text: t('Alerts.DataUseWarning.Action1'),
-            style: 'cancel',
-          },
-          {
-            text: t('Alerts.DataUseWarning.Action2'),
-            onPress: navigateToCamera,
-            style: 'destructive',
-          },
-        ],
-      })
-      return
-    }
-
-    navigateToCamera()
   }
 
   const navigateToWebView = useCallback(
