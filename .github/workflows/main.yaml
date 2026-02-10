@@ -293,7 +293,6 @@ jobs:
           archive
 
       - name: Export production archive
-        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: ${{ matrix.export_options }}
