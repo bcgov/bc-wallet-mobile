@@ -22,21 +22,13 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
     emitAlert: (title: string, body: string, options?: AlertOptions) => void,
     utils: SystemCheckUtils
   ) {
-    console.log('New System Check is running')
-
     this.alertReasoning = alertReasoning
     this.emitAlert = emitAlert
     this.utils = utils
   }
 
   async runCheck(): Promise<boolean> {
-    console.log(
-      'Alert Reasoning system check: ',
-      this.alertReasoning,
-      Boolean(this.alertReasoning),
-      !Boolean(this.alertReasoning)
-    )
-    return !Boolean(this.alertReasoning)
+    return !this.alertReasoning
   }
 
   onFail() {

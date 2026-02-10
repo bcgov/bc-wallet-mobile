@@ -125,8 +125,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appVersion,
     store.bcsc.selectedNickname,
     store.bcscSecure.registrationAccessToken,
+    store.bcsc.alertReasoning,
     tokenApi,
     utils,
+    emitAlert,
   ])
 
   return useMemo(() => {

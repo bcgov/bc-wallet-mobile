@@ -11,6 +11,12 @@ export interface BCSCIdTokenContextType<T> {
   refreshData: () => void
 }
 
+/**
+ * A helper function to derive credential metadata from the IdToken returned from the token endpoint.
+ *
+ * @param token The token returned from the token endpoint containing BCSC related claims
+ * @returns CredentialMetadata object derived from the token
+ */
 export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
   const fullName = `${token.given_name} ${token.family_name}`
 
@@ -24,6 +30,14 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
   } as CredentialMetadata
 }
 
+/**
+ * A helper function to compare 'new' credential metadata from the token endpoint with the existing credential metadata in the store.
+ * If any of the values checked are different a false is returned to trigger the system to alert the user that something has happened.
+ *
+ * @param c1 Credential Metadata object to check
+ * @param c2 Credential Metadata object to check
+ * @returns boolean returned if both objects are the same, otherwise this returns false
+ */
 export const compareCredentialMetadata = (c1: CredentialMetadata, c2: CredentialMetadata): boolean => {
   return (
     c1.fullName === c2.fullName &&
@@ -68,12 +82,14 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
         if (!dataUpdated) {
           dispatch({
             type: BCDispatchAction.ALERT_REASONING,
-            payload: [{ event: data.bcsc_event, state: data.bcsc_reason }],
+            payload: [{ event: data.bcsc_event, reason: data.bcsc_reason }],
           })
         }
       }
       dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [tokenData] })
     }
+    // leaving out store.bcsc.credentialMetadata from the dependencies to avoid infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isReady, dispatch])
 
   const contextValue = useMemo(() => {
