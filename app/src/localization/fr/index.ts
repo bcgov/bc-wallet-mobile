@@ -983,6 +983,7 @@ const translation = {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
+      "RemoveAccountLoading": "Removing account... (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
       "AccountDetails": "All account details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",

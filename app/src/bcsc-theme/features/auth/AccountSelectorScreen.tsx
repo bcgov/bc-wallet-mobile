@@ -49,9 +49,7 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
       testID={testIdWithKey('ContinueSetup')}
       title={'Continue setting up account'}
       accessibilityLabel={'Continue setting up account'}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.EnterPIN)
-      }}
+      onPress={() => navigation.navigate(BCSCScreens.EnterPIN)}
     />
   )
 

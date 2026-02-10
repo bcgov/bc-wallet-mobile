@@ -1,3 +1,4 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
@@ -16,8 +17,10 @@ type VerificationResetResult =
     }
 
 /**
- * Custom hook that provides a function to reset the application to the start of
- * the verification flow without requiring the user to repeat onboarding.
+ * Custom hook that provides a function to reset the application to the start of the verification (Setup Steps).
+ *
+ * TODO (MD): Consider moving this into useFactoryReset and modifing API to return multiple handlers
+ * ie: { factoryReset, verificationReset, ...}
  *
  * This includes:
  *  - Performing a factory reset to clear verification-related data while preserving onboarding state.
@@ -29,7 +32,8 @@ type VerificationResetResult =
 export const useVerificationReset = (client: BCSCApiClient | null) => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const registration = useRegistrationApi(client, Boolean(client))
+  const { register } = useRegistrationApi(client, Boolean(client))
+  const { handleSuccessfulAuth } = useSecureActions()
   const factoryReset = useFactoryReset()
 
   /**
@@ -39,9 +43,9 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
    */
   const verificationReset = useCallback(async (): Promise<VerificationResetResult> => {
     try {
-      logger.info('[VerificationReset]: Starting BCSC verification reset')
+      logger.info('[VerificationReset]: Resetting user to beginning of verification flow')
 
-      // Get device auth method before factory reset
+      // Get current device auth method
       const deviceAuthMethod = await getAccountSecurityMethod()
 
       const result = await factoryReset(
@@ -49,20 +53,23 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
         {
           appVersion: store.bcsc.appVersion,
           analyticsOptIn: store.bcsc.analyticsOptIn,
+          selectedNickname: '',
         },
         // BCSC Secure state to persist
         {
-          hasAccount: true,
           walletKey: store.bcscSecure.walletKey,
         }
       )
 
-      // Re-register the device with the same device auth method
-      await registration.register(deviceAuthMethod)
-
       if (!result.success) {
-        logger.error('[VerificationReset]: Factory reset failed', result.error)
+        logger.error('[VerificationReset]: Verification reset failed', result.error)
       }
+
+      // Re-register the device with the old device auth method
+      await register(deviceAuthMethod)
+
+      // Authenticate user with their wallet key
+      await handleSuccessfulAuth(store.bcscSecure.walletKey)
 
       logger.info('[VerificationReset]: BCSC verification reset completed successfully')
       return { success: true }
@@ -71,7 +78,7 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
 
       return { success: false, error: error as Error }
     }
-  }, [logger, factoryReset, store.bcsc.appVersion, store.bcsc.analyticsOptIn, store.bcscSecure.walletKey, registration])
+  }, [logger, factoryReset, store.bcsc, store.bcscSecure.walletKey, register, handleSuccessfulAuth])
 
   return verificationReset
 }

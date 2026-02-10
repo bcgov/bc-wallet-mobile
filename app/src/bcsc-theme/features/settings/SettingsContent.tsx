@@ -1,4 +1,5 @@
 import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
@@ -53,6 +54,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { client } = useBCSCApiClientState()
   const verificationReset = useVerificationReset(client)
   const { emitAlert } = useErrorAlert()
+  const loadingScreen = useLoadingScreen()
 
   const styles = StyleSheet.create({
     container: {
@@ -164,18 +166,17 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           text: t('Alerts.CancelMobileCardSetup.Action1'),
           style: 'destructive',
           onPress: async () => {
-            try {
-              const result = await verificationReset()
+            loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
 
-              if (!result.success) {
-                logger.error('[RemoveAccount] Error removing account from settings', result.error)
-                return
-              }
+            logger.info('[SettingsRemoveAccount] User confirmed account removal, proceeding with verification reset')
 
-              logger.info('[RemoveAccount] Account removed successfully from settings')
-            } catch (error) {
-              logger.error('[RemoveAccount] Failed to remove account from settings', error as Error)
+            const result = await verificationReset()
+
+            if (!result.success) {
+              logger.error('[SettingsRemoveAccount] Failed to remove account', result.error)
             }
+
+            loadingScreen.stopLoading()
           },
         },
       ],
