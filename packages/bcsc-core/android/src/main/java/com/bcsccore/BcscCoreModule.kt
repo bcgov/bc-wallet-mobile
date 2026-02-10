@@ -1031,10 +1031,6 @@ class BcscCoreModule(
         }
 
         try {
-            // FIXME: Do we need this currentKeyPair? is the call doing something important but we don't need the ouput?
-            // Get the current key pair for signing
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
-
             // Create JWT assertion for OAuth2 client credentials
             val now = Date()
             val expiration = Date(now.time + JWT_EXPIRATION_SECONDS * 1000)

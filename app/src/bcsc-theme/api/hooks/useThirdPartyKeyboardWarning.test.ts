@@ -1,128 +1,116 @@
-import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { AppEventCode } from '@/events/appEventCode'
-import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
-import { SystemCheckUtils } from '@/services/system-checks/system-checks'
-import { BCDispatchAction, BCSCAlertEvent } from '@/store'
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { BCDispatchAction, BCState } from '@/store'
+import { useStore } from '@bifold/core'
+import { act, renderHook } from '@testing-library/react-native'
+import { Platform } from 'react-native'
+import { isThirdPartyKeyboardActive, openKeyboardSelector } from 'react-native-bcsc-core'
 
-describe('InformativeBCSCAlertsSystemCheck', () => {
-  let mockUtils: SystemCheckUtils
-  let emitAlert: jest.Mock
+jest.mock('@/contexts/ErrorAlertContext')
+jest.mock('@bifold/core')
+jest.mock('react-native-bcsc-core')
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}))
 
-  const createAlertReasoning = (reason: BCSCReason): BCSCAlertEvent => ({
-    event: 'StatusNotification',
-    reason,
-  })
+describe('useThirdPartyKeyboardWarning', () => {
+  const mockDispatch = jest.fn()
+  const emitAlert = jest.fn()
+
+  const setStore = (hasDismissedThirdPartyKeyboardAlert: boolean) => {
+    const mockState = {
+      bcsc: { hasDismissedThirdPartyKeyboardAlert },
+    } as BCState
+    jest.mocked(useStore).mockReturnValue([mockState, mockDispatch])
+  }
 
   beforeEach(() => {
     jest.resetAllMocks()
-
-    emitAlert = jest.fn()
-
-    mockUtils = {
-      dispatch: jest.fn(),
-      translation: jest.fn((key: string) => key) as any,
-      logger: {
-        error: jest.fn(),
-        warn: jest.fn(),
-      } as any,
-    }
+    jest.mocked(useErrorAlert).mockReturnValue({ emitAlert } as any)
+    ;(Platform as any).OS = 'android'
   })
 
-  describe('runCheck', () => {
-    it('should return true when there is no alert reasoning', async () => {
-      const check = new InformativeBCSCAlertsSystemCheck(undefined, emitAlert, mockUtils)
+  it('should not emit alert when already dismissed', async () => {
+    setStore(true)
+    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
 
-      const result = await check.runCheck()
+    const hook = renderHook(() => useThirdPartyKeyboardWarning())
 
-      expect(result).toBe(true)
+    await act(async () => {
+      await hook.result.current.showThirdPartyKeyboardWarning()
     })
 
-    it('should return false when there is alert reasoning', async () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Renew), emitAlert, mockUtils)
-
-      const result = await check.runCheck()
-
-      expect(result).toBe(false)
-    })
+    expect(isThirdPartyKeyboardActive).not.toHaveBeenCalled()
+    expect(emitAlert).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalled()
   })
 
-  describe('onFail', () => {
-    it('should emit CARD_STATUS_UPDATED for Renew', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Renew), emitAlert, mockUtils)
+  it('should not emit alert on iOS', async () => {
+    setStore(false)
+    ;(Platform as any).OS = 'ios'
+    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
 
-      check.onFail()
+    const hook = renderHook(() => useThirdPartyKeyboardWarning())
 
-      expect(emitAlert).toHaveBeenCalledWith(
-        'BCSC.AccountUpdated.Title',
-        'BCSC.AccountUpdated.Message',
-        expect.objectContaining({
-          event: AppEventCode.CARD_STATUS_UPDATED,
-          actions: [
-            {
-              text: 'BCSC.AccountUpdated.Button',
-              style: 'cancel',
-            },
-          ],
-        })
-      )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
+    await act(async () => {
+      await hook.result.current.showThirdPartyKeyboardWarning()
     })
 
-    it('should emit CARD_TYPE_CHANGED for Replace', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Replace), emitAlert, mockUtils)
-
-      check.onFail()
-
-      expect(emitAlert).toHaveBeenCalledWith(
-        'BCSC.AccountUpdated.Title',
-        'BCSC.AccountUpdated.Message',
-        expect.objectContaining({
-          event: AppEventCode.CARD_TYPE_CHANGED,
-          actions: [
-            {
-              text: 'BCSC.AccountUpdated.Button',
-              style: 'cancel',
-            },
-          ],
-        })
-      )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
-    })
-
-    it('should emit GENERAL for other reasons', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(
-        createAlertReasoning(BCSCReason.ApprovedByAgent),
-        emitAlert,
-        mockUtils
-      )
-
-      check.onFail()
-
-      expect(emitAlert).toHaveBeenCalledWith(
-        'BCSC.AccountUpdated.Title',
-        'BCSC.AccountUpdated.Message',
-        expect.objectContaining({
-          event: AppEventCode.GENERAL,
-          actions: [
-            {
-              text: 'BCSC.AccountUpdated.Button',
-              style: 'cancel',
-            },
-          ],
-        })
-      )
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
-    })
+    expect(isThirdPartyKeyboardActive).not.toHaveBeenCalled()
+    expect(emitAlert).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalled()
   })
 
-  describe('onSuccess', () => {
-    it('should do nothing', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(undefined, emitAlert, mockUtils)
+  it('should emit alert and dispatch when a third-party keyboard is active', async () => {
+    setStore(false)
+    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
 
-      check.onSuccess()
+    const hook = renderHook(() => useThirdPartyKeyboardWarning())
 
-      expect(emitAlert).not.toHaveBeenCalled()
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+    await act(async () => {
+      await hook.result.current.showThirdPartyKeyboardWarning()
     })
+
+    expect(emitAlert).toHaveBeenCalledWith(
+      'BCSC.ThirdPartyKeyboard.Title',
+      'BCSC.ThirdPartyKeyboard.Message',
+      expect.objectContaining({
+        actions: [
+          { text: 'BCSC.ThirdPartyKeyboard.ContinueButton', style: 'cancel' },
+          {
+            text: 'BCSC.ThirdPartyKeyboard.ChangeButton',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
+        ],
+      })
+    )
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT,
+      payload: [true],
+    })
+
+    const alertOptions = emitAlert.mock.calls[0][2]
+    const changeAction = alertOptions.actions.find(
+      (action: { text: string }) => action.text === 'BCSC.ThirdPartyKeyboard.ChangeButton'
+    )
+    changeAction.onPress()
+
+    expect(openKeyboardSelector).toHaveBeenCalledTimes(1)
+  })
+
+  it('should not emit alert when third-party keyboard is not active', async () => {
+    setStore(false)
+    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(false)
+
+    const hook = renderHook(() => useThirdPartyKeyboardWarning())
+
+    await act(async () => {
+      await hook.result.current.showThirdPartyKeyboardWarning()
+    })
+
+    expect(emitAlert).not.toHaveBeenCalled()
+    expect(mockDispatch).not.toHaveBeenCalled()
   })
 })

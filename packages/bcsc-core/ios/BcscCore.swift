@@ -2774,7 +2774,7 @@ class BcscCore: NSObject {
     reject _: @escaping RCTPromiseRejectBlock
   ) {
     // iOS doesn't provide a public API to reliably detect third party keyboards
-    // returning false to not interupt the user
+    // returning false to not interrupt the user
     resolve(false)
   }
 

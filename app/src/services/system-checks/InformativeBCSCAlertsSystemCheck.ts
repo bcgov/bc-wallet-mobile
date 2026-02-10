@@ -8,7 +8,7 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  * Checks storage for alert data and displays an alert if data is found.
  *
  * @export
- * @class DeviceInvalidatedSystemCheck
+ * @class InformativeBCSCAlertsSystemCheck
  * @implements {SystemCheckStrategy}
  */
 

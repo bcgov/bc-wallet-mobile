@@ -92,7 +92,7 @@ describe('ErrorAlertContext', () => {
       expect(() => renderHook(() => useErrorAlert())).toThrow('useErrorAlert must be used within an ErrorAlertProvider')
     })
 
-    it('should return context with emitError, emitAlert, emitErrorAlert, and dismiss', () => {
+    it('should return context with emitErrorModal, emitAlert, emitErrorAlert, and dismiss', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       expect(result.current).toHaveProperty('emitErrorModal')
