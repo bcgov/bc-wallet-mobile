@@ -561,9 +561,10 @@ jobs:
           echo "✅ All builds passed!"
 
   ship-to-saucelabs:
-    if: false # Disabled
-    # if: github.ref_name == 'main'
+    # if: false # Disabled
+    if: github.ref_name == 'main'
     needs: [build-ios, build-android]
+    continue-on-error: true
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -582,13 +583,13 @@ jobs:
             artifact_name: 'BCWallet.ipa'
           - platform: 'android'
             build_type: 'bc-wallet'
-            artifact_ref: 'android-bc-wallet-artifact-aab'
+            artifact_ref: 'android-bc-wallet-artifact.aab'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet App'
             artifact_name: 'app-release.aab'
           - platform: 'android'
             build_type: 'single-app'
-            artifact_ref: 'android-single-app-artifact-aab'
+            artifact_ref: 'android-single-app-artifact.aab'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet Single App'
             artifact_name: 'app-release.aab'
