@@ -1,4 +1,3 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
 import {
   InfoBox,
@@ -30,7 +29,6 @@ import TipCarousel from '@components/TipCarousel'
 const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
-  const { emitError } = useErrorAlert()
   const { walletSecret } = useAuth()
   const { ColorPalette, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
@@ -139,7 +137,6 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
     t,
     store.authentication.didAuthenticate,
     walletSecret,
-    emitError,
   ])
 
   const handleErrorCallToActionPressed = useCallback(() => {

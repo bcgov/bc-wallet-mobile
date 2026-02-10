@@ -78,7 +78,6 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
       const tokenData = tokenToCredentialMetadata(data)
       if (store.bcsc.credentialMetadata) {
         const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
-
         if (!dataUpdated) {
           dispatch({
             type: BCDispatchAction.ALERT_REASONING,

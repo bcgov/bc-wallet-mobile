@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/usethirdPartyKeyboardWarning'
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'

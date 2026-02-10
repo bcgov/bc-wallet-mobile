@@ -48,13 +48,14 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
           {
             text: this.utils.translation('BCSC.AccountUpdated.Button'),
             style: 'cancel',
+            onPress: () => {
+              // clear the alert reasoning so that the alert doesn't show again until new data is received
+              this.utils.dispatch({ type: BCDispatchAction.ALERT_REASONING, payload: undefined })
+            },
           },
         ],
       }
     )
-
-    // clear the alert reasoning so that the alert doesn't show again until new data is received
-    this.utils.dispatch({ type: BCDispatchAction.ALERT_REASONING, payload: [undefined] })
   }
 
   onSuccess() {

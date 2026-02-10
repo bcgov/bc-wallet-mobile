@@ -14,7 +14,8 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/usethirdPartyKeyboardWarning'
+
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 

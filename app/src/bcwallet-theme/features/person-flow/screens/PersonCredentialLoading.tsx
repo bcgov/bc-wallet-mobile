@@ -49,7 +49,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
-  const { emitError } = useErrorAlert()
+  const { emitErrorModal } = useErrorAlert()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const steps: string[] = useMemo(
@@ -191,7 +191,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       store.developer.enableAppToAppPersonFlow &&
       ['Development', 'Test'].includes(store.developer.environment.name)
     ) {
-      initiateAppToAppFlow(store.developer.environment.appToAppUrl, emitError, logger)
+      initiateAppToAppFlow(store.developer.environment.appToAppUrl, emitErrorModal, logger)
         .then(() => {
           setStep(5)
           logger.info('Initiated app-to-app flow')
@@ -218,7 +218,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
     setStep,
-    emitError,
+    emitErrorModal,
   ])
 
   useEffect(() => {

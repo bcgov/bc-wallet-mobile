@@ -1,4 +1,4 @@
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/usethirdPartyKeyboardWarning'
+import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'

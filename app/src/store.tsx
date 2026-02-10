@@ -747,12 +747,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
       const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCDispatchAction.ALERT_REASONING: {
       const alertReasoning = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, alertReasoning }
+      const bcsc = { ...state.bcsc, alertReasoning: alertReasoning }
       const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
 
