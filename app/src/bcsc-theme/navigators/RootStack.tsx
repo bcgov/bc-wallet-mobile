@@ -20,7 +20,7 @@ const BCSCRootStack: React.FC = () => {
   const { isClientReady } = useBCSCApiClientState()
   const [loading, setLoading] = useState(true)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitError } = useErrorAlert()
+  const { emitErrorModal } = useErrorAlert()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   useEffect(() => {
@@ -32,9 +32,9 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (err) {
-      emitError('STATE_LOAD_ERROR', { error: err })
+      emitErrorModal('STATE_LOAD_ERROR', { error: err })
     }
-  }, [dispatch, loadState, emitError, store.stateLoaded])
+  }, [dispatch, loadState, emitErrorModal, store.stateLoaded])
 
   // Check for existing account on initial load - only runs after state is loaded
   useEffect(() => {

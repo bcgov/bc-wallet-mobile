@@ -75,7 +75,6 @@ describe('useFactoryReset', () => {
     await act(async () => {
       const result = await hook.result.current()
       if (!result.success) {
-        console.log(result.error.message)
         throw new Error(`Factory reset failed: ${result.error?.message}`)
       }
       expect(result.success).toBe(true)

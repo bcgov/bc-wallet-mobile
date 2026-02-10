@@ -19,7 +19,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+  const { emitErrorModal, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -168,7 +168,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerError = (key: ErrorRegistryKey) => {
-    emitError(key, {
+    emitErrorModal(key, {
       error: new Error(`Test error triggered for: ${key}`),
       context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },
     })
