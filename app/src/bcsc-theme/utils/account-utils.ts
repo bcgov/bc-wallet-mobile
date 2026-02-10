@@ -21,3 +21,18 @@ export const getNicknameValidationErrorKey = (state: BCState, nickname: string):
 
   return null
 }
+
+/**
+ * Determines if the V3 account nickname should me migrated.
+ *
+ * Note: We don't want to migrate if the selected nickname is null (ie: user removed account).
+ *
+ * @param store - The current state of the app.
+ * @param accountNickname - The nickname of the account to check for migration.
+ * @returns A boolean indicating whether the account nickname should be migrated.
+ */
+export const shouldMigrateV3AccountNickname = (store: BCState, accountNickname?: string): accountNickname is string => {
+  return Boolean(
+    accountNickname && store.bcsc.selectedNickname !== null && !store.bcsc.nicknames.includes(accountNickname)
+  )
+}

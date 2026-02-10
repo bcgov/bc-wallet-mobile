@@ -154,7 +154,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         clientID: data.client_id,
         issuer: apiClient.endpoints.issuer,
         securityMethod,
-        nickname: store.bcsc.selectedNickname,
+        nickname: store.bcsc.selectedNickname ?? undefined,
       })
 
       await updateTokens({

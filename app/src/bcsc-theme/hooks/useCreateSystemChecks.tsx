@@ -96,7 +96,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
-      registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
+      registrationApi.updateRegistration(
+        store.bcscSecure.registrationAccessToken,
+        store.bcsc.selectedNickname ?? undefined
+      )
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),

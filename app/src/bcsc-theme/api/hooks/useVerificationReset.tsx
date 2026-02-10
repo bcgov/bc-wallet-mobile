@@ -53,7 +53,7 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
         {
           appVersion: store.bcsc.appVersion,
           analyticsOptIn: store.bcsc.analyticsOptIn,
-          selectedNickname: '',
+          selectedNickname: null,
         },
         // BCSC Secure state to persist
         {
