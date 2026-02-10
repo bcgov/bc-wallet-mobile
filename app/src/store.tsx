@@ -38,7 +38,7 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
-// This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, ect.)
+// This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, etc.)
 export interface CredentialMetadata {
   fullName: string
   bcscReason: string
