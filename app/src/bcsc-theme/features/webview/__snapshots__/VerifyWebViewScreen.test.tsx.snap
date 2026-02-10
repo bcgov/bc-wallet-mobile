@@ -5,13 +5,6 @@ exports[`VerifyWebView renders correctly 1`] = `
   allowsBackForwardNavigationGestures={true}
   bounces={false}
   domStorageEnabled={true}
-  injectedJavaScriptBeforeContentLoaded="
-    (function() {
-      const fontScale = 2;
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    })();
-  "
   javaScriptEnabled={true}
   mixedContentMode="compatibility"
   onError={[Function]}
@@ -33,6 +26,11 @@ exports[`VerifyWebView renders correctly 1`] = `
     }
   }
   startInLoadingState={true}
+  style={
+    {
+      "backgroundColor": "#F2F2F2",
+    }
+  }
   testID="mocked-webview"
   thirdPartyCookiesEnabled={true}
   userAgent="Single App"

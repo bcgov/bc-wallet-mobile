@@ -853,6 +853,12 @@ const translation = {
       "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
       "ButtonText": "Ok (PT-BR)"
     },
+    "CancelledVerification": {
+      "Title": "Your identity couldn't be verified (PT-BR)",
+      "Label": "Details from Service BC agent: \n {{reason}} (PT-BR)",
+      "Button": "Ok (PT-BR)",
+      "NoReason": "No reason provided (PT-BR)"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (PT-BR)",
       "Description": "It's needed to verify your identity. (PT-BR)",
@@ -1042,7 +1048,17 @@ const translation = {
       "Close": "Close (PT-BR)",
       "GoToAppStore": "Go to App Store (PT-BR)",
       "RemoveAccount": "Remove Account (PT-BR)",
-		}
+		},
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent (PT-BR)",
+      "Description": "Please try again later. (PT-BR)",
+    },
+    "DataUseWarning": {
+      "Title": "Data Use (PT-BR)",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
+      "Action1": "Cancel (PT-BR)",
+      "Action2": "Use Data (PT-BR)",
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

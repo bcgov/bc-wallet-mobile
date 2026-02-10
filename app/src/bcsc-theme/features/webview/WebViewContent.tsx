@@ -1,7 +1,6 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { getWebViewAccessibilityProps } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
@@ -42,13 +41,6 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { fontScale } = useWindowDimensions()
-
-  // Platform-specific accessibility text scaling:
-  // iOS uses JavaScript injection, Android uses native textZoom prop
-  const { injectedJavaScript, textZoom } = useMemo(
-    () => getWebViewAccessibilityProps(Platform.OS, fontScale, injectedJavascript),
-    [fontScale, injectedJavascript]
-  )
 
   const styles = StyleSheet.create({
     loadingContainer: {
@@ -95,6 +87,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       domStorageEnabled={true}
       allowsBackForwardNavigationGestures={true}
       bounces={false}
+      style={{ backgroundColor: ColorPalette.brand.primaryBackground }}
       renderLoading={() => (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size={'large'} />
@@ -108,8 +101,8 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       thirdPartyCookiesEnabled={true}
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
-      textZoom={textZoom}
-      injectedJavaScriptBeforeContentLoaded={injectedJavaScript}
+      textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
+      injectedJavaScriptBeforeContentLoaded={injectedJavascript}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />

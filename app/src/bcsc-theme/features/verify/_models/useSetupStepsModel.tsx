@@ -33,12 +33,20 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const handleCheckStatus = useCallback(async () => {
     setIsCheckingStatus(true)
     try {
+      if (store.bcscSecure.refreshToken) {
+        // If we have a refresh token we can assume verification is complete
+        // Scenario: user checked their status but closed the app before completing VerificationSuccess
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+        return
+      }
+
       if (!store.bcscSecure.verificationRequestId) {
         throw new Error(t('BCSC.Steps.VerificationIDMissing'))
       }
 
-      const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
-
+      const { status, status_message } = await evidence.getVerificationRequestStatus(
+        store.bcscSecure.verificationRequestId
+      )
       if (status === 'verified') {
         if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
           throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
@@ -50,6 +58,10 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         }
 
         navigation.navigate(BCSCScreens.VerificationSuccess)
+      } else if (status === 'cancelled') {
+        navigation.navigate(BCSCScreens.CancelledReview, {
+          agentReason: status_message,
+        })
       } else {
         navigation.navigate(BCSCScreens.PendingReview)
       }
@@ -60,6 +72,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       setIsCheckingStatus(false)
     }
   }, [
+    store.bcscSecure.refreshToken,
     store.bcscSecure.verificationRequestId,
     store.bcscSecure.deviceCode,
     store.bcscSecure.userCode,

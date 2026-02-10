@@ -8,6 +8,7 @@ exports[`EvidenceCapture renders correctly 1`] = `
       "position": "relative",
     }
   }
+  testID="com.ariesbifold:id/EvidenceCaptureScreenMaskedCamera"
 >
   <RNCSafeAreaView
     edges={

@@ -73,7 +73,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     return Orientation.getOrientation()
   }
 
-  // The .afj folder from Credo cannot be restored.
+  /// The .afj folder from Credo cannot be restored.
   private func excludeDotAFJFolderFromBackup() {
     let folderName = ".afj"
     guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {

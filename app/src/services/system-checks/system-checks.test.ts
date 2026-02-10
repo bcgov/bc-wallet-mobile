@@ -357,11 +357,17 @@ describe('System Checks', () => {
   describe('InternetStatusSystemCheck', () => {
     describe('runCheck', () => {
       it('should return true when internet is reachable', async () => {
-        const mockNetInfo = { isConnected: true, isInternetReachable: true } as any
+        const isConnected = true
+        const isInternetReachable = true
         const mockNavigation = {} as any
         const mockLogger = new MockLogger()
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         const result = internetStatusCheck.runCheck()
 
@@ -369,11 +375,17 @@ describe('System Checks', () => {
       })
 
       it('should return false when internet is not reachable', async () => {
-        const mockNetInfo = { isConnected: false, isInternetReachable: null } as any
+        const isConnected = false
+        const isInternetReachable = null
         const mockNavigation = {} as any
         const mockLogger = new MockLogger()
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         const result = internetStatusCheck.runCheck()
 
@@ -381,12 +393,17 @@ describe('System Checks', () => {
       })
 
       it('should return false when internet is partially reachable', async () => {
-        const mockNetInfo = { isConnected: true, isInternetReachable: false } as any
+        const isConnected = true
+        const isInternetReachable = false
         const mockNavigation = {} as any
         const mockLogger = new MockLogger()
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
-
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
         const result = internetStatusCheck.runCheck()
 
         expect(result).toBe(false)
@@ -394,14 +411,20 @@ describe('System Checks', () => {
     })
     describe('onFail', () => {
       it('should navigate to InternetDisconnected modal if not already there', () => {
-        const mockNetInfo = {} as any
+        const isConnected = false
+        const isInternetReachable = false
         const mockNavigation = {
           getState: jest.fn().mockReturnValue({ routes: [{ name: 'Home' }], index: 0 }),
           navigate: jest.fn(),
         } as any
         const mockLogger = { warn: jest.fn() } as any
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         internetStatusCheck.onFail()
 
@@ -410,14 +433,20 @@ describe('System Checks', () => {
       })
 
       it('should not navigate if already on InternetDisconnected modal', () => {
-        const mockNetInfo = {} as any
+        const isConnected = false
+        const isInternetReachable = false
         const mockNavigation = {
           getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.InternetDisconnected }], index: 0 }),
           navigate: jest.fn(),
         } as any
         const mockLogger = { warn: jest.fn() } as any
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         internetStatusCheck.onFail()
 
@@ -428,7 +457,8 @@ describe('System Checks', () => {
 
     describe('onSuccess', () => {
       it('should navigate back if on InternetDisconnected modal', () => {
-        const mockNetInfo = {} as any
+        const isConnected = true
+        const isInternetReachable = true
         const mockNavigation = {
           getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.InternetDisconnected }], index: 0 }),
           canGoBack: jest.fn().mockReturnValue(true),
@@ -436,7 +466,12 @@ describe('System Checks', () => {
         } as any
         const mockLogger = {} as any
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         internetStatusCheck.onSuccess()
 
@@ -444,7 +479,8 @@ describe('System Checks', () => {
       })
 
       it('should not navigate back if not on InternetDisconnected modal', () => {
-        const mockNetInfo = {} as any
+        const isConnected = true
+        const isInternetReachable = true
         const mockNavigation = {
           getState: jest.fn().mockReturnValue({ routes: [{ name: 'Home' }], index: 0 }),
           canGoBack: jest.fn().mockReturnValue(true),
@@ -452,7 +488,12 @@ describe('System Checks', () => {
         } as any
         const mockLogger = {} as any
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         internetStatusCheck.onSuccess()
 
@@ -460,7 +501,8 @@ describe('System Checks', () => {
       })
 
       it('should not navigate back if cannot go back', () => {
-        const mockNetInfo = {} as any
+        const isConnected = true
+        const isInternetReachable = true
         const mockNavigation = {
           getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.InternetDisconnected }], index: 0 }),
           canGoBack: jest.fn().mockReturnValue(false),
@@ -468,7 +510,12 @@ describe('System Checks', () => {
         } as any
         const mockLogger = {} as any
 
-        const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
 
         internetStatusCheck.onSuccess()
 

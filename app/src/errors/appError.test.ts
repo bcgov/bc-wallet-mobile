@@ -2,10 +2,14 @@ import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
-import { AppError } from './appError'
+import { AppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorDefinition, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 describe('AppError', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe('constructor', () => {
     it('should create an AppError with correct properties', () => {
       const identity = {
@@ -27,18 +31,6 @@ describe('AppError', () => {
       expect(error.cause).toBeInstanceOf(Error)
       expect(error.timestamp).toBeDefined()
       expect(error.handled).toBe(false)
-    })
-
-    it('should track error event in analytics upon creation', () => {
-      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Title', 'Description', identity)
-
-      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
     })
   })
 
@@ -63,6 +55,23 @@ describe('AppError', () => {
       const error = new AppError('Title', 'Description', identity, { cause: 'Not an error' as any })
 
       expect(error.technicalMessage).toBeNull()
+    })
+  })
+
+  describe('track', () => {
+    it('should track error event in analytics', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      error.track()
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
     })
   })
 
@@ -94,6 +103,30 @@ describe('AppError', () => {
 
       expect(error.title).not.toBe('titleKey')
       expect(error.description).not.toBe('descriptionKey')
+    })
+
+    it('should track error event in analytics upon creation from definition by default', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR)
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
+    })
+
+    it('should not track error event in analytics if specified false', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR, { track: false })
+
+      expect(trackErrorEventSpy).not.toHaveBeenCalled()
+    })
+
+    it('should track error event in analytics if specified true', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR, { track: true })
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
     })
   })
 
@@ -150,6 +183,37 @@ describe('AppError', () => {
       })
 
       jest.useRealTimers()
+    })
+  })
+
+  describe('isHandledAppError', () => {
+    it('should return true for handled AppError', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+      error.handled = true
+
+      expect(isHandledAppError(error)).toBe(true)
+    })
+
+    it('should return false for unhandled AppError', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      expect(isHandledAppError(error)).toBe(false)
+    })
+
+    it('should return false for non-AppError', () => {
+      const error = new Error('Regular error')
+
+      expect(isHandledAppError(error)).toBe(false)
     })
   })
 })
