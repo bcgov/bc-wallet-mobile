@@ -61,7 +61,6 @@ export const useFactoryReset = () => {
         logger.warn('FactoryReset: Failed to delete IAS account from server')
       }
     } catch (error) {
-      console.log(error)
       logger.warn('FactoryReset: Error occurred while deleting IAS account from server', { error })
     }
 
@@ -87,8 +86,11 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
-        dispatch({ type: BCDispatchAction.CLEAR_SECURE_STATE, payload: [bcscSecureState] })
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [bcscState] })
+        dispatch({
+          type: BCDispatchAction.CLEAR_SECURE_STATE,
+          payload: bcscSecureState ? [bcscSecureState] : undefined,
+        })
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
 
         if (client) {
           // TODO (bm): We should have an actual method to clear tokens
