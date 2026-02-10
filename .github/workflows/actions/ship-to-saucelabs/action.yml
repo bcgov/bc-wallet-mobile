@@ -39,6 +39,19 @@ runs:
       shell: bash
       run: pwd && ls -la
 
+    - name: Set tags based on context
+      id: set_tags
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          TAGS='["pr", "pr-${{ github.event.pull_request.number }}"]'
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          TAGS='["rc"]'
+        else
+          TAGS='[]'
+        fi
+        echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
     - name: Upload artifact to SauceLabs
       shell: bash
       env:
@@ -53,4 +66,5 @@ runs:
         -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
         --form "payload=@$ARTIFACT_NAME" \
         --form "name=$SAUCE_LABS_NAME" \
-        --form "description=$SAUCE_LABS_DESCRIPTION"
+        --form "description=$SAUCE_LABS_DESCRIPTION" \
+        --form "tags=${{ steps.set_tags.outputs.tags }}"
