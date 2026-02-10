@@ -46,6 +46,11 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
 
 jest.mock('react-native-device-info', () => ({
   getBundleId: () => mockGetBundleId(),
+  getApplicationName: jest.fn(() => 'TestApp'),
+  getVersion: jest.fn(() => '1.0.0'),
+  getBuildNumber: jest.fn(() => '100'),
+  getSystemName: jest.fn(() => 'iOS'),
+  getSystemVersion: jest.fn(() => '17.0'),
 }))
 
 // --------------------
@@ -77,6 +82,10 @@ jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () =
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/InformativeBCSCAlertsSystemCheck', () => ({
+  InformativeBCSCAlertsSystemCheck: class InformativeBCSCAlertsSystemCheck {},
 }))
 
 describe('useGetSystemChecks', () => {
@@ -254,11 +263,12 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // DeviceInvalidatedSystemCheck, DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(5) // DeviceInvalidatedSystemCheck, DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
         expect(systemChecks[0].constructor.name).toBe('DeviceInvalidatedSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('InformativeBCSCAlertsSystemCheck')
       })
     })
   })

@@ -14,30 +14,28 @@ const useThirdPartyKeyboardWarning = () => {
   const hasShownWarning = Boolean(store.bcsc.hasDismissedThirdPartyKeyboardAlert)
 
   const showThirdPartyKeyboardWarning = useCallback(async () => {
-    {
-      // The user should only see this warning once
-      if (hasShownWarning) {
-        return
-      }
+    // The user should only see this warning once
+    if (hasShownWarning) {
+      return
+    }
 
-      if (Platform.OS === 'android') {
-        const isthirdPartyKeyboard = await isThirdPartyKeyboardActive()
-        if (isthirdPartyKeyboard) {
-          emitAlert(t('BCSC.ThirdPartyKeyboard.Title'), t('BCSC.ThirdPartyKeyboard.Message'), {
-            actions: [
-              {
-                text: t('BCSC.ThirdPartyKeyboard.ContinueButton'),
-                style: 'cancel',
-              },
-              {
-                text: t('BCSC.ThirdPartyKeyboard.ChangeButton'),
-                style: 'destructive',
-                onPress: () => openKeyboardSelector(),
-              },
-            ],
-          })
-          dispatch({ type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT, payload: [true] })
-        }
+    if (Platform.OS === 'android') {
+      const isthirdPartyKeyboard = await isThirdPartyKeyboardActive()
+      if (isthirdPartyKeyboard) {
+        emitAlert(t('BCSC.ThirdPartyKeyboard.Title'), t('BCSC.ThirdPartyKeyboard.Message'), {
+          actions: [
+            {
+              text: t('BCSC.ThirdPartyKeyboard.ContinueButton'),
+              style: 'cancel',
+            },
+            {
+              text: t('BCSC.ThirdPartyKeyboard.ChangeButton'),
+              style: 'destructive',
+              onPress: () => openKeyboardSelector(),
+            },
+          ],
+        })
+        dispatch({ type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT, payload: [true] })
       }
     }
   }, [dispatch, emitAlert, hasShownWarning, t])
