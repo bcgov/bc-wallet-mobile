@@ -562,7 +562,7 @@ jobs:
 
   ship-to-saucelabs:
     if: github.event.pull_request.head.repo.fork != true
-    needs: [build-summary]
+    needs: [build-ios, build-android, build-summary]
     continue-on-error: true
     runs-on: ubuntu-22.04
     strategy:
