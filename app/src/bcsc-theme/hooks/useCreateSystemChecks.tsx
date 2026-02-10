@@ -1,11 +1,13 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import useTokenApi from '@/bcsc-theme/api/hooks/useTokens'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
+import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
@@ -57,6 +59,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
+  const { emitAlert } = useErrorAlert()
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
 
   const defaultReadiness = isNavigationReady && client && isClientReady
@@ -102,6 +105,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
       new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+      new InformativeBCSCAlertsSystemCheck(store.bcsc.alertReasoning, emitAlert, utils),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
