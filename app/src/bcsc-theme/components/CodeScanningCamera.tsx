@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import {
   Alert,
   Animated,
-  GestureResponderEvent,
   Image,
   Platform,
   Pressable,
@@ -18,6 +17,7 @@ import {
 import {
   Camera,
   CameraCaptureError,
+  CameraProps,
   Code,
   CodeScannerFrame,
   CodeType,
@@ -26,8 +26,25 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera'
+import Reanimated, {
+  useAnimatedProps,
+  useSharedValue,
+  interpolate,
+  Extrapolation,
+  runOnJS,
+} from 'react-native-reanimated'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+
+Reanimated.addWhitelistedNativeProps({ zoom: true })
+const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
+
+/**
+ * How far the pinch gesture scales to reach the full device zoom range.
+ * A 3× pinch covers the entire min→max zoom range.
+ */
+const PINCH_SCALE_FULL_ZOOM = 3
 
 /**
  * Extended Code interface with position and orientation metadata
@@ -148,8 +165,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
 
-  // Zoom management - start at 1.0, will be updated to initialZoom in onInitialized
-  const [zoom, setZoom] = useState(1.0)
+  // Zoom management – uses Reanimated shared value for smooth pinch-to-zoom
+  const zoom = useSharedValue(1.0)
+  const zoomOffset = useSharedValue(0)
+  const [zoomDisplay, setZoomDisplay] = useState(1.0)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
@@ -243,10 +262,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     },
   ])
 
-  // Track format video dimensions for debug overlay and coordinate transform verification.
-  // The Preview use case on Android targets format.videoSize — comparing this with
-  // CodeScannerFrame dimensions reveals aspect ratio mismatches that cause overlay misalignment.
-
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback((targetZoom: number) => {
     if (!device) {
@@ -256,6 +271,98 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     const deviceMaxZoom = device.maxZoom ?? 10
     return Math.max(deviceMinZoom, Math.min(targetZoom, deviceMaxZoom))
   }, [device])
+
+  /**
+   * Enhanced tap-to-focus animation handler
+   * Shows a visual indicator where the user tapped to focus
+   */
+  const drawFocusTap = useCallback((point: { x: number; y: number }): void => {
+    setFocusPoint(point)
+
+    focusOpacity.setValue(1)
+    focusScale.setValue(1.5)
+
+    Animated.parallel([
+      Animated.timing(focusOpacity, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(focusScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setFocusPoint(null)
+    })
+  }, [focusOpacity, focusScale])
+
+  // Derived zoom bounds for the pinch gesture worklet
+  const minZoomValue = device?.minZoom ?? 1
+  const maxZoomValue = Math.min(device?.maxZoom ?? 10, 20)
+
+  // Animated zoom props for the ReanimatedCamera
+  const animatedProps = useAnimatedProps<CameraProps>(
+    () => ({ zoom: zoom.value }),
+    [zoom],
+  )
+
+  // Pinch-to-zoom gesture — maps linear pinch scale to the camera's zoom range
+  const pinchGesture = Gesture.Pinch()
+    .onBegin(() => {
+      zoomOffset.value = zoom.value
+    })
+    .onUpdate((event) => {
+      // Double interpolation for natural-feeling zoom:
+      // 1) Map the raw pinch scale [1/3 … 1 … 3] → [-1 … 0 … 1]
+      const scale = interpolate(
+        event.scale,
+        [1 - 1 / PINCH_SCALE_FULL_ZOOM, 1, PINCH_SCALE_FULL_ZOOM],
+        [-1, 0, 1],
+        Extrapolation.CLAMP,
+      )
+      // 2) Map [-1 … 0 … 1] → [minZoom … startZoom … maxZoom]
+      const newZoom = interpolate(
+        scale,
+        [-1, 0, 1],
+        [minZoomValue, zoomOffset.value, maxZoomValue],
+        Extrapolation.CLAMP,
+      )
+      zoom.value = newZoom
+      runOnJS(setZoomDisplay)(newZoom)
+    })
+
+  // Tap-to-focus gesture (replaces the Pressable overlay)
+  const focusByTap = useCallback(
+    async (point: { x: number; y: number }) => {
+      if (!device?.supportsFocus || !camera.current) {
+        return
+      }
+      drawFocusTap(point)
+      try {
+        await camera.current.focus(point)
+      } catch (error) {
+        if (error instanceof CameraCaptureError && error.code === 'capture/focus-canceled') {
+          return
+        }
+        throw error
+      }
+    },
+    [device?.supportsFocus, drawFocusTap],
+  )
+
+  const tapGesture = Gesture.Tap().onEnd((event) => {
+    runOnJS(focusByTap)({ x: event.x, y: event.y })
+  })
+
+  // Compose pinch + tap; disable while scanning is locked so overlay buttons work
+  const isGestureEnabled = scanState !== 'locked'
+  const composedGesture = Gesture.Simultaneous(
+    pinchGesture.enabled(isGestureEnabled),
+    tapGesture.enabled(isGestureEnabled),
+  )
 
   /**
    * Calculate barcode orientation based on dimensions
@@ -377,46 +484,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       height: fHeight * scale,
     }
 
-    // Debug log the transformation
-    if (showBarcodeHighlight) {
-      // Compare ImageAnalysis (frame) vs Preview (format) aspect ratios
-      /*
-      const iaAspect = fw / fh
-      const fmtW = formatVideoWidth ?? 0
-      const fmtH = formatVideoHeight ?? 0
-      const previewAspect = fmtH > 0 ? Math.min(fmtW, fmtH) / Math.max(fmtW, fmtH) : 0
-      const containerAspect = containerWidth / containerHeight
-      logger.debug('Transform', {
-        platform: Platform.OS,
-        rawFrameSize: { w: cameraFrameWidth, h: cameraFrameHeight },
-        adjustedFrameSize: { w: fw, h: fh },
-        formatVideoSize: { w: fmtW, h: fmtH },
-        containerSize: { w: containerWidth.toFixed(1), h: containerHeight.toFixed(1) },
-        windowSize: { w: width, h: windowHeight },
-        aspectRatios: { 
-          imageAnalysis: iaAspect.toFixed(4),
-          format: previewAspect.toFixed(4),
-          container: containerAspect.toFixed(4),
-          iaMismatch: previewAspect > 0 ? Math.abs(iaAspect - previewAspect).toFixed(4) : 'n/a',
-        },
-        isDevicePortrait,
-        isFrameLandscape,
-        scaleX: scaleX.toFixed(3),
-        scaleY: scaleY.toFixed(3),
-        scale: scale.toFixed(3),
-        offset: { x: offsetX.toFixed(1), y: offsetY.toFixed(1) },
-        inputRaw: frame,
-        inputTransformed: { x: Math.round(fx), y: Math.round(fy), w: Math.round(fWidth), h: Math.round(fHeight) },
-        output: {
-          x: Math.round(result.x),
-          y: Math.round(result.y),
-          w: Math.round(result.width),
-          h: Math.round(result.height)
-        }
-      })
-      */
-    }
-
     return result
   }
 
@@ -438,15 +505,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
-      // Debug logging for barcode detection
-      /* 
-      if (showBarcodeHighlight && codes.length > 0) {
-        logger.debug('Codes detected', { count: codes.length, frame: { width: frame.width, height: frame.height }, container: containerSize })
-        codes.forEach((code, idx) => {
-          logger.debug(`Code ${idx}`, { type: code.type, frame: code.frame })
-        })
-      } */
-
       // Always update displayed codes for visual feedback
       if (codes.length > 0) {
         // Track current scan's codes for validation
@@ -466,13 +524,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
               containerSize.width,
               containerSize.height
             )
-            /* 
-            logger.debug('Position transformation', {
-              input: code.frame,
-              output: position,
-              frameSize,
-              containerSize
-            }) */
           } else if (code.frame) {
             // Fallback to untransformed coordinates if we don't have dimensions yet
             position = code.frame
@@ -483,22 +534,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
           // Check if code is aligned with scan zone (pass type for custom zone matching)
           const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
-
-          // Debug alignment check on iOS to diagnose coordinate issues
-          if (showBarcodeHighlight && position && containerSize && Platform.OS === 'ios') {
-            const normPos = {
-              x: +(position.x / containerSize.width).toFixed(4),
-              y: +(position.y / containerSize.height).toFixed(4),
-              width: +(position.width / containerSize.width).toFixed(4),
-              height: +(position.height / containerSize.height).toFixed(4),
-            }
-            logger.debug(`iOS alignment check [${code.type}]`, {
-              aligned: isAligned,
-              codeNorm: normPos,
-              codeAbs: { x: Math.round(position.x), y: Math.round(position.y), w: Math.round(position.width), h: Math.round(position.height) },
-              margin: ALIGNMENT_MARGIN_FACTOR,
-            })
-          }
 
           // Validate through consecutive readings (only if aligned)
           const key = `${code.type}-${code.value}`
@@ -522,16 +557,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             // Only validated (for callback) if ALSO aligned with scan zone
             isValidated = isAligned && readingCount >= VALIDATION_THRESHOLD
 
-            /* if (showBarcodeHighlight) {
-              logger.debug('Barcode validation', {
-                type: code.type,
-                value: code.value?.substring(0, 20),
-                readingCount,
-                isAligned,
-                isValidated,
-                threshold: VALIDATION_THRESHOLD
-              })
-            } */
           }
 
           return {
@@ -831,17 +856,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             { x: marginX, y: marginY }
           )
 
-          // Debug iOS zone matching to diagnose coordinate issues
-          if (showBarcodeHighlight && Platform.OS === 'ios' && codeType) {
-            logger.debug(`iOS zone check [${codeType}]`, {
-              aligned,
-              zone: { x: zone.box.x, y: zone.box.y, w: zone.box.width, h: zone.box.height },
-              zoneAbs: { x: Math.round(absX), y: Math.round(absY), w: Math.round(absW), h: Math.round(absH) },
-              codeAbs: { x: Math.round(codePosition.x), y: Math.round(codePosition.y), w: Math.round(codePosition.width), h: Math.round(codePosition.height) },
-              margin: { x: Math.round(marginX), y: Math.round(marginY), factor: marginFactor },
-            })
-          }
-
           return aligned
         })
       }
@@ -856,7 +870,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
       return isFullyWithinBounds(scanZoneBounds, { x: marginX, y: marginY })
     },
-    [containerSize, scanZones, scanZoneBounds, showBarcodeHighlight, logger]
+    [containerSize, scanZones, scanZoneBounds]
   )
 
   // Track which scan zone indices currently have aligned barcode detections.
@@ -943,17 +957,19 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       // Reset zoom when screen comes into focus
       const targetZoom = getEffectiveZoom(initialZoom)
       logger.debug('Screen focused, applying zoom', { zoom: targetZoom })
-      setZoom(targetZoom)
+      zoom.value = targetZoom
+      setZoomDisplay(targetZoom)
 
       // Reset zoom and resume activity tracking when screen loses focus
       return () => {
         setTorchEnabled(false)
         stopFocusCycling()
         const resetZoom = getEffectiveZoom(initialZoom)
-        setZoom(resetZoom)
+        zoom.value = resetZoom
+        setZoomDisplay(resetZoom)
         resumeActivityTracking()
       }
-    }, [pauseActivityTracking, getEffectiveZoom, initialZoom, logger, stopFocusCycling, resumeActivityTracking])
+    }, [pauseActivityTracking, getEffectiveZoom, initialZoom, logger, stopFocusCycling, resumeActivityTracking, zoom])
   )
 
   const toggleTorch = () => {
@@ -974,9 +990,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       formatVideo: format ? `${format.videoWidth}×${format.videoHeight}` : 'none',
       formatPhoto: format ? `${format.photoWidth}×${format.photoHeight}` : 'none',
     })
-    setZoom(targetZoom)
+    zoom.value = targetZoom
+    setZoomDisplay(targetZoom)
     logger.debug('Zoom applied after initialization', { zoom: targetZoom })
-  }, [initialZoom, getEffectiveZoom, logger, device, format])
+  }, [initialZoom, getEffectiveZoom, logger, device, format, zoom])
 
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize || !frameSize) {
@@ -1184,10 +1201,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     },
     zoomIndicator: {
       position: 'absolute',
-      bottom: Spacing.md,
+      top: 50,
       right: Spacing.md,
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      paddingHorizontal: 10,
+      paddingHorizontal: 5,
       paddingVertical: 6,
       borderRadius: 8,
       minWidth: 60,
@@ -1195,59 +1212,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     },
     zoomText: {
       color: 'white',
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: 'bold',
     },
   })
 
-  /**
-   * Enhanced tap-to-focus handler
-   * Allows precise focus on small barcodes
-   */
-  const drawFocusTap = (point: { x: number; y: number }): void => {
-    setFocusPoint(point)
-
-    focusOpacity.setValue(1)
-    focusScale.setValue(1.5)
-
-    Animated.parallel([
-      Animated.timing(focusOpacity, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(focusScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setFocusPoint(null)
-    })
-  }
-
-  const handleFocusTap = async (e: GestureResponderEvent): Promise<void> => {
-    if (!device?.supportsFocus || !camera.current) {
-      return
-    }
-
-    const { locationX: x, locationY: y } = e.nativeEvent
-    const tapPoint = { x, y }
-    drawFocusTap(tapPoint)
-
-    try {
-      await camera.current.focus(tapPoint)
-    } catch (error) {
-      // Ignore focus canceled errors
-      if (error instanceof CameraCaptureError && error.code === 'capture/focus-canceled') {
-        return
-      }
-
-      // Rethrow other errors
-      throw error
-    }
-  }
+  // handleFocusTap removed — tap-to-focus is now handled by tapGesture (see composedGesture)
 
   if (!device || !hasPermission) {
     return (
@@ -1272,7 +1242,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             The coordinate transformation logic accounts for the cropped portion to ensure
             highlight boxes align correctly with visible barcodes.
           */}
-          <Camera
+          <ReanimatedCamera
             ref={camera}
             style={styles.camera}
             device={device}
@@ -1280,9 +1250,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             isActive={hasPermission && !frozenFrameUri}
             video={true}
             codeScanner={codeScanner}
-            enableZoomGesture={true}
             torch={torchEnabled ? 'on' : 'off'}
-            zoom={zoom}
+            animatedProps={animatedProps}
             onInitialized={handleCameraInitialized}
             resizeMode="cover"
           />
@@ -1462,14 +1431,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           </View>
         </View>
 
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPressIn={(e) => {
-          handleFocusTap(e)
-        }}
-        // Disable touch interceptor when locked so Save/Continue buttons are tappable
-        pointerEvents={scanState === 'locked' ? 'none' : 'auto'}
-      />
+      {/* Pinch-to-zoom + tap-to-focus gesture layer */}
+      <GestureDetector gesture={composedGesture}>
+        <Reanimated.View style={StyleSheet.absoluteFill} collapsable={false} />
+      </GestureDetector>
 
       {/* Scan area guide — custom zones or default centered zone */}
       <View style={styles.overlayContainer} pointerEvents="none" testID='scan-zone'>
@@ -1551,7 +1516,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
       {/* Zoom level indicator - always visible */}
       <View style={styles.zoomIndicator}>
-        <Text style={styles.zoomText}>Zoom: {zoom.toFixed(2)}x</Text>
+        <Text style={styles.zoomText}>Zoom: {zoomDisplay.toFixed(2)}x</Text>
         {device && (
           <Text style={[styles.zoomText, { fontSize: 8 }]}>
             ({device.minZoom?.toFixed(1)}-{device.maxZoom?.toFixed(1)})
