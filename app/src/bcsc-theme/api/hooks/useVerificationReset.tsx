@@ -53,7 +53,7 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
         {
           appVersion: store.bcsc.appVersion,
           analyticsOptIn: store.bcsc.analyticsOptIn,
-          selectedNickname: null,
+          selectedNickname: '', // FIXME (MD): Allow null values for nickname in BcscCore.setAccount(). Currently all nullish values are ignored.
         },
         // BCSC Secure state to persist
         {

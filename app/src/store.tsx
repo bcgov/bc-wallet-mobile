@@ -61,7 +61,7 @@ export interface NonBCSCUserMetadata {
 export interface BCSCState {
   appVersion: string
   nicknames: string[]
-  selectedNickname?: string | null // undefined: nickname not set | null: nickname removed
+  selectedNickname?: string
   prompts?: VerificationPrompt[]
   videoDuration?: number
   photoMetadata?: VerificationPhotoUploadPayload
