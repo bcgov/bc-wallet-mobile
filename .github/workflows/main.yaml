@@ -561,8 +561,6 @@ jobs:
           echo "✅ All builds passed!"
 
   ship-to-saucelabs:
-    # if: false # Disabled
-    # if: github.ref_name == 'main'
     if: github.event.pull_request.head.repo.fork != true
     needs: [build-summary]
     continue-on-error: true
@@ -572,13 +570,13 @@ jobs:
         include:
           - platform: 'ios'
             build_type: 'bc-wallet'
-            artifact_ref: 'ios-bc-wallet-artifact'
+            artifact_ref: 'ios-bc-wallet-artifact.ipa'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet App'
             artifact_name: 'BCWallet.ipa'
           - platform: 'ios'
             build_type: 'single-app'
-            artifact_ref: 'ios-single-app-artifact'
+            artifact_ref: 'ios-single-app-artifact.ipa'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet Single App'
             artifact_name: 'BCWallet.ipa'
