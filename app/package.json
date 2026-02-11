@@ -45,9 +45,9 @@
     "format:kotlin": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint -F 'android/app/src/**/*.kt'",
     "format:kotlin:check": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint 'android/app/src/**/*.kt'",
     "typecheck": "tsc --noEmit",
-    "setup:ios": "bundle install && cd ios && bundle exec pod install",
-    "setup:android": "cd android && ./gradlew app:dependencies --write-locks",
-    "setup": "yarn setup:ios && yarn setup:android",
+    "ios:setup": "bundle install && cd ios && bundle exec pod install",
+    "android:setup": "cd android && ./gradlew app:dependencies --write-locks",
+    "setup": "yarn ios:setup && yarn android:setup",
     "snowplow:start": "adb reverse tcp:9090 tcp:9090 && docker run -p 9090:9090 snowplow/snowplow-micro:3.0.1 && echo 'Snowplow Micro analytics server started on port 9090'",
     "snowplow:stop": "docker ps -a -q --filter ancestor=snowplow/snowplow-micro:3.0.1 | xargs -r docker rm -f && echo 'Snowplow Micro analytics container stopped and removed'"
   },
