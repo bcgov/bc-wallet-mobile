@@ -4,6 +4,70 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import ScanSerialScreen from './ScanSerialScreen'
 
+// Mock react-native-vision-camera
+jest.mock('react-native-vision-camera', () => ({
+  Camera: 'Camera',
+  useCameraDevice: jest.fn(() => ({
+    id: 'back',
+    supportsFocus: true,
+    minZoom: 1,
+    maxZoom: 8,
+    neutralZoom: 1,
+    hasTorch: true,
+  })),
+  useCameraFormat: jest.fn(() => ({})),
+  useCameraPermission: jest.fn(() => ({
+    hasPermission: true,
+    requestPermission: jest.fn(),
+  })),
+  useCodeScanner: jest.fn((config) => config),
+}))
+
+// Mock BCSCActivityContext — not provided by BasicAppContext
+jest.mock('../../contexts/BCSCActivityContext', () => ({
+  useBCSCActivity: jest.fn(() => ({
+    appStateStatus: 'active',
+    pauseActivityTracking: jest.fn(),
+    resumeActivityTracking: jest.fn(),
+  })),
+}))
+
+// Mock react-native-reanimated
+jest.mock('react-native-reanimated', () => {
+  return {
+    __esModule: true,
+    default: {
+      addWhitelistedNativeProps: jest.fn(),
+      createAnimatedComponent: (component: any) => component,
+      View: require('react-native').View,
+    },
+    useSharedValue: (initial: number) => ({ value: initial }),
+    useAnimatedProps: (factory: () => any) => factory(),
+    interpolate: jest.fn((value: number) => value),
+    Extrapolation: { CLAMP: 'clamp' },
+    runOnJS: (fn: any) => fn,
+  }
+})
+
+// Mock gesture handler
+const mockGestureChain = () => {
+  const chain: any = {}
+  chain.enabled = jest.fn().mockReturnValue(chain)
+  chain.onBegin = jest.fn().mockReturnValue(chain)
+  chain.onUpdate = jest.fn().mockReturnValue(chain)
+  chain.onEnd = jest.fn().mockReturnValue(chain)
+  return chain
+}
+
+jest.mock('react-native-gesture-handler', () => ({
+  Gesture: {
+    Pinch: () => mockGestureChain(),
+    Tap: () => mockGestureChain(),
+    Simultaneous: (...gestures: any[]) => gestures,
+  },
+  GestureDetector: ({ children }: any) => children,
+}))
+
 describe('ScanSerial', () => {
   let mockNavigation: any
 
