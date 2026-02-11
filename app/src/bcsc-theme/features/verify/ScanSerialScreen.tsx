@@ -9,9 +9,9 @@ import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, LayoutAnimation, Platform, Pressable, StyleSheet, Switch, UIManager, View } from 'react-native'
 import { useCameraPermission } from 'react-native-vision-camera'
+import { Spacing } from '../../../bcwallet-theme/theme'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import { LoadingScreenContent } from '../../features/splash-loading/LoadingScreenContent'
-import { Spacing } from '../../../bcwallet-theme/theme'
 
 /**
  * Scan Zone for the 2 barcodes:
@@ -47,7 +47,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { ColorPalette } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
-  
+
   // Toggle for barcode highlight feature (always on when not in debug mode)
   const [showBarcodeHighlight, setShowBarcodeHighlight] = useState(false)
   // Toggle for scan zone tracking/saving (always off when not in debug mode)
@@ -58,7 +58,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const toggleOverlay = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
-    setOverlayExpanded(prev => {
+    setOverlayExpanded((prev) => {
       Animated.timing(chevronRotation, {
         toValue: prev ? 0 : 1,
         duration: 250,
@@ -116,9 +116,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         enableScanZones={enableScanZones}
         initialZoom={2.0}
         scanZones={Platform.select({
-          default: [
-            { types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } },
-          ],
+          default: [{ types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } }],
         })}
         style={StyleSheet.absoluteFillObject}
       />
@@ -142,9 +140,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           )}
 
           {/* Collapsed: brief instruction */}
-          <ThemedText style={styles.collapsedText}>
-            {t('BCSC.Instructions.Paragraph')}
-          </ThemedText>
+          <ThemedText style={styles.collapsedText}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
 
           {/* Expanded content */}
           {overlayExpanded && (
@@ -233,7 +229,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginBottom: Spacing.sm,
-    marginTop: Spacing.xl
+    marginTop: Spacing.xl,
   },
   expandedContent: {
     flex: 1,

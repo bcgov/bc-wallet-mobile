@@ -27,7 +27,7 @@ export const CameraFormat = {
   /**
    * Format optimized for scanning small barcodes (code-39, code-128, PDF417)
    * Prioritizes high resolution and frame rate for accurate detection of small codes
-   * 
+   *
    * Barcode sizes:
    * - Code-39/Code-128: ~30mm x 4mm
    * - PDF417: ~50mm x 9mm
