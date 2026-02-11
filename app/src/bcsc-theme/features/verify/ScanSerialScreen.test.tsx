@@ -1,4 +1,3 @@
-import { View } from 'react-native'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
@@ -40,7 +39,8 @@ jest.mock('react-native-reanimated', () => {
     default: {
       addWhitelistedNativeProps: jest.fn(),
       createAnimatedComponent: (component: any) => component,
-      View,
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      View: require('react-native').View,
     },
     useSharedValue: (initial: number) => ({ value: initial }),
     useAnimatedProps: (factory: () => any) => factory(),
