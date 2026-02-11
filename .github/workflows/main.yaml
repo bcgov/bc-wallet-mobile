@@ -293,7 +293,6 @@ jobs:
           archive
 
       - name: Export production archive
-        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: ${{ matrix.export_options }}
@@ -561,34 +560,34 @@ jobs:
           echo "✅ All builds passed!"
 
   ship-to-saucelabs:
-    if: false # Disabled
-    # if: github.ref_name == 'main'
-    needs: [build-ios, build-android]
+    if: github.event.pull_request.head.repo.fork != true
+    needs: [build-ios, build-android, build-summary]
+    continue-on-error: true
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         include:
           - platform: 'ios'
             build_type: 'bc-wallet'
-            artifact_ref: 'ios-bc-wallet-artifact'
+            artifact_ref: 'ios-bc-wallet-artifact.ipa'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet App'
             artifact_name: 'BCWallet.ipa'
           - platform: 'ios'
             build_type: 'single-app'
-            artifact_ref: 'ios-single-app-artifact'
+            artifact_ref: 'ios-single-app-artifact.ipa'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet Single App'
             artifact_name: 'BCWallet.ipa'
           - platform: 'android'
             build_type: 'bc-wallet'
-            artifact_ref: 'android-bc-wallet-artifact-aab'
+            artifact_ref: 'android-bc-wallet-artifact.aab'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet App'
             artifact_name: 'app-release.aab'
           - platform: 'android'
             build_type: 'single-app'
-            artifact_ref: 'android-single-app-artifact-aab'
+            artifact_ref: 'android-single-app-artifact.aab'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet Single App'
             artifact_name: 'app-release.aab'
