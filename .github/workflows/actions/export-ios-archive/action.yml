@@ -31,7 +31,7 @@ runs:
     - name: Upload signed artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.output_artifact_ref }}
+        name: ${{ inputs.output_artifact_ref }}.ipa
         path: export/BCWallet.ipa
         if-no-files-found: error
         retention-days: 7
