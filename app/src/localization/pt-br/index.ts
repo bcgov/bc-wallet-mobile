@@ -1055,6 +1055,10 @@ const translation = {
       "Title": "Date and Time on This Device Is Incorrect (PT-BR)",
       "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically. (PT-BR)",
       "Action1": "Open Settings (PT-BR)",
+    },
+    "AlreadyVerified": {
+      "Title": "Problem Checking Status (PT-BR)",
+      "Description": "Please close the app and try again. (PT-BR)",
     }
 	},
   "BCWalletError": {

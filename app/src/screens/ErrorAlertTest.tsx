@@ -147,6 +147,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         'login_same_device_invalid_pairing_code',
         `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
       ),
+    already_verified: () => injectErrorCodeIntoAxiosResponse(client, 'already_verified', client.endpoints.token),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {

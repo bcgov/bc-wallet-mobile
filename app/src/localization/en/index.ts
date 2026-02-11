@@ -1055,6 +1055,10 @@ const translation = {
       "Title": "Date and Time on This Device Is Incorrect",
       "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically.",
       "Action1": "Open Settings",
+    },
+    "AlreadyVerified": {
+      "Title": "Problem Checking Status",
+      "Description": "Please close the app and try again.",
     }
 	},
   "BCWalletError": {
