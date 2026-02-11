@@ -1,4 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -21,6 +22,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const loadingScreen = useLoadingScreen()
 
   const styles = StyleSheet.create({
     container: {
@@ -53,11 +55,20 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           buttonType={ButtonType.Critical}
           title={t('BCSC.Account.RemoveAccount')}
           onPress={async () => {
-            const result = await factoryReset()
+            try {
+              loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
 
-            if (!result.success) {
-              // TODO (MD): Show some user feedback that the factory reset failed
-              logger.error('Factory reset failed', result.error)
+              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
+
+              const result = await factoryReset()
+
+              if (!result.success) {
+                logger.error('[RemoveAccount] Failed to remove account', result.error)
+              }
+            } catch (error) {
+              logger.error('[RemoveAccount] Error during account removal', error as Error)
+            } finally {
+              loadingScreen.stopLoading()
             }
           }}
         />

@@ -1,10 +1,10 @@
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
-import useApi from './useApi'
+import useRegistrationApi from './useRegistrationApi'
 
 type FactoryResetResult =
   | {
@@ -28,11 +28,11 @@ type FactoryResetResult =
  *  - Clearing the BCSC state in the global store.
  *  - Logging out the user by updating the authentication state.
  *
- * @returns {Function} A function that performs the factory reset when called.
+ * @returns A function that performs the factory reset when called.
  */
 export const useFactoryReset = () => {
-  const client = useBCSCApiClient()
-  const { registration } = useApi()
+  const { client, isClientReady } = useBCSCApiClientState()
+  const registration = useRegistrationApi(client, Boolean(isClientReady))
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteSecureData } = useSecureActions()
@@ -80,15 +80,19 @@ export const useFactoryReset = () => {
    * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
-    async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
+    async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {
       try {
+        if (!client) {
+          throw new Error('FactoryReset: BCSCApiClient is not initialized')
+        }
+
         await removeAccountArtifacts()
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
         clearSecureState()
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: state ? [state] : undefined })
 
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
         client.clearTokens()
 
         logger.info('FactoryReset: Logging out user...')

@@ -231,6 +231,7 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use (FR)",
       "Analytics": "Analytics (FR)",
+      "RemoveAccount": "Remove account (FR)",
       "AppSecurity": {
         "ScreenTitle": "App Security (FR)",
         "ChangeAppSecurity": "Change App Security (FR)",
@@ -327,9 +328,6 @@ const translation = {
       "Step5": "Step 5 (FR)",
       "VerificationIDMissing": "Verification request ID is missing (FR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
-      "AreYouSure": "Are you sure? (FR)",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
-      "DeleteVerifyRequest": "Delete Verify Request (FR)",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }}) (FR)",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }}) (FR)",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used (FR)",
@@ -997,6 +995,7 @@ const translation = {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
+      "RemoveAccountLoading": "Removing account... (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
       "AccountDetails": "All account details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
@@ -1052,6 +1051,16 @@ const translation = {
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent (FR)",
       "Description": "Please try again later. (FR)",
+    },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure? (FR)",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again. (FR)",
+      "Action1": "Reset App (FR)"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure? (FR)",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
+      "Action1": "Delete Verify Request (FR)",
     },
     "DataUseWarning": {
       "Title": "Data Use (FR)",

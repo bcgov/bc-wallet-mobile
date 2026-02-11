@@ -49,14 +49,11 @@ const BCSCRootStack: React.FC = () => {
     const asyncEffect = async () => {
       try {
         const account = await getAccount()
-        if (account) {
-          // adds nickname to store if migrating from v3 and isn't already present
-          if (account.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
-            dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
-          }
-          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-        } else {
-          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
+
+        dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
+
+        if (account?.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
+          dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
         }
       } catch (error) {
         logger.error('Error checking for existing account:', error as Error)
@@ -66,7 +63,7 @@ const BCSCRootStack: React.FC = () => {
       }
     }
     asyncEffect()
-  }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
+  }, [dispatch, loading, logger, store.bcsc.nicknames, store.stateLoaded])
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || loading || !isNavigationReady) {
