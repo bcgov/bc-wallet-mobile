@@ -873,10 +873,22 @@ export const showLocalNotification = async (title: string, message: string): Pro
   return BcscCore.showLocalNotification(title, message);
 };
 
+/**
+ *  A native module function that checks if a 3rd party keyboard is currently active on an android device.
+ *  iOS does not support this check and will always return false.
+ *
+ * @returns True if a 3rd party keyboard is active, false otherwsie
+ */
 export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
   return BcscCore.isThirdPartyKeyboardActive();
 };
 
-export const openKeyboardSelector = async (): Promise<void> => {
+/**
+ * Opens the keyboard selector on Android to allow the user to switch their keyboards.
+ * iOS does not support this and will always resolve immediately.
+ *
+ * @returns A promise that resolves when the selector is open
+ */
+export const openAndroidKeyboardSelector = async (): Promise<void> => {
   return BcscCore.openKeyboardSelector();
 };
