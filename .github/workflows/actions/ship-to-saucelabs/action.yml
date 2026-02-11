@@ -58,18 +58,21 @@ runs:
         SAUCE_LABS_DESCRIPTION: ${{ inputs.sauce_labs_description }}
         TAGS: ${{ steps.set_tags.outputs.tags }}
       run: |
-        TAG_ARGS=""
+        CURL_ARGS=(
+          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY"
+          -X POST
+          "https://api.us-west-1.saucelabs.com/v1/storage/upload"
+          --form "payload=@$ARTIFACT_NAME"
+          --form "name=$SAUCE_LABS_NAME"
+          --form "description=$SAUCE_LABS_DESCRIPTION"
+        )
+
         if [ -n "$TAGS" ]; then
           IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
           for tag in "${TAG_ARRAY[@]}"; do
-            TAG_ARGS="$TAG_ARGS --form tags=$tag"
+            CURL_ARGS+=(--form "tags=$tag")
           done
         fi
 
-        curl \
-        -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-        -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-        --form "payload=@$ARTIFACT_NAME" \
-        --form "name=$SAUCE_LABS_NAME" \
-        --form "description=$SAUCE_LABS_DESCRIPTION" \
-        $TAG_ARGS
+        echo "Uploading with tags: $TAGS"
+        curl "${CURL_ARGS[@]}"
