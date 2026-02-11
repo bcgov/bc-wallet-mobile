@@ -1,7 +1,6 @@
-import BCSCApiClient from '@/bcsc-theme/api/client'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { useBCSCApiClient, useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -14,7 +13,6 @@ jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core')
-jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('./useRegistrationApi')
 
@@ -23,18 +21,6 @@ const warnMock = jest.fn()
 describe('useFactoryReset', () => {
   beforeEach(() => {
     jest.resetAllMocks()
-
-    const mockClient = { tokens: undefined } as BCSCApiClient
-
-    const useBCSCApiClientMock = jest.mocked(useBCSCApiClient)
-    useBCSCApiClientMock.mockReturnValue(mockClient)
-
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: mockClient,
-      isClientReady: true,
-      error: null,
-    })
 
     const useSecureActionsMock = jest.mocked(useSecureActions)
     useSecureActionsMock.mockReturnValue({
@@ -48,6 +34,7 @@ describe('useFactoryReset', () => {
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
     const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
     const registerMock = jest.fn()
@@ -55,6 +42,7 @@ describe('useFactoryReset', () => {
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
 
+    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
     useRegistrationApiMock.mockReturnValue({
       deleteRegistration: deleteRegistrationMock,
       register: registerMock,
@@ -82,11 +70,9 @@ describe('useFactoryReset', () => {
     expect(deleteRegistrationMock).toHaveBeenCalledWith('test-client-id')
     expect(deleteSecureDataMock).toHaveBeenCalledWith()
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
-    expect(dispatchMock.mock.calls[0]).toStrictEqual([
-      { type: BCDispatchAction.CLEAR_SECURE_STATE, payload: undefined },
-    ])
-    expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
-    expect(dispatchMock.mock.calls[2]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+    expect(clearSecureStateMock).toHaveBeenCalledWith()
+    expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
+    expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
   })
 
   it.todo('should factory reset with custom state when provided')
@@ -97,9 +83,11 @@ describe('useFactoryReset', () => {
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
     const infoMock = jest.fn()
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
     const deleteRegistrationMock = jest.fn()
 
+    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
     bcscCoreMock.getAccount.mockResolvedValue(null)
     useApiMock.mockImplementation(() => ({ registration: { deleteRegistration: deleteRegistrationMock } }) as any)
     useSecureActionsMock.mockReturnValue({
@@ -125,7 +113,9 @@ describe('useFactoryReset', () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
+    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
     bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
     useSecureActionsMock.mockReturnValue({
       clearSecureState: jest.fn(),
@@ -149,9 +139,11 @@ describe('useFactoryReset', () => {
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
     const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
 
+    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
     useRegistrationApiMock.mockReturnValue({
       deleteRegistration: deleteRegistrationMock,
     } as any)

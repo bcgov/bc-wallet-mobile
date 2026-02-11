@@ -1,6 +1,5 @@
-import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -21,8 +20,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { Spacing } = useTheme()
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
-  const client = useBCSCApiClient()
-  const verificationReset = useVerificationReset(client)
+  const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
 
@@ -62,7 +60,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
 
               logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
-              const result = await verificationReset()
+              const result = await factoryReset()
 
               if (!result.success) {
                 logger.error('[RemoveAccount] Failed to remove account', result.error)

@@ -1,6 +1,6 @@
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCDispatchAction, BCSCSecureState, BCSCState, BCState } from '@/store'
+import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -28,14 +28,14 @@ type FactoryResetResult =
  *  - Clearing the BCSC state in the global store.
  *  - Logging out the user by updating the authentication state.
  *
- * @returns {Function} A function that performs the factory reset when called.
+ * @returns A function that performs the factory reset when called.
  */
 export const useFactoryReset = () => {
   const { client, isClientReady } = useBCSCApiClientState()
-  const registration = useRegistrationApi(client, isClientReady)
+  const registration = useRegistrationApi(client, Boolean(isClientReady))
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { deleteSecureData } = useSecureActions()
+  const { clearSecureState, deleteSecureData } = useSecureActions()
 
   // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
 
@@ -80,22 +80,21 @@ export const useFactoryReset = () => {
    * @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
   const factoryReset = useCallback(
-    async (bcscState?: Partial<BCSCState>, bcscSecureState?: Partial<BCSCSecureState>): Promise<FactoryResetResult> => {
+    async (bcscState?: Partial<BCSCState>): Promise<FactoryResetResult> => {
       try {
+        if (!client) {
+          throw new Error('FactoryReset: BCSCApiClient is not initialized')
+        }
+
         await removeAccountArtifacts()
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
-        dispatch({
-          type: BCDispatchAction.CLEAR_SECURE_STATE,
-          payload: bcscSecureState ? [bcscSecureState] : undefined,
-        })
+        clearSecureState()
         dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
 
-        if (client) {
-          // TODO (bm): We should have an actual method to clear tokens
-          client.tokens = undefined
-        }
+        // TODO (bm): We should have an actual method to clear tokens
+        client.tokens = undefined
 
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
@@ -110,7 +109,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [client, removeAccountArtifacts, logger, dispatch]
+    [removeAccountArtifacts, logger, clearSecureState, dispatch, client]
   )
 
   return factoryReset

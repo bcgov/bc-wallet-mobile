@@ -1,6 +1,5 @@
-import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -51,8 +50,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
-  const { client } = useBCSCApiClientState()
-  const verificationReset = useVerificationReset(client)
+  const factoryReset = useFactoryReset()
   const { emitAlert } = useErrorAlert()
   const loadingScreen = useLoadingScreen()
 
@@ -171,7 +169,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
               logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
-              const result = await verificationReset()
+              const result = await factoryReset()
 
               if (!result.success) {
                 logger.error('[RemoveAccount] Failed to remove account', result.error)
