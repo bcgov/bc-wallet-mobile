@@ -10,7 +10,6 @@ import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { shouldMigrateV3AccountNickname } from '../utils/account-utils'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
@@ -53,7 +52,7 @@ const BCSCRootStack: React.FC = () => {
 
         dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
 
-        if (shouldMigrateV3AccountNickname(store, account?.nickname)) {
+        if (account?.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
           dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
         }
       } catch (error) {
@@ -64,7 +63,7 @@ const BCSCRootStack: React.FC = () => {
       }
     }
     asyncEffect()
-  }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading, store.bcsc.selectedNickname, store])
+  }, [dispatch, loading, logger, store.bcsc.nicknames, store.stateLoaded])
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || loading || !isNavigationReady) {

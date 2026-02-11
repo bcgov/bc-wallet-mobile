@@ -166,17 +166,21 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           text: t('Alerts.CancelMobileCardSetup.Action1'),
           style: 'destructive',
           onPress: async () => {
-            loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
+            try {
+              loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
 
-            logger.info('[SettingsRemoveAccount] User confirmed account removal, proceeding with verification reset')
+              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
-            const result = await verificationReset()
+              const result = await verificationReset()
 
-            if (!result.success) {
-              logger.error('[SettingsRemoveAccount] Failed to remove account', result.error)
+              if (!result.success) {
+                logger.error('[RemoveAccount] Failed to remove account', result.error)
+              }
+            } catch (error) {
+              logger.error('[RemoveAccount] Error during account removal', error as Error)
+            } finally {
+              loadingScreen.stopLoading()
             }
-
-            loadingScreen.stopLoading()
           },
         },
       ],

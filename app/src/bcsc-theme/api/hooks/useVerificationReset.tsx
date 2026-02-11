@@ -53,7 +53,6 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
         {
           appVersion: store.bcsc.appVersion,
           analyticsOptIn: store.bcsc.analyticsOptIn,
-          selectedNickname: '', // FIXME (MD): Allow null values for nickname in BcscCore.setAccount(). Currently all nullish values are ignored.
         },
         // BCSC Secure state to persist
         {
@@ -62,13 +61,14 @@ export const useVerificationReset = (client: BCSCApiClient | null) => {
       )
 
       if (!result.success) {
-        logger.error('[VerificationReset]: Verification reset failed', result.error)
+        // If factory reset fails, we cannot guarantee a consistent state, so we return early with the error
+        return result
       }
 
       // Re-register the device with the old device auth method
       await register(deviceAuthMethod)
 
-      // Authenticate user with their wallet key
+      // Authenticate user with their existing wallet key
       await handleSuccessfulAuth(store.bcscSecure.walletKey)
 
       logger.info('[VerificationReset]: BCSC verification reset completed successfully')

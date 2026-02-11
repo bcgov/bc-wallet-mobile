@@ -271,26 +271,23 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </>
       ) : null}
 
-      {
-        // QUESTION (MD): Should we keep this factory reset button for development?
-        __DEV__ ? (
-          <View style={{ padding: Spacing.md }}>
-            <Button
-              title={t('BCSC.Steps.ResetData') + ' (DEV)'}
-              onPress={async () => {
-                const result = await factoryReset()
+      {__DEV__ ? (
+        <View style={{ padding: Spacing.md }}>
+          <Button
+            title={t('BCSC.Steps.ResetData') + ' (DEV)'}
+            onPress={async () => {
+              const result = await factoryReset()
 
-                if (!result.success) {
-                  logger.error('Factory reset failed', result.error)
-                }
-              }}
-              testID={testIdWithKey('ResetData')}
-              accessibilityLabel={t('BCSC.Steps.ResetData')}
-              buttonType={ButtonType.Secondary}
-            />
-          </View>
-        ) : null
-      }
+              if (!result.success) {
+                logger.error('Factory reset failed', result.error)
+              }
+            }}
+            testID={testIdWithKey('ResetData')}
+            accessibilityLabel={t('BCSC.Steps.ResetData')}
+            buttonType={ButtonType.Secondary}
+          />
+        </View>
+      ) : null}
     </ScreenWrapper>
   )
 }
