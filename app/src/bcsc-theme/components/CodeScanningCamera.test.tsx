@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native'
+import { View } from 'react-native'
 import React from 'react'
 
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -39,7 +40,7 @@ jest.mock('react-native-reanimated', () => {
     default: {
       addWhitelistedNativeProps: jest.fn(),
       createAnimatedComponent: (component: any) => component,
-      View: require('react-native').View,
+      View,
     },
     useSharedValue: (initial: number) => ({ value: initial }),
     useAnimatedProps: (factory: () => any) => factory(),
