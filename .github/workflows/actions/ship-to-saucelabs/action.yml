@@ -40,11 +40,11 @@ runs:
       shell: bash
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          TAGS='["pr","pr-${{ github.event.pull_request.number }}"]'
+          TAGS='pr,pr-${{ github.event.pull_request.number }}'
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          TAGS='["rc"]'
+          TAGS='rc'
         else
-          TAGS='[]'
+          TAGS=''
         fi
         echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
