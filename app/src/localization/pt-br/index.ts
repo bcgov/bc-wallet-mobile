@@ -1072,6 +1072,10 @@ const translation = {
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed
+    "Device": {
+      "KeypairGenerationError": "(PT-BR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
+      "KeypairGenerationTitle": "(PT-BR) Problem with App",
+    },
   },
 }
 
