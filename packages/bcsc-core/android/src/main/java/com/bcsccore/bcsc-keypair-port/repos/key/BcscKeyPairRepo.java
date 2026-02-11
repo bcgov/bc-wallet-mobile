@@ -227,8 +227,9 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * Creates a 4096-bit RSA key with SHA-512 digest for signing.
    * 
    * @param alias the alias to store the key pair under
+   * @throws KeypairGenerationException if key generation fails
    */
-  private void generateKeyPair(String alias) {
+  private void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -258,6 +259,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
+      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage());
     }
   }
 
