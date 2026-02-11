@@ -40,11 +40,11 @@ runs:
       shell: bash
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
-          TAGS="pr,pr-${{ github.event.pull_request.number }}"
+          TAGS='["pr","pr-${{ github.event.pull_request.number }}"]'
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          TAGS="rc"
+          TAGS='["rc"]'
         else
-          TAGS=""
+          TAGS='[]'
         fi
         echo "tags=$TAGS" >> $GITHUB_OUTPUT
 
@@ -58,21 +58,12 @@ runs:
         SAUCE_LABS_DESCRIPTION: ${{ inputs.sauce_labs_description }}
         TAGS: ${{ steps.set_tags.outputs.tags }}
       run: |
-        CURL_ARGS=(
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY"
-          -X POST
-          "https://api.us-west-1.saucelabs.com/v1/storage/upload"
-          --form "payload=@$ARTIFACT_NAME"
-          --form "name=$SAUCE_LABS_NAME"
-          --form "description=$SAUCE_LABS_DESCRIPTION"
-        )
-
-        if [ -n "$TAGS" ]; then
-          IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
-          for tag in "${TAG_ARRAY[@]}"; do
-            CURL_ARGS+=(--form "tags=$tag")
-          done
-        fi
-
         echo "Uploading with tags: $TAGS"
-        curl "${CURL_ARGS[@]}"
+        curl \
+          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+          -X POST \
+          "https://api.us-west-1.saucelabs.com/v1/storage/upload" \
+          --form "payload=@$ARTIFACT_NAME" \
+          --form "name=$SAUCE_LABS_NAME" \
+          --form "description=$SAUCE_LABS_DESCRIPTION" \
+          --form "tags=$TAGS"
