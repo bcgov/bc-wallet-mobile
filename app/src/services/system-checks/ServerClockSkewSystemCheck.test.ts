@@ -17,7 +17,7 @@ describe('ServerClockSkewSystemCheck', () => {
   })
 
   describe('runCheck', () => {
-    it('should fail when device clock skewed more than 5 minutes from server clock', async () => {
+    it('should fail when device clock skewed 5 minutes or more from server clock', async () => {
       const mockEmitAlert = jest.fn()
 
       const mockUtils = {
@@ -32,6 +32,40 @@ describe('ServerClockSkewSystemCheck', () => {
       const systemCheck = new ServerClockSkewSystemCheck(serverTimestamp, deviceTimestamp, mockEmitAlert, mockUtils)
 
       expect(systemCheck.runCheck()).toBe(false)
+    })
+
+    it('should fail when device clock skewed 5 minutes or more less than server clock', async () => {
+      const mockEmitAlert = jest.fn()
+
+      const mockUtils = {
+        logger: new MockLogger(),
+        dispatch: jest.fn(),
+        translation: jest.fn() as unknown as TFunction,
+      }
+
+      const serverTimestamp = new Date()
+      const deviceTimestamp = new Date(serverTimestamp.getTime() + FIVE_MINUTES_IN_MS)
+
+      const systemCheck = new ServerClockSkewSystemCheck(serverTimestamp, deviceTimestamp, mockEmitAlert, mockUtils)
+
+      expect(systemCheck.runCheck()).toBe(false)
+    })
+
+    it('should pass when device clock is the same as server clock', async () => {
+      const mockEmitAlert = jest.fn()
+
+      const mockUtils = {
+        logger: new MockLogger(),
+        dispatch: jest.fn(),
+        translation: jest.fn() as unknown as TFunction,
+      }
+
+      const serverTimestamp = new Date()
+      const deviceTimestamp = new Date(serverTimestamp.getTime())
+
+      const systemCheck = new ServerClockSkewSystemCheck(serverTimestamp, deviceTimestamp, mockEmitAlert, mockUtils)
+
+      expect(systemCheck.runCheck()).toBe(true)
     })
 
     it('should pass when device clock skewed less than 5 minutes from server clock', async () => {

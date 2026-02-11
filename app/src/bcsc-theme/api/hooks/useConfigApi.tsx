@@ -35,6 +35,11 @@ const useConfigApi = (apiClient: BCSCApiClient) => {
       }
     )
 
+    if (!headers.date || Number.isNaN(Date.parse(headers.date))) {
+      // The Date header is required to determine server clock skew, so we throw an error if it's missing or invalid
+      throw new Error('getServerStatus: Invalid or missing Date header in response')
+    }
+
     return {
       ...data,
       serverTimestamp: new Date(headers.date),

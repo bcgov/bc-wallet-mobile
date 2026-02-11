@@ -108,3 +108,6 @@ export const DRIVERS_LICENSE_BARCODE = 'pdf-417'
 
 // Endpoint path constants
 export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'
+
+// Error constants
+export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999

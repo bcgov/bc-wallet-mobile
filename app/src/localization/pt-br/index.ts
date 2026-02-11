@@ -1055,7 +1055,7 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
       "Action1": "Use Data (PT-BR)",
     },
-    "LiveCallTroubleShooting": {
+    "LiveCallHavingTrouble": {
       "Title": "Having trouble? (PT-BR)",
       "Description": "Please end your call to get additional help and troubleshooting tips. (PT-BR)",
       "Action1": "End Call (PT-BR)",

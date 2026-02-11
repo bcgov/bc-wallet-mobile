@@ -76,7 +76,7 @@ jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => 
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
 }))
 
-jest.mock('@services/system-checks/ServerClockSkewSystemCheck', () => ({
+jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
   ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
 }))
 
@@ -145,7 +145,7 @@ describe('useGetSystemChecks', () => {
         jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
 
         mockUseConfigApi.mockReturnValue({
-          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date().toISOString() }),
+          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date() }),
         })
 
         const { result } = renderHook(() => useCreateSystemChecks())
@@ -185,7 +185,7 @@ describe('useGetSystemChecks', () => {
         jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
 
         mockUseConfigApi.mockReturnValue({
-          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date().toISOString() }),
+          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date() }),
         })
 
         const { result } = renderHook(() => useCreateSystemChecks())

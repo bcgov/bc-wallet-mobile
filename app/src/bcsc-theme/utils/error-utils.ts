@@ -1,3 +1,4 @@
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { isAppEventCode } from '@/events/appEventCode'
@@ -114,7 +115,7 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       'Server Error',
       `Unhandled app event code (${errorCode})`,
       {
-        statusCode: 0o00,
+        statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
         appEvent: errorCode,
         category: ErrorCategory.GENERAL,
       },
