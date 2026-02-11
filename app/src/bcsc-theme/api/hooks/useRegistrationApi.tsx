@@ -165,7 +165,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, getAttestation, store.bcsc.selectedNickname, updateTokens]
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
   )
 
   /**
