@@ -117,13 +117,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * fetches notification tokens, creates registration body, and submits to BCSC.
    * Stores returned client credentials and updates local account storage.
    *
-   * @param securityMethod - The authentication method to register with
-   * @param nickname - Optional account nickname
    * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
    */
   const register = useCallback(
-    async (securityMethod: AccountSecurityMethod, nickname?: string) => {
+    async (securityMethod: AccountSecurityMethod) => {
       if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration')
       }
@@ -156,7 +154,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         clientID: data.client_id,
         issuer: apiClient.endpoints.issuer,
         securityMethod,
-        nickname: nickname,
+        nickname: store.bcsc.selectedNickname,
       })
 
       await updateTokens({
@@ -167,7 +165,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, getAttestation, store.bcsc.selectedNickname, updateTokens]
   )
 
   /**
