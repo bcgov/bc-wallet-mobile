@@ -231,6 +231,7 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
+      "RemoveAccount": "Remove account",
       "AppSecurity": {
         "ScreenTitle": "App Security",
         "ChangeAppSecurity": "Change App Security",
@@ -326,9 +327,6 @@ const translation = {
       "Step5": "Step 5",
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
-      "AreYouSure": "Are you sure?",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
-      "DeleteVerifyRequest": "Delete Verify Request",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }})",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }})",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used",
@@ -985,6 +983,7 @@ const translation = {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
+      "RemoveAccountLoading": "Removing account...",
       "TransferAccount": "Transfer account to another device",
       "AccountDetails": "All account details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
@@ -1040,6 +1039,16 @@ const translation = {
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent",
       "Description": "Please try again later.",
+    },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure?",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again.",
+      "Action1": "Reset App"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure?",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
+      "Action1": "Delete Verify Request",
     },
     "DataUseWarning": {
       "Title": "Data Use",

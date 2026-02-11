@@ -43,12 +43,16 @@ jest.mock('react-native-toast-message', () => ({
 
 const mockAlert = jest.fn()
 
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({
-    emitAlert: mockAlert,
-    clearError: jest.fn(),
-  }),
-}))
+jest.mock('@/contexts/ErrorAlertContext', () => {
+  const actual = jest.requireActual('@/contexts/ErrorAlertContext')
+  return {
+    ...actual,
+    useErrorAlert: () => ({
+      emitAlert: mockAlert,
+      clearError: jest.fn(),
+    }),
+  }
+})
 
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
 const mockGetAvailableBiometricType = jest.mocked(getAvailableBiometricType)

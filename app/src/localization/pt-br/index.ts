@@ -231,6 +231,7 @@ const translation = {
       "AnalyticsOptIn": "Analytics Opt-In Placeholder (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
       "Analytics": "Analytics (PT-BR)",
+      "RemoveAccount": "Remove account (PT-BR)",
       "AppSecurity": {
         "ScreenTitle": "App Security (PT-BR)",
         "ChangeAppSecurity": "Change App Security (PT-BR)",
@@ -326,9 +327,6 @@ const translation = {
       "Step5": "Step 5 (PT-BR)",
       "VerificationIDMissing": "Verification request ID is missing (PT-BR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
-      "AreYouSure": "Are you sure? (PT-BR)",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (PT-BR)",
-      "DeleteVerifyRequest": "Delete Verify Request (PT-BR)",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }}) (PT-BR)",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }}) (PT-BR)",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used (PT-BR)",
@@ -985,6 +983,7 @@ const translation = {
       "RemoveAccount": "Remove account (PT-BR)",
       "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
+      "RemoveAccountLoading": "Removing account... (PT-BR)",
       "TransferAccount": "Transfer account to another device (PT-BR)",
       "AccountDetails": "All account details (PT-BR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
@@ -1040,6 +1039,16 @@ const translation = {
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent (PT-BR)",
       "Description": "Please try again later. (PT-BR)",
+    },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure? (PT-BR)",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again. (PT-BR)",
+      "Action1": "Reset App (PT-BR)"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure? (PT-BR)",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (PT-BR)",
+      "Action1": "Delete Verify Request (PT-BR)",
     },
     "DataUseWarning": {
       "Title": "Data Use (PT-BR)",

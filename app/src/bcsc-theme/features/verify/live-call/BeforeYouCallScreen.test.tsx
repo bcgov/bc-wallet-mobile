@@ -1,12 +1,10 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
-import { fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
-import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 import BeforeYouCallScreen from './BeforeYouCallScreen'
 
 describe('BeforeYouCall', () => {
@@ -20,9 +18,7 @@ describe('BeforeYouCall', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <ErrorAlertProvider>
-          <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
-        </ErrorAlertProvider>
+        <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
       </BasicAppContext>
     )
 
@@ -32,9 +28,7 @@ describe('BeforeYouCall', () => {
   it('navigates to VerifyWebView with verify-by-call help when Assistance is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <ErrorAlertProvider>
-          <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
-        </ErrorAlertProvider>
+        <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
       </BasicAppContext>
     )
 

@@ -4,6 +4,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
@@ -109,7 +110,7 @@ describe('useSetupStepsModel', () => {
 
   describe('Initial state', () => {
     it('should return steps and step actions', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       expect(result.current.steps).toEqual(mockSteps)
       expect(result.current.stepActions).toBeDefined()
@@ -120,7 +121,7 @@ describe('useSetupStepsModel', () => {
 
   describe('stepActions.nickname', () => {
     it('should navigate to NicknameAccount screen', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.nickname()
 
@@ -141,7 +142,7 @@ describe('useSetupStepsModel', () => {
         },
       })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.id()
 
@@ -160,7 +161,7 @@ describe('useSetupStepsModel', () => {
         },
       })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.id()
 
@@ -181,7 +182,7 @@ describe('useSetupStepsModel', () => {
         },
       })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.id()
 
@@ -200,7 +201,7 @@ describe('useSetupStepsModel', () => {
         },
       })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.id()
 
@@ -210,7 +211,7 @@ describe('useSetupStepsModel', () => {
 
   describe('stepActions.address', () => {
     it('should navigate to ResidentialAddress screen', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.address()
 
@@ -220,7 +221,7 @@ describe('useSetupStepsModel', () => {
 
   describe('stepActions.email', () => {
     it('should navigate to EnterEmail screen with cardProcess', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.email()
 
@@ -232,7 +233,7 @@ describe('useSetupStepsModel', () => {
 
   describe('stepActions.verify', () => {
     it('should navigate to VerificationMethodSelection screen', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.verify()
 
@@ -242,7 +243,7 @@ describe('useSetupStepsModel', () => {
 
   describe('stepActions.transfer', () => {
     it('should navigate to TransferAccountInstructions screen', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.stepActions.transfer()
 
@@ -255,7 +256,7 @@ describe('useSetupStepsModel', () => {
       mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue({ status: 'verified' })
       mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({ refresh_token: 'new-refresh-token' })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -269,7 +270,7 @@ describe('useSetupStepsModel', () => {
       mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue({ status: 'verified' })
       mockTokenApi.checkDeviceCodeStatus.mockResolvedValue({})
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -282,7 +283,7 @@ describe('useSetupStepsModel', () => {
     it('should navigate to PendingReview when status is not verified', async () => {
       mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue({ status: 'pending' })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -305,7 +306,7 @@ describe('useSetupStepsModel', () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithoutRequestId, mockDispatch])
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -330,7 +331,7 @@ describe('useSetupStepsModel', () => {
       bifoldMock.useStore.mockReturnValue([storeWithoutDeviceCode, mockDispatch])
       mockEvidenceApi.getVerificationRequestStatus.mockResolvedValue({ status: 'verified' })
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       await act(async () => {
         await result.current.handleCheckStatus()
@@ -349,7 +350,7 @@ describe('useSetupStepsModel', () => {
     })
 
     it('should show confirmation alert when called', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.handleCancelVerification()
 
@@ -366,7 +367,7 @@ describe('useSetupStepsModel', () => {
     it('should cancel verification request and navigate when confirmed', async () => {
       mockEvidenceApi.cancelVerificationRequest.mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.handleCancelVerification()
 
@@ -399,7 +400,7 @@ describe('useSetupStepsModel', () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([storeWithoutRequestId, mockDispatch])
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.handleCancelVerification()
 
@@ -421,7 +422,7 @@ describe('useSetupStepsModel', () => {
       const mockError = new Error('Network error')
       mockEvidenceApi.cancelVerificationRequest.mockRejectedValue(mockError)
 
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.handleCancelVerification()
 
@@ -442,7 +443,7 @@ describe('useSetupStepsModel', () => {
     })
 
     it('should not do anything when cancel button is pressed', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
 
       result.current.handleCancelVerification()
 
