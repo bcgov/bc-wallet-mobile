@@ -40,13 +40,13 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
       eventCode = AppEventCode.CARD_TYPE_CHANGED
     }
     this.emitAlert(
-      this.utils.translation('BCSC.AccountUpdated.Title'),
-      this.utils.translation('BCSC.AccountUpdated.Message'),
+      this.utils.translation('Alerts.AccountUpdated.Title'),
+      this.utils.translation('Alerts.AccountUpdated.Description'),
       {
         event: eventCode,
         actions: [
           {
-            text: this.utils.translation('BCSC.AccountUpdated.Button'),
+            text: this.utils.translation('Alerts.Actions.DefaultOk'),
             style: 'cancel',
             onPress: () => {
               // clear the alert reasoning so that the alert doesn't show again until new data is received

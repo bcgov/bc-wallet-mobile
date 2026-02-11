@@ -4,7 +4,7 @@ import { useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Platform } from 'react-native'
-import { isThirdPartyKeyboardActive, openKeyboardSelector } from 'react-native-bcsc-core'
+import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-native-bcsc-core'
 
 const useThirdPartyKeyboardWarning = () => {
   const { t } = useTranslation()
@@ -22,16 +22,16 @@ const useThirdPartyKeyboardWarning = () => {
     if (Platform.OS === 'android') {
       const isthirdPartyKeyboard = await isThirdPartyKeyboardActive()
       if (isthirdPartyKeyboard) {
-        emitAlert(t('BCSC.ThirdPartyKeyboard.Title'), t('BCSC.ThirdPartyKeyboard.Message'), {
+        emitAlert(t('Alerts.ThirdPartyKeyboard.Title'), t('Alerts.ThirdPartyKeyboard.Description'), {
           actions: [
             {
-              text: t('BCSC.ThirdPartyKeyboard.ContinueButton'),
+              text: t('Alerts.ThirdPartyKeyboard.Action1'),
               style: 'cancel',
             },
             {
-              text: t('BCSC.ThirdPartyKeyboard.ChangeButton'),
+              text: t('Alerts.ThirdPartyKeyboard.Action2'),
               style: 'destructive',
-              onPress: () => openKeyboardSelector(),
+              onPress: () => openAndroidKeyboardSelector(),
             },
           ],
         })

@@ -380,17 +380,6 @@ const translation = {
         "DismissButton": "Dismiss (PT-BR)"
       }
     },
-    "AccountUpdated": {
-      "Title": "Account Updated (PT-BR)",
-      "Message": "Your account has been automatically updated with information from your new BC Services Card. (PT-BR)",
-      "Button": "Ok (PT-BR)"
-    },
-    "ThirdPartyKeyboard": {
-      "Title": "Warning (PT-BR)",
-      "Message": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard? (PT-BR)",
-      "ContinueButton": "Continue (PT-BR)",
-      "ChangeButton": "Change Keyboard (PT-BR)"
-    },
     "AccountExpired": {
       "StaticBannerTitle": "Expired (PT-BR)",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
@@ -1067,7 +1056,17 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
       "Action1": "Cancel (PT-BR)",
       "Action2": "Use Data (PT-BR)",
-    }
+    },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning (PT-BR)",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard? (PT-BR)",
+      "Action1": "Continue (PT-BR)",
+      "Action2": "Change Keyboard (PT-BR)"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated (PT-BR)",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card. (PT-BR)",
+    },
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

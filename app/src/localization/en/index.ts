@@ -380,17 +380,6 @@ const translation = {
         "DismissButton": "Dismiss"
       }
     },
-    "AccountUpdated": {
-      "Title": "Account Updated",
-      "Message": "Your account has been automatically updated with information from your new BC Services Card.",
-      "Button": "Ok"
-    },
-    "ThirdPartyKeyboard": {
-      "Title": "Warning",
-      "Message": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard?",
-      "ContinueButton": "Continue",
-      "ChangeButton": "Change Keyboard"
-    },
     "AccountExpired": {
       "StaticBannerTitle": "Expired",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
@@ -1067,7 +1056,17 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
       "Action1": "Cancel",
       "Action2": "Use Data",
-    }
+    },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard?",
+      "Action1": "Continue",
+      "Action2": "Change Keyboard"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card.",
+    },
 	},
   "BCWalletError": {
     "Camera": {
