@@ -4,6 +4,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { getAccount } from 'react-native-bcsc-core'
+import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
@@ -24,6 +25,7 @@ const BCSCRootStack: React.FC = () => {
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   useSystemChecks(SystemCheckScope.STARTUP)
+  useThirdPartyKeyboardWarning()
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet

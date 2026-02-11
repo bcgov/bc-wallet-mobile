@@ -1,17 +1,28 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform } from 'react-native'
+import { Keyboard, Platform } from 'react-native'
 import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-native-bcsc-core'
 
+/**
+ * Custom hook to show a warning when a third-party keyboard is detected on an android device.
+ * This warning is only shown once
+ */
 const useThirdPartyKeyboardWarning = () => {
   const { t } = useTranslation()
   const { emitAlert } = useErrorAlert()
   const [store, dispatch] = useStore<BCState>()
 
   const hasShownWarning = Boolean(store.bcsc.hasDismissedThirdPartyKeyboardAlert)
+
+  useEffect(() => {
+    const didShowListener = Keyboard.addListener('keyboardDidShow', showThirdPartyKeyboardWarning)
+    return () => {
+      didShowListener.remove()
+    }
+  }, [])
 
   const showThirdPartyKeyboardWarning = useCallback(async () => {
     // The user should only see this warning once
@@ -39,8 +50,6 @@ const useThirdPartyKeyboardWarning = () => {
       }
     }
   }, [dispatch, emitAlert, hasShownWarning, t])
-
-  return { showThirdPartyKeyboardWarning }
 }
 
 export default useThirdPartyKeyboardWarning

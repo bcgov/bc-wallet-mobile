@@ -10,12 +10,11 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 
@@ -30,16 +29,11 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
-  const { showThirdPartyKeyboardWarning } = useThirdPartyKeyboardWarning()
 
   const handleChangeCode = (text: string) => {
     setCode(text)
     setMessage(undefined)
   }
-
-  useEffect(() => {
-    showThirdPartyKeyboardWarning()
-  }, [showThirdPartyKeyboardWarning])
 
   const onSubmit = async () => {
     if (code.length < 6) {

@@ -1,11 +1,10 @@
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface CreatePINScreenProps {
@@ -22,11 +21,6 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
   const { handleSuccessfulAuth } = useSecureActions()
   const { stopLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { showThirdPartyKeyboardWarning } = useThirdPartyKeyboardWarning()
-
-  useEffect(() => {
-    showThirdPartyKeyboardWarning()
-  }, [showThirdPartyKeyboardWarning])
 
   const handlePINSuccess = useCallback(
     async (result: PINEntryResult) => {
