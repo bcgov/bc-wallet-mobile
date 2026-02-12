@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
+  UploadEvidenceResponseData,
   VerificationPhotoUploadPayload,
   VerificationPrompt,
   VerificationVideoUploadPayload,
@@ -79,7 +80,9 @@ const useEvidenceUploadModel = (
       logger.debug(`Evidence metadata for ${metadataPayload.type}`)
       // For each metadata item, find matching upload URI and read binary
       for (const metadataItem of evidenceItem.metadata) {
-        const matchingResponse = evidenceMetadataResponse.find((response: any) => response.label === metadataItem.label)
+        const matchingResponse = evidenceMetadataResponse.find(
+          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
+        )
 
         if (matchingResponse) {
           // Read the image file
