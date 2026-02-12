@@ -132,15 +132,21 @@ const useEvidenceUploadModel = (
   )
 
   const finalizeVerification = useCallback(
-    async (photoUploadUri: string, videoUploadUri: string, additionalUploadUris: string[]) => {
+    async (
+      photoUploadUri: string,
+      videoUploadUri: string,
+      additionalUploadUris: string[],
+      requestId: string,
+      requestSha: string
+    ) => {
       const allUploadUris = [photoUploadUri, videoUploadUri, ...additionalUploadUris]
-      await evidence.sendVerificationRequest(store.bcscSecure.verificationRequestId!, {
+      await evidence.sendVerificationRequest(requestId, {
         upload_uris: allUploadUris,
-        sha256: store.bcscSecure.verificationRequestSha!,
+        sha256: requestSha,
       })
       logger.debug('Completed verification request')
     },
-    [evidence, logger, store.bcscSecure.verificationRequestId, store.bcscSecure.verificationRequestSha]
+    [evidence, logger]
   )
 
   const handleSend = useCallback(async () => {
@@ -159,6 +165,10 @@ const useEvidenceUploadModel = (
         throw new Error('Missing verification request data')
       }
 
+      if (!photoMetadata) {
+        throw new Error('Missing photo metadata')
+      }
+
       const { photoBytes, videoBytes, videoMetadata } = await prepareLocalFiles(
         photoPath,
         videoPath,
@@ -172,7 +182,7 @@ const useEvidenceUploadModel = (
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
 
       const { photoMetadataResponse, videoMetadataResponse } = await uploadEvidenceMetadata(
-        photoMetadata!,
+        photoMetadata,
         videoMetadata
       )
 
@@ -189,7 +199,9 @@ const useEvidenceUploadModel = (
       await finalizeVerification(
         photoMetadataResponse.upload_uri,
         videoMetadataResponse.upload_uri,
-        additionalUploadUris
+        additionalUploadUris,
+        verificationRequestId,
+        verificationRequestSha
       )
 
       await updateAccountFlags({

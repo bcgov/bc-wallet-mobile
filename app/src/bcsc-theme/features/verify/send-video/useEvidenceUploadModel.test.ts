@@ -5,6 +5,7 @@ import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
@@ -232,13 +233,12 @@ describe('useEvidenceUploadModel', () => {
       ])
 
       const mockReadFile = jest.mocked(readFileInChunks)
-      mockReadFile.mockResolvedValue(new Uint8Array([1, 2, 3]))
+      mockReadFile.mockResolvedValue(Buffer.from([1, 2, 3]))
 
       const mockGetCache = jest.mocked(VerificationVideoCache.getCache)
-      mockGetCache.mockResolvedValue(new Uint8Array([4, 5, 6]))
+      mockGetCache.mockResolvedValue(Buffer.from([4, 5, 6]))
 
-      const RNFS = require('react-native-fs')
-      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
 
       const mockGetVideoMeta = jest.mocked(getVideoMetadata)
       mockGetVideoMeta.mockResolvedValue({ duration: 10 } as any)
@@ -291,11 +291,10 @@ describe('useEvidenceUploadModel', () => {
         jest.fn(),
       ])
 
-      jest.mocked(readFileInChunks).mockResolvedValue(new Uint8Array([1, 2, 3]))
+      jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(undefined as any)
 
-      const RNFS = require('react-native-fs')
-      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -339,12 +338,11 @@ describe('useEvidenceUploadModel', () => {
       ])
 
       const mockReadFile = jest.mocked(readFileInChunks)
-      mockReadFile.mockResolvedValue(new Uint8Array([1, 2, 3]))
+      mockReadFile.mockResolvedValue(Buffer.from([1, 2, 3]))
 
-      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(new Uint8Array([4, 5, 6]))
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
 
-      const RNFS = require('react-native-fs')
-      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
 
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
