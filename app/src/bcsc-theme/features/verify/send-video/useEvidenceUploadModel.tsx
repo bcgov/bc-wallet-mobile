@@ -9,6 +9,7 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -28,6 +29,7 @@ const useEvidenceUploadModel = (
   const { updateAccountFlags } = useSecureActions()
   const { t } = useTranslation()
   const loadingScreen = useLoadingScreen()
+  const { emitError } = useErrorAlert()
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
   const { verificationRequestId, verificationRequestSha } = store.bcscSecure
@@ -169,40 +171,68 @@ const useEvidenceUploadModel = (
         throw new Error('Missing photo metadata')
       }
 
-      const { photoBytes, videoBytes, videoMetadata } = await prepareLocalFiles(
-        photoPath,
-        videoPath,
-        videoDuration,
-        prompts
-      )
+      let photoBytes: Buffer
+      let videoBytes: Buffer
+      let videoMetadata: VerificationVideoUploadPayload
+      try {
+        const result = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
+        photoBytes = result.photoBytes
+        videoBytes = result.videoBytes
+        videoMetadata = result.videoMetadata
+      } catch (error) {
+        emitError('FILE_UPLOAD_ERROR', { error })
+        return
+      }
 
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
-      const additionalEvidence = await processAdditionalEvidence()
+      let additionalEvidence: { uploadUri: string; imageBytes: Buffer }[]
+      try {
+        additionalEvidence = await processAdditionalEvidence()
+      } catch (error) {
+        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        return
+      }
 
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
 
-      const { photoMetadataResponse, videoMetadataResponse } = await uploadEvidenceMetadata(
-        photoMetadata,
-        videoMetadata
-      )
+      let photoMetadataResponse: { upload_uri: string }
+      let videoMetadataResponse: { upload_uri: string }
+      try {
+        const result = await uploadEvidenceMetadata(photoMetadata, videoMetadata)
+        photoMetadataResponse = result.photoMetadataResponse
+        videoMetadataResponse = result.videoMetadataResponse
+      } catch (error) {
+        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        return
+      }
 
-      await uploadEvidenceFiles(
-        photoMetadataResponse.upload_uri,
-        photoBytes,
-        videoMetadataResponse.upload_uri,
-        videoBytes,
-        additionalEvidence
-      )
+      try {
+        await uploadEvidenceFiles(
+          photoMetadataResponse.upload_uri,
+          photoBytes,
+          videoMetadataResponse.upload_uri,
+          videoBytes,
+          additionalEvidence
+        )
+      } catch (error) {
+        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        return
+      }
 
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
-      const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
-      await finalizeVerification(
-        photoMetadataResponse.upload_uri,
-        videoMetadataResponse.upload_uri,
-        additionalUploadUris,
-        verificationRequestId,
-        verificationRequestSha
-      )
+      try {
+        const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
+        await finalizeVerification(
+          photoMetadataResponse.upload_uri,
+          videoMetadataResponse.upload_uri,
+          additionalUploadUris,
+          verificationRequestId,
+          verificationRequestSha
+        )
+      } catch (error) {
+        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        return
+      }
 
       await updateAccountFlags({
         userSubmittedVerificationVideo: true,
@@ -215,15 +245,14 @@ const useEvidenceUploadModel = (
         })
       )
     } catch (error) {
-      // TODO (MD): Handle this error properly (show user feedback etc...)
-      logger.error('Error during sending information to Service BC', error as Error)
+      emitError('EVIDENCE_UPLOAD_UNKNOWN_ERROR', { error })
     } finally {
       loadingScreen.stopLoading()
     }
   }, [
+    emitError,
     finalizeVerification,
     loadingScreen,
-    logger,
     navigation,
     photoMetadata,
     photoPath,
