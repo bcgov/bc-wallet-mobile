@@ -111,10 +111,10 @@ const useEvidenceUploadModel = (
   const uploadEvidenceFiles = useCallback(
     async (
       photoUploadUri: string,
-      photoBytes: any,
+      photoBytes: Buffer,
       videoUploadUri: string,
-      videoBytes: any,
-      additionalUploads: { uploadUri: string; imageBytes: any }[]
+      videoBytes: Buffer,
+      additionalUploads: { uploadUri: string; imageBytes: Buffer }[]
     ) => {
       await Promise.all([
         evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes),
