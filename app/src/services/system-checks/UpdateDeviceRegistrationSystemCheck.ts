@@ -3,7 +3,7 @@ import { BCDispatchAction } from '@/store'
 import { getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
-type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
+type UpdateRegistrationFunction = () => Promise<RegistrationResponseData | undefined>
 
 /**
  * Checks conditions to determine if the device registration needs to be updated.
