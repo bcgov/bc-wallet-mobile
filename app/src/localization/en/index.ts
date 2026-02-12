@@ -1105,8 +1105,21 @@ const translation = {
     "DataUseWarning": {
       "Title": "Data Use",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
-      "Action1": "Cancel",
-      "Action2": "Use Data",
+      "Action1": "Use Data",
+    },
+    "LiveCallHavingTrouble": {
+      "Title": "Having trouble?",
+      "Description": "Please end your call to get additional help and troubleshooting tips.",
+      "Action1": "End Call",
+    },
+    "ClockSkewError": {
+      "Title": "Date and Time on This Device Is Incorrect",
+      "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically.",
+      "Action1": "Open Settings",
+    },
+    "AlreadyVerified": {
+      "Title": "Problem Checking Status",
+      "Description": "Please close the app and try again.",
     }
 	},
   "BCWalletError": {

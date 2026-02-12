@@ -40,7 +40,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitErrorAlert } = useErrorAlert()
+  const { emitAlert, emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
@@ -81,6 +81,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       policy.handle(error, {
         linking: Linking,
         emitErrorAlert,
+        emitAlert,
         alerts,
         navigation,
         translate: t,
@@ -89,7 +90,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       error.handled = true
     },
-    [alerts, emitErrorAlert, logger, navigation, t]
+    [alerts, emitAlert, emitErrorAlert, logger, navigation, t]
   )
 
   useEffect(() => {

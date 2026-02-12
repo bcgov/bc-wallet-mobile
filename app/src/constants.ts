@@ -85,6 +85,7 @@ export const CROP_DELAY_MS = 11000
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
+export const FIVE_MINUTES_IN_SECONDS = 5 * 60
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
@@ -108,3 +109,6 @@ export const DRIVERS_LICENSE_BARCODE = 'pdf-417'
 
 // Endpoint path constants
 export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'
+
+// Error constants
+export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999

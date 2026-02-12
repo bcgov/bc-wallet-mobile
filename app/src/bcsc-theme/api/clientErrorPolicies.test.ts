@@ -4,6 +4,7 @@ import { AxiosError } from 'axios'
 import { BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
+  alreadyVerifiedErrorPolicy,
   AxiosAppError,
   birthdateLockoutErrorPolicy,
   ClientErrorHandlingPolicies,
@@ -566,6 +567,41 @@ describe('clientErrorPolicies', () => {
             },
           }
           expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
+        })
+      })
+
+      describe('alreadyVerifiedErrorPolicy', () => {
+        it('should match ALREADY_VERIFIED on token endpoint', () => {
+          const error = newError('already_verified')
+          const context = {
+            endpoint: '/api/token',
+            apiEndpoints: {
+              token: '/api/token',
+            },
+          }
+          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeTruthy()
+        })
+
+        it('should NOT match ALREADY_VERIFIED on other endpoint', () => {
+          const error = newError('already_verified')
+          const context = {
+            endpoint: '/api/other',
+            apiEndpoints: {
+              token: '/api/token',
+            },
+          }
+          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
+        })
+
+        it('should NOT match other error codes', () => {
+          const error = newError('some_other_error')
+          const context = {
+            endpoint: '/api/token',
+            apiEndpoints: {
+              token: '/api/token',
+            },
+          }
+          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
         })
       })
 

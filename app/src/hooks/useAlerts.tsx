@@ -149,6 +149,12 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     })
   }, [emitAlert, t])
 
+  const alreadyVerifiedAlert = useCallback(() => {
+    emitAlert(t('Alerts.AlreadyVerified.Title'), t('Alerts.AlreadyVerified.Description'), {
+      event: AppEventCode.ALREADY_VERIFIED,
+    })
+  }, [emitAlert, t])
+
   const liveCallFileUploadAlert = useCallback(() => {
     emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
       event: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
@@ -214,6 +220,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       problemWithLoginAlert,
       invalidPairingCodeAlert,
       invalidPairingCodeSameDeviceAlert,
+      alreadyVerifiedAlert,
     }),
     [
       unsecuredNetworkAlert,
@@ -231,6 +238,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       problemWithLoginAlert,
       invalidPairingCodeAlert,
       invalidPairingCodeSameDeviceAlert,
+      alreadyVerifiedAlert,
     ]
   )
 }
@@ -258,6 +266,7 @@ export const getAppEventAlert = (appEvent: AppEventCode, alerts: AppAlerts) => {
     [AppEventCode.INVALID_PAIRING_CODE, alerts.invalidPairingCodeAlert],
     [AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, alerts.invalidPairingCodeSameDeviceAlert],
     [AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR, alerts.liveCallFileUploadAlert],
+    [AppEventCode.ALREADY_VERIFIED, alerts.alreadyVerifiedAlert],
   ])
 
   return alertMap.get(appEvent)

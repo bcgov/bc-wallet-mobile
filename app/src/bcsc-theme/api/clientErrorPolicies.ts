@@ -43,6 +43,7 @@ export type ErrorMatcherContext = {
 type ErrorHandlerContext = {
   translate: TFunction
   emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
+  emitAlert: (title: string, message: string, options?: { actions?: AlertAction[] }) => void
   alerts: AppAlerts
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
@@ -199,6 +200,16 @@ export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for already verified event on token endpoint
+export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.ALREADY_VERIFIED && context.endpoint === context.apiEndpoints.token
+  },
+  handle: (_error, context) => {
+    context.alerts.alreadyVerifiedAlert()
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -213,4 +224,5 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
+  alreadyVerifiedErrorPolicy,
 ]
