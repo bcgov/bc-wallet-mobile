@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
@@ -13,10 +14,17 @@ jest.mock('@/utils/read-file')
 jest.mock('@/bcsc-theme/utils/file-info', () => ({
   getVideoMetadata: jest.fn(),
 }))
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    trackErrorEvent: jest.fn(),
+    trackAlertDisplayEvent: jest.fn(),
+    trackAlertActionEvent: jest.fn(),
+  },
+}))
 
-const mockEmitError = jest.fn()
+const mockEmitErrorAlert = jest.fn()
 jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({ emitError: mockEmitError }),
+  useErrorAlert: () => ({ emitErrorAlert: mockEmitErrorAlert }),
 }))
 jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
   VerificationVideoCache: {
@@ -152,9 +160,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_UNKNOWN_ERROR', {
-        error: expect.objectContaining({ message: 'Missing photo or video data' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
+        })
+      )
     })
 
     it('should emit EVIDENCE_UPLOAD_UNKNOWN_ERROR when prompts are missing', async () => {
@@ -179,9 +189,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_UNKNOWN_ERROR', {
-        error: expect.objectContaining({ message: 'Missing video prompts data' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
+        })
+      )
     })
 
     it('should emit EVIDENCE_UPLOAD_UNKNOWN_ERROR when verification request data is missing', async () => {
@@ -206,9 +218,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_UNKNOWN_ERROR', {
-        error: expect.objectContaining({ message: 'Missing verification request data' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
+        })
+      )
     })
 
     it('should complete the full upload flow and navigate on success', async () => {
@@ -267,7 +281,7 @@ describe('useEvidenceUploadModel', () => {
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
       expect(mockNavigation.dispatch).toHaveBeenCalled()
-      expect(mockEmitError).not.toHaveBeenCalled()
+      expect(mockEmitErrorAlert).not.toHaveBeenCalled()
     })
 
     it('should emit FILE_UPLOAD_ERROR when video cache is missing', async () => {
@@ -304,9 +318,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('FILE_UPLOAD_ERROR', {
-        error: expect.objectContaining({ message: 'Cache missing video data' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.FILE_UPLOAD_ERROR,
+        })
+      )
     })
 
     it('should emit EVIDENCE_UPLOAD_SERVER_ERROR when additional evidence processing fails', async () => {
@@ -350,9 +366,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_SERVER_ERROR', {
-        error: expect.objectContaining({ message: 'Evidence metadata failed' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
+        })
+      )
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).not.toHaveBeenCalled()
     })
 
@@ -391,9 +409,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_SERVER_ERROR', {
-        error: expect.objectContaining({ message: 'Metadata upload failed' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
+        })
+      )
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
     })
 
@@ -435,9 +455,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_SERVER_ERROR', {
-        error: expect.objectContaining({ message: 'Upload failed' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
+        })
+      )
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
     })
 
@@ -481,9 +503,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitError).toHaveBeenCalledWith('EVIDENCE_UPLOAD_SERVER_ERROR', {
-        error: expect.objectContaining({ message: 'Verification failed' }),
-      })
+      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
+        })
+      )
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
     })
 
@@ -548,7 +572,7 @@ describe('useEvidenceUploadModel', () => {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
       })
-      expect(mockEmitError).not.toHaveBeenCalled()
+      expect(mockEmitErrorAlert).not.toHaveBeenCalled()
     })
   })
 })

@@ -10,6 +10,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -29,7 +30,7 @@ const useEvidenceUploadModel = (
   const { updateAccountFlags } = useSecureActions()
   const { t } = useTranslation()
   const loadingScreen = useLoadingScreen()
-  const { emitError } = useErrorAlert()
+  const { emitErrorAlert } = useErrorAlert()
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
   const { verificationRequestId, verificationRequestSha } = store.bcscSecure
@@ -180,7 +181,7 @@ const useEvidenceUploadModel = (
         videoBytes = result.videoBytes
         videoMetadata = result.videoMetadata
       } catch (error) {
-        emitError('FILE_UPLOAD_ERROR', { error })
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error }))
         return
       }
 
@@ -189,7 +190,7 @@ const useEvidenceUploadModel = (
       try {
         additionalEvidence = await processAdditionalEvidence()
       } catch (error) {
-        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_UPLOAD_SERVER_ERROR, { cause: error }))
         return
       }
 
@@ -202,7 +203,7 @@ const useEvidenceUploadModel = (
         photoMetadataResponse = result.photoMetadataResponse
         videoMetadataResponse = result.videoMetadataResponse
       } catch (error) {
-        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_UPLOAD_SERVER_ERROR, { cause: error }))
         return
       }
 
@@ -215,7 +216,7 @@ const useEvidenceUploadModel = (
           additionalEvidence
         )
       } catch (error) {
-        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_UPLOAD_SERVER_ERROR, { cause: error }))
         return
       }
 
@@ -230,7 +231,7 @@ const useEvidenceUploadModel = (
           verificationRequestSha
         )
       } catch (error) {
-        emitError('EVIDENCE_UPLOAD_SERVER_ERROR', { error })
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_UPLOAD_SERVER_ERROR, { cause: error }))
         return
       }
 
@@ -245,12 +246,12 @@ const useEvidenceUploadModel = (
         })
       )
     } catch (error) {
-      emitError('EVIDENCE_UPLOAD_UNKNOWN_ERROR', { error })
+      emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.EVIDENCE_UPLOAD_UNKNOWN_ERROR, { cause: error }))
     } finally {
       loadingScreen.stopLoading()
     }
   }, [
-    emitError,
+    emitErrorAlert,
     finalizeVerification,
     loadingScreen,
     navigation,
