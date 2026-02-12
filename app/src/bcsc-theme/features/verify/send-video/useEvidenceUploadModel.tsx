@@ -108,7 +108,7 @@ const useEvidenceUploadModel = (
     [evidence, logger]
   )
 
-  const uploadAllBinaries = useCallback(
+  const uploadEvidenceFiles = useCallback(
     async (
       photoUploadUri: string,
       photoBytes: any,
@@ -123,7 +123,7 @@ const useEvidenceUploadModel = (
           evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
         ),
       ])
-      logger.debug('Uploaded all binaries')
+      logger.debug('Uploaded all evidence files')
     },
     [evidence, logger]
   )
@@ -173,7 +173,7 @@ const useEvidenceUploadModel = (
         videoMetadata
       )
 
-      await uploadAllBinaries(
+      await uploadEvidenceFiles(
         photoMetadataResponse.upload_uri,
         photoBytes,
         videoMetadataResponse.upload_uri,
@@ -217,7 +217,7 @@ const useEvidenceUploadModel = (
     prompts,
     t,
     updateAccountFlags,
-    uploadAllBinaries,
+    uploadEvidenceFiles,
     uploadEvidenceMetadata,
     verificationRequestId,
     verificationRequestSha,
