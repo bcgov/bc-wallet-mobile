@@ -1,3 +1,4 @@
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
@@ -7,8 +8,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-
-import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import { LoadingScreenContent } from '../../features/splash-loading/LoadingScreenContent'

@@ -1,7 +1,9 @@
 import { DeviceEventEmitter } from 'react-native'
-
+import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
+import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
+import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 import { PairingService } from '../pairing'
 import { VerificationResponseService } from '../verification-response'
 import { FcmViewModel } from './FcmViewModel'
@@ -28,10 +30,6 @@ const mockApiClient = {
 jest.mock('../../contexts/BCSCApiClientContext', () => ({
   getBCSCApiClient: jest.fn(() => mockApiClient),
 }))
-
-import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
-import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
-import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 
 describe('FcmViewModel', () => {
   let viewModel: FcmViewModel

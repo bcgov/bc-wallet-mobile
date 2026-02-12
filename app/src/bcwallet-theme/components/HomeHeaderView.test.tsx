@@ -1,8 +1,7 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import HomeHeaderView from '@bcwallet-theme/components/HomeHeaderView'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 
 describe('HomeHeaderView Component', () => {
   beforeEach(() => {

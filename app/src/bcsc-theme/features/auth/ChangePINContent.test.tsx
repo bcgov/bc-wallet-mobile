@@ -1,11 +1,10 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useNavigation } from '@mocks/@react-navigation/native'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { canPerformDeviceAuthentication, setAccountSecurityMethod, setPIN, verifyPIN } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'
-
-import { useNavigation } from '@mocks/@react-navigation/native'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { ChangePINContent } from './ChangePINContent'
 
 jest.mock('react-native-bcsc-core', () => ({

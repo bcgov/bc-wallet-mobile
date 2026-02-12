@@ -1,3 +1,4 @@
+import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
 import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
 import { TOKENS, useServices } from '@bifold/core'
@@ -6,8 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
-
-import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
 import {
   ConnectionRequest,
   ConnectResult,

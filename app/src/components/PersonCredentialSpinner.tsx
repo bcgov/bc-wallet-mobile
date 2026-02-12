@@ -1,9 +1,8 @@
+import ActivityIndicator from '@assets/img/activity-indicator-circle.svg'
+import EmptyWallet from '@assets/img/personCredLoadingIcon.svg'
 import { useTheme } from '@bifold/core'
 import React, { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, View } from 'react-native'
-
-import ActivityIndicator from '@assets/img/activity-indicator-circle.svg'
-import EmptyWallet from '@assets/img/personCredLoadingIcon.svg'
 
 const timing: Animated.TimingAnimationConfig = {
   toValue: 1,

@@ -1,5 +1,4 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
-
 import { useServiceLoginState } from './useServiceLoginState'
 
 const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn() }

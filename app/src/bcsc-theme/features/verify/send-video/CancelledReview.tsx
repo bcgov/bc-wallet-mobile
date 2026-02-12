@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react'
-
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledRerivewViewModel'
