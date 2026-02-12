@@ -1,4 +1,4 @@
-import { useVerificationReset } from '@/bcsc-theme/api/hooks/useVerificationReset'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
@@ -11,11 +11,20 @@ import { Linking, Platform } from 'react-native'
 
 export type AppAlerts = ReturnType<typeof useAlerts>
 
+/**
+ * Hook to centralize the creation of alerts.
+ *
+ * Each alert corresponds to a specific AppEventCode and contains the necessary information and actions for that event.
+ * This allows for consistent alert handling across the app and makes it easy to manage and update alerts in one place.
+ *
+ * @param navigation - The navigation prop used for navigating to different screens from within alert actions.
+ * @returns An object containing functions to trigger alerts for various app events.
+ */
 export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
-  const verificationReset = useVerificationReset()
+  const factoryReset = useFactoryReset()
 
   const unsecuredNetworkAlert = useCallback(() => {
     emitAlert(t('Alerts.UnsecuredNetwork.Title'), t('Alerts.UnsecuredNetwork.Description'), {
@@ -36,28 +45,25 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   }, [emitAlert, t])
 
   const appUpdateRequiredAlert = useCallback(() => {
-    emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description')),
-      {
-        event: Platform.select({
-          ios: AppEventCode.IOS_APP_UPDATE_REQUIRED,
-          default: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
-        }),
-        actions: [
-          {
-            // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
-            text: t('Alerts.AppUpdateRequired.Action1'),
-            onPress: async () => {
-              try {
-                const appStoreUrl = getBCSCAppStoreUrl()
-                await Linking.openURL(appStoreUrl)
-              } catch (error) {
-                logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
-              }
-            },
+    emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
+      event: Platform.select({
+        ios: AppEventCode.IOS_APP_UPDATE_REQUIRED,
+        default: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
+      }),
+      actions: [
+        {
+          text: t('Alerts.AppUpdateRequired.Action1'),
+          onPress: async () => {
+            try {
+              const appStoreUrl = getBCSCAppStoreUrl()
+              await Linking.openURL(appStoreUrl)
+            } catch (error) {
+              logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
+            }
           },
-        ],
-      }
-    // TODO: Add actions
+        },
+      ],
+    })
   }, [emitAlert, logger, t])
 
   const problemWithAccountAlert = useCallback(() => {
@@ -108,7 +114,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
           text: t('Global.OK'),
           onPress: async () => {
             try {
-              await verificationReset()
+              await factoryReset()
             } catch (error) {
               logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
             }
@@ -116,7 +122,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
         },
       ],
     })
-  }, [emitAlert, logger, t, verificationReset])
+  }, [emitAlert, logger, t, factoryReset])
 
   const verificationNotCompleteAlert = useCallback(() => {
     emitAlert(t('Alerts.VerificationNotComplete.Title'), t('Alerts.VerificationNotComplete.Description'), {
@@ -127,7 +133,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const problemWithLoginAlert = useCallback(() => {
     emitAlert(t('Alerts.ProblemWithLogin.Title'), t('Alerts.ProblemWithLogin.Description'), {
       event: AppEventCode.LOGIN_PARSE_URI,
-      // TODO (MD): Docs say 'OK' closes alert AND removes login request
+      // TODO (MD): Docs say 'OK' closes alert AND removes login request. Add action to remove login request?
     })
   }, [emitAlert, t])
 
@@ -229,6 +235,13 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   )
 }
 
+/**
+ * Utility function to get the corresponding alert function for a given AppEventCode.
+ *
+ * @param appEvent - The AppEventCode for which to get the alert function.
+ * @param alerts - The object containing all alert functions returned by the useAlerts hook.
+ * @returns The alert function corresponding to the given AppEventCode, or undefined if no match is found.
+ */
 export const getAppEventAlert = (appEvent: AppEventCode, alerts: AppAlerts) => {
   const alertMap = new Map<AppEventCode, () => void>([
     [AppEventCode.UNSECURED_NETWORK, alerts.unsecuredNetworkAlert],
@@ -247,5 +260,5 @@ export const getAppEventAlert = (appEvent: AppEventCode, alerts: AppAlerts) => {
     [AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR, alerts.liveCallFileUploadAlert],
   ])
 
-  return alertMap.get(appEvent) ?? null
+  return alertMap.get(appEvent)
 }

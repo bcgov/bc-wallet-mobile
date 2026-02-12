@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppEventCode } from '@/events/appEventCode'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -7,7 +9,6 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
@@ -23,6 +24,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
+  const { emitAlert } = useErrorAlert()
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -87,41 +89,45 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    * Cancel a pending verification request
    */
   const handleCancelVerification = useCallback(async () => {
-    Alert.alert(t('BCSC.Steps.AreYouSure'), t('BCSC.Steps.YourVerificationRequestWillBeDeleted'), [
-      {
-        text: t('BCSC.Steps.DeleteVerifyRequest'),
-        onPress: async () => {
-          try {
-            if (!store.bcscSecure.verificationRequestId) {
-              return
+    emitAlert(t('Alerts.CancelVerificationRequest.Title'), t('Alerts.CancelVerificationRequest.Description'), {
+      event: AppEventCode.CANCEL_VERIFICATION_REQUEST,
+      actions: [
+        {
+          text: t('Alerts.CancelVerificationRequest.Action1'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (!store.bcscSecure.verificationRequestId) {
+                return
+              }
+              await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
+            } catch (error) {
+              logger.error(`Error cancelling verification request: ${error}`)
+            } finally {
+              // Clear verification request from secure state
+              updateVerificationRequest(null, null)
+              await updateAccountFlags({
+                userSubmittedVerificationVideo: false,
+              })
+              navigation.navigate(BCSCScreens.VerificationMethodSelection)
             }
-            await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
-          } catch (error) {
-            logger.error(`Error cancelling verification request: ${error}`)
-          } finally {
-            // Clear verification request from secure state
-            updateVerificationRequest(null, null)
-            await updateAccountFlags({
-              userSubmittedVerificationVideo: false,
-            })
-            navigation.navigate(BCSCScreens.VerificationMethodSelection)
-          }
+          },
         },
-      },
-      {
-        text: t('Global.Cancel'),
-        onPress: () => {},
-        style: 'cancel',
-      },
-    ])
+        {
+          text: t('Global.Cancel'),
+          style: 'cancel',
+        },
+      ],
+    })
   }, [
+    emitAlert,
+    t,
     store.bcscSecure.verificationRequestId,
     evidence,
     logger,
-    navigation,
     updateVerificationRequest,
     updateAccountFlags,
-    t,
+    navigation,
   ])
 
   /**

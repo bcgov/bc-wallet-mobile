@@ -1,8 +1,8 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 import { MainSettingsScreen } from './MainSettingsScreen'
 
 describe('MainSettings', () => {
@@ -11,17 +11,14 @@ describe('MainSettings', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
-    jest.useFakeTimers()
-  })
-
-  afterEach(() => {
-    jest.useRealTimers()
   })
 
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <MainSettingsScreen navigation={mockNavigation as never} />
+        <BCSCLoadingProvider>
+          <MainSettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
