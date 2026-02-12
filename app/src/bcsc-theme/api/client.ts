@@ -1,6 +1,3 @@
-import { ErrorRegistry } from '@/errors'
-import { AppError } from '@/errors/appError'
-import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -9,6 +6,7 @@ import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
+  getAppErrorFromAxiosError,
 } from '../utils/error-utils'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
@@ -123,9 +121,8 @@ class BCSCApiClient {
       // 1. Format the error - update error code and message properties from IAS response
       const error = formatIasAxiosResponseError(_error)
 
-      // 2. Create AppError from the IAS error code
-      const errorDefinition = getErrorDefinitionFromAppEventCode(error.code) ?? ErrorRegistry.UNKNOWN_SERVER_ERROR
-      const appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
+      // 2. Convert the axios error into an AppError
+      const appError = getAppErrorFromAxiosError(error)
 
       const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
       const statusCode = error.response?.status ?? 0

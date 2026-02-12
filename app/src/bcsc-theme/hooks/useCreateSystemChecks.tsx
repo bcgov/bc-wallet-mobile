@@ -8,6 +8,7 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
+import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
@@ -61,6 +62,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
+  const { emitAlert } = useErrorAlert()
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.account_expiration_date
@@ -77,6 +79,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const systemChecks: SystemCheckStrategy[] = [
       new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics, logger),
       new ServerStatusSystemCheck(serverStatus, utils),
+      new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils),
     ]
 
     // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
@@ -85,7 +88,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
 
     return systemChecks
-  }, [configApi, isBCServicesCardBundle, logger, navigation, store.bcsc.analyticsOptIn, utils])
+  }, [configApi, emitAlert, isBCServicesCardBundle, logger, navigation, store.bcsc.analyticsOptIn, utils])
 
   /**
    * Get system checks to run on main stack

@@ -21,7 +21,12 @@ describe('useConfigApi', () => {
   describe('getServerStatus', () => {
     it('calls the correct endpoint for android', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: {
+          date: 'Wed, 01 Jan 2025 00:00:00 GMT',
+        },
+      })
       Platform.OS = 'android'
 
       // Call the method we're testing
@@ -34,18 +39,21 @@ describe('useConfigApi', () => {
           skipBearerAuth: true,
         }
       )
-      expect(response).toEqual({ status: 'ok' })
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
     })
 
     it('calls the correct endpoint for ios', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: { date: 'Wed, 01 Jan 2025 00:00:00 GMT' },
+      })
       const response = await config.getServerStatus()
 
       expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/status/ios/mobile_card`, {
         skipBearerAuth: true,
       })
-      expect(response).toEqual({ status: 'ok' })
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
     })
 
     it('handles API errors gracefully', async () => {

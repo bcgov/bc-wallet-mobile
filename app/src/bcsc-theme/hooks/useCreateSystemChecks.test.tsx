@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
+import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 
@@ -88,6 +89,10 @@ jest.mock('@/services/system-checks/InformativeBCSCAlertsSystemCheck', () => ({
   InformativeBCSCAlertsSystemCheck: class InformativeBCSCAlertsSystemCheck {},
 }))
 
+jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
+  ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
+}))
+
 describe('useGetSystemChecks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
@@ -96,6 +101,7 @@ describe('useGetSystemChecks', () => {
   describe('STARTUP scope', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready', () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
@@ -127,6 +133,7 @@ describe('useGetSystemChecks', () => {
 
     describe('getSystemChecks', () => {
       it('should return the correct system checks for STARTUP scope', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
@@ -150,19 +157,23 @@ describe('useGetSystemChecks', () => {
 
         jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
 
-        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+        mockUseConfigApi.mockReturnValue({
+          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date() }),
+        })
 
         const { result } = renderHook(() => useCreateSystemChecks())
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(3) // AnalyticsSystemCheck, ServerStatusSystemCheck, UpdateAppSystemCheck
+        expect(systemChecks).toHaveLength(4) // AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
         expect(systemChecks[0].constructor.name).toBe('AnalyticsSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('ServerStatusSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('UpdateAppSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateAppSystemCheck')
       })
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
@@ -186,15 +197,18 @@ describe('useGetSystemChecks', () => {
 
         jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
 
-        mockUseConfigApi.mockReturnValue({ getServerStatus: jest.fn() })
+        mockUseConfigApi.mockReturnValue({
+          getServerStatus: jest.fn().mockReturnValue({ serverTimestamp: new Date() }),
+        })
 
         const { result } = renderHook(() => useCreateSystemChecks())
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(2) // AnalyticsSystemCheck, ServerStatusSystemCheck
+        expect(systemChecks).toHaveLength(3) // AnalyticsSystemCheck, ServerClockSkewSystemCheck, ServerStatusSystemCheck
         expect(systemChecks[0].constructor.name).toBe('AnalyticsSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('ServerStatusSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
       })
     })
   })
@@ -202,6 +216,7 @@ describe('useGetSystemChecks', () => {
   describe('MAIN_STACK scope', () => {
     describe('isReady', () => {
       it('should be ready when all flags ready ', () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
@@ -233,6 +248,7 @@ describe('useGetSystemChecks', () => {
 
     describe('getSystemChecks', () => {
       it('should return the correct system checks for MAIN_STACK scope', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,

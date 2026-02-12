@@ -50,11 +50,11 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
         event: AppEventCode.DATA_USE_WARNING,
         actions: [
           {
-            text: t('Alerts.DataUseWarning.Action1'),
+            text: t('Global.Cancel'),
             style: 'cancel',
           },
           {
-            text: t('Alerts.DataUseWarning.Action2'),
+            text: t('Alerts.DataUseWarning.Action1'),
             onPress: navigateToCamera,
             style: 'destructive',
           },

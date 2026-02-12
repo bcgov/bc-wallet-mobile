@@ -45,7 +45,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitErrorAlert } = useErrorAlert()
+  const { emitAlert, emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const factoryReset = useFactoryReset()
 
@@ -99,6 +99,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       policy.handle(error, {
         linking: Linking,
         emitErrorAlert,
+        emitAlert,
         navigation,
         translate: t,
         logger,
@@ -106,7 +107,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       error.handled = true
     },
-    [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
+    [allErrorHandlingPolicies, emitAlert, emitErrorAlert, logger, navigation, t]
   )
 
   useEffect(() => {

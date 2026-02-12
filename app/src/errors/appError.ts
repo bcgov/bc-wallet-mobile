@@ -33,7 +33,7 @@ export class AppError extends Error {
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
 
-  constructor(title: string, description: string, identity: ErrorIdentity, options?: ErrorOptions) {
+  constructor(title: string, description: string, identity: ErrorIdentity, options?: AppErrorOptions) {
     super(`${title}: ${description}`, options)
     this.name = this.constructor.name
 
@@ -45,6 +45,11 @@ export class AppError extends Error {
     this.description = description
     this.timestamp = new Date().toISOString()
     this.handled = false
+
+    // Track the error in analytics unless explicitly disabled
+    if (options?.track !== false) {
+      this.track()
+    }
   }
 
   /**
@@ -73,7 +78,7 @@ export class AppError extends Error {
    * @returns An instance of AppError.
    */
   static fromErrorDefinition(definition: ErrorDefinition, options?: AppErrorOptions): AppError {
-    const appError = new AppError(
+    return new AppError(
       i18next.t(definition.titleKey) ?? definition.titleKey,
       i18next.t(definition.descriptionKey) ?? definition.descriptionKey,
       {
@@ -83,13 +88,6 @@ export class AppError extends Error {
       },
       options
     )
-
-    // Track the error in analytics unless explicitly disabled
-    if (options?.track !== false) {
-      appError.track()
-    }
-
-    return appError
   }
 
   /**
