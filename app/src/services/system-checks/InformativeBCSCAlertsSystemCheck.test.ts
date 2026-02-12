@@ -57,7 +57,7 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           actions: [
             {
               onPress: expect.any(Function),
-              text: 'Alerts.Actions.DefaultOk',
+              text: 'Alerts.Actions.DefaultOK',
               style: 'cancel',
             },
           ],
@@ -79,7 +79,7 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           actions: [
             {
               onPress: expect.any(Function),
-              text: 'Alerts.Actions.DefaultOk',
+              text: 'Alerts.Actions.DefaultOK',
               style: 'cancel',
             },
           ],
@@ -101,7 +101,7 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
           actions: [
             {
               onPress: expect.any(Function),
-              text: 'Alerts.Actions.DefaultOk',
+              text: 'Alerts.Actions.DefaultOK',
               style: 'cancel',
             },
           ],

@@ -62,7 +62,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
-  const { emitAlert } = useErrorAlert()
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.account_expiration_date
