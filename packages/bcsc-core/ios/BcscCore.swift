@@ -2778,7 +2778,7 @@ class BcscCore: NSObject {
     resolve(false)
   }
 
-  func openKeyboardSelector(_: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func openKeyboardSelector(resolve: @escaping RCTPromiseResolveBlock, _: @escaping RCTPromiseRejectBlock) {
     // iOS doesn't provide a public API to open the keyboard selector
     // resolve immediately
     logger.log("openKeyboardSelector: Unsupported on iOS")

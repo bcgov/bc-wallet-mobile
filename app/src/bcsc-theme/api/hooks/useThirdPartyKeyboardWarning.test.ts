@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-semi */
 import { BCDispatchAction } from '@/store'
 import { Platform } from 'react-native'
 import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-native-bcsc-core'
