@@ -1,10 +1,26 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCState } from '@/store'
+import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import { VerificationVideoCache } from './VideoReviewScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/utils/read-file')
+jest.mock('@/bcsc-theme/utils/file-info', () => ({
+  getVideoMetadata: jest.fn(),
+}))
+jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
+  VerificationVideoCache: {
+    getCache: jest.fn(),
+    clearCache: jest.fn(),
+  },
+}))
+jest.mock('react-native-fs', () => ({
+  stat: jest.fn(),
+}))
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
   return {
@@ -190,6 +206,66 @@ describe('useEvidenceUploadModel', () => {
         'Error during sending information to Service BC',
         expect.objectContaining({ message: 'Missing verification request data' })
       )
+    })
+
+    it('should complete the full upload flow and navigate on success', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      const mockReadFile = jest.mocked(readFileInChunks)
+      mockReadFile.mockResolvedValue(new Uint8Array([1, 2, 3]))
+
+      const mockGetCache = jest.mocked(VerificationVideoCache.getCache)
+      mockGetCache.mockResolvedValue(new Uint8Array([4, 5, 6]))
+
+      const RNFS = require('react-native-fs')
+      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+
+      const mockGetVideoMeta = jest.mocked(getVideoMetadata)
+      mockGetVideoMeta.mockResolvedValue({ duration: 10 } as any)
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+      mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.sendVerificationRequest.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalled()
+      expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalled()
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything())
+      expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledWith('video-uri', expect.anything())
+      expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
+        upload_uris: ['photo-uri', 'video-uri'],
+        sha256: 'sha-456',
+      })
+      expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
+      expect(mockLogger.error).not.toHaveBeenCalled()
     })
   })
 })
