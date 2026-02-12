@@ -1,3 +1,7 @@
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
+import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
+import { isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 
 export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
@@ -88,4 +92,37 @@ export const isNetworkError = (error: unknown): boolean => {
   }
 
   return false
+}
+
+/**
+ * Converts an AxiosError into a structured AppError based on the error code and app event mappings.
+ *
+ * @param error - The AxiosError to convert
+ * @returns The resulting AppError with structured information and cause
+ */
+export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
+  const errorCode = error.code
+  const errorDefinition = getErrorDefinitionFromAppEventCode(errorCode)
+
+  // If we have a predefined error definition for this app event code, use it to create the AppError
+  if (errorDefinition) {
+    return AppError.fromErrorDefinition(errorDefinition, { cause: error })
+  }
+
+  // Create a generic AppError for known event codes that don't have a predefined error definition
+  if (isAppEventCode(errorCode)) {
+    return new AppError(
+      'Server Error',
+      `Unhandled app event code (${errorCode})`,
+      {
+        statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
+        appEvent: errorCode,
+        category: ErrorCategory.GENERAL,
+      },
+      { cause: error }
+    )
+  }
+
+  // For all other cases, return a generic unknown server error
+  return AppError.fromErrorDefinition(ErrorRegistry.UNKNOWN_SERVER_ERROR, { cause: error })
 }

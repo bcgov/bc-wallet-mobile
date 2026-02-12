@@ -3,13 +3,16 @@ import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/comp
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { CROP_DELAY_MS } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { VolumeManager } from 'react-native-volume-manager'
@@ -18,8 +21,6 @@ import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
 import CallProcessingView from './components/CallProcessingView'
-
-import { CROP_DELAY_MS } from '@/constants'
 import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
 
@@ -42,6 +43,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitAlert } = useErrorAlert()
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -239,6 +241,22 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [setCallEnded, cleanup, leaveCall, logger])
 
+  const handleHavingTrouble = useCallback(() => {
+    emitAlert(t('Alerts.LiveCallHavingTrouble.Title'), t('Alerts.LiveCallHavingTrouble.Description'), {
+      event: AppEventCode.IN_CALL_HAVING_TROUBLE,
+      actions: [
+        {
+          text: t('Global.Close'),
+        },
+        {
+          text: t('Alerts.LiveCallHavingTrouble.Action1'),
+          style: 'destructive',
+          onPress: handleEndCall,
+        },
+      ],
+    })
+  }, [emitAlert, handleEndCall, t])
+
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
@@ -287,9 +305,16 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       padding: Spacing.md,
       backgroundColor: ColorPalette.notification.popupOverlay,
     },
+    lowerContentContainer: {
+      flexDirection: 'row',
+      height: (width / 4) * 1.5,
+    },
+    hasTroubleContainer: {
+      marginLeft: 'auto',
+    },
     selfieVideoContainer: {
       width: width / 4,
-      height: (width / 4) * 1.5,
+      height: '100%',
       overflow: 'hidden',
     },
     selfieVideo: {
@@ -318,11 +343,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           ) : null}
         </View>
         <View style={styles.lowerContainer}>
-          {localStream && !videoHidden && (
-            <View style={styles.selfieVideoContainer}>
-              <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
-            </View>
-          )}
+          <View style={styles.lowerContentContainer}>
+            {localStream && !videoHidden && (
+              <View style={styles.selfieVideoContainer}>
+                <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
+              </View>
+            )}
+
+            <TouchableOpacity onPress={handleHavingTrouble} style={styles.hasTroubleContainer}>
+              <ThemedText>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.controlsContainer}>
             <CallIconButton
