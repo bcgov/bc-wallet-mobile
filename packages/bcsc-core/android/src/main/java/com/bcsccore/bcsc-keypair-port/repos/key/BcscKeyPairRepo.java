@@ -98,6 +98,8 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final KeyPair keyPair = getKeyPair(keyStore, info.getAlias());
       SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
+    } catch (KeypairGenerationException e) {
+      throw e;
     } catch (Exception e) {
       throw new KeypairGenerationException(e.getMessage(), e);
     }
@@ -152,6 +154,8 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final KeyPair keyPair = getKeyPair(keyStore, alias);
       SimpleLog.d(TAG, "Generated new key pair " + alias);
       return new BcscKeyPair(keyPair, newInfo);
+    } catch (KeypairGenerationException e) {
+      throw e;
     } catch (Exception e) {
       throw new KeypairGenerationException(e.getMessage(), e);
     }
