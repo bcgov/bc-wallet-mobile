@@ -150,7 +150,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       } catch (error) {
         if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
           emitError('KEYPAIR_GENERATION_ERROR', { error })
-          return
         }
         throw error
       }
@@ -219,7 +218,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         } catch (error) {
           if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
             emitError('KEYPAIR_GENERATION_ERROR', { error })
-            return
           }
           throw error
         }

@@ -99,7 +99,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
     } catch (Exception e) {
-      throw new KeypairGenerationException(e.getMessage());
+      throw new KeypairGenerationException(e.getMessage(), e);
     }
   }
 
@@ -153,7 +153,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       SimpleLog.d(TAG, "Generated new key pair " + alias);
       return new BcscKeyPair(keyPair, newInfo);
     } catch (Exception e) {
-      throw new KeypairGenerationException(e.getMessage());
+      throw new KeypairGenerationException(e.getMessage(), e);
     }
   }
 
@@ -259,7 +259,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage());
+      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
     }
   }
 
