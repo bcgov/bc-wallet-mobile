@@ -74,19 +74,21 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   }, [load])
 
   useEffect(() => {
-    if (data) {
-      const tokenData = tokenToCredentialMetadata(data)
-      if (store.bcsc.credentialMetadata) {
-        const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
-        if (!dataUpdated) {
-          dispatch({
-            type: BCDispatchAction.ALERT_REASONING,
-            payload: [{ event: data.bcsc_event, reason: data.bcsc_reason }],
-          })
-        }
-      }
-      dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [tokenData] })
+    if (!data) {
+      return
     }
+
+    const tokenData = tokenToCredentialMetadata(data)
+    if (store.bcsc.credentialMetadata) {
+      const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
+      if (!dataUpdated) {
+        dispatch({
+          type: BCDispatchAction.ALERT_REASONING,
+          payload: [{ event: data.bcsc_event, reason: data.bcsc_reason }],
+        })
+      }
+    }
+    dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [tokenData] })
     // leaving out store.bcsc.credentialMetadata from the dependencies to avoid infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isReady, dispatch])

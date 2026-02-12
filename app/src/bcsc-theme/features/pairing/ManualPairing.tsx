@@ -1,3 +1,5 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
@@ -12,10 +14,6 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-
-import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
