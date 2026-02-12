@@ -1,9 +1,8 @@
+import { FIVE_MINUTES_IN_SECONDS } from '@/constants'
 import { ErrorAlertContextType } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Linking } from 'react-native'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
-
-const FIVE_MINUTES_IN_SECONDS = 5 * 60
 
 /**
  * System check to detect server clock skew issues by comparing the server timestamp with the device timestamp.
