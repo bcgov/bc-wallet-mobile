@@ -1,119 +1,133 @@
-import useThirdPartyKeyboardWarning from '@/bcsc-theme/api/hooks/useThirdPartyKeyboardWarning'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
-import { act, renderHook } from '@testing-library/react-native'
+import { BCDispatchAction } from '@/store'
 import { Platform } from 'react-native'
-import { isThirdPartyKeyboardActive, openKeyboardSelector } from 'react-native-bcsc-core'
+import { isThirdPartyKeyboardActive, openAndroidKeyboardSelector } from 'react-native-bcsc-core'
+import { showThirdPartyKeyboardWarning } from './useThirdPartyKeyboardWarning'
 
-jest.mock('@/contexts/ErrorAlertContext')
 jest.mock('@bifold/core')
+
 jest.mock('react-native-bcsc-core', () => ({
   isThirdPartyKeyboardActive: jest.fn(),
-  openKeyboardSelector: jest.fn(),
-}))
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  openAndroidKeyboardSelector: jest.fn(),
 }))
 
-describe('useThirdPartyKeyboardWarning', () => {
+describe('showThirdPartyKeyboardWarning', () => {
+  const mockT = (key: string) => key
+  const mockEmitAlert = jest.fn()
   const mockDispatch = jest.fn()
-  const emitAlert = jest.fn()
-
-  const setStore = (hasDismissedThirdPartyKeyboardAlert: boolean) => {
-    const mockState = {
-      bcsc: { hasDismissedThirdPartyKeyboardAlert },
-    } as BCState
-    jest.mocked(useStore).mockReturnValue([mockState, mockDispatch])
-  }
 
   beforeEach(() => {
-    jest.resetAllMocks()
-    jest.mocked(useErrorAlert).mockReturnValue({ emitAlert } as any)
-    ;(Platform as any).OS = 'android'
+    Platform.OS = 'ios'
+    jest.clearAllMocks()
   })
 
-  it('should not emit alert when already dismissed', async () => {
-    setStore(true)
-    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
+  describe('when warning has already been dismissed', () => {
+    it('should not show alert or dispatch', async () => {
+      await showThirdPartyKeyboardWarning(true, mockT, mockEmitAlert, mockDispatch)
 
-    const hook = renderHook(() => useThirdPartyKeyboardWarning())
-
-    await act(async () => {
-      await hook.result.current.showThirdPartyKeyboardWarning()
+      expect(mockEmitAlert).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
     })
-
-    expect(isThirdPartyKeyboardActive).not.toHaveBeenCalled()
-    expect(emitAlert).not.toHaveBeenCalled()
-    expect(mockDispatch).not.toHaveBeenCalled()
   })
 
-  it('should not emit alert on iOS', async () => {
-    setStore(false)
-    ;(Platform as any).OS = 'ios'
-    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
-
-    const hook = renderHook(() => useThirdPartyKeyboardWarning())
-
-    await act(async () => {
-      await hook.result.current.showThirdPartyKeyboardWarning()
+  describe('on iOS', () => {
+    beforeEach(() => {
+      ;(Platform.OS as any) = 'ios'
     })
 
-    expect(isThirdPartyKeyboardActive).not.toHaveBeenCalled()
-    expect(emitAlert).not.toHaveBeenCalled()
-    expect(mockDispatch).not.toHaveBeenCalled()
+    it('should not show alert or dispatch', async () => {
+      ;(isThirdPartyKeyboardActive as jest.Mock).mockResolvedValue(true)
+
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
+
+      expect(mockEmitAlert).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(isThirdPartyKeyboardActive).not.toHaveBeenCalled()
+    })
   })
 
-  it('should emit alert and dispatch when a third-party keyboard is active', async () => {
-    setStore(false)
-    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(true)
-
-    const hook = renderHook(() => useThirdPartyKeyboardWarning())
-
-    await act(async () => {
-      await hook.result.current.showThirdPartyKeyboardWarning()
+  describe('on Android with third-party keyboard active', () => {
+    beforeEach(() => {
+      ;(Platform.OS as any) = 'android'
+      ;(isThirdPartyKeyboardActive as jest.Mock).mockResolvedValue(true)
     })
 
-    expect(emitAlert).toHaveBeenCalledWith(
-      'BCSC.ThirdPartyKeyboard.Title',
-      'BCSC.ThirdPartyKeyboard.Message',
-      expect.objectContaining({
-        actions: [
-          { text: 'BCSC.ThirdPartyKeyboard.ContinueButton', style: 'cancel' },
-          {
-            text: 'BCSC.ThirdPartyKeyboard.ChangeButton',
-            style: 'destructive',
-            onPress: expect.any(Function),
-          },
-        ],
+    it('should show alert with correct title and description', async () => {
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.ThirdPartyKeyboard.Title',
+        'Alerts.ThirdPartyKeyboard.Description',
+        expect.any(Object)
+      )
+    })
+
+    it('should show alert with cancel and destructive actions', async () => {
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
+
+      const callArgs = mockEmitAlert.mock.calls[0][2]
+      expect(callArgs.actions).toHaveLength(2)
+      expect(callArgs.actions[0]).toEqual({
+        text: 'Alerts.ThirdPartyKeyboard.Action1',
+        style: 'cancel',
       })
-    )
-
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT,
-      payload: [true],
+      expect(callArgs.actions[1]).toEqual({
+        text: 'Alerts.ThirdPartyKeyboard.Action2',
+        style: 'destructive',
+        onPress: expect.any(Function),
+      })
     })
 
-    const alertOptions = emitAlert.mock.calls[0][2]
-    const changeAction = alertOptions.actions.find(
-      (action: { text: string }) => action.text === 'BCSC.ThirdPartyKeyboard.ChangeButton'
-    )
-    changeAction.onPress()
+    it('should dispatch DISMISSED_THIRD_PARTY_KEYBOARD_ALERT action', async () => {
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
 
-    expect(openKeyboardSelector).toHaveBeenCalledTimes(1)
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT,
+        payload: [true],
+      })
+    })
+
+    it('should call openAndroidKeyboardSelector when Action2 is pressed', async () => {
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
+
+      const callArgs = mockEmitAlert.mock.calls[0][2]
+      const action2 = callArgs.actions[1]
+
+      action2.onPress()
+
+      expect(openAndroidKeyboardSelector).toHaveBeenCalled()
+    })
   })
 
-  it('should not emit alert when third-party keyboard is not active', async () => {
-    setStore(false)
-    jest.mocked(isThirdPartyKeyboardActive).mockResolvedValue(false)
-
-    const hook = renderHook(() => useThirdPartyKeyboardWarning())
-
-    await act(async () => {
-      await hook.result.current.showThirdPartyKeyboardWarning()
+  describe('on Android without third-party keyboard', () => {
+    beforeEach(() => {
+      ;(Platform.OS as any) = 'android'
+      ;(isThirdPartyKeyboardActive as jest.Mock).mockResolvedValue(false)
     })
 
-    expect(emitAlert).not.toHaveBeenCalled()
-    expect(mockDispatch).not.toHaveBeenCalled()
+    it('should not show alert or dispatch', async () => {
+      await showThirdPartyKeyboardWarning(false, mockT, mockEmitAlert, mockDispatch)
+
+      expect(mockEmitAlert).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('with custom translation function', () => {
+    it('should use translation function for all alert text', async () => {
+      const customT = jest.fn((key: string) => `translated_${key}`)
+      ;(Platform.OS as any) = 'android'
+      ;(isThirdPartyKeyboardActive as jest.Mock).mockResolvedValue(true)
+
+      await showThirdPartyKeyboardWarning(false, customT, mockEmitAlert, mockDispatch)
+
+      expect(customT).toHaveBeenCalledWith('Alerts.ThirdPartyKeyboard.Title')
+      expect(customT).toHaveBeenCalledWith('Alerts.ThirdPartyKeyboard.Description')
+      expect(customT).toHaveBeenCalledWith('Alerts.ThirdPartyKeyboard.Action1')
+      expect(customT).toHaveBeenCalledWith('Alerts.ThirdPartyKeyboard.Action2')
+
+      const callArgs = mockEmitAlert.mock.calls[0]
+      expect(callArgs[0]).toBe('translated_Alerts.ThirdPartyKeyboard.Title')
+      expect(callArgs[1]).toBe('translated_Alerts.ThirdPartyKeyboard.Description')
+    })
   })
 })

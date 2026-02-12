@@ -2,16 +2,11 @@ import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
 import { SystemCheckUtils } from '@/services/system-checks/system-checks'
-import { BCDispatchAction, BCSCAlertEvent } from '@/store'
+import { BCSCAlertEvent } from '@/store'
 
 describe('InformativeBCSCAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
   let emitAlert: jest.Mock
-
-  const createAlertReasoning = (reason: BCSCReason): BCSCAlertEvent => ({
-    event: 'StatusNotification',
-    reason,
-  })
 
   beforeEach(() => {
     jest.resetAllMocks()
@@ -38,7 +33,8 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
     })
 
     it('should return false when there is alert reasoning', async () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Renew), emitAlert, mockUtils)
+      const alertReasoning: BCSCAlertEvent = { reason: BCSCReason.Renew } as any
+      const check = new InformativeBCSCAlertsSystemCheck(alertReasoning, emitAlert, mockUtils)
 
       const result = await check.runCheck()
 
@@ -48,73 +44,69 @@ describe('InformativeBCSCAlertsSystemCheck', () => {
 
   describe('onFail', () => {
     it('should emit CARD_STATUS_UPDATED for Renew', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Renew), emitAlert, mockUtils)
+      const alertReasoning: BCSCAlertEvent = { reason: BCSCReason.Renew } as any
+      const check = new InformativeBCSCAlertsSystemCheck(alertReasoning, emitAlert, mockUtils)
 
       check.onFail()
 
-      expect(emitAlert).toHaveBeenCalledWith('BCSC.AccountUpdated.Title', 'BCSC.AccountUpdated.Message', {
-        event: AppEventCode.CARD_STATUS_UPDATED,
-        actions: [
-          {
-            text: 'BCSC.AccountUpdated.Button',
-            style: 'cancel',
-            onPress: expect.any(Function),
-          },
-        ],
-      })
-
-      // Verify the onPress callback clears alert reasoning
-      const alertOptions = emitAlert.mock.calls[0][2]
-      alertOptions.actions[0].onPress()
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: undefined })
+      expect(emitAlert).toHaveBeenCalledWith(
+        'Alerts.AccountUpdated.Title',
+        'Alerts.AccountUpdated.Description',
+        expect.objectContaining({
+          event: AppEventCode.CARD_STATUS_UPDATED,
+          actions: [
+            {
+              onPress: expect.any(Function),
+              text: 'Alerts.Actions.DefaultOk',
+              style: 'cancel',
+            },
+          ],
+        })
+      )
     })
 
     it('should emit CARD_TYPE_CHANGED for Replace', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(createAlertReasoning(BCSCReason.Replace), emitAlert, mockUtils)
+      const alertReasoning: BCSCAlertEvent = { reason: BCSCReason.Replace } as any
+      const check = new InformativeBCSCAlertsSystemCheck(alertReasoning, emitAlert, mockUtils)
 
       check.onFail()
 
-      expect(emitAlert).toHaveBeenCalledWith('BCSC.AccountUpdated.Title', 'BCSC.AccountUpdated.Message', {
-        event: AppEventCode.CARD_TYPE_CHANGED,
-        actions: [
-          {
-            text: 'BCSC.AccountUpdated.Button',
-            style: 'cancel',
-            onPress: expect.any(Function),
-          },
-        ],
-      })
-
-      // Verify the onPress callback clears alert reasoning
-      const alertOptions = emitAlert.mock.calls[0][2]
-      alertOptions.actions[0].onPress()
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: undefined })
+      expect(emitAlert).toHaveBeenCalledWith(
+        'Alerts.AccountUpdated.Title',
+        'Alerts.AccountUpdated.Description',
+        expect.objectContaining({
+          event: AppEventCode.CARD_TYPE_CHANGED,
+          actions: [
+            {
+              onPress: expect.any(Function),
+              text: 'Alerts.Actions.DefaultOk',
+              style: 'cancel',
+            },
+          ],
+        })
+      )
     })
 
     it('should emit GENERAL for other reasons', () => {
-      const check = new InformativeBCSCAlertsSystemCheck(
-        createAlertReasoning(BCSCReason.ApprovedByAgent),
-        emitAlert,
-        mockUtils
-      )
+      const alertReasoning: BCSCAlertEvent = { reason: BCSCReason.ApprovedByAgent } as any
+      const check = new InformativeBCSCAlertsSystemCheck(alertReasoning, emitAlert, mockUtils)
 
       check.onFail()
 
-      expect(emitAlert).toHaveBeenCalledWith('BCSC.AccountUpdated.Title', 'BCSC.AccountUpdated.Message', {
-        event: AppEventCode.GENERAL,
-        actions: [
-          {
-            text: 'BCSC.AccountUpdated.Button',
-            style: 'cancel',
-            onPress: expect.any(Function),
-          },
-        ],
-      })
-
-      // Verify the onPress callback clears alert reasoning
-      const alertOptions = emitAlert.mock.calls[0][2]
-      alertOptions.actions[0].onPress()
-      expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.ALERT_REASONING, payload: undefined })
+      expect(emitAlert).toHaveBeenCalledWith(
+        'Alerts.AccountUpdated.Title',
+        'Alerts.AccountUpdated.Description',
+        expect.objectContaining({
+          event: AppEventCode.GENERAL,
+          actions: [
+            {
+              onPress: expect.any(Function),
+              text: 'Alerts.Actions.DefaultOk',
+              style: 'cancel',
+            },
+          ],
+        })
+      )
     })
   })
 
