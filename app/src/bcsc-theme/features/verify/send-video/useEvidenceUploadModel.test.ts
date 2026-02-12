@@ -279,6 +279,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -329,9 +330,7 @@ describe('useEvidenceUploadModel', () => {
               {
                 evidenceType: { evidence_type: 'drivers_licence' },
                 documentNumber: 'DL123',
-                metadata: [
-                  { label: 'front', file_path: '/front.jpg', side: 'front' },
-                ],
+                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front' }],
               },
             ],
           },
@@ -349,9 +348,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
-      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
-        { label: 'front', upload_uri: 'evidence-uri-front' },
-      ])
+      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([{ label: 'front', upload_uri: 'evidence-uri-front' }])
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
       mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
