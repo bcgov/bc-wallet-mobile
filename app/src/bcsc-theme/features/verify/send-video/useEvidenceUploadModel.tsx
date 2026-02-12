@@ -62,7 +62,7 @@ const useEvidenceUploadModel = (
     // Process additional evidence data
     // TODO (bm): store properly typed additional evidence in state
     const additionalEvidence = store.bcscSecure.additionalEvidenceData
-    const evidenceUploads: { uploadUri: string; imageBytes: any }[] = []
+    const evidenceUploads: { uploadUri: string; imageBytes: Buffer }[] = []
 
     // Process each piece of additional evidence
     for (const evidenceItem of additionalEvidence) {
