@@ -303,4 +303,6 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
+  loginRejectedOnClientMetadataErrorPolicy,
+  loginRejectedOnDeviceAuthorizationErrorPolicy,
 ]
