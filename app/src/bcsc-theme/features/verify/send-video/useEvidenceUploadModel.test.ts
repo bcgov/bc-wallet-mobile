@@ -267,5 +267,114 @@ describe('useEvidenceUploadModel', () => {
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
+
+    it('should log error when video cache is missing', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      jest.mocked(readFileInChunks).mockResolvedValue(new Uint8Array([1, 2, 3]))
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(undefined as any)
+
+      const RNFS = require('react-native-fs')
+      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during sending information to Service BC',
+        expect.objectContaining({ message: 'Cache missing video data' })
+      )
+    })
+
+    it('should process additional evidence and include in upload', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [
+              {
+                evidenceType: { evidence_type: 'drivers_licence' },
+                documentNumber: 'DL123',
+                metadata: [
+                  { label: 'front', file_path: '/front.jpg', side: 'front' },
+                ],
+              },
+            ],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      const mockReadFile = jest.mocked(readFileInChunks)
+      mockReadFile.mockResolvedValue(new Uint8Array([1, 2, 3]))
+
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(new Uint8Array([4, 5, 6]))
+
+      const RNFS = require('react-native-fs')
+      RNFS.stat.mockResolvedValue({ mtime: new Date('2026-01-01') })
+
+      jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+
+      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
+        { label: 'front', upload_uri: 'evidence-uri-front' },
+      ])
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+      mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.sendVerificationRequest.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockEvidenceApi.sendEvidenceMetadata).toHaveBeenCalledWith({
+        type: 'drivers_licence',
+        number: 'DL123',
+        images: [{ label: 'front', side: 'front', file_path: undefined }],
+      })
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
+      expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
+        upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
+        sha256: 'sha-456',
+      })
+      expect(mockLogger.error).not.toHaveBeenCalled()
+    })
   })
 })
