@@ -148,18 +148,34 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
       ),
     already_verified: () => injectErrorCodeIntoAxiosResponse(client, 'already_verified', client.endpoints.token),
-    client_login_rejected_400: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.clientMetadata}`),
-    client_login_rejected_401: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.clientMetadata}`),
-    client_login_rejected_403: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.clientMetadata}`),
-    device_login_rejected_400: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.deviceAuthorization}`),
-    device_login_rejected_401: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.deviceAuthorization}`),
-    device_login_rejected_403: () =>
-      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.deviceAuthorization}`),
+    client_login_rejected_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.clientMetadata}`)
+    },
+    client_login_rejected_401: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.clientMetadata}`)
+    },
+    client_login_rejected_403: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.clientMetadata}`)
+    },
+    device_login_rejected_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.deviceAuthorization}`)
+    },
+    device_login_rejected_401: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.deviceAuthorization}`)
+    },
+    device_login_rejected_403: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.deviceAuthorization}`)
+    },
+    invalid_token: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
+    },
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {

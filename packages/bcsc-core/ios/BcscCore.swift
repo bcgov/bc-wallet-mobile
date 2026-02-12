@@ -2782,7 +2782,7 @@ class BcscCore: NSObject {
     // iOS doesn't provide a public API to open the keyboard selector
     // resolve immediately
     logger.log("openKeyboardSelector: Unsupported on iOS")
-    resolve()
+    resolve(nil)
   }
 
   // Support for the new architecture (Fabric)

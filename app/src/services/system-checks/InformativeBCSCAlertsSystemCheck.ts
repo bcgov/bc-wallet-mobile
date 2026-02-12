@@ -46,7 +46,7 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
         event: eventCode,
         actions: [
           {
-            text: this.utils.translation('Alerts.Actions.DefaultOk'),
+            text: this.utils.translation('Alerts.Actions.DefaultOK'),
             style: 'cancel',
             onPress: () => {
               // clear the alert reasoning so that the alert doesn't show again until new data is received

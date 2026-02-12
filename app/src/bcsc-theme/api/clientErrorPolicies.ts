@@ -156,6 +156,32 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
     })
   },
 }
+// Error policy for INVALID_TOKEN event on token endpoint
+export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error, {
+      actions: [
+        {
+          text: context.translate('Alerts.Actions.Close'),
+          style: 'cancel',
+          onPress: () => {
+            // noop
+          },
+        },
+        {
+          text: context.translate('Alerts.Actions.RemoveAccount'),
+          style: 'destructive',
+          onPress: () => {
+            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+          },
+        },
+      ],
+    })
+  },
+}
 
 // Error policy for VERIFY_NOT_COMPLETE event on evidence endpoint
 export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
@@ -320,4 +346,5 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   loginRejectedOnClientMetadataErrorPolicy,
   loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
+  invalidTokenReturnedPolicy,
 ]
