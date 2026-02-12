@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
-import { renderHook } from '@testing-library/react-native'
+import { act, renderHook } from '@testing-library/react-native'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core', () => {
@@ -119,6 +119,77 @@ describe('useEvidenceUploadModel', () => {
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
       expect(result.current.isReady).toBe(true)
+    })
+  })
+
+  describe('handleSend', () => {
+    it('should log error when photo or video data is missing', async () => {
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during sending information to Service BC',
+        expect.objectContaining({ message: 'Missing photo or video data' })
+      )
+    })
+
+    it('should log error when prompts are missing', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during sending information to Service BC',
+        expect.objectContaining({ message: 'Missing video prompts data' })
+      )
+    })
+
+    it('should log error when verification request data is missing', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error during sending information to Service BC',
+        expect.objectContaining({ message: 'Missing verification request data' })
+      )
     })
   })
 })
