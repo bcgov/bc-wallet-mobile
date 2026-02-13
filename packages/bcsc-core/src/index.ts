@@ -34,7 +34,6 @@ export const BcscNativeErrorCodes = {
  */
 export interface BcscNativeError extends Error {
   code: string;
-  message: string;
 }
 
 /**
