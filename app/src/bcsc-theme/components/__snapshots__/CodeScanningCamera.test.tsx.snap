@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`CodeScanningCamera renders correctly with default props 1`] = `
+exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] = `
 <View
   style={
     [
@@ -23,7 +23,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
       }
     }
   >
-    <Camera
+    <View
       animatedProps={
         {
           "zoom": 1,
@@ -49,20 +49,1377 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
           "supportsFocus": true,
         }
       }
-      format={{}}
-      isActive={true}
-      onInitialized={[Function]}
-      ref={
+      format={
         {
-          "current": null,
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
         }
       }
+      isActive={true}
       resizeMode="cover"
       style={
         {
           "flex": 1,
         }
       }
+      testID="mock-camera"
+      torch="off"
+      video={true}
+    />
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "pointerEvents": "none",
+            "zIndex": 2,
+          },
+        ]
+      }
+    />
+  </View>
+  <View
+    collapsable={false}
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "alignItems": "center",
+        "bottom": 0,
+        "justifyContent": "center",
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+    testID="scan-zone"
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 3,
+          "height": 75,
+          "left": "50%",
+          "marginLeft": -150,
+          "marginTop": -37.5,
+          "position": "absolute",
+          "top": "50%",
+          "width": 300,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": 8,
+        "minWidth": 60,
+        "paddingHorizontal": 5,
+        "paddingVertical": 6,
+        "position": "absolute",
+        "right": 16,
+        "top": 50,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "white",
+          "fontSize": 10,
+          "fontWeight": "bold",
+        }
+      }
+    >
+      Zoom: 
+      1.00
+      x
+    </Text>
+    <Text
+      style={
+        [
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+          {
+            "fontSize": 8,
+          },
+        ]
+      }
+    >
+      (
+      1.0
+      -
+      8.0
+      )
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "position": "absolute",
+        "right": 16,
+        "top": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Scan.TorchOff"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      hitSlop={
+        {
+          "bottom": 44,
+          "left": 44,
+          "right": 44,
+          "top": 44,
+        }
+      }
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": undefined,
+          "borderColor": "#FFFFFF",
+          "borderRadius": 24,
+          "borderWidth": 1,
+          "height": 24,
+          "justifyContent": "center",
+          "marginBottom": 50,
+          "opacity": 1,
+          "width": 24,
+        }
+      }
+      testID="com.ariesbifold:id/ScanTorch"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 24,
+            },
+            {
+              "alignItems": "center",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+        "position": "relative",
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      {
+        "flex": 1,
+        "overflow": "hidden",
+        "position": "relative",
+      }
+    }
+  >
+    <View
+      animatedProps={
+        {
+          "zoom": 1,
+        }
+      }
+      codeScanner={
+        {
+          "codeTypes": [
+            "code-128",
+            "code-39",
+            "pdf-417",
+          ],
+          "onCodeScanned": [Function],
+        }
+      }
+      device={
+        {
+          "hasTorch": true,
+          "id": "back",
+          "maxZoom": 8,
+          "minZoom": 1,
+          "neutralZoom": 1,
+          "supportsFocus": true,
+        }
+      }
+      format={
+        {
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
+        }
+      }
+      isActive={true}
+      resizeMode="cover"
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="mock-camera"
+      torch="off"
+      video={true}
+    />
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "pointerEvents": "none",
+            "zIndex": 2,
+          },
+        ]
+      }
+    />
+  </View>
+  <View
+    collapsable={false}
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "alignItems": "center",
+        "bottom": 0,
+        "justifyContent": "center",
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+    testID="scan-zone"
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 3,
+          "height": 75,
+          "left": "50%",
+          "marginLeft": -150,
+          "marginTop": -37.5,
+          "position": "absolute",
+          "top": "50%",
+          "width": 300,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": 8,
+        "minWidth": 60,
+        "paddingHorizontal": 5,
+        "paddingVertical": 6,
+        "position": "absolute",
+        "right": 16,
+        "top": 50,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "white",
+          "fontSize": 10,
+          "fontWeight": "bold",
+        }
+      }
+    >
+      Zoom: 
+      1.00
+      x
+    </Text>
+    <Text
+      style={
+        [
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+          {
+            "fontSize": 8,
+          },
+        ]
+      }
+    >
+      (
+      1.0
+      -
+      8.0
+      )
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "position": "absolute",
+        "right": 16,
+        "top": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Scan.TorchOff"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      hitSlop={
+        {
+          "bottom": 44,
+          "left": 44,
+          "right": 44,
+          "top": 44,
+        }
+      }
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": undefined,
+          "borderColor": "#FFFFFF",
+          "borderRadius": 24,
+          "borderWidth": 1,
+          "height": 24,
+          "justifyContent": "center",
+          "marginBottom": 50,
+          "opacity": 1,
+          "width": 24,
+        }
+      }
+      testID="com.ariesbifold:id/ScanTorch"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 24,
+            },
+            {
+              "alignItems": "center",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zones and enableScanZones 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+        "position": "relative",
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      {
+        "flex": 1,
+        "overflow": "hidden",
+        "position": "relative",
+      }
+    }
+  >
+    <View
+      animatedProps={
+        {
+          "zoom": 1,
+        }
+      }
+      codeScanner={
+        {
+          "codeTypes": [
+            "code-128",
+            "code-39",
+            "pdf-417",
+          ],
+          "onCodeScanned": [Function],
+        }
+      }
+      device={
+        {
+          "hasTorch": true,
+          "id": "back",
+          "maxZoom": 8,
+          "minZoom": 1,
+          "neutralZoom": 1,
+          "supportsFocus": true,
+        }
+      }
+      format={
+        {
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
+        }
+      }
+      isActive={true}
+      resizeMode="cover"
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="mock-camera"
+      torch="off"
+      video={true}
+    />
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "pointerEvents": "none",
+            "zIndex": 2,
+          },
+        ]
+      }
+    />
+  </View>
+  <View
+    collapsable={false}
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "alignItems": "center",
+        "bottom": 0,
+        "justifyContent": "center",
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+    testID="scan-zone"
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 3,
+          "height": 75,
+          "left": "50%",
+          "marginLeft": -150,
+          "marginTop": -37.5,
+          "position": "absolute",
+          "top": "50%",
+          "width": 300,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": 8,
+        "minWidth": 60,
+        "paddingHorizontal": 5,
+        "paddingVertical": 6,
+        "position": "absolute",
+        "right": 16,
+        "top": 50,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "white",
+          "fontSize": 10,
+          "fontWeight": "bold",
+        }
+      }
+    >
+      Zoom: 
+      1.00
+      x
+    </Text>
+    <Text
+      style={
+        [
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+          {
+            "fontSize": 8,
+          },
+        ]
+      }
+    >
+      (
+      1.0
+      -
+      8.0
+      )
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "position": "absolute",
+        "right": 16,
+        "top": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Scan.TorchOff"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      hitSlop={
+        {
+          "bottom": 44,
+          "left": 44,
+          "right": 44,
+          "top": 44,
+        }
+      }
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": undefined,
+          "borderColor": "#FFFFFF",
+          "borderRadius": 24,
+          "borderWidth": 1,
+          "height": 24,
+          "justifyContent": "center",
+          "marginBottom": 50,
+          "opacity": 1,
+          "width": 24,
+        }
+      }
+      testID="com.ariesbifold:id/ScanTorch"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 24,
+            },
+            {
+              "alignItems": "center",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+        "position": "relative",
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      {
+        "flex": 1,
+        "overflow": "hidden",
+        "position": "relative",
+      }
+    }
+  >
+    <View
+      animatedProps={
+        {
+          "zoom": 1,
+        }
+      }
+      codeScanner={
+        {
+          "codeTypes": [
+            "code-128",
+            "code-39",
+            "pdf-417",
+          ],
+          "onCodeScanned": [Function],
+        }
+      }
+      device={
+        {
+          "hasTorch": true,
+          "id": "back",
+          "maxZoom": 8,
+          "minZoom": 1,
+          "neutralZoom": 1,
+          "supportsFocus": true,
+        }
+      }
+      format={
+        {
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
+        }
+      }
+      isActive={true}
+      resizeMode="cover"
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="mock-camera"
+      torch="off"
+      video={true}
+    />
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "pointerEvents": "none",
+            "zIndex": 2,
+          },
+        ]
+      }
+    />
+  </View>
+  <View
+    collapsable={false}
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "alignItems": "center",
+        "bottom": 0,
+        "justifyContent": "center",
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+    testID="scan-zone"
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 3,
+          "height": 75,
+          "left": "50%",
+          "marginLeft": -150,
+          "marginTop": -37.5,
+          "position": "absolute",
+          "top": "50%",
+          "width": 300,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": 8,
+        "minWidth": 60,
+        "paddingHorizontal": 5,
+        "paddingVertical": 6,
+        "position": "absolute",
+        "right": 16,
+        "top": 50,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "white",
+          "fontSize": 10,
+          "fontWeight": "bold",
+        }
+      }
+    >
+      Zoom: 
+      1.00
+      x
+    </Text>
+    <Text
+      style={
+        [
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+          {
+            "fontSize": 8,
+          },
+        ]
+      }
+    >
+      (
+      1.0
+      -
+      8.0
+      )
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "position": "absolute",
+        "right": 16,
+        "top": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Scan.TorchOff"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      hitSlop={
+        {
+          "bottom": 44,
+          "left": 44,
+          "right": 44,
+          "top": 44,
+        }
+      }
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": undefined,
+          "borderColor": "#FFFFFF",
+          "borderRadius": 24,
+          "borderWidth": 1,
+          "height": 24,
+          "justifyContent": "center",
+          "marginBottom": 50,
+          "opacity": 1,
+          "width": 24,
+        }
+      }
+      testID="com.ariesbifold:id/ScanTorch"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 24,
+            },
+            {
+              "alignItems": "center",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag enabled 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+        "position": "relative",
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      {
+        "flex": 1,
+        "overflow": "hidden",
+        "position": "relative",
+      }
+    }
+  >
+    <View
+      animatedProps={
+        {
+          "zoom": 1,
+        }
+      }
+      codeScanner={
+        {
+          "codeTypes": [
+            "code-128",
+            "code-39",
+            "pdf-417",
+          ],
+          "onCodeScanned": [Function],
+        }
+      }
+      device={
+        {
+          "hasTorch": true,
+          "id": "back",
+          "maxZoom": 8,
+          "minZoom": 1,
+          "neutralZoom": 1,
+          "supportsFocus": true,
+        }
+      }
+      format={
+        {
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
+        }
+      }
+      isActive={true}
+      resizeMode="cover"
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="mock-camera"
+      torch="off"
+      video={true}
+    />
+    <View
+      style={
+        [
+          {
+            "bottom": 0,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "top": 0,
+          },
+          {
+            "pointerEvents": "none",
+            "zIndex": 2,
+          },
+        ]
+      }
+    />
+  </View>
+  <View
+    collapsable={false}
+    style={
+      {
+        "bottom": 0,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+  />
+  <View
+    pointerEvents="none"
+    style={
+      {
+        "alignItems": "center",
+        "bottom": 0,
+        "justifyContent": "center",
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
+      }
+    }
+    testID="scan-zone"
+  >
+    <View
+      onLayout={[Function]}
+      style={
+        {
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 3,
+          "height": 75,
+          "left": "50%",
+          "marginLeft": -150,
+          "marginTop": -37.5,
+          "position": "absolute",
+          "top": "50%",
+          "width": 300,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "rgba(0, 0, 0, 0.7)",
+        "borderRadius": 8,
+        "minWidth": 60,
+        "paddingHorizontal": 5,
+        "paddingVertical": 6,
+        "position": "absolute",
+        "right": 16,
+        "top": 50,
+      }
+    }
+  >
+    <Text
+      style={
+        {
+          "color": "white",
+          "fontSize": 10,
+          "fontWeight": "bold",
+        }
+      }
+    >
+      Zoom: 
+      1.00
+      x
+    </Text>
+    <Text
+      style={
+        [
+          {
+            "color": "white",
+            "fontSize": 10,
+            "fontWeight": "bold",
+          },
+          {
+            "fontSize": 8,
+          },
+        ]
+      }
+    >
+      (
+      1.0
+      -
+      8.0
+      )
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "position": "absolute",
+        "right": 16,
+        "top": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Scan.TorchOff"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      hitSlop={
+        {
+          "bottom": 44,
+          "left": 44,
+          "right": 44,
+          "top": 44,
+        }
+      }
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": undefined,
+          "borderColor": "#FFFFFF",
+          "borderRadius": 24,
+          "borderWidth": 1,
+          "height": 24,
+          "justifyContent": "center",
+          "marginBottom": 50,
+          "opacity": 1,
+          "width": 24,
+        }
+      }
+      testID="com.ariesbifold:id/ScanTorch"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 24,
+            },
+            {
+              "alignItems": "center",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`CodeScanningCamera renders correctly with default props 1`] = `
+<View
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+        "position": "relative",
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      {
+        "flex": 1,
+        "overflow": "hidden",
+        "position": "relative",
+      }
+    }
+  >
+    <View
+      animatedProps={
+        {
+          "zoom": 1,
+        }
+      }
+      codeScanner={
+        {
+          "codeTypes": [
+            "code-128",
+            "code-39",
+            "pdf-417",
+          ],
+          "onCodeScanned": [Function],
+        }
+      }
+      device={
+        {
+          "hasTorch": true,
+          "id": "back",
+          "maxZoom": 8,
+          "minZoom": 1,
+          "neutralZoom": 1,
+          "supportsFocus": true,
+        }
+      }
+      format={
+        {
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
+        }
+      }
+      isActive={true}
+      resizeMode="cover"
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      testID="mock-camera"
       torch="off"
       video={true}
     />
@@ -292,7 +1649,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
       }
     }
   >
-    <Camera
+    <View
       animatedProps={
         {
           "zoom": 1,
@@ -318,20 +1675,22 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
           "supportsFocus": true,
         }
       }
-      format={{}}
-      isActive={true}
-      onInitialized={[Function]}
-      ref={
+      format={
         {
-          "current": null,
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
         }
       }
+      isActive={true}
       resizeMode="cover"
       style={
         {
           "flex": 1,
         }
       }
+      testID="mock-camera"
       torch="off"
       video={true}
     />
@@ -561,7 +1920,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
       }
     }
   >
-    <Camera
+    <View
       animatedProps={
         {
           "zoom": 1,
@@ -587,20 +1946,22 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
           "supportsFocus": true,
         }
       }
-      format={{}}
-      isActive={true}
-      onInitialized={[Function]}
-      ref={
+      format={
         {
-          "current": null,
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
         }
       }
+      isActive={true}
       resizeMode="cover"
       style={
         {
           "flex": 1,
         }
       }
+      testID="mock-camera"
       torch="off"
       video={true}
     />
@@ -830,7 +2191,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
       }
     }
   >
-    <Camera
+    <View
       animatedProps={
         {
           "zoom": 1,
@@ -856,20 +2217,22 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
           "supportsFocus": true,
         }
       }
-      format={{}}
-      isActive={true}
-      onInitialized={[Function]}
-      ref={
+      format={
         {
-          "current": null,
+          "photoHeight": 1080,
+          "photoWidth": 1920,
+          "videoHeight": 1080,
+          "videoWidth": 1920,
         }
       }
+      isActive={true}
       resizeMode="cover"
       style={
         {
           "flex": 1,
         }
       }
+      testID="mock-camera"
       torch="off"
       video={true}
     />
