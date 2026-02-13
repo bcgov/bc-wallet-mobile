@@ -134,10 +134,13 @@ export interface CodeScanningCameraProps {
 
   /**
    * Initial zoom level
-   * @default 2.0
+   * @default 2
    */
   initialZoom?: number
 }
+
+/** Collective scan state: scanning → aligned → locked */
+type ScanState = 'scanning' | 'aligned' | 'locked'
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
  *  When false (default), automatically confirms and proceeds with the scan. */
@@ -200,7 +203,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const VALIDATION_THRESHOLD = Platform.OS === 'ios' ? 5 : 3
 
   // Collective scan state: 'scanning' → 'aligned' → 'locked'
-  const [scanState, setScanState] = useState<'scanning' | 'aligned' | 'locked'>('scanning')
+  const [scanState, setScanState] = useState<ScanState>('scanning')
 
   // Scan-and-accumulate: track validated codes across frames within a time window.
   // This allows PDF-417 and Code-39 to be detected in separate frames rather than
@@ -601,7 +604,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   /** Determine the collective scan state based on qualifying aligned codes */
   const computeScanState = (
     enhancedCodes: EnhancedCode[]
-  ): { newScanState: 'scanning' | 'aligned' | 'locked'; qualifyingCodes: EnhancedCode[] } => {
+  ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
     const identifiedCodes = enhancedCodes.filter((c) => c.value && c.value.length > 0)
 
     // In production mode (enableScanZones OFF), only codes aligned with scan zones
@@ -616,7 +619,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       qualifyingCount >= MIN_CODES_FOR_ALIGNED &&
       qualifyingCodes.every((c) => (c.readingCount ?? 0) >= LOCK_READING_THRESHOLD)
 
-    let newScanState: 'scanning' | 'aligned' | 'locked'
+    let newScanState: ScanState
     if (allLocked) {
       newScanState = 'locked'
     } else if (qualifyingCount >= MIN_CODES_FOR_ALIGNED) {
@@ -629,7 +632,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /** Update barcode highlight overlays with fade animations */
-  const updateBarcodeHighlights = (enhancedCodes: EnhancedCode[], newScanState: 'scanning' | 'aligned' | 'locked') => {
+  const updateBarcodeHighlights = (enhancedCodes: EnhancedCode[], newScanState: ScanState) => {
     if (!showBarcodeHighlight) {
       return
     }
@@ -705,7 +708,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const handleLockTransition = (
     qualifyingCodes: EnhancedCode[],
     frame: CodeScannerFrame,
-    newScanState: 'scanning' | 'aligned' | 'locked'
+    newScanState: ScanState
   ) => {
     if (newScanState !== 'locked' || isLockedRef.current) {
       return
