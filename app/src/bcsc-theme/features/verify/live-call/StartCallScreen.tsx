@@ -1,6 +1,7 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -23,7 +24,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
-  const { liveCallFileUploadAlert } = useAlerts(navigation)
+  const { showEventAlert } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -65,7 +66,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const handleImageError = (error: ImageErrorEvent) => {
     logger.error('[StartCallScreen] Error loading user photo for live call', { error })
 
-    liveCallFileUploadAlert()
+    showEventAlert(AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR)
   }
 
   if (showPermissionDisabled) {

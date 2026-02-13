@@ -9,16 +9,31 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
 
-export type AppAlerts = ReturnType<typeof useAlerts>
-
 /**
- * Hook to centralize the creation of alerts.
+ * Hook that centralizes alert handling for all {@link AppEventCode} values.
  *
- * Each alert corresponds to a specific AppEventCode and contains the necessary information and actions for that event.
- * This allows for consistent alert handling across the app and makes it easy to manage and update alerts in one place.
+ * This hook acts as the alert policy layer for the application. It maps
+ * domain-level {@link AppEventCode} values to their corresponding
+ * user-facing alert behavior and executes the appropriate alert when requested.
  *
- * @param navigation - The navigation prop used for navigating to different screens from within alert actions.
- * @returns An object containing functions to trigger alerts for various app events.
+ * Alerts are categorized as:
+ * - Basic alerts: Display a localized title and description with a default close action.
+ * - Complex alerts: Include additional actions such as navigation, factory reset,
+ *   external linking, or other side effects.
+ *
+ * By routing all alert behavior through this hook, the application ensures:
+ * - Consistent alert messaging and structure
+ * - A single source of truth for event-to-alert mappings
+ * - Clear separation between domain events and UI presentation logic
+ *
+ * @param navigation - React Navigation prop used for alert-driven navigation actions.
+ *
+ * @returns An object containing:
+ * - `showEventAlert` — Executes the alert associated with a given {@link AppEventCode}.
+ *
+ * @example
+ * const { showEventAlert } = useAlerts(navigation)
+ * showEventAlert(AppEventCode.SERVER_ERROR)
  */
 export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const { t } = useTranslation()
@@ -26,23 +41,33 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
 
-  const unsecuredNetworkAlert = useCallback(() => {
-    emitAlert(t('Alerts.UnsecuredNetwork.Title'), t('Alerts.UnsecuredNetwork.Description'), {
-      event: AppEventCode.UNSECURED_NETWORK,
-    })
-  }, [emitAlert, t])
+  const createBasicAlert = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return () => {
+        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), { event })
+      }
+    },
+    [emitAlert, t]
+  )
 
-  const serverTimeoutAlert = useCallback(() => {
-    emitAlert(t('Alerts.ServerTimeout.Title'), t('Alerts.ServerTimeout.Description'), {
-      event: AppEventCode.SERVER_TIMEOUT,
-    })
-  }, [emitAlert, t])
+  // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
 
-  const serverErrorAlert = useCallback(() => {
-    emitAlert(t('Alerts.ServerError.Title'), t('Alerts.ServerError.Description'), {
-      event: AppEventCode.SERVER_ERROR,
-    })
-  }, [emitAlert, t])
+  const unsecuredNetworkAlert = createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
+  const serverTimeoutAlert = createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
+  const serverErrorAlert = createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
+  const forgetPairingsAlert = createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
+  const loginServerErrorAlert = createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
+  const tooManyAttemptsAlert = createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
+  const verificationNotCompleteAlert = createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
+  const problemWithLoginAlert = createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
+  const invalidPairingCodeAlert = createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
+  const alreadyVerifiedAlert = createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
+  const invalidPairingCodeSameDeviceAlert = createBasicAlert(
+    AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
+    'InvalidPairingCodeSameDevice'
+  )
+
+  // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
   const appUpdateRequiredAlert = useCallback(() => {
     emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
@@ -73,9 +98,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
         {
           text: t('Alerts.Actions.Close'),
           style: 'cancel',
-          onPress: () => {
-            // noop
-          },
         },
         {
           text: t('Alerts.ProblemWithAccount.Action1'),
@@ -87,24 +109,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       ],
     })
   }, [emitAlert, navigation, t])
-
-  const forgetPairingsAlert = useCallback(() => {
-    emitAlert(t('Alerts.ForgetPairings.Title'), t('Alerts.ForgetPairings.Description'), {
-      event: AppEventCode.FORGET_ALL_PAIRINGS,
-    })
-  }, [emitAlert, t])
-
-  const loginServerErrorAlert = useCallback(() => {
-    emitAlert(t('Alerts.LoginServerError.Title'), t('Alerts.LoginServerError.Description'), {
-      event: AppEventCode.LOGIN_SERVER_ERROR,
-    })
-  }, [emitAlert, t])
-
-  const tooManyAttemptsAlert = useCallback(() => {
-    emitAlert(t('Alerts.TooManyAttempts.Title'), t('Alerts.TooManyAttempts.Description'), {
-      event: AppEventCode.TOO_MANY_ATTEMPTS,
-    })
-  }, [emitAlert, t])
 
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
@@ -123,37 +127,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       ],
     })
   }, [emitAlert, logger, t, factoryReset])
-
-  const verificationNotCompleteAlert = useCallback(() => {
-    emitAlert(t('Alerts.VerificationNotComplete.Title'), t('Alerts.VerificationNotComplete.Description'), {
-      event: AppEventCode.VERIFY_NOT_COMPLETE,
-    })
-  }, [emitAlert, t])
-
-  const problemWithLoginAlert = useCallback(() => {
-    emitAlert(t('Alerts.ProblemWithLogin.Title'), t('Alerts.ProblemWithLogin.Description'), {
-      event: AppEventCode.LOGIN_PARSE_URI,
-      // TODO (MD): Docs say 'OK' closes alert AND removes login request. Add action to remove login request?
-    })
-  }, [emitAlert, t])
-
-  const invalidPairingCodeAlert = useCallback(() => {
-    emitAlert(t('Alerts.InvalidPairingCode.Title'), t('Alerts.InvalidPairingCode.Description'), {
-      event: AppEventCode.INVALID_PAIRING_CODE,
-    })
-  }, [emitAlert, t])
-
-  const invalidPairingCodeSameDeviceAlert = useCallback(() => {
-    emitAlert(t('Alerts.InvalidPairingCodeSameDevice.Title'), t('Alerts.InvalidPairingCodeSameDevice.Description'), {
-      event: AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
-    })
-  }, [emitAlert, t])
-
-  const alreadyVerifiedAlert = useCallback(() => {
-    emitAlert(t('Alerts.AlreadyVerified.Title'), t('Alerts.AlreadyVerified.Description'), {
-      event: AppEventCode.ALREADY_VERIFIED,
-    })
-  }, [emitAlert, t])
 
   const liveCallFileUploadAlert = useCallback(() => {
     emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
@@ -203,71 +176,70 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     })
   }, [emitAlert, navigation, t])
 
-  return useMemo(
-    () => ({
-      unsecuredNetworkAlert,
-      serverTimeoutAlert,
-      serverErrorAlert,
-      appUpdateRequiredAlert,
-      problemWithAccountAlert,
-      forgetPairingsAlert,
-      liveCallFileUploadAlert,
-      dataUseWarningAlert,
-      loginServerErrorAlert,
-      tooManyAttemptsAlert,
-      setupExpiredAlert,
-      verificationNotCompleteAlert,
-      problemWithLoginAlert,
-      invalidPairingCodeAlert,
-      invalidPairingCodeSameDeviceAlert,
-      alreadyVerifiedAlert,
-    }),
+  /**
+   * Show event alert based on the provided AppEventCode.
+   *
+   * @param appEvent - The AppEventCode for which to show the alert.
+   * @returns void
+   */
+  const showEventAlert = useCallback(
+    (appEvent: AppEventCode) => {
+      const alertMap: Partial<Record<AppEventCode, () => void>> = {
+        [AppEventCode.UNSECURED_NETWORK]: unsecuredNetworkAlert,
+        [AppEventCode.SERVER_TIMEOUT]: serverTimeoutAlert,
+        [AppEventCode.SERVER_ERROR]: serverErrorAlert,
+        [AppEventCode.IOS_APP_UPDATE_REQUIRED]: appUpdateRequiredAlert,
+        [AppEventCode.ANDROID_APP_UPDATE_REQUIRED]: appUpdateRequiredAlert,
+        [AppEventCode.NO_TOKENS_RETURNED]: problemWithAccountAlert,
+        [AppEventCode.LOGIN_SERVER_ERROR]: loginServerErrorAlert,
+        [AppEventCode.FORGET_ALL_PAIRINGS]: forgetPairingsAlert,
+        [AppEventCode.TOO_MANY_ATTEMPTS]: tooManyAttemptsAlert,
+        [AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST]: setupExpiredAlert,
+        [AppEventCode.VERIFY_NOT_COMPLETE]: verificationNotCompleteAlert,
+        [AppEventCode.LOGIN_PARSE_URI]: problemWithLoginAlert,
+        [AppEventCode.INVALID_PAIRING_CODE]: invalidPairingCodeAlert,
+        [AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE]: invalidPairingCodeAlert,
+        [AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE]: invalidPairingCodeSameDeviceAlert,
+        [AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR]: liveCallFileUploadAlert,
+        [AppEventCode.ALREADY_VERIFIED]: alreadyVerifiedAlert,
+        [AppEventCode.DATA_USE_WARNING]: dataUseWarningAlert,
+      }
+
+      const alertFunction = alertMap[appEvent]
+
+      if (alertFunction) {
+        logger.info(`[EventAlert] Showing alert for AppEventCode: ${appEvent}`)
+        alertFunction()
+        return
+      }
+
+      logger.warn(`[EventAlert] No alert found for AppEventCode: ${appEvent}`)
+    },
     [
-      unsecuredNetworkAlert,
-      serverTimeoutAlert,
-      serverErrorAlert,
+      alreadyVerifiedAlert,
       appUpdateRequiredAlert,
-      problemWithAccountAlert,
-      forgetPairingsAlert,
-      liveCallFileUploadAlert,
       dataUseWarningAlert,
-      loginServerErrorAlert,
-      tooManyAttemptsAlert,
-      setupExpiredAlert,
-      verificationNotCompleteAlert,
-      problemWithLoginAlert,
+      forgetPairingsAlert,
       invalidPairingCodeAlert,
       invalidPairingCodeSameDeviceAlert,
-      alreadyVerifiedAlert,
+      liveCallFileUploadAlert,
+      logger,
+      loginServerErrorAlert,
+      problemWithAccountAlert,
+      problemWithLoginAlert,
+      serverErrorAlert,
+      serverTimeoutAlert,
+      setupExpiredAlert,
+      tooManyAttemptsAlert,
+      unsecuredNetworkAlert,
+      verificationNotCompleteAlert,
     ]
   )
-}
 
-/**
- * Utility function to get the corresponding alert function for a given AppEventCode.
- *
- * @param appEvent - The AppEventCode for which to get the alert function.
- * @param alerts - The object containing all alert functions returned by the useAlerts hook.
- * @returns The alert function corresponding to the given AppEventCode, or undefined if no match is found.
- */
-export const getAppEventAlert = (appEvent: AppEventCode, alerts: AppAlerts) => {
-  const alertMap = new Map<AppEventCode, () => void>([
-    [AppEventCode.UNSECURED_NETWORK, alerts.unsecuredNetworkAlert],
-    [AppEventCode.SERVER_TIMEOUT, alerts.serverTimeoutAlert],
-    [AppEventCode.SERVER_ERROR, alerts.serverErrorAlert],
-    [AppEventCode.IOS_APP_UPDATE_REQUIRED, alerts.appUpdateRequiredAlert],
-    [AppEventCode.ANDROID_APP_UPDATE_REQUIRED, alerts.appUpdateRequiredAlert],
-    [AppEventCode.NO_TOKENS_RETURNED, alerts.problemWithAccountAlert],
-    [AppEventCode.LOGIN_SERVER_ERROR, alerts.loginServerErrorAlert],
-    [AppEventCode.TOO_MANY_ATTEMPTS, alerts.tooManyAttemptsAlert],
-    [AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST, alerts.setupExpiredAlert],
-    [AppEventCode.VERIFY_NOT_COMPLETE, alerts.verificationNotCompleteAlert],
-    [AppEventCode.LOGIN_PARSE_URI, alerts.problemWithLoginAlert],
-    [AppEventCode.INVALID_PAIRING_CODE, alerts.invalidPairingCodeAlert],
-    [AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, alerts.invalidPairingCodeSameDeviceAlert],
-    [AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR, alerts.liveCallFileUploadAlert],
-    [AppEventCode.ALREADY_VERIFIED, alerts.alreadyVerifiedAlert],
-  ])
-
-  return alertMap.get(appEvent)
+  return useMemo(
+    () => ({
+      showEventAlert,
+    }),
+    [showEventAlert]
+  )
 }

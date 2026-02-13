@@ -1,13 +1,11 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { AppAlerts, getAppEventAlert } from '@/hooks/useAlerts'
-import { AlertAction } from '@/utils/alert'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
-import { Linking } from 'react-native'
+import { Linking, Platform } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
@@ -42,12 +40,10 @@ export type ErrorMatcherContext = {
 
 type ErrorHandlerContext = {
   translate: TFunction
-  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
-  emitAlert: (title: string, message: string, options?: { actions?: AlertAction[] }) => void
-  alerts: AppAlerts
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
+  showEventAlert: (appEvent: AppEventCode) => void
 }
 
 export interface AxiosAppError extends AppError {
@@ -69,14 +65,7 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
     return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
   },
   handle: (error, context) => {
-    const alert = getAppEventAlert(error.appEvent, context.alerts)
-
-    if (!alert) {
-      context.logger.info('[GlobalAlertErrorPolicy] No alert found for app event:', { appEvent: error.appEvent })
-      return
-    }
-
-    alert()
+    context.showEventAlert(error.appEvent)
   },
 }
 
@@ -86,7 +75,7 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (_error, context) => {
-    context.alerts.problemWithAccountAlert()
+    context.showEventAlert(AppEventCode.NO_TOKENS_RETURNED)
   },
 }
 
@@ -96,7 +85,7 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
   },
   handle: (_error, context) => {
-    context.alerts.verificationNotCompleteAlert()
+    context.showEventAlert(AppEventCode.VERIFY_NOT_COMPLETE)
   },
 }
 
@@ -106,7 +95,7 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
     return context.statusCode === 500 || context.statusCode === 503
   },
   handle: (_error, context) => {
-    context.alerts.serverErrorAlert()
+    context.showEventAlert(AppEventCode.SERVER_ERROR)
   },
 }
 
@@ -120,7 +109,12 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (_error, context) => {
-    context.alerts.appUpdateRequiredAlert()
+    if (Platform.OS === 'ios') {
+      context.showEventAlert(AppEventCode.IOS_APP_UPDATE_REQUIRED)
+      return
+    }
+
+    context.showEventAlert(AppEventCode.ANDROID_APP_UPDATE_REQUIRED)
   },
 }
 
@@ -170,16 +164,7 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (error, context) => {
-    const alert = getAppEventAlert(error.appEvent, context.alerts)
-
-    if (!alert) {
-      context.logger.info('[VerifyDeviceAssertionErrorPolicy] No alert found for app event:', {
-        appEvent: error.appEvent,
-      })
-      return
-    }
-
-    alert()
+    context.showEventAlert(error.appEvent)
   },
 }
 
@@ -196,7 +181,7 @@ export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (_error, context) => {
-    context.alerts.setupExpiredAlert()
+    context.showEventAlert(AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST)
   },
 }
 
@@ -206,7 +191,7 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.ALREADY_VERIFIED && context.endpoint === context.apiEndpoints.token
   },
   handle: (_error, context) => {
-    context.alerts.alreadyVerifiedAlert()
+    context.showEventAlert(AppEventCode.ALREADY_VERIFIED)
   },
 }
 

@@ -1,4 +1,5 @@
 import { HelpCentreUrl } from '@/constants'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -18,7 +19,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
-  const { dataUseWarningAlert } = useAlerts(navigation)
+  const { showEventAlert } = useAlerts(navigation)
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
@@ -36,7 +37,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     const netInfo = await NetInfo.refresh()
 
     if (netInfo.type === 'cellular') {
-      dataUseWarningAlert()
+      showEventAlert(AppEventCode.DATA_USE_WARNING)
       return
     }
 

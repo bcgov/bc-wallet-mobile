@@ -1,4 +1,3 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -40,9 +39,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitAlert, emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const alerts = useAlerts(navigation)
+  const { showEventAlert } = useAlerts(navigation)
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -80,17 +78,15 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       policy.handle(error, {
         linking: Linking,
-        emitErrorAlert,
-        emitAlert,
-        alerts,
         navigation,
         translate: t,
         logger,
+        showEventAlert,
       })
 
       error.handled = true
     },
-    [alerts, emitAlert, emitErrorAlert, logger, navigation, t]
+    [logger, navigation, showEventAlert, t]
   )
 
   useEffect(() => {
