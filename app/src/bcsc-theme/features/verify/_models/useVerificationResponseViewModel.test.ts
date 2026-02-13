@@ -14,10 +14,10 @@ jest.mock('@bifold/core', () => {
   }
 })
 
-const mockEmitError = jest.fn()
+const mockEmitErrorAlert = jest.fn()
 jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({
-    emitError: mockEmitError,
+    emitErrorAlert: mockEmitErrorAlert,
   }),
 }))
 

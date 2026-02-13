@@ -3,6 +3,8 @@ import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
   Button,
   ButtonType,
@@ -75,7 +77,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
   const { register } = useRegistrationApi(client, isClientReady)
-  const { emitError } = useErrorAlert()
+  const { emitErrorAlert } = useErrorAlert()
 
   const pin2Ref = useRef<TextInput>(null)
 
@@ -134,7 +136,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         }
       } catch (error) {
         if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          emitError('KEYPAIR_GENERATION_ERROR', { error })
+          emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.KEYPAIR_GENERATION_ERROR, { cause: error }))
         }
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error: ${error}`)
@@ -143,7 +145,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register, emitError]
+    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register, emitErrorAlert]
   )
 
   const onPressContinue = useCallback(async () => {
