@@ -114,7 +114,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         cameraType={'back'}
         showBarcodeHighlight={showBarcodeHighlight}
         enableScanZones={enableScanZones}
-        initialZoom={2.0}
+        initialZoom={2}
         scanZones={Platform.select({
           default: [{ types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } }],
         })}

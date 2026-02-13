@@ -151,7 +151,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   showBarcodeHighlight = false,
   enableScanZones = false,
   scanZones,
-  initialZoom = 2.0,
+  initialZoom = 2,
 }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
@@ -166,9 +166,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusScale = useRef(new Animated.Value(1)).current
 
   // Zoom management – uses Reanimated shared value for smooth pinch-to-zoom
-  const zoom = useSharedValue(1.0)
+  const zoom = useSharedValue(1)
   const zoomOffset = useSharedValue(0)
-  const [zoomDisplay, setZoomDisplay] = useState(1.0)
+  const [zoomDisplay, setZoomDisplay] = useState(1)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
@@ -492,6 +492,258 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     return result
   }
 
+  // --- Helpers extracted from onCodeScanned to reduce cognitive complexity ---
+
+  /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
+  const enhanceSingleCode = (code: Code): EnhancedCode => {
+    let position: { x: number; y: number; width: number; height: number } | undefined
+
+    // Use the frame property which is already relative to the Camera Preview
+    if (code.frame && containerSize && frameSize) {
+      // Transform coordinates from camera sensor space to container space
+      position = transformCoordinates(
+        code.frame,
+        frameSize.width,
+        frameSize.height,
+        containerSize.width,
+        containerSize.height
+      )
+    } else if (code.frame) {
+      // Fallback to untransformed coordinates if we don't have dimensions yet
+      position = code.frame
+    }
+
+    const corners = code.corners
+    const orientation = calculateOrientation(corners)
+
+    // Check if code is aligned with scan zone (pass type for custom zone matching)
+    const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
+
+    // Validate through consecutive readings (only if aligned)
+    const key = `${code.type}-${code.value}`
+    let readingCount = 1
+    let isValidated = false
+
+    // Always track consecutive readings for any code with a value —
+    // this drives the visual lock state (readingCount >= LOCK_READING_THRESHOLD).
+    // But only mark as "validated" (for triggering the scan callback) when also aligned.
+    if (code.value) {
+      const existing = barcodeReadings.current.get(key)
+      if (existing && existing.value === code.value && existing.type === code.type) {
+        // Same code detected consecutively - increment count
+        readingCount = existing.count + 1
+        barcodeReadings.current.set(key, { value: code.value, type: code.type, count: readingCount })
+      } else {
+        // New code or changed value - reset count
+        barcodeReadings.current.set(key, { value: code.value, type: code.type, count: 1 })
+      }
+      // Only validated (for callback) if ALSO aligned with scan zone
+      isValidated = isAligned && readingCount >= VALIDATION_THRESHOLD
+    }
+
+    return {
+      ...code,
+      position,
+      orientation,
+      isAligned,
+      isValidated,
+      readingCount,
+    }
+  }
+
+  /** Remove readings for barcodes no longer detected in the current scan frame */
+  const cleanupStaleReadings = (currentScanKeys: Set<string>) => {
+    const keysToDelete: string[] = []
+    barcodeReadings.current.forEach((_, key) => {
+      if (!currentScanKeys.has(key)) {
+        keysToDelete.push(key)
+      }
+    })
+    keysToDelete.forEach((key) => barcodeReadings.current.delete(key))
+  }
+
+  /** Update per-zone detection tracking for focus cycling prioritisation */
+  const updateZoneDetectionTracking = (enhancedCodes: EnhancedCode[]) => {
+    if (!scanZones || scanZones.length === 0 || !containerSize) {
+      return
+    }
+    const newDetected = new Set<number>()
+    for (const code of enhancedCodes) {
+      if (!code.isAligned || !code.position) {
+        continue
+      }
+      // Determine which zone index this aligned code belongs to
+      for (let zi = 0; zi < scanZones.length; zi++) {
+        const zone = scanZones[zi]
+        if (code.type && zone.types.length > 0 && !zone.types.includes(code.type)) {
+          continue
+        }
+        const absX = zone.box.x * containerSize.width
+        const absY = zone.box.y * containerSize.height
+        const absW = zone.box.width * containerSize.width
+        const absH = zone.box.height * containerSize.height
+        const mx = absW * ALIGNMENT_MARGIN_FACTOR
+        const my = absH * ALIGNMENT_MARGIN_FACTOR
+        if (
+          code.position.x >= absX - mx &&
+          code.position.y >= absY - my &&
+          code.position.x + code.position.width <= absX + absW + mx &&
+          code.position.y + code.position.height <= absY + absH + my
+        ) {
+          newDetected.add(zi)
+          break
+        }
+      }
+    }
+    detectedZoneIndices.current = newDetected
+  }
+
+  /** Determine the collective scan state based on qualifying aligned codes */
+  const computeScanState = (
+    enhancedCodes: EnhancedCode[]
+  ): { newScanState: 'scanning' | 'aligned' | 'locked'; qualifyingCodes: EnhancedCode[] } => {
+    const identifiedCodes = enhancedCodes.filter((c) => c.value && c.value.length > 0)
+
+    // In production mode (enableScanZones OFF), only codes aligned with scan zones
+    // (and matching barcode types) drive state transitions. This ensures highlights
+    // only turn green / lock when barcodes are in the expected positions.
+    // In dev/calibration mode (enableScanZones ON), all identified codes count —
+    // this allows capturing scan zones from any position.
+    const qualifyingCodes = enableScanZones ? identifiedCodes : identifiedCodes.filter((c) => c.isAligned)
+
+    const qualifyingCount = qualifyingCodes.length
+    const allLocked =
+      qualifyingCount >= MIN_CODES_FOR_ALIGNED &&
+      qualifyingCodes.every((c) => (c.readingCount ?? 0) >= LOCK_READING_THRESHOLD)
+
+    let newScanState: 'scanning' | 'aligned' | 'locked'
+    if (allLocked) {
+      newScanState = 'locked'
+    } else if (qualifyingCount >= MIN_CODES_FOR_ALIGNED) {
+      newScanState = 'aligned'
+    } else {
+      newScanState = 'scanning'
+    }
+
+    return { newScanState, qualifyingCodes }
+  }
+
+  /** Update barcode highlight overlays with fade animations */
+  const updateBarcodeHighlights = (enhancedCodes: EnhancedCode[], newScanState: 'scanning' | 'aligned' | 'locked') => {
+    if (!showBarcodeHighlight) {
+      return
+    }
+
+    // Clear any pending clear timeout since we have detected codes
+    if (clearHighlightTimeoutRef.current) {
+      clearTimeout(clearHighlightTimeoutRef.current)
+      clearHighlightTimeoutRef.current = null
+    }
+
+    // Update if codes changed OR if position changed (for real-time tracking as camera moves)
+    const codesChanged =
+      detectedCodes.length !== enhancedCodes.length ||
+      enhancedCodes.some(
+        (code, idx) =>
+          !detectedCodes[idx] ||
+          detectedCodes[idx].value !== code.value ||
+          detectedCodes[idx].type !== code.type ||
+          // Track position changes for live updates as camera moves
+          (code.position &&
+            detectedCodes[idx].position &&
+            (Math.abs(code.position.x - detectedCodes[idx].position!.x) > 5 ||
+              Math.abs(code.position.y - detectedCodes[idx].position!.y) > 5 ||
+              Math.abs(code.position.width - detectedCodes[idx].position!.width) > 5 ||
+              Math.abs(code.position.height - detectedCodes[idx].position!.height) > 5))
+      )
+
+    if (codesChanged) {
+      setDetectedCodes(enhancedCodes)
+
+      // Fade in the highlight
+      Animated.timing(highlightFadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start()
+    }
+
+    // Set a timeout to clear highlights if no codes are detected for 500ms
+    // Skip when locked — highlights should persist until user action
+    if (newScanState !== 'locked') {
+      clearHighlightTimeoutRef.current = setTimeout(() => {
+        setDetectedCodes([])
+        Animated.timing(highlightFadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start()
+      }, 500)
+    }
+  }
+
+  /** Accumulate validated+aligned codes across frames within a time window */
+  const accumulateValidatedResults = (enhancedCodes: EnhancedCode[]) => {
+    const now = Date.now()
+    const newlyValidated = enhancedCodes.filter((code) => code.isAligned && code.isValidated)
+
+    // Add/update validated codes in the accumulator
+    newlyValidated.forEach((code) => {
+      const key = `${code.type}-${code.value}`
+      accumulatedCodes.current.set(key, { code, timestamp: now })
+    })
+
+    // Expire old detections outside the accumulation window
+    accumulatedCodes.current.forEach((entry, key) => {
+      if (now - entry.timestamp > ACCUMULATION_WINDOW_MS) {
+        accumulatedCodes.current.delete(key)
+      }
+    })
+  }
+
+  /** Handle the lock state transition when all qualifying codes are consistently detected */
+  const handleLockTransition = (
+    qualifyingCodes: EnhancedCode[],
+    frame: CodeScannerFrame,
+    newScanState: 'scanning' | 'aligned' | 'locked'
+  ) => {
+    if (newScanState !== 'locked' || isLockedRef.current) {
+      return
+    }
+    // Freeze scanning — user must tap "Confirm" or "Try Again"
+    // newScanState === 'locked' already guarantees ≥2 qualifying codes with ≥5 consecutive readings each
+    isLockedRef.current = true
+    lockedScanRef.current = { codes: qualifyingCodes, frame }
+    // Cancel any clear timeout so highlights persist
+    if (clearHighlightTimeoutRef.current) {
+      clearTimeout(clearHighlightTimeoutRef.current)
+      clearHighlightTimeoutRef.current = null
+    }
+  }
+
+  /** Handle when no codes are detected — clear highlights and reset readings */
+  const handleNoCodesDetected = () => {
+    if (isLockedRef.current) {
+      return
+    }
+    // Clear highlights and validation readings when no codes are detected
+    // (but never reset if locked — highlights are frozen)
+    detectedZoneIndices.current = new Set()
+    setScanState('scanning')
+    if (showBarcodeHighlight && detectedCodes.length > 0) {
+      setDetectedCodes([])
+      // Fade out the highlight
+      Animated.timing(highlightFadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start()
+    }
+    // Clear validation readings when no codes detected (but keep accumulated codes —
+    // they expire via the time window, allowing brief gaps in detection)
+    barcodeReadings.current.clear()
+  }
+
   /**
    * Enhanced code scanner with position and orientation metadata
    * Pauses scanning while processing detected codes to prevent multiple callbacks
@@ -510,230 +762,21 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
-      // Always update displayed codes for visual feedback
-      if (codes.length > 0) {
-        // Track current scan's codes for validation
-        const currentScanKeys = new Set<string>()
-
-        // Enhance codes with position and orientation metadata
-        const enhancedCodes: EnhancedCode[] = codes.map((code) => {
-          let position: { x: number; y: number; width: number; height: number } | undefined
-
-          // Use the frame property which is already relative to the Camera Preview
-          if (code.frame && containerSize && frameSize) {
-            // Transform coordinates from camera sensor space to container space
-            position = transformCoordinates(
-              code.frame,
-              frameSize.width,
-              frameSize.height,
-              containerSize.width,
-              containerSize.height
-            )
-          } else if (code.frame) {
-            // Fallback to untransformed coordinates if we don't have dimensions yet
-            position = code.frame
-          }
-
-          const corners = code.corners
-          const orientation = calculateOrientation(corners)
-
-          // Check if code is aligned with scan zone (pass type for custom zone matching)
-          const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
-
-          // Validate through consecutive readings (only if aligned)
-          const key = `${code.type}-${code.value}`
-          currentScanKeys.add(key)
-          let readingCount = 1
-          let isValidated = false
-
-          // Always track consecutive readings for any code with a value —
-          // this drives the visual lock state (readingCount >= LOCK_READING_THRESHOLD).
-          // But only mark as "validated" (for triggering the scan callback) when also aligned.
-          if (code.value) {
-            const existing = barcodeReadings.current.get(key)
-            if (existing && existing.value === code.value && existing.type === code.type) {
-              // Same code detected consecutively - increment count
-              readingCount = existing.count + 1
-              barcodeReadings.current.set(key, { value: code.value, type: code.type, count: readingCount })
-            } else {
-              // New code or changed value - reset count
-              barcodeReadings.current.set(key, { value: code.value, type: code.type, count: 1 })
-            }
-            // Only validated (for callback) if ALSO aligned with scan zone
-            isValidated = isAligned && readingCount >= VALIDATION_THRESHOLD
-          }
-
-          return {
-            ...code,
-            position,
-            orientation,
-            isAligned,
-            isValidated,
-            readingCount,
-          }
-        })
-
-        // Clean up readings for codes that are no longer detected
-        const keysToDelete: string[] = []
-        barcodeReadings.current.forEach((_, key) => {
-          if (!currentScanKeys.has(key)) {
-            keysToDelete.push(key)
-          }
-        })
-        keysToDelete.forEach((key) => barcodeReadings.current.delete(key))
-
-        // Update per-zone detection tracking for focus cycling prioritisation
-        if (scanZones && scanZones.length > 0 && containerSize) {
-          const newDetected = new Set<number>()
-          for (const code of enhancedCodes) {
-            if (!code.isAligned || !code.position) {
-              continue
-            }
-            // Determine which zone index this aligned code belongs to
-            for (let zi = 0; zi < scanZones.length; zi++) {
-              const zone = scanZones[zi]
-              if (code.type && zone.types.length > 0 && !zone.types.includes(code.type)) {
-                continue
-              }
-              const absX = zone.box.x * containerSize.width
-              const absY = zone.box.y * containerSize.height
-              const absW = zone.box.width * containerSize.width
-              const absH = zone.box.height * containerSize.height
-              const mx = absW * ALIGNMENT_MARGIN_FACTOR
-              const my = absH * ALIGNMENT_MARGIN_FACTOR
-              if (
-                code.position.x >= absX - mx &&
-                code.position.y >= absY - my &&
-                code.position.x + code.position.width <= absX + absW + mx &&
-                code.position.y + code.position.height <= absY + absH + my
-              ) {
-                newDetected.add(zi)
-                break
-              }
-            }
-          }
-          detectedZoneIndices.current = newDetected
-        }
-
-        // Determine collective scan state based on identified codes
-        const identifiedCodes = enhancedCodes.filter((c) => c.value && c.value.length > 0)
-
-        // In production mode (enableScanZones OFF), only codes aligned with scan zones
-        // (and matching barcode types) drive state transitions. This ensures highlights
-        // only turn green / lock when barcodes are in the expected positions.
-        // In dev/calibration mode (enableScanZones ON), all identified codes count —
-        // this allows capturing scan zones from any position.
-        const qualifyingCodes = enableScanZones ? identifiedCodes : identifiedCodes.filter((c) => c.isAligned)
-
-        const qualifyingCount = qualifyingCodes.length
-        const allLocked =
-          qualifyingCount >= MIN_CODES_FOR_ALIGNED &&
-          qualifyingCodes.every((c) => (c.readingCount ?? 0) >= LOCK_READING_THRESHOLD)
-        const newScanState = allLocked ? 'locked' : qualifyingCount >= MIN_CODES_FOR_ALIGNED ? 'aligned' : 'scanning'
-        setScanState(newScanState)
-
-        // Always show highlight boxes for all detected codes
-        if (showBarcodeHighlight) {
-          // Clear any pending clear timeout since we have detected codes
-          if (clearHighlightTimeoutRef.current) {
-            clearTimeout(clearHighlightTimeoutRef.current)
-            clearHighlightTimeoutRef.current = null
-          }
-
-          // Update if codes changed OR if position changed (for real-time tracking as camera moves)
-          const codesChanged =
-            detectedCodes.length !== enhancedCodes.length ||
-            enhancedCodes.some(
-              (code, idx) =>
-                !detectedCodes[idx] ||
-                detectedCodes[idx].value !== code.value ||
-                detectedCodes[idx].type !== code.type ||
-                // Track position changes for live updates as camera moves
-                (code.position &&
-                  detectedCodes[idx].position &&
-                  (Math.abs(code.position.x - detectedCodes[idx].position!.x) > 5 ||
-                    Math.abs(code.position.y - detectedCodes[idx].position!.y) > 5 ||
-                    Math.abs(code.position.width - detectedCodes[idx].position!.width) > 5 ||
-                    Math.abs(code.position.height - detectedCodes[idx].position!.height) > 5))
-            )
-
-          if (codesChanged) {
-            setDetectedCodes(enhancedCodes)
-
-            // Fade in the highlight
-            Animated.timing(highlightFadeAnim, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: true,
-            }).start()
-          }
-
-          // Set a timeout to clear highlights if no codes are detected for 500ms
-          // Skip when locked — highlights should persist until user action
-          if (newScanState !== 'locked') {
-            clearHighlightTimeoutRef.current = setTimeout(() => {
-              setDetectedCodes([])
-              Animated.timing(highlightFadeAnim, {
-                toValue: 0,
-                duration: 200,
-                useNativeDriver: true,
-              }).start()
-            }, 500)
-          }
-        }
-
-        // Accumulate validated+aligned codes across frames within a time window.
-        // This allows PDF-417 and Code-39 to be detected separately rather than
-        // requiring both in the exact same frame.
-        const now = Date.now()
-        const newlyValidated = enhancedCodes.filter((code) => code.isAligned && code.isValidated)
-
-        // Add/update validated codes in the accumulator
-        newlyValidated.forEach((code) => {
-          const key = `${code.type}-${code.value}`
-          accumulatedCodes.current.set(key, { code, timestamp: now })
-        })
-
-        // Expire old detections outside the accumulation window
-        accumulatedCodes.current.forEach((entry, key) => {
-          if (now - entry.timestamp > ACCUMULATION_WINDOW_MS) {
-            accumulatedCodes.current.delete(key)
-          }
-        })
-
-        // Collect all accumulated codes (from current + recent frames)
-
-        // When locked, freeze scanning and store codes for user confirmation.
-        // Always require user to tap "Confirm" before proceeding.
-        if (newScanState === 'locked' && !isLockedRef.current) {
-          // Freeze scanning — user must tap "Confirm" or "Try Again"
-          // newScanState === 'locked' already guarantees ≥2 qualifying codes with ≥5 consecutive readings each
-          isLockedRef.current = true
-          lockedScanRef.current = { codes: qualifyingCodes, frame }
-          // Cancel any clear timeout so highlights persist
-          if (clearHighlightTimeoutRef.current) {
-            clearTimeout(clearHighlightTimeoutRef.current)
-            clearHighlightTimeoutRef.current = null
-          }
-        }
-      } else if (!isLockedRef.current) {
-        // Clear highlights and validation readings when no codes are detected
-        // (but never reset if locked — highlights are frozen)
-        detectedZoneIndices.current = new Set()
-        setScanState('scanning')
-        if (showBarcodeHighlight && detectedCodes.length > 0) {
-          setDetectedCodes([])
-          // Fade out the highlight
-          Animated.timing(highlightFadeAnim, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-          }).start()
-        }
-        // Clear validation readings when no codes detected (but keep accumulated codes —
-        // they expire via the time window, allowing brief gaps in detection)
-        barcodeReadings.current.clear()
+      if (codes.length === 0) {
+        handleNoCodesDetected()
+        return
       }
+
+      // Enhance codes with position and orientation metadata
+      const enhancedCodes = codes.map(enhanceSingleCode)
+      const currentScanKeys = new Set(enhancedCodes.map((c) => `${c.type}-${c.value}`))
+      cleanupStaleReadings(currentScanKeys)
+      updateZoneDetectionTracking(enhancedCodes)
+      const { newScanState, qualifyingCodes } = computeScanState(enhancedCodes)
+      setScanState(newScanState)
+      updateBarcodeHighlights(enhancedCodes, newScanState)
+      accumulateValidatedResults(enhancedCodes)
+      handleLockTransition(qualifyingCodes, frame, newScanState)
     },
   })
 
@@ -1268,9 +1311,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             enableScanZones &&
             scanZones &&
             containerSize &&
-            scanZones.map((zone, idx) => (
+            scanZones.map((zone) => (
               <View
-                key={`debug-zone-${idx}`}
+                key={`debug-zone-${zone.types.join('-')}-${zone.box.x}-${zone.box.y}`}
                 style={{
                   position: 'absolute',
                   left: zone.box.x * containerSize.width,
@@ -1394,18 +1437,20 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
           {/* Barcode highlight overlay - rendered inside camera view for correct positioning */}
           {showBarcodeHighlight &&
-            detectedCodes.map((code, index) => {
+            detectedCodes.map((code) => {
               if (!code.position) {
                 return null
               }
 
               // Highlight style is based on COLLECTIVE scan state, not per-code
-              const highlightStyle =
-                scanState === 'locked'
-                  ? styles.barcodeHighlightLocked
-                  : scanState === 'aligned'
-                    ? styles.barcodeHighlightAligned
-                    : styles.barcodeHighlightScanning
+              let highlightStyle
+              if (scanState === 'locked') {
+                highlightStyle = styles.barcodeHighlightLocked
+              } else if (scanState === 'aligned') {
+                highlightStyle = styles.barcodeHighlightAligned
+              } else {
+                highlightStyle = styles.barcodeHighlightScanning
+              }
 
               // Show decoded value inside highlight for 1D barcodes (code-39, code-128)
               const show1DValue = (code.type === 'code-39' || code.type === 'code-128') && code.value
@@ -1422,7 +1467,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
               return (
                 <Animated.View
-                  key={`${code.type}-${index}`}
+                  key={`${code.type}-${code.value}`}
                   style={[
                     styles.barcodeHighlight,
                     highlightStyle,
@@ -1503,12 +1548,18 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       <View style={styles.overlayContainer} pointerEvents="none" testID="scan-zone">
         {scanZones && scanZones.length > 0 && containerSize ? (
           // Render custom scan zones from saved coordinates
-          scanZones.map((zone, idx) => {
-            const zoneColor =
-              scanState === 'locked' ? '#00FF00' : scanState === 'aligned' ? '#00CC00' : ColorPalette.brand.primary
+          scanZones.map((zone) => {
+            let zoneColor
+            if (scanState === 'locked') {
+              zoneColor = '#00FF00'
+            } else if (scanState === 'aligned') {
+              zoneColor = '#00CC00'
+            } else {
+              zoneColor = ColorPalette.brand.primary
+            }
             return (
               <View
-                key={`scan-zone-${idx}`}
+                key={`scan-zone-${zone.types.join('-')}-${zone.box.x}-${zone.box.y}`}
                 style={{
                   position: 'absolute',
                   left: zone.box.x * containerSize.width,
