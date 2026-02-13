@@ -1107,10 +1107,10 @@ const translation = {
       "TooManyAttemptsDescription": "Please try again later.",
     },
     "Login": {
-      "Title": "Login Error",
+      "Title": "Problem with App",
       "ProblemWithLoginTitle": "Problem with Login",
       "ParseErrorDescription": "Please try again later. (error 304)",
-      "Rejected": "Your login request was rejected. Please try again.",
+      "Rejected": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again. ",
       "Unauthorized": "You are not authorized to access this service.",
       "Forbidden": "Access to this service is forbidden.",
       "ServerErrorDescription": "Please try again later. (error 303)",
@@ -1146,7 +1146,7 @@ const translation = {
       "VerifyRequestExpiredDescription": "You must start set up again.",
     },
     "Token": {
-      "Title": "Authentication Error",
+      "Title": "Problem with App",
       "Invalid": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again.",
       "NoTokensReturnedTitle": "Problem with Account",
       "NoTokensReturnedDescription": "No authentication tokens were returned. Please try again.",
