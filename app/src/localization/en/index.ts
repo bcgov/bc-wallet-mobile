@@ -1147,7 +1147,7 @@ const translation = {
     },
     "Token": {
       "Title": "Authentication Error",
-      "Invalid": "The authentication token is invalid. Please sign in again.",
+      "Invalid": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again.",
       "NoTokensReturnedTitle": "Problem with Account",
       "NoTokensReturnedDescription": "No authentication tokens were returned. Please try again.",
       "Null": "Authentication token is missing. Please sign in again.",
