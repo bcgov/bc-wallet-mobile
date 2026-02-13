@@ -1,6 +1,7 @@
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState } from '@/store'
 import {
   Button,
@@ -15,6 +16,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, View } from 'react-native'
@@ -123,6 +125,19 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   /**
+   * Checks if the birthdate is of minimum age.
+   *
+   * @see MINIMUM_VERIFICATION_AGE in constants.ts
+   * @param value - The birth date to check.
+   * @param minimumAge - The minimum age required for verification.
+   * @returns True if the birth date is of minimum age, false otherwise.
+   *
+   */
+  const isOfMinimumAge = (value: string, minimumAge: number): boolean => {
+    return moment().diff(moment(value, 'YYYY-MM-DD'), 'years') >= minimumAge
+  }
+
+  /**
    * Validates the formState form fields.
    *
    * @param {EvidenceCollectionFormState} values - The current form values.
@@ -135,18 +150,27 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     if (!isDocumentNumberValid(values.documentNumber)) {
       errors.documentNumber = t('BCSC.EvidenceIDCollection.DocumentNumberError')
     }
+
     if (!additionalEvidenceRequired) {
       return errors
     }
+
     if (!values.firstName) {
       errors.firstName = t('BCSC.EvidenceIDCollection.FirstNameError')
     }
+
     if (!values.lastName) {
       errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
     }
+
     if (!isDateValid(values.birthDate)) {
       errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateError')
     }
+
+    if (isDateValid(values.birthDate) && !isOfMinimumAge(values.birthDate, MINIMUM_VERIFICATION_AGE)) {
+      errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge: MINIMUM_VERIFICATION_AGE })
+    }
+
     if (values.middleNames && values.middleNames.split(' ').length > 2) {
       errors.middleNames = t('BCSC.EvidenceIDCollection.MiddleNamesError')
     }
@@ -298,10 +322,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               open={openDatePicker}
               mode="date"
               title={t('BCSC.EvidenceIDCollection.BirthDatePickerLabel')}
-              date={formState.birthDate ? new Date(formState.birthDate) : new Date()}
+              date={formState.birthDate ? moment(formState.birthDate).toDate() : new Date()}
               onConfirm={(date) => {
                 setOpenDatePicker(false)
-                handleChange('birthDate', date.toISOString().split('T')[0])
+                handleChange('birthDate', moment(date).format('YYYY-MM-DD'))
               }}
               onCancel={() => {
                 setOpenDatePicker(false)
@@ -317,7 +341,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={() => {
                 // no-op to disable manual input
               }}
-              onFocus={() => {
+              onPressIn={() => {
                 Keyboard.dismiss()
                 setOpenDatePicker(true)
               }}

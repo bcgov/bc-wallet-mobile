@@ -952,6 +952,7 @@ const translation = {
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
