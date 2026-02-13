@@ -3,7 +3,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
-import { IdToken } from '../utils/id-token'
+import { BCSCEvent, IdToken } from '../utils/id-token'
 
 export interface BCSCIdTokenContextType<T> {
   isLoading: boolean
@@ -79,6 +79,11 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
     }
 
     const tokenData = tokenToCredentialMetadata(data)
+
+    if (tokenData.bcscReason === BCSCEvent.Cancel) {
+      // cancel events are handled by `DeviceInvalidedated`
+      return
+    }
     if (store.bcsc.credentialMetadata) {
       const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
       if (!dataUpdated) {
