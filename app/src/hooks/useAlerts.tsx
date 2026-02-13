@@ -41,10 +41,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
 
-  const createBasicAlert = useCallback(
-    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+  /**
+   * Factory function to create basic alerts for a given AppEventCode and translation key.
+   *
+   * @param event - The AppEventCode associated with the alert for analytics tracking.
+   * @param alertKey - The key used to retrieve the title and description from translations. ie: 'UnsecuredNetwork' for 'Alerts.UnsecuredNetwork.Title' and 'Alerts.UnsecuredNetwork.Description'
+   * @returns A function that, when called, emits an alert with the localized title and description for the given alertKey and tracks the specified event.
+   */
+  const _createBasicAlert = useCallback(
+    (event: AppEventCode, alertKey: string) => {
       return () => {
-        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), { event })
+        emitAlert(t(`Alerts.${alertKey}.Title`), t(`Alerts.${alertKey}.Description`), { event })
       }
     },
     [emitAlert, t]
@@ -52,17 +59,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
 
-  const unsecuredNetworkAlert = createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
-  const serverTimeoutAlert = createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
-  const serverErrorAlert = createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
-  const forgetPairingsAlert = createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
-  const loginServerErrorAlert = createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
-  const tooManyAttemptsAlert = createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
-  const verificationNotCompleteAlert = createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
-  const problemWithLoginAlert = createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
-  const invalidPairingCodeAlert = createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
-  const alreadyVerifiedAlert = createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
-  const invalidPairingCodeSameDeviceAlert = createBasicAlert(
+  const unsecuredNetworkAlert = _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
+  const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
+  const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
+  const forgetPairingsAlert = _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
+  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
+  const tooManyAttemptsAlert = _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
+  const verificationNotCompleteAlert = _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
+  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
+  const invalidPairingCodeAlert = _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
+  const alreadyVerifiedAlert = _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
+  const invalidPairingCodeSameDeviceAlert = _createBasicAlert(
     AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     'InvalidPairingCodeSameDevice'
   )
