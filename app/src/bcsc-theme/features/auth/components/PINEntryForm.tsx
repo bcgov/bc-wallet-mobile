@@ -2,6 +2,7 @@ import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import {
   Button,
   ButtonType,
@@ -16,7 +17,13 @@ import {
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TextInput } from 'react-native'
-import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  BcscNativeErrorCodes,
+  canPerformDeviceAuthentication,
+  isBcscNativeError,
+  setPIN as setNativePIN,
+} from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
   success: boolean
@@ -68,6 +75,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
   const { register } = useRegistrationApi(client, isClientReady)
+  const { emitError } = useErrorAlert()
 
   const pin2Ref = useRef<TextInput>(null)
 
@@ -125,6 +133,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
+        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
+          emitError('KEYPAIR_GENERATION_ERROR', { error })
+        }
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error: ${error}`)
       } finally {
@@ -132,7 +143,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register]
+    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register, emitError]
   )
 
   const onPressContinue = useCallback(async () => {

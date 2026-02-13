@@ -3,18 +3,15 @@ import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
-  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
-  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
@@ -63,7 +60,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-  const { emitError } = useErrorAlert()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -144,15 +140,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         getNotificationTokens(logger),
       ])
 
-      let body: string | null
-      try {
-        body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
-      } catch (error) {
-        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          emitError('KEYPAIR_GENERATION_ERROR', { error })
-        }
-        throw error
-      }
+      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
       logger.info('Generated dynamic client registration body')
 
       const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
@@ -177,7 +165,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, emitError]
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
   )
 
   /**
@@ -212,15 +200,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        let body: string | null
-        try {
-          body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
-        } catch (error) {
-          if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-            emitError('KEYPAIR_GENERATION_ERROR', { error })
-          }
-          throw error
-        }
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 
@@ -271,7 +251,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens, emitError]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens]
   )
 
   /**

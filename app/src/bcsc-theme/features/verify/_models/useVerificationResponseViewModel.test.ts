@@ -14,6 +14,20 @@ jest.mock('@bifold/core', () => {
   }
 })
 
+const mockEmitError = jest.fn()
+jest.mock('@/contexts/ErrorAlertContext', () => ({
+  useErrorAlert: () => ({
+    emitError: mockEmitError,
+  }),
+}))
+
+jest.mock('react-native-bcsc-core', () => ({
+  isBcscNativeError: jest.fn().mockReturnValue(false),
+  BcscNativeErrorCodes: {
+    KEYPAIR_GENERATION_FAILED: 'KEYPAIR_GENERATION_FAILED',
+  },
+}))
+
 const mockUpdateVerified = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 

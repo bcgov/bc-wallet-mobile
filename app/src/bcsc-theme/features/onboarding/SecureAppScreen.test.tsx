@@ -12,6 +12,10 @@ jest.mock('react-native-bcsc-core', () => ({
   getAvailableBiometricType: jest.fn(),
   performDeviceAuthentication: jest.fn(),
   setupDeviceSecurity: jest.fn(),
+  isBcscNativeError: jest.fn().mockReturnValue(false),
+  BcscNativeErrorCodes: {
+    KEYPAIR_GENERATION_FAILED: 'KEYPAIR_GENERATION_FAILED',
+  },
   BiometricType: {
     None: 'none',
     FaceID: 'face id',

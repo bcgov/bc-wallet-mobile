@@ -9,6 +9,10 @@ import { PINEntryForm } from './PINEntryForm'
 jest.mock('react-native-bcsc-core', () => ({
   setPIN: jest.fn(),
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
+  isBcscNativeError: jest.fn().mockReturnValue(false),
+  BcscNativeErrorCodes: {
+    KEYPAIR_GENERATION_FAILED: 'KEYPAIR_GENERATION_FAILED',
+  },
   AccountSecurityMethod: {
     PinNoDeviceAuth: 'app_pin_no_device_authn',
     PinWithDeviceAuth: 'app_pin_has_device_authn',
