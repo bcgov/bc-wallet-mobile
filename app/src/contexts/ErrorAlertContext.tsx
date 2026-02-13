@@ -1,5 +1,4 @@
 import { extractErrorMessage } from '@/errors'
-import { AppError } from '@/errors/appError'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
@@ -34,11 +33,6 @@ export interface ErrorAlertContextType {
    * Show native alert with title and body
    */
   emitAlert: (title: string, body: string, options?: AlertOptions) => void
-
-  /**
-   * Show error as native alert from an AppError instance
-   */
-  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
 
   /**
    * Dismiss the currently displayed error modal
@@ -98,13 +92,6 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
   }, [])
 
   /**
-   * Show error as native alert from an AppError instance
-   */
-  const emitErrorAlert = useCallback((error: AppError, options?: { actions?: AlertAction[] }) => {
-    showAlert(error.title, error.description, options?.actions, error.appEvent)
-  }, [])
-
-  /**
    * Dismiss the currently displayed error modal
    */
   const dismiss = useCallback((): void => {
@@ -115,10 +102,9 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     () => ({
       emitError,
       emitAlert,
-      emitErrorAlert,
       dismiss,
     }),
-    [emitError, emitAlert, emitErrorAlert, dismiss]
+    [emitError, emitAlert, dismiss]
   )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>

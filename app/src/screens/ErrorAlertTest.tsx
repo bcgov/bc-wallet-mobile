@@ -2,7 +2,6 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
 import { AxiosError } from 'axios'
@@ -19,7 +18,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+  const { emitError, emitAlert, dismiss } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -177,8 +176,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
 
   const triggerErrorAsAlert = (key: ErrorRegistryKey) => {
     const definition = ErrorRegistry[key]
-    const error = AppError.fromErrorDefinition(definition)
-    emitErrorAlert(error, {
+    emitAlert(t(definition.titleKey), t(definition.descriptionKey), {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
         { text: t('Global.Okay'), style: 'default' },

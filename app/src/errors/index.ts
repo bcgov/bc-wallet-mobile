@@ -16,15 +16,10 @@
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
  *
  * const MyComponent = () => {
- *   const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+ *   const { emitError, emitAlert, dismiss } = useErrorAlert()
  *
  *   // Show error via ErrorModal
  *   emitError('INVALID_QR_CODE', { error: err })
- *
- *   // Show error as native alert with custom buttons
- *   emitErrorAlert(new AppError(...), {
- *     actions: [{ text: 'Retry', onPress: retry }]
- *   })
  *
  *   // Show informational native alert
  *   emitAlert('Update available', 'A new version is ready', {
