@@ -153,8 +153,6 @@ const useEvidenceUploadModel = (
   )
 
   const handleSend = useCallback(async () => {
-    emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: new Error('blarh') }))
-    return
     try {
       loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
 
