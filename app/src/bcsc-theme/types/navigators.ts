@@ -187,6 +187,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
 }
 
 export type BCSCTabStackParams = {
