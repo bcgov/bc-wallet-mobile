@@ -11,7 +11,7 @@ jest.mock('react-native-bcsc-core', () => ({
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
   isBcscNativeError: jest.fn().mockReturnValue(false),
   BcscNativeErrorCodes: {
-    KEYPAIR_GENERATION_FAILED: 'KEYPAIR_GENERATION_FAILED',
+    KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
   },
   AccountSecurityMethod: {
     PinNoDeviceAuth: 'app_pin_no_device_authn',
