@@ -11,6 +11,7 @@ import {
   Text,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
 } from '@bifold/core'
@@ -52,6 +53,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [openDatePicker, setOpenDatePicker] = useState(false)
+  const { ButtonLoading } = useAnimatedComponents()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
@@ -184,34 +187,42 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @returns {*} {Promise<void>}
    */
   const handleOnContinue = async () => {
-    // clear previous validation errors
-    setFormErrors({})
+    try {
+      setIsSubmitting(true)
+      // clear previous validation errors
+      setFormErrors({})
 
-    const evidenceFormErrors = validateEvidence(formState, additionalEvidenceRequired)
+      const evidenceFormErrors = validateEvidence(formState, additionalEvidenceRequired)
 
-    // if there are validation errors, display them and do not proceed
-    if (Object.keys(evidenceFormErrors).length > 0) {
-      setFormErrors(evidenceFormErrors)
+      // if there are validation errors, display them and do not proceed
+      if (Object.keys(evidenceFormErrors).length > 0) {
+        setFormErrors(evidenceFormErrors)
+        return
+      }
+
+      // update the store with the collected user metadata formState
+      if (additionalEvidenceRequired) {
+        await updateUserInfo({
+          birthdate: new Date(formState.birthDate),
+        })
+
+        await updateUserMetadata({
+          name: {
+            // trim whitespace from names just in case
+            first: formState.firstName.trim(),
+            last: formState.lastName.trim(),
+            middle: formState.middleNames.trim(),
+          },
+        })
+      }
+
+      await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
+    } catch (error) {
+      logger.error('Error submitting user metadata form', error as Error)
       return
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // update the store with the collected user metadata formState
-    if (additionalEvidenceRequired) {
-      await updateUserInfo({
-        birthdate: new Date(formState.birthDate),
-      })
-
-      await updateUserMetadata({
-        name: {
-          // trim whitespace from names just in case
-          first: formState.firstName.trim(),
-          last: formState.lastName.trim(),
-          middle: formState.middleNames.trim(),
-        },
-      })
-    }
-
-    await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
 
     const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
       return item.evidenceType.has_photo
@@ -255,7 +266,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         testID={testIdWithKey('EvidenceIDCollectionContinue')}
         buttonType={ButtonType.Primary}
         onPress={handleOnContinue}
-      />
+        disabled={isSubmitting}
+      >
+        {isSubmitting && <ButtonLoading />}
+      </Button>
       <Button
         title="Cancel"
         accessibilityLabel={'Cancel'}
