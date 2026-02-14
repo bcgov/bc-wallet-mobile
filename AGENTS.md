@@ -15,7 +15,7 @@ This project follows a **React-adapted MVVM pattern** using hooks. The tradition
 - Returns state values and action handlers for the View to consume
 - Should not contain any TSX or UI components
 
-> **Note:** These hooks are named with a `Model` suffix (e.g., `useSetupStepsModel`) for brevity and consistency, but they *function as the ViewModel* layer in our MVVM architecture. The actual **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services, which the model hooks consume and orchestrate.
+> **Note:** These hooks are named with a `Model` suffix (e.g., `useSetupStepsModel`) for brevity and consistency, but they _function as the ViewModel_ layer in our MVVM architecture. The actual **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services, which the model hooks consume and orchestrate.
 
 ```typescript
 // useSetupStepsModel.tsx
@@ -166,8 +166,16 @@ This codebase uses a **feature-based structure** where each feature contains its
    - Access global state via `useStore` or context hooks
 
 5. **Naming Conventions**
+
    - Model hooks: Prefer `use[Feature]Model` (e.g., `useSetupStepsModel`) for new and updated code. Some legacy hooks may use `use[Feature]ViewModel` (e.g., `useVerificationSuccessViewModel`); these should be gradually renamed to the `Model` suffix as the codebase is standardized.
    - Views: `[Feature]Screen` or descriptive component names
+
+6. **Error Handling**
+
+   - **User-facing errors belong in the UI layer** (Views or Model hooks), not in API/data hooks. API hooks should throw errors and let callers decide whether and how to surface them.
+   - Use `emitErrorAlert` with `AppError.fromErrorDefinition(ErrorRegistry.XXX, { cause: error })` to show errors as native alerts. Prefer this over `emitError` with registry keys.
+   - Callers should inspect error types (e.g., `isBcscNativeError`) and choose the appropriate response — some errors are critical (onboarding, auth), others are intentionally non-critical (background tasks, optional nickname updates).
+   - API hooks should remain single-responsibility: make the API call, return data, throw on failure. No UI side effects.
 
 ## Commit Message and PR Title Formatting
 
