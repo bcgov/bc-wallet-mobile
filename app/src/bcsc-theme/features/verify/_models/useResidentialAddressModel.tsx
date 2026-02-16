@@ -13,6 +13,7 @@ import Toast from 'react-native-toast-message'
 
 export type ResidentialAddressFormState = {
   streetAddress: string
+  streetAddress2: string
   city: string
   province: ProvinceCode | null
   postalCode: string
@@ -20,6 +21,7 @@ export type ResidentialAddressFormState = {
 
 export type ResidentialAddressFormErrors = {
   streetAddress?: string
+  streetAddress2?: string
   city?: string
   province?: string
   postalCode?: string
@@ -45,6 +47,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
     streetAddress: store.bcscSecure.userMetadata?.address?.streetAddress ?? '',
+    streetAddress2: store.bcscSecure.userMetadata?.address?.streetAddress2 ?? '',
     city: store.bcscSecure.userMetadata?.address?.city ?? '',
     province: store.bcscSecure.userMetadata?.address?.province ?? null,
     postalCode: store.bcscSecure.userMetadata?.address?.postalCode ?? '',
@@ -117,6 +120,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       ...store.bcscSecure.userMetadata,
       address: {
         streetAddress: formState.streetAddress.trim(),
+        streetAddress2: formState.streetAddress2.trim() || undefined,
         postalCode: formState.postalCode.trim(),
         city: formState.city.trim(),
         province: formState.province as ProvinceCode, // we know this is present because validation passed
@@ -145,13 +149,18 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     try {
       setIsSubmitting(true)
 
+      const streetAddress2Trimmed = formState.streetAddress2.trim()
+      const mergedStreetAddress = streetAddress2Trimmed
+        ? `${formState.streetAddress.trim()}\n${streetAddress2Trimmed}`
+        : formState.streetAddress.trim()
+
       const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
         firstName: store.bcscSecure.userMetadata.name.first,
         lastName: store.bcscSecure.userMetadata.name.last,
         birthdate: store.bcscSecure.birthdate.toISOString().split('T')[0],
         middleNames: store.bcscSecure.userMetadata.name.middle,
         address: {
-          streetAddress: formState.streetAddress,
+          streetAddress: mergedStreetAddress,
           city: formState.city,
           province: formState.province as ProvinceCode, // field has already been validated
           postalCode: formState.postalCode,
