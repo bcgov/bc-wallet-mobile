@@ -120,7 +120,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       ...store.bcscSecure.userMetadata,
       address: {
         streetAddress: formState.streetAddress.trim(),
-        streetAddress2: formState.streetAddress2.trim() || undefined,
+        ...(formState.streetAddress2.trim() ? { streetAddress2: formState.streetAddress2.trim() } : {}),
         postalCode: formState.postalCode.trim(),
         city: formState.city.trim(),
         province: formState.province as ProvinceCode, // we know this is present because validation passed
