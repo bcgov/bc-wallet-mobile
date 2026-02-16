@@ -673,10 +673,10 @@ export const useSecureActions = () => {
         userMetadata = {}
 
         if (authRequest.address) {
-          const streetParts = (authRequest.address.streetAddress || '').split('\n')
+          const [streetAddress, streetAddress2] = (authRequest.address.streetAddress || '').split('\n')
           userMetadata.address = {
-            streetAddress: streetParts[0] || '',
-            ...(streetParts[1] ? { streetAddress2: streetParts[1] } : {}),
+            streetAddress: streetAddress || '',
+            ...(streetAddress2 ? { streetAddress2 } : {}),
             postalCode: authRequest.address.postalCode || '',
             city: authRequest.address.locality || '',
             province: (authRequest.address.region as ProvinceCode) || 'BC',
