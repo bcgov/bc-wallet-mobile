@@ -40,7 +40,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { showEventAlert } = useAlerts(navigation)
+  const alerts = useAlerts(navigation)
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -81,12 +81,12 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         navigation,
         translate: t,
         logger,
-        showEventAlert,
+        alerts,
       })
 
       error.handled = true
     },
-    [logger, navigation, showEventAlert, t]
+    [alerts, logger, navigation, t]
   )
 
   useEffect(() => {

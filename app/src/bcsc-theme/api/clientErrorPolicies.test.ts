@@ -66,12 +66,46 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call showEventAlert with the error', () => {
+      it('should show server error alert', () => {
         const error = newError('server_error')
-        const showEventAlert = jest.fn()
-        const context = { showEventAlert }
+        const mockAlert = jest.fn()
+        const context = { alerts: { serverErrorAlert: mockAlert } }
         globalAlertErrorPolicy.handle(error, context as any)
-        expect(showEventAlert).toHaveBeenCalledWith('server_error')
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show unsecured network alert', () => {
+        const error = newError('unsecured_network')
+        const mockAlert = jest.fn()
+        const context = { alerts: { unsecuredNetworkAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show server timeout alert', () => {
+        const error = newError('server_timeout')
+        const mockAlert = jest.fn()
+        const context = { alerts: { serverTimeoutAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show too many attempts alert', () => {
+        const error = newError('too_many_attempts')
+        const mockAlert = jest.fn()
+        const context = { alerts: { tooManyAttemptsAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should log warning for undefined app events', () => {
+        const error = newError('undefined_event')
+        const loggerMock = { warn: jest.fn() }
+        const context = { logger: loggerMock }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(loggerMock.warn).toHaveBeenCalledWith(
+          '[GlobalAlertErrorPolicy] No alert defined for app event: undefined_event'
+        )
       })
     })
   })
@@ -102,20 +136,20 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call showEventAlert with actions', () => {
+      it('should call problem with account alert', () => {
         const error = newError('no_tokens_returned')
-        const showEventAlertMock = jest.fn()
+        const alertMock = jest.fn()
         const navigationMock = jest.fn()
         const translateMock = jest.fn()
         const context = {
-          showEventAlert: showEventAlertMock,
+          alerts: { problemWithAccountAlert: alertMock },
           translate: translateMock,
           navigation: { navigate: navigationMock },
         }
         translateMock.mockReturnValue('close')
         noTokensReturnedErrorPolicy.handle(error, context as any)
 
-        expect(showEventAlertMock).toHaveBeenCalledWith('no_tokens_returned')
+        expect(alertMock).toHaveBeenCalled()
       })
     })
   })
@@ -179,21 +213,21 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call showEventAlert with update action', () => {
+      it('should call app update required alert', () => {
         const error = newError('ios_app_update_required')
-        const showEventAlertMock = jest.fn()
+        const mockAlert = jest.fn()
         const translateMock = jest.fn()
         const openURLMock = jest.fn()
         const linkingMock = { openURL: openURLMock }
         const context = {
-          showEventAlert: showEventAlertMock,
+          alerts: { appUpdateRequiredAlert: mockAlert },
           translate: translateMock,
           linking: linkingMock,
         }
         translateMock.mockReturnValue('Go to App Store')
         updateRequiredErrorPolicy.handle(error, context as any)
 
-        expect(showEventAlertMock).toHaveBeenCalledWith('ios_app_update_required')
+        expect(mockAlert).toHaveBeenCalled()
       })
     })
   })
@@ -410,12 +444,14 @@ describe('clientErrorPolicies', () => {
         const originalError = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR) as AxiosAppError
         const error = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: originalError })
 
-        const showEventAlertMock = jest.fn()
+        const mockAlert = jest.fn()
         const context = {
-          showEventAlert: showEventAlertMock,
+          alerts: {
+            serverErrorAlert: mockAlert,
+          },
         }
         unexpectedServerErrorPolicy.handle(originalError, context as any)
-        expect(showEventAlertMock).toHaveBeenCalledWith('server_error')
+        expect(mockAlert).toHaveBeenCalled()
         expect(error.cause).toBe(originalError)
       })
     })
@@ -490,14 +526,54 @@ describe('clientErrorPolicies', () => {
       })
 
       describe('handle', () => {
-        it('should emit the alert', () => {
-          const error = newError('invalid_pairing_code')
-          const showEventAlertMock = jest.fn()
+        it('should emit the login server error alert', () => {
+          const error = newError('login_server_error')
+          const mockAlert = jest.fn()
           const context = {
-            showEventAlert: showEventAlertMock,
+            alerts: { serverErrorAlert: mockAlert },
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(showEventAlertMock).toHaveBeenCalledWith('invalid_pairing_code')
+          expect(mockAlert).toHaveBeenCalled()
+        })
+
+        it('should emit the problem with account alert', () => {
+          const error = newError('login_parse_uri')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { problemWithAccountAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
+        })
+
+        it('should emit the invalid pairing code alert', () => {
+          const error = newError('invalid_pairing_code')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { invalidPairingCodeAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
+        })
+
+        it('should emit the login remembered pairing code code alert', () => {
+          const error = newError('login_remembered_device_invalid_pairing_code')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { invalidPairingCodeAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
+        })
+
+        it('should emit the login remembered device invalid pairing code alert', () => {
+          const error = newError('login_same_device_invalid_pairing_code')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { loginSameDeviceInvalidPairingCodeAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
         })
       })
     })
@@ -576,12 +652,12 @@ describe('clientErrorPolicies', () => {
       describe('handle', () => {
         it('should emit the alert', () => {
           const error = newError('verify_not_complete')
-          const showEventAlertMock = jest.fn()
+          const mockAlert = jest.fn()
           const context = {
-            showEventAlert: showEventAlertMock,
+            alerts: { verificationNotCompleteAlert: mockAlert },
           }
           verifyNotCompletedErrorPolicy.handle(error, context as any)
-          expect(showEventAlertMock).toHaveBeenCalledWith('verify_not_complete')
+          expect(mockAlert).toHaveBeenCalled()
         })
       })
     })

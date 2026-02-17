@@ -4,7 +4,6 @@ import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVi
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { CROP_DELAY_MS } from '@/constants'
-import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -43,7 +42,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { showEventAlert } = useAlerts(navigation)
+  const { liveCallHavingTroubleAlert } = useAlerts(navigation)
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -242,8 +241,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }, [setCallEnded, cleanup, leaveCall, logger])
 
   const handleHavingTrouble = useCallback(() => {
-    showEventAlert(AppEventCode.IN_CALL_HAVING_TROUBLE, handleEndCall)
-  }, [handleEndCall, showEventAlert])
+    liveCallHavingTroubleAlert(handleEndCall)
+  }, [handleEndCall, liveCallHavingTroubleAlert])
 
   if (flowState === VideoCallFlowState.ERROR) {
     return (

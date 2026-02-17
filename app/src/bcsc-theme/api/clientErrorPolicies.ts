@@ -1,11 +1,12 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
+import { AppAlerts } from '@/hooks/useAlerts'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
-import { Linking, Platform } from 'react-native'
+import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
@@ -43,7 +44,7 @@ type ErrorHandlerContext = {
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
-  showEventAlert: (appEvent: AppEventCode) => void
+  alerts: AppAlerts
 }
 
 export interface AxiosAppError extends AppError {
@@ -65,7 +66,18 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
     return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
   },
   handle: (error, context) => {
-    context.showEventAlert(error.appEvent)
+    switch (error.appEvent) {
+      case AppEventCode.UNSECURED_NETWORK:
+        return context.alerts.unsecuredNetworkAlert()
+      case AppEventCode.SERVER_TIMEOUT:
+        return context.alerts.serverTimeoutAlert()
+      case AppEventCode.SERVER_ERROR:
+        return context.alerts.serverErrorAlert()
+      case AppEventCode.TOO_MANY_ATTEMPTS:
+        return context.alerts.tooManyAttemptsAlert()
+    }
+
+    context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)
   },
 }
 
@@ -75,7 +87,7 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (_error, context) => {
-    context.showEventAlert(AppEventCode.NO_TOKENS_RETURNED)
+    context.alerts.problemWithAccountAlert()
   },
 }
 
@@ -85,7 +97,7 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
   },
   handle: (_error, context) => {
-    context.showEventAlert(AppEventCode.VERIFY_NOT_COMPLETE)
+    context.alerts.verificationNotCompleteAlert()
   },
 }
 
@@ -95,7 +107,7 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
     return context.statusCode === 500 || context.statusCode === 503
   },
   handle: (_error, context) => {
-    context.showEventAlert(AppEventCode.SERVER_ERROR)
+    context.alerts.serverErrorAlert()
   },
 }
 
@@ -109,12 +121,7 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (_error, context) => {
-    if (Platform.OS === 'ios') {
-      context.showEventAlert(AppEventCode.IOS_APP_UPDATE_REQUIRED)
-      return
-    }
-
-    context.showEventAlert(AppEventCode.ANDROID_APP_UPDATE_REQUIRED)
+    context.alerts.appUpdateRequiredAlert()
   },
 }
 
@@ -164,7 +171,20 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (error, context) => {
-    context.showEventAlert(error.appEvent)
+    switch (error.appEvent) {
+      case AppEventCode.LOGIN_SERVER_ERROR:
+        return context.alerts.serverErrorAlert()
+      case AppEventCode.LOGIN_PARSE_URI:
+        return context.alerts.problemWithAccountAlert()
+      case AppEventCode.INVALID_PAIRING_CODE:
+        return context.alerts.invalidPairingCodeAlert()
+      case AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE:
+        return context.alerts.invalidPairingCodeAlert()
+      case AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE:
+        return context.alerts.loginSameDeviceInvalidPairingCodeAlert()
+    }
+
+    context.logger.warn(`[VerifyDeviceAssertaionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
   },
 }
 
@@ -181,7 +201,7 @@ export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (_error, context) => {
-    context.showEventAlert(AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST)
+    context.alerts.setupExpiredAlert()
   },
 }
 
@@ -191,7 +211,7 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.ALREADY_VERIFIED && context.endpoint === context.apiEndpoints.token
   },
   handle: (_error, context) => {
-    context.showEventAlert(AppEventCode.ALREADY_VERIFIED)
+    context.alerts.alreadyVerifiedAlert()
   },
 }
 
@@ -207,6 +227,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
+  expiredAppSetupErrorPolicy,
   alreadyVerifiedErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,

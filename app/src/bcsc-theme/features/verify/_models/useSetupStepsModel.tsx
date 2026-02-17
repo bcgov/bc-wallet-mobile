@@ -1,6 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
@@ -24,7 +23,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  const { showEventAlert } = useAlerts(navigation)
+  const { cancelVerificationRequestAlert } = useAlerts(navigation)
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -89,7 +88,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    * Cancel a pending verification request
    */
   const handleCancelVerification = useCallback(async () => {
-    showEventAlert(AppEventCode.CANCEL_VERIFICATION_REQUEST, async () => {
+    cancelVerificationRequestAlert(async () => {
       try {
         if (!store.bcscSecure.verificationRequestId) {
           return
@@ -107,7 +106,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       }
     })
   }, [
-    showEventAlert,
+    cancelVerificationRequestAlert,
     store.bcscSecure.verificationRequestId,
     evidence,
     logger,
