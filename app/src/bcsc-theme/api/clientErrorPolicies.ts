@@ -203,11 +203,12 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   birthdateLockoutErrorPolicy,
-  globalAlertErrorPolicy,
-  unexpectedServerErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   alreadyVerifiedErrorPolicy,
+  // Specific polices listed above, followed by global policies
+  globalAlertErrorPolicy,
+  unexpectedServerErrorPolicy,
 ]
