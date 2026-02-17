@@ -126,7 +126,7 @@ class BcscCore: NSObject {
       signer = RSASigner(privateKey: keyPair.private)
     } catch {
       reject(
-        "E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
+        "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
       )
       return nil
     }
@@ -871,7 +871,7 @@ class BcscCore: NSObject {
         keyId = latestKeyInfo.tag
       } catch {
         reject(
-          "E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
+          "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
           error
         )
         return
@@ -880,7 +880,7 @@ class BcscCore: NSObject {
       // No keys found, generate a new one
       guard let newKeyId = generateKeyPair() else {
         reject(
-          "E_KEY_GENERATION_FAILED",
+          "E_KEYPAIR_GENERATION_FAILED",
           "Failed to generate or retrieve key pair for client registration", nil
         )
         return
@@ -891,7 +891,7 @@ class BcscCore: NSObject {
         keyId = newKeyId
       } catch {
         reject(
-          "E_GET_KEYPAIR_FAILED",
+          "E_KEYPAIR_RETRIEVAL_FAILED",
           "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
         )
         return
