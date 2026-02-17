@@ -64,6 +64,7 @@ import com.nimbusds.jwt.SignedJWT
 
 // BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
+import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
 import com.bcsccore.keypair.core.models.BcscKeyPair
@@ -1235,6 +1236,13 @@ class BcscCoreModule(
 
             Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
             promise.resolve(registrationBodyAsString)
+        } catch (e: KeypairGenerationException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Keypair generation error: ${e.devMessage}", e)
+            promise.reject(
+                "E_KEYPAIR_GENERATION_FAILED",
+                "Failed to generate or retrieve key pair for client registration: ${e.devMessage}",
+                e,
+            )
         } catch (e: BcscException) {
             Log.e(NAME, "getDynamicClientRegistrationBody: BCSC error: ${e.devMessage}", e)
             promise.reject(
