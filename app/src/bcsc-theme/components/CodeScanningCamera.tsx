@@ -705,11 +705,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   /** Handle the lock state transition when all qualifying codes are consistently detected */
-  const handleLockTransition = (
-    qualifyingCodes: EnhancedCode[],
-    frame: CodeScannerFrame,
-    newScanState: ScanState
-  ) => {
+  const handleLockTransition = (qualifyingCodes: EnhancedCode[], frame: CodeScannerFrame, newScanState: ScanState) => {
     if (newScanState !== 'locked' || isLockedRef.current) {
       return
     }
