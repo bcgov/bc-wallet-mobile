@@ -1,3 +1,4 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -9,7 +10,6 @@ import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -121,8 +121,9 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${(err as Error)?.message
-          }`
+        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
+          (err as Error)?.message
+        }`
 
         setClientAndSingleton(null)
         setError(errorMessage)

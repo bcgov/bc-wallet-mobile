@@ -2,6 +2,7 @@ import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts } from '@/hooks/useAlerts'
+import { AlertAction } from '@/utils/alert'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
@@ -9,7 +10,6 @@ import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
-import { AlertAction } from '@/utils/alert'
 
 /**
  * Set of event codes that should trigger alerts in the BCSC client
