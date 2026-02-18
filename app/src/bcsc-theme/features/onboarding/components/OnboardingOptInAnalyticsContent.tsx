@@ -1,6 +1,6 @@
+import { ONBOARDING_ICON_IMAGE_SIZE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import analytics from '@assets/img/analytics.png'
 import {
   Button,
   ButtonType,
@@ -13,7 +13,8 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface OnboardingOptInAnalyticsContentProps {
   onPress: () => void
@@ -36,6 +37,15 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     },
     imageContainer: {
       alignItems: 'center',
+      backgroundColor: 'orange',
+    },
+    iconContainer: {
+      alignItems: 'center',
+      marginVertical: Spacing.md,
+    },
+    icon: {
+      backgroundColor: ColorPalette.grayscale.white,
+      borderRadius: Spacing.md,
     },
     titleContainer: {
       alignItems: 'center',
@@ -82,7 +92,14 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.sectionContainer}>
-      <Image source={analytics} style={styles.imageContainer} />
+      <View style={styles.iconContainer}>
+        <Icon
+          name={'analytics'}
+          size={ONBOARDING_ICON_IMAGE_SIZE}
+          color={ColorPalette.brand.primaryBackground}
+          style={styles.icon}
+        />
+      </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
     </ScreenWrapper>

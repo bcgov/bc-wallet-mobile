@@ -1,5 +1,4 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -28,7 +27,6 @@ export const VerifyChangeSecurityScreen = ({ navigation }: VerifyChangeSecurityS
   const handleLearnMorePress = useCallback(() => {
     navigation.navigate(BCSCScreens.VerifyWebView, {
       title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }, [navigation, t])

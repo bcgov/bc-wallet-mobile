@@ -3,7 +3,6 @@ import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/Se
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -55,7 +54,6 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const handleLearnMorePress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
       title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }, [navigation, t])

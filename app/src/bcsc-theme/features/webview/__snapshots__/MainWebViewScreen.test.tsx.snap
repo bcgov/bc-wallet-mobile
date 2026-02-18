@@ -5,6 +5,37 @@ exports[`MainWebView renders correctly 1`] = `
   allowsBackForwardNavigationGestures={true}
   bounces={false}
   domStorageEnabled={true}
+  injectedJavaScriptBeforeContentLoaded="
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      const fontScale = 2;
+      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+      document.body.style.fontSize = (16 * fontScale) + 'px';
+    
+      document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+      document.body.style.backgroundColor = '#F2F2F2';
+      document.body.style.color = '#FFFFFFFF';
+
+      const style = document.createElement('style');
+      style.textContent = \`
+        body, body * {
+          background-color: #F2F2F2 !important;
+          color: #FFFFFFFF !important;
+        }
+        a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
+          color: #1A5A96 !important;
+          text-decoration-color: #1A5A96 !important;
+          border-color: #1A5A96 !important;
+        }
+      \`;
+      document.head.appendChild(style);
+      document.querySelectorAll('a').forEach(el => {
+        el.style.setProperty('color', '#1A5A96', 'important');
+        el.style.setProperty('text-decoration-color', '#1A5A96', 'important');
+        el.style.setProperty('border-color', '#1A5A96', 'important');
+      });
+    });
+  "
   javaScriptEnabled={true}
   mixedContentMode="compatibility"
   onError={[Function]}
