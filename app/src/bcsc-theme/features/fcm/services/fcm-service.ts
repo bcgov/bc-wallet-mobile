@@ -97,6 +97,7 @@ export class FcmService {
   private foregroundSubscription?: () => void
   private notificationOpenedSubscription?: () => void
   private initialized = false
+  private suppressed = false
 
   public async init(): Promise<void> {
     if (this.initialized) {
@@ -142,12 +143,21 @@ export class FcmService {
     this.handlers.clear()
   }
 
+  public setSuppressed(value: boolean): void {
+    this.suppressed = value
+  }
+
   public subscribe(handler: FcmMessageHandler): () => void {
     this.handlers.add(handler)
     return () => this.handlers.delete(handler)
   }
 
   private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage, delivery?: FcmDeliveryContext): void {
+    if (this.suppressed) {
+      console.log('[FcmService] notification suppressed, skipping')
+      return
+    }
+    console.log('[FcmService] raw push notification:', JSON.stringify(remoteMessage, null, 2))
     const message = this.parseMessage(remoteMessage)
     this.handlers.forEach((handler) => handler(message, delivery))
   }
