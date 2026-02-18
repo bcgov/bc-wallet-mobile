@@ -7,7 +7,6 @@ Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
  app/android/app/BUCK                           |   4 ++--
  app/android/app/build.gradle                   |   4 ++--
- app/android/app/google-services.json           |  17 +++++++++--------
  app/android/app/src/main/AndroidManifest.xml   |   4 ++--
  .../src/main/ic_launcher_mono-playstore.png    | Bin 0 -> 18297 bytes
  .../java/ca/bc/gov/BCWallet/MainActivity.kt    |   2 +-
@@ -49,7 +48,7 @@ Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
  .../res/mipmap-xxxhdpi/ic_launcher_round.png   | Bin 12903 -> 0 bytes
  .../app/src/main/res/values/strings.xml        |   2 +-
  app/react-native.config.js                     |   2 +-
- 44 files changed, 30 insertions(+), 31 deletions(-)
+ 43 files changed, 21 insertions(+), 23 deletions(-)
  create mode 100644 app/android/app/src/main/ic_launcher_mono-playstore.png
  delete mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
  create mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_mono.xml
@@ -127,53 +126,6 @@ index f6758ac4..fe17abd6 100644
          minSdkVersion rootProject.ext.minSdkVersion
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
-diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
-index a1407c70..d1fcccb8 100644
---- a/app/android/app/google-services.json
-+++ b/app/android/app/google-services.json
-@@ -1,33 +1,34 @@
- {
-   "project_info": {
--    "project_number": "1008044298583",
--    "project_id": "bc-wallet-mobile",
--    "storage_bucket": "bc-wallet-mobile.appspot.com"
-+    "project_number": "209333430748",
-+    "firebase_url": "https://bcsc-app-test-fcm.firebaseio.com",
-+    "project_id": "bcsc-app-test-fcm",
-+    "storage_bucket": "bcsc-app-test-fcm.firebasestorage.app"
-   },
-   "client": [
-     {
-       "client_info": {
--        "mobilesdk_app_id": "1:1008044298583:android:56bf7c25b882152a44ae12",
-+        "mobilesdk_app_id": "1:209333430748:android:1c4641260a97bfe5",
-         "android_client_info": {
--          "package_name": "ca.bc.gov.BCWallet"
-+          "package_name": "ca.bc.gov.id.servicescard.dev"
-         }
-       },
-       "oauth_client": [
-         {
--          "client_id": "1008044298583-12lpkisi403oa5bc5hs0800o48cl4nhj.apps.googleusercontent.com",
-+          "client_id": "209333430748-f89kks1sr4an87kmkilim6e1jj2gd0nc.apps.googleusercontent.com",
-           "client_type": 3
-         }
-       ],
-       "api_key": [
-         {
--          "current_key": "AIzaSyB9TMILh7AQmEGCdwvvmDeN-WG4G345p9I"
-+          "current_key": "AIzaSyBUm3mvXOZ_EGrRnyVFNgJIQJZQhGR2_uw"
-         }
-       ],
-       "services": {
-         "appinvite_service": {
-           "other_platform_oauth_client": [
-             {
--              "client_id": "1008044298583-12lpkisi403oa5bc5hs0800o48cl4nhj.apps.googleusercontent.com",
-+              "client_id": "209333430748-f89kks1sr4an87kmkilim6e1jj2gd0nc.apps.googleusercontent.com",
-               "client_type": 3
-             }
-           ]
 diff --git a/app/android/app/src/main/AndroidManifest.xml b/app/android/app/src/main/AndroidManifest.xml
 index c19e6dc1..3690f892 100644
 --- a/app/android/app/src/main/AndroidManifest.xml
