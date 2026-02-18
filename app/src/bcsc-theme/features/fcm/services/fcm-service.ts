@@ -7,6 +7,7 @@ import {
   onNotificationOpenedApp,
   setBackgroundMessageHandler,
 } from '@react-native-firebase/messaging'
+import { AbstractBifoldLogger } from '@bifold/core'
 
 // ============================================================================
 // Status Notification Types
@@ -94,10 +95,15 @@ export class FcmService {
   private static readonly BCSC_STATUS_NOTIFICATION = 'bcsc_status_notification'
 
   private readonly handlers = new Set<FcmMessageHandler>()
+  private readonly logger?: AbstractBifoldLogger
   private foregroundSubscription?: () => void
   private notificationOpenedSubscription?: () => void
   private initialized = false
   private suppressed = false
+
+  constructor(logger?: AbstractBifoldLogger) {
+    this.logger = logger
+  }
 
   public async init(): Promise<void> {
     if (this.initialized) {
@@ -154,10 +160,10 @@ export class FcmService {
 
   private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage, delivery?: FcmDeliveryContext): void {
     if (this.suppressed) {
-      console.log('[FcmService] notification suppressed, skipping')
+      this.logger?.info('[FcmService] notification suppressed, skipping')
       return
     }
-    console.log('[FcmService] raw push notification:', JSON.stringify(remoteMessage, null, 2))
+    this.logger?.info(`[FcmService] raw push notification: ${JSON.stringify(remoteMessage, null, 2)}`)
     const message = this.parseMessage(remoteMessage)
     this.handlers.forEach((handler) => handler(message, delivery))
   }

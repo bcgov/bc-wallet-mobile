@@ -72,7 +72,7 @@ const pairingService = new PairingService(appLogger)
 const verificationResponseService = new VerificationResponseService(appLogger)
 const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
-const fcmService = new FcmService()
+const fcmService = new FcmService(appLogger)
 const fcmViewModel = new FcmViewModel(fcmService, appLogger, pairingService, verificationResponseService, appMode)
 
 const App = () => {
