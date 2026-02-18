@@ -357,22 +357,6 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.VERIFICATION,
   },
-  EVIDENCE_UPLOAD_SERVER_ERROR: {
-    statusCode: 2402,
-    appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
-    titleKey: 'BCWalletError.Verification.Title',
-    descriptionKey: 'BCWalletError.Verification.UploadServerError',
-    severity: ErrorSeverity.ERROR,
-    category: ErrorCategory.VERIFICATION,
-  },
-  EVIDENCE_UPLOAD_UNKNOWN_ERROR: {
-    statusCode: 2403,
-    appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
-    titleKey: 'BCWalletError.Verification.Title',
-    descriptionKey: 'BCWalletError.Verification.UploadUnknownError',
-    severity: ErrorSeverity.ERROR,
-    category: ErrorCategory.VERIFICATION,
-  },
   FILE_UPLOAD_ERROR: {
     statusCode: 2404,
     appEvent: AppEventCode.FILE_UPLOAD_ERROR,

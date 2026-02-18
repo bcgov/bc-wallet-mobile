@@ -35,8 +35,6 @@ export enum AppEventCode {
   CARD_TYPE_CHANGED = 'card_type_changed',
   CLOCK_SKEW_ERROR = 'clock_skew_error',
   DATA_USE_WARNING = 'data_use_warning',
-  EVIDENCE_UPLOAD_SERVER_ERROR = 'evidence_upload_server_error',
-  EVIDENCE_UPLOAD_UNKNOWN_ERROR = 'evidence_upload_unknown_error',
   INVALID_PAIRING_CODE = 'invalid_pairing_code',
   INVALID_TOKEN = 'invalid_token',
   IN_CALL_HAVING_TROUBLE = 'in_call_having_trouble',

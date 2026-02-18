@@ -69,6 +69,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const problemWithLoginAlert = createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
   const invalidPairingCodeAlert = createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
   const alreadyVerifiedAlert = createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
+  const fileUploadErrorAlert = createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
   const loginSameDeviceInvalidPairingCodeAlert = createBasicAlert(
     AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     'InvalidPairingCodeSameDevice'
@@ -244,26 +245,28 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      fileUploadErrorAlert,
     }),
     [
-      alreadyVerifiedAlert,
-      appUpdateRequiredAlert,
-      cancelVerificationRequestAlert,
-      dataUseWarningAlert,
+      unsecuredNetworkAlert,
+      serverTimeoutAlert,
+      serverErrorAlert,
       forgetPairingsAlert,
+      loginServerErrorAlert,
+      tooManyAttemptsAlert,
+      verificationNotCompleteAlert,
+      problemWithLoginAlert,
       invalidPairingCodeAlert,
       loginSameDeviceInvalidPairingCodeAlert,
-      liveCallFileUploadAlert,
-      liveCallHavingTroubleAlert,
-      loginServerErrorAlert,
+      alreadyVerifiedAlert,
+      appUpdateRequiredAlert,
       problemWithAccountAlert,
-      problemWithLoginAlert,
-      serverErrorAlert,
-      serverTimeoutAlert,
       setupExpiredAlert,
-      tooManyAttemptsAlert,
-      unsecuredNetworkAlert,
-      verificationNotCompleteAlert,
+      liveCallFileUploadAlert,
+      dataUseWarningAlert,
+      liveCallHavingTroubleAlert,
+      cancelVerificationRequestAlert,
+      fileUploadErrorAlert,
     ]
   )
 }
