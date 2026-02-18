@@ -1,8 +1,8 @@
 diff --git a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f03c59314 100644
+index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c5069c6aca7 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-@@ -75,11 +75,42 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+@@ -75,11 +75,39 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
        }
  
        if (format != null) {
@@ -21,7 +21,6 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f
 +        } else {
 +          format.photoSize
 +        }
-+        Log.i(CameraSession.TAG, "Preview target size: ${targetSize} (codeScannerActive=${codeScannerConfig != null}, videoActive=${videoConfig != null})")
  
 +        // Strictly filter Preview to matching aspect ratio to ensure Preview and
 +        // ImageAnalysis/CodeScanner have the same FOV.
@@ -34,11 +33,9 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f
 +              .filter { Math.abs(it.width.toFloat() / it.height.toFloat() - targetAspect) < tolerance }
 +              .sortedBy { Math.abs(it.width * it.height - targetSize.width * targetSize.height) }
 +            if (aspectMatched.isNotEmpty()) {
-+              Log.i(CameraSession.TAG, "Preview: filtered to ${aspectMatched.size} resolutions matching aspect ${targetAspect}: ${aspectMatched.take(3)}")
 +              aspectMatched
 +            } else {
 +              // Fallback: sort by aspect ratio then size (original behavior)
-+              Log.w(CameraSession.TAG, "Preview: no resolutions matching aspect ${targetAspect}, falling back to best-effort sort")
 +              supportedSizes.sortedWith(compareBy(
 +                { Math.abs(it.width.toFloat() / it.height.toFloat() - targetAspect) },
 +                { Math.abs(it.width * it.height - targetSize.width * targetSize.height) }
@@ -48,7 +45,7 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f
            .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
            .build()
          preview.setResolutionSelector(previewResolutionSelector)
-@@ -220,7 +251,21 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+@@ -220,7 +248,20 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
    val codeScannerConfig = configuration.codeScanner as? CameraConfiguration.Output.Enabled<CameraConfiguration.CodeScanner>
    if (codeScannerConfig != null) {
      Log.i(CameraSession.TAG, "Creating CodeScanner output...")
@@ -58,7 +55,6 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f
 +      // Without this, CameraX defaults to ~640x480 which is insufficient for PDF-417 barcodes
 +      // that need >=1156px width for reliable decoding per Google ML Kit documentation.
 +      if (format != null) {
-+        Log.i(CameraSession.TAG, "CodeScanner target size: ${format.videoSize}")
 +        val resolutionSelector = ResolutionSelector.Builder()
 +          .forSize(format.videoSize)
 +          // Use same resolution mode as Preview so CameraX picks matching resolutions.
@@ -71,36 +67,8 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..a9d6582ebd74ef815fd1c70781e04a3f
      val pipeline = CodeScannerPipeline(codeScannerConfig.config, callback)
      analyzer.setAnalyzer(CameraQueues.analyzerExecutor, pipeline)
      codeScannerOutput = analyzer
-@@ -280,6 +325,27 @@ internal suspend fun CameraSession.configureCamera(provider: ProcessCameraProvid
-   // Bind it all together (must be on UI Thread)
-   Log.i(CameraSession.TAG, "Binding ${useCases.size} use-cases...")
-   camera = provider.bindToLifecycle(this, cameraSelector, *useCases.toTypedArray())
-+
-+  // Log actual resolved resolutions after binding (for debugging coordinate mapping)
-+  val previewResInfo = previewOutput?.resolutionInfo
-+  val codeScannerResInfo = codeScannerOutput?.resolutionInfo
-+  val fpResInfo = frameProcessorOutput?.resolutionInfo
-+  Log.i(CameraSession.TAG, "=== Post-bind resolution info ===")
-+  if (previewResInfo != null) {
-+    Log.i(CameraSession.TAG, "Preview ACTUAL resolution: ${previewResInfo.resolution.width}x${previewResInfo.resolution.height}, cropRect: ${previewResInfo.cropRect}")
-+  } else {
-+    Log.w(CameraSession.TAG, "Preview resolutionInfo is NULL (previewOutput=${if (previewOutput != null) "exists" else "null"})")
-+  }
-+  if (codeScannerResInfo != null) {
-+    Log.i(CameraSession.TAG, "CodeScanner ACTUAL resolution: ${codeScannerResInfo.resolution.width}x${codeScannerResInfo.resolution.height}, cropRect: ${codeScannerResInfo.cropRect}")
-+  } else {
-+    Log.w(CameraSession.TAG, "CodeScanner resolutionInfo is NULL (codeScannerOutput=${if (codeScannerOutput != null) "exists" else "null"})")
-+  }
-+  if (fpResInfo != null) {
-+    Log.i(CameraSession.TAG, "FrameProcessor ACTUAL resolution: ${fpResInfo.resolution.width}x${fpResInfo.resolution.height}, cropRect: ${fpResInfo.cropRect}")
-+  }
-+  Log.i(CameraSession.TAG, "=== End resolution info ===")
-+
-   // Notify callback
-   callback.onInitialized()
- 
 diff --git a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
-index 23d78d1350242c1d2497b732fd77b291b9e06c3a..769b5527824f093c248ee77295d2c70a0bf15924 100644
+index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b16151603c6c7ab4 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
 @@ -23,6 +23,10 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
@@ -114,15 +82,11 @@ index 23d78d1350242c1d2497b732fd77b291b9e06c3a..769b5527824f093c248ee77295d2c70a
        .build()
      scanner = BarcodeScanning.getClient(barcodeScannerOptions)
    }
-@@ -33,10 +37,36 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
+@@ -33,10 +37,26 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
  
      try {
        val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
 +      val rotation = imageProxy.imageInfo.rotationDegrees
-+
-+      // Debug: log image dimensions and cropRect for coordinate mapping verification
-+      Log.d(TAG, "ImageProxy: ${imageProxy.width}x${imageProxy.height}, rotation=$rotation, " +
-+        "InputImage: ${inputImage.width}x${inputImage.height}, cropRect=${imageProxy.cropRect}")
 +
 +      // Report frame dimensions in the ROTATED coordinate space to match ML Kit's
 +      // boundingBox output. ML Kit internally applies the rotation for detection and
@@ -142,12 +106,6 @@ index 23d78d1350242c1d2497b732fd77b291b9e06c3a..769b5527824f093c248ee77295d2c70a
          .addOnSuccessListener { barcodes ->
            if (barcodes.isNotEmpty()) {
 -            callback.onCodeScanned(barcodes, CodeScannerFrame(inputImage.width, inputImage.height))
-+            // Debug: log each barcode's bounding box for coordinate mapping verification
-+            barcodes.forEach { barcode ->
-+              val bbox = barcode.boundingBox
-+              Log.d(TAG, "Barcode[${barcode.format}]: bbox=(${bbox?.left},${bbox?.top},${bbox?.right},${bbox?.bottom}), " +
-+                "size=${bbox?.width()}x${bbox?.height()}, frameReported=${frameWidth}x${frameHeight}, value=${barcode.rawValue?.take(30)}")
-+            }
 +            callback.onCodeScanned(barcodes, CodeScannerFrame(frameWidth, frameHeight))
            }
          }
