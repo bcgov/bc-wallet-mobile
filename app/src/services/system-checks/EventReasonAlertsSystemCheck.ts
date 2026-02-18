@@ -46,7 +46,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   async runCheck(): Promise<boolean> {
-    this.utils.logger.info('EventReasonAlertsSystemCheck -> RUNNING CHECK')
     const token = await this.getIdToken()
     this.tokenMetadata = tokenToCredentialMetadata(token)
     this.event = token.bcsc_event

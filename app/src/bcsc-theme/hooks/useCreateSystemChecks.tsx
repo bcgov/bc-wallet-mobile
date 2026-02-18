@@ -5,6 +5,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
+import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
@@ -102,6 +103,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
+      new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
       new EventReasonAlertsSystemCheck(getIdToken, emitAlert, store.bcsc.credentialMetadata, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
