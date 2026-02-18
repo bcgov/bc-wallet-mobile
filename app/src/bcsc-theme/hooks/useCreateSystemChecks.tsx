@@ -5,8 +5,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
-import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
+import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
@@ -103,9 +102,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
-      new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
-      new InformativeBCSCAlertsSystemCheck(getIdToken, emitAlert, store.bcsc.credentialMetadata, utils, navigation),
+      new EventReasonAlertsSystemCheck(getIdToken, emitAlert, store.bcsc.credentialMetadata, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
@@ -115,8 +113,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     if (isBCServicesCardBundle) {
       systemChecks.push(new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils))
     }
-
     return systemChecks
+    // credentialMetadata is being left out of the dependency array on purpose to avoid an infinite render loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     accountExpirationDate,
     isBCServicesCardBundle,

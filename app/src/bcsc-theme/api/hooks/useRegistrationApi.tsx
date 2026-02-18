@@ -14,7 +14,10 @@ import {
 
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
@@ -63,7 +66,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
-  const { emitError } = useErrorAlert()
+  const { emitErrorAlert } = useErrorAlert()
   /**
    * Retrieves platform-specific attestation for device verification.
    *
@@ -149,7 +152,17 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
       } catch (error) {
         if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          emitError('KEYPAIR_GENERATION_ERROR', { error })
+          const appError = new AppError(
+            'Unknown error occured',
+            'An unknown error occurred during keypair generation. Please try again.',
+            {
+              statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
+              appEvent: AppEventCode.KEYPAIR_GENERATION_ERROR,
+              category: ErrorCategory.GENERAL,
+            },
+            { cause: error }
+          )
+          emitErrorAlert(appError)
         }
         throw error
       }
@@ -177,7 +190,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, emitError]
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens, emitErrorAlert]
   )
 
   /**
@@ -217,7 +230,17 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
         } catch (error) {
           if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-            emitError('KEYPAIR_GENERATION_ERROR', { error })
+            const appError = new AppError(
+              'Unknown error occured',
+              'An unknown error occurred during keypair generation. Please try again.',
+              {
+                statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
+                appEvent: AppEventCode.KEYPAIR_GENERATION_ERROR,
+                category: ErrorCategory.GENERAL,
+              },
+              { cause: error }
+            )
+            emitErrorAlert(appError)
           }
           throw error
         }
@@ -271,7 +294,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, getAttestation, updateTokens, emitError]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens, emitErrorAlert]
   )
 
   /**

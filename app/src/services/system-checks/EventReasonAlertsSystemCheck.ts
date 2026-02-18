@@ -7,13 +7,21 @@ import { BCDispatchAction, CredentialMetadata } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Checks storage for alert data and displays an alert if data is found.
+ * Checks token metadata and renders a modal or alert
+ * Reasons:
+ * Cancel
+ *  - displays a modal instructing user to reset their app
+ * Renew:
+ *  - emits an alert informing the user their information has been updated
+ *
+ * Replace:
+ *  - emits an alert informing the user their card type has changed
  *
  * @export
- * @class InformativeBCSCAlertsSystemCheck
+ * @class EventReasonAlertsSystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
+export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private readonly navigation: SystemCheckNavigation
   private readonly getIdToken: () => Promise<IdToken>
   private readonly emitAlert: (title: string, bodyx: string, options?: AlertOptions) => void
@@ -38,12 +46,13 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   async runCheck(): Promise<boolean> {
+    this.utils.logger.info('EventReasonAlertsSystemCheck -> RUNNING CHECK')
     const token = await this.getIdToken()
     this.tokenMetadata = tokenToCredentialMetadata(token)
     this.event = token.bcsc_event
     this.reason = token.bcsc_reason
 
-    // if the event is a cancel, this app will need to be reset, no
+    // if the event is a cancel, this app will need to be reset, no need to continue
     if (token.bcsc_event === BCSCEvent.Cancel) {
       return false
     }
@@ -53,7 +62,6 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
 
     // If stored metadata and current token metadata are different, update the stored metadata
     if (!isMetadataTheSame) {
-      // update stored metadata
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
     }
 
@@ -65,14 +73,14 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    switch (this.reason) {
-      case BCSCReason.Cancel:
+    switch (this.event) {
+      case BCSCEvent.Cancel:
         this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
         break
-      case BCSCReason.Renew:
+      case BCSCEvent.Renewal:
         this.alertBuilder(AppEventCode.CARD_STATUS_UPDATED)
         break
-      case BCSCReason.Replace:
+      case BCSCEvent.Replace:
         this.alertBuilder(AppEventCode.CARD_TYPE_CHANGED)
         break
       default:
