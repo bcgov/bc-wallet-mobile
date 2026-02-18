@@ -1,8 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useState } from 'react'
+import { BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
 
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
@@ -10,6 +14,7 @@ const useVerificationResponseViewModel = () => {
   const { registration } = useApi()
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
+  const { emitErrorAlert } = useErrorAlert()
 
   const handleUpdateRegistration = useCallback(async () => {
     try {
@@ -28,11 +33,14 @@ const useVerificationResponseViewModel = () => {
 
       await registration.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
+      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
+        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.KEYPAIR_GENERATION_ERROR, { cause: error }))
+      }
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to update registration: ${errMessage}`)
       return
     }
-  }, [registration, store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, logger])
+  }, [registration, store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, logger, emitErrorAlert])
 
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)

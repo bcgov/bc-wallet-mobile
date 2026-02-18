@@ -17,6 +17,8 @@ api*.json
 !PINSecret.swift
 *secrets*
 .env
+google-services.json
+GoogleService-Info.plist
 .idea/
 
 # Other
