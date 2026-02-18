@@ -31,6 +31,10 @@ jobs:
             "PLAY_STORE_JKS_BASE64_SADEV"
             "PLAY_STORE_JKS_ALIAS_SADEV"
             "PLAY_STORE_JKS_PASSWD_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -48,6 +52,10 @@ jobs:
           PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
           PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
     steps:
@@ -219,6 +227,7 @@ jobs:
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
           git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
+
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -231,28 +240,19 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: app
-        env:
-          # translate matrix.build_type to ENV BUILD_TARGET ie: Mode
-          BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
-          MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
-          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
-          OCA_URL: ${{ vars.OCA_URL }}
-          PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
-          REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
-          INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-        run: |
-          echo "BUILD_TARGET=${BUILD_TARGET}" >.env
-          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
-          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
-          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
-          echo "OCA_URL=${OCA_URL}" >>.env
-          echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
-          echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
-          echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
+        uses: ./.github/workflows/actions/create-environment-settings
+        with:
+          build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
+          mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
+          mediator_url: ${{ secrets.MEDIATOR_URL }}
+          ias_portal_url: ${{ secrets.IAS_PORTAL_URL }}
+          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          oca_url: ${{ vars.OCA_URL }}
+          proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
+          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          platform: ios
 
       - name: Update APS environment
         run: |
@@ -414,28 +414,19 @@ jobs:
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: app
-        env:
-          # translate matrix.build_type to ENV BUILD_TARGET ie: Mode
-          BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
-          MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
-          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
-          OCA_URL: ${{ vars.OCA_URL }}
-          PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
-          REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
-          INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-        run: |
-          echo "BUILD_TARGET=${BUILD_TARGET}" >.env
-          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
-          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
-          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
-          echo "OCA_URL=${OCA_URL}" >>.env
-          echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
-          echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
-          echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
+        uses: ./.github/workflows/actions/create-environment-settings
+        with:
+          build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
+          mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
+          mediator_url: ${{ secrets.MEDIATOR_URL }}
+          ias_portal_url: ${{ secrets.IAS_PORTAL_URL }}
+          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          oca_url: ${{ vars.OCA_URL }}
+          proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
+          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          platform: android
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access

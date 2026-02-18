@@ -1,0 +1,81 @@
+name: Create Environment Settings
+description: |
+  Create the .env file with environment settings and write
+  Firebase/Google Services credentials to the file system.
+
+inputs:
+  build_target:
+    description: 'The build target (bcwallet or bcsc)'
+    required: true
+  mediator_use_push_notifications:
+    description: 'Whether to use push notifications for the mediator'
+    required: true
+  mediator_url:
+    description: 'The mediator URL'
+    required: true
+  ias_portal_url:
+    description: 'The IAS portal URL'
+    required: true
+  ias_agent_invite_url:
+    description: 'The IAS agent invite URL'
+    required: true
+  oca_url:
+    description: 'The OCA URL'
+    required: true
+  proof_template_url:
+    description: 'The proof template URL'
+    required: true
+  remote_logging_url:
+    description: 'The remote logging URL'
+    required: true
+  indy_vdr_proxy_url:
+    description: 'The Indy VDR proxy URL'
+    required: true
+  google_services_credentials_base64:
+    description: 'Base64 encoded Google Services credentials file'
+    required: true
+  platform:
+    description: 'The platform (ios or android)'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Create environment settings
+      shell: bash
+      working-directory: app
+      env:
+        BUILD_TARGET: ${{ inputs.build_target }}
+        MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ inputs.mediator_use_push_notifications }}
+        MEDIATOR_URL: ${{ inputs.mediator_url }}
+        IAS_PORTAL_URL: ${{ inputs.ias_portal_url }}
+        IAS_AGENT_INVITE_URL: ${{ inputs.ias_agent_invite_url }}
+        OCA_URL: ${{ inputs.oca_url }}
+        PROOF_TEMPLATE_URL: ${{ inputs.proof_template_url }}
+        REMOTE_LOGGING_URL: ${{ inputs.remote_logging_url }}
+        INDY_VDR_PROXY_URL: ${{ inputs.indy_vdr_proxy_url }}
+      run: |
+        echo "BUILD_TARGET=${BUILD_TARGET}" >.env
+        echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
+        echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
+        echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
+        echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
+        echo "OCA_URL=${OCA_URL}" >>.env
+        echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
+        echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
+        echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
+
+    - name: Write Google Services credentials
+      shell: bash
+      env:
+        GOOGLE_SERVICES_CREDENTIALS_BASE64: ${{ inputs.google_services_credentials_base64 }}
+        PLATFORM: ${{ inputs.platform }}
+      run: |
+        if [ "${PLATFORM}" = "ios" ]; then
+          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/ios/GoogleService-Info.plist
+        elif [ "${PLATFORM}" = "android" ]; then
+          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/android/app/google-services.json
+        else
+          echo "error: Unknown platform '${PLATFORM}'"
+          exit 1
+        fi
