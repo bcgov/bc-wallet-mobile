@@ -1,11 +1,10 @@
-import { CommonActions } from '@react-navigation/native'
-import { renderHook, waitFor } from '@testing-library/react-native'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/useEnterBirthdateViewModel'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as Bifold from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
+import { renderHook, waitFor } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)

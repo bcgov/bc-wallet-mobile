@@ -1,3 +1,7 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
+import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import {
   Button,
   ButtonType,
@@ -8,15 +12,10 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
-
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
-import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import { StackNavigationProp } from '@react-navigation/stack'
 
 const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
 

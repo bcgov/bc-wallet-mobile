@@ -1,10 +1,9 @@
-import { render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-import { BiometricType, canPerformDeviceAuthentication, getAvailableBiometricType } from 'react-native-bcsc-core'
-
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render, waitFor } from '@testing-library/react-native'
+import React from 'react'
+import { BiometricType, canPerformDeviceAuthentication, getAvailableBiometricType } from 'react-native-bcsc-core'
 import { SecureAppScreen } from './SecureAppScreen'
 
 jest.mock('react-native-bcsc-core', () => ({
@@ -12,6 +11,10 @@ jest.mock('react-native-bcsc-core', () => ({
   getAvailableBiometricType: jest.fn(),
   performDeviceAuthentication: jest.fn(),
   setupDeviceSecurity: jest.fn(),
+  isBcscNativeError: jest.fn().mockReturnValue(false),
+  BcscNativeErrorCodes: {
+    KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
+  },
   BiometricType: {
     None: 'none',
     FaceID: 'face id',

@@ -2,7 +2,6 @@ import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
-
 import { BCWalletEventTypes } from '../../events/eventTypes'
 
 const AddCredentialButton = () => {

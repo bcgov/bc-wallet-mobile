@@ -1,5 +1,4 @@
 import React, { createContext, useContext } from 'react'
-
 import { PairingService } from './PairingService'
 
 const PairingServiceContext = createContext<PairingService | null>(null)

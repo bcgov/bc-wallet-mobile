@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from 'react'
-
 import BCSCApiClient from '../client'
 
 export interface VerifyAttestationPayload {

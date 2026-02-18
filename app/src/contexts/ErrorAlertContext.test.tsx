@@ -1,8 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native'
+import i18next from 'i18next'
 import React from 'react'
 import { DeviceEventEmitter } from 'react-native'
-
-import i18next from 'i18next'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../errors/errorRegistry'
 import { AppEventCode } from '../events/appEventCode'
 import { showAlert } from '../utils/alert'
