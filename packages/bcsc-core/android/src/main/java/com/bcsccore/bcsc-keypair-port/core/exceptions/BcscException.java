@@ -46,6 +46,20 @@ public class BcscException extends Exception {
   }
 
   /**
+   * Create an exception with an alert key, developer message, and cause.
+   * Preserves the original exception for debugging and stack trace chaining.
+   * @param key the alert key identifying the type of error
+   * @param devMessage the developer message describing the error
+   * @param cause the original throwable that caused this exception
+   */
+  public BcscException(@NonNull AlertKey key, String devMessage, Throwable cause) {
+    super(cause);
+    final String message = devMessage == null ? NO_MESSAGE : devMessage;
+    this.alertKey = key;
+    this.devMessage = message;
+  }
+
+  /**
    * Create an exception with just a developer message.
    * @param devMessage the developer message describing the error
    */

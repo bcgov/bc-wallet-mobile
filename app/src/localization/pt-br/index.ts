@@ -952,6 +952,7 @@ const translation = {
       "BirthDateLabel": "Birth date (PT-BR)",
       "BirthDateSubtext": "Enter your birth date (PT-BR)",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+      "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card (PT-BR)",
       "BirthDatePickerLabel": "Select birth date (PT-BR)",
       "BirthDatePickerAccessibilityLabel": "Birth date picker (PT-BR)",
       "MiddleNamesLabel": "Middle names (PT-BR)",
@@ -1072,6 +1073,10 @@ const translation = {
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed
+    "Device": {
+      "KeypairGenerationError": "(PT-BR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
+      "KeypairGenerationTitle": "(PT-BR) Problem with App",
+    },
   },
 }
 

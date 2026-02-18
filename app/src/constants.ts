@@ -112,3 +112,6 @@ export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'
 
 // Error constants
 export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999
+
+// Validation constants
+export const MINIMUM_VERIFICATION_AGE = 12
