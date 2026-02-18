@@ -1,5 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
+import { BCState } from '@/store'
 import {
   InfoBox,
   InfoBoxType,
@@ -12,15 +13,13 @@ import {
   useTheme,
 } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
+import ProgressBar from '@components/ProgressBar'
+import TipCarousel from '@components/TipCarousel'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { BCState } from '@/store'
-import ProgressBar from '@components/ProgressBar'
-import TipCarousel from '@components/TipCarousel'
 
 /*
   To customize this splash screen set the background color of the

@@ -1,8 +1,7 @@
+import ActivityIndicator from '@assets/img/activity-indicator-circle.svg'
 import { testIdWithKey } from '@bifold/core'
 import React, { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, View } from 'react-native'
-
-import ActivityIndicator from '@assets/img/activity-indicator-circle.svg'
 
 const timing: Animated.TimingAnimationConfig = {
   toValue: 1,

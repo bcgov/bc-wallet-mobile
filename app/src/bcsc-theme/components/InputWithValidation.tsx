@@ -10,6 +10,7 @@ type InputWithValidationProps = {
   onChange: (value: string) => void
   label: string
   onFocus?: () => void
+  onPressIn?: () => void
   subtext?: string
   error?: string
   labelProps?: StyleProp<TextStyle>
@@ -53,6 +54,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           props.onChange(e.nativeEvent.text)
         }}
         onFocus={props.onFocus}
+        onPressIn={props.onPressIn}
         accessibilityLabel={props.label}
         testID={testIdWithKey(`${props.id}-input`)}
         {...props.textInputProps}

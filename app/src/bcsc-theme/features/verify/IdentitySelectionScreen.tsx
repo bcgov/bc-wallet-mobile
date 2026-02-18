@@ -1,18 +1,17 @@
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
-import { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Image, Pressable, StyleSheet, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
+import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri

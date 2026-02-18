@@ -1,4 +1,6 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useNavigation } from '@mocks/custom/@react-navigation/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import {
@@ -12,9 +14,6 @@ import {
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'
-
-import { useNavigation } from '@mocks/custom/@react-navigation/core'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { ChangeSecurityContent } from './ChangeSecurityContent'
 
 jest.mock('react-native-bcsc-core', () => ({

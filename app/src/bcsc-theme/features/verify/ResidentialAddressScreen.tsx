@@ -14,7 +14,6 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
-
 import useResidentialAddressModel from './_models/useResidentialAddressModel'
 
 type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>

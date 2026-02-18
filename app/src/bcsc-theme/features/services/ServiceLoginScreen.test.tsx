@@ -1,9 +1,8 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
 const createMockPairingService = () =>

@@ -1,9 +1,8 @@
+import { PAIRING_CODE_LENGTH } from '@/constants'
 import { useTheme } from '@bifold/core'
+import { splitSplice } from '@utils/splitSplice'
 import React, { useState } from 'react'
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native'
-
-import { PAIRING_CODE_LENGTH } from '@/constants'
-import { splitSplice } from '@utils/splitSplice'
 
 interface Props extends TextInputProps {
   handleChangeCode: (text: string) => void

@@ -1,8 +1,7 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import { Developer, IASEnvironment } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 import NonProdOverlay from './NonProdOverlay'
 
 describe('NonProdOverlay Component', () => {
