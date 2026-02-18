@@ -209,6 +209,10 @@ const useEvidenceUploadModel = (
         })
       )
     } catch (error) {
+      /**
+        * Dev note: evidence_upload_server_error + evidence_upload_unkown_error are both deprecated in the IAS documentation.
+        * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
+        */
       const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error })
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
       fileUploadErrorAlert()
