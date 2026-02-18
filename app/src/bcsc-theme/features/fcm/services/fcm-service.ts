@@ -159,13 +159,16 @@ export class FcmService {
   }
 
   private emit(remoteMessage: FirebaseMessagingTypes.RemoteMessage, delivery?: FcmDeliveryContext): void {
+    // Log, but avoid leaking potentially sensitive data
+    this.logger?.debug(
+      `[FcmService] push notification received (keys: ${Object.keys(remoteMessage.data ?? {}).join(', ') || 'none'})`
+    )
+
     if (this.suppressed) {
       this.logger?.debug('[FcmService] notification suppressed, skipping')
       return
     }
-    this.logger?.debug(
-      `[FcmService] push notification received (keys: ${Object.keys(remoteMessage.data ?? {}).join(', ') || 'none'})`
-    )
+
     const message = this.parseMessage(remoteMessage)
     this.handlers.forEach((handler) => handler(message, delivery))
   }
