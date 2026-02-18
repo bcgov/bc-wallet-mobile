@@ -245,7 +245,6 @@ jobs:
           build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_portal_url: ${{ secrets.IAS_PORTAL_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
@@ -419,7 +418,6 @@ jobs:
           build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_portal_url: ${{ secrets.IAS_PORTAL_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}

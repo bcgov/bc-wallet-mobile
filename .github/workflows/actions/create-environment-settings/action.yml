@@ -13,9 +13,6 @@ inputs:
   mediator_url:
     description: 'The mediator URL'
     required: true
-  ias_portal_url:
-    description: 'The IAS portal URL'
-    required: true
   ias_agent_invite_url:
     description: 'The IAS agent invite URL'
     required: true
@@ -48,7 +45,6 @@ runs:
         BUILD_TARGET: ${{ inputs.build_target }}
         MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ inputs.mediator_use_push_notifications }}
         MEDIATOR_URL: ${{ inputs.mediator_url }}
-        IAS_PORTAL_URL: ${{ inputs.ias_portal_url }}
         IAS_AGENT_INVITE_URL: ${{ inputs.ias_agent_invite_url }}
         OCA_URL: ${{ inputs.oca_url }}
         PROOF_TEMPLATE_URL: ${{ inputs.proof_template_url }}
@@ -58,7 +54,6 @@ runs:
         echo "BUILD_TARGET=${BUILD_TARGET}" >.env
         echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
         echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
-        echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
         echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
         echo "OCA_URL=${OCA_URL}" >>.env
         echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
