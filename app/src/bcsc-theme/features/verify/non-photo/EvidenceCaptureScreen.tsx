@@ -15,6 +15,8 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
+import { withAlert } from '@/utils/alert'
+import { useAlerts } from '@/hooks/useAlerts'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -41,6 +43,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
   const codeScanner = useCodeScanner({
     codeTypes: scanner.codeTypes,
     onCodeScanned: async (codes) => {
@@ -140,7 +143,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       scanner.handleScanDriversLicense(licenseRef.current)
     }
 
-    const photoMetadata = await getPhotoMetadata(currentPhotoPath, logger)
+
+    // Wrap getPhotoMetadata with alert
+    const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
+    const photoMetadata = await getPhotoMetadataWithAlert(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
     const newPhotos = [...capturedPhotos, photoMetadata]
     setCapturedPhotos(newPhotos)
@@ -169,7 +175,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   if (isCameraLoading) {
-    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => {}} />
+    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => { }} />
   }
 
   if (!hasPermission) {

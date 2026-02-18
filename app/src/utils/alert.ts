@@ -9,7 +9,7 @@ export type AlertAction = AlertButton & { text: string }
 // Default OK action - evaluated at call time to get current translation
 const getDefaultOkAction = (): AlertAction => ({
   text: i18n.t('Global.Okay'),
-  onPress: () => {},
+  onPress: () => { },
 })
 
 /**
@@ -36,5 +36,23 @@ export const showAlert = (title: string, body: string, actions?: AlertAction[], 
 
   if (event) {
     Analytics.trackAlertDisplayEvent(event)
+  }
+}
+
+/**
+  * Wrap a function with an alert.
+  *
+  * @param fn - The function to wrap
+  * @param alert - The alert function to call if an error is thrown
+  * @returns A new function that wraps the original function with an alert on error
+  */
+export const withAlert = <TFunction extends (...args: any[]) => ReturnType<TFunction>>(fn: TFunction, alert: () => void) => {
+  return (...args: Parameters<TFunction>) => {
+    try {
+      return await fn(...args)
+    } catch (error) {
+      alert()
+      throw error
+    }
   }
 }
