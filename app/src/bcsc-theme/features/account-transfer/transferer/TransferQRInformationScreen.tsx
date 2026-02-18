@@ -1,5 +1,4 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-
 import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'

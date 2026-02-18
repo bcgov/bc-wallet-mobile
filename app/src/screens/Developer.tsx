@@ -1,3 +1,5 @@
+import { BCThemeNames } from '@/constants'
+import { BCDispatchAction, BCState, Mode } from '@/store'
 import {
   DispatchAction,
   LockoutReason,
@@ -17,9 +19,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCThemeNames } from '@/constants'
-import { BCDispatchAction, BCState, Mode } from '@/store'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'

@@ -1,9 +1,8 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import React from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
 
 const mockFactoryReset = jest.fn()

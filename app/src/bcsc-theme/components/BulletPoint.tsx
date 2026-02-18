@@ -1,8 +1,7 @@
+import { ThemedText } from '@bifold/core'
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-
-import { ThemedText } from '@bifold/core'
 
 interface Props {
   pointsText?: string

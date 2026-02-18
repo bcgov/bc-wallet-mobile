@@ -1,8 +1,7 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import React from 'react'
 import CancelledReview from './CancelledReview'
 
 describe('CancelledReview', () => {

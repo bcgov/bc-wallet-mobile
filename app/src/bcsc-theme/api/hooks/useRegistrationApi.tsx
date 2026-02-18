@@ -1,3 +1,8 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
@@ -11,12 +16,6 @@ import {
   isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
-
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 

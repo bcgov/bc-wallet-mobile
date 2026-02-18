@@ -1,8 +1,7 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import { AutoLockScreen } from '@/bcsc-theme/features/settings/AutoLockScreen'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 
 describe('AutoLockScreen', () => {
   beforeEach(() => {
