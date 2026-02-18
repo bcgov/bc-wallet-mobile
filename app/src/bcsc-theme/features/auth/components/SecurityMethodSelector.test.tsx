@@ -8,7 +8,6 @@ import {
   getAvailableBiometricType,
   performDeviceAuthentication,
 } from 'react-native-bcsc-core'
-
 import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
 import { SecurityMethodSelector } from './SecurityMethodSelector'
 

@@ -1,5 +1,3 @@
-import React, { useCallback } from 'react'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors/appError'
@@ -7,6 +5,7 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'

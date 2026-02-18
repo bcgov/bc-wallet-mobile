@@ -1,8 +1,7 @@
-import { act, fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { act, fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 import { HelpCentreUrl } from '../../../../constants'
 import { BCSCScreens } from '../../../types/navigators'
 import TransferQRInformationScreen from './TransferQRInformationScreen'

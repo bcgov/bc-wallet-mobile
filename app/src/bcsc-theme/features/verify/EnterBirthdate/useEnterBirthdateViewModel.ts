@@ -1,13 +1,12 @@
-import { TOKENS, useServices, useStore } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback } from 'react'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**

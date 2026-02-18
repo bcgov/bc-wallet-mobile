@@ -1,5 +1,4 @@
 import { expirationOverrideInMinutes } from '@utils/expiration'
-
 import MockDate from 'mockdate'
 
 jest.useFakeTimers({ legacyFakeTimers: true })

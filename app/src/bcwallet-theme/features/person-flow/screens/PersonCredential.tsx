@@ -1,3 +1,6 @@
+import { BCState } from '@/store'
+import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
+import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
 import {
   Button,
   ButtonType,
@@ -10,16 +13,12 @@ import {
 } from '@bifold/core'
 import { useAgent } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
+import { getBCSCAppStoreUrl, openLink } from '@utils/links'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCState } from '@/store'
-import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
-import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
-import { getBCSCAppStoreUrl, openLink } from '@utils/links'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
