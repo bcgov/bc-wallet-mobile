@@ -11,6 +11,7 @@ import { Animated, LayoutAnimation, Platform, Pressable, StyleSheet, Switch, UIM
 import { useCameraPermission } from 'react-native-vision-camera'
 import { Spacing } from '../../../bcwallet-theme/theme'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
+import { BCSC_SN_SCAN_ZONES } from '../../components/utils/camera'
 import { LoadingScreenContent } from '../../features/splash-loading/LoadingScreenContent'
 
 /**
@@ -109,15 +110,12 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     <View style={styles.container}>
       {/* Camera fills the entire screen */}
       <CodeScanningCamera
-        codeTypes={scanner.codeTypes}
         onCodeScanned={onCodeScanned}
         cameraType={'back'}
         showBarcodeHighlight={showBarcodeHighlight}
         enableScanZones={enableScanZones}
         initialZoom={2}
-        scanZones={Platform.select({
-          default: [{ types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } }],
-        })}
+        scanZones={BCSC_SN_SCAN_ZONES}
         style={StyleSheet.absoluteFillObject}
       />
 
