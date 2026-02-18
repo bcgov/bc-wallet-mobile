@@ -32,9 +32,7 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -303,9 +301,7 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -574,9 +570,8 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
-            "code-39",
             "pdf-417",
+            "code-39",
           ],
           "onCodeScanned": [Function],
         }
@@ -845,9 +840,8 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
-            "code-39",
             "pdf-417",
+            "code-39",
           ],
           "onCodeScanned": [Function],
         }
@@ -1116,9 +1110,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -1387,9 +1379,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -1658,9 +1648,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -1929,9 +1917,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }
@@ -2200,9 +2186,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
       codeScanner={
         {
           "codeTypes": [
-            "code-128",
             "code-39",
-            "pdf-417",
           ],
           "onCodeScanned": [Function],
         }

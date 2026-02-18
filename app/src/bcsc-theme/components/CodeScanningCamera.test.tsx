@@ -4,6 +4,7 @@ import { Platform } from 'react-native'
 
 import { BasicAppContext } from '@mocks/helpers/app'
 import CodeScanningCamera, { ScanZone } from './CodeScanningCamera'
+import { BCSC_SN_SCAN_ZONES } from './utils/camera'
 
 // Store references to mock functions for access in tests
 const mockRequestPermission = jest.fn()
@@ -131,8 +132,8 @@ jest.mock('react-native-gesture-handler', () => ({
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
   const defaultProps = {
-    codeTypes: ['code-128', 'code-39', 'pdf-417'] as any,
     onCodeScanned: mockOnCodeScanned,
+    scanZones: BCSC_SN_SCAN_ZONES,
   }
 
   beforeEach(() => {
@@ -171,11 +172,14 @@ describe('CodeScanningCamera', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('passes correct code types to scanner', () => {
-    const codeTypes = ['code-128', 'pdf-417'] as any
+  it('derives code types from scan zones', () => {
+    const zones: ScanZone[] = [
+      { types: ['code-128'], box: { x: 0, y: 0, width: 1, height: 0.5 } },
+      { types: ['pdf-417'], box: { x: 0, y: 0.5, width: 1, height: 0.5 } },
+    ]
     render(
       <BasicAppContext>
-        <CodeScanningCamera {...defaultProps} codeTypes={codeTypes} />
+        <CodeScanningCamera {...defaultProps} scanZones={zones} />
       </BasicAppContext>
     )
 
@@ -183,7 +187,7 @@ describe('CodeScanningCamera', () => {
     const { useCodeScanner } = require('react-native-vision-camera')
     expect(useCodeScanner).toHaveBeenCalledWith(
       expect.objectContaining({
-        codeTypes,
+        codeTypes: expect.arrayContaining(['code-128', 'pdf-417']),
       })
     )
   })
@@ -343,7 +347,7 @@ describe('CodeScanningCamera', () => {
       const { useCodeScanner } = require('react-native-vision-camera')
       expect(useCodeScanner).toHaveBeenCalledWith(
         expect.objectContaining({
-          codeTypes: defaultProps.codeTypes,
+          codeTypes: ['code-39'],
           onCodeScanned: expect.any(Function),
         })
       )

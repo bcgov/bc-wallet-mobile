@@ -61,8 +61,6 @@ const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
 const PINCH_SCALE_FULL_ZOOM = 3
 
 export interface CodeScanningCameraProps {
-  codeTypes: CodeType[]
-
   /**
    * Callback function called when a code is successfully scanned
    * @param codes Array of scanned codes with position and orientation metadata
@@ -98,11 +96,11 @@ export interface CodeScanningCameraProps {
 
   /**
    * Pre-defined scan zones describing expected barcode positions on the card.
-   * When provided, these replace the default centered scan zone overlay.
-   * Coordinates are normalized (0-1) relative to the camera container.
+   * Each zone defines where a barcode is expected (type + normalized 0-1 box coords).
+   * Used for alignment detection, zone-based focus cycling, and overlay rendering.
    * Use the output of "Save Scan Zones" to populate this prop.
    */
-  scanZones?: ScanZone[]
+  scanZones: ScanZone[]
 
   /**
    * Initial zoom level
@@ -116,7 +114,6 @@ export interface CodeScanningCameraProps {
 const ENABLE_MANUAL_CONFIRM = false
 
 const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
-  codeTypes,
   onCodeScanned,
   style,
   cameraType = 'back',
@@ -125,6 +122,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   scanZones,
   initialZoom = 2,
 }) => {
+  // Derive scanner code types from the declared scan zones (deduped)
+  const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
+
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -157,9 +157,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const lockedScanRef = useRef<{ codes: EnhancedCode[]; frame: CodeScannerFrame } | null>(null)
 
   // --- Configurable highlight thresholds ---
-  // Minimum number of identified codes (with a decoded value) to show "aligned" (green, no border)
-  // Derived from the number of scan zones provided, so each zone must have a matching code
-  const MIN_CODES_FOR_ALIGNED = scanZones?.length ?? 2
   // Consecutive identical readings required per code for "locked" state (green with border)
   const LOCK_READING_THRESHOLD = 5
   // Alignment tolerance for scan zone matching (proportional to zone size)
@@ -412,7 +409,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   /** Update per-zone detection tracking for focus cycling prioritisation */
   const updateZoneDetectionTracking = (enhancedCodes: EnhancedCode[]) => {
-    if (!scanZones || scanZones.length === 0 || !containerSize) {
+    if (scanZones.length === 0 || !containerSize) {
       return
     }
     const newDetected = new Set<number>()
@@ -452,7 +449,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } =>
     determineScanState(enhancedCodes, {
       enableScanZones,
-      minCodesForAligned: MIN_CODES_FOR_ALIGNED,
+      minCodesForAligned: scanZones.length,
       lockReadingThreshold: LOCK_READING_THRESHOLD,
     })
 
@@ -684,7 +681,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const FOCUS_CYCLE_INTERVAL_MS = 2500 // Cycle focus every 2.5 seconds
 
   const startFocusCycling = useCallback(() => {
-    if (!scanZones || scanZones.length === 0 || !containerSize || !device?.supportsFocus) {
+    if (scanZones.length === 0 || !containerSize || !device?.supportsFocus) {
       return
     }
 

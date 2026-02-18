@@ -360,3 +360,10 @@ export const determineScanState = (
 
   return { newScanState, qualifyingCodes }
 }
+
+/**
+ * Scan zones for the BC Services Card / Driver's License serial number scan screen.
+ * Describes the expected position of the Code 39 serial number barcode on a CR-80 ID card.
+ * Coordinates are normalized (0–1) relative to the camera container.
+ */
+export const BCSC_SN_SCAN_ZONES: ScanZone[] = [{ types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } }]

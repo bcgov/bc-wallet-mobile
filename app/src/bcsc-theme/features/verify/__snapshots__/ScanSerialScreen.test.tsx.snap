@@ -47,8 +47,6 @@ exports[`ScanSerial renders correctly 1`] = `
           {
             "codeTypes": [
               "code-39",
-              "code-128",
-              "pdf-417",
             ],
             "onCodeScanned": [Function],
           }
