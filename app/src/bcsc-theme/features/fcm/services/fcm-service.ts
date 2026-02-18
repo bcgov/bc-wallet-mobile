@@ -146,6 +146,7 @@ export class FcmService {
     this.notificationOpenedSubscription?.()
     this.notificationOpenedSubscription = undefined
     this.initialized = false
+    this.suppressed = false
     this.handlers.clear()
   }
 

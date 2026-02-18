@@ -32,4 +32,23 @@ describe('LiveCall', () => {
 
     tree.unmount()
   })
+
+  it('suppresses FCM on mount and re-enables on unmount', () => {
+    const fcmService = new FcmService()
+    const spy = jest.spyOn(fcmService, 'setSuppressed')
+
+    const tree = render(
+      <BasicAppContext>
+        <FcmServiceProvider service={fcmService}>
+          <LiveCallScreen navigation={mockNavigation as never} />
+        </FcmServiceProvider>
+      </BasicAppContext>
+    )
+
+    expect(spy).toHaveBeenCalledWith(true)
+    spy.mockClear()
+
+    tree.unmount()
+    expect(spy).toHaveBeenCalledWith(false)
+  })
 })
