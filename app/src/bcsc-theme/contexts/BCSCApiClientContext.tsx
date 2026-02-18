@@ -9,6 +9,7 @@ import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -40,6 +41,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const { emitAlert } = useErrorAlert()
   const alerts = useAlerts(navigation)
 
   /**
@@ -78,6 +80,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       policy.handle(error, {
         linking: Linking,
+        emitAlert,
         navigation,
         translate: t,
         logger,
@@ -86,7 +89,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       error.handled = true
     },
-    [alerts, logger, navigation, t]
+    [alerts, emitAlert, logger, navigation, t]
   )
 
   useEffect(() => {
@@ -118,9 +121,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
-          (err as Error)?.message
-        }`
+        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${(err as Error)?.message
+          }`
 
         setClientAndSingleton(null)
         setError(errorMessage)

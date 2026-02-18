@@ -9,6 +9,7 @@ import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
+import { AlertAction } from '@/utils/alert'
 
 /**
  * Set of event codes that should trigger alerts in the BCSC client
@@ -41,6 +42,8 @@ export type ErrorMatcherContext = {
 
 type ErrorHandlerContext = {
   translate: TFunction
+  /** @deprecated Use specific alert functions from context.alerts */
+  emitAlert: (title: string, message: string, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
