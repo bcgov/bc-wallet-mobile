@@ -1122,6 +1122,10 @@ const translation = {
       "Title": "Problem Checking Status",
       "Description": "Please close the app and try again.",
     },
+    "FileUploadError": {
+      "Title": "Problem with Connection",
+      "Description": "Please try again."
+    },
     "ProblemWithApp": {
       "Title": "Problem with App",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"

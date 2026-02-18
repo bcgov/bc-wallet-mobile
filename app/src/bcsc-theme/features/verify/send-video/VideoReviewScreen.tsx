@@ -47,7 +47,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
-  const { failedToReadFromLocalStorageAlert } = useAlerts()
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
