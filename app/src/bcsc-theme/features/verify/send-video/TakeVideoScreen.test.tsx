@@ -1,9 +1,7 @@
+import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-import { BasicAppContext } from '@mocks/helpers/app'
-
 import { useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 import TakeVideoScreen from './TakeVideoScreen'
 

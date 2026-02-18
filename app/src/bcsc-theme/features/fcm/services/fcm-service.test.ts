@@ -33,7 +33,6 @@ jest.mock('@react-native-firebase/messaging', () => {
     setBackgroundMessageHandler: mockSetBackgroundMessageHandler,
   }
 })
-
 import * as messaging from '@react-native-firebase/messaging'
 import { FcmService } from './fcm-service'
 

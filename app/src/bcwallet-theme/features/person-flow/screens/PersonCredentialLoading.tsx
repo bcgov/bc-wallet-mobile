@@ -1,4 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { BCState } from '@/store'
 import {
   AttestationEventTypes,
   BifoldError,
@@ -15,6 +16,8 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
+import ProgressBar from '@components/ProgressBar'
 import { CredentialState } from '@credo-ts/core'
 import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -22,10 +25,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-import { BCState } from '@/store'
-import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
-import ProgressBar from '@components/ProgressBar'
 import {
   WellKnownAgentDetails,
   authenticateWithServiceCard,

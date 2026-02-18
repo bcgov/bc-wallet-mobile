@@ -1,3 +1,6 @@
+import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
+import { AttestationRestrictions } from '@/constants'
+import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
   BifoldAgent,
@@ -16,12 +19,8 @@ import {
   ProofState,
 } from '@credo-ts/core'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
-import { useEffect, useState } from 'react'
-
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { AttestationRestrictions } from '@/constants'
-import { BCState } from '@/store'
 import { isProofRequestingAttestation } from '@services/attestation'
+import { useEffect, useState } from 'react'
 
 export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
   const { agent } = useAgent()

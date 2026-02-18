@@ -1,9 +1,8 @@
-import React, { useCallback } from 'react'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
 import NicknameForm from './components/NicknameForm'

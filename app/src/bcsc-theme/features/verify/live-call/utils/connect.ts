@@ -1,3 +1,4 @@
+import { KEEP_ALIVE_INTERVAL_MS, RECONNECTION_GRACE_PERIOD_MS } from '@/constants'
 import { BifoldLogger } from '@bifold/core'
 import {
   callsWebrtcParticipant,
@@ -10,8 +11,6 @@ import {
 } from '@pexip/infinity-api'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
-
-import { KEEP_ALIVE_INTERVAL_MS, RECONNECTION_GRACE_PERIOD_MS } from '@/constants'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
 // WebRTC Events need handlers even if we don't do anything with some of them
