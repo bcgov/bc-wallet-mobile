@@ -77,7 +77,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
       const deviceCode = _getDeviceCode()
       const body = { client_id: account.clientID, device_code: deviceCode }
       const token = await createPreVerificationJWT(deviceCode, account.clientID)
-      const { data } = await apiClient.post<VideoSession>(`${apiClient.endpoints.video}/v2/sessions/`, body, {
+      const { data } = await apiClient.post<VideoSession>(`${apiClient.endpoints.video}/v2/sessions`, body, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -119,7 +119,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
 
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<VideoCall>(
-          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls`,
           body,
           {
             headers: {
