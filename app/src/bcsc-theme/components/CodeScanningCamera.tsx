@@ -36,6 +36,20 @@ import {
 } from 'react-native-vision-camera'
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import {
+  EnhancedCode,
+  Rect,
+  ScanState,
+  ScanZone,
+  calculateBarcodeOrientation,
+  clampZoom,
+  determineScanState,
+  getPaddedHighlightPosition,
+  isCodeAlignedWithZones,
+  transformBarcodeCoordinates,
+} from './utils/camera'
+
+export type { EnhancedCode, ScanZone }
 
 Reanimated.addWhitelistedNativeProps({ zoom: true })
 const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
@@ -45,48 +59,6 @@ const ReanimatedCamera = Reanimated.createAnimatedComponent(Camera)
  * A 3× pinch covers the entire min→max zoom range.
  */
 const PINCH_SCALE_FULL_ZOOM = 3
-
-/**
- * Extended Code interface with position and orientation metadata
- */
-export interface EnhancedCode extends Code {
-  /**
-   * Position of the barcode in the camera frame
-   */
-  position?: { x: number; y: number; width: number; height: number }
-  /**
-   * Orientation of the barcode (horizontal or vertical)
-   */
-  orientation?: 'horizontal' | 'vertical'
-  /**
-   * Whether the code is aligned with the scan zone
-   */
-  isAligned?: boolean
-  /**
-   * Whether the code has been validated through consecutive readings
-   */
-  isValidated?: boolean
-  /**
-   * Number of consecutive identical readings for this code
-   */
-  readingCount?: number
-}
-
-/**
- * A saved scan zone describing where a barcode is expected on a card.
- * Coordinates are normalized (0-1) relative to the camera container.
- */
-export interface ScanZone {
-  /** Barcode format types expected in this zone (e.g. ['code-39'], ['pdf-417']) */
-  types: string[]
-  /** Normalized bounding box (0-1) relative to the camera container */
-  box: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
-}
 
 export interface CodeScanningCameraProps {
   codeTypes: CodeType[]
@@ -138,9 +110,6 @@ export interface CodeScanningCameraProps {
    */
   initialZoom?: number
 }
-
-/** Collective scan state: scanning → aligned → locked */
-type ScanState = 'scanning' | 'aligned' | 'locked'
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
  *  When false (default), automatically confirms and proceeds with the scan. */
@@ -273,9 +242,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       if (!device) {
         return targetZoom
       }
-      const deviceMinZoom = device.minZoom ?? 1
-      const deviceMaxZoom = device.maxZoom ?? 10
-      return Math.max(deviceMinZoom, Math.min(targetZoom, deviceMaxZoom))
+      return clampZoom(targetZoom, device.minZoom ?? 1, device.maxZoom ?? 10)
     },
     [device]
   )
@@ -372,129 +339,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     tapGesture.enabled(isGestureEnabled)
   )
 
-  /**
-   * Calculate barcode orientation based on dimensions
-   * @param corners Corner points of the detected barcode
-   * @returns 'horizontal' or 'vertical'
-   */
-  const calculateOrientation = (corners?: { x: number; y: number }[]): 'horizontal' | 'vertical' => {
-    if (!corners || corners.length < 2) {
-      return 'horizontal'
-    }
-
-    // Calculate width and height from corners
-    const width = Math.abs(corners[1].x - corners[0].x)
-    const height = Math.abs(corners[2].y - corners[0].y)
-
-    // If width > height, it's horizontal, otherwise vertical
-    return width > height ? 'horizontal' : 'vertical'
-  }
-
-  /**
-   * Transform coordinates from CodeScannerFrame space to preview container space.
-   *
-   * Key platform differences (from VisionCamera v4 native source code):
-   *
-   * **iOS** (`CameraSession+CodeScanner.swift`):
-   *   - `CodeScannerFrame` = `device.activeFormat.videoDimensions` → always LANDSCAPE (e.g., 1920×1080)
-   *   - `code.frame` = `AVMetadataObject.bounds` (normalized 0-1) × videoDimensions
-   *   - `AVMetadataObject.bounds` are already orientation-corrected by AVFoundation:
-   *     bounds.x = horizontal fraction (left→right), bounds.y = vertical fraction (top→bottom)
-   *   - BUT VisionCamera scales them by landscape dims: x*1920, y*1080
-   *   - This creates coordinates that are positionally correct but in a mismatched aspect ratio
-   *   - Fix: Normalize back to 0-1 fractions, then remap to portrait frame dimensions
-   *
-   * **Android** (`CodeScannerPipeline.kt`):
-   *   - `CodeScannerFrame` = `InputImage.width/height` → RAW (unrotated) dimensions (e.g., 640×480)
-   *   - `code.frame` = ML Kit `Barcode.boundingBox` → in ROTATED (portrait) space (e.g., 480×640)
-   *   - ML Kit applies `rotationDegrees` internally, returning bounding boxes in upright coords
-   *   - But `InputImage.width/height` returns pre-rotation dimensions
-   *   - Fix: Swap frame dimensions only (coordinates are already in portrait space)
-   *
-   * With resizeMode="cover", the camera preview fills the container while maintaining
-   * aspect ratio, center-cropping any overflow. We use Math.max(scaleX, scaleY) for
-   * the uniform scale and compute centering offsets for the cropped dimension.
-   */
-  const transformCoordinates = (
-    frame: { x: number; y: number; width: number; height: number },
-    cameraFrameWidth: number,
-    cameraFrameHeight: number,
-    containerWidth: number,
-    containerHeight: number
-  ): { x: number; y: number; width: number; height: number } => {
-    let fw = cameraFrameWidth
-    let fh = cameraFrameHeight
-    let fx = frame.x
-    let fy = frame.y
-    let fWidth = frame.width
-    let fHeight = frame.height
-
-    // Use WINDOW dimensions to detect device orientation, not container dimensions.
-    // The camera container may be wider than tall (e.g., 411×377) even in portrait mode
-    // due to UI chrome (nav bars, buttons) consuming vertical space.
-    const isDevicePortrait = windowHeight > width
-    const isFrameLandscape = fw > fh
-
-    if (isDevicePortrait) {
-      if (Platform.OS === 'ios') {
-        // iOS: AVMetadataObject.bounds are in RAW landscape sensor space.
-        // VisionCamera scales normalized bounds (0-1) by videoDimensions:
-        //   code.x = bounds.x * size.width  (sensor long/short axis)
-        //   code.y = bounds.y * size.height  (sensor short/long axis)
-        //
-        // Normalizing by the SAME dimensions recovers the original 0-1 bounds,
-        // regardless of whether size.width > size.height or vice versa.
-        //
-        // For portrait display, from empirical testing:
-        //   bounds.x (sensor "X") corresponds to physical VERTICAL (top-to-bottom)
-        //   bounds.y (sensor "Y") corresponds to physical HORIZONTAL (right-to-left, inverted)
-        //
-        // Portrait mapping - sensor coordinates to display coordinates:
-        //   Empirically: boundsY maps to display X (but mirrored: 1-Y-H)
-        //                boundsX maps to display Y
-        const normX = fx / cameraFrameWidth // recovers bounds.x
-        const normY = fy / cameraFrameHeight // recovers bounds.y
-        const normW = fWidth / cameraFrameWidth
-        const normH = fHeight / cameraFrameHeight
-
-        // Portrait frame: short axis = width, long axis = height
-        fw = Math.min(cameraFrameWidth, cameraFrameHeight)
-        fh = Math.max(cameraFrameWidth, cameraFrameHeight)
-
-        // Swap axes: sensor Y → display X (mirrored), sensor X → display Y
-        fx = (1 - normY - normH) * fw
-        fy = normX * fh
-        fWidth = normH * fw
-        fHeight = normW * fh
-      } else if (isFrameLandscape) {
-        // Android: ML Kit applies rotationDegrees internally and returns boundingBox
-        // in portrait coordinate space (e.g., 480×640), but InputImage.width/height
-        // (used for CodeScannerFrame) returns raw unrotated dimensions (e.g., 640×480).
-        // Just swap frame dimensions to match the bounding box coordinate space.
-        fw = cameraFrameHeight
-        fh = cameraFrameWidth
-      }
-    }
-
-    // Cover mode scaling: use the larger scale factor to fill the container
-    const scaleX = containerWidth / fw
-    const scaleY = containerHeight / fh
-    const scale = Math.max(scaleX, scaleY)
-
-    // Centering offset for the dimension that overflows the container
-    const offsetX = (containerWidth - fw * scale) / 2
-    const offsetY = (containerHeight - fh * scale) / 2
-
-    const result = {
-      x: fx * scale + offsetX,
-      y: fy * scale + offsetY,
-      width: fWidth * scale,
-      height: fHeight * scale,
-    }
-
-    return result
-  }
-
   // --- Helpers extracted from onCodeScanned to reduce cognitive complexity ---
 
   /** Enhance a single barcode with position, orientation, alignment, and validation metadata */
@@ -504,12 +348,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     // Use the frame property which is already relative to the Camera Preview
     if (code.frame && containerSize && frameSize) {
       // Transform coordinates from camera sensor space to container space
-      position = transformCoordinates(
+      position = transformBarcodeCoordinates(
         code.frame,
         frameSize.width,
         frameSize.height,
         containerSize.width,
-        containerSize.height
+        containerSize.height,
+        { width, height: windowHeight }
       )
     } else if (code.frame) {
       // Fallback to untransformed coordinates if we don't have dimensions yet
@@ -517,7 +362,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
 
     const corners = code.corners
-    const orientation = calculateOrientation(corners)
+    const orientation = calculateBarcodeOrientation(corners)
 
     // Check if code is aligned with scan zone (pass type for custom zone matching)
     const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
@@ -604,32 +449,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   /** Determine the collective scan state based on qualifying aligned codes */
   const computeScanState = (
     enhancedCodes: EnhancedCode[]
-  ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
-    const identifiedCodes = enhancedCodes.filter((c) => c.value && c.value.length > 0)
-
-    // In production mode (enableScanZones OFF), only codes aligned with scan zones
-    // (and matching barcode types) drive state transitions. This ensures highlights
-    // only turn green / lock when barcodes are in the expected positions.
-    // In dev/calibration mode (enableScanZones ON), all identified codes count —
-    // this allows capturing scan zones from any position.
-    const qualifyingCodes = enableScanZones ? identifiedCodes : identifiedCodes.filter((c) => c.isAligned)
-
-    const qualifyingCount = qualifyingCodes.length
-    const allLocked =
-      qualifyingCount >= MIN_CODES_FOR_ALIGNED &&
-      qualifyingCodes.every((c) => (c.readingCount ?? 0) >= LOCK_READING_THRESHOLD)
-
-    let newScanState: ScanState
-    if (allLocked) {
-      newScanState = 'locked'
-    } else if (qualifyingCount >= MIN_CODES_FOR_ALIGNED) {
-      newScanState = 'aligned'
-    } else {
-      newScanState = 'scanning'
-    }
-
-    return { newScanState, qualifyingCodes }
-  }
+  ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } =>
+    determineScanState(enhancedCodes, {
+      enableScanZones,
+      minCodesForAligned: MIN_CODES_FOR_ALIGNED,
+      lockReadingThreshold: LOCK_READING_THRESHOLD,
+    })
 
   /** Update barcode highlight overlays with fade animations */
   const updateBarcodeHighlights = (enhancedCodes: EnhancedCode[], newScanState: ScanState) => {
@@ -827,21 +652,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const scanSize = Math.min(width - 80, 300)
   const scanAreaDimensions = { width: scanSize, height: scanSize / 4 }
 
-  const getHighlightPosition = useCallback((position: { x: number; y: number; width: number; height: number }) => {
-    if (Platform.OS !== 'android') {
-      return position
-    }
-
-    // Android: ML Kit's boundingBox is a tight fit that excludes quiet zones.
-    // Pad only the rendered highlight (not alignment math).
-    const pad = 8
-    return {
-      x: position.x - pad,
-      y: position.y - pad,
-      width: position.width + pad * 2,
-      height: position.height + pad * 2,
-    }
-  }, [])
+  const getHighlightPosition = useCallback((position: Rect) => getPaddedHighlightPosition(position), [])
 
   /**
    * Check if a code's box falls within a scan zone (with proportional margin).
@@ -858,60 +669,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * @returns true if the code box is within any matching scan zone (± margin)
    */
   const isCodeAlignedWithScanZone = useCallback(
-    (
-      codePosition: { x: number; y: number; width: number; height: number },
-      codeType?: string,
-      marginFactor: number = 0
-    ): boolean => {
-      if (!containerSize) {
-        return false
-      }
-
-      const isFullyWithinBounds = (
-        bounds: { x: number; y: number; width: number; height: number },
-        margin: { x: number; y: number }
-      ): boolean =>
-        codePosition.x >= bounds.x - margin.x &&
-        codePosition.y >= bounds.y - margin.y &&
-        codePosition.x + codePosition.width <= bounds.x + bounds.width + margin.x &&
-        codePosition.y + codePosition.height <= bounds.y + bounds.height + margin.y
-
-      // When custom scan zones are provided, check against each one
-      if (scanZones && scanZones.length > 0) {
-        return scanZones.some((zone) => {
-          // If zone specifies types, only match compatible barcode types
-          if (codeType && zone.types.length > 0 && !zone.types.includes(codeType)) {
-            return false
-          }
-          // Convert normalized (0-1) box to absolute container coordinates
-          const absX = zone.box.x * containerSize.width
-          const absY = zone.box.y * containerSize.height
-          const absW = zone.box.width * containerSize.width
-          const absH = zone.box.height * containerSize.height
-
-          // Expand zone bounds proportionally for tolerance
-          const marginX = absW * marginFactor
-          const marginY = absH * marginFactor
-
-          const aligned = isFullyWithinBounds(
-            { x: absX, y: absY, width: absW, height: absH },
-            { x: marginX, y: marginY }
-          )
-
-          return aligned
-        })
-      }
-
-      // Fallback: check against default scan zone overlay bounds
-      if (!scanZoneBounds) {
-        return false
-      }
-
-      const marginX = scanZoneBounds.width * marginFactor
-      const marginY = scanZoneBounds.height * marginFactor
-
-      return isFullyWithinBounds(scanZoneBounds, { x: marginX, y: marginY })
-    },
+    (codePosition: Rect, codeType?: string, marginFactor: number = 0): boolean =>
+      isCodeAlignedWithZones(codePosition, codeType, containerSize, scanZones, scanZoneBounds, marginFactor),
     [containerSize, scanZones, scanZoneBounds]
   )
 
