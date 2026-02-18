@@ -7,9 +7,8 @@ Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
  app/ios/AriesBifold.xcodeproj/project.pbxproj |  18 +++++++++++++-----
  app/ios/AriesBifold/Info.plist                |  12 +++++++++++-
- app/ios/GoogleService-Info.plist              |  14 ++++++++------
  .../AppIcon.appiconset/iTunesArtwork.png      | Bin 40899 -> 26160 bytes
- 4 files changed, 32 insertions(+), 12 deletions(-)
+ 3 files changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
 index 3a1a4ff6..ce20d819 100644
@@ -106,44 +105,6 @@ index 9a437152..b013ac9c 100644
  	</array>
  	<key>CFBundleVersion</key>
  	<string>$(CURRENT_PROJECT_VERSION)</string>
-diff --git a/app/ios/GoogleService-Info.plist b/app/ios/GoogleService-Info.plist
-index 0d2b4e52..506abd7c 100644
---- a/app/ios/GoogleService-Info.plist
-+++ b/app/ios/GoogleService-Info.plist
-@@ -3,17 +3,17 @@
- <plist version="1.0">
- <dict>
- 	<key>API_KEY</key>
--	<string>AIzaSyCL37I5zpWEauPopROBm6d64bGDiimAvZE</string>
-+	<string>AIzaSyBYE9-AFaGgXjS9wMXxkQcvR0gb-1L36ak</string>
- 	<key>GCM_SENDER_ID</key>
--	<string>1008044298583</string>
-+	<string>27280337469</string>
- 	<key>PLIST_VERSION</key>
- 	<string>1</string>
- 	<key>BUNDLE_ID</key>
--	<string>ca.bc.gov.BCWallet</string>
-+	<string>ca.bc.gov.iddev.servicescard</string>
- 	<key>PROJECT_ID</key>
--	<string>bc-wallet-mobile</string>
-+	<string>bcsc-ios-app</string>
- 	<key>STORAGE_BUCKET</key>
--	<string>bc-wallet-mobile.appspot.com</string>
-+	<string>bcsc-ios-app.firebasestorage.app</string>
- 	<key>IS_ADS_ENABLED</key>
- 	<false></false>
- 	<key>IS_ANALYTICS_ENABLED</key>
-@@ -25,6 +25,8 @@
- 	<key>IS_SIGNIN_ENABLED</key>
- 	<true></true>
- 	<key>GOOGLE_APP_ID</key>
--	<string>1:1008044298583:ios:76bfc02e8a3c04f844ae12</string>
-+	<string>1:27280337469:ios:d17c95af9612ae764dd854</string>
-+	<key>DATABASE_URL</key>
-+	<string>https://bcsc-ios-app.firebaseio.com</string>
- </dict>
- </plist>
-\ No newline at end of file
 diff --git a/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png b/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png
 index 0643d71a48eb9ed5e2b2e73dd1f4405a95030d72..3271b1c4aa016c8a37d021b3eaa6d3ca09a15305 100644
 GIT binary patch
