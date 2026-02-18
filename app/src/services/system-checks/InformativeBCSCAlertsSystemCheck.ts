@@ -51,27 +51,32 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
     // Compare new and stored credential metadata
     const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
 
+    // If stored metadata and current token metadata are different, update the stored metadata
     if (!isMetadataTheSame) {
       // update stored metadata
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
     }
 
-    return !isMetadataTheSame
+    return isMetadataTheSame
   }
 
-  // On fail
-  // Reason === Cancel: create the device indalivded class and let that do it's thing
-  // Otherwise, emit an alert and update the stored metadata
   onFail() {
     if (!this.event || !this.reason) {
       return
     }
 
-    if (this.reason === BCSCReason.Cancel) {
-      // let the DeviceInvalidated class handle cancel events
-      this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
-    } else {
-      this.alertBuilder(this.reason)
+    switch (this.reason) {
+      case BCSCReason.Cancel:
+        this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
+        break
+      case BCSCReason.Renew:
+        this.alertBuilder(AppEventCode.CARD_STATUS_UPDATED)
+        break
+      case BCSCReason.Replace:
+        this.alertBuilder(AppEventCode.CARD_TYPE_CHANGED)
+        break
+      default:
+        break
     }
   }
 
@@ -80,15 +85,7 @@ export class InformativeBCSCAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   // helper function for building the alert to emit
-  alertBuilder(reason: BCSCReason) {
-    let eventCode: AppEventCode = AppEventCode.GENERAL
-    if (reason === BCSCReason.Renew) {
-      eventCode = AppEventCode.CARD_STATUS_UPDATED
-    }
-    if (reason === BCSCReason.Replace) {
-      eventCode = AppEventCode.CARD_TYPE_CHANGED
-    }
-
+  alertBuilder(eventCode: AppEventCode) {
     this.emitAlert(
       this.utils.translation('Alerts.AccountUpdated.Title'),
       this.utils.translation('Alerts.AccountUpdated.Description'),
