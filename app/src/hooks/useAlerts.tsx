@@ -74,6 +74,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     'InvalidPairingCodeSameDevice'
   )
 
+  // Problem with app error alerts - These represent critical issues with the app itself
+  const failedToWriteToLocalStorageAlert = createBasicAlert(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: 100 })
+  const failedToReadFromLocalStorageAlert = createBasicAlert(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: 101 })
+  const clientRegistrationNullAlert = createBasicAlert(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: 102 })
+  const authorizationRequestNullAlert = createBasicAlert(AppEventCode.ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: 103 })
+  const credentialNullAlert = createBasicAlert(AppEventCode.ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: 104 })
+  const unableToDecreptIdTokenAlert = createBasicAlert(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: 105 })
+  const unableToDeleteKeyPairAlert = createBasicAlert(AppEventCode.ERR_108_UNABLE_TO_DELETE_KEY_PAIR, 'ProblemWithApp', { errorCode: 108 })
+  const failedToDeserializeJsonAlert = createBasicAlert(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON, 'ProblemWithApp', { errorCode: 109 })
+  const unableToDecryptJweAlert = createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', { errorCode: 110 })
+
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
   const appUpdateRequiredAlert = useCallback(() => {
