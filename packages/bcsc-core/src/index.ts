@@ -15,6 +15,34 @@ export type {
   NativeAddress,
   NativeAuthorizationRequest,
 } from './NativeBcscCore';
+
+/**
+ * Standard error codes used by native modules when rejecting promises.
+ * These codes are consistent across iOS and Android platforms.
+ * Access via `error.code` on caught native module errors.
+ */
+export const BcscNativeErrorCodes = {
+  /** Secure hardware / keystore could not generate a new keypair */
+  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
+  /** Keypair exists but could not be retrieved from secure storage */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+} as const;
+
+/**
+ * Shape of errors thrown by React Native native module promise rejections.
+ * The `code` property corresponds to the first argument passed to `reject()` / `promise.reject()`.
+ */
+export interface BcscNativeError extends Error {
+  code: string;
+}
+
+/**
+ * Type guard to check if an unknown error is a native module error with a `code` property.
+ */
+export const isBcscNativeError = (error: unknown): error is BcscNativeError => {
+  return error instanceof Error && 'code' in error;
+};
+
 export interface TokenInfo {
   id: string;
   type: TokenType;

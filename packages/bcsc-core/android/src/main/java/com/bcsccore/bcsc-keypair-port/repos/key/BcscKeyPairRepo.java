@@ -98,8 +98,10 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final KeyPair keyPair = getKeyPair(keyStore, info.getAlias());
       SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
+    } catch (KeypairGenerationException e) {
+      throw e;
     } catch (Exception e) {
-      throw new KeypairGenerationException(e.getMessage());
+      throw new KeypairGenerationException(e.getMessage(), e);
     }
   }
 
@@ -152,8 +154,10 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final KeyPair keyPair = getKeyPair(keyStore, alias);
       SimpleLog.d(TAG, "Generated new key pair " + alias);
       return new BcscKeyPair(keyPair, newInfo);
+    } catch (KeypairGenerationException e) {
+      throw e;
     } catch (Exception e) {
-      throw new KeypairGenerationException(e.getMessage());
+      throw new KeypairGenerationException(e.getMessage(), e);
     }
   }
 
@@ -227,8 +231,9 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * Creates a 4096-bit RSA key with SHA-512 digest for signing.
    * 
    * @param alias the alias to store the key pair under
+   * @throws KeypairGenerationException if key generation fails
    */
-  private void generateKeyPair(String alias) {
+  private void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -258,6 +263,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
+      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
     }
   }
 

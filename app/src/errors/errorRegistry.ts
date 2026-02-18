@@ -684,7 +684,7 @@ export const ErrorRegistry = {
   KEYPAIR_GENERATION_ERROR: {
     statusCode: 2707,
     appEvent: AppEventCode.ADD_CARD_KEYPAIR_GENERATION,
-    titleKey: 'BCWalletError.Device.Title',
+    titleKey: 'BCWalletError.Device.KeypairGenerationTitle',
     descriptionKey: 'BCWalletError.Device.KeypairGenerationError',
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.DEVICE,

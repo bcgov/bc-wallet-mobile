@@ -953,6 +953,7 @@ const translation = {
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
@@ -1184,7 +1185,8 @@ const translation = {
       "ClockSkew": "Your device clock is not synchronized. Please check your date and time settings.",
       "AuthorizationError": "Device authorization failed. Please try again.",
       "IncorrectOS": "This app is not supported on your current operating system.",
-      "KeypairGenerationError": "Failed to generate device keys. Please try again.",
+      "KeypairGenerationError": "The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
+      "KeypairGenerationTitle": "Problem with App",
     },
     "General": {
       "Title": "Something Went Wrong",
