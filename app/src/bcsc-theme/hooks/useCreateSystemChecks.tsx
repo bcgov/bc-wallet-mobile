@@ -5,7 +5,6 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InformativeBCSCAlertsSystemCheck } from '@/services/system-checks/InformativeBCSCAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
@@ -105,9 +104,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
-      new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
-      new InformativeBCSCAlertsSystemCheck(store.bcsc.alertReasoning, emitAlert, utils),
+      new InformativeBCSCAlertsSystemCheck(getIdToken, emitAlert, store.bcsc.credentialMetadata, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck

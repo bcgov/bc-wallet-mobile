@@ -226,7 +226,6 @@ enum BCSCDispatchAction {
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   HIDE_DEVICE_AUTH_CONFIRMATION = 'bcsc/hideDeviceAuthConfirmation',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
-  ALERT_REASONING = 'bcsc/alertReasoning',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
   CLEAR_SECURE_STATE = 'bcsc/clearSecureState',
@@ -755,13 +754,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCDispatchAction.ALERT_REASONING: {
-      const alertReasoning = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, alertReasoning: alertReasoning }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

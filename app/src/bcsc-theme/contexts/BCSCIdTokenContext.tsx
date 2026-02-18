@@ -1,9 +1,9 @@
-import { BCDispatchAction, BCState, CredentialMetadata } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { CredentialMetadata } from '@/store'
+import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
-import { BCSCEvent, IdToken } from '../utils/id-token'
+import { IdToken } from '../utils/id-token'
 
 export interface BCSCIdTokenContextType<T> {
   isLoading: boolean
@@ -38,7 +38,13 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
  * @param c2 Credential Metadata object to check
  * @returns boolean returned if both objects are the same, otherwise this returns false
  */
-export const compareCredentialMetadata = (c1: CredentialMetadata, c2: CredentialMetadata): boolean => {
+export const compareCredentialMetadata = (
+  c1: CredentialMetadata | undefined,
+  c2: CredentialMetadata | undefined
+): boolean => {
+  if (!c1 || !c2) {
+    return false
+  }
   return (
     c1.fullName === c2.fullName &&
     c1.bcscReason === c2.bcscReason &&
@@ -60,7 +66,6 @@ export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> 
 export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
 
   const { data, load, isLoading, refresh, isReady } = useDataLoader(
     () => api.token.getCachedIdTokenMetadata({ refreshCache: true }),
@@ -77,26 +82,7 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
     if (!data) {
       return
     }
-
-    const tokenData = tokenToCredentialMetadata(data)
-
-    if (tokenData.bcscReason === BCSCEvent.Cancel) {
-      // cancel events are handled by `DeviceInvalidedated`
-      return
-    }
-    if (store.bcsc.credentialMetadata) {
-      const dataUpdated = compareCredentialMetadata(tokenData, store.bcsc.credentialMetadata)
-      if (!dataUpdated) {
-        dispatch({
-          type: BCDispatchAction.ALERT_REASONING,
-          payload: [{ event: data.bcsc_event, reason: data.bcsc_reason }],
-        })
-      }
-    }
-    dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [tokenData] })
-    // leaving out store.bcsc.credentialMetadata from the dependencies to avoid infinite loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, isReady, dispatch])
+  }, [data, isReady])
 
   const contextValue = useMemo(() => {
     if (!data) {
