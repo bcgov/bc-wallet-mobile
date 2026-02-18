@@ -1,9 +1,8 @@
-import { fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
 import { ConfirmDeviceAuthInfoScreen } from '@/bcsc-theme/features/auth/ConfirmDeviceAuthInfoScreen'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 
 describe('ConfirmDeviceAuthInfoScreen', () => {
   let mockNavigation: any

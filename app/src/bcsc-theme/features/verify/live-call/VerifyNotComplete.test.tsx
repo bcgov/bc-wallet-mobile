@@ -1,11 +1,10 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
-import { fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 import VerifyNotCompleteScreen from './VerifyNotComplete'
 
 describe('VerifyNotComplete', () => {

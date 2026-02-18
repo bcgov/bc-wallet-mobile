@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
-
 import { VerificationResponseService } from './VerificationResponseService'
 import {
   VerificationResponseServiceProvider,

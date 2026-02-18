@@ -1,7 +1,5 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-
 import { BCSCScreens } from '../../types/navigators'
-
 import {
   VerificationResponseEventType,
   VerificationResponseNavigationEvent,

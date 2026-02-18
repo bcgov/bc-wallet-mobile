@@ -1,3 +1,6 @@
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCThemeNames } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
 import {
   Button,
   ButtonType,
@@ -9,15 +12,11 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
-
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCThemeNames } from '@/constants'
-import { isHandledAppError } from '@/errors/appError'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {

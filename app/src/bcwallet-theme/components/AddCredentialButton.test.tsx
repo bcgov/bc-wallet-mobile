@@ -1,8 +1,7 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import AddCredentialButton from '@bcwallet-theme/components/AddCredentialButton'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 
 describe('AddCredentialButton Component', () => {
   beforeEach(() => {
