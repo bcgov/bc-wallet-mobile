@@ -676,11 +676,13 @@ export const useSecureActions = () => {
           const [streetAddress, streetAddress2] = (authRequest.address.streetAddress || '').split('\n')
           userMetadata.address = {
             streetAddress: streetAddress || '',
-            ...(streetAddress2 ? { streetAddress2 } : {}),
             postalCode: authRequest.address.postalCode || '',
             city: authRequest.address.locality || '',
             province: (authRequest.address.region as ProvinceCode) || 'BC',
             country: 'CA',
+          }
+          if (streetAddress2) {
+            userMetadata.address.streetAddress2 = streetAddress2
           }
         }
 
