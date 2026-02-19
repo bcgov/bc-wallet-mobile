@@ -1,5 +1,4 @@
 import React, { createContext, useContext } from 'react'
-
 import { VerificationResponseService } from './VerificationResponseService'
 
 const VerificationResponseServiceContext = createContext<VerificationResponseService | null>(null)

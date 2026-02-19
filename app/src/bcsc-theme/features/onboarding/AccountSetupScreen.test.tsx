@@ -1,8 +1,7 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 import AccountSetupScreen from './AccountSetupScreen'
 
 describe('AccountSetup', () => {

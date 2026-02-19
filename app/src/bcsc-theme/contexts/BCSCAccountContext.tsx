@@ -4,7 +4,6 @@ import { TOKENS, useServices } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import { DeviceEventEmitter } from 'react-native'
-
 import useApi from '../api/hooks/useApi'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'

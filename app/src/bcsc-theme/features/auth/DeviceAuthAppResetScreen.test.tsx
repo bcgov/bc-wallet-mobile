@@ -1,9 +1,8 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-
 import { DeviceAuthAppResetScreen } from '@/bcsc-theme/features/auth/DeviceAuthAppResetScreen'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import React from 'react'
 
 const mockFactoryReset = jest.fn()
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({

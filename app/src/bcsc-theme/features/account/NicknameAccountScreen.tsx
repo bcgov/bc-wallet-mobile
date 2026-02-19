@@ -1,10 +1,9 @@
-import React, { useCallback } from 'react'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
+import React, { useCallback } from 'react'
 import NicknameForm from './components/NicknameForm'
 
 const NicknameAccountScreen: React.FC = () => {

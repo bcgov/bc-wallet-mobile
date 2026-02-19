@@ -1,8 +1,7 @@
-import { fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 import AccountSelectorScreen from './AccountSelectorScreen'
 
 describe('AccountSetup', () => {

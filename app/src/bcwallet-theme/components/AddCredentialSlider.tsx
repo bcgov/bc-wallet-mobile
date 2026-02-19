@@ -1,16 +1,15 @@
+import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
+import { hitSlop } from '@/constants'
 import { SafeAreaModal, Screens, Stacks, testIdForAccessabilityLabel, testIdWithKey, useTheme } from '@bifold/core'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import { CredentialState } from '@credo-ts/core'
 import { useCredentialByState } from '@credo-ts/react-hooks'
+import { BCWalletEventTypes } from '@events/eventTypes'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { hitSlop } from '@/constants'
-import { BCWalletEventTypes } from '@events/eventTypes'
 
 export default function AddCredentialSlider() {
   const { ColorPalette, TextTheme } = useTheme()

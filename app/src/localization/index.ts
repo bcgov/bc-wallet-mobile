@@ -1,6 +1,5 @@
 import { translationResources } from '@bifold/core'
 import merge from 'lodash.merge'
-
 import en from './en'
 import fr from './fr'
 import ptBr from './pt-br'
