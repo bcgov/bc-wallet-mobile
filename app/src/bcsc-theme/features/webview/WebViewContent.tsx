@@ -1,4 +1,5 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { createWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -19,24 +20,16 @@ interface WebViewContentProps {
    * @type {() => void}
    */
   onLoaded?: () => void
-  /**
-   * Optional JavaScript code to inject into the WebView before content loads.
-   * Why? This is used to apply theming or other customizations to the web content.
-   *
-   * @see webview-utils.ts -> createTermsOfUseWebViewJavascriptInjection for an example.
-   * @type {string | undefined}
-   */
-  injectedJavascript?: string
 }
 
 /**
- * A WebView component that loads a given URL with optional injected JavaScript.
+ * A WebView component that loads a given URL with injected JavaScript
  * Automatically applies accessibility font scaling based on device settings.
  *
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {React.ReactElement} The rendered WebView component.
  */
-const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript, onLoaded }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url, onLoaded }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -102,7 +95,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={injectedJavascript}
+      injectedJavaScriptBeforeContentLoaded={createWebViewJavascriptInjection(ColorPalette)}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />
