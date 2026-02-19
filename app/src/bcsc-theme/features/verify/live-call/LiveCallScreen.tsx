@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -30,6 +31,7 @@ type LiveCallScreenProps = {
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
   const [store] = useStore<BCState>()
+  const fcmService = useFcmService()
   const { ColorPalette, Spacing, NavigationTheme } = useTheme()
   const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
@@ -133,6 +135,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       clearIntervalIfExists(timerIntervalRef)
     }
   }, [])
+
+  // Suppress FCM notifications while in the live call
+  useEffect(() => {
+    fcmService.setSuppressed(true)
+    return () => fcmService.setSuppressed(false)
+  }, [fcmService])
 
   // setup volume detection
   useEffect(() => {

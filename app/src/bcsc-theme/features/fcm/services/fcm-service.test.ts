@@ -351,6 +351,44 @@ describe('FcmService', () => {
     })
   })
 
+  describe('suppression', () => {
+    beforeEach(async () => {
+      await service.init()
+    })
+
+    it('does not notify handlers when suppressed', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      service.setSuppressed(true)
+
+      mockState.onMessageCallback?.({
+        data: { bcsc_challenge_request: 'test-jwt' },
+        notification: undefined,
+      })
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('resumes notifying handlers after unsuppressed', () => {
+      const handler = jest.fn()
+      service.subscribe(handler)
+      service.setSuppressed(true)
+
+      mockState.onMessageCallback?.({
+        data: { bcsc_challenge_request: 'test-jwt' },
+        notification: undefined,
+      })
+      expect(handler).not.toHaveBeenCalled()
+
+      service.setSuppressed(false)
+      mockState.onMessageCallback?.({
+        data: { bcsc_challenge_request: 'test-jwt' },
+        notification: undefined,
+      })
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('status message edge cases', () => {
     beforeEach(async () => {
       await service.init()
