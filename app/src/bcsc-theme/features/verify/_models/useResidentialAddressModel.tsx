@@ -3,7 +3,7 @@ import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizatio
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
-import { BCState } from '@/store'
+import { BCState, NonBCSCUserMetadata } from '@/store'
 import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -116,11 +116,11 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     // A1: update user metadata
     // QUESTION: Does updating the data here make sense if the IAS device auth is tied to the previous values?
     // If no: swap this block (A1) and the check for the deviceCode (A2)
-    const updatedUserMetadata = {
+    const updatedUserMetadata: NonBCSCUserMetadata = {
       ...store.bcscSecure.userMetadata,
       address: {
         streetAddress: formState.streetAddress.trim(),
-        ...(formState.streetAddress2.trim() ? { streetAddress2: formState.streetAddress2.trim() } : {}),
+        streetAddress2: formState.streetAddress2.trim() || undefined,
         postalCode: formState.postalCode.trim(),
         city: formState.city.trim(),
         province: formState.province as ProvinceCode, // we know this is present because validation passed
