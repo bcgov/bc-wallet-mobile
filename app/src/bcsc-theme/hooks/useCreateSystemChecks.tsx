@@ -15,7 +15,7 @@ import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
@@ -66,6 +66,11 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.account_expiration_date
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
+
+  // update credential metadata ref on store change
+  useEffect(() => {
+    credentialMetadataRef.current = store.bcsc.credentialMetadata
+  }, [store.bcsc.credentialMetadata])
 
   /**
    * Get system checks to run at app startup

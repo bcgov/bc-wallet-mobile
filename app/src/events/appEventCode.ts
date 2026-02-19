@@ -17,7 +17,6 @@ export enum AppEventCode {
   ADD_CARD_DYNAMIC_REGISTRATION = 'add_card_dynamic_registration', //being tracked
   ADD_CARD_INCORRECT_OS = 'add_card_incorrect_os',
   ADD_CARD_KEYPAIR_GENERATION = 'add_card_keypair_generation',
-  KEYPAIR_GENERATION_ERROR = 'keypair_generation_error',
   ADD_CARD_PIN_STORE = 'add_card_pin_store',
   ADD_CARD_PROVIDER = 'add_card_provider',
   ADD_CARD_SERVER_CONFIGURATION = 'add_card_server_configuration',

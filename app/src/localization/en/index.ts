@@ -304,9 +304,9 @@ const translation = {
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
-        "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue.",
-        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue.",
-        "CancelledByUser": "This device has been removed from your account by a user action.",
+        "CancelledByCardCancel": "Your account will be removed from this app.",
+        "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service.",
+        "CancelledByUser": "You made a change on {{ url }} to remove your account from the app on this device.",
         "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",

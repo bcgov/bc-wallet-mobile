@@ -905,7 +905,7 @@ export const showLocalNotification = async (title: string, message: string): Pro
  *  A native module function that checks if a 3rd party keyboard is currently active on an android device.
  *  iOS does not support this check and will always return false.
  *
- * @returns True if a 3rd party keyboard is active, false otherwsie
+ * @returns True if a 3rd party keyboard is active, false otherwise
  */
 export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
   return BcscCore.isThirdPartyKeyboardActive();

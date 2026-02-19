@@ -3821,7 +3821,7 @@ class BcscCoreModule(
                     android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
                 )
             val isSystemKeyboard =
-                currentInputMethod?.contains("com.andoird") == true ||
+                currentInputMethod?.contains("com.android") == true ||
                     currentInputMethod?.contains("com.google") == true
 
             promise.resolve(!isSystemKeyboard)

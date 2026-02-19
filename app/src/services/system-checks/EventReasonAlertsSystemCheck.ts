@@ -24,7 +24,7 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
 export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private readonly navigation: SystemCheckNavigation
   private readonly getIdToken: () => Promise<IdToken>
-  private readonly emitAlert: (title: string, bodyx: string, options?: AlertOptions) => void
+  private readonly emitAlert: (title: string, body: string, options?: AlertOptions) => void
   private readonly credentialMetadata: CredentialMetadata | undefined
   private readonly utils: SystemCheckUtils
   private event: BCSCEvent | undefined

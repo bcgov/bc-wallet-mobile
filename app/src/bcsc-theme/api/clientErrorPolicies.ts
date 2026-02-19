@@ -76,10 +76,10 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
 export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
-      error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
-      error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
-      (error.appEvent === AppEventCode.LOGIN_REJECTED_400 &&
-        context.endpoint.includes(context.apiEndpoints.clientMetadata))
+      (error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_400) &&
+      context.endpoint.includes(context.apiEndpoints.clientMetadata)
     )
   },
   handle: (error, context) => {
@@ -105,10 +105,10 @@ export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
 export const loginRejectedOnDeviceAuthorizationErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
-      error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
-      error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
-      (error.appEvent === AppEventCode.LOGIN_REJECTED_400 &&
-        context.endpoint.includes(context.apiEndpoints.deviceAuthorization))
+      (error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_400) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
     )
   },
   handle: (error, context) => {

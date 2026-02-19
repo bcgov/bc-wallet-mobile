@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
+import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { BCSCState, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -52,7 +53,7 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     // Can add more cases here for different BCSCReason types in the future
     [BCSCReason.Cancel]: t('BCSC.Modals.DeviceInvalidated.CancelledByCardCancel'),
     [BCSCReason.CanceledByAgent]: t('BCSC.Modals.DeviceInvalidated.CancelledByAgent'),
-    [BCSCReason.CanceledByUser]: t('BCSC.Modals.DeviceInvalidated.CancelledByUser'),
+    [BCSCReason.CanceledByUser]: t('BCSC.Modals.DeviceInvalidated.CancelledByUser', { url: ACCOUNT_SERVICES_URL }),
     [BCSCReason.CanceledByAdditionalCard]: t('BCSC.Modals.DeviceInvalidated.CanceledByAdditionalCard'),
   }
 
