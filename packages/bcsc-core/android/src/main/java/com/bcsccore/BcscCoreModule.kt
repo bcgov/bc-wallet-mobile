@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 
@@ -1031,9 +1032,6 @@ class BcscCoreModule(
         }
 
         try {
-            // Get the current key pair for signing
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
-
             // Create JWT assertion for OAuth2 client credentials
             val now = Date()
             val expiration = Date(now.time + JWT_EXPIRATION_SECONDS * 1000)
@@ -1092,6 +1090,7 @@ class BcscCoreModule(
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
+            // FIXME: Do we need this currentKeyPair? is the call doing something important but we don't need the ouput?
             // Get the current (newest) key pair for signing
             val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
 
@@ -3811,6 +3810,31 @@ class BcscCoreModule(
             Log.e(NAME, "decodeLoginChallenge: Unexpected error: ${e.message}", e)
             promise.reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge", e)
         }
+    }
+
+    @ReactMethod
+    override fun isThirdPartyKeyboardActive(promise: Promise) {
+        try {
+            val currentInputMethod =
+                android.provider.Settings.Secure.getString(
+                    reactApplicationContext.contentResolver,
+                    android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
+                )
+            val isSystemKeyboard =
+                currentInputMethod?.contains("com.android") == true ||
+                    currentInputMethod?.contains("com.google") == true
+
+            promise.resolve(!isSystemKeyboard)
+        } catch (e: Exception) {
+            Log.e(NAME, "3rdPartyKeyboardCheck: ${e.message}", e)
+            promise.resolve(false) // Default to false if any error occurs, to avoid blocking user input
+        }
+    }
+
+    @ReactMethod
+    override fun openKeyboardSelector() {
+        val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.showInputMethodPicker()
     }
 
     /**

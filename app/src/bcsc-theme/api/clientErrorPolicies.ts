@@ -72,10 +72,94 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy LOGIN_REJECT events that appear on client metadata fetch failures
+export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      (error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_400) &&
+      context.endpoint.includes(context.apiEndpoints.clientMetadata)
+    )
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error, {
+      actions: [
+        {
+          text: context.translate('Alerts.Actions.Close'),
+          style: 'cancel',
+        },
+        {
+          text: context.translate('Alerts.Actions.RemoveAccount'),
+          style: 'destructive',
+          onPress: () => {
+            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+          },
+        },
+      ],
+    })
+  },
+}
+
+// Error policy LOGIN_REJECTED events that appear on device verification
+export const loginRejectedOnDeviceAuthorizationErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      (error.appEvent === AppEventCode.LOGIN_REJECTED_401 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_403 ||
+        error.appEvent === AppEventCode.LOGIN_REJECTED_400) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error, {
+      actions: [
+        {
+          text: context.translate('Alerts.Actions.Close'),
+          style: 'cancel',
+        },
+        {
+          text: context.translate('Alerts.Actions.RemoveAccount'),
+          style: 'destructive',
+          onPress: () => {
+            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+          },
+        },
+      ],
+    })
+  },
+}
+
 // Error policy for NO_TOKENS_RETURNED event on token endpoint
 export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
+  },
+  handle: (error, context) => {
+    context.emitErrorAlert(error, {
+      actions: [
+        {
+          text: context.translate('Alerts.Actions.Close'),
+          style: 'cancel',
+          onPress: () => {
+            // noop
+          },
+        },
+        {
+          text: context.translate('Alerts.Actions.RemoveAccount'),
+          style: 'destructive',
+          onPress: () => {
+            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+          },
+        },
+      ],
+    })
+  },
+}
+// Error policy for INVALID_TOKEN event on token endpoint
+export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (error, context) => {
     context.emitErrorAlert(error, {
@@ -259,5 +343,8 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
+  loginRejectedOnClientMetadataErrorPolicy,
+  loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
+  invalidTokenReturnedPolicy,
 ]

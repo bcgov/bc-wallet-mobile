@@ -126,6 +126,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingCreatePIN]: undefined
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCScreens.OnboardingDeveloper]: undefined
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -186,6 +187,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
 }
 
 export type BCSCTabStackParams = {

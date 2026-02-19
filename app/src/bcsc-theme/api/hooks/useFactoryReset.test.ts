@@ -42,7 +42,12 @@ describe('useFactoryReset', () => {
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
 
-    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
+    useBCSCApiClientStateMock.mockReturnValue({
+      client: {
+        clearTokens: jest.fn().mockResolvedValue(undefined),
+      },
+      isClientReady: true,
+    } as any)
     useRegistrationApiMock.mockReturnValue({
       deleteRegistration: deleteRegistrationMock,
       register: registerMock,
