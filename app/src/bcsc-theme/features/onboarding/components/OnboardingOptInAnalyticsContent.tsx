@@ -35,10 +35,6 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     sectionContainer: {
       gap: Spacing.lg,
     },
-    imageContainer: {
-      alignItems: 'center',
-      backgroundColor: 'orange',
-    },
     iconContainer: {
       alignItems: 'center',
       marginVertical: Spacing.md,
