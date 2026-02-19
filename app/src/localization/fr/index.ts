@@ -1066,9 +1066,9 @@ const translation = {
       "Title": "Success (FR)",
       "Description": "You have successfully unpaired your device. (FR)"
     },
-    "LoginServerError": {
+    "ProblemWithLogin": {
       "Title": "Problem with Login (FR)",
-      "Description": "Please try again later. (error 303) (FR)"
+      "Description": "Please try again later. (error {{ errorCode }}) (FR)"
     },
     "TooManyAttempts": {
       "Title": "Sorry, You've Tried Too Many Times (FR)",
@@ -1081,10 +1081,6 @@ const translation = {
     "VerificationNotComplete": {
       "Title": "Verify Not Complete (FR)",
       "Description": "Go to a Service BC location to verify your identity. (FR)"
-    },
-    "ProblemWithLogin": {
-      "Title": "Problem with Login (FR)",
-      "Description": "Please try again later. (error 304) (FR)"
     },
     "InvalidPairingCode": {
       "Title": "Invalid Pairing Code (FR)",

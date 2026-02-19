@@ -1055,7 +1055,7 @@ const translation = {
     },
     "ProblemWithAccount": {
       "Title": "Problem with Account",
-      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCdoe }})",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }})",
       "Action1": "Remove Account",
     },
     "ProblemWithApp": {
@@ -1066,9 +1066,9 @@ const translation = {
       "Title": "Success",
       "Description": "You have successfully unpaired your device."
     },
-    "LoginServerError": {
+    "ProblemWithLogin": {
       "Title": "Problem with Login",
-      "Description": "Please try again later. (error 303)"
+      "Description": "Please try again later. (error {{ errorCode }})"
     },
     "TooManyAttempts": {
       "Title": "Sorry, You've Tried Too Many Times",
@@ -1081,10 +1081,6 @@ const translation = {
     "VerificationNotComplete": {
       "Title": "Verify Not Complete",
       "Description": "Go to a Service BC location to verify your identity."
-    },
-    "ProblemWithLogin": {
-      "Title": "Problem with Login",
-      "Description": "Please try again later. (error 304)"
     },
     "InvalidPairingCode": {
       "Title": "Invalid Pairing Code",

@@ -229,7 +229,7 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
   handle: (error, context) => {
     switch (error.appEvent) {
       case AppEventCode.LOGIN_SERVER_ERROR:
-        return context.alerts.serverErrorAlert()
+        return context.alerts.loginServerErrorAlert()
       case AppEventCode.LOGIN_PARSE_URI:
         return context.alerts.problemWithLoginAlert()
       case AppEventCode.INVALID_PAIRING_CODE:

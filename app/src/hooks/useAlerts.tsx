@@ -24,7 +24,6 @@ type AlertOnPressAction = () => void | Promise<void>
  * - Complex alerts: Include additional actions such as navigation, factory reset,
  *   external linking, or other side effects.
  *
- *
  * @example
  * const alerts = useAlerts(navigation)
  * alerts.unsecuredNetworkAlert() // Shows the unsecured network alert
@@ -90,10 +89,8 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
   const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
   const forgetPairingsAlert = _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
-  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
   const tooManyAttemptsAlert = _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
   const verificationNotCompleteAlert = _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
-  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
   const invalidPairingCodeAlert = _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
   const alreadyVerifiedAlert = _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
   const fileUploadErrorAlert = _createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
@@ -101,7 +98,13 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     'InvalidPairingCodeSameDevice'
   )
-
+  // Login related alerts
+  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', {
+    errorCode: '303',
+  })
+  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', {
+    errorCode: '304',
+  })
   // Remove account alerts
   const loginRejected401Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401')
   const loginRejected403Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403')

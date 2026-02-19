@@ -1066,9 +1066,9 @@ const translation = {
       "Title": "Success (PT-BR)",
       "Description": "You have successfully unpaired your device. (PT-BR)"
     },
-    "LoginServerError": {
+    "ProblemWithLogin": {
       "Title": "Problem with Login (PT-BR)",
-      "Description": "Please try again later. (error 303) (PT-BR)"
+      "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
     },
     "TooManyAttempts": {
       "Title": "Sorry, You've Tried Too Many Times (PT-BR)",
@@ -1081,10 +1081,6 @@ const translation = {
     "VerificationNotComplete": {
       "Title": "Verify Not Complete (PT-BR)",
       "Description": "Go to a Service BC location to verify your identity. (PT-BR)"
-    },
-    "ProblemWithLogin": {
-      "Title": "Problem with Login (PT-BR)",
-      "Description": "Please try again later. (error 304) (PT-BR)"
     },
     "InvalidPairingCode": {
       "Title": "Invalid Pairing Code (PT-BR)",

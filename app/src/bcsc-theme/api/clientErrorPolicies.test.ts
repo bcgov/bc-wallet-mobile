@@ -136,13 +136,13 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call problem with account alert', () => {
+      it('should call no tokens returned alert', () => {
         const error = newError('no_tokens_returned')
         const alertMock = jest.fn()
         const navigationMock = jest.fn()
         const translateMock = jest.fn()
         const context = {
-          alerts: { problemWithAccountAlert: alertMock },
+          alerts: { noTokensReturnedAlert: alertMock },
           translate: translateMock,
           navigation: { navigate: navigationMock },
         }
@@ -530,7 +530,7 @@ describe('clientErrorPolicies', () => {
           const error = newError('login_server_error')
           const mockAlert = jest.fn()
           const context = {
-            alerts: { serverErrorAlert: mockAlert },
+            alerts: { loginServerErrorAlert: mockAlert },
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
@@ -540,7 +540,7 @@ describe('clientErrorPolicies', () => {
           const error = newError('login_parse_uri')
           const mockAlert = jest.fn()
           const context = {
-            alerts: { problemWithAccountAlert: mockAlert },
+            alerts: { problemWithLoginAlert: mockAlert },
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
