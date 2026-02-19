@@ -131,7 +131,7 @@ app/android/app/google-services.json
 app/ios/GoogleService-Info.plist
 ```
 
-There are separate files for each build target (BC Wallet and BCSC v4). The files are tied to the Android package ID and iOS bundle ID respectively, so they are not interchangeable between targets. Make sure you use the files that match your `BUILD_TARGET` (in your .env).
+There are separate files for each build target (BC Wallet and BCSC). The files are tied to the Android package ID and iOS bundle ID respectively, so they are not interchangeable between targets. Make sure you use the files that match your `BUILD_TARGET` (in your .env).
 
 These files are required for push notifications and other Google services but are not checked into the repository.
 
