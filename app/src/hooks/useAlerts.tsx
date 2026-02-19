@@ -41,6 +41,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   // HELPER FUNCTIONS
 
+  // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
   const _createBasicAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return () => {
@@ -57,6 +58,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     [emitAlert, t]
   )
 
+  // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
   const _createProblemWithAccountAlert = useCallback(
     (event: AppEventCode, errorCode: string) => {
       return () => {
@@ -83,6 +85,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
 
+  const problemWithAppAlert = _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp')
   const unsecuredNetworkAlert = _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
   const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
   const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
@@ -239,6 +242,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   return useMemo(
     () => ({
+      problemWithAppAlert,
       unsecuredNetworkAlert,
       serverTimeoutAlert,
       serverErrorAlert,
@@ -264,6 +268,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       invalidTokenAlert,
     }),
     [
+      problemWithAppAlert,
       unsecuredNetworkAlert,
       serverTimeoutAlert,
       serverErrorAlert,

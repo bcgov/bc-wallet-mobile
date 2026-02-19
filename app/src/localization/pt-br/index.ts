@@ -1058,6 +1058,10 @@ const translation = {
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }}) (PT-BR)",
       "Action1": "Remove Account (PT-BR)",
     },
+    "ProblemWithApp": {
+      "Title": "Problem with App (PT-BR)",
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (PT-BR)"
+    },
     "ForgetPairings": {
       "Title": "Success (PT-BR)",
       "Description": "You have successfully unpaired your device. (PT-BR)"
