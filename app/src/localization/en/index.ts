@@ -306,7 +306,7 @@ const translation = {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",
         "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service.",
-        "CancelledByUser": "You made a change on {{ url }} to remove your account from the app on this device.",
+        "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device.",
         "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
