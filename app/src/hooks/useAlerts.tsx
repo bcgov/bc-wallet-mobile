@@ -183,11 +183,11 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       event: AppEventCode.DATA_USE_WARNING,
       actions: [
         {
-          text: t('Alerts.DataUseWarning.Action1'),
+          text: t('Global.Continue'),
           style: 'cancel',
         },
         {
-          text: t('Alerts.DataUseWarning.Action2'),
+          text: t('Alerts.DataUseWarning.Action1'),
           onPress: () => {
             navigation.navigate(BCSCScreens.TakePhoto, {
               forLiveCall: true,
