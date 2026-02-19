@@ -200,6 +200,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerError = (key: ErrorRegistryKey) => {
+    onBack()
     emitErrorModal(key, {
       error: new Error(`Test error triggered for: ${key}`),
       context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },

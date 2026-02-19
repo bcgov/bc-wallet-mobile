@@ -116,10 +116,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   const appUpdateRequiredAlert = useCallback(() => {
     emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
-      event: Platform.select({
-        ios: AppEventCode.IOS_APP_UPDATE_REQUIRED,
-        default: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
-      }),
+      event: Platform.OS === 'ios' ? AppEventCode.IOS_APP_UPDATE_REQUIRED : AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
       actions: [
         {
           text: t('Alerts.AppUpdateRequired.Action1'),

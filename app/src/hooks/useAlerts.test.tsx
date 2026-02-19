@@ -2,6 +2,7 @@ import { mockUseServices, mockUseStore } from '@/bcsc-theme/hooks/useCreateSyste
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
+import RN, { Platform } from 'react-native'
 import { useAlerts } from './useAlerts'
 
 jest.mock('@bifold/core', () => ({
@@ -462,8 +463,258 @@ describe('useAlerts', () => {
   })
 
   describe('appUpdateRequiredAlert', () => {
-    it.todo('ios: should show an alert with the correct title and message')
+    it('ios: should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
 
-    it.todo('ios: should open the app store when the action is pressed')
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.appUpdateRequiredAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.AppUpdateRequired.Title',
+        'Alerts.AppUpdateRequired.Description',
+        {
+          event: AppEventCode.IOS_APP_UPDATE_REQUIRED,
+          actions: [
+            {
+              text: 'Alerts.AppUpdateRequired.Action1',
+              onPress: expect.any(Function),
+            },
+          ],
+        }
+      )
+    })
+
+    it('ios: should open the app store when the action is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const openURLSpy = jest.spyOn(RN.Linking, 'openURL')
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.appUpdateRequiredAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.AppUpdateRequired.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(openURLSpy).toHaveBeenCalledWith('https://apps.apple.com/us/app/id1234298467')
+    })
+
+    it('android: should show an alert with the correct title and message', () => {
+      Platform.OS = 'android'
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.appUpdateRequiredAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.AppUpdateRequired.Title',
+        'Alerts.AppUpdateRequired.Description',
+        {
+          event: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
+          actions: [
+            {
+              text: 'Alerts.AppUpdateRequired.Action1',
+              onPress: expect.any(Function),
+            },
+          ],
+        }
+      )
+    })
+  })
+
+  describe('setupExpiredAlert', () => {})
+
+  describe('liveCallFileUploadErrorAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.liveCallFileUploadAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.LiveCallFileUploadError.Title',
+        'Alerts.LiveCallFileUploadError.Description',
+        {
+          event: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
+          actions: [
+            {
+              text: 'Global.OK',
+              onPress: expect.any(Function),
+            },
+          ],
+        }
+      )
+    })
+
+    // FIXME: Investigate mock issue with CommonActions.reset being undefined...
+    it.todo('should navigate back to the setupsteps screen when the action is pressed')
+  })
+
+  describe('dataUseWarningAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.dataUseWarningAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.DataUseWarning.Title', 'Alerts.DataUseWarning.Description', {
+        event: AppEventCode.DATA_USE_WARNING,
+        actions: [
+          {
+            text: 'Global.Continue',
+            style: 'cancel',
+          },
+          {
+            text: 'Alerts.DataUseWarning.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
+        ],
+      })
+    })
+
+    it('should navigate to the take photo screen when the action is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.dataUseWarningAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.DataUseWarning.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCTakePhoto', {
+        forLiveCall: true,
+        deviceSide: 'front',
+        cameraInstructions: '',
+        cameraLabel: '',
+      })
+    })
+  })
+
+  describe('liveCallHavingTroubleAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const mockAction = jest.fn()
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.liveCallHavingTroubleAlert(mockAction)
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.LiveCallHavingTrouble.Title',
+        'Alerts.LiveCallHavingTrouble.Description',
+        {
+          event: AppEventCode.IN_CALL_HAVING_TROUBLE,
+          actions: [
+            {
+              text: 'Global.Close',
+            },
+            {
+              text: 'Alerts.LiveCallHavingTrouble.Action1',
+              style: 'destructive',
+              onPress: mockAction,
+            },
+          ],
+        }
+      )
+    })
+
+    it('should call the provided action when the action button is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const mockAction = jest.fn()
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.liveCallHavingTroubleAlert(mockAction)
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.LiveCallHavingTrouble.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockAction).toHaveBeenCalled()
+    })
+  })
+
+  describe('cancelVerificationRequestAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const mockAction = jest.fn()
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.cancelVerificationRequestAlert(mockAction)
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.CancelVerificationRequest.Title',
+        'Alerts.CancelVerificationRequest.Description',
+        {
+          event: AppEventCode.CANCEL_VERIFICATION_REQUEST,
+          actions: [
+            {
+              text: 'Alerts.CancelVerificationRequest.Action1',
+              style: 'destructive',
+              onPress: mockAction,
+            },
+            {
+              text: 'Global.Cancel',
+              style: 'cancel',
+            },
+          ],
+        }
+      )
+    })
+
+    it('should call the provided action when the OK button is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const mockAction = jest.fn()
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.cancelVerificationRequestAlert(mockAction)
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.CancelVerificationRequest.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockAction).toHaveBeenCalled()
+    })
   })
 })
