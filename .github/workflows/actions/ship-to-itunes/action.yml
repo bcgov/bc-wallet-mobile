@@ -53,6 +53,11 @@ runs:
           [ -n "$group" ] && GROUPS+=("$group")
         done <<< "$BETA_GROUPS"
 
+        if [ ${#GROUPS[@]} -eq 0 ]; then
+          echo "Error: no beta groups provided"
+          exit 1
+        fi
+
         app-store-connect publish \
         --enable-package-validation \
         --max-build-processing-wait 10 \
