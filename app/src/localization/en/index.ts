@@ -1055,7 +1055,7 @@ const translation = {
     },
     "ProblemWithAccount": {
       "Title": "Problem with Account",
-      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error 214)",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCdoe }})",
       "Action1": "Remove Account",
     },
     "ForgetPairings": {

@@ -95,21 +95,14 @@ export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          text: context.translate('Alerts.Actions.Close'),
-          style: 'cancel',
-        },
-        {
-          text: context.translate('Alerts.Actions.RemoveAccount'),
-          style: 'destructive',
-          onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
+    switch (error.appEvent) {
+      case AppEventCode.LOGIN_REJECTED_400:
+        return context.alerts.loginRejected400Alert()
+      case AppEventCode.LOGIN_REJECTED_401:
+        return context.alerts.loginRejected401Alert()
+      case AppEventCode.LOGIN_REJECTED_403:
+        return context.alerts.loginRejected403Alert()
+    }
   },
 }
 
@@ -124,21 +117,14 @@ export const loginRejectedOnDeviceAuthorizationErrorPolicy: ErrorHandlingPolicy 
     )
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          text: context.translate('Alerts.Actions.Close'),
-          style: 'cancel',
-        },
-        {
-          text: context.translate('Alerts.Actions.RemoveAccount'),
-          style: 'destructive',
-          onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
+    switch (error.appEvent) {
+      case AppEventCode.LOGIN_REJECTED_400:
+        return context.alerts.loginRejected400Alert()
+      case AppEventCode.LOGIN_REJECTED_401:
+        return context.alerts.loginRejected401Alert()
+      case AppEventCode.LOGIN_REJECTED_403:
+        return context.alerts.loginRejected403Alert()
+    }
   },
 }
 
@@ -148,7 +134,7 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (_error, context) => {
-    context.alerts.problemWithAccountAlert()
+    context.alerts.noTokensReturnedAlert()
   },
 }
 // Error policy for INVALID_TOKEN event on token endpoint
@@ -156,25 +142,8 @@ export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          text: context.translate('Alerts.Actions.Close'),
-          style: 'cancel',
-          onPress: () => {
-            // noop
-          },
-        },
-        {
-          text: context.translate('Alerts.Actions.RemoveAccount'),
-          style: 'destructive',
-          onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
+  handle: (_error, context) => {
+    context.alerts.invalidTokenAlert()
   },
 }
 
@@ -262,7 +231,7 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
       case AppEventCode.LOGIN_SERVER_ERROR:
         return context.alerts.serverErrorAlert()
       case AppEventCode.LOGIN_PARSE_URI:
-        return context.alerts.problemWithAccountAlert()
+        return context.alerts.problemWithLoginAlert()
       case AppEventCode.INVALID_PAIRING_CODE:
         return context.alerts.invalidPairingCodeAlert()
       case AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE:

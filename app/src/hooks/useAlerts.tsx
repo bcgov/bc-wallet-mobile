@@ -41,7 +41,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   // HELPER FUNCTIONS
 
-  const createBasicAlert = useCallback(
+  const _createBasicAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return () => {
         emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
@@ -57,23 +57,54 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     [emitAlert, t]
   )
 
+  const _createProblemWithAccountAlert = useCallback(
+    (event: AppEventCode, errorCode: string) => {
+      return () => {
+        emitAlert(t(`Alerts.ProblemWithAccount.Title`), t(`Alerts.ProblemWithAccount.Description`, { errorCode }), {
+          event,
+          actions: [
+            {
+              text: t('Global.Close'),
+              style: 'cancel',
+            },
+            {
+              text: t('Alerts.ProblemWithAccount.Action1'),
+              style: 'destructive',
+              onPress: () => {
+                navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+              },
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, navigation, t]
+  )
+
   // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
 
-  const unsecuredNetworkAlert = createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
-  const serverTimeoutAlert = createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
-  const serverErrorAlert = createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
-  const forgetPairingsAlert = createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
-  const loginServerErrorAlert = createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
-  const tooManyAttemptsAlert = createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
-  const verificationNotCompleteAlert = createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
-  const problemWithLoginAlert = createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
-  const invalidPairingCodeAlert = createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
-  const alreadyVerifiedAlert = createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
-  const fileUploadErrorAlert = createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
-  const loginSameDeviceInvalidPairingCodeAlert = createBasicAlert(
+  const unsecuredNetworkAlert = _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
+  const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
+  const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
+  const forgetPairingsAlert = _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
+  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
+  const tooManyAttemptsAlert = _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
+  const verificationNotCompleteAlert = _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
+  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
+  const invalidPairingCodeAlert = _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
+  const alreadyVerifiedAlert = _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
+  const fileUploadErrorAlert = _createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
+  const loginSameDeviceInvalidPairingCodeAlert = _createBasicAlert(
     AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     'InvalidPairingCodeSameDevice'
   )
+
+  // Remove account alerts
+  const loginRejected401Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401')
+  const loginRejected403Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403')
+  const loginRejected400Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1')
+  const noTokensReturnedAlert = _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214')
+  const invalidTokenAlert = _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215')
 
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
@@ -98,25 +129,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       ],
     })
   }, [emitAlert, logger, t])
-
-  const problemWithAccountAlert = useCallback(() => {
-    emitAlert(t('Alerts.ProblemWithAccount.Title'), t('Alerts.ProblemWithAccount.Description'), {
-      event: AppEventCode.NO_TOKENS_RETURNED,
-      actions: [
-        {
-          text: t('Alerts.Actions.Close'),
-          style: 'cancel',
-        },
-        {
-          text: t('Alerts.ProblemWithAccount.Action1'),
-          style: 'destructive',
-          onPress: () => {
-            navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
-  }, [emitAlert, navigation, t])
 
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
@@ -239,13 +251,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginSameDeviceInvalidPairingCodeAlert,
       alreadyVerifiedAlert,
       appUpdateRequiredAlert,
-      problemWithAccountAlert,
+      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
       fileUploadErrorAlert,
+      loginRejected401Alert,
+      loginRejected403Alert,
+      loginRejected400Alert,
+      invalidTokenAlert,
     }),
     [
       unsecuredNetworkAlert,
@@ -260,13 +276,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginSameDeviceInvalidPairingCodeAlert,
       alreadyVerifiedAlert,
       appUpdateRequiredAlert,
-      problemWithAccountAlert,
+      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
       fileUploadErrorAlert,
+      loginRejected401Alert,
+      loginRejected403Alert,
+      loginRejected400Alert,
+      invalidTokenAlert,
     ]
   )
 }
