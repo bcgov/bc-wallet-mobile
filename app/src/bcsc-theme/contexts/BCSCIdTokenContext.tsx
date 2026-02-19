@@ -78,12 +78,6 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
     load()
   }, [load])
 
-  useEffect(() => {
-    if (!data) {
-      return
-    }
-  }, [data, isReady])
-
   const contextValue = useMemo(() => {
     if (!data) {
       return {
