@@ -20,6 +20,11 @@ inputs:
     description: |
       The version name for the release notes. i.e 1.0.1
     required: true
+  beta_groups:
+    description: |
+      Space-separated, individually quoted TestFlight beta group names
+      to distribute the build to. e.g. '"The Team" "IDIM Team"'
+    required: true
 
 runs:
   using: composite
@@ -44,5 +49,5 @@ runs:
         --enable-package-validation \
         --max-build-processing-wait 10 \
         --testflight \
-        --beta-group "The Team" "IDIM Team" \
+        --beta-group ${{ inputs.beta_groups }} \
         --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
