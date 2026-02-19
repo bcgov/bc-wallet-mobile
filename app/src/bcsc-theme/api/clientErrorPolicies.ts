@@ -237,7 +237,7 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
         return context.alerts.loginSameDeviceInvalidPairingCodeAlert()
     }
 
-    context.logger.warn(`[VerifyDeviceAssertaionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+    context.logger.warn(`[VerifyDeviceAssertionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
   },
 }
 
