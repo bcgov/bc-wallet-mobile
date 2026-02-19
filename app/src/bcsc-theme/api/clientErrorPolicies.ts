@@ -2,7 +2,6 @@ import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts } from '@/hooks/useAlerts'
-import { AlertAction } from '@/utils/alert'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
@@ -42,8 +41,6 @@ export type ErrorMatcherContext = {
 
 type ErrorHandlerContext = {
   translate: TFunction
-  /** @deprecated Use specific alert functions from context.alerts */
-  emitAlert: (title: string, message: string, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
@@ -284,7 +281,6 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   expiredAppSetupErrorPolicy,
-  alreadyVerifiedErrorPolicy,
   loginRejectedOnClientMetadataErrorPolicy,
   loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
