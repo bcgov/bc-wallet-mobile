@@ -67,7 +67,7 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const { data, load, isLoading, refresh, isReady } = useDataLoader(
+  const { data, load, isLoading, refresh } = useDataLoader(
     () => api.token.getCachedIdTokenMetadata({ refreshCache: true }),
     {
       onError: (error) => logger.error('BCSCIdTokenProvider: Failed to load ID Token metadata', error as Error),

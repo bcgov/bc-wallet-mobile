@@ -59,11 +59,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     // Compare new and stored credential metadata
     const isMetadataTheSame = compareCredentialMetadata(this.tokenMetadata, this.credentialMetadata)
 
-    // If stored metadata and current token metadata are different, update the stored metadata
-    if (!isMetadataTheSame) {
-      this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
-    }
-
     return isMetadataTheSame
   }
 
@@ -71,6 +66,9 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     if (!this.event || !this.reason) {
       return
     }
+
+    // update the credential metadata
+    this.utils.dispatch({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA, payload: [this.tokenMetadata] })
 
     switch (this.event) {
       case BCSCEvent.Cancel:
