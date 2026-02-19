@@ -27,7 +27,7 @@ export interface ErrorAlertContextType {
   /**
    * Show error via ErrorModal (default display)
    */
-  emitError: (key: ErrorRegistryKey, options?: ErrorOptions) => void
+  emitErrorModal: (key: ErrorRegistryKey, options?: ErrorOptions) => void
 
   /**
    * Show native alert with title and body
@@ -59,14 +59,13 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
    * Show error via ErrorModal
    * Uses i18next.t() directly to avoid stale closure issues with useCallback
    *
-   * TODO (MD): Rename to emitErrorModal to clarify usage
    */
-  const emitError = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
+  const emitErrorModal = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
     const definition = ErrorRegistry[key]
 
     if (!definition) {
       appLogger.warn(`Unknown error key: ${key}`)
-      emitError('GENERAL_ERROR', options)
+      emitErrorModal('GENERAL_ERROR', options)
       return
     }
 
@@ -100,11 +99,11 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
 
   const value: ErrorAlertContextType = useMemo(
     () => ({
-      emitError,
+      emitErrorModal,
       emitAlert,
       dismiss,
     }),
-    [emitError, emitAlert, dismiss]
+    [emitErrorModal, emitAlert, dismiss]
   )
 
   return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>

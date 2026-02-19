@@ -38,16 +38,31 @@ exports[`Notifications renders correctly 1`] = `
         style={
           {
             "alignItems": "center",
+            "marginVertical": 16,
           }
         }
       >
-        <Image
-          source={
-            {
-              "uri": "mock-notification-image",
-            }
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#FFFFFF",
+                "fontSize": 125,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Design Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
           }
-        />
+        >
+          󰂟
+        </Text>
       </View>
       <Text
         maxFontSizeMultiplier={2}

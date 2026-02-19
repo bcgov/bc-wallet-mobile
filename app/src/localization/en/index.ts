@@ -304,9 +304,10 @@ const translation = {
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
-        "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue.",
-        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue.",
-        "CancelledByUser": "This device has been removed from your account by a user action.",
+        "CancelledByCardCancel": "Your account will be removed from this app.",
+        "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service.",
+        "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device.",
+        "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
       }
@@ -1108,6 +1109,16 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
       "Action1": "Use Data",
     },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard?",
+      "Action1": "Continue",
+      "Action2": "Change Keyboard"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card.",
+    },
     "LiveCallHavingTrouble": {
       "Title": "Having trouble?",
       "Description": "Please end your call to get additional help and troubleshooting tips.",
@@ -1153,10 +1164,10 @@ const translation = {
       "TooManyAttemptsDescription": "Please try again later.",
     },
     "Login": {
-      "Title": "Login Error",
+      "Title": "Problem with App",
       "ProblemWithLoginTitle": "Problem with Login",
       "ParseErrorDescription": "Please try again later. (error 304)",
-      "Rejected": "Your login request was rejected. Please try again.",
+      "Rejected": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again. ",
       "Unauthorized": "You are not authorized to access this service.",
       "Forbidden": "Access to this service is forbidden.",
       "ServerErrorDescription": "Please try again later. (error 303)",
@@ -1192,8 +1203,8 @@ const translation = {
       "VerifyRequestExpiredDescription": "You must start set up again.",
     },
     "Token": {
-      "Title": "Authentication Error",
-      "Invalid": "The authentication token is invalid. Please sign in again.",
+      "Title": "Problem with App",
+      "Invalid": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again.",
       "NoTokensReturnedTitle": "Problem with Account",
       "NoTokensReturnedDescription": "No authentication tokens were returned. Please try again.",
       "Null": "Authentication token is missing. Please sign in again.",

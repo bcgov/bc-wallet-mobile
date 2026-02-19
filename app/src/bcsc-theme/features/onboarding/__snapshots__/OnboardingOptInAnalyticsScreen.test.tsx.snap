@@ -34,18 +34,39 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <Image
-        source={
-          {
-            "uri": "mock-notification-image",
-          }
-        }
+      <View
         style={
           {
             "alignItems": "center",
+            "marginVertical": 16,
           }
         }
-      />
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#F2F2F2",
+                "fontSize": 125,
+              },
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": 16,
+              },
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={

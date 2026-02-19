@@ -1,5 +1,4 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { createTermsOfUseWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
 import { Button, ButtonType, ContentGradient, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -58,11 +57,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
-      <WebViewContent
-        url={TERMS_OF_USE_URL}
-        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette)}
-        onLoaded={() => setWebViewIsLoaded(true)}
-      />
+      <WebViewContent url={TERMS_OF_USE_URL} onLoaded={() => setWebViewIsLoaded(true)} />
     </ScreenWrapper>
   )
 }
