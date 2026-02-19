@@ -4,8 +4,6 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import { NotificationsScreen } from './NotificationsScreen'
 
-jest.mock('@assets/img/notifications.png', () => ({ uri: 'mock-notification-image' }))
-
 describe('Notifications', () => {
   let mockNavigation: any
 

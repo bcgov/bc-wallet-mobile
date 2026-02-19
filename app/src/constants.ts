@@ -81,6 +81,7 @@ export const PAIRING_CODE_LENGTH = 6
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000
 export const CROP_DELAY_MS = 11000
+export const ONBOARDING_ICON_IMAGE_SIZE = 125
 
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
