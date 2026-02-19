@@ -6,7 +6,7 @@ import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
-import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
+import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
@@ -15,7 +15,7 @@ import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
@@ -59,12 +59,18 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
-  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
   const { emitAlert } = useErrorAlert()
+  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
+  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.account_expiration_date
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
+
+  // update credential metadata ref on store change
+  useEffect(() => {
+    credentialMetadataRef.current = store.bcsc.credentialMetadata
+  }, [store.bcsc.credentialMetadata])
 
   /**
    * Get system checks to run at app startup
@@ -103,9 +109,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
-      new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
       new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
+      new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
@@ -115,7 +121,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     if (isBCServicesCardBundle) {
       systemChecks.push(new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils))
     }
-
     return systemChecks
   }, [
     accountExpirationDate,
@@ -127,6 +132,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcscSecure.registrationAccessToken,
     tokenApi,
     utils,
+    emitAlert,
   ])
 
   return useMemo(() => {

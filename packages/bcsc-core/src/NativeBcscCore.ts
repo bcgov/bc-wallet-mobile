@@ -394,6 +394,20 @@ export interface Spec extends TurboModule {
    */
   hasCredential(): Promise<boolean>;
   showLocalNotification(title: string, message: string): Promise<void>;
+
+  /**
+   * Checks if a third party keyboard is currently active on android.
+   * iOS will always return false as keyboard detection isn't reliable
+   *
+   * @returns true if a third party keyboard is active, otherwise this returns false
+   */
+  isThirdPartyKeyboardActive(): Promise<boolean>;
+
+  /**
+   * Opens the native keyboard selector on Android.
+   * iOS does not support programmatically opening the keyboard selector.
+   */
+  openKeyboardSelector(): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

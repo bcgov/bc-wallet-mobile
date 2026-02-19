@@ -213,4 +213,8 @@ abstract class BcscCoreSpec internal constructor(
         key: com.facebook.react.bridge.ReadableMap?,
         promise: Promise,
     )
+
+    abstract fun isThirdPartyKeyboardActive(promise: Promise)
+
+    abstract fun openKeyboardSelector()
 }

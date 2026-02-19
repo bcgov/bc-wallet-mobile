@@ -40,6 +40,21 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
+// This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, etc.)
+export interface CredentialMetadata {
+  fullName: string
+  bcscReason: string
+  deviceCount: number
+  deviceLimit: number
+  cardType: string
+  lastUpdated: number // THIS IS THE bcsc_status_date from the token response
+}
+
+export interface BCSCAlertEvent {
+  event: string
+  reason: string
+}
+
 /**
  * Collection of metadata needed when a user is registering for the application
  * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
@@ -75,6 +90,8 @@ export interface BCSCState {
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
   hasDismissedExpiryAlert?: boolean
+  hasDismissedThirdPartyKeyboardAlert?: boolean
+  credentialMetadata?: CredentialMetadata
 }
 
 /**
@@ -207,6 +224,7 @@ enum BCSCDispatchAction {
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   HIDE_DEVICE_AUTH_CONFIRMATION = 'bcsc/hideDeviceAuthConfirmation',
+  UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
   CLEAR_SECURE_STATE = 'bcsc/clearSecureState',
@@ -236,6 +254,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
+  DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
 }
 
 enum ModeDispatchAction {
@@ -718,6 +737,22 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT: {
+      // this should use the date as a key, so this variable is always up to date...
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
+      const credentialMetadata = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, credentialMetadata }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

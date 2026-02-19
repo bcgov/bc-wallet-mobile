@@ -91,10 +91,9 @@ export const useFactoryReset = () => {
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
         clearSecureState()
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
 
-        // TODO (bm): We should have an actual method to clear tokens
-        client.tokens = undefined
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
+        client.clearTokens()
 
         logger.info('FactoryReset: Logging out user...')
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })

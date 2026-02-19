@@ -307,6 +307,7 @@ const translation = {
         "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (PT-BR)",
         "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (PT-BR)",
         "CancelledByUser": "This device has been removed from your account by a user action. (PT-BR)",
+        "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
       }
@@ -1055,6 +1056,16 @@ const translation = {
       "Title": "Data Use (PT-BR)",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
       "Action1": "Use Data (PT-BR)",
+    },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning (PT-BR)",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard? (PT-BR)",
+      "Action1": "Continue (PT-BR)",
+      "Action2": "Change Keyboard (PT-BR)"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated (PT-BR)",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card. (PT-BR)",
     },
     "LiveCallHavingTrouble": {
       "Title": "Having trouble? (PT-BR)",
