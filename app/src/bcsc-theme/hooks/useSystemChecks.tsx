@@ -1,5 +1,6 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
+import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { runSystemChecks } from '@/services/system-checks/system-checks'
 import { BCState } from '@/store'
@@ -31,7 +32,7 @@ export enum SystemCheckScope {
  */
 export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -39,6 +40,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const ranSystemChecksRef = useRef(false)
   const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
+  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
+  const { emitAlert } = useErrorAlert()
 
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
@@ -81,7 +84,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, async () => {
-      logger.info('useSystemChecks: Tokens refreshed, running device invalidation check')
+      logger.info('useSystemChecks: Tokens refreshed, running event reason alerts system check')
 
       try {
         const utils = { dispatch, translation: t, logger }
@@ -90,14 +93,16 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         // to reuse the freshly updated ID token from cache without forcing another refresh.
         const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
 
-        await runSystemChecks([new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils)])
+        await runSystemChecks([
+          new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
+        ])
       } catch (error) {
         logger.error(`Device invalidation check failed after token refresh: ${(error as Error).message}`)
       }
     })
 
     return () => subscription.remove()
-  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger, navigation])
+  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger, navigation, emitAlert])
 
   useEffect(() => {
     const runSystemChecksByScope = async () => {

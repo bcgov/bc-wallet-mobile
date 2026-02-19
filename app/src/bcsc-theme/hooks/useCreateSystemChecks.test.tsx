@@ -45,15 +45,6 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
   useNavigationContainer: () => mockUseNavigationContainer(),
 }))
 
-jest.mock('react-native-device-info', () => ({
-  getBundleId: () => mockGetBundleId(),
-  getApplicationName: jest.fn(() => 'TestApp'),
-  getVersion: jest.fn(() => '1.0.0'),
-  getBuildNumber: jest.fn(() => '100'),
-  getSystemName: jest.fn(() => 'iOS'),
-  getSystemVersion: jest.fn(() => '17.0'),
-}))
-
 // --------------------
 // System checks
 // --------------------
@@ -67,10 +58,6 @@ jest.mock('@/services/system-checks/ServerStatusSystemCheck', () => ({
 
 jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
   UpdateAppSystemCheck: class UpdateAppSystemCheck {},
-}))
-
-jest.mock('@/services/system-checks/DeviceInvalidatedSystemCheck', () => ({
-  DeviceInvalidatedSystemCheck: class DeviceInvalidatedSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({

@@ -92,7 +92,6 @@ export interface BCSCState {
   hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   credentialMetadata?: CredentialMetadata
-  alertReasoning?: BCSCAlertEvent
 }
 
 /**

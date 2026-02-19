@@ -15,7 +15,7 @@ import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
@@ -60,6 +60,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { isNavigationReady } = useNavigationContainer()
   const accountContext = useContext(BCSCAccountContext)
   const { emitAlert } = useErrorAlert()
+  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
 
   const defaultReadiness = isNavigationReady && client && isClientReady
@@ -105,7 +106,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceCountSystemCheck(getIdToken, utils),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
-      new EventReasonAlertsSystemCheck(getIdToken, emitAlert, store.bcsc.credentialMetadata, utils, navigation),
+      new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
@@ -116,8 +117,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils))
     }
     return systemChecks
-    // credentialMetadata is being left out of the dependency array on purpose to avoid an infinite render loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     accountExpirationDate,
     isBCServicesCardBundle,
@@ -126,7 +125,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appVersion,
     store.bcsc.selectedNickname,
     store.bcscSecure.registrationAccessToken,
-    store.bcsc.alertReasoning,
     tokenApi,
     utils,
     emitAlert,
