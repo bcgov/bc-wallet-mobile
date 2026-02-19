@@ -140,13 +140,16 @@ jobs:
             export_options: 'export-options-bcw.plist'
             release_config: 'release-bcw.xcconfig'
             artifact_name: 'ios-bc-wallet-artifact'
-            beta_groups: '"The Team" "IDIM Team"'
+            beta_groups: |-
+              The Team
+              IDIM Team
           - build_type: 'single-app'
             app_version: '4.0.0'
             export_options: 'export-options-sa.plist'
             release_config: 'release-sa.xcconfig'
             artifact_name: 'ios-single-app-artifact'
-            beta_groups: '"IDIM testers for DEV env"'
+            beta_groups: |-
+              IDIM testers for DEV env
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)

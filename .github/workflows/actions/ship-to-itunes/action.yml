@@ -22,8 +22,8 @@ inputs:
     required: true
   beta_groups:
     description: |
-      Space-separated, individually quoted TestFlight beta group names
-      to distribute the build to. e.g. '"The Team" "IDIM Team"'
+      Newline-separated TestFlight beta group names to distribute
+      the build to. One group per line.
     required: true
 
 runs:
@@ -46,9 +46,16 @@ runs:
         BETA_GROUPS: ${{ inputs.beta_groups }}
       run: |
         export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
+
+        GROUPS=()
+        while IFS= read -r group; do
+          group="$(echo "$group" | xargs)"
+          [ -n "$group" ] && GROUPS+=("$group")
+        done <<< "$BETA_GROUPS"
+
         app-store-connect publish \
         --enable-package-validation \
         --max-build-processing-wait 10 \
         --testflight \
-        --beta-group ${BETA_GROUPS} \
+        --beta-group "${GROUPS[@]}" \
         --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
