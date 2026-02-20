@@ -966,6 +966,8 @@ const translation = {
       "StreetAddressLabel": "Street Line 1 (PT-BR)",
       "StreetAddressSubtext": "Your residential street address (PT-BR)",
       "StreetAddressRequired": "Please enter a street address (PT-BR)",
+      "StreetAddress2Label": "Street Line 2 (Optional) (PT-BR)",
+      "StreetAddress2Subtext": "Apartment, suite, unit, building, floor, etc. (PT-BR)",
       "CityLabel": "City (PT-BR)",
       "CitySubtext": "The city of your current address (PT-BR)",
       "CityRequired": "Please enter a city (PT-BR)",
