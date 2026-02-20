@@ -114,32 +114,11 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     'ProblemWithApp',
     { errorCode: 102 }
   )
-  // const authorizationRequestNullAlert = createBasicAlert(
-  //   AppEventCode.ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL,
-  //   'ProblemWithApp',
-  //   { errorCode: 103 }
-  // )
-  // const credentialNullAlert = createBasicAlert(AppEventCode.ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL, 'ProblemWithApp', {
-  //   errorCode: 104,
-  // })
   const unableToDecryptIdTokenAlert = _createBasicAlert(
     AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
     'ProblemWithApp',
     { errorCode: 105 }
   )
-  // const unableToDeleteKeyPairAlert = createBasicAlert(
-  //   AppEventCode.ERR_108_UNABLE_TO_DELETE_KEY_PAIR,
-  //   'ProblemWithApp',
-  //   { errorCode: 108 }
-  // )
-  // const failedToDeserializeJsonAlert = createBasicAlert(
-  //   AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON,
-  //   'ProblemWithApp',
-  //   { errorCode: 109 }
-  // )
-  // const unableToDecryptJweAlert = createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', {
-  //   errorCode: 110,
-  // })
   // Login related alerts
   const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', {
     errorCode: '303',
