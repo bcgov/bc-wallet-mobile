@@ -1060,7 +1060,7 @@ const translation = {
     },
     "ProblemWithApp": {
       "Title": "Problem with App (FR)",
-      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)"
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
     },
     "ForgetPairings": {
       "Title": "Success (FR)",

@@ -7,11 +7,11 @@ import { useCallback, useMemo } from 'react'
 import { AccountSecurityMethod, BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
 
 /**
- * Service hook for registration api, business logic related to registration API calls
- * and UI event handling should be implemented here.
+ * Service layer hook for registration api.
+ * Business logic related to registration API calls and UI event handling should be implemented here.
  *
  * @param registrationApi - The base token API service.
- * @returns Token API service with UI event handling.
+ * @returns Registration service
  */
 export const useRegistrationService = (registrationApi: RegistrationApi) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
@@ -42,7 +42,7 @@ export const useRegistrationService = (registrationApi: RegistrationApi) => {
   )
 
   /**
-   * Updates an existing BCSC client registration with error handling and user alerts.
+   * Updates an existing BCSC client registration and alerts on failures during the update process.
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
@@ -68,7 +68,7 @@ export const useRegistrationService = (registrationApi: RegistrationApi) => {
 
   return useMemo(
     () => ({
-      ...registrationApi,
+      ...registrationApi, // Spread the base API to include all its methods
       updateRegistration,
       register,
     }),

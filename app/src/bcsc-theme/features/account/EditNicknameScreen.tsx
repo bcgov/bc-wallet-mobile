@@ -12,8 +12,8 @@ const EditNicknameScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store, dispatch] = useStore<BCState>()
-  const { registration } = useApi()
-  const registrationService = useRegistrationService(registration)
+  const { registration: registrationApi } = useApi()
+  const registration = useRegistrationService(registrationApi)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(
@@ -28,7 +28,7 @@ const EditNicknameScreen: React.FC = () => {
       })
 
       try {
-        await registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
+        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
         logger.error('Failed to update registration', { error: apiError })
         throw apiError
@@ -49,7 +49,7 @@ const EditNicknameScreen: React.FC = () => {
       store.bcscSecure.registrationAccessToken,
       t,
       navigation,
-      registrationService,
+      registration,
       logger,
     ]
   )

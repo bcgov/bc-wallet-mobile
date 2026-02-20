@@ -6,7 +6,8 @@ import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/
 import { useCallback, useMemo } from 'react'
 
 /**
- * Service hook for token api, business logic related to token API calls and UI event handling should be implemented here.
+ * Service layer hook for token api.
+ * Business logic related to token API calls and UI event handling should be implemented here.
  *
  * @param tokenApi - The base token API service.
  * @returns Token API service with UI event handling.
@@ -15,6 +16,12 @@ export const useTokenService = (tokenApi: TokenApi) => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
+  /**
+   * Gets cached ID token metadata and handles errors related to decryption and verification failures by showing an alert.
+   *
+   * @param config - Configuration for fetching ID token metadata
+   * @returns Promise resolving to ID token metadata response data
+   */
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
       try {
@@ -31,7 +38,7 @@ export const useTokenService = (tokenApi: TokenApi) => {
 
   return useMemo(
     () => ({
-      ...tokenApi,
+      ...tokenApi, // Spread the base token API to include all its methods
       getCachedIdTokenMetadata,
     }),
     [getCachedIdTokenMetadata, tokenApi]

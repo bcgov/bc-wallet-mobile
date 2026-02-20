@@ -119,8 +119,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * fetches notification tokens, creates registration body, and submits to BCSC.
    * Stores returned client credentials and updates local account storage.
    *
-   * @see {@link registrationErrorHandler} for handling errors that may occur during this process
-   *
    * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
    */
@@ -183,8 +181,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * Requires valid registration access token and nickname. Generates fresh attestation
    * and notification tokens, then submits PUT request to update client registration.
    * Updates local account storage with new credentials.
-   *
-   * @see {@link registrationErrorHandler} for handling errors that may occur during this process
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set

@@ -1058,6 +1058,10 @@ const translation = {
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }})",
       "Action1": "Remove Account",
     },
+    "ProblemWithApp": {
+      "Title": "Problem with App",
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
+    },
     "ForgetPairings": {
       "Title": "Success",
       "Description": "You have successfully unpaired your device."
@@ -1133,10 +1137,6 @@ const translation = {
       "Title": "Problem with Connection",
       "Description": "Please try again."
     },
-    "ProblemWithApp": {
-      "Title": "Problem with App",
-      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
-    }
   },
   "BCWalletError": {
     "Camera": {
