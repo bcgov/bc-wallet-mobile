@@ -122,7 +122,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   // const credentialNullAlert = createBasicAlert(AppEventCode.ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL, 'ProblemWithApp', {
   //   errorCode: 104,
   // })
-  const unableToDecreptIdTokenAlert = _createBasicAlert(
+  const unableToDecryptIdTokenAlert = _createBasicAlert(
     AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
     'ProblemWithApp',
     { errorCode: 105 }
@@ -309,7 +309,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       clientRegistrationNullAlert,
       // authorizationRequestNullAlert,
       // credentialNullAlert,
-      unableToDecryptIdTokenAlert: unableToDecreptIdTokenAlert,
+      unableToDecryptIdTokenAlert,
       // unableToDeleteKeyPairAlert,
       // failedToDeserializeJsonAlert,
       // unableToDecryptJweAlert,
@@ -344,7 +344,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       clientRegistrationNullAlert,
       // authorizationRequestNullAlert,
       // credentialNullAlert,
-      unableToDecreptIdTokenAlert,
+      unableToDecryptIdTokenAlert,
       // unableToDeleteKeyPairAlert,
       // failedToDeserializeJsonAlert,
       // unableToDecryptJweAlert,
