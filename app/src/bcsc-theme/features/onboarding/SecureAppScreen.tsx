@@ -4,9 +4,7 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors/appError'
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -33,7 +31,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const { handleSuccessfulAuth } = useSecureActions()
   const { register } = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitErrorAlert } = useErrorAlert()
+  const { problemWithAppAlert } = useAlerts(navigation)
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -52,12 +50,12 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       }
     } catch (error) {
       if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-        emitErrorAlert(AppError.fromErrorDefinition(ErrorRegistry.KEYPAIR_GENERATION_ERROR, { cause: error }))
+        problemWithAppAlert()
       }
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error completing device security setup: ${errMessage}`)
     }
-  }, [handleSuccessfulAuth, logger, register, emitErrorAlert])
+  }, [register, handleSuccessfulAuth, logger, problemWithAppAlert])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

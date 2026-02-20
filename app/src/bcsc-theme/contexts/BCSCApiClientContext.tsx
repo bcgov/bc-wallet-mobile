@@ -1,4 +1,4 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -7,13 +7,7 @@ import React, { createContext, useCallback, useEffect, useMemo, useState } from 
 import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
-import {
-  AxiosAppError,
-  ClientErrorHandlingPolicies,
-  ErrorMatcherContext,
-  createExpiredAppSetupErrorPolicy,
-} from '../api/clientErrorPolicies'
-import { useFactoryReset } from '../api/hooks/useFactoryReset'
+import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -45,22 +39,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitAlert, emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const factoryReset = useFactoryReset()
-
-  // Combine client error handling policies with policy factories
-  const allErrorHandlingPolicies = useMemo(() => {
-    return [
-      ...ClientErrorHandlingPolicies,
-      createExpiredAppSetupErrorPolicy(async () => {
-        const result = await factoryReset()
-        if (!result.success) {
-          logger.error('[VerificationReset] Error while resetting', result.error)
-        }
-      }),
-    ]
-  }, [factoryReset, logger])
+  const alerts = useAlerts(navigation)
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -81,7 +61,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const handleApiClientError = useCallback(
     (error: AxiosAppError, context: ErrorMatcherContext) => {
-      const policy = allErrorHandlingPolicies.find((policy) => policy.matches(error, context))
+      const policy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context))
 
       if (!policy) {
         logger.info('[BCSCApiClient] No error handling policy for:', {
@@ -98,16 +78,15 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       policy.handle(error, {
         linking: Linking,
-        emitErrorAlert,
-        emitAlert,
         navigation,
         translate: t,
         logger,
+        alerts,
       })
 
       error.handled = true
     },
-    [allErrorHandlingPolicies, emitAlert, emitErrorAlert, logger, navigation, t]
+    [alerts, logger, navigation, t]
   )
 
   useEffect(() => {

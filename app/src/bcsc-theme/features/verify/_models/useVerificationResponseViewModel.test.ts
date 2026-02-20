@@ -14,11 +14,8 @@ jest.mock('@bifold/core', () => {
   }
 })
 
-const mockEmitErrorAlert = jest.fn()
 jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({
-    emitErrorAlert: mockEmitErrorAlert,
-  }),
+  useErrorAlert: () => ({}),
 }))
 
 jest.mock('react-native-bcsc-core', () => ({

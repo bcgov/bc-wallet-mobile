@@ -35,8 +35,6 @@ export enum AppEventCode {
   CARD_TYPE_CHANGED = 'card_type_changed',
   CLOCK_SKEW_ERROR = 'clock_skew_error',
   DATA_USE_WARNING = 'data_use_warning',
-  EVIDENCE_UPLOAD_SERVER_ERROR = 'evidence_upload_server_error',
-  EVIDENCE_UPLOAD_UNKNOWN_ERROR = 'evidence_upload_unknown_error',
   INVALID_PAIRING_CODE = 'invalid_pairing_code',
   INVALID_TOKEN = 'invalid_token',
   IN_CALL_HAVING_TROUBLE = 'in_call_having_trouble',
@@ -54,7 +52,7 @@ export enum AppEventCode {
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
   SERVER_ERROR = 'server_error',
-  UNKNOWN_SERVER_ERROR = 'unknown_server_error', // fallback value - no IAS mapping
+  UNKNOWN_SERVER_ERROR = 'unknown_server_error', // Non-IAS error code
   SERVER_TIMEOUT = 'server_timeout',
   UNSECURED_NETWORK = 'unsecured_network',
   USER_INPUT_BIRTHDATE_EMPTY = 'user_input_birthdate_empty',
@@ -128,6 +126,8 @@ export enum AppEventCode {
   EMAIL_VERIFICATION_CODE_INVALID = 'email_verification_code_invalid',
   EMAIL_ADDRESS_INVALID = 'email_address_invalid',
   CONFIRM_SKIP_EMAIL_ADDRESS = 'confirm_skip_email_address',
+  FORGET_ALL_PAIRINGS = 'forget_all_pairings',
+  LIVE_CALL_FILE_UPLOAD_ERROR = 'live_call_file_upload_error', // Non-IAS error code
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
@@ -143,26 +143,26 @@ export enum AppEventCode {
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
   // Wallet/Agent Errors
-  STATE_LOAD_ERROR = 'state_load_error',
-  AGENT_INITIALIZATION_ERROR = 'agent_initialization_error',
-  WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found',
+  STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
+  AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
+  WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found', // Non-IAS error code
   // BCID/Connection Errors
-  PARSE_INVITATION_ERROR = 'parse_invitation_error',
-  RECEIVE_INVITATION_ERROR = 'receive_invitation_error',
-  LEGACY_DID_ERROR = 'legacy_did_error',
-  APP_TO_APP_URL_ERROR = 'app_to_app_url_error',
-  SERVICE_CARD_AUTH_ERROR = 'service_card_auth_error',
+  PARSE_INVITATION_ERROR = 'parse_invitation_error', // Non-IAS error code
+  RECEIVE_INVITATION_ERROR = 'receive_invitation_error', // Non-IAS error code
+  LEGACY_DID_ERROR = 'legacy_did_error', // Non-IAS error code
+  APP_TO_APP_URL_ERROR = 'app_to_app_url_error', // Non-IAS error code
+  SERVICE_CARD_AUTH_ERROR = 'service_card_auth_error', // Non-IAS error code
   // Attestation Errors
-  ATTESTATION_BAD_INVITATION = 'attestation_bad_invitation',
-  ATTESTATION_CONNECTION_ERROR = 'attestation_connection_error',
-  ATTESTATION_NONCE_ERROR = 'attestation_nonce_error',
-  ATTESTATION_GENERATION_ERROR = 'attestation_generation_error',
-  ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error',
-  ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined',
-  ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable',
-  ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
-  ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
-  ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
+  ATTESTATION_BAD_INVITATION = 'attestation_bad_invitation', // Non-IAS error code
+  ATTESTATION_CONNECTION_ERROR = 'attestation_connection_error', // Non-IAS error code
+  ATTESTATION_NONCE_ERROR = 'attestation_nonce_error', // Non-IAS error code
+  ATTESTATION_GENERATION_ERROR = 'attestation_generation_error', // Non-IAS error code
+  ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error', // Non-IAS error code
+  ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined', // Non-IAS error code
+  ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable', // Non-IAS error code
+  ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error', // Non-IAS error code
+  ATTESTATION_REQUEST_ERROR = 'attestation_request_error', // Non-IAS error code
+  ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
 }
 
 const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))

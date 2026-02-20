@@ -47,6 +47,16 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
       />
 
       <InputWithValidation
+        id={'streetAddress2'}
+        label={t('BCSC.Address.StreetAddress2Label')}
+        value={formState.streetAddress2}
+        onChange={(value) => handleChange('streetAddress2', value)}
+        error={formErrors.streetAddress2}
+        subtext={t('BCSC.Address.StreetAddress2Subtext')}
+        textInputProps={{ autoCorrect: false }}
+      />
+
+      <InputWithValidation
         id={'city'}
         label={t('BCSC.Address.CityLabel')}
         value={formState.city}

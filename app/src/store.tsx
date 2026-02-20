@@ -68,6 +68,7 @@ export interface NonBCSCUserMetadata {
   }
   address?: {
     streetAddress: string
+    streetAddress2?: string
     postalCode: string
     city: string
     province: ProvinceCode

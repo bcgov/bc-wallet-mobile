@@ -2,9 +2,10 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
+import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,8 +20,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const { emitErrorModal, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+  const { emitErrorModal, emitAlert, dismiss } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation()
+  const alerts = useAlerts(navigation as any)
 
   const styles = StyleSheet.create({
     container: {
@@ -197,6 +200,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   }
 
   const triggerError = (key: ErrorRegistryKey) => {
+    onBack()
     emitErrorModal(key, {
       error: new Error(`Test error triggered for: ${key}`),
       context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },
@@ -205,8 +209,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
 
   const triggerErrorAsAlert = (key: ErrorRegistryKey) => {
     const definition = ErrorRegistry[key]
-    const error = AppError.fromErrorDefinition(definition)
-    emitErrorAlert(error, {
+    emitAlert(t(definition.titleKey), t(definition.descriptionKey), {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
         { text: t('Global.Okay'), style: 'default' },
@@ -278,6 +281,25 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                   onPress={() => triggerError(key)}
                 />
                 <Text style={[styles.description, { marginTop: 4, marginBottom: 0 }]}>{description}</Text>
+              </View>
+            )
+          })}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'useAlerts Hook'}</Text>
+          <Text style={styles.description}>{'useAlerts callbacks'}</Text>
+          {Object.keys(alerts).map((alertCallback) => {
+            const showAlert = alerts[alertCallback as keyof typeof alerts]
+            return (
+              <View key={alertCallback} style={styles.buttonRow}>
+                <Button
+                  title={alertCallback}
+                  accessibilityLabel={`Trigger useAlerts ${alertCallback}`}
+                  testID={`api-error-${alertCallback}`}
+                  buttonType={ButtonType.Secondary}
+                  onPress={showAlert}
+                />
               </View>
             )
           })}
