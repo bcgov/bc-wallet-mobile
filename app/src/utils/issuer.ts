@@ -6,7 +6,7 @@ import { getIssuer, setIssuer } from 'react-native-bcsc-core'
  * Initializes the issuer value on app startup if it is not already set.
  *
  * @param logger - The RemoteLogger instance for logging any errors during initialization.
- * @returns Promise<void> - A promise that resolves when the initialization process is complete.
+ * @returns A promise that resolves when the initialization process is complete.
  */
 export const initIssuer = async (logger: RemoteLogger): Promise<void> => {
   try {
@@ -22,6 +22,6 @@ export const initIssuer = async (logger: RemoteLogger): Promise<void> => {
 
     await setIssuer(defaultIssuer)
   } catch (error) {
-    logger.error('[BCSCCore] Error initializing issuer on startup', error as Error)
+    logger.error('[BCSCCore] Error initializing issuer', error as Error)
   }
 }
