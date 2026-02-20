@@ -1,20 +1,17 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { registration } = useApi()
+  const registrationService = useRegistrationService(registration)
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
-  const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const alerts = useAlerts(navigation)
 
   const handleUpdateRegistration = useCallback(async () => {
     try {
@@ -31,15 +28,13 @@ const useVerificationResponseViewModel = () => {
         return
       }
 
-      await registration.updateRegistration(registrationAccessToken, selectedNickname)
+      await registrationService.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
-      registrationErrorHandler(error, alerts)
-
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to update registration: ${errMessage}`)
       return
     }
-  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registration, logger, alerts])
+  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registrationService, logger])
 
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)

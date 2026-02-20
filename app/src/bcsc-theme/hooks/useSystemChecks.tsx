@@ -11,7 +11,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import BCSCApiClient from '../api/client'
-import useTokenApi from '../api/hooks/useTokens'
+import useTokenApi, { useTokenService } from '../api/hooks/useTokens'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 
@@ -35,6 +35,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const tokenApi = useTokenApi(client as BCSCApiClient)
+  const tokenService = useTokenService(tokenApi)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
@@ -96,7 +97,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
         // Tokens have already been refreshed before this event; use refreshCache: false
         // to reuse the freshly updated ID token from cache without forcing another refresh.
-        const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
+        const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
         await runSystemChecks([
           new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
@@ -107,7 +108,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     })
 
     return () => subscription.remove()
-  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger, navigation, emitAlert])
+  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger, navigation, emitAlert, tokenService])
 
   useEffect(() => {
     const runSystemChecksByScope = async () => {

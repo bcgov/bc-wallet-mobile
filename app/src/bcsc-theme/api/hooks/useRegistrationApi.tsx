@@ -3,10 +3,11 @@ import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-toke
 import { AppError, ErrorRegistry } from '@/errors'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import { AppAlerts } from '@/hooks/useAlerts'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
@@ -58,6 +59,8 @@ export interface RegistrationResponseData {
 export interface NonceResponseData {
   nonce: string
 }
+
+type RegistrationApi = ReturnType<typeof useRegistrationApi>
 
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
@@ -314,20 +317,73 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 }
 
 /**
- * Handles errors that may occur during the registration process and triggers appropriate alerts.
+ * Service hook for registration api, business logic related to registration API calls
+ * and UI event handling should be implemented here.
  *
- * @param error - The error object thrown during registration
- * @param alerts - The AppAlerts object containing alert functions to display to the user
- * @returns void
+ * @param registrationApi - The base token API service.
+ * @returns Token API service with UI event handling.
  */
-export const registrationErrorHandler = (error: unknown, alerts: AppAlerts) => {
-  if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-    alerts.problemWithAppAlert()
-  }
+export const useRegistrationService = (registrationApi: RegistrationApi) => {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const alerts = useAlerts(navigation)
 
-  if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
-    alerts.clientRegistrationNullAlert()
-  }
+  /**
+   * Registers a new BCSC client and alerts on failures during the registration process.
+   *
+   * @param securityMethod - The account security method to use for registration
+   * @returns Promise resolving to registration response data or void if account exists
+   */
+  const register = useCallback(
+    async (securityMethod: AccountSecurityMethod) => {
+      try {
+        return await registrationApi.register(securityMethod)
+      } catch (error) {
+        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
+          alerts.problemWithAppAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
+          alerts.clientRegistrationNullAlert()
+        }
+        throw error
+      }
+    },
+    [registrationApi, alerts]
+  )
+
+  /**
+   * Updates an existing BCSC client registration with error handling and user alerts.
+   *
+   * @param registrationAccessToken - Bearer token for registration endpoint access
+   * @param selectedNickname - New client name/nickname to set
+   * @return Promise resolving to updated registration response data
+   */
+  const updateRegistration = useCallback(
+    async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
+      try {
+        return await registrationApi.updateRegistration(registrationAccessToken, selectedNickname)
+      } catch (error) {
+        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
+          alerts.problemWithAppAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
+          alerts.clientRegistrationNullAlert()
+        }
+        throw error
+      }
+    },
+    [registrationApi, alerts]
+  )
+
+  return useMemo(
+    () => ({
+      ...registrationApi,
+      updateRegistration,
+      register,
+    }),
+    [register, registrationApi, updateRegistration]
+  )
 }
 
 export default useRegistrationApi

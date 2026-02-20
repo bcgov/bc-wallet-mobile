@@ -1,5 +1,9 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -22,6 +26,8 @@ export interface TokenResponse {
   scope: string
   token_type: string
 }
+
+type TokenApi = ReturnType<typeof useTokenApi>
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
   const { updateTokens } = useSecureActions()
@@ -105,6 +111,39 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
       getCachedIdTokenMetadata,
     }),
     [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken]
+  )
+}
+
+/**
+ * Service hook for token api, business logic related to token API calls and UI event handling should be implemented here.
+ *
+ * @param tokenApi - The base token API service.
+ * @returns Token API service with UI event handling.
+ */
+export const useTokenService = (tokenApi: TokenApi): ReturnType<typeof useTokenApi> => {
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const alerts = useAlerts(navigation)
+
+  const getCachedIdTokenMetadata = useCallback(
+    async (config: IdTokenMetadataConfig) => {
+      try {
+        return await tokenApi.getCachedIdTokenMetadata(config)
+      } catch (error) {
+        if (isAppError(error, AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)) {
+          alerts.unableToDecryptIdTokenAlert()
+        }
+        throw error
+      }
+    },
+    [alerts, tokenApi]
+  )
+
+  return useMemo(
+    () => ({
+      ...tokenApi,
+      getCachedIdTokenMetadata,
+    }),
+    [getCachedIdTokenMetadata, tokenApi]
   )
 }
 

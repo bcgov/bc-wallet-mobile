@@ -1,4 +1,4 @@
-import useRegistrationApi, { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi, { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
@@ -69,7 +69,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
-  const { register } = useRegistrationApi(client, isClientReady)
+  const registrationApi = useRegistrationApi(client, isClientReady)
+  const { register } = useRegistrationService(registrationApi)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
@@ -129,8 +130,6 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
-        registrationErrorHandler(error, alerts)
-
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error: ${error}`)
       } finally {

@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useTokenService } from '@/bcsc-theme/api/hooks/useTokens'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -27,6 +28,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
  */
 const Services: React.FC = () => {
   const { token } = useApi()
+  const tokenService = useTokenService(token)
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
@@ -37,7 +39,7 @@ const Services: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { load: loadIdTokenMetadata, data: idTokenMetadata } = useDataLoader(
     // use the cache, card type doesn't change
-    () => token.getCachedIdTokenMetadata({ refreshCache: false }),
+    () => tokenService.getCachedIdTokenMetadata({ refreshCache: false }),
     {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }

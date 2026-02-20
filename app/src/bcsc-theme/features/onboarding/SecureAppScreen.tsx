@@ -1,10 +1,9 @@
-import useRegistrationApi, { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi, { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -24,9 +23,9 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const { t } = useTranslation()
   const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { register } = useRegistrationApi(client, isClientReady)
+  const registrationApi = useRegistrationApi(client, isClientReady)
+  const { register } = useRegistrationService(registrationApi)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const alerts = useAlerts(navigation)
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -44,12 +43,10 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      registrationErrorHandler(error, alerts)
-
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error completing device security setup: ${errMessage}`)
     }
-  }, [register, handleSuccessfulAuth, logger, alerts])
+  }, [register, handleSuccessfulAuth, logger])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

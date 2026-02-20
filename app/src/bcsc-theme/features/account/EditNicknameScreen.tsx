@@ -1,6 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import { useAlerts } from '@/hooks/useAlerts'
+import { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
@@ -14,8 +13,8 @@ const EditNicknameScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store, dispatch] = useStore<BCState>()
   const { registration } = useApi()
+  const registrationService = useRegistrationService(registration)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const alerts = useAlerts(navigation)
 
   const handleSubmit = useCallback(
     async (trimmedNickname: string) => {
@@ -29,10 +28,8 @@ const EditNicknameScreen: React.FC = () => {
       })
 
       try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
+        await registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
-        registrationErrorHandler(apiError, alerts)
-
         logger.error('Failed to update registration', { error: apiError })
         throw apiError
       }
@@ -52,8 +49,7 @@ const EditNicknameScreen: React.FC = () => {
       store.bcscSecure.registrationAccessToken,
       t,
       navigation,
-      registration,
-      alerts,
+      registrationService,
       logger,
     ]
   )
