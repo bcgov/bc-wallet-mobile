@@ -203,9 +203,11 @@ export const connect = async (
         currentToken = response.data.result.token
         logger.info('Pexip token refreshed successfully')
       } else {
-        logger.warn('Token refresh returned unexpected response', { status: response.status })
+        logger.warn('Token refresh returned non-200 response, conference likely ended', { status: response.status })
+        handleDisconnect()
       }
     } catch (err) {
+      // Network errors may be transient — WebRTC state changes will catch persistent issues
       logger.error('Pexip token refresh failed:', err as Error)
     }
   }, KEEP_ALIVE_INTERVAL_MS)
