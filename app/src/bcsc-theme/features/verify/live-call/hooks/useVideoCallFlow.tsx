@@ -73,22 +73,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
 
-  // immediately stops all video and audio
-  const stopAllMedia = useCallback(() => {
-    if (localStream) {
-      logger.info('Stopping local stream tracks...')
-      localStream.getTracks().forEach((track) => track.stop())
-    }
-
-    if (remoteStream) {
-      logger.info('Stopping remote stream tracks...')
-      remoteStream.getTracks().forEach((track) => track.stop())
-    }
-
-    logger.info('Media stopped successfully')
-  }, [localStream, remoteStream, logger])
-
-  // stops media
   // stops keep-alives
   // disconnects from pexip conference
   // updates call and session via API
@@ -196,12 +180,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       setVideoCallError(videoCallError)
       setFlowState(VideoCallFlowState.ERROR)
 
-      stopAllMedia()
-      setSession(null)
-      setClientCallId(null)
-      setConnection(null)
+      // Trigger full cleanup (disconnects Pexip, releases media, updates API)
+      cleanup()
     },
-    [stopAllMedia, logger]
+    [cleanup, logger]
   )
 
   // 1. a session must be created before anything else
