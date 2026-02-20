@@ -1035,9 +1035,61 @@ const translation = {
 		"Actions": {
 			"DefaultOK": "OK (PT-BR)",
       "Close": "Close (PT-BR)",
-      "GoToAppStore": "Go to App Store (PT-BR)",
-      "RemoveAccount": "Remove Account (PT-BR)",
 		},
+    "UnsecuredNetwork": {
+      "Title": "Unsecured Network (PT-BR)",
+      "Description": "A secure internet connection is required. Please check your network or try another network. (PT-BR)"
+    },
+    "ServerTimeout": {
+      "Title": "Connection Error (PT-BR)",
+      "Description": "Please try again later. (PT-BR)"
+    },
+    "ServerError": {
+      "Title": "Server Error (PT-BR)",
+      "Description": "There is a problem with the service. Please try again later. (error 302) (PT-BR)"
+    },
+    "AppUpdateRequired": {
+      "Title": "App Update Required (PT-BR)",
+      "Description": "You must update this app to continue. (PT-BR)",
+      "Action1": "Go To App Store (PT-BR)"
+    },
+    "ProblemWithAccount": {
+      "Title": "Problem with Account (PT-BR)",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }}) (PT-BR)",
+      "Action1": "Remove Account (PT-BR)",
+    },
+    "ProblemWithApp": {
+      "Title": "Problem with App (PT-BR)",
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (PT-BR)"
+    },
+    "ForgetPairings": {
+      "Title": "Success (PT-BR)",
+      "Description": "You have successfully unpaired your device. (PT-BR)"
+    },
+    "ProblemWithLogin": {
+      "Title": "Problem with Login (PT-BR)",
+      "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
+    },
+    "TooManyAttempts": {
+      "Title": "Sorry, You've Tried Too Many Times (PT-BR)",
+      "Description": "Please try again later. (PT-BR)"
+    },
+    "SetupExpired": {
+      "Title": "Setup Expired (PT-BR)",
+      "Description": "You must start set up again. (PT-BR)"
+    },
+    "VerificationNotComplete": {
+      "Title": "Verify Not Complete (PT-BR)",
+      "Description": "Go to a Service BC location to verify your identity. (PT-BR)"
+    },
+    "InvalidPairingCode": {
+      "Title": "Invalid Pairing Code (PT-BR)",
+      "Description": "You've entered an invalid pairing code. Please re-enter your pairing code and try again. (PT-BR)"
+    },
+    "InvalidPairingCodeSameDevice": {
+      "Title": "Invalid Login (PT-BR)",
+      "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk. (PT-BR)"
+    },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent (PT-BR)",
       "Description": "Please try again later. (PT-BR)",
@@ -1080,7 +1132,11 @@ const translation = {
     "AlreadyVerified": {
       "Title": "Problem Checking Status (PT-BR)",
       "Description": "Please close the app and try again. (PT-BR)",
-    }
+    },
+    "FileUploadError": {
+      "Title": "Problem with Connection (PT-BR)",
+      "Description": "Please try again. (PT-BR)"
+    },
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

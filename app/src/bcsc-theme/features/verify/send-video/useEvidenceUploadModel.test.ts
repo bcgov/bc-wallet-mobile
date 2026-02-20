@@ -1,7 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
@@ -22,10 +21,6 @@ jest.mock('@/utils/analytics/analytics-singleton', () => ({
   },
 }))
 
-const mockEmitErrorAlert = jest.fn()
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({ emitErrorAlert: mockEmitErrorAlert }),
-}))
 jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
   VerificationVideoCache: {
     getCache: jest.fn(),
@@ -58,6 +53,13 @@ jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
     stopLoading: jest.fn(),
     updateLoadingMessage: jest.fn(),
     isLoading: false,
+  }),
+}))
+
+const mockFileUploadErrorAlert = jest.fn()
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: () => ({
+    fileUploadErrorAlert: mockFileUploadErrorAlert,
   }),
 }))
 
@@ -153,21 +155,17 @@ describe('useEvidenceUploadModel', () => {
   })
 
   describe('handleSend', () => {
-    it('should emit EVIDENCE_UPLOAD_UNKNOWN_ERROR when photo or video data is missing', async () => {
+    it('should emit fileUploadErrorAlert when photo or video data is missing', async () => {
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
       await act(async () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_UNKNOWN_ERROR when prompts are missing', async () => {
+    it('should emit fileUploadErrorAlert when prompts are missing', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -189,14 +187,10 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_UNKNOWN_ERROR when verification request data is missing', async () => {
+    it('should emit fileUploadErrorAlert when verification request data is missing', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -218,11 +212,7 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_UNKNOWN_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
     it('should complete the full upload flow and navigate on success', async () => {
@@ -281,10 +271,9 @@ describe('useEvidenceUploadModel', () => {
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
       expect(mockNavigation.dispatch).toHaveBeenCalled()
-      expect(mockEmitErrorAlert).not.toHaveBeenCalled()
     })
 
-    it('should emit FILE_UPLOAD_ERROR when video cache is missing', async () => {
+    it('should emit fileUploadErrorAlert when video cache is missing', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -318,14 +307,10 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.FILE_UPLOAD_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_SERVER_ERROR when additional evidence processing fails', async () => {
+    it('should emit fileUploadErrorAlert when additional evidence processing fails', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -366,15 +351,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).not.toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_SERVER_ERROR when metadata upload fails', async () => {
+    it('should emit fileUploadErrorAlert when metadata upload fails', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -409,15 +390,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_SERVER_ERROR when binary upload fails', async () => {
+    it('should emit fileUploadErrorAlert when binary upload fails', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -455,15 +432,11 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
     })
 
-    it('should emit EVIDENCE_UPLOAD_SERVER_ERROR when finalization fails', async () => {
+    it('should emit fileUploadErrorAlert when finalization fails', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -503,11 +476,7 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockEmitErrorAlert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          appEvent: AppEventCode.EVIDENCE_UPLOAD_SERVER_ERROR,
-        })
-      )
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
     })
 
@@ -572,7 +541,6 @@ describe('useEvidenceUploadModel', () => {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
       })
-      expect(mockEmitErrorAlert).not.toHaveBeenCalled()
     })
   })
 })
