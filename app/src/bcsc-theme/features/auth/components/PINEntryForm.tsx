@@ -1,4 +1,4 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi, { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
@@ -18,13 +18,7 @@ import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TextInput } from 'react-native'
-import {
-  AccountSecurityMethod,
-  BcscNativeErrorCodes,
-  canPerformDeviceAuthentication,
-  isBcscNativeError,
-  setPIN as setNativePIN,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
   success: boolean
@@ -77,7 +71,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const { client, isClientReady } = useBCSCApiClientState()
   const { register } = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { problemWithAppAlert } = useAlerts(navigation)
+  const alerts = useAlerts(navigation)
 
   const pin2Ref = useRef<TextInput>(null)
 
@@ -135,9 +129,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
-        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          problemWithAppAlert()
-        }
+        registrationErrorHandler(error, alerts)
+
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error: ${error}`)
       } finally {
@@ -145,7 +138,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger, problemWithAppAlert, stopLoading]
+    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger, alerts, stopLoading]
   )
 
   const onPressContinue = useCallback(async () => {

@@ -109,11 +109,11 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     'ProblemWithApp',
     { errorCode: 101 }
   )
-  // const clientRegistrationNullAlert = createBasicAlert(
-  //   AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
-  //   'ProblemWithApp',
-  //   { errorCode: 102 }
-  // )
+  const clientRegistrationNullAlert = _createBasicAlert(
+    AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
+    'ProblemWithApp',
+    { errorCode: 102 }
+  )
   // const authorizationRequestNullAlert = createBasicAlert(
   //   AppEventCode.ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL,
   //   'ProblemWithApp',
@@ -306,7 +306,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       fileUploadErrorAlert,
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert,
-      // clientRegistrationNullAlert,
+      clientRegistrationNullAlert,
       // authorizationRequestNullAlert,
       // credentialNullAlert,
       // unableToDecreptIdTokenAlert,
@@ -341,7 +341,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       fileUploadErrorAlert,
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert,
-      // clientRegistrationNullAlert,
+      clientRegistrationNullAlert,
       // authorizationRequestNullAlert,
       // credentialNullAlert,
       // unableToDecreptIdTokenAlert,

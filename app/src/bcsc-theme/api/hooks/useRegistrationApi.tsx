@@ -1,6 +1,9 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
+import { AppAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
@@ -8,10 +11,12 @@ import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
+  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
+  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -117,6 +122,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * fetches notification tokens, creates registration body, and submits to BCSC.
    * Stores returned client credentials and updates local account storage.
    *
+   * @see {@link registrationErrorHandler} for handling errors that may occur during this process
+   *
    * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
    */
@@ -179,6 +186,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * Requires valid registration access token and nickname. Generates fresh attestation
    * and notification tokens, then submits PUT request to update client registration.
    * Updates local account storage with new credentials.
+   *
+   * @see {@link registrationErrorHandler} for handling errors that may occur during this process
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
@@ -302,6 +311,23 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     }),
     [register, updateRegistration, deleteRegistration]
   )
+}
+
+/**
+ * Handles errors that may occur during the registration process and triggers appropriate alerts.
+ *
+ * @param error - The error object thrown during registration
+ * @param alerts - The AppAlerts object containing alert functions to display to the user
+ * @returns void
+ */
+export const registrationErrorHandler = (error: unknown, alerts: AppAlerts) => {
+  if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
+    alerts.problemWithAppAlert()
+  }
+
+  if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
+    alerts.clientRegistrationNullAlert()
+  }
 }
 
 export default useRegistrationApi

@@ -10,8 +10,9 @@ import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
-import { getInitialEnvironment, initialState, Mode, reducer } from '@/store'
+import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
+import { initIssuer } from '@/utils/issuer'
 import { appLogger } from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import {
@@ -41,7 +42,6 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 import { AppContainer } from './container-imp'
-import { initIssuer } from '@/utils/issuer'
 
 initLanguages(localization)
 initIssuer(appLogger)

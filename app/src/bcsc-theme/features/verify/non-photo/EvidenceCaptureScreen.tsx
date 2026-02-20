@@ -7,7 +7,9 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
@@ -15,8 +17,6 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
-import { withAlert } from '@/utils/alert'
-import { useAlerts } from '@/hooks/useAlerts'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -143,7 +143,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       scanner.handleScanDriversLicense(licenseRef.current)
     }
 
-
     // Wrap getPhotoMetadata with alert
     const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
     const photoMetadata = await getPhotoMetadataWithAlert(currentPhotoPath, logger)
@@ -175,7 +174,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   if (isCameraLoading) {
-    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => { }} />
+    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => {}} />
   }
 
   if (!hasPermission) {

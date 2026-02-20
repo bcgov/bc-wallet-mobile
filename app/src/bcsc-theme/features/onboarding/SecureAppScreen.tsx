@@ -1,4 +1,4 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi, { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -9,12 +9,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  AccountSecurityMethod,
-  BcscNativeErrorCodes,
-  isBcscNativeError,
-  setupDeviceSecurity,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -31,7 +26,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const { handleSuccessfulAuth } = useSecureActions()
   const { register } = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { problemWithAppAlert } = useAlerts(navigation)
+  const alerts = useAlerts(navigation)
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -49,13 +44,12 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-        problemWithAppAlert()
-      }
+      registrationErrorHandler(error, alerts)
+
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error completing device security setup: ${errMessage}`)
     }
-  }, [register, handleSuccessfulAuth, logger, problemWithAppAlert])
+  }, [register, handleSuccessfulAuth, logger, alerts])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

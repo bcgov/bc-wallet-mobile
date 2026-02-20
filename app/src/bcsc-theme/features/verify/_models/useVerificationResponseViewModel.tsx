@@ -1,11 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { registrationErrorHandler } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
-import { BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
 
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
@@ -14,7 +14,7 @@ const useVerificationResponseViewModel = () => {
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { problemWithAppAlert } = useAlerts(navigation)
+  const alerts = useAlerts(navigation)
 
   const handleUpdateRegistration = useCallback(async () => {
     try {
@@ -33,14 +33,13 @@ const useVerificationResponseViewModel = () => {
 
       await registration.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-        problemWithAppAlert()
-      }
+      registrationErrorHandler(error, alerts)
+
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to update registration: ${errMessage}`)
       return
     }
-  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registration, logger, problemWithAppAlert])
+  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registration, logger, alerts])
 
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)
