@@ -26,7 +26,7 @@ const NicknameAccountScreen: React.FC = () => {
       }
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },
-    [dispatch, navigation, registration, store.bcscSecure.registrationAccessToken, logger]
+    [dispatch, navigation, logger, registration, store.bcscSecure.registrationAccessToken]
   )
 
   return <NicknameForm onSubmit={handleSubmit} />

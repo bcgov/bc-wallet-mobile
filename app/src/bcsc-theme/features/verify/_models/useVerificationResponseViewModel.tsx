@@ -8,8 +8,8 @@ import { useCallback, useState } from 'react'
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { registration } = useApi()
-  const registrationService = useRegistrationService(registration)
+  const { registration: registrationApi } = useApi()
+  const registration = useRegistrationService(registrationApi)
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
@@ -28,13 +28,13 @@ const useVerificationResponseViewModel = () => {
         return
       }
 
-      await registrationService.updateRegistration(registrationAccessToken, selectedNickname)
+      await registration.updateRegistration(registrationAccessToken, selectedNickname)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to update registration: ${errMessage}`)
       return
     }
-  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registrationService, logger])
+  }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registration, logger])
 
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)

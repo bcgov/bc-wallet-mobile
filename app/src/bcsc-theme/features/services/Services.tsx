@@ -27,8 +27,8 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
  * @return {*} {React.ReactElement} The Services screen component.
  */
 const Services: React.FC = () => {
-  const { token } = useApi()
-  const tokenService = useTokenService(token)
+  const { token: tokenApi } = useApi()
+  const token = useTokenService(tokenApi)
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
@@ -39,7 +39,7 @@ const Services: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { load: loadIdTokenMetadata, data: idTokenMetadata } = useDataLoader(
     // use the cache, card type doesn't change
-    () => tokenService.getCachedIdTokenMetadata({ refreshCache: false }),
+    () => token.getCachedIdTokenMetadata({ refreshCache: false }),
     {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }
