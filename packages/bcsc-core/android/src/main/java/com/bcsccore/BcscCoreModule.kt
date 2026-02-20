@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
@@ -3815,19 +3816,40 @@ class BcscCoreModule(
     @ReactMethod
     override fun isThirdPartyKeyboardActive(promise: Promise) {
         try {
-            val currentInputMethod =
-                android.provider.Settings.Secure.getString(
-                    reactApplicationContext.contentResolver,
-                    android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
-                )
-            val isSystemKeyboard =
-                currentInputMethod?.contains("com.android") == true ||
-                    currentInputMethod?.contains("com.google") == true
+            val cr = reactApplicationContext.contentResolver
+            val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 
-            promise.resolve(!isSystemKeyboard)
+            if (imm == null) {
+                promise.resolve(false)
+                return
+            }
+            // Get the ID of the currently active input method (keyboard)
+            val defaultInputMethodId =
+                Settings.Secure.getString(
+                    cr,
+                    Settings.Secure.DEFAULT_INPUT_METHOD,
+                )
+
+            // Get all the keyboards available on device
+            val enabled = imm.enabledInputMethodList
+            var isThirdParty = false
+
+            // loop through available keyboards until the active one is found, then check if it's a system keyboard or 3rd party
+            for (imi in enabled) {
+                val isCurrent = imi.id == defaultInputMethodId
+                if (!isCurrent) continue
+
+                // Check if the active keyboard is a system app (installed with the device, gboard, samsung etc.) or a 3rd party app
+                val flags = imi.serviceInfo.applicationInfo.flags
+                val isSystem = (flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                isThirdParty = !isSystem
+                break
+            }
+
+            promise.resolve(isThirdParty)
         } catch (e: Exception) {
             Log.e(NAME, "3rdPartyKeyboardCheck: ${e.message}", e)
-            promise.resolve(false) // Default to false if any error occurs, to avoid blocking user input
+            promise.resolve(false)
         }
     }
 
