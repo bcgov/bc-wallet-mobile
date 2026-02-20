@@ -1,7 +1,8 @@
-import useRegistrationApi, { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useAlerts } from '@/hooks/useAlerts'
 import {
   Button,

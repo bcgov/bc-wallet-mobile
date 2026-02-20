@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useTokenService } from '@/bcsc-theme/api/hooks/useTokens'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'

@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useState } from 'react'

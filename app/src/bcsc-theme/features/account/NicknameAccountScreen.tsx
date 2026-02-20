@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useRegistrationService } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
