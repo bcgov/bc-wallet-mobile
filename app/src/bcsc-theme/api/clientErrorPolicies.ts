@@ -2,7 +2,6 @@ import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts } from '@/hooks/useAlerts'
-import { AlertAction } from '@/utils/alert'
 import { BifoldLogger } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
 import { AxiosError } from 'axios'
@@ -10,29 +9,6 @@ import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
-
-/**
- * Set of event codes that should trigger alerts in the BCSC client
- * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
- */
-const GLOBAL_ALERT_EVENT_CODES = new Set([
-  //AppEventCode.NO_INTERNET, // Handled by the InternetDisconnected modal
-  AppEventCode.UNSECURED_NETWORK,
-  AppEventCode.SERVER_TIMEOUT,
-  AppEventCode.SERVER_ERROR,
-  AppEventCode.TOO_MANY_ATTEMPTS,
-])
-
-/**
- * Set of event codes for verify device assertion endpoint
- */
-const VERIFY_DEVICE_ASSERTION_EVENT_CODES = new Set([
-  AppEventCode.LOGIN_SERVER_ERROR,
-  AppEventCode.LOGIN_PARSE_URI,
-  AppEventCode.INVALID_PAIRING_CODE,
-  AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE,
-  AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
-])
 
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
@@ -42,8 +18,6 @@ export type ErrorMatcherContext = {
 
 type ErrorHandlerContext = {
   translate: TFunction
-  /** @deprecated Use specific alert functions from context.alerts */
-  emitAlert: (title: string, message: string, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
@@ -60,27 +34,101 @@ type ErrorHandlingPolicy = {
 }
 
 // ----------------------------------------
+// Helper Functions + Alert Maps
+// ----------------------------------------
+
+// Global alert map for app events that can occur across multiple endpoints (e.g. network errors, server errors)
+const _getGlobalAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
+    [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
+    [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],
+    [AppEventCode.TOO_MANY_ATTEMPTS, alerts?.tooManyAttemptsAlert],
+  ])
+}
+
+// Alert map for LOGIN_REJECTED events that can occur on multiple endpoints (client metadata fetch, device authorization)
+const _getLoginRejectedAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.LOGIN_REJECTED_400, alerts?.loginRejected400Alert],
+    [AppEventCode.LOGIN_REJECTED_401, alerts?.loginRejected401Alert],
+    [AppEventCode.LOGIN_REJECTED_403, alerts?.loginRejected403Alert],
+  ])
+}
+
+// Alert map for device verification assertion errors
+const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.LOGIN_SERVER_ERROR, alerts?.loginServerErrorAlert],
+    [AppEventCode.LOGIN_PARSE_URI, alerts?.problemWithLoginAlert],
+    [AppEventCode.INVALID_PAIRING_CODE, alerts?.invalidPairingCodeAlert],
+    [AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE, alerts?.invalidPairingCodeAlert],
+    [AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, alerts?.loginSameDeviceInvalidPairingCodeAlert],
+  ])
+}
+
+// ----------------------------------------
 // Error Handling Policies
+// https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
 // ----------------------------------------
 
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
-    return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
+    return _getGlobalAlertMap().has(error.appEvent)
   },
   handle: (error, context) => {
-    switch (error.appEvent) {
-      case AppEventCode.UNSECURED_NETWORK:
-        return context.alerts.unsecuredNetworkAlert()
-      case AppEventCode.SERVER_TIMEOUT:
-        return context.alerts.serverTimeoutAlert()
-      case AppEventCode.SERVER_ERROR:
-        return context.alerts.serverErrorAlert()
-      case AppEventCode.TOO_MANY_ATTEMPTS:
-        return context.alerts.tooManyAttemptsAlert()
+    const alert = _getGlobalAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
     }
 
-    context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+    alert()
+  },
+}
+
+// Error policy LOGIN_REJECT events that appear on client metadata fetch failures
+export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      _getLoginRejectedAlertMap().has(error.appEvent) && context.endpoint.includes(context.apiEndpoints.clientMetadata)
+    )
+  },
+  handle: (error, context) => {
+    const alert = _getLoginRejectedAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(
+        `[LoginRejectedOnClientMetadataErrorPolicy] No alert defined for app event: ${error.appEvent}`
+      )
+      return
+    }
+
+    alert()
+  },
+}
+
+// Error policy LOGIN_REJECTED events that appear on device verification
+export const loginRejectedOnDeviceAuthorizationErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      _getLoginRejectedAlertMap().has(error.appEvent) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (error, context) => {
+    const alert = _getLoginRejectedAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(
+        `[LoginRejectedOnDeviceAuthorizationErrorPolicy] No alert defined for app event: ${error.appEvent}`
+      )
+      return
+    }
+
+    alert()
   },
 }
 
@@ -90,7 +138,16 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
   handle: (_error, context) => {
-    context.alerts.problemWithAccountAlert()
+    context.alerts.noTokensReturnedAlert()
+  },
+}
+// Error policy for INVALID_TOKEN event on token endpoint
+export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
+  },
+  handle: (_error, context) => {
+    context.alerts.invalidTokenAlert()
   },
 }
 
@@ -169,25 +226,19 @@ export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
 export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
-      VERIFY_DEVICE_ASSERTION_EVENT_CODES.has(error.appEvent) &&
+      _getVerifyDeviceAssertionAlertMap().has(error.appEvent) &&
       context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
     )
   },
   handle: (error, context) => {
-    switch (error.appEvent) {
-      case AppEventCode.LOGIN_SERVER_ERROR:
-        return context.alerts.serverErrorAlert()
-      case AppEventCode.LOGIN_PARSE_URI:
-        return context.alerts.problemWithAccountAlert()
-      case AppEventCode.INVALID_PAIRING_CODE:
-        return context.alerts.invalidPairingCodeAlert()
-      case AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE:
-        return context.alerts.invalidPairingCodeAlert()
-      case AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE:
-        return context.alerts.loginSameDeviceInvalidPairingCodeAlert()
+    const alert = _getVerifyDeviceAssertionAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[VerifyDeviceAssertionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
     }
 
-    context.logger.warn(`[VerifyDeviceAssertaionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+    alert()
   },
 }
 
@@ -231,7 +282,10 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   expiredAppSetupErrorPolicy,
+  loginRejectedOnClientMetadataErrorPolicy,
+  loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
+  invalidTokenReturnedPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
   unexpectedServerErrorPolicy,

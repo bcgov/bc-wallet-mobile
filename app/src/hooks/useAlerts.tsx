@@ -24,7 +24,6 @@ type AlertOnPressAction = () => void | Promise<void>
  * - Complex alerts: Include additional actions such as navigation, factory reset,
  *   external linking, or other side effects.
  *
- *
  * @example
  * const alerts = useAlerts(navigation)
  * alerts.unsecuredNetworkAlert() // Shows the unsecured network alert
@@ -41,7 +40,8 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   // HELPER FUNCTIONS
 
-  const createBasicAlert = useCallback(
+  // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
+  const _createBasicAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return () => {
         emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
@@ -57,74 +57,108 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     [emitAlert, t]
   )
 
+  // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
+  const _createProblemWithAccountAlert = useCallback(
+    (event: AppEventCode, errorCode: string) => {
+      return () => {
+        emitAlert(t(`Alerts.ProblemWithAccount.Title`), t(`Alerts.ProblemWithAccount.Description`, { errorCode }), {
+          event,
+          actions: [
+            {
+              text: t('Global.Close'),
+              style: 'cancel',
+            },
+            {
+              text: t('Alerts.ProblemWithAccount.Action1'),
+              style: 'destructive',
+              onPress: () => {
+                navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+              },
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, navigation, t]
+  )
+
   // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
 
-  const unsecuredNetworkAlert = createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
-  const serverTimeoutAlert = createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
-  const serverErrorAlert = createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
-  const forgetPairingsAlert = createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
-  const loginServerErrorAlert = createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'LoginServerError')
-  const tooManyAttemptsAlert = createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
-  const verificationNotCompleteAlert = createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
-  const problemWithLoginAlert = createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin')
-  const invalidPairingCodeAlert = createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
-  const alreadyVerifiedAlert = createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
-  const fileUploadErrorAlert = createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
-  const loginSameDeviceInvalidPairingCodeAlert = createBasicAlert(
+  const problemWithAppAlert = _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' })
+  const unsecuredNetworkAlert = _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
+  const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
+  const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
+  const forgetPairingsAlert = _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
+  const tooManyAttemptsAlert = _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
+  const verificationNotCompleteAlert = _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
+  const invalidPairingCodeAlert = _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
+  const alreadyVerifiedAlert = _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
+  const fileUploadErrorAlert = _createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
+  const loginSameDeviceInvalidPairingCodeAlert = _createBasicAlert(
     AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
     'InvalidPairingCodeSameDevice'
   )
   // Problem with app error alerts - These represent critical issues with the app itself
-  const failedToWriteToLocalStorageAlert = createBasicAlert(
+  const failedToWriteToLocalStorageAlert = _createBasicAlert(
     AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
     'ProblemWithApp',
     { errorCode: 100 }
   )
-  const failedToReadFromLocalStorageAlert = createBasicAlert(
+  const failedToReadFromLocalStorageAlert = _createBasicAlert(
     AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE,
     'ProblemWithApp',
     { errorCode: 101 }
   )
-  const clientRegistrationNullAlert = createBasicAlert(
-    AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
-    'ProblemWithApp',
-    { errorCode: 102 }
-  )
-  const authorizationRequestNullAlert = createBasicAlert(
-    AppEventCode.ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL,
-    'ProblemWithApp',
-    { errorCode: 103 }
-  )
-  const credentialNullAlert = createBasicAlert(AppEventCode.ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL, 'ProblemWithApp', {
-    errorCode: 104,
+  // const clientRegistrationNullAlert = createBasicAlert(
+  //   AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
+  //   'ProblemWithApp',
+  //   { errorCode: 102 }
+  // )
+  // const authorizationRequestNullAlert = createBasicAlert(
+  //   AppEventCode.ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL,
+  //   'ProblemWithApp',
+  //   { errorCode: 103 }
+  // )
+  // const credentialNullAlert = createBasicAlert(AppEventCode.ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL, 'ProblemWithApp', {
+  //   errorCode: 104,
+  // })
+  // const unableToDecreptIdTokenAlert = createBasicAlert(
+  //   AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
+  //   'ProblemWithApp',
+  //   { errorCode: 105 }
+  // )
+  // const unableToDeleteKeyPairAlert = createBasicAlert(
+  //   AppEventCode.ERR_108_UNABLE_TO_DELETE_KEY_PAIR,
+  //   'ProblemWithApp',
+  //   { errorCode: 108 }
+  // )
+  // const failedToDeserializeJsonAlert = createBasicAlert(
+  //   AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON,
+  //   'ProblemWithApp',
+  //   { errorCode: 109 }
+  // )
+  // const unableToDecryptJweAlert = createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', {
+  //   errorCode: 110,
+  // })
+  // Login related alerts
+  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', {
+    errorCode: '303',
   })
-  const unableToDecreptIdTokenAlert = createBasicAlert(
-    AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
-    'ProblemWithApp',
-    { errorCode: 105 }
-  )
-  const unableToDeleteKeyPairAlert = createBasicAlert(
-    AppEventCode.ERR_108_UNABLE_TO_DELETE_KEY_PAIR,
-    'ProblemWithApp',
-    { errorCode: 108 }
-  )
-  const failedToDeserializeJsonAlert = createBasicAlert(
-    AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON,
-    'ProblemWithApp',
-    { errorCode: 109 }
-  )
-  const unableToDecryptJweAlert = createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', {
-    errorCode: 110,
+  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', {
+    errorCode: '304',
   })
+  // Remove account alerts
+  const loginRejected401Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401')
+  const loginRejected403Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403')
+  const loginRejected400Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1')
+  const noTokensReturnedAlert = _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214')
+  const invalidTokenAlert = _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215')
 
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
   const appUpdateRequiredAlert = useCallback(() => {
     emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
-      event: Platform.select({
-        ios: AppEventCode.IOS_APP_UPDATE_REQUIRED,
-        default: AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
-      }),
+      event: Platform.OS === 'ios' ? AppEventCode.IOS_APP_UPDATE_REQUIRED : AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
       actions: [
         {
           text: t('Alerts.AppUpdateRequired.Action1'),
@@ -140,25 +174,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       ],
     })
   }, [emitAlert, logger, t])
-
-  const problemWithAccountAlert = useCallback(() => {
-    emitAlert(t('Alerts.ProblemWithAccount.Title'), t('Alerts.ProblemWithAccount.Description'), {
-      event: AppEventCode.NO_TOKENS_RETURNED,
-      actions: [
-        {
-          text: t('Alerts.Actions.Close'),
-          style: 'cancel',
-        },
-        {
-          text: t('Alerts.ProblemWithAccount.Action1'),
-          style: 'destructive',
-          onPress: () => {
-            navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
-  }, [emitAlert, navigation, t])
 
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
@@ -207,11 +222,11 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       event: AppEventCode.DATA_USE_WARNING,
       actions: [
         {
-          text: t('Alerts.DataUseWarning.Action1'),
+          text: t('Global.Continue'),
           style: 'cancel',
         },
         {
-          text: t('Alerts.DataUseWarning.Action2'),
+          text: t('Alerts.DataUseWarning.Action1'),
           onPress: () => {
             navigation.navigate(BCSCScreens.TakePhoto, {
               forLiveCall: true,
@@ -269,6 +284,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
 
   return useMemo(
     () => ({
+      problemWithAppAlert,
       unsecuredNetworkAlert,
       serverTimeoutAlert,
       serverErrorAlert,
@@ -281,7 +297,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginSameDeviceInvalidPairingCodeAlert,
       alreadyVerifiedAlert,
       appUpdateRequiredAlert,
-      problemWithAccountAlert,
+      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
@@ -290,15 +306,20 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       fileUploadErrorAlert,
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert,
-      clientRegistrationNullAlert,
-      authorizationRequestNullAlert,
-      credentialNullAlert,
-      unableToDecreptIdTokenAlert,
-      unableToDeleteKeyPairAlert,
-      failedToDeserializeJsonAlert,
-      unableToDecryptJweAlert,
+      // clientRegistrationNullAlert,
+      // authorizationRequestNullAlert,
+      // credentialNullAlert,
+      // unableToDecreptIdTokenAlert,
+      // unableToDeleteKeyPairAlert,
+      // failedToDeserializeJsonAlert,
+      // unableToDecryptJweAlert,
+      loginRejected401Alert,
+      loginRejected403Alert,
+      loginRejected400Alert,
+      invalidTokenAlert,
     }),
     [
+      problemWithAppAlert,
       unsecuredNetworkAlert,
       serverTimeoutAlert,
       serverErrorAlert,
@@ -311,7 +332,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginSameDeviceInvalidPairingCodeAlert,
       alreadyVerifiedAlert,
       appUpdateRequiredAlert,
-      problemWithAccountAlert,
+      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
@@ -320,13 +341,17 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       fileUploadErrorAlert,
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert,
-      clientRegistrationNullAlert,
-      authorizationRequestNullAlert,
-      credentialNullAlert,
-      unableToDecreptIdTokenAlert,
-      unableToDeleteKeyPairAlert,
-      failedToDeserializeJsonAlert,
-      unableToDecryptJweAlert,
+      // clientRegistrationNullAlert,
+      // authorizationRequestNullAlert,
+      // credentialNullAlert,
+      // unableToDecreptIdTokenAlert,
+      // unableToDeleteKeyPairAlert,
+      // failedToDeserializeJsonAlert,
+      // unableToDecryptJweAlert,
+      loginRejected401Alert,
+      loginRejected403Alert,
+      loginRejected400Alert,
+      invalidTokenAlert,
     ]
   )
 }

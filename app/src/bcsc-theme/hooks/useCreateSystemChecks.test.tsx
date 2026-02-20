@@ -60,10 +60,6 @@ jest.mock('@/services/system-checks/UpdateAppSystemCheck', () => ({
   UpdateAppSystemCheck: class UpdateAppSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/DeviceInvalidatedSystemCheck', () => ({
-  DeviceInvalidatedSystemCheck: class DeviceInvalidatedSystemCheck {},
-}))
-
 jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
   DeviceCountSystemCheck: class DeviceCountSystemCheck {},
 }))
@@ -74,6 +70,10 @@ jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () =
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/EventReasonAlertsSystemCheck', () => ({
+  EventReasonAlertsSystemCheck: class EventReasonAlertsSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
@@ -266,10 +266,10 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // DeviceInvalidatedSystemCheck, DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
-        expect(systemChecks[0].constructor.name).toBe('DeviceInvalidatedSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
+        expect(systemChecks).toHaveLength(4) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
         expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
     })

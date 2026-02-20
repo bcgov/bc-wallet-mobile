@@ -8,9 +8,9 @@ interface AuthWebViewScreenProps {
 }
 
 const AuthWebViewScreen: React.FC<AuthWebViewScreenProps> = ({ route }) => {
-  const { url, injectedJavascript } = route.params
+  const { url } = route.params
 
-  return <WebViewContent url={url} injectedJavascript={injectedJavascript} />
+  return <WebViewContent url={url} />
 }
 
 export { AuthWebViewScreen }

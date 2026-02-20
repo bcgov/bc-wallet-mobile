@@ -1,4 +1,3 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -41,7 +40,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { emitAlert } = useErrorAlert()
   const alerts = useAlerts(navigation)
 
   /**
@@ -80,7 +78,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       policy.handle(error, {
         linking: Linking,
-        emitAlert,
         navigation,
         translate: t,
         logger,
@@ -89,7 +86,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       error.handled = true
     },
-    [alerts, emitAlert, logger, navigation, t]
+    [alerts, logger, navigation, t]
   )
 
   useEffect(() => {
