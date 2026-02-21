@@ -108,7 +108,6 @@ exports[`EnterBirthdate renders correctly 1`] = `
           date={2025-12-03T00:00:00.000Z}
           mode="date"
           onDateChange={[Function]}
-          onStateChange={[Function]}
           theme="light"
         />
       </View>
