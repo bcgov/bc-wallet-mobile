@@ -1,7 +1,7 @@
 From 5e7b82dbbcb2e1422b451e50cdfe585312684191 Mon Sep 17 00:00:00 2001
 From: Bryce McMath <bryce.j.mcmath@gmail.com>
 Date: Fri, 23 Jan 2026 17:25:50 -0800
-Subject: [PATCH] chore: ios app to bcsc dev
+Subject: [PATCH] chore: ios app to bcsc qa
 
 Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
@@ -59,7 +59,7 @@ index 3a1a4ff6..ce20d819 100644
  				);
 -				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 -				PRODUCT_NAME = BCWallet;
-+				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.iddev.servicescard;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.idqa.servicescard;
 +				PRODUCT_NAME = "$(TARGET_NAME)";
  				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
  				SUPPORTS_MACCATALYST = NO;
@@ -70,7 +70,7 @@ index 3a1a4ff6..ce20d819 100644
  				);
 -				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 -				PRODUCT_NAME = BCWallet;
-+				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.iddev.servicescard;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.idqa.servicescard;
 +				PRODUCT_NAME = "$(TARGET_NAME)";
  				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
  				SUPPORTS_MACCATALYST = NO;
@@ -84,7 +84,7 @@ index 9a437152..b013ac9c 100644
  	<string>en</string>
  	<key>CFBundleDisplayName</key>
 -	<string>BC Wallet</string>
-+	<string>BC Services Card Dev</string>
++	<string>BC Services Card QA</string>
  	<key>CFBundleExecutable</key>
  	<string>$(EXECUTABLE_NAME)</string>
  	<key>CFBundleIdentifier</key>
