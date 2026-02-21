@@ -82,57 +82,6 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     [emitAlert, navigation, t]
   )
 
-  // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
-
-  const problemWithAppAlert = _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' })
-  const unsecuredNetworkAlert = _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork')
-  const serverTimeoutAlert = _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout')
-  const serverErrorAlert = _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError')
-  const forgetPairingsAlert = _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings')
-  const tooManyAttemptsAlert = _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts')
-  const verificationNotCompleteAlert = _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete')
-  const invalidPairingCodeAlert = _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode')
-  const alreadyVerifiedAlert = _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified')
-  const fileUploadErrorAlert = _createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError')
-  const loginSameDeviceInvalidPairingCodeAlert = _createBasicAlert(
-    AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
-    'InvalidPairingCodeSameDevice'
-  )
-  // Problem with app error alerts - These represent critical issues with the app itself
-  const failedToWriteToLocalStorageAlert = _createBasicAlert(
-    AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
-    'ProblemWithApp',
-    { errorCode: 100 }
-  )
-  const failedToReadFromLocalStorageAlert = _createBasicAlert(
-    AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE,
-    'ProblemWithApp',
-    { errorCode: 101 }
-  )
-  const clientRegistrationNullAlert = _createBasicAlert(
-    AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
-    'ProblemWithApp',
-    { errorCode: 102 }
-  )
-  const unableToDecryptIdTokenAlert = _createBasicAlert(
-    AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
-    'ProblemWithApp',
-    { errorCode: 105 }
-  )
-  // Login related alerts
-  const loginServerErrorAlert = _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', {
-    errorCode: '303',
-  })
-  const problemWithLoginAlert = _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', {
-    errorCode: '304',
-  })
-  // Remove account alerts
-  const loginRejected401Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401')
-  const loginRejected403Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403')
-  const loginRejected400Alert = _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1')
-  const noTokensReturnedAlert = _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214')
-  const invalidTokenAlert = _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215')
-
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
 
   const appUpdateRequiredAlert = useCallback(() => {
@@ -262,65 +211,47 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   )
 
   return useMemo(
-    () => ({
-      problemWithAppAlert,
-      unsecuredNetworkAlert,
-      serverTimeoutAlert,
-      serverErrorAlert,
-      forgetPairingsAlert,
-      loginServerErrorAlert,
-      tooManyAttemptsAlert,
-      verificationNotCompleteAlert,
-      problemWithLoginAlert,
-      invalidPairingCodeAlert,
-      loginSameDeviceInvalidPairingCodeAlert,
-      alreadyVerifiedAlert,
+    () =>
+      // prettier-ignore
+      ({
       appUpdateRequiredAlert,
-      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      fileUploadErrorAlert,
-      failedToWriteToLocalStorageAlert,
-      failedToReadFromLocalStorageAlert,
-      clientRegistrationNullAlert,
-      unableToDecryptIdTokenAlert,
-      loginRejected401Alert,
-      loginRejected403Alert,
-      loginRejected400Alert,
-      invalidTokenAlert,
+      problemWithAppAlert: _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
+      unsecuredNetworkAlert: _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
+      serverTimeoutAlert: _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),
+      serverErrorAlert: _createBasicAlert(AppEventCode.SERVER_ERROR, 'ServerError'),
+      forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'),
+      tooManyAttemptsAlert: _createBasicAlert(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts'),
+      verificationNotCompleteAlert: _createBasicAlert(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete'),
+      invalidPairingCodeAlert: _createBasicAlert(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode'),
+      alreadyVerifiedAlert: _createBasicAlert(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
+      fileUploadErrorAlert: _createBasicAlert(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
+      loginSameDeviceInvalidPairingCodeAlert: _createBasicAlert(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
+      failedToWriteToLocalStorageAlert: _createBasicAlert(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '100' }),
+      failedToReadFromLocalStorageAlert: _createBasicAlert(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '101' }),
+      clientRegistrationNullAlert: _createBasicAlert(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '102' }),
+      unableToDecryptIdTokenAlert: _createBasicAlert(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: '105' }),
+      loginServerErrorAlert: _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
+      problemWithLoginAlert: _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
+      loginRejected401Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401'),
+      loginRejected403Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403'),
+      loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
+      noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
+      invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
     }),
     [
-      problemWithAppAlert,
-      unsecuredNetworkAlert,
-      serverTimeoutAlert,
-      serverErrorAlert,
-      forgetPairingsAlert,
-      loginServerErrorAlert,
-      tooManyAttemptsAlert,
-      verificationNotCompleteAlert,
-      problemWithLoginAlert,
-      invalidPairingCodeAlert,
-      loginSameDeviceInvalidPairingCodeAlert,
-      alreadyVerifiedAlert,
+      _createBasicAlert,
+      _createProblemWithAccountAlert,
       appUpdateRequiredAlert,
-      noTokensReturnedAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      fileUploadErrorAlert,
-      failedToWriteToLocalStorageAlert,
-      failedToReadFromLocalStorageAlert,
-      clientRegistrationNullAlert,
-      unableToDecryptIdTokenAlert,
-      loginRejected401Alert,
-      loginRejected403Alert,
-      loginRejected400Alert,
-      invalidTokenAlert,
     ]
   )
 }

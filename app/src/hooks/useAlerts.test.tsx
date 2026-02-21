@@ -18,6 +18,16 @@ describe('useAlerts', () => {
     jest.clearAllMocks()
   })
 
+  describe('alerts', () => {
+    it('should return correct number of alerts', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      // Missing test detection helper for devs
+      expect(Object.keys(result.current)).toHaveLength(28)
+    })
+  })
+
   describe('problemWithAppAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
