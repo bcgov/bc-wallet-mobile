@@ -13,7 +13,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
@@ -37,6 +37,15 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [date, setDate] = useState(vm.initialDate ?? today)
   const dateRef = useRef(vm.initialDate ?? today)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [])
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -47,15 +56,28 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     },
   })
 
+  // Debounce onDateChange to wait for the wheel picker to settle before
+  // committing the value. The picker fires intermediate values as the
+  // wheel decelerates; without this the submitted date can be wrong.
   // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
-  const onDateChange = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const day = date.getDate()
+  const onDateChange = useCallback((newDate: Date) => {
+    const year = newDate.getFullYear()
+    const month = newDate.getMonth()
+    const day = newDate.getDate()
     const realDate = new Date(year, month, day, 12, 0, 0, 0)
-    setDate(realDate)
+
     dateRef.current = realDate
-  }
+    setPickerState('spinning')
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDate(realDate)
+      setPickerState('idle')
+    }, 400)
+  }, [])
 
   const handleSubmit = async () => {
     try {
