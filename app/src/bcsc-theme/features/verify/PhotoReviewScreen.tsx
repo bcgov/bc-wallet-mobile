@@ -1,5 +1,7 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
+import { withAlert } from '@/utils/alert'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
 import { ScreenWrapper, TOKENS, useServices, useStore } from '@bifold/core'
@@ -17,6 +19,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   const { photoPath, forLiveCall } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
   if (!photoPath) {
     throw new Error(t('BCSC.PhotoReview.PathRequired'))
@@ -24,7 +27,9 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
   const onPressUse = async () => {
     try {
-      const photoMetadata = await getPhotoMetadata(photoPath, logger)
+      // Wrap getPhotoMetadata with alert
+      const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
+      const photoMetadata = await getPhotoMetadataWithAlert(photoPath, logger)
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
 

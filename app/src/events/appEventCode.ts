@@ -66,8 +66,8 @@ export enum AppEventCode {
   ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE = 'err_100_failed_to_write_local_storage',
   ERR_101_FAILED_TO_READ_LOCAL_STORAGE = 'err_101_failed_to_read_local_storage',
   ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL = 'err_102_client_registration_unexpectedly_null',
-  ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL = 'err_103_authorization_request_unexpectedly_null',
-  ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL = 'err_104_credential_unexpectedly_null',
+  // ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL deprecated in V4
+  // ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL deprecated in V4
   ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN = 'err_105_unable_to_decrypt_and_verify_id_token',
   ERR_106_UNABLE_TO_DESERIALIZE_ID_TOKEN = 'err_106_unable_to_deserialize_id_token',
   ERR_107_UNABLE_TO_PARSE_JWT_TOKENS = 'err_107_unable_to_parse_jwt_tokens',

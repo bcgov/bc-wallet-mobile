@@ -2,7 +2,7 @@ import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { useAlerts } from '@/hooks/useAlerts'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import {
   Button,
   ButtonType,
@@ -14,17 +14,10 @@ import {
   useAnimatedComponents,
   useServices,
 } from '@bifold/core'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TextInput } from 'react-native'
-import {
-  AccountSecurityMethod,
-  BcscNativeErrorCodes,
-  canPerformDeviceAuthentication,
-  isBcscNativeError,
-  setPIN as setNativePIN,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
   success: boolean
@@ -75,9 +68,8 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { client, isClientReady } = useBCSCApiClientState()
-  const { register } = useRegistrationApi(client, isClientReady)
-  const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { problemWithAppAlert } = useAlerts(navigation)
+  const registrationApi = useRegistrationApi(client, isClientReady)
+  const { register } = useRegistrationService(registrationApi)
 
   const pin2Ref = useRef<TextInput>(null)
 
@@ -135,9 +127,6 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
-        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          problemWithAppAlert()
-        }
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
         logger.error(`PIN setup error: ${error}`)
       } finally {
@@ -145,7 +134,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         stopLoading()
       }
     },
-    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger, problemWithAppAlert, stopLoading]
+    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger, stopLoading]
   )
 
   const onPressContinue = useCallback(async () => {

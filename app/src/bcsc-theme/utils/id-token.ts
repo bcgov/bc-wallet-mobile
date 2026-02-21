@@ -1,3 +1,4 @@
+import { AppError, ErrorRegistry } from '@/errors'
 import { BifoldLogger } from '@bifold/core'
 import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
 import { StatusNotification } from '../features/fcm/services/fcm-service'
@@ -105,6 +106,6 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     return payload
   } catch (error) {
     logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
-    throw error
+    throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
   }
 }

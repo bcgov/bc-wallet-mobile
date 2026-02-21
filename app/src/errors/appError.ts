@@ -131,3 +131,21 @@ export class AppError extends Error {
 export function isHandledAppError(error: unknown): error is AppError {
   return error instanceof AppError && error.handled
 }
+
+/**
+ * Check if an error is an instance of AppError, and optionally if it matches a specific app event code.
+ *
+ * @param error - The error to check
+ * @param appEvent - Optional app event code to match against the error's appEvent property
+ * @returns True if the error is an AppError (and matches the app event code if provided)
+ */
+export function isAppError<TAppEventCode extends AppEventCode>(
+  error: unknown,
+  appEvent?: TAppEventCode
+): error is AppError & { appEvent: TAppEventCode } {
+  if (appEvent) {
+    return error instanceof AppError && error.appEvent === appEvent
+  }
+
+  return error instanceof AppError
+}

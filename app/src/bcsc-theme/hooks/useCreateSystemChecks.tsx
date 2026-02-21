@@ -22,6 +22,8 @@ import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useRegistrationApi from '../api/hooks/useRegistrationApi'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
+import { useRegistrationService } from '../services/hooks/useRegistrationService'
+import { useTokenService } from '../services/hooks/useTokenService'
 import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -54,7 +56,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
+  const tokenService = useTokenService(tokenApi)
   const registrationApi = useRegistrationApi(client, isClientReady)
+  const registrationService = useRegistrationService(registrationApi)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
@@ -104,9 +108,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       throw new Error('Account expiration date undefined. Did you forget to check isReady?')
     }
 
-    const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
+    const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
-      registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
+      registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceCountSystemCheck(getIdToken, utils),
@@ -124,15 +128,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return systemChecks
   }, [
     accountExpirationDate,
-    isBCServicesCardBundle,
-    navigation,
-    registrationApi,
-    store.bcsc.appVersion,
-    store.bcsc.selectedNickname,
-    store.bcscSecure.registrationAccessToken,
-    tokenApi,
     utils,
     emitAlert,
+    navigation,
+    isBCServicesCardBundle,
+    tokenService,
+    registrationService,
+    store.bcscSecure.registrationAccessToken,
+    store.bcsc.selectedNickname,
+    store.bcsc.appVersion,
   ])
 
   return useMemo(() => {

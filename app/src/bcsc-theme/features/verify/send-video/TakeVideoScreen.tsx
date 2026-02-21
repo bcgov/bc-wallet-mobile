@@ -7,6 +7,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -18,6 +19,7 @@ import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Camera,
+  CameraCaptureError,
   CameraRuntimeError,
   useCameraDevice,
   useCameraFormat,
@@ -62,6 +64,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
+  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -186,39 +189,53 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    const snapshot = await cameraRef.current.takeSnapshot()
+    try {
+      const snapshot = await cameraRef.current.takeSnapshot()
 
-    cameraRef.current.startRecording({
-      fileType: 'mp4',
-      videoCodec: 'h265',
-      onRecordingError: (error) => {
-        stopTimer() // Stop timer on error
+      cameraRef.current.startRecording({
+        fileType: 'mp4',
+        videoCodec: 'h265',
+        onRecordingError: (error) => {
+          stopTimer() // Stop timer on error
 
-        // If recording was canceled, do not show an alert
-        if (error.code === 'capture/recording-canceled') {
-          logger.debug('Video recording canceled')
-          return
-        }
+          // If recording was canceled, do not show an alert
+          if (error.code === 'capture/recording-canceled') {
+            logger.debug('Video recording canceled')
+            return
+          }
 
-        logger.debug(`Recording error (${error.code}): ${error.message}`)
-        Alert.alert(
-          t('BCSC.SendVideo.TakeVideo.RecordingError'),
-          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
-        )
-      },
-      onRecordingFinished: async (video) => {
-        logger.info(`Recording finished, duration: ${video.duration}`)
-        stopTimer() // Stop timer when manually stopping recording
-        setPrompt('')
-        if (exceedsMaxDurationRef.current) {
-          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
-          return
-        }
+          logger.debug(`Recording error (${error.code}): ${error.message}`)
 
-        navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
-      },
-    })
-  }, [prompts, startTimer, logger, stopTimer, t, navigation])
+          // Handle file I/O errors separately to provide a specific alert
+          if (error.code === 'capture/file-io-error') {
+            throw error
+          }
+
+          Alert.alert(
+            t('BCSC.SendVideo.TakeVideo.RecordingError'),
+            t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+          )
+        },
+        onRecordingFinished: async (video) => {
+          logger.info(`Recording finished, duration: ${video.duration}`)
+          stopTimer() // Stop timer when manually stopping recording
+          setPrompt('')
+          if (exceedsMaxDurationRef.current) {
+            navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
+            return
+          }
+
+          navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
+        },
+      })
+    } catch (error) {
+      logger.error('Error starting video recording:', error as Error)
+
+      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+        failedToWriteToLocalStorageAlert()
+      }
+    }
+  }, [prompts, startTimer, logger, stopTimer, t, failedToWriteToLocalStorageAlert, navigation])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)

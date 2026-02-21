@@ -1,3 +1,4 @@
+import { useAlerts } from '@/hooks/useAlerts'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useIsFocused } from '@react-navigation/native'
 import { useRef, useState } from 'react'
@@ -5,7 +6,14 @@ import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, CodeScanner, FormatFilter, useCameraDevice, useCameraFormat } from 'react-native-vision-camera'
+import {
+  Camera,
+  CameraCaptureError,
+  CodeScanner,
+  FormatFilter,
+  useCameraDevice,
+  useCameraFormat,
+} from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
   navigation: any
@@ -40,6 +48,7 @@ const MaskedCamera = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   const format = useCameraFormat(device, cameraFormatFilter)
+  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -122,6 +131,13 @@ const MaskedCamera = ({
       }
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
+
+      // Handle file I/O errors separately to provide a specific alert
+      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+        failedToWriteToLocalStorageAlert()
+        return
+      }
+
       Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
     }
   }
