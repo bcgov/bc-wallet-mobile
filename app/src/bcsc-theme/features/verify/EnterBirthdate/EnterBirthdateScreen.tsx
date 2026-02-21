@@ -43,6 +43,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
       }
     }
   }, [])
@@ -71,6 +72,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
     }
 
     debounceTimerRef.current = setTimeout(() => {
@@ -137,7 +139,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           mode={'date'}
           date={date}
           onDateChange={onDateChange}
-          onStateChange={setPickerState}
         />
       </View>
     </ScreenWrapper>
