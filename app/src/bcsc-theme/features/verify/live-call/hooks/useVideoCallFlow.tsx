@@ -1,7 +1,10 @@
 import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
+import { BCState } from '@/store'
+import readFileInChunks from '@/utils/read-file'
 import useApi from '@bcsc-theme/api/hooks/useApi'
+import { UploadEvidenceResponseData } from '@bcsc-theme/api/hooks/useEvidenceApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
-import { TOKENS, useServices } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
@@ -47,7 +50,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const cleanupCompletedRef = useRef(false)
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { video } = useApi()
+  const [store] = useStore<BCState>()
+  const { video, evidence } = useApi()
   const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
@@ -60,7 +64,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       flowState === VideoCallFlowState.WAITING_FOR_AGENT ||
       flowState === VideoCallFlowState.IN_CALL ||
       flowState === VideoCallFlowState.CONNECTING_WEBRTC ||
-      flowState === VideoCallFlowState.CREATING_SESSION
+      flowState === VideoCallFlowState.CREATING_SESSION ||
+      flowState === VideoCallFlowState.UPLOADING_DOCUMENTS
     ) {
       return VideoCallBackgroundMode.AUDIO_ONLY
     }
@@ -85,6 +90,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     cleanupCompletedRef.current = true
     connection?.setAppInitiatedDisconnect(true)
     connection?.stopPexipKeepAlive()
+    connection?.closePexipEventSource()
     clearIntervalIfExists(backendKeepAliveTimerRef)
 
     try {
@@ -134,7 +140,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setSession(null)
     setClientCallId(null)
     setConnection(null)
-    setVideoCallError(null)
   }, [video, clientCallId, session, connection, logger, t])
 
   const startBackendKeepAlive = useCallback(() => {
@@ -186,7 +191,70 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [cleanup, logger]
   )
 
-  // 1. a session must be created before anything else
+  const uploadSelfiePhoto = useCallback(async () => {
+    const { photoPath, photoMetadata } = store.bcsc
+    if (!photoPath || !photoMetadata) {
+      logger.debug('No selfie photo to upload')
+      return
+    }
+
+    logger.info('Uploading selfie photo...')
+    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(photoMetadata)
+    const photoBytes = await readFileInChunks(photoPath, logger)
+    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
+    logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
+  }, [evidence, logger, store.bcsc])
+
+  const uploadAdditionalEvidence = useCallback(async () => {
+    const additionalEvidence = store.bcscSecure.additionalEvidenceData
+    if (!additionalEvidence || additionalEvidence.length === 0) {
+      logger.debug('No additional evidence to upload')
+      return
+    }
+
+    logger.info(`Uploading ${additionalEvidence.length} additional evidence item(s)...`)
+
+    for (const evidenceItem of additionalEvidence) {
+      const metadataPayload = {
+        type: evidenceItem.evidenceType.evidence_type,
+        number: evidenceItem.documentNumber,
+        images: evidenceItem.metadata.map((data) => {
+          return { ...data, file_path: undefined }
+        }),
+      }
+
+      const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
+      logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
+
+      for (const metadataItem of evidenceItem.metadata) {
+        const matchingResponse = evidenceMetadataResponse.find(
+          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
+        )
+
+        if (matchingResponse) {
+          const imageBytes = await readFileInChunks(metadataItem.file_path, logger)
+          await evidence.uploadPhotoEvidenceBinary(matchingResponse.upload_uri, imageBytes)
+          logger.debug(`Evidence binary uploaded for ${metadataItem.label}: ${imageBytes.length} bytes`)
+        }
+      }
+    }
+
+    logger.info('All additional evidence uploaded successfully')
+  }, [evidence, logger, store.bcscSecure.additionalEvidenceData])
+
+  // 0. upload any required evidence before attempting to connect to the call, since it must be present in IDCheck
+  const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
+    try {
+      await uploadSelfiePhoto()
+      await uploadAdditionalEvidence()
+    } catch (error) {
+      handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
+      return false
+    }
+    return true
+  }, [uploadSelfiePhoto, uploadAdditionalEvidence, handleError])
+
+  // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
@@ -255,6 +323,12 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   // all of the functions within catch their own errors
   const startVideoCall = useCallback(async () => {
     cleanupCompletedRef.current = false
+    setFlowState(VideoCallFlowState.UPLOADING_DOCUMENTS)
+    const uploaded = await uploadPreCallEvidence()
+    if (!uploaded) {
+      return
+    }
+
     setFlowState(VideoCallFlowState.CREATING_SESSION)
     const newSession = await createSession()
     if (!newSession) {
@@ -271,10 +345,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     if (!newCall) {
       return
     }
-  }, [createSession, establishWebRTCConnection, createCall])
+  }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall])
 
   // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
+    setVideoCallError(null)
     await cleanup()
     await startVideoCall()
   }, [cleanup, startVideoCall])

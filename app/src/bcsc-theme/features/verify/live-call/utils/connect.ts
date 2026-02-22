@@ -9,6 +9,7 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
+import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
@@ -226,6 +227,30 @@ export const connect = async (
     participantUuid,
   })
 
+  // Subscribe to Pexip server-sent events for real-time disconnect detection.
+  // This provides near-instant notification when the agent ends the call or the
+  // conference is terminated, rather than waiting for WebRTC state changes.
+  const pexipEventsUrl = `${req.nodeUrl}/api/client/v2/conferences/${req.conferenceAlias}/events?token=${currentToken}`
+  logger.info('Subscribing to Pexip server-sent events...')
+  const eventSource = new EventSource<'disconnect'>(pexipEventsUrl)
+
+  eventSource.addEventListener('disconnect', (event) => {
+    const reason = event.data ? JSON.parse(event.data)?.reason : 'unknown'
+    logger.info('Pexip SSE disconnect event received', { reason })
+    handleDisconnect()
+  })
+
+  eventSource.addEventListener('error', (event) => {
+    // SSE errors are not fatal — WebRTC state changes and token refresh
+    // serve as backup disconnect detection mechanisms
+    logger.warn('Pexip SSE error', { error: event })
+  })
+
+  const closePexipEventSource = () => {
+    logger.info('Closing Pexip event source...')
+    eventSource.close()
+  }
+
   const closePeerConnection = () => {
     logger.info('Closing peer connection...')
     // Prevent stale disconnect callbacks from firing
@@ -259,6 +284,7 @@ export const connect = async (
     peerConnection,
     disconnectPexip,
     stopPexipKeepAlive,
+    closePexipEventSource,
     setAppInitiatedDisconnect,
     closePeerConnection,
     releaseLocalStream,

@@ -9425,6 +9425,7 @@ __metadata:
     react-native-screenguard: "npm:~1.1.0"
     react-native-screens: "npm:~4.16.0"
     react-native-splash-screen: "npm:~3.3.0"
+    react-native-sse: "npm:~1.2.1"
     react-native-svg: "npm:~15.12.1"
     react-native-svg-transformer: "npm:~1.5.0"
     react-native-tcp-socket: "npm:~6.0.6"
@@ -19622,6 +19623,13 @@ __metadata:
   peerDependencies:
     react-native: ">=0.57.0"
   checksum: 10c0/0979585b4087dba0825c94393477fc0301210cfa09eae4a98336e91865765f3c774cf8b20c525b3cea74c588e1e4ff0aa9d7500292ad52979670aa59ab83f0a4
+  languageName: node
+  linkType: hard
+
+"react-native-sse@npm:~1.2.1":
+  version: 1.2.1
+  resolution: "react-native-sse@npm:1.2.1"
+  checksum: 10c0/68b95601da2a0d37b2cd7ee4af16169a4650ec615b656cb064aba537f3f516b2242b0533c90b63fc0950ef39e25f5a62d8bc53c70ac892c460d24dc3efe3d844
   languageName: node
   linkType: hard
 
