@@ -142,7 +142,7 @@
     "react-native-uuid": "~2.0.3",
     "react-native-vector-icons": "~10.3.0",
     "react-native-video": "~6.18.0",
-    "react-native-vision-camera": "4.7.3",
+    "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch",
     "react-native-volume-manager": "~1.10.0",
     "react-native-webrtc": "~124.0.6",
     "react-native-webview": "~13.16.0",
