@@ -1,16 +1,13 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import { useRemoveAccountAlert } from '@/bcsc-theme/hooks/useRemoveAccountAlert'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppEventCode } from '@/events/appEventCode'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -40,9 +37,7 @@ const Account: React.FC = () => {
   const getQuickLoginURL = useQuickLoginURL()
   const account = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
-  const factoryReset = useFactoryReset()
-  const { emitAlert } = useErrorAlert()
-  const loadingScreen = useLoadingScreen()
+  const showRemoveAccountAlert = useRemoveAccountAlert()
 
   const openedWebview = useRef(false)
 
@@ -89,39 +84,6 @@ const Account: React.FC = () => {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
   }, [client, navigation, logger, t])
-
-  const handleRemoveAccount = useCallback(() => {
-    emitAlert(t('Alerts.RemoveAccount.Title'), t('Alerts.RemoveAccount.Description'), {
-      event: AppEventCode.REMOVE_ACCOUNT,
-      actions: [
-        {
-          text: t('Global.Cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('Alerts.RemoveAccount.Action1'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
-
-              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
-
-              const result = await factoryReset()
-
-              if (!result.success) {
-                logger.error('[RemoveAccount] Failed to remove account', result.error)
-              }
-            } catch (error) {
-              logger.error('[RemoveAccount] Error during account removal', error as Error)
-            } finally {
-              loadingScreen.stopLoading()
-            }
-          },
-        },
-      ],
-    })
-  }, [emitAlert, t, factoryReset, loadingScreen, logger])
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
@@ -216,7 +178,7 @@ const Account: React.FC = () => {
             description={t('BCSC.Account.AccountDetailsDescription')}
           />
           <SectionButton
-            onPress={handleRemoveAccount}
+            onPress={showRemoveAccountAlert}
             title={t('BCSC.Account.RemoveAccount')}
           />
         </View>

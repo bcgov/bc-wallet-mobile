@@ -1,183 +1,108 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TransferSuccess Render tests renders correctly 1`] = `
-<RNCSafeAreaView
-  edges={
-    {
-      "bottom": "additive",
-      "left": "additive",
-      "right": "additive",
-      "top": "off",
-    }
-  }
+<View
   style={
-    [
-      {
-        "backgroundColor": "#F2F2F2",
-        "flex": 1,
-      },
-      undefined,
-    ]
-  }
->
-  <RCTScrollView
-    contentContainerStyle={
-      [
-        {
-          "padding": 16,
-        },
-        {
-          "alignItems": "center",
-          "justifyContent": "center",
-        },
-      ]
+    {
+      "display": "flex",
+      "flex": 1,
     }
-    showsVerticalScrollIndicator={false}
-  >
-    <View>
-      <Text
-        allowFontScaling={false}
-        selectable={false}
-        style={
-          [
-            {
-              "color": "#003366",
-              "fontSize": 108,
-            },
-            undefined,
-            {
-              "fontFamily": "Material Design Icons",
-              "fontStyle": "normal",
-              "fontWeight": "normal",
-            },
-            {},
-          ]
-        }
-      >
-        󰄬
-      </Text>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 26,
-              "fontWeight": "bold",
-            },
-            {
-              "marginTop": 16,
-              "textAlign": "center",
-            },
-          ]
-        }
-      >
-        BCSC.TransferSuccess.Title
-      </Text>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
-              "fontWeight": "bold",
-            },
-            {
-              "marginVertical": 24,
-              "textAlign": "center",
-            },
-          ]
-        }
-      >
-        BCSC.TransferSuccess.Description
-      </Text>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            {
-              "marginBottom": 16,
-              "textAlign": "center",
-            },
-          ]
-        }
-      >
-        BCSC.TransferSuccess.ExtraText
-      </Text>
-    </View>
-  </RCTScrollView>
-  <View
+  }
+  testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
+>
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "additive",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
     style={
       [
         {
-          "gap": 16,
-        },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
+          "backgroundColor": "#F2F2F2",
+          "flex": 1,
         },
         undefined,
       ]
     }
   >
-    <View
-      accessibilityLabel="BCSC.TransferSuccess.ButtonText"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
-      style={
-        {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
-        }
-      }
-      testID="com.ariesbifold:id/BCSC.TransferSuccess.ButtonText"
-    >
-      <View
-        style={
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "padding": 16,
+          },
           {
             "alignItems": "center",
-            "flexDirection": "row",
             "justifyContent": "center",
+          },
+        ]
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#003366",
+                "fontSize": 108,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Design Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
           }
-        }
-      >
+        >
+          󰄬
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              {
+                "marginTop": 16,
+                "textAlign": "center",
+              },
+            ]
+          }
+        >
+          BCSC.TransferSuccess.Title
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "marginVertical": 24,
+                "textAlign": "center",
+              },
+            ]
+          }
+        >
+          BCSC.TransferSuccess.Description
+        </Text>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -188,102 +113,187 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "normal",
               },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-                false,
-              ],
+              {
+                "marginBottom": 16,
+                "textAlign": "center",
+              },
             ]
           }
         >
-          BCSC.TransferSuccess.ButtonText
+          BCSC.TransferSuccess.ExtraText
         </Text>
       </View>
-    </View>
+    </RCTScrollView>
     <View
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
       style={
-        {
-          "backgroundColor": "#D8292F",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
-        }
+        [
+          {
+            "gap": 16,
+          },
+          {
+            "paddingBottom": 16,
+            "paddingHorizontal": 16,
+          },
+          undefined,
+        ]
       }
-      testID="com.ariesbifold:id/BCSC.Account.RemoveAccount"
     >
       <View
-        style={
+        accessibilityLabel="BCSC.TransferSuccess.ButtonText"
+        accessibilityRole="button"
+        accessibilityState={
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
           }
         }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#003366",
+            "borderRadius": 4,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.TransferSuccess.ButtonText"
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-                false,
-              ],
-            ]
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            }
           }
         >
-          BCSC.Account.RemoveAccount
-        </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                  false,
+                ],
+              ]
+            }
+          >
+            BCSC.TransferSuccess.ButtonText
+          </Text>
+        </View>
+      </View>
+      <View
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#D8292F",
+            "borderRadius": 4,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BCSC.Account.RemoveAccount"
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                  false,
+                ],
+              ]
+            }
+          >
+            BCSC.Account.RemoveAccount
+          </Text>
+        </View>
       </View>
     </View>
-  </View>
-</RNCSafeAreaView>
+  </RNCSafeAreaView>
+</View>
 `;
