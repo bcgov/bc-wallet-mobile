@@ -96,6 +96,7 @@ export const useFactoryReset = () => {
         client.clearTokens()
 
         logger.info('FactoryReset: Logging out user...')
+        dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
 
         // Factory reset complete

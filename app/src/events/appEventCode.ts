@@ -139,6 +139,7 @@ export enum AppEventCode {
   CANCEL_VERIFICATION_REQUEST = 'cancel_verification_request',
   REMOTE_VERIFICATION_PENDING = 'remote_verification_pending',
   CANCEL_MOBILE_CARD_SETUP = 'cancel_mobile_card_setup',
+  REMOVE_ACCOUNT = 'remove_account',
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',

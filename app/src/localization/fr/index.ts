@@ -1101,6 +1101,11 @@ const translation = {
       "Description": "This will delete all information you entered to set up the app. You will have to start again. (FR)",
       "Action1": "Reset App (FR)"
     },
+    "RemoveAccount": {
+      "Title": "Remove account from this app? (FR)",
+      "Description": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
+      "Action1": "Remove account (FR)"
+    },
     "CancelVerificationRequest": {
       "Title": "Are you sure? (FR)",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",

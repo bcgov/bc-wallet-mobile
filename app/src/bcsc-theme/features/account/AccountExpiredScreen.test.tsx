@@ -1,8 +1,12 @@
+import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { AccountExpiredScreen } from './AccountExpiredScreen'
+
+jest.unmock('@/bcsc-theme/contexts/BCSCAccountContext')
 
 describe('AccountExpired', () => {
   let mockNavigation: any
@@ -12,15 +16,6 @@ describe('AccountExpired', () => {
 
     jest.clearAllMocks()
     jest.useFakeTimers()
-
-    const mockAccountContext = {
-      account: {
-        card_expiry: '2024-12-31',
-        fullname_formatted: 'John Doe',
-      },
-    }
-
-    jest.spyOn(React, 'useContext').mockReturnValue(mockAccountContext)
   })
 
   afterEach(() => {
@@ -30,7 +25,19 @@ describe('AccountExpired', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <AccountExpiredScreen navigation={mockNavigation} />
+        <BCSCLoadingProvider>
+          <BCSCAccountContext.Provider
+            value={{
+              isLoadingAccount: false,
+              account: {
+                card_expiry: '2024-12-31',
+                fullname_formatted: 'John Doe',
+              } as any,
+            }}
+          >
+            <AccountExpiredScreen navigation={mockNavigation} />
+          </BCSCAccountContext.Provider>
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 

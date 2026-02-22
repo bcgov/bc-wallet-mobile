@@ -77,7 +77,8 @@ describe('useFactoryReset', () => {
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
     expect(clearSecureStateMock).toHaveBeenCalledWith()
     expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
-    expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+    expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] }])
+    expect(dispatchMock.mock.calls[2]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
   })
 
   it.todo('should factory reset with custom state when provided')
