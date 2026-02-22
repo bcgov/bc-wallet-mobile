@@ -215,6 +215,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
       InCallManager.start({ media: 'video', auto: true })
+      // InCallManager forces speaker on for video media type on Android.
+      // This clears the override so audio routes to Bluetooth/wired headsets when connected.
+      InCallManager.setForceSpeakerphoneOn(false)
     }
   }, [flowState, startVideoCall])
 
@@ -227,6 +230,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   // loading / error user-facing state message
   const stateMessage = useMemo(() => {
     switch (flowState) {
+      case VideoCallFlowState.UPLOADING_DOCUMENTS:
+        return t('BCSC.VideoCall.CallStates.UploadingDocuments')
       case VideoCallFlowState.CREATING_SESSION:
         return t('BCSC.VideoCall.CallStates.CreatingSession')
       case VideoCallFlowState.CONNECTING_WEBRTC:
@@ -312,6 +317,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
+        title={videoCallError?.title}
         message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
