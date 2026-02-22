@@ -166,7 +166,10 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
 // Suppresses the global error popup so the video call screen can show its own error UI.
 export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return (context.statusCode === 500 || context.statusCode === 503) && context.endpoint.includes(context.apiEndpoints.video)
+    return (
+      (context.statusCode === 500 || context.statusCode === 503) &&
+      context.endpoint.includes(context.apiEndpoints.video)
+    )
   },
   handle: (_error, context) => {
     context.logger.info('[VideoSessionErrorPolicy] Suppressing global alert — video call screen will handle this error')

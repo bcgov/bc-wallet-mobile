@@ -235,7 +235,13 @@ export const connect = async (
   const eventSource = new EventSource<'disconnect'>(pexipEventsUrl)
 
   eventSource.addEventListener('disconnect', (event) => {
-    const reason = event.data ? JSON.parse(event.data)?.reason : 'unknown'
+    let reason = 'unknown'
+    try {
+      reason = event.data ? (JSON.parse(event.data)?.reason ?? reason) : reason
+    } catch (error) {
+      // Malformed JSON in SSE payload — proceed with disconnect regardless
+      logger.warn('Failed to parse Pexip disconnect event data', { data: event.data, error: error as Error })
+    }
     logger.info('Pexip SSE disconnect event received', { reason })
     handleDisconnect()
   })

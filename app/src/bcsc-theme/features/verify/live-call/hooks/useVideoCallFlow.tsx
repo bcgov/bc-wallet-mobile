@@ -1,10 +1,9 @@
 import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
-import { BCState } from '@/store'
-import readFileInChunks from '@/utils/read-file'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import useApi from '@bcsc-theme/api/hooks/useApi'
-import { UploadEvidenceResponseData } from '@bcsc-theme/api/hooks/useEvidenceApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import useEvidenceUpload from '@bcsc-theme/hooks/useEvidenceUpload'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
@@ -21,6 +20,17 @@ import {
 import { clearIntervalIfExists } from '../utils/clearTimeoutIfExists'
 import { connect } from '../utils/connect'
 import createVideoCallError from '../utils/createVideoCallError'
+
+// Maps v4 error types to v3-compatible Snowplow error codes
+// so analytics are consistent across both platforms
+const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
+  [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
+  [VideoCallErrorType.SESSION_FAILED]: 'server_error',
+  [VideoCallErrorType.CONNECTION_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.NETWORK_ERROR]: 'no_internet',
+  [VideoCallErrorType.PERMISSION_DENIED]: 'permission_denied',
+}
 
 export interface VideoCallFlow {
   flowState: VideoCallFlowState
@@ -50,8 +60,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const cleanupCompletedRef = useRef(false)
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
-  const { video, evidence } = useApi()
+  const { video } = useApi()
+  const { uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries } = useEvidenceUpload()
   const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
@@ -182,77 +192,33 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     (type: VideoCallErrorType, error: Error) => {
       logger.error(`Video call error [${type}]:`, error)
       const videoCallError = createVideoCallError(type, error?.toString())
+
+      Analytics.trackErrorEvent({
+        code: AnalyticsErrorCodeMap[type],
+        message: error?.toString() ?? type,
+      })
+
       setVideoCallError(videoCallError)
       setFlowState(VideoCallFlowState.ERROR)
-
-      // Trigger full cleanup (disconnects Pexip, releases media, updates API)
-      cleanup()
+      cleanup().catch((cleanupError) => {
+        logger.error('Error during cleanup after video call error:', cleanupError)
+      })
     },
     [cleanup, logger]
   )
-
-  const uploadSelfiePhoto = useCallback(async () => {
-    const { photoPath, photoMetadata } = store.bcsc
-    if (!photoPath || !photoMetadata) {
-      logger.debug('No selfie photo to upload')
-      return
-    }
-
-    logger.info('Uploading selfie photo...')
-    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(photoMetadata)
-    const photoBytes = await readFileInChunks(photoPath, logger)
-    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
-    logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
-  }, [evidence, logger, store.bcsc])
-
-  const uploadAdditionalEvidence = useCallback(async () => {
-    const additionalEvidence = store.bcscSecure.additionalEvidenceData
-    if (!additionalEvidence || additionalEvidence.length === 0) {
-      logger.debug('No additional evidence to upload')
-      return
-    }
-
-    logger.info(`Uploading ${additionalEvidence.length} additional evidence item(s)...`)
-
-    for (const evidenceItem of additionalEvidence) {
-      const metadataPayload = {
-        type: evidenceItem.evidenceType.evidence_type,
-        number: evidenceItem.documentNumber,
-        images: evidenceItem.metadata.map((data) => {
-          return { ...data, file_path: undefined }
-        }),
-      }
-
-      const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
-      logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
-
-      for (const metadataItem of evidenceItem.metadata) {
-        const matchingResponse = evidenceMetadataResponse.find(
-          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
-        )
-
-        if (matchingResponse) {
-          const imageBytes = await readFileInChunks(metadataItem.file_path, logger)
-          await evidence.uploadPhotoEvidenceBinary(matchingResponse.upload_uri, imageBytes)
-          logger.debug(`Evidence binary uploaded for ${metadataItem.label}: ${imageBytes.length} bytes`)
-        }
-      }
-    }
-
-    logger.info('All additional evidence uploaded successfully')
-  }, [evidence, logger, store.bcscSecure.additionalEvidenceData])
 
   // 0. upload any required evidence before attempting to connect to the call, since it must be present in IDCheck
   const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
     try {
       await uploadSelfiePhoto()
-      await uploadAdditionalEvidence()
+      const additionalEvidence = await processAdditionalEvidence()
+      await uploadEvidenceBinaries(additionalEvidence)
     } catch (error) {
       handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
       return false
     }
     return true
-  }, [uploadSelfiePhoto, uploadAdditionalEvidence, handleError])
+  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError])
 
   // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
