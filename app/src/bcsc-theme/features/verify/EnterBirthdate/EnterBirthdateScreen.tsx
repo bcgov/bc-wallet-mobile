@@ -57,9 +57,10 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     },
   })
 
-  // Debounce onDateChange to wait for the wheel picker to settle before
-  // committing the value. The picker fires intermediate values as the
-  // wheel decelerates; without this the submitted date can be wrong.
+  // Update the controlled date prop immediately so the picker stays in sync,
+  // but debounce the pickerState transition (spinning → idle) to block the
+  // Done button until the wheel has settled. The picker fires intermediate
+  // values as it decelerates; dateRef always holds the latest value for submission.
   // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
   const onDateChange = useCallback((newDate: Date) => {
     const year = newDate.getFullYear()
@@ -67,6 +68,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     const day = newDate.getDate()
     const realDate = new Date(year, month, day, 12, 0, 0, 0)
 
+    setDate(realDate)
     dateRef.current = realDate
     setPickerState('spinning')
 
@@ -76,7 +78,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      setDate(realDate)
       setPickerState('idle')
     }, 400)
   }, [])
