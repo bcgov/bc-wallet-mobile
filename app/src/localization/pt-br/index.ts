@@ -788,6 +788,13 @@ const translation = {
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
     },
+    "VerificationCardError": {
+      "CardExpired": {
+        "Heading": "Sorry, you can't add this card. (PT-BR)",
+        "Description": "This card is no longer valid. It has expired. (PT-BR)",
+        "ButtonText": "Get a BC Services Card (PT-BR)"
+      }
+    },
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times (PT-BR)",
       "Message": "Please try again later. (PT-BR)",

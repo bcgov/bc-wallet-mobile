@@ -381,7 +381,13 @@ describe('useCardScanner', () => {
       })
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.MismatchedSerial }],
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: 'MismatchedSerial' },
+          },
+        ],
       })
     })
   })

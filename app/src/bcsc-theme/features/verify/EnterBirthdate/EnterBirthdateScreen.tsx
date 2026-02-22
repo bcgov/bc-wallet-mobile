@@ -1,6 +1,7 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
+import { VerificationCardError } from '../VerificationCardErrorScreen'
 import {
   Button,
   ButtonType,
@@ -72,7 +73,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       }
 
       logger.error('CSN and birthdate mismatch, card not found', { error })
-      navigation.navigate(BCSCScreens.MismatchedSerial)
+      navigation.navigate(BCSCScreens.VerificationCardError, {
+        errorType: VerificationCardError.MismatchedSerial,
+      })
     } finally {
       setLoading(false)
     }

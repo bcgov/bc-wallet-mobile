@@ -1,5 +1,6 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
+import { VerificationCardError } from '../features/verify/VerificationCardErrorScreen'
 import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {
@@ -27,7 +28,7 @@ export enum BCSCScreens {
   ManualSerial = 'BCSCManualSerial',
   ScanSerial = 'BCSCScanSerial',
   EnterBirthdate = 'BCSCEnterBirthdate',
-  MismatchedSerial = 'BCSCMismatchedSerial',
+  VerificationCardError = 'BCSCVerificationCardError',
   BirthdateLockout = 'BCSCBirthdateLockout',
   EnterEmail = 'BCSCEnterEmail',
   EmailConfirmation = 'BCSCEmailConfirmation',
@@ -140,7 +141,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ManualSerial]: undefined
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
-  [BCSCScreens.MismatchedSerial]: undefined
+  [BCSCScreens.VerificationCardError]: { errorType: VerificationCardError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
