@@ -284,6 +284,7 @@ jobs:
             single-app-dev)  git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch ;;
             single-app-test) git am < ./patch/0005-chore-ios-app-to-bcsc-test.patch ;;
             single-app-qa)   git am < ./patch/0006-chore-ios-app-to-bcsc-qa.patch ;;
+            *) echo "error: Unknown build type '${{ matrix.build_type }}'"; exit 1 ;;
           esac
 
       - name: Bump Build No.
@@ -310,7 +311,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
           platform: ios
 
       - name: Update APS environment
@@ -327,7 +328,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || matrix.build_type == 'single-app-dev' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 || secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
+          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || matrix.build_type == 'single-app-dev' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -462,6 +463,7 @@ jobs:
             single-app-dev)  git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch ;;
             single-app-test) git am < ./patch/0003-chore-android-app-to-bcsc-test.patch ;;
             single-app-qa)   git am < ./patch/0004-chore-android-app-to-bcsc-qa.patch ;;
+            *) echo "error: Unknown build type '${{ matrix.build_type }}'"; exit 1 ;;
           esac
 
       # Actual environment variables are not being picked up
@@ -479,7 +481,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
           platform: android
 
       - name: Create release keystore
@@ -488,9 +490,9 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_BASE64_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_BASE64_SATEST || secrets.PLAY_STORE_JKS_BASE64_SAQA }}
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
+          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_BASE64_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_BASE64_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_BASE64_SAQA }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -500,8 +502,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
