@@ -19,7 +19,6 @@ import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Camera,
-  CameraCaptureError,
   CameraRuntimeError,
   useCameraDevice,
   useCameraFormat,
@@ -189,52 +188,44 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    try {
-      const snapshot = await cameraRef.current.takeSnapshot()
+    const snapshot = await cameraRef.current.takeSnapshot()
 
-      cameraRef.current.startRecording({
-        fileType: 'mp4',
-        videoCodec: 'h265',
-        onRecordingError: (error) => {
-          stopTimer() // Stop timer on error
+    cameraRef.current.startRecording({
+      fileType: 'mp4',
+      videoCodec: 'h265',
+      onRecordingError: (error) => {
+        stopTimer() // Stop timer on error
 
-          // If recording was canceled, do not show an alert
-          if (error.code === 'capture/recording-canceled') {
-            logger.debug('Video recording canceled')
-            return
-          }
+        // If recording was canceled, do not show an alert
+        if (error.code === 'capture/recording-canceled') {
+          logger.debug('Video recording canceled')
+          return
+        }
 
-          logger.debug(`Recording error (${error.code}): ${error.message}`)
+        logger.debug(`Recording error (${error.code}): ${error.message}`)
 
-          // Handle file I/O errors separately to provide a specific alert
-          if (error.code === 'capture/file-io-error') {
-            throw error
-          }
+        // Handle file I/O errors separately to provide a specific alert
+        if (error.code === 'capture/file-io-error') {
+          failedToWriteToLocalStorageAlert()
+        }
 
-          Alert.alert(
-            t('BCSC.SendVideo.TakeVideo.RecordingError'),
-            t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
-          )
-        },
-        onRecordingFinished: async (video) => {
-          logger.info(`Recording finished, duration: ${video.duration}`)
-          stopTimer() // Stop timer when manually stopping recording
-          setPrompt('')
-          if (exceedsMaxDurationRef.current) {
-            navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
-            return
-          }
+        Alert.alert(
+          t('BCSC.SendVideo.TakeVideo.RecordingError'),
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+        )
+      },
+      onRecordingFinished: async (video) => {
+        logger.info(`Recording finished, duration: ${video.duration}`)
+        stopTimer() // Stop timer when manually stopping recording
+        setPrompt('')
+        if (exceedsMaxDurationRef.current) {
+          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
+          return
+        }
 
-          navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
-        },
-      })
-    } catch (error) {
-      logger.error('Error starting video recording:', error as Error)
-
-      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-        failedToWriteToLocalStorageAlert()
-      }
-    }
+        navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
+      },
+    })
   }, [prompts, startTimer, logger, stopTimer, t, failedToWriteToLocalStorageAlert, navigation])
 
   const onPressNextPrompt = async () => {

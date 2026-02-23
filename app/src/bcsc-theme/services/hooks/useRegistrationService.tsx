@@ -35,6 +35,7 @@ export const useRegistrationService = (registrationApi: RegistrationApi) => {
         if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
           alerts.clientRegistrationNullAlert()
         }
+
         throw error
       }
     },
@@ -60,6 +61,7 @@ export const useRegistrationService = (registrationApi: RegistrationApi) => {
         if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
           alerts.clientRegistrationNullAlert()
         }
+
         throw error
       }
     },

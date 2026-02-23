@@ -30,6 +30,7 @@ export const useTokenService = (tokenApi: TokenApi) => {
         if (isAppError(error, AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)) {
           alerts.unableToDecryptIdTokenAlert()
         }
+
         throw error
       }
     },

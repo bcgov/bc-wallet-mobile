@@ -44,7 +44,7 @@ export const showAlert = (title: string, body: string, actions?: AlertAction[], 
  *
  * @param fn - The function to wrap
  * @param alert - The alert function to call if an error is thrown
- *  @returns A new function that wraps the original function with an alert on error
+ * @returns A new function that wraps the original function with an alert on error
  */
 export const withAlert = <TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
