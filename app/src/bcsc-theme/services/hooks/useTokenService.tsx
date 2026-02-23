@@ -1,4 +1,6 @@
-import { IdTokenMetadataConfig, TokenApi } from '@/bcsc-theme/api/hooks/useTokens'
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useTokenApi, { IdTokenMetadataConfig } from '@/bcsc-theme/api/hooks/useTokens'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -9,10 +11,11 @@ import { useCallback, useMemo } from 'react'
  * Service layer hook for token api.
  * Business logic related to token API calls and UI event handling should be implemented here.
  *
- * @param tokenApi - The base token API service.
  * @returns Token API service with UI event handling.
  */
-export const useTokenService = (tokenApi: TokenApi) => {
+export const useTokenService = () => {
+  const { client } = useBCSCApiClientState()
+  const tokenApi = useTokenApi(client as BCSCApiClient)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 

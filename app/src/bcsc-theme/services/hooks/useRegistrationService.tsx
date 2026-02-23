@@ -1,4 +1,5 @@
-import { RegistrationApi } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -10,10 +11,11 @@ import { AccountSecurityMethod, BcscNativeErrorCodes, isBcscNativeError } from '
  * Service layer hook for registration api.
  * Business logic related to registration API calls and UI event handling should be implemented here.
  *
- * @param registrationApi - The base token API service.
  * @returns Registration service
  */
-export const useRegistrationService = (registrationApi: RegistrationApi) => {
+export const useRegistrationService = () => {
+  const { client } = useBCSCApiClientState()
+  const registrationApi = useRegistrationApi(client)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 

@@ -1,5 +1,4 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import useTokenApi from '@/bcsc-theme/api/hooks/useTokens'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
@@ -20,7 +19,6 @@ import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
-import useRegistrationApi from '../api/hooks/useRegistrationApi'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -55,10 +53,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
-  const tokenApi = useTokenApi(client as BCSCApiClient)
-  const tokenService = useTokenService(tokenApi)
-  const registrationApi = useRegistrationApi(client, isClientReady)
-  const registrationService = useRegistrationService(registrationApi)
+  const tokenService = useTokenService()
+  const registrationService = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()

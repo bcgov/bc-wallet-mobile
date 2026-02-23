@@ -1,4 +1,3 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -12,8 +11,7 @@ const EditNicknameScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store, dispatch] = useStore<BCState>()
-  const { registration: registrationApi } = useApi()
-  const registration = useRegistrationService(registrationApi)
+  const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(

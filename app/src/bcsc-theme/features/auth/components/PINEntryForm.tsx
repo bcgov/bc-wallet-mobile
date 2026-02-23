@@ -1,7 +1,5 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import {
   Button,
@@ -67,9 +65,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage1, setErrorMessage1] = useState<string | undefined>(undefined)
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { client, isClientReady } = useBCSCApiClientState()
-  const registrationApi = useRegistrationApi(client, isClientReady)
-  const { register } = useRegistrationService(registrationApi)
+  const { register } = useRegistrationService()
 
   const pin2Ref = useRef<TextInput>(null)
 

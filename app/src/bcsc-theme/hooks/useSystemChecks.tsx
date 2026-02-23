@@ -10,8 +10,6 @@ import { useNavigation } from '@react-navigation/native'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
-import BCSCApiClient from '../api/client'
-import useTokenApi from '../api/hooks/useTokens'
 import { useTokenService } from '../services/hooks/useTokenService'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
@@ -35,8 +33,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
-  const tokenApi = useTokenApi(client as BCSCApiClient)
-  const tokenService = useTokenService(tokenApi)
+  const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
@@ -109,7 +106,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     })
 
     return () => subscription.remove()
-  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger, navigation, emitAlert, tokenService])
+  }, [scope, isClientReady, client, dispatch, t, logger, navigation, emitAlert, tokenService])
 
   useEffect(() => {
     const runSystemChecksByScope = async () => {

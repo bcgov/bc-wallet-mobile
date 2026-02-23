@@ -1,3 +1,4 @@
+import * as storeModule from '@/store'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 import { initIssuer } from './issuer'
@@ -23,14 +24,16 @@ describe('initIssuer', () => {
   it('should set the issuer to the default value if it is not defined', async () => {
     const getIssuerSpy = jest.spyOn(BcscCore, 'getIssuer')
     const setIssuerSpy = jest.spyOn(BcscCore, 'setIssuer')
+    const getInitialEnvironmentSpy = jest.spyOn(storeModule, 'getInitialEnvironment')
     const mockLogger = new MockLogger()
 
+    getInitialEnvironmentSpy.mockReturnValue({ iasApiBaseUrl: 'https://test-env.com/issuer' } as any)
     getIssuerSpy.mockResolvedValue(null)
 
     await initIssuer(mockLogger as any)
 
     expect(getIssuerSpy).toHaveBeenCalled()
-    expect(setIssuerSpy).toHaveBeenCalledWith('https://id.gov.bc.ca')
+    expect(setIssuerSpy).toHaveBeenCalledWith('https://test-env.com/issuer')
   })
 
   it('should log an error if there is an issue during initialization', async () => {

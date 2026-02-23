@@ -1,4 +1,3 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
@@ -10,8 +9,7 @@ import NicknameForm from './components/NicknameForm'
 const NicknameAccountScreen: React.FC = () => {
   const navigation = useNavigation()
   const [store, dispatch] = useStore<BCState>()
-  const { registration: registrationApi } = useApi()
-  const registration = useRegistrationService(registrationApi)
+  const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(

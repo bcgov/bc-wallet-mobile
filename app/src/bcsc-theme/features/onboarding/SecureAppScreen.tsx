@@ -1,6 +1,4 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -22,10 +20,8 @@ interface SecureAppScreenProps {
  */
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
-  const registrationApi = useRegistrationApi(client, isClientReady)
-  const { register } = useRegistrationService(registrationApi)
+  const { register } = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleDeviceAuthPress = useCallback(async () => {

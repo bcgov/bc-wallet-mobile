@@ -1,3 +1,4 @@
+import * as useTokenApiModule from '@/bcsc-theme/api/hooks/useTokens'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
@@ -19,9 +20,11 @@ describe('useTokenService', () => {
       const tokenApi = {
         getCachedIdTokenMetadata: jest.fn().mockResolvedValue(mockData),
       } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-      const { result } = renderHook(() => useTokenService(tokenApi))
+      const { result } = renderHook(() => useTokenService())
 
       const data = await result.current.getCachedIdTokenMetadata({ refreshCache: true })
 
@@ -35,9 +38,11 @@ describe('useTokenService', () => {
         getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
       } as any
       const mockAlerts = { unableToDecryptIdTokenAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useTokenService(tokenApi))
+      const { result } = renderHook(() => useTokenService())
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
       expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
@@ -51,13 +56,36 @@ describe('useTokenService', () => {
       } as any
       const unableToDecryptIdTokenAlert = jest.fn()
       const mockAlerts = { unableToDecryptIdTokenAlert }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useTokenService(tokenApi))
+      const { result } = renderHook(() => useTokenService())
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
       expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
       expect(unableToDecryptIdTokenAlert).not.toHaveBeenCalled()
     })
+  })
+
+  it('should return memoized functions', () => {
+    const tokenApi = {
+      getCachedIdTokenMetadata: jest.fn(),
+      checkDeviceCodeStatus: jest.fn(),
+      deviceToken: 'test-device-token',
+    } as any
+
+    jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+    jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+    const { result, rerender } = renderHook(() => useTokenService())
+
+    const firstResult = result.current
+
+    rerender(undefined)
+
+    const secondResult = result.current
+
+    expect(firstResult).toBe(secondResult)
   })
 })

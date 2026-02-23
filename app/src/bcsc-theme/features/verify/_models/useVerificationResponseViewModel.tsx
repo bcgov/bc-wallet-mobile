@@ -1,4 +1,3 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCState } from '@/store'
@@ -8,8 +7,7 @@ import { useCallback, useState } from 'react'
 const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { registration: registrationApi } = useApi()
-  const registration = useRegistrationService(registrationApi)
+  const registration = useRegistrationService()
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
