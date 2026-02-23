@@ -183,7 +183,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
     
-    implementation 'net.java.dev.jna:jna:5.14.0'
+    implementation 'net.java.dev.jna:jna:5.18.1'
     
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
