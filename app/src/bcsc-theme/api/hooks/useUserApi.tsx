@@ -1,4 +1,5 @@
 import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
+import { AppError, ErrorRegistry } from '@/errors'
 import moment from 'moment'
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
@@ -39,7 +40,11 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     return withAccount(async () => {
       const { data } = await apiClient.get<string>(apiClient.endpoints.userInfo)
       const userInfoString = await decodePayload(data)
-      return JSON.parse(userInfoString)
+      try {
+        return JSON.parse(userInfoString)
+      } catch (error) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
+      }
     })
   }, [apiClient])
 
