@@ -9,6 +9,7 @@ import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, LayoutAnimation, Platform, Pressable, StyleSheet, Switch, UIManager, View } from 'react-native'
 import { useCameraPermission } from 'react-native-vision-camera'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Spacing } from '../../../bcwallet-theme/theme'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import { BCSC_SN_SCAN_ZONES } from '../../components/utils/camera'
@@ -107,7 +108,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Camera fills the entire screen */}
       <CodeScanningCamera
         onCodeScanned={onCodeScanned}
@@ -189,7 +190,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           )}
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 
@@ -207,7 +208,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // safe area for home indicator
     height: '40%',
   },
   handleContainer: {
