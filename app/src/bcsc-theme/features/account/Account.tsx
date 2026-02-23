@@ -82,8 +82,8 @@ const Account: React.FC = () => {
           }
         } catch (error) {
           logger.error('[RemoveAccount] Error during account removal', error as Error)
-          removingAccount.current = false
         } finally {
+          removingAccount.current = false
           loadingScreen.stopLoading()
         }
       }

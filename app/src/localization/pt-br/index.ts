@@ -1134,6 +1134,11 @@ const translation = {
       "Title": "Problem Checking Status (PT-BR)",
       "Description": "Please close the app and try again. (PT-BR)",
     },
+    "RemoveAccount": {
+      "Title": "Remove account from this app? (PT-BR)",
+      "Description": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
+      "Action1": "Remove account (PT-BR)"
+    },
     "FileUploadError": {
       "Title": "Problem with Connection (PT-BR)",
       "Description": "Please try again. (PT-BR)"
