@@ -94,8 +94,16 @@ export interface IdToken {
  * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a IdToken object.
  */
 export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
+  let payloadString: string
   try {
-    const payloadString = await decodePayload(idToken)
+    payloadString = await decodePayload(idToken)
+  } catch (error) {
+    logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
+
+    throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
+  }
+
+  try {
     const payload: IdToken = JSON.parse(payloadString)
 
     // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
@@ -105,11 +113,8 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
 
     return payload
   } catch (error) {
-    logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
-    if (error instanceof SyntaxError) {
-      throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
-    }
+    logger.error('getIdTokenMetadata -> Failed to parse ID token payload', error as Error)
 
-    throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
+    throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
   }
 }

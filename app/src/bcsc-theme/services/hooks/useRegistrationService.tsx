@@ -38,6 +38,10 @@ export const useRegistrationService = () => {
           alerts.clientRegistrationNullAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
+          alerts.failedToDeserializeJsonAlert()
+        }
+
         throw error
       }
     },
@@ -62,6 +66,10 @@ export const useRegistrationService = () => {
 
         if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
           alerts.clientRegistrationNullAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
+          alerts.failedToDeserializeJsonAlert()
         }
 
         throw error

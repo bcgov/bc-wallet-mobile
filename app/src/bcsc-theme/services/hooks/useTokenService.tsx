@@ -34,6 +34,10 @@ export const useTokenService = () => {
           alerts.unableToDecryptIdTokenAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
+          alerts.failedToDeserializeJsonAlert()
+        }
+
         throw error
       }
     },
