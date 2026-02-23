@@ -57,7 +57,9 @@ const Account: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (removingAccount.current || route.params?.removeAccount) return
+      if (removingAccount.current || route.params?.removeAccount) {
+        return
+      }
 
       logger.info('Account screen focused, refreshing ID token metadata...')
       refreshIdToken()

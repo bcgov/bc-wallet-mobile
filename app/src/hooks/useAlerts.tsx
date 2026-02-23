@@ -1,11 +1,12 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { BCSCLoadingContext } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useContext, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
 
@@ -37,8 +38,27 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
+  const loadingContext = useContext(BCSCLoadingContext)
 
   // HELPER FUNCTIONS
+
+  // _performFactoryReset handles the loading screen and error handling for factory reset operations.
+  const _performFactoryReset = useCallback(async () => {
+    try {
+      loadingContext?.startLoading(t('BCSC.Account.RemoveAccountLoading'))
+      logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
+
+      const result = await factoryReset()
+
+      if (!result.success) {
+        logger.error('[RemoveAccount] Failed to remove account', result.error)
+      }
+    } catch (error) {
+      logger.error('[RemoveAccount] Error during account removal', error as Error)
+    } finally {
+      loadingContext?.stopLoading()
+    }
+  }, [loadingContext, t, logger, factoryReset])
 
   // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
   const _createBasicAlert = useCallback(
@@ -71,15 +91,13 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
             {
               text: t('Alerts.ProblemWithAccount.Action1'),
               style: 'destructive',
-              onPress: () => {
-                navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-              },
+              onPress: _performFactoryReset,
             },
           ],
         })
       }
     },
-    [emitAlert, navigation, t]
+    [emitAlert, t, _performFactoryReset]
   )
 
   // BASIC ALERTS - These alerts only require a title, description, and event code, with no additional actions (default 'OK' to close).
@@ -199,6 +217,23 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     })
   }, [emitAlert, navigation, t])
 
+  const removeAccountAlert = useCallback(() => {
+    emitAlert(t('Alerts.RemoveAccount.Title'), t('Alerts.RemoveAccount.Description'), {
+      event: AppEventCode.REMOVE_ACCOUNT,
+      actions: [
+        {
+          text: t('Global.Cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('Alerts.RemoveAccount.Action1'),
+          style: 'destructive',
+          onPress: _performFactoryReset,
+        },
+      ],
+    })
+  }, [emitAlert, t, _performFactoryReset])
+
   // INTERACTION DRIVEN ALERTS - These alerts require an additional context-specific action to be passed in when triggered.
 
   const liveCallHavingTroubleAlert = useCallback(
@@ -266,6 +301,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginRejected403Alert,
       loginRejected400Alert,
       invalidTokenAlert,
+      removeAccountAlert,
     }),
     [
       problemWithAppAlert,
@@ -292,6 +328,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginRejected403Alert,
       loginRejected400Alert,
       invalidTokenAlert,
+      removeAccountAlert,
     ]
   )
 }

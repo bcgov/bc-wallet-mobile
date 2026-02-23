@@ -2,8 +2,8 @@ import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { useRemoveAccountAlert } from '@/bcsc-theme/hooks/useRemoveAccountAlert'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useAlerts } from '@/hooks/useAlerts'
 import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext } from 'react'
@@ -24,7 +24,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const accountContext = useContext(BCSCAccountContext)
-  const showRemoveAccountAlert = useRemoveAccountAlert()
+  const alerts = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -63,7 +63,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
           />
           <CardButton
             title={t('BCSC.AccountExpired.RemoveButton')}
-            onPress={showRemoveAccountAlert}
+            onPress={alerts.removeAccountAlert}
           />
         </View>
       </ScrollView>

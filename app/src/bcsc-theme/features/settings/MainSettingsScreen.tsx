@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HELP_URL } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +16,7 @@ type MainSettingsScreenProps = {
  */
 export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
+  const alerts = useAlerts(navigation)
 
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.MainContactUs)
@@ -66,6 +68,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onAutoLock={onAutoLock}
       onAppSecurity={onAppSecurity}
       onChangePIN={onChangePIN}
+      onRemoveAccount={alerts.removeAccountAlert}
     />
   )
 }

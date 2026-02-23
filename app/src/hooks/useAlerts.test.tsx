@@ -5,6 +5,8 @@ import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { useAlerts } from './useAlerts'
 
+const mockFactoryReset = jest.fn().mockResolvedValue({ success: true })
+
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
   useServices: () => mockUseServices(),
@@ -13,9 +15,17 @@ jest.mock('@bifold/core', () => ({
   },
 }))
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
+  useFactoryReset: () => mockFactoryReset,
+}))
+
+jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
+  BCSCLoadingContext: {},
+}))
+
 describe('useAlerts', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
   })
 
   describe('problemWithAppAlert', () => {
@@ -345,7 +355,7 @@ describe('useAlerts', () => {
       )
     })
 
-    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+    it('should trigger factory reset when the action is pressed', async () => {
       const mockNavigation = { navigate: jest.fn() }
       const mockEmitAlert = jest.fn()
       jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
@@ -358,9 +368,9 @@ describe('useAlerts', () => {
       const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
       expect(action).toBeDefined()
 
-      action.onPress()
+      await action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockFactoryReset).toHaveBeenCalled()
     })
   })
 
@@ -394,7 +404,7 @@ describe('useAlerts', () => {
       )
     })
 
-    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+    it('should trigger factory reset when the action is pressed', async () => {
       const mockNavigation = { navigate: jest.fn() }
       const mockEmitAlert = jest.fn()
       jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
@@ -407,9 +417,9 @@ describe('useAlerts', () => {
       const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
       expect(action).toBeDefined()
 
-      action.onPress()
+      await action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockFactoryReset).toHaveBeenCalled()
     })
   })
 
@@ -443,7 +453,7 @@ describe('useAlerts', () => {
       )
     })
 
-    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+    it('should trigger factory reset when the action is pressed', async () => {
       const mockNavigation = { navigate: jest.fn() }
       const mockEmitAlert = jest.fn()
       jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
@@ -456,9 +466,9 @@ describe('useAlerts', () => {
       const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
       expect(action).toBeDefined()
 
-      action.onPress()
+      await action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockFactoryReset).toHaveBeenCalled()
     })
   })
 

@@ -1,5 +1,4 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useRemoveAccountAlert } from '@/bcsc-theme/hooks/useRemoveAccountAlert'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
@@ -24,6 +23,7 @@ interface SettingsContentProps {
   onAutoLock?: () => void
   onAppSecurity?: () => void
   onChangePIN?: () => void
+  onRemoveAccount?: () => void
 }
 
 /**
@@ -40,6 +40,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onAutoLock,
   onAppSecurity,
   onChangePIN,
+  onRemoveAccount,
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -47,7 +48,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
-  const showRemoveAccountAlert = useRemoveAccountAlert()
 
   const styles = StyleSheet.create({
     container: {
@@ -200,11 +200,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 endAdornmentText={analyticsOptInText}
               />
 
-              <SettingsActionCard
-                title={t('BCSC.Settings.RemoveAccount')}
-                onPress={showRemoveAccountAlert}
-                textStyle={{ color: ColorPalette.semantic.error }}
-              />
+              {onRemoveAccount ? (
+                <SettingsActionCard
+                  title={t('BCSC.Settings.RemoveAccount')}
+                  onPress={onRemoveAccount}
+                  textStyle={{ color: ColorPalette.semantic.error }}
+                />
+              ) : null}
             </View>
           </>
         ) : null}
