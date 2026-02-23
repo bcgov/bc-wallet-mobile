@@ -20,6 +20,8 @@ import DatePicker from 'react-native-date-picker'
 import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
+const PICKER_DEBOUNCE_MS = 400
+
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 }
@@ -60,7 +62,8 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   // Update the controlled date prop immediately so the picker stays in sync,
   // but debounce the pickerState transition (spinning → idle) to block the
   // Done button until the wheel has settled. The picker fires intermediate
-  // values as it decelerates; dateRef always holds the latest value for submission.
+  // values as it decelerates; dateRef holds the latest value for submission
+  // to avoid stale closures in the async handleSubmit.
   // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
   const onDateChange = useCallback((newDate: Date) => {
     const year = newDate.getFullYear()
@@ -79,7 +82,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
     debounceTimerRef.current = setTimeout(() => {
       setPickerState('idle')
-    }, 400)
+    }, PICKER_DEBOUNCE_MS)
   }, [])
 
   const handleSubmit = async () => {
@@ -118,7 +121,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         handleSubmit()
       }}
       buttonType={ButtonType.Primary}
-      disabled={loading}
+      disabled={loading || pickerState === 'spinning'}
     >
       {loading && <ButtonLoading />}
     </Button>
