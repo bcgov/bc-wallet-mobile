@@ -193,7 +193,7 @@ export type BCSCVerifyStackParams = {
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
+  [BCSCScreens.Account]: { removeAccount?: boolean } | undefined
 }
 
 export type BCSCMainStackParams = {

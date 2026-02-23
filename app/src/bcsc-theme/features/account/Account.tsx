@@ -1,16 +1,18 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +21,7 @@ import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
 
 type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
+type AccountRouteProp = RouteProp<BCSCTabStackParams, BCSCScreens.Account>
 
 /**
  * Renders the account screen component, which displays user information and provides navigation to account-related actions.
@@ -31,13 +34,17 @@ const Account: React.FC = () => {
   const { metadata } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
+  const route = useRoute<AccountRouteProp>()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
   const account = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
+  const factoryReset = useFactoryReset()
+  const loadingScreen = useLoadingScreen()
 
   const openedWebview = useRef(false)
+  const removingAccount = useRef(false)
 
   const { load: loadBcscServiceClient, data: bcscServiceClient } = useDataLoader(metadata.getBCSCClientMetadata, {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
@@ -50,11 +57,38 @@ const Account: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
+      if (removingAccount.current || route.params?.removeAccount) return
+
       logger.info('Account screen focused, refreshing ID token metadata...')
       refreshIdToken()
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [logger])
+    }, [logger, route.params?.removeAccount])
   )
+  useEffect(() => {
+    if (route.params?.removeAccount && !removingAccount.current) {
+      removingAccount.current = true
+
+      const doRemoval = async () => {
+        try {
+          loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
+          logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
+
+          const result = await factoryReset()
+
+          if (!result.success) {
+            logger.error('[RemoveAccount] Failed to remove account', result.error)
+          }
+        } catch (error) {
+          logger.error('[RemoveAccount] Error during account removal', error as Error)
+          removingAccount.current = false
+        } finally {
+          loadingScreen.stopLoading()
+        }
+      }
+
+      doRemoval()
+    }
+  }, [route.params?.removeAccount, loadingScreen, t, logger, factoryReset])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
