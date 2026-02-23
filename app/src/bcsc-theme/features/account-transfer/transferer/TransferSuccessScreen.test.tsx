@@ -4,7 +4,7 @@ import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { BCSCStacks, BCSCScreens } from '../../../types/navigators'
+import { BCSCScreens, BCSCStacks } from '../../../types/navigators'
 import TransferSuccessScreen from './TransferSuccessScreen'
 
 describe('TransferSuccess', () => {

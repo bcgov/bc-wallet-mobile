@@ -257,7 +257,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
         </>
       ) : null}
-
     </ScreenWrapper>
   )
 }

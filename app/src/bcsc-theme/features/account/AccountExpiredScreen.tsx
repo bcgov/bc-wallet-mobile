@@ -61,10 +61,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
               navigation.navigate(BCSCScreens.AccountRenewalInformation)
             }}
           />
-          <CardButton
-            title={t('BCSC.AccountExpired.RemoveButton')}
-            onPress={alerts.removeAccountAlert}
-          />
+          <CardButton title={t('BCSC.AccountExpired.RemoveButton')} onPress={alerts.removeAccountAlert} />
         </View>
       </ScrollView>
     </ScreenWrapper>
