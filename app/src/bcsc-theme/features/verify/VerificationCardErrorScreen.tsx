@@ -5,11 +5,9 @@ import { RouteProp, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { Image, Linking, StyleSheet, useWindowDimensions } from 'react-native'
 import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
+import { VerificationCardError } from './verificationCardError'
 
-export enum VerificationCardError {
-  MismatchedSerial = 'MismatchedSerial',
-  CardExpired = 'CardExpired',
-}
+export { VerificationCardError }
 
 const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
 

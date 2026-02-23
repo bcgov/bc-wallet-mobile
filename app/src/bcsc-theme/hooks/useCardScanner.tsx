@@ -8,7 +8,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { CodeType } from 'react-native-vision-camera'
 import useApi from '../api/hooks/useApi'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
-import { VerificationCardError } from '../features/verify/VerificationCardErrorScreen'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import {
   DecodedCodeKind,

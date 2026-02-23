@@ -1,7 +1,7 @@
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
-import { VerificationCardError } from '../features/verify/VerificationCardErrorScreen'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
