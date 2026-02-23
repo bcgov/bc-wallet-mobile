@@ -58,7 +58,7 @@
     "sha.js": "2.4.12",
     "elliptic": "6.6.1",
     "@types/react": "19.1.0",
-    "react-native-vision-camera": "4.7.3",
+    "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch",
     "@credo-ts/anoncreds@npm:0.5.19": "patch:@credo-ts/anoncreds@npm%3A0.5.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.19-09c3e8bbd1.patch",
     "@credo-ts/anoncreds@npm:0.5.15": "patch:@credo-ts/anoncreds@npm%3A0.5.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.19-09c3e8bbd1.patch",
     "@credo-ts/core@npm:0.5.19": "patch:@credo-ts/core@npm%3A0.5.19#~/.yarn/patches/@credo-ts-core-npm-0.5.19-0177059ca8.patch",
