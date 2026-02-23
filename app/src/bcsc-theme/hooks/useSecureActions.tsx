@@ -344,8 +344,12 @@ export const useSecureActions = () => {
       const authRequestData: Partial<NativeAuthorizationRequest> = {}
 
       if (userMetadata?.address) {
+        const mergedStreetAddress = userMetadata.address.streetAddress2
+          ? `${userMetadata.address.streetAddress}\n${userMetadata.address.streetAddress2}`
+          : userMetadata.address.streetAddress
+
         authRequestData.address = {
-          streetAddress: userMetadata.address.streetAddress,
+          streetAddress: mergedStreetAddress,
           locality: userMetadata.address.city,
           postalCode: userMetadata.address.postalCode,
           country: userMetadata.address.country,
@@ -669,12 +673,16 @@ export const useSecureActions = () => {
         userMetadata = {}
 
         if (authRequest.address) {
+          const [streetAddress, streetAddress2] = (authRequest.address.streetAddress || '').split('\n')
           userMetadata.address = {
-            streetAddress: authRequest.address.streetAddress || '',
+            streetAddress: streetAddress || '',
             postalCode: authRequest.address.postalCode || '',
             city: authRequest.address.locality || '',
             province: (authRequest.address.region as ProvinceCode) || 'BC',
             country: 'CA',
+          }
+          if (streetAddress2) {
+            userMetadata.address.streetAddress2 = streetAddress2
           }
         }
 

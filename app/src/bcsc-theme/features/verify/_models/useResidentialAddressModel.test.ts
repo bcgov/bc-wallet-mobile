@@ -106,12 +106,35 @@ describe('useResidentialAddressModel', () => {
 
       expect(result.current.formState).toEqual({
         streetAddress: '123 Main St',
+        streetAddress2: '',
         city: 'Vancouver',
         province: 'BC',
         postalCode: 'V6B 1A1',
       })
       expect(result.current.formErrors).toEqual({})
       expect(result.current.isSubmitting).toBe(false)
+    })
+
+    it('should initialize streetAddress2 from store when present', () => {
+      const storeWithAddress2 = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          userMetadata: {
+            ...mockStore.bcscSecure.userMetadata,
+            address: {
+              ...mockStore.bcscSecure.userMetadata.address,
+              streetAddress2: 'Apt 4B',
+            },
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      expect(result.current.formState.streetAddress2).toBe('Apt 4B')
     })
 
     it('should return empty form state when no address in store', () => {
@@ -124,7 +147,13 @@ describe('useResidentialAddressModel', () => {
       bifoldMock.useStore.mockReturnValue([storeWithoutAddress, mockDispatch])
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
-      expect(result.current.formState).toEqual({ streetAddress: '', city: '', province: null, postalCode: '' })
+      expect(result.current.formState).toEqual({
+        streetAddress: '',
+        streetAddress2: '',
+        city: '',
+        province: null,
+        postalCode: '',
+      })
     })
   })
 
@@ -316,6 +345,72 @@ describe('useResidentialAddressModel', () => {
 
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
+    })
+
+    it('should merge streetAddress2 with newline when present', async () => {
+      const storeWithAddress2 = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          userMetadata: {
+            ...mockStore.bcscSecure.userMetadata,
+            address: {
+              ...mockStore.bcscSecure.userMetadata.address,
+              streetAddress2: 'Apt 4B',
+            },
+          },
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithAddress2, mockDispatch])
+
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({
+            streetAddress: '123 Main St\nApt 4B',
+          }),
+        })
+      )
+    })
+
+    it('should not include newline when streetAddress2 is empty', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({
+            streetAddress: '123 Main St',
+          }),
+        })
+      )
     })
 
     it('should set isSubmitting during authorization', async () => {
