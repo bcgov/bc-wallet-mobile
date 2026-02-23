@@ -1,57 +1,122 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`RemoveAccountConfirmation renders correctly 1`] = `
-<View
-  style={
+<RNCSafeAreaView
+  edges={
     {
-      "display": "flex",
-      "flex": 1,
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
     }
   }
-  testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
->
-  <RNCSafeAreaView
-    edges={
-      {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
-        "top": "off",
-      }
+  style={
+    {
+      "flex": 1,
+      "justifyContent": "space-between",
+      "padding": 16,
     }
-    style={
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
       {
-        "flex": 1,
-        "justifyContent": "space-between",
-        "padding": 16,
+        "flexGrow": 1,
+        "gap": 16,
       }
     }
   >
-    <RCTScrollView
-      contentContainerStyle={
+    <View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.Account.RemoveAccountTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.Account.RemoveAccountParagraph
+      </Text>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      {
+        "gap": 16,
+        "marginTop": 24,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="BCSC.Account.RemoveAccount"
+      accessibilityRole="button"
+      accessibilityState={
         {
-          "flexGrow": 1,
-          "gap": 16,
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#D8292F",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
         }
       }
     >
-      <View>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
           }
-        >
-          BCSC.Account.RemoveAccountTitle
-        </Text>
+        }
+      >
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -62,178 +127,103 @@ exports[`RemoveAccountConfirmation renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "normal",
               },
-              undefined,
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+                false,
+              ],
             ]
           }
         >
-          BCSC.Account.RemoveAccountParagraph
+          BCSC.Account.RemoveAccount
         </Text>
       </View>
-    </RCTScrollView>
+    </View>
     <View
+      accessibilityLabel="Global.Cancel"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
       style={
         {
-          "gap": 16,
-          "marginTop": 24,
+          "borderColor": "#003366",
+          "borderRadius": 4,
+          "borderWidth": 2,
+          "opacity": 1,
+          "padding": 16,
         }
       }
     >
       <View
-        accessibilityLabel="BCSC.Account.RemoveAccount"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
         style={
           {
-            "backgroundColor": "#D8292F",
-            "borderRadius": 4,
-            "opacity": 1,
-            "padding": 16,
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
           }
         }
       >
-        <View
+        <Text
+          maxFontSizeMultiplier={2}
           style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
               [
                 {
-                  "color": "#313132",
+                  "color": "#003366",
                   "fontFamily": "BCSans-Regular",
                   "fontSize": 18,
-                  "fontWeight": "normal",
+                  "fontWeight": "bold",
+                  "textAlign": "center",
                 },
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            BCSC.Account.RemoveAccount
-          </Text>
-        </View>
-      </View>
-      <View
-        accessibilityLabel="Global.Cancel"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "borderColor": "#003366",
-            "borderRadius": 4,
-            "borderWidth": 2,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
+                false,
+                false,
+                false,
+              ],
+            ]
           }
         >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  {
-                    "color": "#003366",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            Global.Cancel
-          </Text>
-        </View>
+          Global.Cancel
+        </Text>
       </View>
     </View>
-  </RNCSafeAreaView>
-</View>
+  </View>
+</RNCSafeAreaView>
 `;

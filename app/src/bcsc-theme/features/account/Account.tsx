@@ -6,7 +6,6 @@ import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { useRemoveAccountAlert } from '@/bcsc-theme/hooks/useRemoveAccountAlert'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
@@ -37,7 +36,6 @@ const Account: React.FC = () => {
   const getQuickLoginURL = useQuickLoginURL()
   const account = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
-  const showRemoveAccountAlert = useRemoveAccountAlert()
 
   const openedWebview = useRef(false)
 
@@ -178,7 +176,7 @@ const Account: React.FC = () => {
             description={t('BCSC.Account.AccountDetailsDescription')}
           />
           <SectionButton
-            onPress={showRemoveAccountAlert}
+            onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
             title={t('BCSC.Account.RemoveAccount')}
           />
         </View>
