@@ -1,7 +1,6 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
-import { VerificationCardError } from '../VerificationCardErrorScreen'
 import {
   Button,
   ButtonType,
@@ -18,6 +17,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
+import { VerificationCardError } from '../VerificationCardErrorScreen'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {
