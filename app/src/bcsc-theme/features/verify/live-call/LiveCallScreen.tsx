@@ -1,11 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { CROP_DELAY_MS } from '@/constants'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -31,6 +31,7 @@ type LiveCallScreenProps = {
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
   const [store] = useStore<BCState>()
+  const fcmService = useFcmService()
   const { ColorPalette, Spacing, NavigationTheme } = useTheme()
   const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
@@ -43,7 +44,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitAlert } = useErrorAlert()
+  const { liveCallHavingTroubleAlert } = useAlerts(navigation)
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -134,6 +135,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       clearIntervalIfExists(timerIntervalRef)
     }
   }, [])
+
+  // Suppress FCM notifications while in the live call
+  useEffect(() => {
+    fcmService.setSuppressed(true)
+    return () => fcmService.setSuppressed(false)
+  }, [fcmService])
 
   // setup volume detection
   useEffect(() => {
@@ -242,20 +249,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }, [setCallEnded, cleanup, leaveCall, logger])
 
   const handleHavingTrouble = useCallback(() => {
-    emitAlert(t('Alerts.LiveCallHavingTrouble.Title'), t('Alerts.LiveCallHavingTrouble.Description'), {
-      event: AppEventCode.IN_CALL_HAVING_TROUBLE,
-      actions: [
-        {
-          text: t('Global.Close'),
-        },
-        {
-          text: t('Alerts.LiveCallHavingTrouble.Action1'),
-          style: 'destructive',
-          onPress: handleEndCall,
-        },
-      ],
-    })
-  }, [emitAlert, handleEndCall, t])
+    liveCallHavingTroubleAlert(handleEndCall)
+  }, [handleEndCall, liveCallHavingTroubleAlert])
 
   if (flowState === VideoCallFlowState.ERROR) {
     return (

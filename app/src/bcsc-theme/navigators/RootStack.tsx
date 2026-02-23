@@ -4,6 +4,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { getAccount } from 'react-native-bcsc-core'
+import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
@@ -21,9 +22,10 @@ const BCSCRootStack: React.FC = () => {
   const { isClientReady } = useBCSCApiClientState()
   const [loading, setLoading] = useState(true)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitError } = useErrorAlert()
+  const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   useSystemChecks(SystemCheckScope.STARTUP)
+  useThirdPartyKeyboardWarning()
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
@@ -34,9 +36,9 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (err) {
-      emitError('STATE_LOAD_ERROR', { error: err })
+      emitErrorModal('STATE_LOAD_ERROR', { error: err })
     }
-  }, [dispatch, loadState, emitError, store.stateLoaded])
+  }, [dispatch, loadState, emitErrorModal, store.stateLoaded])
 
   // Check for existing account on initial load - only runs after state is loaded
   // FIXME: This logic appears slightly too complex for the RootStack

@@ -307,6 +307,7 @@ const translation = {
         "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (FR)",
         "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (FR)",
         "CancelledByUser": "This device has been removed from your account by a user action. (FR)",
+        "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
       }
@@ -965,6 +966,8 @@ const translation = {
       "StreetAddressLabel": "Street Line 1 (FR)",
       "StreetAddressSubtext": "Your residential street address (FR)",
       "StreetAddressRequired": "Please enter a street address (FR)",
+      "StreetAddress2Label": "Street Line 2 (Optional) (FR)",
+      "StreetAddress2Subtext": "Apartment, suite, unit, building, floor, etc. (FR)",
       "CityLabel": "City (FR)",
       "CitySubtext": "The city of your current address (FR)",
       "CityRequired": "Please enter a city (FR)",
@@ -1034,9 +1037,61 @@ const translation = {
 		"Actions": {
 			"DefaultOK": "OK (FR)",
       "Close": "Close (FR)",
-      "GoToAppStore": "Go to App Store (FR)",
-      "RemoveAccount": "Remove Account (FR)",
 		},
+    "UnsecuredNetwork": {
+      "Title": "Unsecured Network (FR)",
+      "Description": "A secure internet connection is required. Please check your network or try another network. (FR)"
+    },
+    "ServerTimeout": {
+      "Title": "Connection Error (FR)",
+      "Description": "Please try again later. (FR)"
+    },
+    "ServerError": {
+      "Title": "Server Error (FR)",
+      "Description": "There is a problem with the service. Please try again later. (error 302) (FR)"
+    },
+    "AppUpdateRequired": {
+      "Title": "App Update Required (FR)",
+      "Description": "You must update this app to continue. (FR)",
+      "Action1": "Go To App Store (FR)"
+    },
+    "ProblemWithAccount": {
+      "Title": "Problem with Account (FR)",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }}) (FR)",
+      "Action1": "Remove Account (FR)",
+    },
+    "ProblemWithApp": {
+      "Title": "Problem with App (FR)",
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)"
+    },
+    "ForgetPairings": {
+      "Title": "Success (FR)",
+      "Description": "You have successfully unpaired your device. (FR)"
+    },
+    "ProblemWithLogin": {
+      "Title": "Problem with Login (FR)",
+      "Description": "Please try again later. (error {{ errorCode }}) (FR)"
+    },
+    "TooManyAttempts": {
+      "Title": "Sorry, You've Tried Too Many Times (FR)",
+      "Description": "Please try again later. (FR)"
+    },
+    "SetupExpired": {
+      "Title": "Setup Expired (FR)",
+      "Description": "You must start set up again. (FR)"
+    },
+    "VerificationNotComplete": {
+      "Title": "Verify Not Complete (FR)",
+      "Description": "Go to a Service BC location to verify your identity. (FR)"
+    },
+    "InvalidPairingCode": {
+      "Title": "Invalid Pairing Code (FR)",
+      "Description": "You've entered an invalid pairing code. Please re-enter your pairing code and try again. (FR)"
+    },
+    "InvalidPairingCodeSameDevice": {
+      "Title": "Invalid Login (FR)",
+      "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk. (FR)"
+    },
     "LiveCallFileUploadError": {
       "Title": "Problem Calling Agent (FR)",
       "Description": "Please try again later. (FR)",
@@ -1056,6 +1111,16 @@ const translation = {
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",
       "Action1": "Use Data (FR)",
     },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning (FR)",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard? (FR)",
+      "Action1": "Continue (FR)",
+      "Action2": "Change Keyboard (FR)"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated (FR)",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card. (FR)",
+    },
     "LiveCallHavingTrouble": {
       "Title": "Having trouble? (FR)",
       "Description": "Please end your call to get additional help and troubleshooting tips. (FR)",
@@ -1069,7 +1134,11 @@ const translation = {
     "AlreadyVerified": {
       "Title": "Problem Checking Status (FR)",
       "Description": "Please close the app and try again. (FR)",
-    }
+    },
+    "FileUploadError": {
+      "Title": "Problem with Connection (FR)",
+      "Description": "Please try again. (FR)"
+    },
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

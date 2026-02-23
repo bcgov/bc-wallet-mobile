@@ -1,3 +1,4 @@
+import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import useApi from '../api/hooks/useApi'
@@ -8,6 +9,50 @@ export interface BCSCIdTokenContextType<T> {
   isLoading: boolean
   data: T | null
   refreshData: () => void
+}
+
+/**
+ * A helper function to derive credential metadata from the IdToken returned from the token endpoint.
+ *
+ * @param token The token returned from the token endpoint containing BCSC related claims
+ * @returns CredentialMetadata object derived from the token
+ */
+export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
+  const fullName = `${token.given_name} ${token.family_name}`
+
+  return {
+    fullName,
+    bcscReason: token.bcsc_reason,
+    deviceCount: token.bcsc_devices_count,
+    deviceLimit: token.bcsc_max_devices,
+    cardType: token.bcsc_card_type,
+    lastUpdated: token.bcsc_status_date,
+  } as CredentialMetadata
+}
+
+/**
+ * A helper function to compare 'new' credential metadata from the token endpoint with the existing credential metadata in the store.
+ * If any of the values checked are different a false is returned to trigger the system to alert the user that something has happened.
+ *
+ * @param c1 Credential Metadata object to check
+ * @param c2 Credential Metadata object to check
+ * @returns boolean returned if both objects are the same, otherwise this returns false
+ */
+export const compareCredentialMetadata = (
+  c1: CredentialMetadata | undefined,
+  c2: CredentialMetadata | undefined
+): boolean => {
+  if (!c1 || !c2) {
+    return false
+  }
+  return (
+    c1.fullName === c2.fullName &&
+    c1.bcscReason === c2.bcscReason &&
+    c1.deviceCount === c2.deviceCount &&
+    c1.deviceLimit === c2.deviceLimit &&
+    c1.cardType === c2.cardType &&
+    c1.lastUpdated === c2.lastUpdated
+  )
 }
 
 export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> | null>(null)

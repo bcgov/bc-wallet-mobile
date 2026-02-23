@@ -1,20 +1,20 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
-  type NativeAccount,
   type JWK,
   type JWTClaims,
-  type NativeAuthorizationRequest,
   type LoginChallengeResult,
+  type NativeAccount,
+  type NativeAuthorizationRequest,
 } from './NativeBcscCore';
+export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
+  JWK,
   LoginChallenge,
   LoginChallengeResult,
   NativeAccount,
-  JWK,
-  NativeAuthorizationRequest,
   NativeAddress,
+  NativeAuthorizationRequest,
 } from './NativeBcscCore';
-export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 
 /**
  * Standard error codes used by native modules when rejecting promises.
@@ -465,13 +465,13 @@ export const removeAccount = async (): Promise<void> => {
 // MARK: - Authentication Methods
 
 // Export authentication types
-export type {
-  PINVerificationResult,
-  AccountLockStatus,
-  PINSetupResult,
-  DeviceSecurityUnlockResult,
-} from './NativeBcscCore';
 export { BiometricType } from './NativeBcscCore';
+export type {
+  AccountLockStatus,
+  DeviceSecurityUnlockResult,
+  PINSetupResult,
+  PINVerificationResult,
+} from './NativeBcscCore';
 
 /**
  * Sets a user-created PIN for the current account.
@@ -899,4 +899,24 @@ export async function hasCredential(): Promise<boolean> {
  */
 export const showLocalNotification = async (title: string, message: string): Promise<void> => {
   return BcscCore.showLocalNotification(title, message);
+};
+
+/**
+ *  A native module function that checks if a 3rd party keyboard is currently active on an android device.
+ *  iOS does not support this check and will always return false.
+ *
+ * @returns True if a 3rd party keyboard is active, false otherwise
+ */
+export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
+  return BcscCore.isThirdPartyKeyboardActive();
+};
+
+/**
+ * Opens the keyboard selector on Android to allow the user to switch their keyboards.
+ * iOS does not support this and will always resolve immediately.
+ *
+ * @returns A promise that resolves when the selector is open
+ */
+export const openAndroidKeyboardSelector = async (): Promise<void> => {
+  return BcscCore.openKeyboardSelector();
 };

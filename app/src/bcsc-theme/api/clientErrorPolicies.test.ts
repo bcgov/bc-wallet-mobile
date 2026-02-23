@@ -8,7 +8,6 @@ import {
   AxiosAppError,
   birthdateLockoutErrorPolicy,
   ClientErrorHandlingPolicies,
-  createExpiredAppSetupErrorPolicy,
   globalAlertErrorPolicy,
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
@@ -67,12 +66,46 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call emitErrorAlert with the error', () => {
+      it('should show server error alert', () => {
         const error = newError('server_error')
-        const emitErrorAlert = jest.fn()
-        const context = { emitErrorAlert }
+        const mockAlert = jest.fn()
+        const context = { alerts: { serverErrorAlert: mockAlert } }
         globalAlertErrorPolicy.handle(error, context as any)
-        expect(emitErrorAlert).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show unsecured network alert', () => {
+        const error = newError('unsecured_network')
+        const mockAlert = jest.fn()
+        const context = { alerts: { unsecuredNetworkAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show server timeout alert', () => {
+        const error = newError('server_timeout')
+        const mockAlert = jest.fn()
+        const context = { alerts: { serverTimeoutAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should show too many attempts alert', () => {
+        const error = newError('too_many_attempts')
+        const mockAlert = jest.fn()
+        const context = { alerts: { tooManyAttemptsAlert: mockAlert } }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should log warning for undefined app events', () => {
+        const error = newError('undefined_event')
+        const loggerMock = { warn: jest.fn() }
+        const context = { logger: loggerMock }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(loggerMock.warn).toHaveBeenCalledWith(
+          '[GlobalAlertErrorPolicy] No alert defined for app event: undefined_event'
+        )
       })
     })
   })
@@ -103,38 +136,20 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call emitErrorAlert with actions', () => {
+      it('should call no tokens returned alert', () => {
         const error = newError('no_tokens_returned')
-        const emitErrorAlertMock = jest.fn()
+        const alertMock = jest.fn()
         const navigationMock = jest.fn()
         const translateMock = jest.fn()
         const context = {
-          emitErrorAlert: emitErrorAlertMock,
+          alerts: { noTokensReturnedAlert: alertMock },
           translate: translateMock,
           navigation: { navigate: navigationMock },
         }
         translateMock.mockReturnValue('close')
         noTokensReturnedErrorPolicy.handle(error, context as any)
 
-        expect(emitErrorAlertMock).toHaveBeenCalledTimes(1)
-
-        const alertArgs = emitErrorAlertMock.mock.calls[0]
-
-        const alertActions = alertArgs[1]?.actions
-
-        expect(alertActions[0].text).toBeDefined()
-        expect(alertActions[1].text).toBeDefined()
-
-        expect(alertActions[0].style).toBe('cancel')
-        expect(alertActions[1].style).toBe('destructive')
-
-        const removeAccountOnPressAction = alertActions[1].onPress
-
-        expect(removeAccountOnPressAction).toBeDefined()
-
-        // Simulate pressing the "Remove Account" action
-        removeAccountOnPressAction()
-        expect(navigationMock).toHaveBeenCalledWith(BCSCScreens.RemoveAccountConfirmation)
+        expect(alertMock).toHaveBeenCalled()
       })
     })
   })
@@ -198,35 +213,21 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call emitErrorAlert with update action', () => {
+      it('should call app update required alert', () => {
         const error = newError('ios_app_update_required')
-        const emitErrorAlertMock = jest.fn()
+        const mockAlert = jest.fn()
         const translateMock = jest.fn()
         const openURLMock = jest.fn()
         const linkingMock = { openURL: openURLMock }
         const context = {
-          emitErrorAlert: emitErrorAlertMock,
+          alerts: { appUpdateRequiredAlert: mockAlert },
           translate: translateMock,
           linking: linkingMock,
         }
         translateMock.mockReturnValue('Go to App Store')
         updateRequiredErrorPolicy.handle(error, context as any)
 
-        expect(emitErrorAlertMock).toHaveBeenCalledTimes(1)
-
-        const alertArgs = emitErrorAlertMock.mock.calls[0]
-
-        const alertActions = alertArgs[1]?.actions
-
-        expect(alertActions[0].text).toBe('Go to App Store')
-
-        const goToAppStoreOnPressAction = alertActions[0].onPress
-
-        expect(goToAppStoreOnPressAction).toBeDefined()
-
-        // Simulate pressing the "Go to App Store" action
-        goToAppStoreOnPressAction()
-        expect(openURLMock).toHaveBeenCalledWith(expect.any(String))
+        expect(mockAlert).toHaveBeenCalled()
       })
     })
   })
@@ -443,12 +444,14 @@ describe('clientErrorPolicies', () => {
         const originalError = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR) as AxiosAppError
         const error = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: originalError })
 
-        const emitErrorAlertMock = jest.fn()
+        const mockAlert = jest.fn()
         const context = {
-          emitErrorAlert: emitErrorAlertMock,
+          alerts: {
+            serverErrorAlert: mockAlert,
+          },
         }
         unexpectedServerErrorPolicy.handle(originalError, context as any)
-        expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
         expect(error.cause).toBe(originalError)
       })
     })
@@ -523,84 +526,54 @@ describe('clientErrorPolicies', () => {
       })
 
       describe('handle', () => {
-        it('should emit the alert', () => {
-          const error = newError('invalid_pairing_code')
-          const emitErrorAlertMock = jest.fn()
+        it('should emit the login server error alert', () => {
+          const error = newError('login_server_error')
+          const mockAlert = jest.fn()
           const context = {
-            emitErrorAlert: emitErrorAlertMock,
+            alerts: { loginServerErrorAlert: mockAlert },
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
-        })
-      })
-    })
-
-    describe('createExpiredAppSetupErrorPolicy', () => {
-      describe('matches', () => {
-        it('should match USER_INPUT_EXPIRED_VERIFY_REQUEST on token endpoint', () => {
-          const error = newError('user_input_expired_verify_request')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-
-          const resetApplicationMock = jest.fn()
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
-
-          expect(policy).toBeDefined()
-          expect(policy.matches(error, context as any)).toBeTruthy()
-          expect(resetApplicationMock).not.toHaveBeenCalled()
+          expect(mockAlert).toHaveBeenCalled()
         })
 
-        it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
-          const error = newError('user_input_expired_verify_request')
+        it('should emit the problem with account alert', () => {
+          const error = newError('login_parse_uri')
+          const mockAlert = jest.fn()
           const context = {
-            endpoint: '/api/other',
-            apiEndpoints: {
-              token: '/api/token',
-            },
+            alerts: { problemWithLoginAlert: mockAlert },
           }
-
-          const resetApplicationMock = jest.fn()
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
-
-          expect(policy).toBeDefined()
-          expect(policy.matches(error, context as any)).toBeFalsy()
-          expect(resetApplicationMock).not.toHaveBeenCalled()
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
         })
-      })
 
-      describe('handle', () => {
-        it('should call resetApplication', async () => {
-          const error = newError('user_input_expired_verify_request')
+        it('should emit the invalid pairing code alert', () => {
+          const error = newError('invalid_pairing_code')
+          const mockAlert = jest.fn()
           const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-            logger: {
-              error: jest.fn(),
-            },
-            emitErrorAlert: jest.fn(),
-            translate: (key: string) => key,
+            alerts: { invalidPairingCodeAlert: mockAlert },
           }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
+        })
 
-          const resetApplicationMock = jest.fn().mockResolvedValue(undefined)
-          const policy = createExpiredAppSetupErrorPolicy(resetApplicationMock)
+        it('should emit the login remembered pairing code code alert', () => {
+          const error = newError('login_remembered_device_invalid_pairing_code')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { invalidPairingCodeAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
+        })
 
-          policy.handle(error, context as any)
-
-          const alertArgs = context.emitErrorAlert.mock.calls[0]
-
-          const alertActions = alertArgs[1]?.actions
-          const okOnPressAction = alertActions[0].onPress
-
-          // Simulate pressing the "OK" action
-          await okOnPressAction()
-
-          expect(resetApplicationMock).toHaveBeenCalled()
+        it('should emit the login remembered device invalid pairing code alert', () => {
+          const error = newError('login_same_device_invalid_pairing_code')
+          const mockAlert = jest.fn()
+          const context = {
+            alerts: { loginSameDeviceInvalidPairingCodeAlert: mockAlert },
+          }
+          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalled()
         })
       })
     })
@@ -679,12 +652,12 @@ describe('clientErrorPolicies', () => {
       describe('handle', () => {
         it('should emit the alert', () => {
           const error = newError('verify_not_complete')
-          const emitErrorAlertMock = jest.fn()
+          const mockAlert = jest.fn()
           const context = {
-            emitErrorAlert: emitErrorAlertMock,
+            alerts: { verificationNotCompleteAlert: mockAlert },
           }
           verifyNotCompletedErrorPolicy.handle(error, context as any)
-          expect(emitErrorAlertMock).toHaveBeenCalledWith(error)
+          expect(mockAlert).toHaveBeenCalled()
         })
       })
     })

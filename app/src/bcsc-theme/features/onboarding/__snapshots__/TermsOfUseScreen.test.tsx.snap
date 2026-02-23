@@ -41,7 +41,6 @@ exports[`TermsOfUse renders correctly 1`] = `
         domStorageEnabled={true}
         injectedJavaScriptBeforeContentLoaded="
     document.addEventListener('DOMContentLoaded', function() {
-      const style = document.createElement('style');
       
       const fontScale = 2;
       document.documentElement.style.fontSize = (16 * fontScale) + 'px';
@@ -51,14 +50,24 @@ exports[`TermsOfUse renders correctly 1`] = `
       document.body.style.backgroundColor = '#F2F2F2';
       document.body.style.color = '#FFFFFFFF';
 
+      const style = document.createElement('style');
       style.textContent = \`
-        a, a:visited, a:hover, a:active {
-          color: #1A5A96;
-          text-decoration: #1A5A96;
+        body, body * {
+          background-color: #F2F2F2 !important;
+          color: #FFFFFFFF !important;
+        }
+        a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
+          color: #1A5A96 !important;
+          text-decoration-color: #1A5A96 !important;
+          border-color: #1A5A96 !important;
         }
       \`;
-
       document.head.appendChild(style);
+      document.querySelectorAll('a').forEach(el => {
+        el.style.setProperty('color', '#1A5A96', 'important');
+        el.style.setProperty('text-decoration-color', '#1A5A96', 'important');
+        el.style.setProperty('border-color', '#1A5A96', 'important');
+      });
     });
   "
         javaScriptEnabled={true}
