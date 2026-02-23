@@ -1,18 +1,7 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { hitSlop } from '@/constants'
 import { AccountSetupType, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,8 +32,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const factoryReset = useFactoryReset()
 
   const { steps, stepActions, isCheckingStatus, handleCheckStatus, handleCancelVerification } =
     useSetupStepsModel(navigation)
@@ -271,23 +258,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </>
       ) : null}
 
-      {__DEV__ ? (
-        <View style={{ padding: Spacing.md }}>
-          <Button
-            title={t('BCSC.Steps.ResetData') + ' (DEV)'}
-            onPress={async () => {
-              const result = await factoryReset()
-
-              if (!result.success) {
-                logger.error('Factory reset failed', result.error)
-              }
-            }}
-            testID={testIdWithKey('ResetData')}
-            accessibilityLabel={t('BCSC.Steps.ResetData')}
-            buttonType={ButtonType.Secondary}
-          />
-        </View>
-      ) : null}
     </ScreenWrapper>
   )
 }

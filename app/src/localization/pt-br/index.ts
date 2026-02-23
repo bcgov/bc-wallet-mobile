@@ -344,7 +344,6 @@ const translation = {
       "EditEmail": "Edit (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
-      "ResetData": "Reset data (PT-BR)",
     },
     "SystemChecks": {
       "Devices": {
