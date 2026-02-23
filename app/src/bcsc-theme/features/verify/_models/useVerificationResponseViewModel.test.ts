@@ -1,5 +1,5 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
+import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -56,7 +56,7 @@ describe('useVerificationResponseViewModel', () => {
     },
   }
 
-  const mockRegistrationApi = {
+  const mockRegistrationService = {
     updateRegistration: jest.fn(),
   }
 
@@ -64,16 +64,11 @@ describe('useVerificationResponseViewModel', () => {
     jest.clearAllMocks()
     mockUpdateVerified.mockClear()
     mockUpdateUserMetadata.mockClear()
-    mockRegistrationApi.updateRegistration.mockClear()
-
-    const useApiMock = jest.mocked(useApi)
-    useApiMock.mockReturnValue({
-      registration: mockRegistrationApi,
-    } as any)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore as BCState, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+    jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue(mockRegistrationService as any)
   })
 
   describe('Initial state', () => {
@@ -87,7 +82,7 @@ describe('useVerificationResponseViewModel', () => {
 
   describe('handleAccountSetup', () => {
     it('should complete account setup successfully with all operations', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -98,11 +93,11 @@ describe('useVerificationResponseViewModel', () => {
       // Should have called all the setup operations in sequence
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-      expect(mockRegistrationApi.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -120,7 +115,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should set isSettingUpAccount to false even when an error occurs', async () => {
-      mockRegistrationApi.updateRegistration.mockRejectedValue(new Error('Device code error'))
+      mockRegistrationService.updateRegistration.mockRejectedValue(new Error('Device code error'))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -134,7 +129,7 @@ describe('useVerificationResponseViewModel', () => {
 
     it('should log error if checkDeviceCodeStatus fails', async () => {
       const errorMessage = 'Device code validation failed'
-      mockRegistrationApi.updateRegistration.mockRejectedValue(new Error(errorMessage))
+      mockRegistrationService.updateRegistration.mockRejectedValue(new Error(errorMessage))
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -148,7 +143,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should handle missing refresh token gracefully', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -159,11 +154,11 @@ describe('useVerificationResponseViewModel', () => {
       // Should still complete other operations even without refresh token
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-      expect(mockRegistrationApi.updateRegistration).toHaveBeenCalled()
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalled()
     })
 
     it('should mark account as verified', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -175,7 +170,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should clean up user metadata by setting it to null', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -187,7 +182,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should update registration with token and nickname', async () => {
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -195,12 +190,12 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockRegistrationApi.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
     })
 
     it('should handle error when updateRegistration fails', async () => {
       const registrationError = new Error('Registration update failed')
-      mockRegistrationApi.updateRegistration.mockRejectedValue(registrationError)
+      mockRegistrationService.updateRegistration.mockRejectedValue(registrationError)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -213,7 +208,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should handle non-Error objects thrown as exceptions', async () => {
-      mockRegistrationApi.updateRegistration.mockRejectedValue('String error')
+      mockRegistrationService.updateRegistration.mockRejectedValue('String error')
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -227,7 +222,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('should handle error with no message gracefully', async () => {
-      mockRegistrationApi.updateRegistration.mockRejectedValue({})
+      mockRegistrationService.updateRegistration.mockRejectedValue({})
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -255,7 +250,7 @@ describe('useVerificationResponseViewModel', () => {
     it('should complete full account setup flow successfully', async () => {
       mockUpdateVerified.mockResolvedValue(undefined)
       mockUpdateUserMetadata.mockResolvedValue(undefined)
-      mockRegistrationApi.updateRegistration.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -267,7 +262,7 @@ describe('useVerificationResponseViewModel', () => {
       const calls = [
         mockUpdateVerified.mock.invocationCallOrder[0],
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
-        mockRegistrationApi.updateRegistration.mock.invocationCallOrder[0],
+        mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
       ]
 
       // Verify order is preserved (each call order should be increasing)
@@ -352,7 +347,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to update registration: missing selectedNickname')
       )
-      expect(mockRegistrationApi.updateRegistration).not.toHaveBeenCalled()
+      expect(mockRegistrationService.updateRegistration).not.toHaveBeenCalled()
     })
   })
 })
