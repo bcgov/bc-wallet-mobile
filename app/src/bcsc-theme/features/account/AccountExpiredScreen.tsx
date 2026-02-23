@@ -3,7 +3,6 @@ import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useAlerts } from '@/hooks/useAlerts'
 import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext } from 'react'
@@ -24,7 +23,6 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const accountContext = useContext(BCSCAccountContext)
-  const alerts = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -61,7 +59,10 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
               navigation.navigate(BCSCScreens.AccountRenewalInformation)
             }}
           />
-          <CardButton title={t('BCSC.AccountExpired.RemoveButton')} onPress={alerts.removeAccountAlert} />
+          <CardButton
+            title={t('BCSC.AccountExpired.RemoveButton')}
+            onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
+          />
         </View>
       </ScrollView>
     </ScreenWrapper>

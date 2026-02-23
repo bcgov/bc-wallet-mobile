@@ -1,6 +1,5 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -11,7 +10,6 @@ import { StyleSheet } from 'react-native'
 const TransferSuccessScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
-  const alerts = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -33,7 +31,7 @@ const TransferSuccessScreen: React.FC = () => {
         testID={testIdWithKey(t('BCSC.Account.RemoveAccount'))}
         buttonType={ButtonType.Critical}
         title={t('BCSC.Account.RemoveAccount')}
-        onPress={alerts.removeAccountAlert}
+        onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
       />
     </>
   )
