@@ -58,7 +58,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: jti,
     })
 
-    const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
+    const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
   }, [store.developer.environment.iasApiBaseUrl, jti])
