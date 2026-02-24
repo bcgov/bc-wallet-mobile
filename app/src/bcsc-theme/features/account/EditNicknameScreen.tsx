@@ -1,11 +1,9 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useAlerts } from '@/hooks/useAlerts'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'
 import NicknameForm from './components/NicknameForm'
 
@@ -13,9 +11,8 @@ const EditNicknameScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store, dispatch] = useStore<BCState>()
-  const { registration } = useApi()
+  const registration = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { problemWithAppAlert } = useAlerts(navigation)
 
   const handleSubmit = useCallback(
     async (trimmedNickname: string) => {
@@ -31,9 +28,6 @@ const EditNicknameScreen: React.FC = () => {
       try {
         await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
-        if (isBcscNativeError(apiError) && apiError.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-          problemWithAppAlert()
-        }
         logger.error('Failed to update registration', { error: apiError })
         throw apiError
       }
@@ -55,7 +49,6 @@ const EditNicknameScreen: React.FC = () => {
       navigation,
       registration,
       logger,
-      problemWithAppAlert,
     ]
   )
 

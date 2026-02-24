@@ -7,6 +7,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -62,6 +63,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
+  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -201,6 +203,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         }
 
         logger.debug(`Recording error (${error.code}): ${error.message}`)
+
+        // Handle file I/O errors separately to provide a specific alert
+        if (error.code === 'capture/file-io-error') {
+          failedToWriteToLocalStorageAlert()
+        }
+
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
           t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
@@ -218,7 +226,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-  }, [prompts, startTimer, logger, stopTimer, t, navigation])
+  }, [prompts, startTimer, logger, stopTimer, t, failedToWriteToLocalStorageAlert, navigation])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)

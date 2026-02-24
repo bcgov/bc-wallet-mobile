@@ -1,4 +1,5 @@
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { AppError, ErrorRegistry } from '@/errors'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
@@ -26,15 +27,18 @@ describe('ID Token Utils', () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockLogger = new MockLogger()
+      const mockError = new Error('Decoding error')
 
-      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(new Error('Decoding error'))
+      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(mockError)
 
-      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow('Decoding error')
+      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+        AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: mockError })
+      )
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getIdTokenMetadata -> Failed to decode ID token payload',
-        expect.any(Error)
+        mockError
       )
     })
 

@@ -788,6 +788,13 @@ const translation = {
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
     },
+    "VerificationCardError": {
+      "CardExpired": {
+        "Heading": "Sorry, you can't add this card. (PT-BR)",
+        "Description": "This card is no longer valid. It has expired. (PT-BR)",
+        "ButtonText": "Get a BC Services Card (PT-BR)"
+      }
+    },
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times (PT-BR)",
       "Message": "Please try again later. (PT-BR)",
@@ -890,6 +897,7 @@ const translation = {
       "StartVideoCall": "Start video call (PT-BR)",
       "CallStates": {
         "CreatingSession": "Creating video session... (PT-BR)",
+        "UploadingDocuments": "Uploading your photo... (PT-BR)",
         "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
         "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
         "Initializing": "Initializing... (PT-BR)",
@@ -1062,7 +1070,7 @@ const translation = {
     },
     "ProblemWithApp": {
       "Title": "Problem with App (PT-BR)",
-      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (PT-BR)"
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (PT-BR)"
     },
     "ForgetPairings": {
       "Title": "Success (PT-BR)",

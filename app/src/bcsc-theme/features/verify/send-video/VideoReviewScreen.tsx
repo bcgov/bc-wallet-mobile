@@ -1,6 +1,8 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
+import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
 import {
   Button,
@@ -45,6 +47,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -127,7 +130,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
 
-      const videoFilePromise = readFileInChunks(videoPath, logger)
+      // Wrap the file reader with alert
+      const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
+      const videoFilePromise = readFileInChunksWithAlert(videoPath, logger)
 
       // Set cache to a promise to be resolved by whoever needs it first
       VerificationVideoCache.setCache(videoFilePromise)

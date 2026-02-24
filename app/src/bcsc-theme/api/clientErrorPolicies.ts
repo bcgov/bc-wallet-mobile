@@ -7,6 +7,7 @@ import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
@@ -161,6 +162,20 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for video session endpoint failures (e.g. 503 service unavailable).
+// Suppresses the global error popup so the video call screen can show its own error UI.
+export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return (
+      (context.statusCode === 500 || context.statusCode === 503) &&
+      context.endpoint.includes(context.apiEndpoints.video)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[VideoSessionErrorPolicy] Suppressing global alert — video call screen will handle this error')
+  },
+}
+
 // Error policy for unexpected server errors (http status: 500, 503)
 export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
@@ -269,6 +284,32 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for expired physical card on device authorization endpoint
+export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.UNKNOWN_SERVER_ERROR &&
+      error.technicalMessage === 'card_expired' &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[CardExpiredErrorPolicy] Card expired, navigating to VerificationCardError screen')
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: VerificationCardError.CardExpired },
+          },
+        ],
+      })
+    )
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -276,6 +317,7 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
+  cardExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
@@ -286,6 +328,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
   invalidTokenReturnedPolicy,
+  videoSessionErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
   unexpectedServerErrorPolicy,
