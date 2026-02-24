@@ -7,6 +7,7 @@ import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
@@ -269,6 +270,32 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for expired physical card on device authorization endpoint
+export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.UNKNOWN_SERVER_ERROR &&
+      error.technicalMessage === 'card_expired' &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[CardExpiredErrorPolicy] Card expired, navigating to VerificationCardError screen')
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: VerificationCardError.CardExpired },
+          },
+        ],
+      })
+    )
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -276,6 +303,7 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
+  cardExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
