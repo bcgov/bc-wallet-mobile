@@ -27,7 +27,6 @@ import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
-import MismatchedSerialScreen from '../features/verify/MismatchedSerialScreen'
 import PhotoInstructionsScreen from '../features/verify/PhotoInstructionsScreen'
 import PhotoReviewScreen from '../features/verify/PhotoReviewScreen'
 import { ResidentialAddressScreen } from '../features/verify/ResidentialAddressScreen'
@@ -35,6 +34,7 @@ import ScanSerialScreen from '../features/verify/ScanSerialScreen'
 import SerialInstructionsScreen from '../features/verify/SerialInstructionsScreen'
 import SetupStepsScreen from '../features/verify/SetupStepsScreen'
 import TakePhotoScreen from '../features/verify/TakePhotoScreen'
+import VerificationCardErrorScreen from '../features/verify/VerificationCardErrorScreen'
 import VerificationMethodSelectionScreen from '../features/verify/VerificationMethodSelectionScreen'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import EmailConfirmationScreen from '../features/verify/email/EmailConfirmationScreen'
@@ -138,7 +138,7 @@ const VerifyStack = () => {
         }}
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
-      <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
+      <Stack.Screen name={BCSCScreens.VerificationCardError} component={VerificationCardErrorScreen} />
       <Stack.Screen name={BCSCScreens.BirthdateLockout} component={BirthdateLockoutScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
       <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
