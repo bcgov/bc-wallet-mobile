@@ -23,6 +23,8 @@ export interface TokenResponse {
   token_type: string
 }
 
+export type TokenApi = ReturnType<typeof useTokenApi>
+
 const useTokenApi = (apiClient: BCSCApiClient) => {
   const { updateTokens } = useSecureActions()
   const deviceToken = useCallback(

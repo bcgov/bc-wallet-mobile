@@ -2,7 +2,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
-import { AppError, isHandledAppError } from './appError'
+import { AppError, isAppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorDefinition, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 describe('AppError', () => {
@@ -214,6 +214,41 @@ describe('AppError', () => {
       const error = new Error('Regular error')
 
       expect(isHandledAppError(error)).toBe(false)
+    })
+  })
+
+  describe('isAppError', () => {
+    it('should return true for AppError', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      expect(isAppError(error)).toBe(true)
+    })
+
+    it('should return true for AppError with matching appEvent code', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      expect(isAppError(error, AppEventCode.UNKNOWN_SERVER_ERROR)).toBe(true)
+    })
+
+    it('should return false for AppError with non-matching appEvent code', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Title', 'Description', identity)
+
+      expect(isAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)).toBe(false)
     })
   })
 })

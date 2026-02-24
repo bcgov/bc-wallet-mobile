@@ -788,6 +788,13 @@ const translation = {
       "SerialNumber": "Serial number: {{serial}} (FR)",
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
     },
+    "VerificationCardError": {
+      "CardExpired": {
+        "Heading": "Sorry, you can't add this card. (FR)",
+        "Description": "This card is no longer valid. It has expired. (FR)",
+        "ButtonText": "Get a BC Services Card (FR)"
+      }
+    },
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times (FR)",
       "Message": "Please try again later. (FR)",
@@ -1062,7 +1069,7 @@ const translation = {
     },
     "ProblemWithApp": {
       "Title": "Problem with App (FR)",
-      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)"
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
     },
     "ForgetPairings": {
       "Title": "Success (FR)",

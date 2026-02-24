@@ -1,20 +1,13 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  AccountSecurityMethod,
-  BcscNativeErrorCodes,
-  isBcscNativeError,
-  setupDeviceSecurity,
-} from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -27,11 +20,9 @@ interface SecureAppScreenProps {
  */
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { register } = useRegistrationApi(client, isClientReady)
+  const { register } = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { problemWithAppAlert } = useAlerts(navigation)
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
@@ -49,13 +40,10 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.KEYPAIR_GENERATION_FAILED) {
-        problemWithAppAlert()
-      }
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error completing device security setup: ${errMessage}`)
     }
-  }, [register, handleSuccessfulAuth, logger, problemWithAppAlert])
+  }, [register, handleSuccessfulAuth, logger])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

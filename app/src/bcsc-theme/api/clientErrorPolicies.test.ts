@@ -1,12 +1,14 @@
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
   alreadyVerifiedErrorPolicy,
   AxiosAppError,
   birthdateLockoutErrorPolicy,
+  cardExpiredErrorPolicy,
   ClientErrorHandlingPolicies,
   globalAlertErrorPolicy,
   noTokensReturnedErrorPolicy,
@@ -369,6 +371,88 @@ describe('clientErrorPolicies', () => {
         expect(dispatchArgs.payload.routes).toEqual([
           { name: BCSCScreens.SetupSteps },
           { name: BCSCScreens.BirthdateLockout },
+        ])
+      })
+    })
+  })
+
+  describe('cardExpiredErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match UNKNOWN_SERVER_ERROR with technicalMessage "card_expired" on deviceAuthorization endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('card_expired')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(cardExpiredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match UNKNOWN_SERVER_ERROR with different technicalMessage on deviceAuthorization endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('some_other_message')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(cardExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match UNKNOWN_SERVER_ERROR with "card_expired" on different endpoint', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('card_expired')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(cardExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other error codes with "card_expired" on deviceAuthorization endpoint', () => {
+        const error = newError('server_error')
+        error.cause = new AxiosError('card_expired')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+        expect(cardExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should reset navigation to VerificationCardError screen with CardExpired type', () => {
+        const error = newError('unknown_server_error')
+        error.cause = new AxiosError('card_expired')
+        const dispatchMock = jest.fn()
+        const loggerMock = { info: jest.fn() }
+        const context = {
+          navigation: { dispatch: dispatchMock },
+          logger: loggerMock,
+        }
+        cardExpiredErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[CardExpiredErrorPolicy] Card expired, navigating to VerificationCardError screen'
+        )
+        expect(dispatchMock).toHaveBeenCalledTimes(1)
+
+        const dispatchArgs = dispatchMock.mock.calls[0][0]
+        expect(dispatchArgs.type).toBe('RESET')
+        expect(dispatchArgs.payload.index).toBe(1)
+        expect(dispatchArgs.payload.routes).toEqual([
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: VerificationCardError.CardExpired },
+          },
         ])
       })
     })

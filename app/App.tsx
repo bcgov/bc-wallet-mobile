@@ -10,8 +10,9 @@ import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
-import { getInitialEnvironment, initialState, Mode, reducer } from '@/store'
+import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
+import { initIssuer } from '@/utils/issuer'
 import { appLogger } from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import {
@@ -33,7 +34,6 @@ import {
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getIssuer, setIssuer } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -44,27 +44,7 @@ import { container } from 'tsyringe'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
-
-const defaultIssuer = getInitialEnvironment().iasApiBaseUrl
-getIssuer()
-  .then((persistedIssuer) => {
-    // Only call setIssuer if there's no persisted value
-    // This ensures we don't overwrite a changed environment
-    if (!persistedIssuer) {
-      return setIssuer(defaultIssuer)
-        .then(() => {
-          appLogger.info(`[BCSCCore] initializing issuer to default (${defaultIssuer})`)
-        })
-        .catch((error) => {
-          const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-          appLogger.error(`[BCSCCore] Error setting default issuer: ${errorMsg}`)
-        })
-    }
-  })
-  .catch((error) => {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-    appLogger.error(`[BCSCCore] Error getting issuer on startup: ${errorMsg}`)
-  })
+initIssuer(appLogger)
 
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods

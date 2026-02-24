@@ -18,7 +18,7 @@ import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
-import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
@@ -184,8 +184,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.RemoveAccountConfirmation}
-          component={RemoveAccountConfirmationScreen}
+          name={BCSCScreens.MainRemoveAccountConfirmation}
+          component={MainRemoveAccountConfirmationScreen}
           options={() => ({
             headerShown: true,
             headerBackTitleVisible: false,

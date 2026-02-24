@@ -1,5 +1,6 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCReason } from '../utils/id-token'
 
 export enum BCSCStacks {
@@ -27,7 +28,7 @@ export enum BCSCScreens {
   ManualSerial = 'BCSCManualSerial',
   ScanSerial = 'BCSCScanSerial',
   EnterBirthdate = 'BCSCEnterBirthdate',
-  MismatchedSerial = 'BCSCMismatchedSerial',
+  VerificationCardError = 'BCSCVerificationCardError',
   BirthdateLockout = 'BCSCBirthdateLockout',
   EnterEmail = 'BCSCEnterEmail',
   EmailConfirmation = 'BCSCEmailConfirmation',
@@ -59,7 +60,9 @@ export enum BCSCScreens {
   LiveCall = 'BCSCLiveCall',
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddress = 'BCSCResidentialAddress',
-  RemoveAccountConfirmation = 'BCSCRemoveAccountConfirmation',
+  MainRemoveAccountConfirmation = 'BCSCRemoveAccountConfirmation',
+  VerifyRemoveAccountConfirmation = 'BCSCVerifyRemoveAccountConfirmation',
+  OnboardingRemoveAccountConfirmation = 'BCSCOnboardingRemoveAccountConfirmation',
   TransferAccountInformation = 'BCSCTransferAccountInformation',
   TransferAccountInstructions = 'BCSCTransferAccountInstructions',
   TransferAccountQRDisplay = 'BCSCTransferAccountQRDisplay',
@@ -126,7 +129,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingCreatePIN]: undefined
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCScreens.OnboardingDeveloper]: undefined
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.OnboardingRemoveAccountConfirmation]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -140,7 +143,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ManualSerial]: undefined
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
-  [BCSCScreens.MismatchedSerial]: undefined
+  [BCSCScreens.VerificationCardError]: { errorType: VerificationCardError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
@@ -187,7 +190,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
 }
 
 export type BCSCTabStackParams = {
@@ -202,7 +205,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.MainRemoveAccountConfirmation]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined

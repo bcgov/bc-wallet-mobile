@@ -56,7 +56,6 @@ describe('errorRegistry', () => {
 
       // Credential errors
       expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE).toBeDefined()
-      expect(ErrorRegistry.CREDENTIAL_NULL).toBeDefined()
 
       // Verification errors
       expect(ErrorRegistry.VERIFY_NOT_COMPLETE).toBeDefined()

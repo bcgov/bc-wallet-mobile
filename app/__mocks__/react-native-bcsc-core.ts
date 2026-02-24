@@ -43,6 +43,15 @@ export enum BCSCAccountType {
   NoBcscCard = 'Other - no BC Services Card',
 }
 
+export const BcscNativeErrorCodes = {
+  /** Secure hardware / keystore could not generate a new keypair */
+  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
+  /** Keypair exists but could not be retrieved from secure storage */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+} as const
+
+export const isBcscNativeError = jest.fn().mockReturnValue(true)
+
 // Issuer Management
 export const setIssuer = jest.fn().mockResolvedValue(true)
 export const getIssuer = jest.fn().mockResolvedValue(null)

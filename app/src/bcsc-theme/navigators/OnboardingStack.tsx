@@ -8,7 +8,7 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
-import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
@@ -135,8 +135,8 @@ const OnboardingStack = (): React.ReactElement => {
         }}
       />
       <Stack.Screen
-        name={BCSCScreens.RemoveAccountConfirmation}
-        component={RemoveAccountConfirmationScreen}
+        name={BCSCScreens.OnboardingRemoveAccountConfirmation}
+        component={OnboardingRemoveAccountConfirmationScreen}
         options={() => ({
           headerShown: true,
           headerBackTitleVisible: false,
