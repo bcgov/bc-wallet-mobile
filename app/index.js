@@ -27,6 +27,8 @@ import { name as appName } from './app.json'
 LogBox.ignoreLogs([
   // For Credo deps that are still very new
   /module is experimental and could have unexpected/,
+  // Ignore metro open debugger log
+  'Open debugger to view warnings.',
 ])
 
 AppRegistry.registerComponent(appName, () => App)
