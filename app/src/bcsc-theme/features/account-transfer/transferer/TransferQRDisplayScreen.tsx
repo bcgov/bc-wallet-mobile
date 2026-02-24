@@ -13,14 +13,14 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
-  const jti = useMemo(() => uuid.v4().toString(), [])
+  const jtiRef = useRef(uuid.v4().toString())
   const { deviceAttestation } = useApi()
   const { ColorPalette, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
@@ -49,19 +49,22 @@ const TransferQRDisplayScreen: React.FC = () => {
       return
     }
 
+    const newJti = uuid.v4().toString()
+    jtiRef.current = newJti
+
     const jwt = await createDeviceSignedJWT({
       aud: account.issuer,
       iss: account.clientID,
       sub: account.clientID,
       iat: timeInSeconds,
       exp: timeInSeconds + 60, // give this token 1 minute to live
-      jti: jti,
+      jti: newJti,
     })
 
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
-  }, [store.developer.environment.iasApiBaseUrl, jti])
+  }, [store.developer.environment.iasApiBaseUrl])
 
   const checkAttestation = useCallback(
     async (id: string) => {
@@ -82,7 +85,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
     intervalRef.current = setInterval(() => {
       createToken()
-    }, 30000) // 30 seconds
+    }, 50000) // 50 seconds
   }, [createToken])
 
   const refreshToken = useCallback(() => {
@@ -104,12 +107,12 @@ const TransferQRDisplayScreen: React.FC = () => {
   }, [refreshToken, startInterval])
 
   useEffect(() => {
-    checkAttestation(jti)
+    checkAttestation(jtiRef.current)
     const interval = setInterval(() => {
-      checkAttestation(jti)
+      checkAttestation(jtiRef.current)
     }, 3000)
     return () => clearInterval(interval)
-  }, [checkAttestation, jti])
+  }, [checkAttestation])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
