@@ -1,6 +1,8 @@
 import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
+import useEvidenceUpload from '@bcsc-theme/hooks/useEvidenceUpload'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +20,17 @@ import {
 import { clearIntervalIfExists } from '../utils/clearTimeoutIfExists'
 import { connect } from '../utils/connect'
 import createVideoCallError from '../utils/createVideoCallError'
+
+// Maps v4 error types to v3-compatible Snowplow error codes
+// so analytics are consistent across both platforms
+const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
+  [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
+  [VideoCallErrorType.SESSION_FAILED]: 'server_error',
+  [VideoCallErrorType.CONNECTION_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.NETWORK_ERROR]: 'no_internet',
+  [VideoCallErrorType.PERMISSION_DENIED]: 'permission_denied',
+}
 
 export interface VideoCallFlow {
   flowState: VideoCallFlowState
@@ -48,6 +61,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
+  const { uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries } = useEvidenceUpload()
   const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
@@ -60,7 +74,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       flowState === VideoCallFlowState.WAITING_FOR_AGENT ||
       flowState === VideoCallFlowState.IN_CALL ||
       flowState === VideoCallFlowState.CONNECTING_WEBRTC ||
-      flowState === VideoCallFlowState.CREATING_SESSION
+      flowState === VideoCallFlowState.CREATING_SESSION ||
+      flowState === VideoCallFlowState.UPLOADING_DOCUMENTS
     ) {
       return VideoCallBackgroundMode.AUDIO_ONLY
     }
@@ -73,22 +88,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
 
-  // immediately stops all video and audio
-  const stopAllMedia = useCallback(() => {
-    if (localStream) {
-      logger.info('Stopping local stream tracks...')
-      localStream.getTracks().forEach((track) => track.stop())
-    }
-
-    if (remoteStream) {
-      logger.info('Stopping remote stream tracks...')
-      remoteStream.getTracks().forEach((track) => track.stop())
-    }
-
-    logger.info('Media stopped successfully')
-  }, [localStream, remoteStream, logger])
-
-  // stops media
   // stops keep-alives
   // disconnects from pexip conference
   // updates call and session via API
@@ -101,6 +100,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     cleanupCompletedRef.current = true
     connection?.setAppInitiatedDisconnect(true)
     connection?.stopPexipKeepAlive()
+    connection?.closePexipEventSource()
     clearIntervalIfExists(backendKeepAliveTimerRef)
 
     try {
@@ -150,7 +150,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setSession(null)
     setClientCallId(null)
     setConnection(null)
-    setVideoCallError(null)
   }, [video, clientCallId, session, connection, logger, t])
 
   const startBackendKeepAlive = useCallback(() => {
@@ -193,18 +192,35 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     (type: VideoCallErrorType, error: Error) => {
       logger.error(`Video call error [${type}]:`, error)
       const videoCallError = createVideoCallError(type, error?.toString())
+
+      Analytics.trackErrorEvent({
+        code: AnalyticsErrorCodeMap[type],
+        message: error?.toString() ?? type,
+      })
+
       setVideoCallError(videoCallError)
       setFlowState(VideoCallFlowState.ERROR)
-
-      stopAllMedia()
-      setSession(null)
-      setClientCallId(null)
-      setConnection(null)
+      cleanup().catch((cleanupError) => {
+        logger.error('Error during cleanup after video call error:', cleanupError)
+      })
     },
-    [stopAllMedia, logger]
+    [cleanup, logger]
   )
 
-  // 1. a session must be created before anything else
+  // 0. upload any required evidence before attempting to connect to the call, since it must be present in IDCheck
+  const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
+    try {
+      await uploadSelfiePhoto()
+      const additionalEvidence = await processAdditionalEvidence()
+      await uploadEvidenceBinaries(additionalEvidence)
+    } catch (error) {
+      handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
+      return false
+    }
+    return true
+  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError])
+
+  // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
@@ -273,6 +289,12 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   // all of the functions within catch their own errors
   const startVideoCall = useCallback(async () => {
     cleanupCompletedRef.current = false
+    setFlowState(VideoCallFlowState.UPLOADING_DOCUMENTS)
+    const uploaded = await uploadPreCallEvidence()
+    if (!uploaded) {
+      return
+    }
+
     setFlowState(VideoCallFlowState.CREATING_SESSION)
     const newSession = await createSession()
     if (!newSession) {
@@ -289,10 +311,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     if (!newCall) {
       return
     }
-  }, [createSession, establishWebRTCConnection, createCall])
+  }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall])
 
   // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
+    setVideoCallError(null)
     await cleanup()
     await startVideoCall()
   }, [cleanup, startVideoCall])

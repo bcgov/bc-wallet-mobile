@@ -214,13 +214,26 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
+      // Clear the forced-speaker override before start() so that start()
+      // does not force audio to the speaker on Android. This allows audio
+      // to route to Bluetooth/wired headsets
+      InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }
   }, [flowState, startVideoCall])
 
+  // disconnect any active call when unmounting
+  useEffect(() => {
+    return () => {
+      InCallManager.stop()
+    }
+  }, [])
+
   // loading / error user-facing state message
   const stateMessage = useMemo(() => {
     switch (flowState) {
+      case VideoCallFlowState.UPLOADING_DOCUMENTS:
+        return t('BCSC.VideoCall.CallStates.UploadingDocuments')
       case VideoCallFlowState.CREATING_SESSION:
         return t('BCSC.VideoCall.CallStates.CreatingSession')
       case VideoCallFlowState.CONNECTING_WEBRTC:
@@ -252,9 +265,61 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     liveCallHavingTroubleAlert(handleEndCall)
   }, [handleEndCall, liveCallHavingTroubleAlert])
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: 'black',
+        },
+        agentVideo: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '15%',
+          flex: 1,
+          transform: [{ scale: 1.5 }], // zoom
+        },
+        // just helpful labels, no properties needed
+        upperContainer: {},
+        lowerContainer: {},
+        timeAndLabelContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          padding: Spacing.md,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+        },
+        controlsContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          padding: Spacing.md,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+        },
+        lowerContentContainer: {
+          flexDirection: 'row',
+          height: (width / 4) * 1.5,
+        },
+        hasTroubleContainer: {
+          marginLeft: 'auto',
+        },
+        selfieVideoContainer: {
+          width: width / 4,
+          height: '100%',
+          overflow: 'hidden',
+        },
+        selfieVideo: {
+          flex: 1,
+        },
+      }),
+    [width, Spacing, ColorPalette]
+  )
+
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
+        title={videoCallError?.title}
         message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
@@ -269,53 +334,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   if (flowState !== VideoCallFlowState.IN_CALL) {
     return <CallLoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
   }
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'black',
-    },
-    agentVideo: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: '15%',
-      flex: 1,
-      transform: [{ scale: 1.5 }], // zoom
-    },
-    // just helpful labels, no properties needed
-    upperContainer: {},
-    lowerContainer: {},
-    timeAndLabelContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    controlsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    lowerContentContainer: {
-      flexDirection: 'row',
-      height: (width / 4) * 1.5,
-    },
-    hasTroubleContainer: {
-      marginLeft: 'auto',
-    },
-    selfieVideoContainer: {
-      width: width / 4,
-      height: '100%',
-      overflow: 'hidden',
-    },
-    selfieVideo: {
-      flex: 1,
-    },
-  })
 
   return (
     <View style={styles.container}>

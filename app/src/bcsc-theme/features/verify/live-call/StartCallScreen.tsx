@@ -7,7 +7,7 @@ import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, use
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageErrorEvent, StyleSheet } from 'react-native'
+import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 
 type StartCallScreenProps = {
@@ -45,8 +45,23 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
+  const requestBluetoothPermission = async () => {
+    // On Android 12+, BLUETOOTH_CONNECT must be requested at runtime.
+    // Without it, InCallManager's BluetoothManager silently fails to start
+    // and call audio always routes to the speaker instead of BT headsets.
+    try {
+      if (Platform.OS === 'android' && Platform.Version >= 31) {
+        await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
+      }
+    } catch (error) {
+      // Not a blocker — the call still works without Bluetooth
+      logger.warn('Failed to request Bluetooth permission', { error: error as Error })
+    }
+  }
+
   const onPressStart = async () => {
     if (hasMicrophonePermission) {
+      await requestBluetoothPermission()
       navigation.navigate(BCSCScreens.LiveCall)
       return
     }
@@ -55,6 +70,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       hasRequestedPermission.current = true
       const granted = await requestMicrophonePermission()
       if (granted) {
+        await requestBluetoothPermission()
         navigation.navigate(BCSCScreens.LiveCall)
         return
       }
