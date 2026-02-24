@@ -673,7 +673,7 @@ class BcscCoreModule(
                 return
             }
 
-            val issuer = nativeStorage.readEncryptedFile(issuerFile)
+            val issuer = nativeStorage.readFile(issuerFile)
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
@@ -3874,6 +3874,103 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "verifyJwtSignature: Verification failed: ${e.message}", e)
             false
+        }
+    }
+
+    /**
+     * Performs a recursive scan of all files in the app's private storage directory.
+     *
+     * This method scans the filesDir (context.filesDir) and logs all files and directories
+     * to help diagnose storage layout, migration issues, and file organization.
+     * Mirrors the iOS getNativeFilesScan functionality.
+     *
+     * @param promise Resolves with a map containing:
+     *   - packageName: The app's package name
+     *   - filesDirectory: Path to the app's files directory
+     *   - filesDirExists: Whether the files directory exists
+     *   - files: Array of relative paths to all files/directories found
+     *   - fileCount: Total count of files/directories
+     */
+    @ReactMethod
+    fun getNativeFilesScan(promise: Promise) {
+        try {
+            val packageName = reactApplicationContext.packageName
+            val filesDir = reactApplicationContext.filesDir
+            val filesDirExists = filesDir.exists()
+
+            val result = Arguments.createMap().apply {
+                putString("packageName", packageName)
+                putString("filesDirectory", filesDir.absolutePath)
+                putBoolean("filesDirExists", filesDirExists)
+
+                if (filesDirExists) {
+                    // Recursively scan all files starting from filesDir
+                    val allFiles = mutableListOf<String>()
+                    recursiveFileScan(filesDir, filesDir, allFiles)
+
+                    val filesArray = Arguments.createArray()
+                    allFiles.forEach { filePath ->
+                        filesArray.pushString(filePath)
+                    }
+
+                    putArray("files", filesArray)
+                    putInt("fileCount", allFiles.size)
+
+                    Log.i(
+                        NAME,
+                        "[Native File Scan] Found ${allFiles.size} files/directories in Android storage"
+                    )
+                    allFiles.forEach { file ->
+                        Log.i(NAME, "[Native File Scan] $file")
+                    }
+                } else {
+                    putArray("files", Arguments.createArray())
+                    putInt("fileCount", 0)
+                    Log.i(NAME, "[Native File Scan] Files directory does not exist")
+                }
+            }
+
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getNativeFilesScan: Failed to scan files: ${e.message}", e)
+            promise.reject(
+                "E_NATIVE_FILE_SCAN_FAILED",
+                "Failed to scan native files: ${e.localizedMessage}",
+                e
+            )
+        }
+    }
+
+    /**
+     * Recursively scans a directory and collects all file/directory paths relative to the base directory.
+     *
+     * @param directory The current directory to scan
+     * @param baseDirectory The root directory (used to compute relative paths)
+     * @param results Mutable list to collect file paths
+     */
+    private fun recursiveFileScan(
+        directory: File,
+        baseDirectory: File,
+        results: MutableList<String>,
+    ) {
+        try {
+            val files = directory.listFiles() ?: return
+
+            for (file in files) {
+                // Compute relative path from base directory
+                val relativePath = file.absolutePath.removePrefix(baseDirectory.absolutePath)
+                    .removePrefix(File.separator)
+
+                results.add(relativePath)
+
+                // Recursively scan subdirectories
+                if (file.isDirectory) {
+                    Log.i(NAME, "[Native File Scan] Directory (full path): ${file.absolutePath}")
+                    recursiveFileScan(file, baseDirectory, results)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(NAME, "recursiveFileScan: Error scanning directory: ${e.message}", e)
         }
     }
 }

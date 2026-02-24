@@ -21,6 +21,8 @@ RCT_EXTERN_METHOD(setIssuer : (NSString *)issuer resolve : (RCTPromiseResolveBlo
 
 RCT_EXTERN_METHOD(getIssuer : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getNativeFilesScan : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(setAccount : (NSDictionary *)account resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 

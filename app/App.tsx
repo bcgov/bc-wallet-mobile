@@ -34,6 +34,7 @@ import {
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { getNativeFilesScan } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -75,6 +76,23 @@ const App = () => {
     // that our RN version can be displayed.
     SplashScreen.hide()
   }, [])
+
+  useEffect(() => {
+    getNativeFilesScan()
+      .then((scan) => {
+        logger.info(`[Native File Scan] bundleID: ${scan.bundleID}`)
+        logger.info(`[Native File Scan] bundleDirectory: ${scan.bundleDirectory}`)
+        logger.info(`[Native File Scan] bundleDirectoryExists: ${scan.bundleDirectoryExists}`)
+        logger.info(`[Native File Scan] fileCount: ${scan.fileCount}`)
+        scan.files.forEach((file) => {
+          logger.info(`[Native File Scan] ${file}`)
+        })
+      })
+      .catch((error) => {
+        const errorMsg = error instanceof Error ? error.message : String(error)
+        logger.error(`[Native File Scan] Error: ${errorMsg}`)
+      })
+  }, [logger])
 
   useEffect(() => {
     deepLinkViewModel.initialize()
