@@ -2732,6 +2732,68 @@ class BcscCore: NSObject {
     }
   }
 
+  // MARK: - Native File Scan (Diagnostics)
+
+  private func recursiveFileScan(at base: URL, relativeTo: URL) throws -> [String] {
+    var results: [String] = []
+    let enumerator = FileManager.default.enumerator(
+      at: base,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    while let fileURL = enumerator?.nextObject() as? URL {
+      let relativePath = fileURL.path.replacingOccurrences(of: relativeTo.path + "/", with: "")
+      let resourceValues = try fileURL.resourceValues(forKeys: [.isDirectoryKey])
+      let isDirectory = resourceValues.isDirectory ?? false
+      results.append(isDirectory ? "\(relativePath)/" : relativePath)
+    }
+
+    return results.sorted()
+  }
+
+  /// Scans the app's Application Support bundle directory and logs all files.
+  /// Useful for diagnosing v3 vs v4 migration and file systems
+  func getNativeFilesScan(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      let bundleID = Bundle.main.bundleIdentifier ?? "ca.bc.gov.iddev.servicescard"
+      let rootDirectory = try FileManager.default.url(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let bundleDirectory = rootDirectory.appendingPathComponent(bundleID)
+
+      var result: [String: Any] = [:]
+      result["bundleID"] = bundleID
+      result["bundleDirectory"] = bundleDirectory.path
+      let bundleExists = FileManager.default.fileExists(atPath: bundleDirectory.path)
+      result["bundleDirectoryExists"] = bundleExists
+
+      if bundleExists {
+        let allFiles = try recursiveFileScan(at: bundleDirectory, relativeTo: bundleDirectory)
+        result["files"] = allFiles
+        result["fileCount"] = allFiles.count
+        logger.log("[Native File Scan] Found \(allFiles.count) files/directories")
+        for file in allFiles {
+          logger.log("[Native File Scan] \(file)")
+        }
+      } else {
+        result["files"] = []
+        result["fileCount"] = 0
+        logger.log("[Native File Scan] Bundle directory does not exist")
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \\(error.localizedDescription)", error)
+    }
+  }
+
   /// Displays a local notification with the given title and message.
   /// Used to show foreground push notifications since they are not auto-displayed.
   /// - Parameters:
