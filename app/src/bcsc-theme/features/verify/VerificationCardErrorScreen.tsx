@@ -33,20 +33,24 @@ const VerificationCardErrorScreen = () => {
   })
 
   if (errorType === VerificationCardError.CardExpired) {
+    const controls = (
+      <Button
+        title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+        accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+        testID={testIdWithKey('GetBCSC')}
+        buttonType={ButtonType.Primary}
+        onPress={() => Linking.openURL(GET_BCSC_URL)}
+      />
+    )
+
     return (
-      <ScreenWrapper>
+      <ScreenWrapper controls={controls}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
           {t('BCSC.VerificationCardError.CardExpired.Heading')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.lg }}>
           {t('BCSC.VerificationCardError.CardExpired.Description')}
         </ThemedText>
-        <Button
-          title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
-          accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
-          buttonType={ButtonType.Primary}
-          onPress={() => Linking.openURL(GET_BCSC_URL)}
-        />
       </ScreenWrapper>
     )
   }
