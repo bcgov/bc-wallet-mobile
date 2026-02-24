@@ -54,7 +54,6 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
 
     const newJti = uuid.v4().toString()
-    jtiRef.current = newJti
 
     const jwt = await createDeviceSignedJWT({
       aud: account.issuer,
@@ -65,6 +64,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: newJti,
     })
 
+    jtiRef.current = newJti
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
@@ -111,12 +111,15 @@ const TransferQRDisplayScreen: React.FC = () => {
   }, [refreshToken, startInterval])
 
   useEffect(() => {
+    if (!qrValue) {
+      return
+    }
     checkAttestation(jtiRef.current)
     const interval = setInterval(() => {
       checkAttestation(jtiRef.current)
     }, attestationPollInterval)
     return () => clearInterval(interval)
-  }, [checkAttestation])
+  }, [checkAttestation, qrValue])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
