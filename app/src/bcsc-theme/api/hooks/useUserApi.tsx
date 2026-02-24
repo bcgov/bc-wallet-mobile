@@ -1,6 +1,4 @@
-import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
-import moment from 'moment'
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -73,42 +71,12 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     [apiClient]
   )
 
-  /**
-   * Fetches user metadata and picture URI.
-   *
-   * @returns {*} {Promise<{ user: UserInfoResponseData; picture?: string }>} An object containing user metadata and optional picture URI.
-   */
-  const getUserMetadata = useCallback(async () => {
-    let pictureUri: string | undefined
-    const userMetadata = await getUserInfo()
-
-    // if picture exists, fetch it
-    if (userMetadata.picture) {
-      pictureUri = await getPicture(userMetadata.picture)
-    }
-
-    return { user: userMetadata, picture: pictureUri }
-  }, [getPicture, getUserInfo])
-
-  /**
-   * Retrieves the account expiration date from user information.
-   *
-   * @return {*} {Promise<Date>} A promise that resolves to the account expiration date.
-   */
-  const getAccountExpirationDate = useCallback(async (): Promise<Date> => {
-    const userInfo = await getUserInfo()
-
-    return moment(userInfo.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate()
-  }, [getUserInfo])
-
   return useMemo(
     () => ({
       getUserInfo,
       getPicture,
-      getUserMetadata,
-      getAccountExpirationDate,
     }),
-    [getUserInfo, getPicture, getUserMetadata, getAccountExpirationDate]
+    [getUserInfo, getPicture]
   )
 }
 

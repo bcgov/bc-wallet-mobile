@@ -89,9 +89,12 @@ export interface IdToken {
 /**
  * Decode and parse the BCSC ID token to extract metadata.
  *
- * @param {string} idToken - The BCSC ID token (JWE).
- * @param {BifoldLogger} logger - Logger instance for error logging.
- * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a IdToken object.
+ * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails
+ * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if JSON parsing of the payload fails.
+ *
+ * @param idToken - The BCSC ID token (JWE).
+ * @param logger - Logger instance for error logging.
+ * @returns Parsed ID token payload as a IdToken object.
  */
 export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
   let payloadString: string
