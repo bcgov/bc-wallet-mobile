@@ -68,85 +68,101 @@ exports[`VerificationCardErrorScreen renders CardExpired variant correctly 1`] =
       >
         BCSC.VerificationCardError.CardExpired.Description
       </Text>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      accessibilityLabel="BCSC.VerificationCardError.CardExpired.ButtonText"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="com.ariesbifold:id/GetBCSC"
+    >
       <View
-        accessibilityLabel="BCSC.VerificationCardError.CardExpired.ButtonText"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
         style={
           {
-            "backgroundColor": "#003366",
-            "borderRadius": 4,
-            "opacity": 1,
-            "padding": 16,
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
           }
         }
       >
-        <View
+        <Text
+          maxFontSizeMultiplier={2}
           style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
               [
                 {
-                  "color": "#313132",
+                  "color": "#FFFFFF",
                   "fontFamily": "BCSans-Regular",
                   "fontSize": 18,
-                  "fontWeight": "normal",
+                  "fontWeight": "bold",
+                  "textAlign": "center",
                 },
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            BCSC.VerificationCardError.CardExpired.ButtonText
-          </Text>
-        </View>
+                false,
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          BCSC.VerificationCardError.CardExpired.ButtonText
+        </Text>
       </View>
     </View>
-  </RCTScrollView>
+  </View>
 </RNCSafeAreaView>
 `;
 

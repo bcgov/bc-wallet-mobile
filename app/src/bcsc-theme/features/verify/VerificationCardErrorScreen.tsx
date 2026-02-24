@@ -1,6 +1,6 @@
 import { BCState } from '@/store'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { Image, Linking, StyleSheet, useWindowDimensions } from 'react-native'
