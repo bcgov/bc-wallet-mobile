@@ -222,6 +222,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [flowState, startVideoCall])
 
+  // disconnect any active call when unmounting
   useEffect(() => {
     return () => {
       InCallManager.stop()
