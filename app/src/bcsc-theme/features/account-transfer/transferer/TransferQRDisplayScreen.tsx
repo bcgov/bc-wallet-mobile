@@ -19,6 +19,10 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
+const qrCodeRefreshInterval = 50000 // 50 seconds
+const jwtTimeToLive = 60 // 60 seconds
+const attestationPollInterval = 3000 // 3 seconds
+
 const TransferQRDisplayScreen: React.FC = () => {
   const jtiRef = useRef(uuid.v4().toString())
   const { deviceAttestation } = useApi()
@@ -57,7 +61,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       iss: account.clientID,
       sub: account.clientID,
       iat: timeInSeconds,
-      exp: timeInSeconds + 60, // give this token 1 minute to live
+      exp: timeInSeconds + jwtTimeToLive,
       jti: newJti,
     })
 
@@ -85,7 +89,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
     intervalRef.current = setInterval(() => {
       createToken()
-    }, 50000) // 50 seconds
+    }, qrCodeRefreshInterval)
   }, [createToken])
 
   const refreshToken = useCallback(() => {
@@ -110,7 +114,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     checkAttestation(jtiRef.current)
     const interval = setInterval(() => {
       checkAttestation(jtiRef.current)
-    }, 3000)
+    }, attestationPollInterval)
     return () => clearInterval(interval)
   }, [checkAttestation])
 
