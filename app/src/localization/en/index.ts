@@ -494,7 +494,7 @@ const translation = {
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
       "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",
       "AcceptAnalytics": "Enable Analytics",
-      "DenyAnalytics":  "Skip",
+      "DenyAnalytics": "Skip",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
@@ -710,7 +710,7 @@ const translation = {
         "ActionLabel2": "Record Video",
         "ButtonText": "Send to Service BC Now",
       },
-      "PendingReview":{
+      "PendingReview": {
         "Heading": "Request pending review",
         "Description1": "We review requests:",
         "Bullet1": "Monday to Friday, 9am to 5pm",
@@ -761,7 +761,7 @@ const translation = {
         "StartRecordingButton": "Start Recording Video",
       },
       "VideoReview": {
-        "VideoErrorPath":"Video path and thumbnail path are required",
+        "VideoErrorPath": "Video path and thumbnail path are required",
         "Heading": "Can you see and hear yourself clearly in the video?",
         "UseVideo": "Use this video",
         "RetakeVideo": "Retake video",
@@ -815,7 +815,7 @@ const translation = {
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
-      "Warning" : "Do not scan with the camera app.",
+      "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
       "LearnMore": "Learn more"
     },
@@ -998,7 +998,7 @@ const translation = {
       "TransferAccount": "Transfer account to another device",
       "AccountDetails": "All account details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
-      "AccountInfo" : {
+      "AccountInfo": {
         "ManageDevices": "Manage Devices",
         "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
         "AppExpiryDate": "App expiry date",
@@ -1069,7 +1069,7 @@ const translation = {
     },
     "ProblemWithApp": {
       "Title": "Problem with App",
-      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again."
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
     },
     "ForgetPairings": {
       "Title": "Success",

@@ -7,7 +7,9 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
+import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
@@ -41,6 +43,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
   const codeScanner = useCodeScanner({
     codeTypes: scanner.codeTypes,
     onCodeScanned: async (codes) => {
@@ -140,7 +143,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       scanner.handleScanDriversLicense(licenseRef.current)
     }
 
-    const photoMetadata = await getPhotoMetadata(currentPhotoPath, logger)
+    // Wrap getPhotoMetadata with alert
+    const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
+    const photoMetadata = await getPhotoMetadataWithAlert(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
     const newPhotos = [...capturedPhotos, photoMetadata]
     setCapturedPhotos(newPhotos)

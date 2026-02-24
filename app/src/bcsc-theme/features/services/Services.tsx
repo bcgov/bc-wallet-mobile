@@ -1,6 +1,6 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -26,7 +26,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
  * @return {*} {React.ReactElement} The Services screen component.
  */
 const Services: React.FC = () => {
-  const { token } = useApi()
+  const token = useTokenService()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
