@@ -101,7 +101,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
   try {
     payloadString = await decodePayload(idToken)
   } catch (error) {
-    logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
+    logger.error('[getIdTokenMetadata] Failed to decode ID token payload', error as Error)
 
     throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
   }
@@ -116,7 +116,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
 
     return payload
   } catch (error) {
-    logger.error('getIdTokenMetadata -> Failed to parse json', error as Error)
+    logger.error('[getIdTokenMetadata] Failed to parse json', error as Error)
     throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
   }
 }
