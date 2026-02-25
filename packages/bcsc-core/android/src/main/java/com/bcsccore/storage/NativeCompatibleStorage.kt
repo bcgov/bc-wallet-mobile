@@ -138,11 +138,43 @@ class NativeCompatibleStorage(
                     fis.read(data)
                     data
                 }
-            encryption.decrypt(encryptedBytes)
+            if(isFilePlainText(encryptedBytes)) {
+                Log.d(TAG, "File appears to be plain text, skipping decryption: ${file.absolutePath}")
+                return String(encryptedBytes)
+            } else {
+                return encryption.decrypt(encryptedBytes)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read/decrypt file: ${file.absolutePath}", e)
             null
         }
+    }
+
+    // A helper function that checks if a file's bytes are likely plain text by looking for common JSON structures and UTF-8 BOM
+    private fun isFilePlainText(bytes: ByteArray): Boolean {
+        if (bytes.isEmpty()) return false
+
+        var i = 0
+
+        // UTF-8 BOM
+        if (bytes.size >= 3 &&
+            bytes[0] == 0xEF.toByte() &&
+            bytes[1] == 0xBB.toByte() &&
+            bytes[2] == 0xBF.toByte()
+        ) {
+            i = 3
+        }
+
+        // Skip ASCII whitespace
+        while (i < bytes.size) {
+            when (bytes[i].toInt().toChar()) {
+                ' ', '\n', '\r', '\t' -> i++
+                else -> break
+            }
+        }
+
+        if (i >= bytes.size) return false
+        return bytes[i] == '{'.code.toByte() || bytes[i] == '['.code.toByte()
     }
 
     private fun writeEncryptedFile(
