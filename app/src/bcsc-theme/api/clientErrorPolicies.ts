@@ -176,6 +176,17 @@ export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for attestation status polling — 404 is expected while attestation
+// has not yet been consumed by verifyAttestation.
+export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 404 && context.endpoint.includes(context.apiEndpoints.attestation)
+  },
+  handle: (_error, context) => {
+    context.logger.info('[AttestationPollingErrorPolicy] 404 expected during polling — attestation not yet consumed')
+  },
+}
+
 // Error policy for unexpected server errors (http status: 500, 503)
 export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
@@ -329,6 +340,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyVerifiedErrorPolicy,
   invalidTokenReturnedPolicy,
   videoSessionErrorPolicy,
+  attestationPollingErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
   unexpectedServerErrorPolicy,
