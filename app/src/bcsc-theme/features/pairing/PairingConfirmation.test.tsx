@@ -27,7 +27,7 @@ describe('PairingConfirmation', () => {
     it('shows the arrow and subtitle', () => {
       const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
 
-      const { queryByAccessibilityHint, queryByText } = render(
+      const { queryByText } = render(
         <BasicAppContext>
           <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
         </BasicAppContext>
