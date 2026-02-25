@@ -3240,23 +3240,30 @@ class BcscCoreModule(
     /**
      * Gets credential information from native storage.
      * Android: Stored within Provider → ClientRegistration in secure storage
+     * As a fallback this will also search ~/issuer/account_uuid/providers file for stored credentials
      * Compatible with v3 native app storage for verification state detection.
      * Matches TypeScript: getCredential(): Promise<Record<string, unknown> | null>
      */
     @ReactMethod
     override fun getCredential(promise: Promise) {
         try {
+            val prefsName = reactApplicationContext.packageName
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    reactApplicationContext.packageName,
+                    prefsName,
                     Context.MODE_PRIVATE,
                 )
 
-            val providerJson = sharedPreferences.getString("provider", null)
+            var providerJson = sharedPreferences.getString("provider", null)
             if (providerJson == null) {
-                Log.d(NAME, "getCredential: No provider data found")
-                promise.resolve(null)
-                return
+                Log.d(NAME, "getCredential: No provider data found in SharedPreferences, checking file fallback")
+                providerJson = searchAccountsForProviders()
+
+                if (providerJson == null) {
+                    Log.d(NAME, "getCredential: No provider data found in SharedPreferences or fallback files")
+                    promise.resolve(null)
+                    return
+                }
             }
 
             val providerData = JSONObject(providerJson)
@@ -3296,6 +3303,34 @@ class BcscCoreModule(
             Log.e(NAME, "getCredential error: \${e.message}", e)
             promise.reject("E_GET_CREDENTIAL_ERROR", "Error getting credential: \${e.message}", e)
         }
+    }
+
+    private fun searchAccountsForProviders(): String? {
+        val account = getAccountSync()
+        val accountId = account?.getString("id")
+        val issuer = account?.getString("issuer")
+
+        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+            return null
+        }
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+        val providersFile =
+            File(
+                reactApplicationContext.filesDir,
+                "$issuerName${File.separator}$accountId${File.separator}providers",
+            )
+
+
+            if (!providersFile.exists()) {
+                Log.d(
+                    NAME,
+                    "getCredential: No fallback providers file found under ${reactApplicationContext.filesDir.absolutePath}${File.separator}$issuerName${File.separator}$accountId",
+                )
+                return null
+            }
+        return nativeStorage.readEncryptedFile(providersFile)?.takeIf { it.isNotBlank() }
+        
     }
 
     /**
@@ -3906,37 +3941,38 @@ class BcscCoreModule(
             val filesDir = reactApplicationContext.filesDir
             val filesDirExists = filesDir.exists()
 
-            val result = Arguments.createMap().apply {
-                putString("packageName", packageName)
-                putString("filesDirectory", filesDir.absolutePath)
-                putBoolean("filesDirExists", filesDirExists)
+            val result =
+                Arguments.createMap().apply {
+                    putString("packageName", packageName)
+                    putString("filesDirectory", filesDir.absolutePath)
+                    putBoolean("filesDirExists", filesDirExists)
 
-                if (filesDirExists) {
-                    // Recursively scan all files starting from filesDir
-                    val allFiles = mutableListOf<String>()
-                    recursiveFileScan(filesDir, filesDir, allFiles)
+                    if (filesDirExists) {
+                        // Recursively scan all files starting from filesDir
+                        val allFiles = mutableListOf<String>()
+                        recursiveFileScan(filesDir, filesDir, allFiles)
 
-                    val filesArray = Arguments.createArray()
-                    allFiles.forEach { filePath ->
-                        filesArray.pushString(filePath)
+                        val filesArray = Arguments.createArray()
+                        allFiles.forEach { filePath ->
+                            filesArray.pushString(filePath)
+                        }
+
+                        putArray("files", filesArray)
+                        putInt("fileCount", allFiles.size)
+
+                        Log.i(
+                            NAME,
+                            "[Native File Scan] Found ${allFiles.size} files/directories in Android storage",
+                        )
+                        allFiles.forEach { file ->
+                            Log.i(NAME, "[Native File Scan] $file")
+                        }
+                    } else {
+                        putArray("files", Arguments.createArray())
+                        putInt("fileCount", 0)
+                        Log.i(NAME, "[Native File Scan] Files directory does not exist")
                     }
-
-                    putArray("files", filesArray)
-                    putInt("fileCount", allFiles.size)
-
-                    Log.i(
-                        NAME,
-                        "[Native File Scan] Found ${allFiles.size} files/directories in Android storage"
-                    )
-                    allFiles.forEach { file ->
-                        Log.i(NAME, "[Native File Scan] $file")
-                    }
-                } else {
-                    putArray("files", Arguments.createArray())
-                    putInt("fileCount", 0)
-                    Log.i(NAME, "[Native File Scan] Files directory does not exist")
                 }
-            }
 
             promise.resolve(result)
         } catch (e: Exception) {
@@ -3944,7 +3980,7 @@ class BcscCoreModule(
             promise.reject(
                 "E_NATIVE_FILE_SCAN_FAILED",
                 "Failed to scan native files: ${e.localizedMessage}",
-                e
+                e,
             )
         }
     }
@@ -3966,8 +4002,10 @@ class BcscCoreModule(
 
             for (file in files) {
                 // Compute relative path from base directory
-                val relativePath = file.absolutePath.removePrefix(baseDirectory.absolutePath)
-                    .removePrefix(File.separator)
+                val relativePath =
+                    file.absolutePath
+                        .removePrefix(baseDirectory.absolutePath)
+                        .removePrefix(File.separator)
 
                 results.add(relativePath)
 

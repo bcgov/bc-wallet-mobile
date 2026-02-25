@@ -114,9 +114,9 @@ class NativeCompatibleStorage(
 
     /**
      * Gets the issuer with a fallback.
-     * If the issuer file is missing or unreadable it will 
+     * If the issuer file is missing or unreadable it will
      * search through account directories to infer the issuer
-     * 
+     *
      */
     fun getIssuerWithFallback(): String? {
         val issuerFile = File(context.filesDir, ISSUER_FILENAME)
@@ -131,17 +131,17 @@ class NativeCompatibleStorage(
 
     /**
      * Check file directories for user accounts. This will return the first issuer found.
-     * Account direcotries follow this pattern: 
+     * Account direcotries follow this pattern:
      *  ~/files/sit/{account UUID}/
      *  ~/files/prod/{account UUID}/
-     * 
+     *
      */
     fun findIssuerFromAccountDirectories(): String? {
         val filesDir = context.filesDir
         if (!filesDir.exists() || !filesDir.isDirectory) {
             return null
         }
-        
+
         // loops through issuer direcotries and checks for any account UUID directories
         for (issuerName in IssuerEnvironmentMap.issuerNamesInPriorityOrder) {
             val issuerDirectory = File(filesDir, issuerName)
@@ -195,7 +195,7 @@ class NativeCompatibleStorage(
                     fis.read(data)
                     data
                 }
-            if(isFilePlainText(encryptedBytes)) {
+            if (isFilePlainText(encryptedBytes)) {
                 Log.d(TAG, "File appears to be plain text, skipping decryption: ${file.absolutePath}")
                 return String(encryptedBytes)
             } else {
