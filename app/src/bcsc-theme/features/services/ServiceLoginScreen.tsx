@@ -294,7 +294,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       Alert.alert(t('BCSC.Services.LoginErrorTitle'), (error as Error).message)
     }
-  }, [state.pairingCode, pairing, navigation, logger, t])
+  }, [state.pairingCode, pairing, navigation, logger, t, fromAppSwitch])
 
   const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {
