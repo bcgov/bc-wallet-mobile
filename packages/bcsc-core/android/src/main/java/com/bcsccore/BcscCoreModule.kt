@@ -673,7 +673,7 @@ class BcscCoreModule(
                 return
             }
 
-            val issuer = nativeStorage.readFile(issuerFile)
+            val issuer = nativeStorage.readEncryptedFile(issuerFile)
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
