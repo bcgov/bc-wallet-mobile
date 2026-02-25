@@ -176,7 +176,7 @@ const Account: React.FC = () => {
             description={t('BCSC.Account.AccountDetailsDescription')}
           />
           <SectionButton
-            onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
+            onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
             title={t('BCSC.Account.RemoveAccount')}
           />
         </View>

@@ -1,5 +1,6 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
@@ -37,6 +38,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
+  const { stack } = useBCSCStack()
 
   // HELPER FUNCTIONS
 
@@ -72,14 +74,23 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
               text: t('Alerts.ProblemWithAccount.Action1'),
               style: 'destructive',
               onPress: () => {
-                navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+                switch (stack) {
+                  case BCSCStacks.Main:
+                    return navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
+                  case BCSCStacks.Onboarding:
+                    return navigation.navigate(BCSCScreens.OnboardingRemoveAccountConfirmation)
+                  case BCSCStacks.Verify:
+                    return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
+                }
+
+                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', { stack })
               },
             },
           ],
         })
       }
     },
-    [emitAlert, navigation, t]
+    [emitAlert, logger, navigation, stack, t]
   )
 
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
