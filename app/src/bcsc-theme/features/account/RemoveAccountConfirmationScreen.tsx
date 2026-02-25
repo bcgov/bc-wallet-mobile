@@ -83,4 +83,16 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   )
 }
 
+export const MainRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
+export const VerifyRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
+export const OnboardingRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
 export default RemoveAccountConfirmationScreen

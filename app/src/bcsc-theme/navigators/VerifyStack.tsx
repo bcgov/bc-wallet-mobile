@@ -4,17 +4,18 @@ import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/Settin
 import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
-import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
-import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -66,6 +67,7 @@ const VerifyStack = () => {
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
   useVerificationResponseListener()
@@ -311,8 +313,8 @@ const VerifyStack = () => {
         }}
       />
       <Stack.Screen
-        name={BCSCScreens.RemoveAccountConfirmation}
-        component={RemoveAccountConfirmationScreen}
+        name={BCSCScreens.VerifyRemoveAccountConfirmation}
+        component={VerifyRemoveAccountConfirmationScreen}
         options={() => ({
           headerShown: true,
           headerBackTitleVisible: false,
