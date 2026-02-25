@@ -176,8 +176,8 @@ export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for attestation status polling — 404 is expected while attestation
-// has not yet been consumed by verifyAttestation.
+// Error policy for attestation status polling — 404 is expected while the attestation
+// has not yet been created or consumed by another device's verifyAttestation call.
 export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return context.statusCode === 404 && context.endpoint.includes(context.apiEndpoints.attestation)
