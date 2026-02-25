@@ -10,8 +10,7 @@ import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
 
-// TODO: remove — hard-coded for debugging on Android
-const isIOS = true // Platform.OS === 'ios'
+const isIOS = Platform.OS === 'ios'
 
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const { ColorPalette, Spacing } = useTheme()
