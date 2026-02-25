@@ -74,8 +74,8 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
       }
 
       const response = await apiClient.get(`${apiClient.endpoints.attestation}/${jwtID}`, {
-          suppressStatusCodeLogs: [404],
-        })
+        suppressStatusCodeLogs: [404],
+      })
 
       // 200 response means that the attestation request has been consumed and is valid
       if (response.status == 200) {
