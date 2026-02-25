@@ -453,6 +453,7 @@ const translation = {
       "CompletionTitle": "You're done in this app (FR)",
       "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (FR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
+      "AppSwitchArrowLabel": "Arrow pointing to browser navigation (FR)",
       "BookmarkService": "Save link to: (FR)",
       "ToggleBookmark": "Toggle bookmark (FR)",
     },

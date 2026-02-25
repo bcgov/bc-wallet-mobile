@@ -10,13 +10,11 @@ import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
 
-const isIOS = Platform.OS === 'ios'
-
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const { serviceName, serviceId, fromAppSwitch } = route.params
-  const showAppSwitchGuidance = isIOS && fromAppSwitch
+  const showAppSwitchGuidance = Platform.OS === 'ios' && fromAppSwitch
 
   const onClose = () => {
     navigation.dispatch(
@@ -43,8 +41,10 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
         <ArrowUp
           height={80}
           width={80}
-          fill={ColorPalette.brand.primary}
           color={ColorPalette.brand.primary}
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={t('BCSC.ManualPairing.AppSwitchArrowLabel')}
           style={{ marginTop: -Spacing.md, marginBottom: Spacing.md }}
         />
       )}
