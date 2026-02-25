@@ -1,18 +1,28 @@
 import { BCState } from '@/store'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
-import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { RouteProp, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, useWindowDimensions } from 'react-native'
+import { Image, Linking, StyleSheet, useWindowDimensions } from 'react-native'
+import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
+import { VerificationCardError } from './verificationCardError'
+
+export { VerificationCardError }
+
+const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
 
 const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
 
 const twoThirds = 0.67
 
-const MismatchedSerialScreen = () => {
+const VerificationCardErrorScreen = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
+  const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
+
+  const errorType = params.errorType
 
   const styles = StyleSheet.create({
     image: {
@@ -21,6 +31,29 @@ const MismatchedSerialScreen = () => {
       marginBottom: Spacing.lg,
     },
   })
+
+  if (errorType === VerificationCardError.CardExpired) {
+    const controls = (
+      <Button
+        title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+        accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+        testID={testIdWithKey('GetBCSC')}
+        buttonType={ButtonType.Primary}
+        onPress={() => Linking.openURL(GET_BCSC_URL)}
+      />
+    )
+
+    return (
+      <ScreenWrapper controls={controls}>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
+          {t('BCSC.VerificationCardError.CardExpired.Heading')}
+        </ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.lg }}>
+          {t('BCSC.VerificationCardError.CardExpired.Description')}
+        </ThemedText>
+      </ScreenWrapper>
+    )
+  }
 
   return (
     <ScreenWrapper>
@@ -45,4 +78,4 @@ const MismatchedSerialScreen = () => {
     </ScreenWrapper>
   )
 }
-export default MismatchedSerialScreen
+export default VerificationCardErrorScreen

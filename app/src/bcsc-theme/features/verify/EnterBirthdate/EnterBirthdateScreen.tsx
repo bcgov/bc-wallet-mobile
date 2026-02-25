@@ -17,6 +17,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
+import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {
@@ -72,7 +73,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       }
 
       logger.error('CSN and birthdate mismatch, card not found', { error })
-      navigation.navigate(BCSCScreens.MismatchedSerial)
+      navigation.navigate(BCSCScreens.VerificationCardError, {
+        errorType: VerificationCardError.MismatchedSerial,
+      })
     } finally {
       setLoading(false)
     }

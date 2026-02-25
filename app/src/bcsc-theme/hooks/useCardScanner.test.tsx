@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { VerificationCardError } from '@/bcsc-theme/features/verify/verificationCardError'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -381,7 +382,13 @@ describe('useCardScanner', () => {
       })
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.MismatchedSerial }],
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: VerificationCardError.MismatchedSerial },
+          },
+        ],
       })
     })
   })

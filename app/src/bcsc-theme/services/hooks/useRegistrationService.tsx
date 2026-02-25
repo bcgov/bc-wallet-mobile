@@ -3,7 +3,6 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
-import { appLogger } from '@/utils/logger'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { AccountSecurityMethod, BcscNativeErrorCodes, isBcscNativeError } from 'react-native-bcsc-core'
@@ -19,10 +18,6 @@ export const useRegistrationService = () => {
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
-
-  if (!client || !isClientReady) {
-    appLogger.info('[useRegistrationService] BCSC API client is not ready, registration service will not be available.')
-  }
 
   /**
    * Registers a new BCSC client and alerts on failures during the registration process.

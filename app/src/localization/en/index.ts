@@ -788,6 +788,13 @@ const translation = {
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
     },
+    "VerificationCardError": {
+      "CardExpired": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card is no longer valid. It has expired.",
+        "ButtonText": "Get a BC Services Card"
+      }
+    },
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times",
       "Message": "Please try again later.",
@@ -890,6 +897,7 @@ const translation = {
       "StartVideoCall": "Start video call",
       "CallStates": {
         "CreatingSession": "Creating video session...",
+        "UploadingDocuments": "Uploading your photo...",
         "ConnectingWebRTC": "Connecting to video service...",
         "WaitingForAgent": "Waiting for an agent to join...",
         "Initializing": "Initializing...",

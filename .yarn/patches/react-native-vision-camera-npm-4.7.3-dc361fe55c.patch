@@ -1,0 +1,112 @@
+diff --git a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
+index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c5069c6aca7 100644
+--- a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
++++ b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
+@@ -75,11 +75,39 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+       }
+ 
+       if (format != null) {
+-        // Preview will follow video size as it's size & aspect ratio, or photo- if video is disabled.
+-        val targetSize = if (videoConfig != null) format.videoSize else format.photoSize
++        // When CodeScanner is active, Preview MUST use videoSize (same as CodeScanner)
++        // to ensure both use cases get the same aspect ratio → same sensor crop → same FOV.
++        // Without this, Preview may get e.g. photoSize (4:3 → 1600x1200) while CodeScanner
++        // gets videoSize (16:9 → 1920x1080), causing misaligned barcode overlays.
++        val codeScannerConfig = configuration.codeScanner as? CameraConfiguration.Output.Enabled<CameraConfiguration.CodeScanner>
++        val targetSize = if (codeScannerConfig != null) {
++          // CodeScanner always uses format.videoSize, so Preview must match
++          format.videoSize
++        } else if (videoConfig != null) {
++          format.videoSize
++        } else {
++          format.photoSize
++        }
+ 
++        // Strictly filter Preview to matching aspect ratio to ensure Preview and
++        // ImageAnalysis/CodeScanner have the same FOV.
++        val targetAspect = targetSize.width.toFloat() / targetSize.height.toFloat()
+         val previewResolutionSelector = ResolutionSelector.Builder()
+-          .forSize(targetSize)
++          .setResolutionFilter { supportedSizes, _ ->
++            val tolerance = 0.05f
++            val aspectMatched = supportedSizes
++              .filter { Math.abs(it.width.toFloat() / it.height.toFloat() - targetAspect) < tolerance }
++              .sortedBy { Math.abs(it.width * it.height - targetSize.width * targetSize.height) }
++            if (aspectMatched.isNotEmpty()) {
++              aspectMatched
++            } else {
++              // Fallback: sort by aspect ratio then size (original behavior)
++              supportedSizes.sortedWith(compareBy(
++                { Math.abs(it.width.toFloat() / it.height.toFloat() - targetAspect) },
++                { Math.abs(it.width * it.height - targetSize.width * targetSize.height) }
++              ))
++            }
++          }
+           .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
+           .build()
+         preview.setResolutionSelector(previewResolutionSelector)
+@@ -220,7 +248,20 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+   val codeScannerConfig = configuration.codeScanner as? CameraConfiguration.Output.Enabled<CameraConfiguration.CodeScanner>
+   if (codeScannerConfig != null) {
+     Log.i(CameraSession.TAG, "Creating CodeScanner output...")
+-    val analyzer = ImageAnalysis.Builder().build()
++    val analyzer = ImageAnalysis.Builder().also { analysis ->
++      // Use higher resolution for better barcode detection (especially dense PDF-417).
++      // Without this, CameraX defaults to ~640x480 which is insufficient for PDF-417 barcodes
++      // that need >=1156px width for reliable decoding per Google ML Kit documentation.
++      if (format != null) {
++        val resolutionSelector = ResolutionSelector.Builder()
++          .forSize(format.videoSize)
++          // Use same resolution mode as Preview so CameraX picks matching resolutions.
++          // Different modes can cause different actual resolutions → different FOV/crop → misaligned overlays.
++          .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
++          .build()
++        analysis.setResolutionSelector(resolutionSelector)
++      }
++    }.build()
+     val pipeline = CodeScannerPipeline(codeScannerConfig.config, callback)
+     analyzer.setAnalyzer(CameraQueues.analyzerExecutor, pipeline)
+     codeScannerOutput = analyzer
+diff --git a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
+index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b16151603c6c7ab4 100644
+--- a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
++++ b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
+@@ -23,6 +23,10 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
+     val types = configuration.codeTypes.map { it.toBarcodeType() }
+     val barcodeScannerOptions = BarcodeScannerOptions.Builder()
+       .setBarcodeFormats(types[0], *types.toIntArray())
++      // Return all potential barcodes even if they cannot be fully decoded yet.
++      // This improves detection of partially visible or damaged barcodes (especially PDF-417)
++      // and enables earlier visual feedback to the user.
++      .enableAllPotentialBarcodes()
+       .build()
+     scanner = BarcodeScanning.getClient(barcodeScannerOptions)
+   }
+@@ -33,10 +37,26 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
+ 
+     try {
+       val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
++      val rotation = imageProxy.imageInfo.rotationDegrees
++
++      // Report frame dimensions in the ROTATED coordinate space to match ML Kit's
++      // boundingBox output. ML Kit internally applies the rotation for detection and
++      // returns bounding boxes in portrait/upright coordinates, but InputImage.width/height
++      // returns the ORIGINAL (unrotated) dimensions. We swap here so JS doesn't have to guess.
++      val frameWidth: Int
++      val frameHeight: Int
++      if (rotation == 90 || rotation == 270) {
++        frameWidth = inputImage.height   // swap for rotation
++        frameHeight = inputImage.width
++      } else {
++        frameWidth = inputImage.width
++        frameHeight = inputImage.height
++      }
++
+       scanner.process(inputImage)
+         .addOnSuccessListener { barcodes ->
+           if (barcodes.isNotEmpty()) {
+-            callback.onCodeScanned(barcodes, CodeScannerFrame(inputImage.width, inputImage.height))
++            callback.onCodeScanned(barcodes, CodeScannerFrame(frameWidth, frameHeight))
+           }
+         }
+         .addOnFailureListener { error ->
