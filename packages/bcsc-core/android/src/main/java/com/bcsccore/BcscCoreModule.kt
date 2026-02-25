@@ -668,12 +668,20 @@ class BcscCoreModule(
         try {
             val issuerFile = File(reactApplicationContext.filesDir, "issuer")
             if (!issuerFile.exists()) {
-                // No issuer file exists, return null
+                Log.d(NAME, "getIssuer: Issuer file does not exist at path: ${issuerFile.absolutePath}")
+                val fallbackIssuer = nativeStorage.getIssuerWithFallback()
+                if (fallbackIssuer != null) {
+                    Log.d(NAME, "getIssuer: Resolved fallback issuer from account directories: $fallbackIssuer")
+                    promise.resolve(fallbackIssuer)
+                    return
+                }
+
+                // No issuer file exists and no fallback issuer could be derived
                 promise.resolve(null)
                 return
             }
-
             val issuer = nativeStorage.readEncryptedFile(issuerFile)
+            Log.d(NAME, "getIssuer: Successfully read issuer from file: $issuer")
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)

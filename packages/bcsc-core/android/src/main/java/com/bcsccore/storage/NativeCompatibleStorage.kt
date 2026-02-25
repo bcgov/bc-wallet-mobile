@@ -32,7 +32,10 @@ class NativeCompatibleStorage(
         private const val TOKENS_FILENAME = "tokens"
         private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
-        private const val DEFAULT_ISSUER = "prod"
+        private val UUID_REGEX =
+            Regex(
+                "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            )
     }
 
     private val encryption: Encryption by lazy {
@@ -64,20 +67,8 @@ class NativeCompatibleStorage(
      * - "https://iddev.gov.bc.ca/device/" -> "dev"
      */
     fun getIssuerNameFromIssuer(issuer: String): String {
-        // Map of issuer URLs to issuer names (matches native BuildConfig.ISSUERS)
-        val issuerMap =
-            mapOf(
-                "https://id.gov.bc.ca/device/" to "prod",
-                "https://idsit.gov.bc.ca/device/" to "sit",
-                "https://idqa.gov.bc.ca/device/" to "qa",
-                "https://iddev.gov.bc.ca/device/" to "dev",
-                "https://iddev2.gov.bc.ca/device/" to "dev2",
-                "https://idpreprod.gov.bc.ca/device/" to "preprod",
-                "https://idtest.gov.bc.ca/device/" to "test",
-            )
-
         // Check direct mapping first
-        issuerMap[issuer]?.let { return it }
+        IssuerEnvironmentMap.getIssuerNameFromUrl(issuer)?.let { return it }
 
         // Fallback: extract from URL (matches native Utils.getIssuerNameFromIssuer)
         return try {
@@ -86,11 +77,11 @@ class NativeCompatibleStorage(
             if (startIndex > 0 && endIndex > startIndex) {
                 issuer.substring(startIndex, endIndex)
             } else {
-                DEFAULT_ISSUER // Default fallback
+                IssuerEnvironmentMap.DEFAULT_ISSUER // Default fallback
             }
         } catch (e: Exception) {
             Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'prod'")
-            DEFAULT_ISSUER
+            IssuerEnvironmentMap.DEFAULT_ISSUER
         }
     }
 
@@ -105,12 +96,78 @@ class NativeCompatibleStorage(
             return getIssuerNameFromIssuer(issuer)
         }
 
-        Log.w(TAG, "Issuer file not found or unreadable, defaulting to '$DEFAULT_ISSUER'")
-        return DEFAULT_ISSUER
+        val inferredIssuerName = findIssuerFromAccountDirectories()
+        if (inferredIssuerName != null) {
+            Log.w(
+                TAG,
+                "Issuer file missing; inferred issuer name '$inferredIssuerName' from account directories",
+            )
+            return inferredIssuerName
+        }
+
+        Log.w(
+            TAG,
+            "Issuer file not found or unreadable, defaulting to '${IssuerEnvironmentMap.DEFAULT_ISSUER}'",
+        )
+        return IssuerEnvironmentMap.DEFAULT_ISSUER
+    }
+
+    /**
+     * Gets the issuer with a fallback.
+     * If the issuer file is missing or unreadable it will 
+     * search through account directories to infer the issuer
+     * 
+     */
+    fun getIssuerWithFallback(): String? {
+        val issuerFile = File(context.filesDir, ISSUER_FILENAME)
+        val issuer = readEncryptedFile(issuerFile)
+        if (!issuer.isNullOrEmpty()) {
+            return issuer
+        }
+
+        val inferredIssuerName = findIssuerFromAccountDirectories() ?: return null
+        return IssuerEnvironmentMap.getIssuerUrlFromName(inferredIssuerName)
+    }
+
+    /**
+     * Check file directories for user accounts. This will return the first issuer found.
+     * Account direcotries follow this pattern: 
+     *  ~/files/sit/{account UUID}/
+     *  ~/files/prod/{account UUID}/
+     * 
+     */
+    fun findIssuerFromAccountDirectories(): String? {
+        val filesDir = context.filesDir
+        if (!filesDir.exists() || !filesDir.isDirectory) {
+            return null
+        }
+        
+        // loops through issuer direcotries and checks for any account UUID directories
+        for (issuerName in IssuerEnvironmentMap.issuerNamesInPriorityOrder) {
+            val issuerDirectory = File(filesDir, issuerName)
+            if (!issuerDirectory.exists() || !issuerDirectory.isDirectory) {
+                continue
+            }
+
+            val accountDirectories =
+                issuerDirectory
+                    .listFiles()
+                    ?.filter { it.isDirectory && UUID_REGEX.matches(it.name) }
+                    .orEmpty()
+
+            if (accountDirectories.isNotEmpty()) {
+                Log.d(
+                    TAG,
+                    "Found ${accountDirectories.size} account UUID directory entries under issuer '$issuerName'",
+                )
+                return issuerName
+            }
+        }
+
+        return null
     }
 
     // MARK: - File Path Helpers
-
     private fun getAccountsFile(issuerName: String): File {
         val path = issuerName + File.separator + ACCOUNTS_FILENAME
         return File(context.filesDir, path)
