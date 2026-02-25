@@ -1,5 +1,4 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -25,7 +24,7 @@ describe('BeforeYouCall', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('navigates to VerifyWebView with verify-by-call help when Assistance is pressed', () => {
+  it('navigates to ContactUs when Assistance is pressed', () => {
     const tree = render(
       <BasicAppContext>
         <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
@@ -34,9 +33,6 @@ describe('BeforeYouCall', () => {
 
     fireEvent.press(tree.getByTestId(testIdWithKey('Assistance')))
 
-    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyWebView, {
-      url: HelpCentreUrl.VERIFY_CALL,
-      title: expect.any(String),
-    })
+    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyContactUs)
   })
 })
