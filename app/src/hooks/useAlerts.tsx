@@ -246,6 +246,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       failedToReadFromLocalStorageAlert: _createBasicAlert(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '101' }),
       clientRegistrationNullAlert: _createBasicAlert(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '102' }),
       unableToDecryptIdTokenAlert: _createBasicAlert(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: '105' }),
+      unableToDecryptJweAlert: _createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', { errorCode: '110' }),
       failedToDeserializeJsonAlert: _createBasicAlert(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON, 'ProblemWithApp', { errorCode: '109' }),
       loginServerErrorAlert: _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),

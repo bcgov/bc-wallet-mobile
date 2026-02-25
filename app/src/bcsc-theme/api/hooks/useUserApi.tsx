@@ -37,7 +37,14 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.get<string>(apiClient.endpoints.userInfo)
-      const userInfoString = await decodePayload(data)
+
+      let userInfoString: string
+      try {
+        userInfoString = await decodePayload(data)
+      } catch (error) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: error })
+      }
+
       try {
         return JSON.parse(userInfoString)
       } catch (error) {

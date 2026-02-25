@@ -32,6 +32,10 @@ export const useUserService = () => {
         alerts.failedToDeserializeJsonAlert()
       }
 
+      if (isAppError(error, AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE)) {
+        alerts.unableToDecryptJweAlert()
+      }
+
       throw error
     }
   }, [alerts, userApi])
@@ -55,6 +59,10 @@ export const useUserService = () => {
     } catch (error) {
       if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
         alerts.failedToDeserializeJsonAlert()
+      }
+
+      if (isAppError(error, AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE)) {
+        alerts.unableToDecryptJweAlert()
       }
 
       throw error
