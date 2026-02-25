@@ -13,14 +13,18 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
+const qrCodeRefreshInterval = 50000 // 50 seconds
+const jwtTimeToLive = 60 // 60 seconds
+const attestationPollInterval = 3000 // 3 seconds
+
 const TransferQRDisplayScreen: React.FC = () => {
-  const jti = useMemo(() => uuid.v4().toString(), [])
+  const jtiRef = useRef(uuid.v4().toString())
   const { deviceAttestation } = useApi()
   const { ColorPalette, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
@@ -49,19 +53,22 @@ const TransferQRDisplayScreen: React.FC = () => {
       return
     }
 
+    const newJti = uuid.v4().toString()
+
     const jwt = await createDeviceSignedJWT({
       aud: account.issuer,
       iss: account.clientID,
       sub: account.clientID,
       iat: timeInSeconds,
-      exp: timeInSeconds + 60, // give this token 1 minute to live
-      jti: jti,
+      exp: timeInSeconds + jwtTimeToLive,
+      jti: newJti,
     })
 
-    const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
+    jtiRef.current = newJti
+    const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
-  }, [store.developer.environment.iasApiBaseUrl, jti])
+  }, [store.developer.environment.iasApiBaseUrl])
 
   const checkAttestation = useCallback(
     async (id: string) => {
@@ -82,7 +89,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
     intervalRef.current = setInterval(() => {
       createToken()
-    }, 30000) // 30 seconds
+    }, qrCodeRefreshInterval)
   }, [createToken])
 
   const refreshToken = useCallback(() => {
@@ -104,12 +111,15 @@ const TransferQRDisplayScreen: React.FC = () => {
   }, [refreshToken, startInterval])
 
   useEffect(() => {
-    checkAttestation(jti)
+    if (!qrValue) {
+      return
+    }
+    checkAttestation(jtiRef.current)
     const interval = setInterval(() => {
-      checkAttestation(jti)
-    }, 3000)
+      checkAttestation(jtiRef.current)
+    }, attestationPollInterval)
     return () => clearInterval(interval)
-  }, [checkAttestation, jti])
+  }, [checkAttestation, qrValue])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
