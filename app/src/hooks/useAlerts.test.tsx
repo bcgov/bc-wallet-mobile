@@ -13,6 +13,10 @@ jest.mock('@bifold/core', () => ({
   },
 }))
 
+jest.mock('@/bcsc-theme/contexts/BCSCStackContext', () => ({
+  useBCSCStack: () => ({ stack: 'BCSCMainStack' }),
+}))
+
 describe('useAlerts', () => {
   beforeEach(() => {
     jest.clearAllMocks()

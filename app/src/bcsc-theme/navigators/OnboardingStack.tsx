@@ -7,6 +7,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -21,7 +22,7 @@ import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import SetupTypesScreen from '../features/onboarding/SetupTypesScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { OnboardingWebViewScreen } from '../features/webview/OnboardingWebViewScreen'
-import { BCSCModals, BCSCOnboardingStackParams, BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCOnboardingStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -34,6 +35,7 @@ const OnboardingStack = (): React.ReactElement => {
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCOnboardingStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  useBCSCStack(BCSCStacks.Onboarding)
 
   return (
     <Stack.Navigator

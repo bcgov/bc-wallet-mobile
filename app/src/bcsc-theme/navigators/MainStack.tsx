@@ -10,6 +10,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
@@ -75,6 +76,7 @@ const MainStack: React.FC = () => {
   }, [logger, pendingPairing])
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
   useSystemChecks(SystemCheckScope.MAIN_STACK)
+  useBCSCStack(BCSCStacks.Main)
 
   useEffect(() => {
     const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {

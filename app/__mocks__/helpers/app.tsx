@@ -1,3 +1,4 @@
+import { BCSCStackProvider } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCThemeNames } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { BCState, initialState, reducer } from '@/store'
@@ -37,7 +38,9 @@ export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, init
     <ContainerProvider value={context}>
       <StoreProvider initialState={testInitialState} reducer={reducer}>
         <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
-          <ErrorAlertProvider>{children}</ErrorAlertProvider>
+          <BCSCStackProvider>
+            <ErrorAlertProvider>{children}</ErrorAlertProvider>
+          </BCSCStackProvider>
         </ThemeProvider>
       </StoreProvider>
     </ContainerProvider>
