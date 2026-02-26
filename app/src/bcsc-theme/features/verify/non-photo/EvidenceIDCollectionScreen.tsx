@@ -60,7 +60,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
-    documentNumber: '',
+    documentNumber: '', // make the user re-enter every time
     firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
     middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
     lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
