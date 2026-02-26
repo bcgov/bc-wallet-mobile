@@ -1,0 +1,17 @@
+app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+app/android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+app/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+app/android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+app/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+app/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+app/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png

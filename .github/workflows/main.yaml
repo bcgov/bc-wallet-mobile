@@ -10,6 +10,8 @@ on:
     paths:
       - app/**
       - .yarn/**
+      - variants/**
+      - scripts/**
       - .github/workflows/**
   pull_request:
     branches: [main]
@@ -117,7 +119,7 @@ jobs:
           echo "Comparing ${parent_ref} with ${child_ref}"
 
           diff_output=$(git diff --name-only ${parent_ref}..${child_ref})
-          change_count=$(echo "$diff_output" | (grep -E '^(app/.*)|(.yarn/.*)|(patch/.*)|(.github/workflows/.*)' || true) | wc -l | awk '{$1=$1};1')
+          change_count=$(echo "$diff_output" | (grep -E '^(app/.*)|(.yarn/.*)|(variants/.*)|(scripts/.*)|(patch/.*)|(.github/workflows/.*)' || true) | wc -l | awk '{$1=$1};1')
 
           echo "$change_count files changed in app, .yarn, or .github/workflows"
 
@@ -129,34 +131,141 @@ jobs:
             echo "result=false" >> $GITHUB_OUTPUT
           fi
 
+  # ─── Shared Preparation ─────────────────────────────────────────────
+  # Builds the JS bundle once for all variants, saving ~2-3 min per
+  # variant build. Also warms the Metro bundler cache so that any
+  # residual re-bundling in iOS xcodebuild is near-instant.
+  #
+  # Future optimizations:
+  #   - Use dynamic matrix (fromJSON) to build only bcwallet-prod +
+  #     bcsc-dev on pull requests, all variants on main/dispatch.
+  #   - Upload pre-built iOS JS bundle and use SKIP_BUNDLING=1 in
+  #     xcodebuild to skip Metro entirely for iOS too.
+  prepare:
+    needs: [early-exit-check]
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Metro bundler cache
+        uses: actions/cache@v4
+        with:
+          path: app/.metro-cache
+          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          restore-keys: |
+            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
+            metro-
+
+      - name: Build Android JS bundle
+        working-directory: app
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --verbose
+
+      - name: Build iOS JS bundle (warm Metro cache)
+        working-directory: app
+        run: |
+          npx react-native bundle \
+            --platform ios \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output /tmp/ios-main.jsbundle \
+            --verbose
+
+      - name: Upload Android JS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-jsbundle
+          path: app/android/app/src/main/assets/index.android.bundle
+          retention-days: 1
+
   build-ios:
-    needs: [check-secrets, check-vars, early-exit-check]
+    needs: [check-secrets, check-vars, early-exit-check, prepare]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
-          - build_type: 'bc-wallet'
-            app_version: '1.0.27'
-            export_options: 'export-options-bcw.plist'
-            release_config: 'release-bcw.xcconfig'
-            artifact_name: 'ios-bc-wallet-artifact'
+          - variant: 'bcwallet-prod'
+            build_target: 'bcwallet'
+            export_method: 'app-store'
+            provisioning_profile_uuid: '7a6bfbda-8f83-441e-b709-b57b1863b627'
+            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_BASE64'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64'
+            artifact_name: 'ios-bcwallet-prod'
             beta_groups: |-
               The Team
               IDIM Team
-          - build_type: 'single-app'
-            app_version: '4.0.0'
-            export_options: 'export-options-sa.plist'
-            release_config: 'release-sa.xcconfig'
-            artifact_name: 'ios-single-app-artifact'
+          - variant: 'bcsc-dev'
+            build_target: 'bcsc'
+            export_method: 'app-store-connect'
+            provisioning_profile_uuid: '4f031630-16e4-4f8d-8723-a3d920577416'
+            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SADEV_BASE64'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64'
+            artifact_name: 'ios-bcsc-dev'
             beta_groups: |-
               IDIM testers for DEV env
+          # TODO: Create secrets for bcsc-test/qa/prod variants and update UUIDs
+          - variant: 'bcsc-test'
+            build_target: 'bcsc'
+            export_method: 'app-store-connect'
+            provisioning_profile_uuid: 'REPLACE_WITH_BCSC_TEST_PROV_PROFILE_UUID'
+            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SATEST_BASE64'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64'
+            artifact_name: 'ios-bcsc-test'
+            beta_groups: |-
+              IDIM testers for TEST env
+          - variant: 'bcsc-qa'
+            build_target: 'bcsc'
+            export_method: 'app-store-connect'
+            provisioning_profile_uuid: 'REPLACE_WITH_BCSC_QA_PROV_PROFILE_UUID'
+            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SAQA_BASE64'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64'
+            artifact_name: 'ios-bcsc-qa'
+            beta_groups: |-
+              IDIM testers for QA env
+          - variant: 'bcsc-prod'
+            build_target: 'bcsc'
+            export_method: 'app-store-connect'
+            provisioning_profile_uuid: 'REPLACE_WITH_BCSC_PROD_PROV_PROFILE_UUID'
+            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SA_BASE64'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SA_BASE64'
+            artifact_name: 'ios-bcsc-prod'
+            beta_groups: |-
+              IDIM testers for PROD env
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
-      APP_VERSION: ${{ matrix.app_version }}
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+
+      - name: Load variant config
+        run: |
+          set -a
+          source "variants/${{ matrix.variant }}/variant.env"
+          set +a
+          echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
+          echo "IOS_BUNDLE_ID=${IOS_BUNDLE_ID}" >> "$GITHUB_ENV"
+          echo "APP_NAME=${APP_NAME}" >> "$GITHUB_ENV"
 
       - uses: actions/setup-python@v5
         with:
@@ -202,7 +311,14 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-xcode
+          key: ${{ runner.os }}-dd-xcode-${{ matrix.variant }}
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
@@ -225,13 +341,17 @@ jobs:
           git status && \
           git diff ios/Podfile.lock
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
+      - name: Restore Metro cache
+        uses: actions/cache/restore@v4
+        with:
+          path: app/.metro-cache
+          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          restore-keys: |
+            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
+            metro-
+
+      - name: Apply variant configuration
+        run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
       - name: Bump Build No.
         working-directory: app/ios
@@ -247,7 +367,7 @@ jobs:
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
-          build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
+          build_target: ${{ matrix.build_target }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
@@ -255,7 +375,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          google_services_credentials_base64: ${{ secrets[matrix.google_services_secret] }}
           platform: ios
 
       - name: Update APS environment
@@ -263,8 +383,48 @@ jobs:
           plutil -replace aps-environment -string production app/ios/AriesBifold/AriesBifold.entitlements
           plutil -p app/ios/AriesBifold/AriesBifold.entitlements
 
+      - name: Generate iOS signing config
+        run: |
+          set -a; source "variants/${{ matrix.variant }}/variant.env"; set +a
+          cat > export-options.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>teamID</key>
+            <string>L796QSLV3E</string>
+            <key>method</key>
+            <string>${{ matrix.export_method }}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${IOS_BUNDLE_ID}</key>
+              <string>${{ matrix.provisioning_profile_uuid }}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          cat > release-variant.xcconfig <<'XCEOF'
+          DEVELOPMENT_TEAM = L796QSLV3E
+          CODE_SIGN_STYLE = Manual
+          CODE_SIGN_IDENTITY = iPhone Distribution
+          PROVISIONING_PROFILE_SPECIFIER = ${{ matrix.provisioning_profile_uuid }}
+          CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/AriesBifold/AriesBifold.entitlements
+          XCEOF
+          echo "Generated export-options.plist:"
+          cat export-options.plist
+          echo "Generated release-variant.xcconfig:"
+          cat release-variant.xcconfig
+
       - name: Create prod signing credentials
-        # This step will no work in a `fork` because it will not have access
+        # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
         if: github.event.pull_request.head.repo.fork != true
         uses: ./.github/workflows/actions/create-ios-sig-creds
@@ -272,7 +432,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
+          provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -285,7 +445,7 @@ jobs:
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
           -configuration Release \
-          -xcconfig ../../${{ matrix.release_config }} \
+          -xcconfig ../../release-variant.xcconfig \
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
           -allowProvisioningUpdates \
@@ -299,7 +459,7 @@ jobs:
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          export_options: ${{ matrix.export_options }}
+          export_options: export-options.plist
           output_artifact_ref: ${{ matrix.artifact_name }}
 
       - name: Ship to iTunes
@@ -325,41 +485,70 @@ jobs:
       #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
       #   uses: ./.github/workflows/actions/send-rocketchat-notification
       #   with:
-      #     job_title: "BC Wallet iOS Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
+      #     job_title: "iOS Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
       #     job_status: ${{ job.status }}
       #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-secrets, check-vars, early-exit-check]
+    needs: [check-secrets, check-vars, early-exit-check, prepare]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
-          - build_type: 'bc-wallet'
-            app_version: '1.0.27'
-            android_package_name: 'ca.bc.gov.BCWallet'
+          - variant: 'bcwallet-prod'
+            build_target: 'bcwallet'
             jks_base64_secret: 'PLAY_STORE_JKS_BASE64'
             jks_alias_secret: 'PLAY_STORE_JKS_ALIAS'
             jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD'
-            artifact_name: 'android-bc-wallet-artifact'
-          - build_type: 'single-app'
-            app_version: '4.0.0'
-            android_package_name: 'ca.bc.gov.id.servicescard.dev'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64'
+            artifact_name: 'android-bcwallet-prod'
+          - variant: 'bcsc-dev'
+            build_target: 'bcsc'
             jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SADEV'
             jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SADEV'
             jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SADEV'
-            artifact_name: 'android-single-app-artifact'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64'
+            artifact_name: 'android-bcsc-dev'
+          # TODO: Create secrets for bcsc-test/qa/prod variants
+          - variant: 'bcsc-test'
+            build_target: 'bcsc'
+            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SATEST'
+            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SATEST'
+            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SATEST'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64'
+            artifact_name: 'android-bcsc-test'
+          - variant: 'bcsc-qa'
+            build_target: 'bcsc'
+            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SAQA'
+            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SAQA'
+            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SAQA'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64'
+            artifact_name: 'android-bcsc-qa'
+          - variant: 'bcsc-prod'
+            build_target: 'bcsc'
+            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SA'
+            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SA'
+            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SA'
+            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SA_BASE64'
+            artifact_name: 'android-bcsc-prod'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
     env:
-      APP_VERSION: ${{ matrix.app_version }}
-      ANDROID_PACKAGE_NAME: ${{ matrix.android_package_name }}
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Load variant config
+        run: |
+          set -a
+          source "variants/${{ matrix.variant }}/variant.env"
+          set +a
+          echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
+          echo "ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME}" >> "$GITHUB_ENV"
+          echo "APP_NAME=${APP_NAME}" >> "$GITHUB_ENV"
 
       - name: Check initial disk space
         run: |
@@ -383,6 +572,13 @@ jobs:
           cache: 'gradle'
           server-id: github
           settings-path: ${{ github.workspace }}
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
@@ -408,20 +604,30 @@ jobs:
           echo "=== Disk space after cleanup ==="
           df -h
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+      - name: Restore Metro cache
+        uses: actions/cache/restore@v4
+        with:
+          path: app/.metro-cache
+          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          restore-keys: |
+            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
+            metro-
+
+      - name: Download pre-built JS bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: android-jsbundle
+          path: app/android/app/src/main/assets
+
+      - name: Apply variant configuration
+        run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
-          build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
+          build_target: ${{ matrix.build_target }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
@@ -429,7 +635,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          google_services_credentials_base64: ${{ secrets[matrix.google_services_secret] }}
           platform: android
 
       - name: Create release keystore
@@ -438,9 +644,9 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || secrets.PLAY_STORE_JKS_BASE64_SADEV }}
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_BASE64: ${{ secrets[matrix.jks_base64_secret] }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -450,8 +656,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
@@ -459,8 +665,8 @@ jobs:
           sudo mkdir -p /mnt/gradle-cache
           sudo chown -R $USER:$USER /mnt/gradle-cache
 
-          # Build
-          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --verbose ) && \
+          # JS bundle already provided by the prepare job.
+          # Gradle may re-bundle to build/generated/ but src/main/assets/ takes precedence.
           ./gradlew bundleRelease assembleRelease --no-parallel
 
       - name: List Artifacts
@@ -505,7 +711,7 @@ jobs:
       #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
       #   uses: ./.github/workflows/actions/send-rocketchat-notification
       #   with:
-      #     job_title: "BC Wallet Android Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
+      #     job_title: "Android Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
       #     job_status: ${{ job.status }}
       #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -563,28 +769,64 @@ jobs:
       matrix:
         include:
           - platform: 'ios'
-            build_type: 'bc-wallet'
-            artifact_ref: 'ios-bc-wallet-artifact.ipa'
+            variant: 'bcwallet-prod'
+            artifact_ref: 'ios-bcwallet-prod.ipa'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet App'
             artifact_name: 'BCWallet.ipa'
           - platform: 'ios'
-            build_type: 'single-app'
-            artifact_ref: 'ios-single-app-artifact.ipa'
-            sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.ipa'
-            sauce_labs_description: 'iOS BC Wallet Single App'
+            variant: 'bcsc-dev'
+            artifact_ref: 'ios-bcsc-dev.ipa'
+            sauce_labs_name: 'BCSC-Dev-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Services Card Dev'
+            artifact_name: 'BCWallet.ipa'
+          - platform: 'ios'
+            variant: 'bcsc-test'
+            artifact_ref: 'ios-bcsc-test.ipa'
+            sauce_labs_name: 'BCSC-Test-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Services Card Test'
+            artifact_name: 'BCWallet.ipa'
+          - platform: 'ios'
+            variant: 'bcsc-qa'
+            artifact_ref: 'ios-bcsc-qa.ipa'
+            sauce_labs_name: 'BCSC-QA-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Services Card QA'
+            artifact_name: 'BCWallet.ipa'
+          - platform: 'ios'
+            variant: 'bcsc-prod'
+            artifact_ref: 'ios-bcsc-prod.ipa'
+            sauce_labs_name: 'BCSC-Prod-${{ github.run_number }}.ipa'
+            sauce_labs_description: 'iOS BC Services Card Prod'
             artifact_name: 'BCWallet.ipa'
           - platform: 'android'
-            build_type: 'bc-wallet'
-            artifact_ref: 'android-bc-wallet-artifact.aab'
+            variant: 'bcwallet-prod'
+            artifact_ref: 'android-bcwallet-prod.aab'
             sauce_labs_name: 'BCWallet-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet App'
             artifact_name: 'app-release.aab'
           - platform: 'android'
-            build_type: 'single-app'
-            artifact_ref: 'android-single-app-artifact.aab'
-            sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.aab'
-            sauce_labs_description: 'Android BC Wallet Single App'
+            variant: 'bcsc-dev'
+            artifact_ref: 'android-bcsc-dev.aab'
+            sauce_labs_name: 'BCSC-Dev-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Services Card Dev'
+            artifact_name: 'app-release.aab'
+          - platform: 'android'
+            variant: 'bcsc-test'
+            artifact_ref: 'android-bcsc-test.aab'
+            sauce_labs_name: 'BCSC-Test-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Services Card Test'
+            artifact_name: 'app-release.aab'
+          - platform: 'android'
+            variant: 'bcsc-qa'
+            artifact_ref: 'android-bcsc-qa.aab'
+            sauce_labs_name: 'BCSC-QA-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Services Card QA'
+            artifact_name: 'app-release.aab'
+          - platform: 'android'
+            variant: 'bcsc-prod'
+            artifact_ref: 'android-bcsc-prod.aab'
+            sauce_labs_name: 'BCSC-Prod-${{ github.run_number }}.aab'
+            sauce_labs_description: 'Android BC Services Card Prod'
             artifact_name: 'app-release.aab'
     steps:
       - uses: actions/checkout@v4
