@@ -746,12 +746,16 @@ export const useSecureActions = () => {
    * Clears secure state from store (does not delete from native storage).
    * Call this on logout or app lock.
    */
-  const clearSecureState = useCallback(() => {
-    logger.info('Clearing secure state from memory')
-    dispatch({
-      type: BCDispatchAction.CLEAR_SECURE_STATE,
-    })
-  }, [logger, dispatch])
+  const clearSecureState = useCallback(
+    (secureState?: Partial<BCSCSecureState>) => {
+      logger.info('Clearing secure state from memory')
+      dispatch({
+        type: BCDispatchAction.CLEAR_SECURE_STATE,
+        payload: [secureState],
+      })
+    },
+    [logger, dispatch]
+  )
 
   /**
    * Logs out the user by clearing secure state from memory and marking as not authenticated.
