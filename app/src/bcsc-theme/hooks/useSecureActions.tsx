@@ -599,6 +599,25 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Remove a specific evidence type from secure state and persist to native storage
+   */
+  const removeEvidenceByType = useCallback(
+    async (evidenceType: EvidenceType) => {
+      const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
+        (evidence) => evidence.evidenceType.evidence_type !== evidenceType.evidence_type
+      )
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+    },
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+  )
+
+  /**
    * Remove incomplete evidence entries and persist to native storage
    */
   const removeIncompleteEvidence = useCallback(async () => {
@@ -843,6 +862,7 @@ export const useSecureActions = () => {
     addEvidenceType,
     updateEvidenceMetadata,
     updateEvidenceDocumentNumber,
+    removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,
     handleSuccessfulAuth,
