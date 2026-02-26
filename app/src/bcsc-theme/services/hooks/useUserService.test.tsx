@@ -96,6 +96,40 @@ describe('useUserService', () => {
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(data).toEqual({ user: mockUserData, picture: undefined })
     })
+
+    it('should show alert on JSON deserialization error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { failedToDeserializeJsonAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
+      expect(userApi.getUserInfo).toHaveBeenCalled()
+      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalled()
+    })
+
+    it('should show alert on JWE decryption error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { unableToDecryptJweAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
+      expect(userApi.getUserInfo).toHaveBeenCalled()
+      expect(mockAlerts.unableToDecryptJweAlert).toHaveBeenCalled()
+    })
   })
 
   it('should return memoized functions', () => {

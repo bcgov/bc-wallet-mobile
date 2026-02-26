@@ -207,6 +207,26 @@ describe('useRegistrationService', () => {
     })
   })
 
+  describe('App error ERR_109_FAILED_TO_DESERIALIZE_JSON', () => {
+    it('should show the alert for the app error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
+      const registrationApi = {
+        updateRegistration: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const failedToDeserializeJsonAlert = jest.fn()
+      const mockAlerts = { failedToDeserializeJsonAlert }
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useRegistrationService())
+
+      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      expect(failedToDeserializeJsonAlert).toHaveBeenCalled()
+    })
+  })
+
   it('should return memoized functions', () => {
     const registrationApi = {
       register: jest.fn(),
