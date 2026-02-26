@@ -1,4 +1,6 @@
+import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { WHERE_TO_USE_URL } from '@/constants'
 import FirstTutorial from '@assets/img/FirstTutorial.jpg'
 import SecondTutorial from '@assets/img/SecondTutorial.jpg'
 import ThirdTutorial from '@assets/img/ThirdTutorial.jpg'
@@ -131,6 +133,20 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
       <ThemedText variant={'headingThree'}>{t(pageData.headerContent)}</ThemedText>
       <ThemedText>{t(pageData.bodyContentA)}</ThemedText>
       {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
+      {pageData.key === 'access' ? (
+        <View style={{ marginTop: Spacing.xxl }}>
+        <CardButton
+          title={t('BCSC.Home.WhereToUseTitle')}
+          onPress={() =>
+            navigation.navigate(BCSCScreens.OnboardingWebView, {
+              title: t('BCSC.Onboarding.CarouselServicesHeader'),
+              url: WHERE_TO_USE_URL,
+            })
+          }
+          endIcon="open-in-new"
+        />
+        </View>
+      ) : null}
     </View>
   )
 
