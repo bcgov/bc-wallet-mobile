@@ -599,7 +599,7 @@ export const useSecureActions = () => {
   )
 
   /**
-   * Remove a specific evidence type from secure state and persist to native storage
+   * Remove a specific evidence type from secure state
    */
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
