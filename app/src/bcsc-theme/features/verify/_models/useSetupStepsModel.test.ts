@@ -1,14 +1,17 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
+import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { getAccount, getAccountSecurityMethod } from '@mocks/react-native-bcsc-core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
+jest.mock('react-native-bcsc-core')
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/hooks/useSetupSteps')
 jest.mock('@bifold/core', () => {
@@ -23,12 +26,16 @@ jest.mock('@bifold/core', () => {
 const mockUpdateTokens = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationRequest = jest.fn()
 const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
+const mockClearSecureState = jest.fn()
+const mockDeleteVerificationData = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateTokens: mockUpdateTokens,
     updateVerificationRequest: mockUpdateVerificationRequest,
     updateAccountFlags: mockUpdateAccountFlags,
+    clearSecureState: mockClearSecureState,
+    deleteVerificationData: mockDeleteVerificationData,
   })),
 }))
 
@@ -59,6 +66,7 @@ describe('useSetupStepsModel', () => {
       verificationRequestId: 'test-verification-id',
       additionalEvidenceData: [],
       cardProcess: 'combined',
+      walletKey: 'wallet-key',
     },
   }
 
@@ -456,6 +464,41 @@ describe('useSetupStepsModel', () => {
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('handleResetCardRegistration', () => {
+    it('should throw error if no account', async () => {
+      getAccount.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should delete and clear all registration and verification data', async () => {
+      const mockDeleteRegistration = jest.fn()
+      const mockRegister = jest.fn()
+      getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+      getAccountSecurityMethod.mockResolvedValue('DeviceAuth')
+      jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue({
+        deleteRegistration: mockDeleteRegistration,
+        register: mockRegister,
+      } as any)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockDeleteRegistration).toHaveBeenCalledWith('test-client-id')
+      expect(mockClearSecureState).toHaveBeenCalledWith({
+        hasAccount: true,
+        isHydrated: true,
+        walletKey: 'wallet-key',
+      })
+      expect(mockDeleteVerificationData).toHaveBeenCalledWith()
     })
   })
 })
