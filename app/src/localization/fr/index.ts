@@ -1147,6 +1147,11 @@ const translation = {
       "Title": "Problem with Connection (FR)",
       "Description": "Please try again. (FR)"
     },
+    "FactoryReset": {
+      "Title": "Problem with App (FR)",
+      "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
+      "Action1": "Reset App (FR)"
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

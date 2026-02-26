@@ -29,6 +29,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
   const registrationService = useRegistrationService()
+  const { factoryResetAlert } = useAlerts(navigation)
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -49,24 +50,35 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
           hasAccount: true,
           isHydrated: true,
           walletKey: store.bcscSecure.walletKey, // used for authentication
+          registrationAccessToken: store.bcscSecure.registrationAccessToken, // used for authentication
         })
 
-        // 2. Get the previous device auth for re-registering the account
-        const securityMethod = await BcscCore.getAccountSecurityMethod()
-
-        await Promise.all([
+        const [securityMethod] = await Promise.all([
+          // 2. Get the previous device auth for re-registering the account
+          BcscCore.getAccountSecurityMethod(),
           // 3. Clean up registration on the backend
           registrationService.deleteRegistration(account.clientID),
-          // 4. Re-register the device and generate a new account (prevents "client is in invalid state/statue" errors)
-          registrationService.register(securityMethod),
-          // 4. Delete any persisted verification data in device file system
-          deleteVerificationData(),
         ])
+
+        // 4. Delete any persisted verification data in device file system
+        await deleteVerificationData()
+        // 5. Re-register the device and generate a new account (prevents "client is in invalid state/statue" errors)
+        await registrationService.register(securityMethod)
       })
     } catch (error) {
       logger.error('[handleResetCardRegistration] Error resetting card registration', error as Error)
+      // If reset fails, the app could be in an inconsistent state that may cause crashes or other issues, so we alert the user and make them factory reset
+      factoryResetAlert()
     }
-  }, [clearSecureState, deleteVerificationData, logger, registrationService, store.bcscSecure.walletKey])
+  }, [
+    clearSecureState,
+    deleteVerificationData,
+    factoryResetAlert,
+    logger,
+    registrationService,
+    store.bcscSecure.registrationAccessToken,
+    store.bcscSecure.walletKey,
+  ])
 
   useFocusEffect(
     useCallback(() => {

@@ -114,6 +114,30 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     })
   }, [emitAlert, logger, t])
 
+  // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
+  const factoryResetAlert = useCallback(() => {
+    emitAlert(t('Alerts.FactoryReset.Title'), t('Alerts.FactoryReset.Description'), {
+      event: AppEventCode.FACTORY_RESET,
+      actions: [
+        {
+          text: t('Alerts.FactoryReset.Action1'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await factoryReset()
+
+              if (!result.success) {
+                throw result.error
+              }
+            } catch (error) {
+              logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
+            }
+          },
+        },
+      ],
+    })
+  }, [emitAlert, logger, t, factoryReset])
+
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
       event: AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST,
@@ -231,6 +255,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      factoryResetAlert,
       problemWithAppAlert: _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       unsecuredNetworkAlert: _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
       serverTimeoutAlert: _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),
@@ -255,14 +280,15 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
     }),
     [
-      _createBasicAlert,
-      _createProblemWithAccountAlert,
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
+      factoryResetAlert,
+      _createBasicAlert,
+      _createProblemWithAccountAlert,
     ]
   )
 }
