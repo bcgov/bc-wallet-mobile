@@ -42,14 +42,14 @@ describe('IntroCarouselScreen', () => {
       expect(getByText('BCSC.Onboarding.CarouselServicesContent')).toBeTruthy()
     })
 
-    it('should display the "Where to use" button on the first carousel page', () => {
-      const { getByText } = render(
+    it('should display the "Where to use" button only on the first carousel page', () => {
+      const { getAllByTestId } = render(
         <BasicAppContext>
           <IntroCarouselScreen navigation={mockNavigation as never} />
         </BasicAppContext>
       )
 
-      expect(getByText('BCSC.Home.WhereToUseTitle')).toBeTruthy()
+      expect(getAllByTestId(testIdWithKey('CardButton-BCSC.Home.WhereToUseTitle'))).toHaveLength(1)
     })
 
     it('should display all three carousel pages', () => {
@@ -67,13 +67,13 @@ describe('IntroCarouselScreen', () => {
 
   describe('Navigation', () => {
     it('should navigate to OnboardingWebView when "Where to use" button is pressed', () => {
-      const { getByText } = render(
+      const { getByTestId } = render(
         <BasicAppContext>
           <IntroCarouselScreen navigation={mockNavigation as never} />
         </BasicAppContext>
       )
 
-      fireEvent.press(getByText('BCSC.Home.WhereToUseTitle'))
+      fireEvent.press(getByTestId(testIdWithKey('CardButton-BCSC.Home.WhereToUseTitle')))
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingWebView, {
         title: 'BCSC.Onboarding.CarouselServicesHeader',
