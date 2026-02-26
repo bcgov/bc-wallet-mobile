@@ -117,7 +117,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
   // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
   const factoryResetAlert = useCallback(() => {
     emitAlert(t('Alerts.FactoryReset.Title'), t('Alerts.FactoryReset.Description'), {
-      event: AppEventCode.FACTORY_RESET,
+      event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
       actions: [
         {
           text: t('Alerts.FactoryReset.Action1'),

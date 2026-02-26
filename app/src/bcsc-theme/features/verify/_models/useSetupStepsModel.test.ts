@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
 import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -476,6 +477,20 @@ describe('useSetupStepsModel', () => {
       await result.current.handleResetCardRegistration()
 
       expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should display factory reset alert if error', async () => {
+      const factoryResetAlertSpy = jest
+        .spyOn(useAlertsModule, 'useAlerts')
+        .mockReturnValue({ factoryResetAlert: jest.fn() } as any)
+      getAccount.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockLogger.error).toHaveBeenCalled()
+      expect(factoryResetAlertSpy).toHaveBeenCalled()
     })
 
     it('should delete and clear all registration and verification data', async () => {

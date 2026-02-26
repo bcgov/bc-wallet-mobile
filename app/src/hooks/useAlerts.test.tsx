@@ -1,3 +1,4 @@
+import * as useFactoryResetModule from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { mockUseServices, mockUseStore } from '@/bcsc-theme/hooks/useCreateSystemChecks.test'
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
@@ -719,6 +720,49 @@ describe('useAlerts', () => {
       action.onPress()
 
       expect(mockAction).toHaveBeenCalled()
+    })
+  })
+
+  describe('factoryResetAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.factoryResetAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.FactoryReset.Title', 'Alerts.FactoryReset.Description', {
+        event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
+        actions: [
+          {
+            text: 'Alerts.FactoryReset.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
+        ],
+      })
+    })
+
+    it('onPress should factory reset the app', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      const mockFactoryReset = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      jest.spyOn(useFactoryResetModule, 'useFactoryReset').mockReturnValue(mockFactoryReset as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.factoryResetAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.FactoryReset.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockFactoryReset).toHaveBeenCalled()
     })
   })
 })
