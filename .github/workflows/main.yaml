@@ -207,12 +207,15 @@ jobs:
           retention-days: 1
 
   # ─── Android Build-Cache Warm-Up ──────────────────────────────────────
-  # Runs a full bcwallet-prod (default) release build using the committed
-  # debug keystore.  The Gradle build cache captures task outputs that are
+  # Runs a release build (minus JS bundling) using the committed debug
+  # keystore.  The Gradle build cache captures task outputs that are
   # identical across all variants: CMake/NDK native compilation (4 ABIs),
   # Kotlin & Java compilation of library modules, and resource processing.
   # Variant builds then restore this cache and only rebuild the delta
   # (package name, app icons, strings, signing, final packaging).
+  #
+  # Build cache is stored at /mnt/build-cache (separate from
+  # GRADLE_USER_HOME to avoid overlap with setup-java's dependency cache).
   #
   # Runs in parallel with `prepare` and `build-ios`, so it does NOT
   # extend the iOS critical path.
@@ -224,6 +227,11 @@ jobs:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare directories
+        run: |
+          sudo mkdir -p /mnt/gradle-cache /mnt/build-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache /mnt/build-cache
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -262,24 +270,47 @@ jobs:
           echo "=== Disk space after cleanup ==="
           df -h
 
+      - name: Restore Gradle build cache (cross-run)
+        uses: actions/cache/restore@v4
+        with:
+          path: /mnt/build-cache
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
+            gradle-build-cache-
+
       - name: Warm Gradle build cache
         working-directory: app/android
+        continue-on-error: true
         run: |
-          sudo mkdir -p /mnt/gradle-cache
-          sudo chown -R $USER:$USER /mnt/gradle-cache
-
-          # Provide a placeholder JS bundle so Gradle doesn't launch Metro
+          # Provide a minimal valid JS bundle so asset merge doesn't fail.
+          # We skip the actual Metro bundling task to avoid running Metro.
           mkdir -p app/src/main/assets
-          echo "// warm-up placeholder" > app/src/main/assets/index.android.bundle
+          echo 'var __DEV__=false;' > app/src/main/assets/index.android.bundle
 
-          # Full release build using debug-keystore fallback (no secrets needed).
-          # The build cache captures CMake/NDK, Kotlin, Java, and resource outputs.
-          ./gradlew assembleRelease --build-cache --no-parallel
+          # Build everything EXCEPT the JS bundling task.
+          # This populates the build cache with native compilation (CMake/NDK),
+          # Kotlin/Java compilation, and resource processing outputs.
+          ./gradlew assembleRelease \
+            --build-cache \
+            -Dorg.gradle.caching.local.directory=/mnt/build-cache \
+            -x createBundleReleaseJsAndAssets \
+            --no-parallel
+
+      - name: Inspect build cache
+        if: always()
+        run: |
+          echo "=== Build cache contents ==="
+          du -sh /mnt/build-cache 2>/dev/null || echo "Build cache dir not found"
+          ls -la /mnt/build-cache/ 2>/dev/null | head -20 || true
+          echo "=== Disk space ==="
+          df -h
 
       - name: Save Gradle build cache
+        if: always()
         uses: actions/cache/save@v4
         with:
-          path: /mnt/gradle-cache/caches/build-cache-1
+          path: /mnt/build-cache
           key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
 
   build-ios:
@@ -650,8 +681,8 @@ jobs:
 
       - name: Prepare Gradle cache directory
         run: |
-          sudo mkdir -p /mnt/gradle-cache
-          sudo chown -R $USER:$USER /mnt/gradle-cache
+          sudo mkdir -p /mnt/gradle-cache /mnt/build-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache /mnt/build-cache
 
       - name: Load variant config
         run: |
@@ -719,7 +750,7 @@ jobs:
       - name: Restore Gradle build cache
         uses: actions/cache/restore@v4
         with:
-          path: /mnt/gradle-cache/caches/build-cache-1
+          path: /mnt/build-cache
           key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
           restore-keys: |
             gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
@@ -784,7 +815,17 @@ jobs:
         run: |
           # JS bundle already provided by the prepare job.
           # Gradle may re-bundle to build/generated/ but src/main/assets/ takes precedence.
-          ./gradlew bundleRelease assembleRelease --build-cache --no-parallel
+          ./gradlew bundleRelease assembleRelease \
+            --build-cache \
+            -Dorg.gradle.caching.local.directory=/mnt/build-cache \
+            --no-parallel
+
+      - name: Save Gradle build cache (cross-run)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /mnt/build-cache
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}-${{ matrix.variant }}
 
       - name: List Artifacts
         run: |
