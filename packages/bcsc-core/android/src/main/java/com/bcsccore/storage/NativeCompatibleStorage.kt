@@ -531,16 +531,22 @@ class NativeCompatibleStorage(
         issuerName: String,
         accountUuid: String,
     ): NativeAuthorizationRequest? {
-        // V3 stores provider at: {filesDir}/{issuerName}/{accountUuid}/provider
-        val providerPath = issuerName + File.separator + accountUuid + File.separator + "provider"
+        // V3 stores provider at: {filesDir}/{issuerName}/{accountUuid}/providers
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
         val providerFile = File(context.filesDir, providerPath)
 
         if (!providerFile.exists()) {
-            Log.d(TAG, "V3 provider file not found at: ${providerFile.absolutePath}")
+            Log.d(
+                TAG,
+                "readAuthorizationRequestFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
+            )
             return null
         }
 
-        Log.d(TAG, "Attempting to read v3 provider file: ${providerFile.absolutePath}")
+        Log.d(
+            TAG,
+            "readAuthorizationRequestFromV3Provider: Attempting to read v3 provider file: ${providerFile.absolutePath}",
+        )
 
         val jsonContent = readEncryptedFile(providerFile) ?: return null
 
@@ -567,6 +573,7 @@ class NativeCompatibleStorage(
                 verificationUriVideo = authReqJson.optString("verification_uri_video", null),
                 backCheckVerificationId = authReqJson.optString("backCheckVerificationId", null),
                 evidenceUploadUri = authReqJson.optString("evidence_upload_uri", null),
+                cardProcess = authReqJson.optString("process", null),
                 // Note: Complex objects like Address and Date fields would need more parsing
             )
         } catch (e: Exception) {

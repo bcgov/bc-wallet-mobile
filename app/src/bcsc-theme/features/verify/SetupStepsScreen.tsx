@@ -223,7 +223,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
       {accountType === AccountSetupType.AddAccount ? renderAddAccountSteps() : renderTransferAccountSteps()}
 
-      {store.bcscSecure.userSubmittedVerificationVideo ? (
+      {store.bcscSecure.userSubmittedVerificationVideo || store.bcscSecure.verificationRequestId ? (
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity

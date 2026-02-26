@@ -2633,6 +2633,7 @@ class BcscCoreModule(
             val account = getAccountSync()
             if (account == null) {
                 // No account yet - return null (not an error)
+                Log.d(NAME, "getAuthorizationRequest: No account")
                 promise.resolve(null)
                 return
             }
@@ -2641,6 +2642,7 @@ class BcscCoreModule(
             val issuer = account.getString("issuer")
 
             if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                Log.d(NAME, "getAuthorizationRequest: No issuer")
                 promise.resolve(null)
                 return
             }
@@ -2648,7 +2650,7 @@ class BcscCoreModule(
             val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
 
             // First try to read from our v4 storage location
-            var authRequest = nativeStorage.readAuthorizationRequest(issuerName, accountId)
+            var authRequest: NativeAuthorizationRequest? = nativeStorage.readAuthorizationRequest(issuerName, accountId)
 
             // If not found, try to read from v3 Provider file for migration
             if (authRequest == null) {
@@ -2663,6 +2665,7 @@ class BcscCoreModule(
             }
 
             if (authRequest == null) {
+                Log.d(NAME, "getAuthorizationRequest: No authorization request found")
                 promise.resolve(null)
                 return
             }
@@ -3321,16 +3324,14 @@ class BcscCoreModule(
                 "$issuerName${File.separator}$accountId${File.separator}providers",
             )
 
-
-            if (!providersFile.exists()) {
-                Log.d(
-                    NAME,
-                    "getCredential: No fallback providers file found under ${reactApplicationContext.filesDir.absolutePath}${File.separator}$issuerName${File.separator}$accountId",
-                )
-                return null
-            }
+        if (!providersFile.exists()) {
+            Log.d(
+                NAME,
+                "getCredential: No fallback providers file found under ${reactApplicationContext.filesDir.absolutePath}${File.separator}$issuerName${File.separator}$accountId",
+            )
+            return null
+        }
         return nativeStorage.readEncryptedFile(providersFile)?.takeIf { it.isNotBlank() }
-        
     }
 
     /**
