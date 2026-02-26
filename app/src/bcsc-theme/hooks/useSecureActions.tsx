@@ -566,7 +566,7 @@ export const useSecureActions = () => {
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, metadata } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, metadata } : evidence
       )
 
       dispatch({
@@ -585,7 +585,7 @@ export const useSecureActions = () => {
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, documentNumber } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
       )
 
       dispatch({

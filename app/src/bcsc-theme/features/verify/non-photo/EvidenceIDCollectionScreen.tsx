@@ -246,7 +246,12 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   const handleOnCancel = async () => {
-    await removeEvidenceByType(cardType)
+    try {
+      await removeEvidenceByType(cardType)
+    } catch (error) {
+      logger.error('Error removing evidence on cancel', error as Error)
+    }
+
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
