@@ -31,10 +31,23 @@ jobs:
             "PLAY_STORE_JKS_BASE64_SADEV"
             "PLAY_STORE_JKS_ALIAS_SADEV"
             "PLAY_STORE_JKS_PASSWD_SADEV"
+            "PLAY_STORE_JKS_BASE64_SATEST"
+            "PLAY_STORE_JKS_ALIAS_SATEST"
+            "PLAY_STORE_JKS_PASSWD_SATEST"
+            "PLAY_STORE_JKS_BASE64_SAQA"
+            "PLAY_STORE_JKS_ALIAS_SAQA"
+            "PLAY_STORE_JKS_PASSWD_SAQA"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA"
             "GOOGLE_SERVICES_CREDENTIALS_IOS"
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
+            "PROVISIONING_PROFILE_SADEV"
+            "PROVISIONING_PROFILE_SATEST"
+            "PROVISIONING_PROFILE_SAQA"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -56,6 +69,19 @@ jobs:
           GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          PLAY_STORE_JKS_BASE64_SATEST: ${{ secrets.PLAY_STORE_JKS_BASE64_SATEST }}
+          PLAY_STORE_JKS_ALIAS_SATEST: ${{ secrets.PLAY_STORE_JKS_ALIAS_SATEST }}
+          PLAY_STORE_JKS_PASSWD_SATEST: ${{ secrets.PLAY_STORE_JKS_PASSWD_SATEST }}
+          PLAY_STORE_JKS_BASE64_SAQA: ${{ secrets.PLAY_STORE_JKS_BASE64_SAQA }}
+          PLAY_STORE_JKS_ALIAS_SAQA: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD_SAQA: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
+          PROVISIONING_PROFILE_SADEV: ${{ secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
+          PROVISIONING_PROFILE_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 }}
+          PROVISIONING_PROFILE_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
     steps:
@@ -129,27 +155,50 @@ jobs:
             echo "result=false" >> $GITHUB_OUTPUT
           fi
 
+  prepare-matrix:
+    runs-on: ubuntu-22.04
+    outputs:
+      ios_matrix: ${{ steps.set-matrix.outputs.ios_matrix }}
+      android_matrix: ${{ steps.set-matrix.outputs.android_matrix }}
+    steps:
+      - id: set-matrix
+        shell: bash
+        run: |
+          # Base entries (built on PRs and pushes)
+          BASE_IOS=$(jq -nc '[
+            {"build_type":"bc-wallet","app_version":"1.0.27","export_options":"export-options-bcw.plist","release_config":"release-bcw.xcconfig","artifact_name":"ios-bc-wallet-artifact","beta_groups":"The Team\nIDIM Team"},
+            {"build_type":"single-app-dev","app_version":"4.0.0","export_options":"export-options-sa-dev.plist","release_config":"release-sa-dev.xcconfig","artifact_name":"ios-single-app-dev-artifact","beta_groups":"IDIM testers for DEV env"}
+          ]')
+          BASE_ANDROID=$(jq -nc '[
+            {"build_type":"bc-wallet","app_version":"1.0.27","android_package_name":"ca.bc.gov.BCWallet","artifact_name":"android-bc-wallet-artifact"},
+            {"build_type":"single-app-dev","app_version":"4.0.0","android_package_name":"ca.bc.gov.id.servicescard.dev","artifact_name":"android-single-app-dev-artifact"}
+          ]')
+
+          # Extended entries (only built on push to main / dispatch)
+          EXTRA_IOS=$(jq -nc '[
+            {"build_type":"single-app-test","app_version":"4.0.0","export_options":"export-options-sa-test.plist","release_config":"release-sa-test.xcconfig","artifact_name":"ios-single-app-test-artifact","beta_groups":"IDIM Testers for TEST env"},
+            {"build_type":"single-app-qa","app_version":"4.0.0","export_options":"export-options-sa-qa.plist","release_config":"release-sa-qa.xcconfig","artifact_name":"ios-single-app-qa-artifact","beta_groups":"IDIM Testers for QA env"}
+          ]')
+          EXTRA_ANDROID=$(jq -nc '[
+            {"build_type":"single-app-test","app_version":"4.0.0","android_package_name":"ca.bc.gov.id.servicescard.test","artifact_name":"android-single-app-test-artifact"},
+            {"build_type":"single-app-qa","app_version":"4.0.0","android_package_name":"ca.bc.gov.id.servicescard.qa","artifact_name":"android-single-app-qa-artifact"}
+          ]')
+
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            echo "ios_matrix=${BASE_IOS}" >> "$GITHUB_OUTPUT"
+            echo "android_matrix=${BASE_ANDROID}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ios_matrix=$(jq -nc --argjson a "$BASE_IOS" --argjson b "$EXTRA_IOS" '$a + $b')" >> "$GITHUB_OUTPUT"
+            echo "android_matrix=$(jq -nc --argjson a "$BASE_ANDROID" --argjson b "$EXTRA_ANDROID" '$a + $b')" >> "$GITHUB_OUTPUT"
+          fi
+
   build-ios:
-    needs: [check-secrets, check-vars, early-exit-check]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-matrix]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - build_type: 'bc-wallet'
-            app_version: '1.0.27'
-            export_options: 'export-options-bcw.plist'
-            release_config: 'release-bcw.xcconfig'
-            artifact_name: 'ios-bc-wallet-artifact'
-            beta_groups: |-
-              The Team
-              IDIM Team
-          - build_type: 'single-app'
-            app_version: '4.0.0'
-            export_options: 'export-options-sa.plist'
-            release_config: 'release-sa.xcconfig'
-            artifact_name: 'ios-single-app-artifact'
-            beta_groups: |-
-              IDIM testers for DEV env
+        include: ${{ fromJSON(needs.prepare-matrix.outputs.ios_matrix) }}
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -226,12 +275,17 @@ jobs:
           git diff ios/Podfile.lock
 
       - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
+        if: startsWith(matrix.build_type, 'single-app')
         run: |
-          echo "Patching for Single App build"
+          echo "Patching for ${{ matrix.build_type }} build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
+          case "${{ matrix.build_type }}" in
+            single-app-dev)  git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch ;;
+            single-app-test) git am < ./patch/0005-chore-ios-app-to-bcsc-test.patch ;;
+            single-app-qa)   git am < ./patch/0006-chore-ios-app-to-bcsc-qa.patch ;;
+            *) echo "error: Unknown build type '${{ matrix.build_type }}'"; exit 1 ;;
+          esac
 
       - name: Bump Build No.
         working-directory: app/ios
@@ -247,6 +301,8 @@ jobs:
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
+          # build_target is the BUILD_TARGET .env value, not the build_type.
+          # All single-app-* variants use 'bcsc'.
           build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
@@ -255,7 +311,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
           platform: ios
 
       - name: Update APS environment
@@ -272,7 +328,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
+          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || matrix.build_type == 'single-app-dev' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -302,6 +358,8 @@ jobs:
           export_options: ${{ matrix.export_options }}
           output_artifact_ref: ${{ matrix.artifact_name }}
 
+      # TODO(#3259): Gate publishing per build_type — both iOS and Android must
+      # succeed before either publishes for a given build_type.
       - name: Ship to iTunes
         if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
@@ -331,25 +389,12 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-secrets, check-vars, early-exit-check]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-matrix]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - build_type: 'bc-wallet'
-            app_version: '1.0.27'
-            android_package_name: 'ca.bc.gov.BCWallet'
-            jks_base64_secret: 'PLAY_STORE_JKS_BASE64'
-            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS'
-            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD'
-            artifact_name: 'android-bc-wallet-artifact'
-          - build_type: 'single-app'
-            app_version: '4.0.0'
-            android_package_name: 'ca.bc.gov.id.servicescard.dev'
-            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SADEV'
-            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SADEV'
-            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SADEV'
-            artifact_name: 'android-single-app-artifact'
+        include: ${{ fromJSON(needs.prepare-matrix.outputs.android_matrix) }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -409,18 +454,25 @@ jobs:
           df -h
 
       - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
+        if: startsWith(matrix.build_type, 'single-app')
         run: |
-          echo "Patching for Single App build"
+          echo "Patching for ${{ matrix.build_type }} build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+          case "${{ matrix.build_type }}" in
+            single-app-dev)  git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch ;;
+            single-app-test) git am < ./patch/0003-chore-android-app-to-bcsc-test.patch ;;
+            single-app-qa)   git am < ./patch/0004-chore-android-app-to-bcsc-qa.patch ;;
+            *) echo "error: Unknown build type '${{ matrix.build_type }}'"; exit 1 ;;
+          esac
 
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
+          # build_target is the BUILD_TARGET .env value, not the build_type.
+          # All single-app-* variants use 'bcsc'.
           build_target: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
@@ -429,7 +481,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          google_services_credentials_base64: ${{ matrix.build_type == 'bc-wallet' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 || matrix.build_type == 'single-app-dev' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 || matrix.build_type == 'single-app-test' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 || matrix.build_type == 'single-app-qa' && secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
           platform: android
 
       - name: Create release keystore
@@ -438,9 +490,9 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || secrets.PLAY_STORE_JKS_BASE64_SADEV }}
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_BASE64_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_BASE64_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_BASE64_SAQA }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -450,8 +502,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_ALIAS_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || matrix.build_type == 'single-app-dev' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || matrix.build_type == 'single-app-test' && secrets.PLAY_STORE_JKS_PASSWD_SATEST || matrix.build_type == 'single-app-qa' && secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
@@ -484,6 +536,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # TODO(#3259): Gate publishing per build_type — both iOS and Android must
+      # succeed before either publishes for a given build_type.
       - name: Ship to Google Play
         if: github.ref_name == 'main'
         # working-directory: app/android
@@ -569,8 +623,8 @@ jobs:
             sauce_labs_description: 'iOS BC Wallet App'
             artifact_name: 'BCWallet.ipa'
           - platform: 'ios'
-            build_type: 'single-app'
-            artifact_ref: 'ios-single-app-artifact.ipa'
+            build_type: 'single-app-dev'
+            artifact_ref: 'ios-single-app-dev-artifact.ipa'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.ipa'
             sauce_labs_description: 'iOS BC Wallet Single App'
             artifact_name: 'BCWallet.ipa'
@@ -581,8 +635,8 @@ jobs:
             sauce_labs_description: 'Android BC Wallet App'
             artifact_name: 'app-release.aab'
           - platform: 'android'
-            build_type: 'single-app'
-            artifact_ref: 'android-single-app-artifact.aab'
+            build_type: 'single-app-dev'
+            artifact_ref: 'android-single-app-dev-artifact.aab'
             sauce_labs_name: 'BCWallet-SingleApp-${{ github.run_number }}.aab'
             sauce_labs_description: 'Android BC Wallet Single App'
             artifact_name: 'app-release.aab'

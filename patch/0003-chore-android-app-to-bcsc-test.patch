@@ -1,7 +1,7 @@
 From 1c448f9128a9c0efdd4a817c83738a22c5549e47 Mon Sep 17 00:00:00 2001
 From: Bryce McMath <bryce.j.mcmath@gmail.com>
 Date: Fri, 23 Jan 2026 16:53:37 -0800
-Subject: [PATCH] chore: android app to bcsc dev
+Subject: [PATCH] chore: android app to bcsc test
 
 Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
@@ -94,13 +94,13 @@ index 9e2f136e..5d0333df 100644
  android_build_config(
      name = "build_config",
 -    package = "ca.bc.gov.BCWallet",
-+    package = "ca.bc.gov.id.servicescard.dev",
++    package = "ca.bc.gov.id.servicescard.test",
  )
  
  android_resource(
      name = "res",
 -    package = "ca.bc.gov.BCWallet",
-+    package = "ca.bc.gov.id.servicescard.dev",
++    package = "ca.bc.gov.id.servicescard.test",
      res = "src/main/res",
  )
  
@@ -113,7 +113,7 @@ index f6758ac4..fe17abd6 100644
  
  android {
 -    namespace 'ca.bc.gov.BCWallet'
-+    namespace 'ca.bc.gov.id.servicescard.dev'
++    namespace 'ca.bc.gov.id.servicescard.test'
      ndkVersion rootProject.ext.ndkVersion
      compileSdkVersion rootProject.ext.compileSdkVersion
      buildToolsVersion rootProject.ext.buildToolsVersion
@@ -122,7 +122,7 @@ index f6758ac4..fe17abd6 100644
  
      defaultConfig {
 -        applicationId "ca.bc.gov.BCWallet"
-+        applicationId "ca.bc.gov.id.servicescard.dev"
++        applicationId "ca.bc.gov.id.servicescard.test"
          minSdkVersion rootProject.ext.minSdkVersion
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
@@ -132,7 +132,7 @@ index c19e6dc1..3690f892 100644
 +++ b/app/android/app/src/main/AndroidManifest.xml
 @@ -1,4 +1,4 @@
 -<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.bc.gov.BCWallet"
-+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.bc.gov.id.servicescard.dev"
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.bc.gov.id.servicescard.test"
    xmlns:tools="http://schemas.android.com/tools">
    <uses-feature android:name="android.hardware.camera" />
    <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -462,7 +462,7 @@ index 191b0f8e..9269b9a3 100644
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
 @@ -1,4 +1,4 @@
 -package ca.bc.gov.BCWallet
-+package ca.bc.gov.id.servicescard.dev
++package ca.bc.gov.id.servicescard.test
  
  import android.content.Intent
  import android.content.res.Configuration
@@ -472,7 +472,7 @@ index 182dd279..a4fd0ed6 100644
 +++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
 @@ -1,4 +1,4 @@
 -package ca.bc.gov.BCWallet
-+package ca.bc.gov.id.servicescard.dev
++package ca.bc.gov.id.servicescard.test
  
  import android.app.Application
  import com.facebook.react.PackageList
@@ -3044,7 +3044,7 @@ index 33b1443a..dc20330f 100644
 @@ -1,3 +1,3 @@
  <resources>
 -    <string name="app_name">BC Wallet</string>
-+    <string name="app_name">BC Services Card Dev</string>
++    <string name="app_name">BC Services Card Test</string>
  </resources>
 diff --git a/app/react-native.config.js b/app/react-native.config.js
 index 9934acc6..76822fe4 100644
@@ -3055,7 +3055,7 @@ index 9934acc6..76822fe4 100644
    project: {
      android: {
 -      packageName: 'ca.bc.gov.BCWallet',
-+      packageName: 'ca.bc.gov.id.servicescard.dev',
++      packageName: 'ca.bc.gov.id.servicescard.test',
      },
    },
  }
