@@ -77,3 +77,4 @@ app/vendor/
 
 coverage/
 .settings/
+tmp/
