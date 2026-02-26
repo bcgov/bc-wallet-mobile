@@ -1,6 +1,7 @@
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState } from '@/store'
 import {
   Button,
@@ -106,6 +107,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   /**
+   * Checks if the birthdate is of minimum age.
+   */
+  const isOfMinimumAge = (value: string, minimumAge: number): boolean => {
+    return moment().diff(moment(value, 'YYYY-MM-DD'), 'years') >= minimumAge
+  }
+
+  /**
    * Validates the birth date format (YYYY-MM-DD) and checks if it's a valid date.
    */
   const isDateValid = (value?: string): boolean => {
@@ -149,6 +157,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
     if (!isDateValid(values.birthDate)) {
       errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateError')
+    }
+
+    if (isDateValid(values.birthDate) && !isOfMinimumAge(values.birthDate, MINIMUM_VERIFICATION_AGE)) {
+      errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge: MINIMUM_VERIFICATION_AGE })
     }
 
     if (values.middleNames && values.middleNames.split(' ').length > 2) {
