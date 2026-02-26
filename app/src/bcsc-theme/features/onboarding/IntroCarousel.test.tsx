@@ -1,5 +1,5 @@
-import { BCSCScreens } from '@bcsc-theme/types/navigators'
 import { WHERE_TO_USE_URL } from '@/constants'
+import { BCSCScreens } from '@bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'

@@ -135,16 +135,16 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
       {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
       {pageData.key === 'access' ? (
         <View style={{ marginTop: Spacing.xxl }}>
-        <CardButton
-          title={t('BCSC.Home.WhereToUseTitle')}
-          onPress={() =>
-            navigation.navigate(BCSCScreens.OnboardingWebView, {
-              title: t('BCSC.Onboarding.CarouselServicesHeader'),
-              url: WHERE_TO_USE_URL,
-            })
-          }
-          endIcon="open-in-new"
-        />
+          <CardButton
+            title={t('BCSC.Home.WhereToUseTitle')}
+            onPress={() =>
+              navigation.navigate(BCSCScreens.OnboardingWebView, {
+                title: t('BCSC.Onboarding.CarouselServicesHeader'),
+                url: WHERE_TO_USE_URL,
+              })
+            }
+            endIcon="open-in-new"
+          />
         </View>
       ) : null}
     </View>
