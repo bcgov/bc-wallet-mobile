@@ -245,6 +245,19 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     )
   }
 
+  const handleOnCancel = async () => {
+    await removeEvidenceByType(cardType)
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto } },
+        ],
+      })
+    )
+  }
+
   const controls = (
     <>
       <Button
@@ -262,18 +275,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         accessibilityLabel={'Cancel'}
         testID={testIdWithKey('EvidenceIDCollectionCancel')}
         buttonType={ButtonType.Tertiary}
-        onPress={async () => {
-          await removeEvidenceByType(cardType)
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 1,
-              routes: [
-                { name: BCSCScreens.SetupSteps },
-                { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto } },
-              ],
-            })
-          )
-        }}
+        onPress={handleOnCancel}
       />
     </>
   )
