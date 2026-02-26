@@ -189,6 +189,7 @@ jobs:
             --dev false \
             --entry-file index.js \
             --bundle-output /tmp/ios-main.jsbundle \
+            --assets-dest /tmp/ios-assets \
             --verbose
 
       - name: Upload Android JS bundle
@@ -197,6 +198,89 @@ jobs:
           name: android-jsbundle
           path: app/android/app/src/main/assets/index.android.bundle
           retention-days: 1
+
+      - name: Upload iOS JS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-jsbundle
+          path: /tmp/ios-main.jsbundle
+          retention-days: 1
+
+  # ─── Android Build-Cache Warm-Up ──────────────────────────────────────
+  # Runs a full bcwallet-prod (default) release build using the committed
+  # debug keystore.  The Gradle build cache captures task outputs that are
+  # identical across all variants: CMake/NDK native compilation (4 ABIs),
+  # Kotlin & Java compilation of library modules, and resource processing.
+  # Variant builds then restore this cache and only rebuild the delta
+  # (package name, app icons, strings, signing, final packaging).
+  #
+  # Runs in parallel with `prepare` and `build-ios`, so it does NOT
+  # extend the iOS critical path.
+  prepare-android:
+    needs: [early-exit-check]
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
+    runs-on: ubuntu-22.04
+    env:
+      GRADLE_USER_HOME: /mnt/gradle-cache
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Free up disk space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/microsoft /opt/google
+          sudo rm -rf /opt/az
+          sudo rm -rf /usr/local/julia*
+          sudo docker image prune --all --force || true
+          sudo docker system prune -af || true
+          sudo docker builder prune -af || true
+          sudo apt-get clean
+          echo "=== Disk space after cleanup ==="
+          df -h
+
+      - name: Warm Gradle build cache
+        working-directory: app/android
+        run: |
+          sudo mkdir -p /mnt/gradle-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache
+
+          # Provide a placeholder JS bundle so Gradle doesn't launch Metro
+          mkdir -p app/src/main/assets
+          echo "// warm-up placeholder" > app/src/main/assets/index.android.bundle
+
+          # Full release build using debug-keystore fallback (no secrets needed).
+          # The build cache captures CMake/NDK, Kotlin, Java, and resource outputs.
+          ./gradlew assembleRelease --build-cache --no-parallel
+
+      - name: Save Gradle build cache
+        uses: actions/cache/save@v4
+        with:
+          path: /mnt/gradle-cache/caches/build-cache-1
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
 
   build-ios:
     needs: [check-secrets, check-vars, early-exit-check, prepare]
@@ -311,7 +395,11 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-xcode-${{ matrix.variant }}
+          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-run${{ github.run_number }}
+          restore-keys: |
+            ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-
+            ${{ runner.os }}-dd-${{ matrix.variant }}-
+            ${{ runner.os }}-dd-
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
@@ -349,6 +437,12 @@ jobs:
           restore-keys: |
             metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
             metro-
+
+      - name: Download pre-built iOS JS bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-jsbundle
+          path: app/ios/jsbundle
 
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
@@ -440,7 +534,15 @@ jobs:
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          SKIP_BUNDLING: '1'
+          FORCE_BUNDLING: ''
         run: |
+          # Copy pre-built JS bundle to where xcodebuild archive outputs it.
+          # SKIP_BUNDLING=1 tells react-native-xcode.sh to skip Metro+Hermes.
+          # The JS bundle is already compiled; Xcode embeds it directly.
+          BUNDLE_DIR="xbuild/Build/Products/Release-iphoneos/AriesBifold.app"
+          mkdir -p "$BUNDLE_DIR"
+          cp jsbundle/ios-main.jsbundle "$BUNDLE_DIR/main.jsbundle"
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
@@ -475,10 +577,11 @@ jobs:
 
       - name: Save cache for derived data
         id: cache-dd-save
+        if: always()
         uses: actions/cache/save@v4
         with:
           path: app/ios/xbuild/Build
-          key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
+          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-run${{ github.run_number }}
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for iOS failure
@@ -491,8 +594,12 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-secrets, check-vars, early-exit-check, prepare]
-    if: needs.early-exit-check.outputs.should_skip_build != 'true'
+    needs: [check-secrets, check-vars, early-exit-check, prepare, prepare-android]
+    if: |-
+      always() &&
+      needs.early-exit-check.outputs.should_skip_build != 'true' &&
+      needs.prepare.result == 'success' &&
+      !contains(needs.*.result, 'cancelled')
     strategy:
       matrix:
         include:
@@ -540,6 +647,11 @@ jobs:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare Gradle cache directory
+        run: |
+          sudo mkdir -p /mnt/gradle-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache
 
       - name: Load variant config
         run: |
@@ -604,6 +716,15 @@ jobs:
           echo "=== Disk space after cleanup ==="
           df -h
 
+      - name: Restore Gradle build cache
+        uses: actions/cache/restore@v4
+        with:
+          path: /mnt/gradle-cache/caches/build-cache-1
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
+          restore-keys: |
+            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
+            gradle-build-cache-
+
       - name: Restore Metro cache
         uses: actions/cache/restore@v4
         with:
@@ -661,13 +782,9 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          # Fix permissions for gradle cache
-          sudo mkdir -p /mnt/gradle-cache
-          sudo chown -R $USER:$USER /mnt/gradle-cache
-
           # JS bundle already provided by the prepare job.
           # Gradle may re-bundle to build/generated/ but src/main/assets/ takes precedence.
-          ./gradlew bundleRelease assembleRelease --no-parallel
+          ./gradlew bundleRelease assembleRelease --build-cache --no-parallel
 
       - name: List Artifacts
         run: |
@@ -720,6 +837,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - early-exit-check
+      - prepare-android
       - build-android
       - build-ios
     if: always()
