@@ -758,6 +758,12 @@ jobs:
             gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
             gradle-build-cache-
 
+      - name: Inspect restored build cache
+        run: |
+          echo "=== Build cache after restore ==="
+          du -sh "$GRADLE_USER_HOME/caches/build-cache-1" 2>/dev/null || echo "build-cache-1 dir not found"
+          find "$GRADLE_USER_HOME/caches/build-cache-1" -type f 2>/dev/null | wc -l | xargs -I{} echo "File count: {}"
+
       - name: Restore Metro cache
         uses: actions/cache/restore@v4
         with:
