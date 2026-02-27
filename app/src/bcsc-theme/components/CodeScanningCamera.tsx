@@ -905,7 +905,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // If the callback returns `false`, the scan was rejected — reset so the user can retry.
   useEffect(() => {
     if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked') {
-      void confirmScan()
+      confirmScan()
     }
   }, [scanState, confirmScan])
 
