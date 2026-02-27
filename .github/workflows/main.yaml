@@ -839,11 +839,14 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          # JS bundle already provided by the prepare job at src/main/assets/.
-          # Skip createBundleReleaseJsAndAssets to avoid re-running Metro.
+          # The pre-built JS bundle is at src/main/assets/index.android.bundle
+          # and takes precedence over the generated one at packaging time.
+          # We cannot use -x createBundleReleaseJsAndAssets because Gradle 8's
+          # lazy task providers cause downstream tasks to fail when the skipped
+          # task's outputs are unresolved. The restored Metro cache keeps
+          # re-bundling fast (~30s).
           ./gradlew bundleRelease assembleRelease \
             --build-cache \
-            -x createBundleReleaseJsAndAssets \
             --no-parallel
 
       - name: Save Gradle build cache (cross-run)
