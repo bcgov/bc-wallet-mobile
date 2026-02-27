@@ -3657,7 +3657,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   anoncreds: d48fc0f3bde44f97aef5bb907f6821bf9191d758
   askar: e4600f17f3067e57dca7324b5baaa1b66c3efd23
-  BcscCore: bca6318f371f8a7849e197fa5493aa0d953f581b
+  BcscCore: ee66eefdc69f3580c004b4b3eda45f87438ed433
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
