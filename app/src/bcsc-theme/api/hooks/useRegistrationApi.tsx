@@ -115,27 +115,20 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   /**
    * Registers a new BCSC client with dynamic client registration.
    *
-   * Checks for existing account first. If none exists, generates attestation,
-   * fetches notification tokens, creates registration body, and submits to BCSC.
-   * Stores returned client credentials and updates local account storage.
+   * In most cases, you will want to check for an existing account before calling this function to avoid unecessary registrations.
+   * @see {@link register} for a registration function that includes an account existence check.
+   *
+   * Generates attestation, fetches notification tokens, creates registration body,
+   * and submits to BCSC. Stores returned client credentials and updates local account storage.
    *
    * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
    */
-  const register = useCallback(
+  const createRegistration = useCallback(
     async (securityMethod: AccountSecurityMethod) => {
       if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration')
       }
-
-      const account = await getAccount()
-      // If an account already exists, we don't need to register again
-      if (account) {
-        logger.info('Account already exists, skipping registration')
-        return
-      }
-
-      logger.info('No account found, proceeding with registration')
 
       const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
         getAttestation(),
@@ -173,6 +166,29 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       return data
     },
     [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
+  )
+
+  /**
+   * Registers a new BCSC client if no existing account is found, otherwise skips registration.
+   *
+   * FIXME (MD): This might be better in `useRegistrationService` since it includes the account guard.
+   * Putting this here to prevent breaking tests.
+   *
+   * @param securityMethod - The account security method to use for registration
+   * @returns Promise resolving to registration response data or void if account exists
+   */
+  const register = useCallback(
+    async (securityMethod: AccountSecurityMethod) => {
+      const account = await getAccount()
+      // If an account already exists, we don't need to register again
+      if (account) {
+        logger.info('[RegistrationService] Account already exists, skipping registration')
+        return
+      }
+
+      return createRegistration(securityMethod)
+    },
+    [createRegistration, logger]
   )
 
   /**
@@ -299,10 +315,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   return useMemo(
     () => ({
       register,
+      createRegistration,
       updateRegistration,
       deleteRegistration,
     }),
-    [register, updateRegistration, deleteRegistration]
+    [register, createRegistration, updateRegistration, deleteRegistration]
   )
 }
 

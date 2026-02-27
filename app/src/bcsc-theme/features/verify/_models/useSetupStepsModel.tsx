@@ -1,13 +1,17 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import * as BcscCore from 'react-native-bcsc-core'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
@@ -19,14 +23,78 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
+  const { updateVerificationRequest, updateAccountFlags, deleteVerificationData, clearSecureState } = useSecureActions()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  const { cancelVerificationRequestAlert } = useAlerts(navigation)
+  const { cancelVerificationRequestAlert, factoryResetAlert } = useAlerts(navigation)
+  const registrationService = useRegistrationService()
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
+
+  /**
+   * Handle resetting the card registration process.
+   *
+   * Note: This will reset the completion of all setup steps excluding step 1 (account nickname).
+   * Why? Account nickname is excluded as it is independent to the card registration process (setup step 2).
+   *
+   * @returns Promise that resolves when the reset process is complete
+   */
+  const handleResetCardRegistration = useCallback(async () => {
+    try {
+      await withAccount(async (account) => {
+        // 1. Clear the secure state and trigger a setup steps re-render
+        clearSecureState({
+          hasAccount: true,
+          isHydrated: true,
+          walletKey: store.bcscSecure.walletKey, // used for authentication
+          registrationAccessToken: store.bcscSecure.registrationAccessToken, // used for authentication
+        })
+
+        const [securityMethod] = await Promise.all([
+          // 2. Get the previous device auth for re-registering the account
+          BcscCore.getAccountSecurityMethod(),
+          // 3. Clean up registration on the backend
+          registrationService.deleteRegistration(account.clientID),
+        ])
+
+        // 4. Delete any persisted verification data in device file system
+        await deleteVerificationData()
+        // 5. Re-register the device and generate a new account (prevents "client is in invalid state/statue" errors)
+        await registrationService.createRegistration(securityMethod)
+      })
+    } catch (error) {
+      logger.error('[handleResetCardRegistration] Error resetting card registration', error as Error)
+      // If reset fails, the app could be in an inconsistent state that may cause crashes or other issues, so we alert the user and make them factory reset
+      factoryResetAlert()
+    }
+  }, [
+    clearSecureState,
+    deleteVerificationData,
+    factoryResetAlert,
+    logger,
+    registrationService,
+    store.bcscSecure.registrationAccessToken,
+    store.bcscSecure.walletKey,
+  ])
+
+  useFocusEffect(
+    useCallback(() => {
+      if (steps.id.completed || (!steps.address.completed && !steps.email.completed)) {
+        // If ID step completed or address and email are both incomplete, we can assume workflow is normal
+        return
+      }
+
+      // This can be triggered by users backing out when they have partially completed step 2 (id collection)
+      logger.debug('[useSetupStepsModel] Invalid steps detected, cancelling registration and resetting state.', {
+        idStepCompleted: steps.id.completed,
+        addressStepCompleted: steps.address.completed,
+        emailStepCompleted: steps.email.completed,
+      })
+      handleResetCardRegistration()
+    }, [handleResetCardRegistration, logger, steps.address.completed, steps.email.completed, steps.id.completed])
+  )
 
   /**
    * Check the status of a pending verification request
@@ -170,6 +238,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     isCheckingStatus,
     handleCheckStatus,
     handleCancelVerification,
+    handleResetCardRegistration,
   }
 }
 
