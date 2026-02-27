@@ -183,6 +183,7 @@ jobs:
             --dev false \
             --entry-file index.js \
             --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res \
             --verbose
 
       - name: Build iOS JS bundle (warm Metro cache)
@@ -203,12 +204,28 @@ jobs:
           path: app/android/app/src/main/assets/index.android.bundle
           retention-days: 1
 
+      - name: Upload Android JS assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-jsassets
+          path: app/android/app/src/main/res/drawable-*
+          retention-days: 1
+          if-no-files-found: warn
+
       - name: Upload iOS JS bundle
         uses: actions/upload-artifact@v4
         with:
           name: ios-jsbundle
           path: /tmp/ios-main.jsbundle
           retention-days: 1
+
+      - name: Upload iOS JS assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-jsassets
+          path: /tmp/ios-assets
+          retention-days: 1
+          if-no-files-found: warn
 
       - name: Save Metro bundler cache
         if: github.ref == 'refs/heads/main'
@@ -508,6 +525,12 @@ jobs:
           name: ios-jsbundle
           path: app/ios/jsbundle
 
+      - name: Download pre-built iOS JS assets
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-jsassets
+          path: app/ios/jsassets
+
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
@@ -601,12 +624,19 @@ jobs:
           SKIP_BUNDLING: '1'
           FORCE_BUNDLING: ''
         run: |
-          # Copy pre-built JS bundle to where xcodebuild archive outputs it.
+          # Copy pre-built JS bundle and assets to where xcodebuild archive outputs them.
           # SKIP_BUNDLING=1 tells react-native-xcode.sh to skip Metro+Hermes.
           # The JS bundle is already compiled; Xcode embeds it directly.
           BUNDLE_DIR="xbuild/Build/Products/Release-iphoneos/AriesBifold.app"
           mkdir -p "$BUNDLE_DIR"
           cp jsbundle/ios-main.jsbundle "$BUNDLE_DIR/main.jsbundle"
+          # Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro
+          # in the prepare job. Without these, require('./image.png') resolves
+          # to missing files at runtime.
+          if [ -d jsassets/assets ]; then
+            cp -R jsassets/assets/* "$BUNDLE_DIR/" 2>/dev/null || true
+            echo "Copied $(find jsassets/assets -type f | wc -l | tr -d ' ') iOS asset files"
+          fi
           # Build optimizations:
           # - ccache via CC/CXX: cache C/C++/ObjC compilations across builds
           # - COMPILER_INDEX_STORE_ENABLE=NO: skip index-store writes (not needed in CI)
@@ -813,6 +843,12 @@ jobs:
         with:
           name: android-jsbundle
           path: app/android/app/src/main/assets
+
+      - name: Download pre-built JS assets
+        uses: actions/download-artifact@v4
+        with:
+          name: android-jsassets
+          path: app/android/app/src/main/res
 
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
