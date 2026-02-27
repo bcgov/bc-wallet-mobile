@@ -29,31 +29,22 @@ describe('EnterBirthdate', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('blocks Done button while picker is spinning (debounce pending)', () => {
-    const { getByTestId, UNSAFE_getByType } = render(
+  it('Done button is disabled when no date is selected', () => {
+    const { getByTestId } = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 
-    const picker = UNSAFE_getByType(DatePicker)
-    const newDate = new Date('1990-06-15T12:00:00.000Z')
-
-    // Simulate date change — starts debounce, sets pickerState to 'spinning'
-    act(() => {
-      picker.props.onDateChange(newDate)
-    })
-
-    // Tap Done while debounce is still pending
     const doneButton = getByTestId('com.ariesbifold:id/Done')
     fireEvent.press(doneButton)
 
-    // handleSubmit should NOT have been called (no navigation, no error)
+    // handleSubmit should not run — no date selected means button is disabled
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('allows Done button after debounce settles', () => {
+  it('opens modal date picker when input is pressed', () => {
     const { getByTestId, UNSAFE_getByType } = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
@@ -61,77 +52,82 @@ describe('EnterBirthdate', () => {
     )
 
     const picker = UNSAFE_getByType(DatePicker)
-    const newDate = new Date('1990-06-15T12:00:00.000Z')
+    expect(picker.props.open).toBe(false)
+
+    const input = getByTestId('com.ariesbifold:id/birthDate-input')
+    fireEvent(input, 'pressIn')
+
+    const updatedPicker = UNSAFE_getByType(DatePicker)
+    expect(updatedPicker.props.open).toBe(true)
+  })
+
+  it('sets date and closes modal on confirm', () => {
+    const { getByTestId, UNSAFE_getByType } = render(
+      <BasicAppContext>
+        <EnterBirthdateScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
+
+    const picker = UNSAFE_getByType(DatePicker)
+    const selectedDate = new Date('1990-06-15T12:00:00.000Z')
 
     act(() => {
-      picker.props.onDateChange(newDate)
+      picker.props.onConfirm(selectedDate)
     })
 
-    // Advance past the 400ms debounce
+    // Modal should close after confirming
+    const updatedPicker = UNSAFE_getByType(DatePicker)
+    expect(updatedPicker.props.open).toBe(false)
+
+    // Input should display the formatted date
+    const input = getByTestId('com.ariesbifold:id/birthDate-input')
+    expect(input.props.value).toBe('1990-06-15')
+  })
+
+  it('closes modal without changing date on cancel', () => {
+    const { getByTestId, UNSAFE_getByType } = render(
+      <BasicAppContext>
+        <EnterBirthdateScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
+
+    // Open the picker first
+    const input = getByTestId('com.ariesbifold:id/birthDate-input')
+    fireEvent(input, 'pressIn')
+
+    const picker = UNSAFE_getByType(DatePicker)
+    expect(picker.props.open).toBe(true)
+
     act(() => {
-      jest.advanceTimersByTime(400)
+      picker.props.onCancel()
     })
 
-    // Done button should now be pressable (pickerState is 'idle')
+    // Modal should close
+    const updatedPicker = UNSAFE_getByType(DatePicker)
+    expect(updatedPicker.props.open).toBe(false)
+
+    // Input should remain empty
+    expect(input.props.value).toBe('')
+  })
+
+  it('allows Done button after a date is confirmed', () => {
+    const { getByTestId, UNSAFE_getByType } = render(
+      <BasicAppContext>
+        <EnterBirthdateScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
+
+    const picker = UNSAFE_getByType(DatePicker)
+    const selectedDate = new Date('1990-06-15T12:00:00.000Z')
+
+    act(() => {
+      picker.props.onConfirm(selectedDate)
+    })
+
     const doneButton = getByTestId('com.ariesbifold:id/Done')
     fireEvent.press(doneButton)
 
     // handleSubmit runs — since vm.serial is undefined in test, it calls goBack
     expect(mockNavigation.goBack).toHaveBeenCalled()
-  })
-
-  it('resets debounce timer on rapid date changes', () => {
-    const { getByTestId, UNSAFE_getByType } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
-
-    const picker = UNSAFE_getByType(DatePicker)
-
-    // Simulate rapid intermediate values (wheel spinning through months)
-    act(() => {
-      picker.props.onDateChange(new Date('1990-01-15T12:00:00.000Z'))
-      jest.advanceTimersByTime(200)
-      picker.props.onDateChange(new Date('1990-02-15T12:00:00.000Z'))
-      jest.advanceTimersByTime(200)
-      picker.props.onDateChange(new Date('1990-03-15T12:00:00.000Z'))
-    })
-
-    // Only 200ms after last change — still spinning
-    act(() => {
-      jest.advanceTimersByTime(200)
-    })
-    const doneButton = getByTestId('com.ariesbifold:id/Done')
-    fireEvent.press(doneButton)
-    expect(mockNavigation.goBack).not.toHaveBeenCalled()
-
-    // Advance remaining 200ms — debounce settles
-    act(() => {
-      jest.advanceTimersByTime(200)
-    })
-    fireEvent.press(doneButton)
-    expect(mockNavigation.goBack).toHaveBeenCalled()
-  })
-
-  it('cleans up debounce timer on unmount', () => {
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout')
-
-    const { UNSAFE_getByType, unmount } = render(
-      <BasicAppContext>
-        <EnterBirthdateScreen navigation={mockNavigation as never} />
-      </BasicAppContext>
-    )
-
-    const picker = UNSAFE_getByType(DatePicker)
-    act(() => {
-      picker.props.onDateChange(new Date('1990-06-15T12:00:00.000Z'))
-    })
-
-    // Unmount while debounce is still pending
-    unmount()
-
-    expect(clearTimeoutSpy).toHaveBeenCalled()
-    clearTimeoutSpy.mockRestore()
   })
 })
