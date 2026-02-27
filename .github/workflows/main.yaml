@@ -787,14 +787,9 @@ jobs:
           du -sh "$GRADLE_USER_HOME/caches/build-cache-1" 2>/dev/null || echo "build-cache-1 dir not found"
           find "$GRADLE_USER_HOME/caches/build-cache-1" -type f 2>/dev/null | wc -l | xargs -I{} echo "File count: {}"
 
-      - name: Restore Metro cache
-        uses: actions/cache/restore@v4
-        with:
-          path: app/.metro-cache
-          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-
+      # Metro cache restore is NOT needed here because SKIP_METRO_BUNDLE=1
+      # uses copy-bundle.cjs instead of Metro. The Metro cache is only
+      # used by the prepare job and iOS builds.
 
       - name: Download pre-built JS bundle
         uses: actions/download-artifact@v4
@@ -843,18 +838,20 @@ jobs:
           PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
+          # Skip Metro bundling: use the pre-built JS bundle from the
+          # prepare job instead of re-running Metro (~4 min savings).
+          # Hermes bytecode compilation still runs on the copied bundle.
+          SKIP_METRO_BUNDLE: '1'
         run: |
           # Optimizations applied:
-          # 1. --parallel: builds independent library projects concurrently
+          # 1. SKIP_METRO_BUNDLE=1: copies pre-built JS bundle instead of
+          #    running Metro (~4 min savings). See scripts/copy-bundle.cjs.
+          # 2. --parallel: builds independent library projects concurrently
           #    (30+ RN modules can compile/link in parallel)
-          # 2. -PreactNativeArchitectures: limits CMake/NDK to release-only ABIs
+          # 3. -PreactNativeArchitectures: limits CMake/NDK to release-only ABIs
           #    (arm64-v8a + armeabi-v7a only, skips x86/x86_64 emulator ABIs)
-          # 3. -x lintVitalRelease: skip lint analysis (~1-2 min on critical path)
+          # 4. -x lintVitalRelease: skip lint analysis (~1-2 min on critical path)
           #    Lint should run in a dedicated CI job, not block release builds.
-          #
-          # Note: We cannot use -x createBundleReleaseJsAndAssets because
-          # Gradle 8's lazy task providers cause downstream tasks to fail
-          # when the skipped task's outputs are unresolved.
           ./gradlew bundleRelease assembleRelease \
             --build-cache \
             --parallel \
