@@ -292,31 +292,23 @@ jobs:
         working-directory: app/android
         continue-on-error: true
         run: |
-          # Provide a minimal valid JS bundle so asset merge doesn't fail.
-          # We skip the actual Metro bundling task to avoid running Metro.
-          mkdir -p app/src/main/assets
-          echo 'var __DEV__=false;' > app/src/main/assets/index.android.bundle
-
-          # Provide a minimal google-services.json so the Google Services
-          # Gradle plugin doesn't fail. Without this, all :app:* tasks fail
-          # and their outputs never populate the build cache.
-          cat > app/google-services.json << 'GSEOF'
-          {"project_info":{"project_number":"0","project_id":"placeholder","storage_bucket":"placeholder.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:placeholder","android_client_info":{"package_name":"ca.bc.gov.BCWallet"}},"api_key":[{"current_key":"placeholder"}]}],"configuration_version":"1"}
-          GSEOF
-
-          # Build everything EXCEPT the JS bundling task.
-          # This populates the build cache with native compilation (CMake/NDK),
-          # Kotlin/Java compilation, and resource processing outputs.
-          # - --parallel: builds independent library projects concurrently
-          # - -PreactNativeArchitectures: limits CMake/NDK to release-only ABIs
-          #   (from 4 ABIs to 2, halving native compilation time)
-          # - -x lintVitalRelease: skip lint to save time in cache warming
+          # Build all library subprojects only (skip the :app: module).
+          # The library projects contain all the expensive cacheable work:
+          # - CMake/NDK compilation for 5 native modules (anoncreds, indy-vdr,
+          #   askar, reanimated, screens, vision-camera) × 2 ABIs
+          # - Kotlin/Java compilation for 30+ React Native library modules
+          #
+          # The :app: module is excluded because:
+          # 1. It requires google-services.json (variant-specific secret)
+          # 2. Its createBundleReleaseJsAndAssets task cannot be skipped
+          #    (Gradle 8 lazy providers fail when querying skipped task outputs)
+          # 3. Its tasks are fast (~17s) and partly variant-specific anyway
           ./gradlew assembleRelease \
             --build-cache \
-            -x createBundleReleaseJsAndAssets \
             --parallel \
             -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
-            -x lintVitalRelease
+            -x lintVitalRelease \
+            -x :app:assembleRelease
 
       - name: Inspect build cache
         if: always()
