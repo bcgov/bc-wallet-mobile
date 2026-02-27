@@ -153,7 +153,7 @@ const Account: React.FC = () => {
         />
         <AccountField label={t('BCSC.Account.AccountInfo.Address')} value={account.address?.formatted ?? ''} />
         <AccountField label={t('BCSC.Account.AccountInfo.DateOfBirth')} value={account.birthdate ?? ''} />
-        <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={store.bcscSecure.email ?? ''} />
+        <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={store.bcscSecure.emailAddress ?? ''} />
 
         <View style={styles.buttonsContainer}>
           <SectionButton
