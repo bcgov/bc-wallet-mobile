@@ -1,6 +1,7 @@
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -45,10 +46,11 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 export const useCardScanner = () => {
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scannerEnabledRef = useRef(true)
-  const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
+  const { updateUserInfo, updateUserMetadata, updateDeviceCodes, updateCardProcess, updateVerificationOptions } =
+    useSecureActions()
 
   /**
    * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
@@ -148,24 +150,19 @@ export const useCardScanner = () => {
    */
   const handleScanDriversLicense = useCallback(
     async (license: DriversLicenseMetadata) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_USER_METADATA,
-        payload: [
-          {
-            name: {
-              first: license.firstName,
-              last: license.lastName,
-              middle: license.middleNames,
-            },
-            address: {
-              streetAddress: license.streetAddress,
-              postalCode: license.postalCode,
-              city: license.city,
-              province: license.province,
-              country: 'CA', // currently we only support Canada licenses
-            },
-          },
-        ],
+      await updateUserMetadata({
+        name: {
+          first: license.firstName,
+          last: license.lastName,
+          middle: license.middleNames,
+        },
+        address: {
+          streetAddress: license.streetAddress,
+          postalCode: license.postalCode,
+          city: license.city,
+          province: license.province as ProvinceCode,
+          country: 'CA', // currently we only support Canada licenses
+        },
       })
 
       // Save birthdate from barcode so downstream screens can prepopulate
@@ -173,7 +170,7 @@ export const useCardScanner = () => {
         await updateUserInfo({ birthdate: license.birthDate })
       }
     },
-    [dispatch, updateUserInfo]
+    [updateUserMetadata, updateUserInfo]
   )
 
   /**
@@ -226,7 +223,7 @@ export const useCardScanner = () => {
         if (__DEV__) {
           logger.debug(`[CardScanner] decoding barcode`, { code: code })
         }
-        const decodedCode = decodeScannedCode(code)
+        const decodedCode = decodeScannedCode(code, logger)
 
         if (!decodedCode) {
           // This is usually from a barcode that was partially out of frame

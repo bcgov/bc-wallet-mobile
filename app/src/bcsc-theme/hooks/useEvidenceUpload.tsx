@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -53,13 +53,16 @@ const useEvidenceUpload = () => {
     logger.info(`Processing ${additionalEvidence.length} additional evidence item(s)...`)
 
     for (const evidenceItem of additionalEvidence) {
-      const metadataPayload = {
+      const metadataPayload: EvidenceMetadataPayload = {
         type: evidenceItem.evidenceType.evidence_type,
         number: evidenceItem.documentNumber,
         images: evidenceItem.metadata.map((data) => {
           return { ...data, file_path: undefined }
         }),
-        ...(evidenceItem.barcodes && evidenceItem.barcodes.length > 0 && { barcodes: evidenceItem.barcodes }),
+      }
+
+      if (evidenceItem.barcodes && evidenceItem.barcodes.length > 0) {
+        metadataPayload.barcodes = evidenceItem.barcodes
       }
 
       const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)

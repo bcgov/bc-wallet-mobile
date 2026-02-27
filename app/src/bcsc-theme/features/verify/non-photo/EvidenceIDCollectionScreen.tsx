@@ -2,7 +2,7 @@ import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MINIMUM_VERIFICATION_AGE } from '@/constants'
-import { BCState } from '@/store'
+import { BCState, NonBCSCUserMetadata } from '@/store'
 import {
   Button,
   ButtonType,
@@ -219,18 +219,21 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           birthdate: new Date(formState.birthDate),
         })
 
-        await updateUserMetadata({
+        const newUserMetadata: NonBCSCUserMetadata = {
           name: {
             // trim whitespace from names just in case
             first: formState.firstName.trim(),
             last: formState.lastName.trim(),
             middle: formState.middleNames.trim(),
           },
-          // Preserve address data if it has already been set (eg. from a barcode scan)
-          ...(store.bcscSecure.userMetadata?.address && {
-            address: store.bcscSecure.userMetadata.address,
-          }),
-        })
+        }
+
+        // Preserve address data if it has already been set (eg. from a barcode scan)
+        if (store.bcscSecure.userMetadata?.address) {
+          newUserMetadata.address = store.bcscSecure.userMetadata.address
+        }
+
+        await updateUserMetadata(newUserMetadata)
       }
 
       await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
