@@ -451,7 +451,9 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (PT-BR)",
       "CompletionTitle": "You're done in this app (PT-BR)",
+      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (PT-BR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
+      "AppSwitchArrowLabel": "Arrow pointing to browser navigation (PT-BR)",
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
     },
@@ -1147,6 +1149,11 @@ const translation = {
       "Title": "Problem with Connection (PT-BR)",
       "Description": "Please try again. (PT-BR)"
     },
+    "FactoryReset": {
+      "Title": "Problem with App (PT-BR)",
+      "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (PT-BR)",
+      "Action1": "Reset App (PT-BR)"
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

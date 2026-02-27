@@ -451,7 +451,9 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
       "CompletionTitle": "You're done in this app",
+      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc.",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
+      "AppSwitchArrowLabel": "Arrow pointing to browser navigation",
       "BookmarkService": "Save link to:",
       "ToggleBookmark": "Toggle bookmark",
     },
@@ -1147,6 +1149,11 @@ const translation = {
       "Title": "Problem with Connection",
       "Description": "Please try again."
     },
+    "FactoryReset": {
+      "Title": "Problem with App",
+      "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again.",
+      "Action1": "Reset App"
+    }
   },
   "BCWalletError": {
     "Camera": {

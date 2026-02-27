@@ -1,0 +1,599 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IntroCarouselScreen Rendering should render correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    collapsable={false}
+    handlerTag={-1}
+    handlerType="FlingGestureHandler"
+    onGestureHandlerEvent={[Function]}
+    onGestureHandlerStateChange={[Function]}
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          collapsable={false}
+          style={
+            {
+              "flexDirection": "row",
+              "transform": [
+                {
+                  "translateX": 0,
+                },
+              ],
+              "width": 2250,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "width": 750,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "gap": 16,
+                    "padding": 16,
+                  },
+                  {
+                    "width": 750,
+                  },
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                  }
+                }
+              >
+                <Image
+                  source=""
+                  style={
+                    {
+                      "height": 300,
+                      "resizeMode": "contain",
+                      "width": 750,
+                    }
+                  }
+                />
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 26,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselServicesHeader
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselServicesContent
+              </Text>
+              <View
+                style={
+                  {
+                    "marginTop": 40,
+                  }
+                }
+              >
+                <View
+                  accessibilityLabel="BCSC.Home.WhereToUseTitle"
+                  accessibilityRole="button"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onClick={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "backgroundColor": "#FFFFFF",
+                      "borderColor": "#D9EAF7",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "opacity": 1,
+                      "padding": 16,
+                    }
+                  }
+                  testID="com.ariesbifold:id/CardButton-BCSC.Home.WhereToUseTitle"
+                >
+                  <View
+                    style={
+                      {
+                        "gap": 8,
+                      }
+                    }
+                  >
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "justifyContent": "space-between",
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#003366",
+                              "fontSize": 20,
+                              "fontWeight": "bold",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Home.WhereToUseTitle
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        selectable={false}
+                        style={
+                          [
+                            {
+                              "color": undefined,
+                              "fontSize": 32,
+                            },
+                            {
+                              "color": "#003366",
+                            },
+                            {
+                              "fontFamily": "Material Icons",
+                              "fontStyle": "normal",
+                              "fontWeight": "normal",
+                            },
+                            {},
+                          ]
+                        }
+                      >
+                        
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            style={
+              {
+                "width": 750,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "gap": 16,
+                    "padding": 16,
+                  },
+                  {
+                    "width": 750,
+                  },
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                  }
+                }
+              >
+                <Image
+                  source=""
+                  style={
+                    {
+                      "height": 300,
+                      "resizeMode": "contain",
+                      "width": 750,
+                    }
+                  }
+                />
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 26,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselProveHeader
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselProveBodyContentA
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselProveBodyContentB
+              </Text>
+            </View>
+          </View>
+          <View
+            style={
+              {
+                "width": 750,
+              }
+            }
+          >
+            <View
+              style={
+                [
+                  {
+                    "gap": 16,
+                    "padding": 16,
+                  },
+                  {
+                    "width": 750,
+                  },
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                  }
+                }
+              >
+                <Image
+                  source=""
+                  style={
+                    {
+                      "height": 300,
+                      "resizeMode": "contain",
+                      "width": 750,
+                    }
+                  }
+                />
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 26,
+                      "fontWeight": "bold",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselCannotUseHeader
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselCannotUseBodyContentA
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    undefined,
+                  ]
+                }
+              >
+                BCSC.Onboarding.CarouselCannotUseBodyContentB
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+        }
+      }
+    >
+      <View
+        accessibilityLabel="BCSC.Onboarding.CarouselBack"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": true,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={false}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "opacity": 0.5,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/CarouselBack"
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "color": "#FFFFFF",
+                "fontWeight": "bold",
+              },
+            ]
+          }
+        >
+          BCSC.Onboarding.CarouselBack
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 24,
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFFFF",
+                "borderRadius": 6,
+                "height": 12,
+                "width": 12,
+              },
+              {
+                "backgroundColor": "#003366",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFFFF",
+                "borderRadius": 6,
+                "height": 12,
+                "width": 12,
+              },
+              false,
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFFFF",
+                "borderRadius": 6,
+                "height": 12,
+                "width": 12,
+              },
+              false,
+            ]
+          }
+        />
+      </View>
+      <View
+        accessibilityLabel="BCSC.Onboarding.CarouselNext"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/CarouselNext"
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "color": "#FFFFFF",
+                "fontWeight": "bold",
+              },
+            ]
+          }
+        >
+          BCSC.Onboarding.CarouselNext
+        </Text>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
