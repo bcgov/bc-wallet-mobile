@@ -416,6 +416,28 @@ jobs:
           sudo xcode-select --switch /Applications/Xcode_26.2.app
           sudo xcode-select -p
 
+      - name: Install ccache
+        run: |
+          brew install ccache
+          ccache --version
+          # Configure ccache: 2GB max, no compression (faster), sloppiness for Xcode
+          ccache --set-config=max_size=2G
+          ccache --set-config=compression=false
+          ccache --set-config=sloppiness=clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros
+          ccache --set-config=depend_mode=true
+          ccache --set-config=file_clone=true
+          ccache --set-config=inode_cache=true
+
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-
+            ${{ runner.os }}-ccache-${{ matrix.variant }}-
+            ${{ runner.os }}-ccache-
+
       - name: Cached pip dependencies
         uses: actions/cache@v4
         id: pip-cache
@@ -585,6 +607,7 @@ jobs:
           mkdir -p "$BUNDLE_DIR"
           cp jsbundle/ios-main.jsbundle "$BUNDLE_DIR/main.jsbundle"
           # Build optimizations:
+          # - ccache via CC/CXX: cache C/C++/ObjC compilations across builds
           # - COMPILER_INDEX_STORE_ENABLE=NO: skip index-store writes (not needed in CI)
           # - parallelizeTargets: build independent targets in parallel
           xcodebuild \
@@ -600,9 +623,15 @@ jobs:
           -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
           -sdk iphoneos \
           -parallelizeTargets \
+          CC="$PWD/scripts/ccache-clang.sh" \
+          CXX="$PWD/scripts/ccache-clang++.sh" \
           COMPILER_INDEX_STORE_ENABLE=NO \
           -verbose \
           archive
+
+      - name: Show ccache stats
+        if: always()
+        run: ccache --show-stats || true
 
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
