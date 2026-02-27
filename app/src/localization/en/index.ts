@@ -543,6 +543,7 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
+      "Label": "Birthdate",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
