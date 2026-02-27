@@ -249,7 +249,7 @@ jobs:
             /mnt/gradle-cache/caches
             /mnt/gradle-cache/wrapper
             !/mnt/gradle-cache/caches/build-cache-1
-          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies
@@ -733,7 +733,7 @@ jobs:
             /mnt/gradle-cache/caches
             /mnt/gradle-cache/wrapper
             !/mnt/gradle-cache/caches/build-cache-1
-          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies
@@ -839,10 +839,11 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          # JS bundle already provided by the prepare job.
-          # Gradle may re-bundle to build/generated/ but src/main/assets/ takes precedence.
+          # JS bundle already provided by the prepare job at src/main/assets/.
+          # Skip createBundleReleaseJsAndAssets to avoid re-running Metro.
           ./gradlew bundleRelease assembleRelease \
             --build-cache \
+            -x createBundleReleaseJsAndAssets \
             --no-parallel
 
       - name: Save Gradle build cache (cross-run)
