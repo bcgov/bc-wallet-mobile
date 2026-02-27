@@ -36,7 +36,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   ) : undefined
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper controls={controls} edges={['bottom', 'left', 'right', 'top']}>
       {showAppSwitchGuidance && (
         <ArrowUp
           height={80}
