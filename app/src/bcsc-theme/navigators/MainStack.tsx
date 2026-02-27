@@ -177,14 +177,7 @@ const MainStack: React.FC = () => {
             headerLeft: createMainWebviewHeaderBackButton(),
           })}
         />
-        <Stack.Screen
-          name={BCSCScreens.PairingConfirmation}
-          component={PairingConfirmation}
-          options={() => ({
-            headerShown: true,
-            headerLeft: () => null,
-          })}
-        />
+        <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
         <Stack.Screen
           name={BCSCScreens.MainRemoveAccountConfirmation}
           component={MainRemoveAccountConfirmationScreen}

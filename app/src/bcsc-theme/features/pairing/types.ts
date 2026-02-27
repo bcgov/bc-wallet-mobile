@@ -20,6 +20,7 @@ export type PairingNavigationEvent = {
   params: {
     serviceTitle: string
     pairingCode: string
+    fromAppSwitch?: boolean
   }
 }
 

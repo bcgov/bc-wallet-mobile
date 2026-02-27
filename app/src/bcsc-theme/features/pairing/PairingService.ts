@@ -113,6 +113,7 @@ export class PairingService {
       params: {
         serviceTitle: payload.serviceTitle,
         pairingCode: payload.pairingCode,
+        fromAppSwitch: payload.source === 'deep-link',
       },
     }
     this.navigationListeners.forEach((listener) => listener(event))
