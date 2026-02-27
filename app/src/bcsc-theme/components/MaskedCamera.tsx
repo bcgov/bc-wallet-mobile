@@ -1,7 +1,7 @@
 import { useAlerts } from '@/hooks/useAlerts'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -100,12 +100,16 @@ const MaskedCamera = ({
 
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
 
-  if (!device) {
-    // provide back button if they get into stuck state with no working camera
-    navigation.setOptions({
-      headerShown: true,
-    })
+  useEffect(() => {
+    if (!device) {
+      // provide back button if they have no working camera
+      navigation.setOptions({
+        headerShown: true,
+      })
+    }
+  }, [device, navigation])
 
+  if (!device) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

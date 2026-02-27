@@ -889,18 +889,23 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const confirmScan = useCallback(async () => {
     const locked = lockedScanRef.current
     if (locked) {
-      const result = await onCodeScanned(locked.codes, locked.frame)
-      if (result === false) {
+      try {
+        const result = await onCodeScanned(locked.codes, locked.frame)
+        if (result === false) {
+          resetScanningState()
+        }
+      } catch (error) {
+        logger.error('Error in onCodeScanned callback', { error })
         resetScanningState()
       }
     }
-  }, [onCodeScanned, resetScanningState])
+  }, [onCodeScanned, resetScanningState, logger])
 
   // Auto-confirm: when manual confirm is disabled, immediately fire the callback on lock.
   // If the callback returns `false`, the scan was rejected — reset so the user can retry.
   useEffect(() => {
     if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked') {
-      confirmScan()
+      void confirmScan()
     }
   }, [scanState, confirmScan])
 

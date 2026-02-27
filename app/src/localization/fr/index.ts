@@ -519,7 +519,6 @@ const translation = {
       "Heading": "Provide the card serial number on the back right side of your card. (FR)",
       "Paragraph": "When scanning, you should place the card in front of a white background for best results. (FR)",
       "ScanBarcode": "Scan Barcode with Camera (FR)",
-      "ToggleOverlay": "Toggle overlay (FR)",
       "EnterManually": "Enter Serial Number Manually (FR)",
     },
     "Scan": {

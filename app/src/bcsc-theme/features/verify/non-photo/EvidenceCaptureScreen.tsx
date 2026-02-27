@@ -24,7 +24,7 @@ import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
  * v3 structure (see BarcodeData.toServerJSON in ias-ios)
  *
  * Each scanned barcode type produces one entry:
- * - Code-39 (BCSC serial): `{ type, value }`
+ * - Code-39 or Code-128 (BCSC serial): `{ type, value }`
  * - PDF-417 (driver's licence): `{ type, content_type, document_number, family_name, ... address }`
  */
 const buildBarcodePayload = (bcscSerial: string | null, license: DriversLicenseMetadata | null): BarcodePayload[] => {
