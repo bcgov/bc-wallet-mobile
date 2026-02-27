@@ -232,6 +232,16 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
+
+      // If aborted while the request was in-flight, end the session
+      // immediately so it doesn't leak on the backend
+      if (abortedRef.current) {
+        video.endVideoSession(newSession.session_id).catch((e) => {
+          logger.error('Failed to end orphaned video session:', e as Error)
+        })
+        return null
+      }
+
       sessionRef.current = newSession
       setSession(newSession)
       return newSession
@@ -239,7 +249,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       handleError(VideoCallErrorType.SESSION_FAILED, error as Error)
       return null
     }
-  }, [video, handleError])
+  }, [video, handleError, logger])
 
   // 2. with the session and the gateway URL, we can initiate the WebRTC connection
   const establishWebRTCConnection = useCallback(
@@ -263,6 +273,19 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         }
 
         const conn = await connect(connectionRequest, logger)
+
+        // If aborted while connect was in-flight, tear down the
+        // just-created connection immediately without storing it
+        if (abortedRef.current) {
+          conn.setAppInitiatedDisconnect(true)
+          conn.stopPexipKeepAlive()
+          conn.closePexipEventSource()
+          conn.disconnectPexip().catch((e) => logger.error('Error disconnecting orphaned Pexip:', e as Error))
+          conn.releaseLocalStream()
+          conn.closePeerConnection()
+          return false
+        }
+
         conn.setAppInitiatedDisconnect(false)
         connectionRef.current = conn
         setLocalStream(conn.localStream)
@@ -283,20 +306,33 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     async (sessionId: string): Promise<VideoCall | null> => {
       try {
         const id = uuid.v4().toString()
+        const call = await video.createVideoCall(sessionId, id, 'call_ringing')
+
+        // If aborted while the API call was in-flight, mark the call as
+        // ended immediately and don't store the id in refs/state
+        if (abortedRef.current) {
+          video.updateVideoCallStatus(sessionId, id, 'call_ended').catch((e) => {
+            logger.error('Failed to end orphaned video call:', e as Error)
+          })
+          return null
+        }
+
         clientCallIdRef.current = id
         setClientCallId(id)
-        const call = await video.createVideoCall(sessionId, id, 'call_ringing')
         return call
       } catch (error) {
         handleError(VideoCallErrorType.CALL_FAILED, error as Error)
         return null
       }
     },
-    [video, handleError]
+    [video, handleError, logger]
   )
 
   // three step process with the steps above
   // all of the functions within catch their own errors
+  // each step checks abortedRef after its await and self-cleans any
+  // resources it just allocated, so the between-step checks here are
+  // simply early-outs to avoid starting the next step unnecessarily
   const startVideoCall = useCallback(async () => {
     abortedRef.current = false
     setFlowState(VideoCallFlowState.UPLOADING_DOCUMENTS)
@@ -314,21 +350,14 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setFlowState(VideoCallFlowState.CONNECTING_WEBRTC)
     const connected = await establishWebRTCConnection(newSession)
     if (!connected || abortedRef.current) {
-      // If aborted after WebRTC resources were allocated, clean them up
-      if (abortedRef.current) {
-        await cleanup()
-      }
       return
     }
 
     const newCall = await createCall(newSession.session_id)
     if (!newCall || abortedRef.current) {
-      if (abortedRef.current) {
-        await cleanup()
-      }
       return
     }
-  }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall, cleanup])
+  }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall])
 
   // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
