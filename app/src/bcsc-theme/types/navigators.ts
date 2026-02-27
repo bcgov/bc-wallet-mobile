@@ -60,7 +60,9 @@ export enum BCSCScreens {
   LiveCall = 'BCSCLiveCall',
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddress = 'BCSCResidentialAddress',
-  RemoveAccountConfirmation = 'BCSCRemoveAccountConfirmation',
+  MainRemoveAccountConfirmation = 'BCSCRemoveAccountConfirmation',
+  VerifyRemoveAccountConfirmation = 'BCSCVerifyRemoveAccountConfirmation',
+  OnboardingRemoveAccountConfirmation = 'BCSCOnboardingRemoveAccountConfirmation',
   TransferAccountInformation = 'BCSCTransferAccountInformation',
   TransferAccountInstructions = 'BCSCTransferAccountInstructions',
   TransferAccountQRDisplay = 'BCSCTransferAccountQRDisplay',
@@ -127,7 +129,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingCreatePIN]: undefined
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCScreens.OnboardingDeveloper]: undefined
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.OnboardingRemoveAccountConfirmation]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -188,7 +190,7 @@ export type BCSCVerifyStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
 }
 
 export type BCSCTabStackParams = {
@@ -203,7 +205,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.MainRemoveAccountConfirmation]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined

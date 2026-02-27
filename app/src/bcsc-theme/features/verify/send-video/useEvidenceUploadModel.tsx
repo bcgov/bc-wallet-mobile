@@ -1,11 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import {
-  UploadEvidenceResponseData,
   VerificationPhotoUploadPayload,
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
@@ -28,6 +28,7 @@ const useEvidenceUploadModel = (
   const [store] = useStore<BCState>()
   const { evidence } = useApi()
   const { updateAccountFlags } = useSecureActions()
+  const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const loadingScreen = useLoadingScreen()
   const { fileUploadErrorAlert } = useAlerts(navigation)
@@ -61,45 +62,6 @@ const useEvidenceUploadModel = (
     },
     [logger]
   )
-
-  const processAdditionalEvidence = useCallback(async () => {
-    // Process additional evidence data
-    // TODO (bm): store properly typed additional evidence in state
-    const additionalEvidence = store.bcscSecure.additionalEvidenceData
-    const evidenceUploads: { uploadUri: string; imageBytes: Buffer }[] = []
-
-    // Process each piece of additional evidence
-    for (const evidenceItem of additionalEvidence) {
-      // Upload metadata for each evidence type to get upload URIs
-      const metadataPayload = {
-        type: evidenceItem.evidenceType.evidence_type,
-        number: evidenceItem.documentNumber ?? '',
-        images: evidenceItem.metadata.map((data) => {
-          return { ...data, file_path: undefined }
-        }),
-        ...(evidenceItem.barcodes && evidenceItem.barcodes.length > 0 && { barcodes: evidenceItem.barcodes }),
-      }
-
-      const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
-      logger.debug(`Evidence metadata for ${metadataPayload.type}`)
-      // For each metadata item, find matching upload URI and read binary
-      for (const metadataItem of evidenceItem.metadata) {
-        const matchingResponse = evidenceMetadataResponse.find(
-          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
-        )
-
-        if (matchingResponse) {
-          // Read the image file
-          const imageBytes = await readFileInChunks(metadataItem.file_path, logger)
-          logger.debug(`Evidence metadata ${metadataItem.label}: ${imageBytes.length}`)
-
-          evidenceUploads.push({ uploadUri: matchingResponse.upload_uri, imageBytes })
-        }
-      }
-    }
-
-    return evidenceUploads
-  }, [evidence, logger, store.bcscSecure.additionalEvidenceData])
 
   const uploadEvidenceMetadata = useCallback(
     async (photoMetadata: VerificationPhotoUploadPayload, videoMetadata: VerificationVideoUploadPayload) => {

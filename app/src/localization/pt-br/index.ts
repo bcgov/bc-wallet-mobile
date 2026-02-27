@@ -897,6 +897,7 @@ const translation = {
       "StartVideoCall": "Start video call (PT-BR)",
       "CallStates": {
         "CreatingSession": "Creating video session... (PT-BR)",
+        "UploadingDocuments": "Uploading your photo... (PT-BR)",
         "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
         "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
         "Initializing": "Initializing... (PT-BR)",
