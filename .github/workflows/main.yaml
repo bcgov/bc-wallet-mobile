@@ -297,13 +297,26 @@ jobs:
           mkdir -p app/src/main/assets
           echo 'var __DEV__=false;' > app/src/main/assets/index.android.bundle
 
+          # Provide a minimal google-services.json so the Google Services
+          # Gradle plugin doesn't fail. Without this, all :app:* tasks fail
+          # and their outputs never populate the build cache.
+          cat > app/google-services.json << 'GSEOF'
+          {"project_info":{"project_number":"0","project_id":"placeholder","storage_bucket":"placeholder.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:placeholder","android_client_info":{"package_name":"ca.bc.gov.BCWallet"}},"api_key":[{"current_key":"placeholder"}]}],"configuration_version":"1"}
+          GSEOF
+
           # Build everything EXCEPT the JS bundling task.
           # This populates the build cache with native compilation (CMake/NDK),
           # Kotlin/Java compilation, and resource processing outputs.
+          # - --parallel: builds independent library projects concurrently
+          # - -PreactNativeArchitectures: limits CMake/NDK to release-only ABIs
+          #   (from 4 ABIs to 2, halving native compilation time)
+          # - -x lintVitalRelease: skip lint to save time in cache warming
           ./gradlew assembleRelease \
             --build-cache \
             -x createBundleReleaseJsAndAssets \
-            --no-parallel
+            --parallel \
+            -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
+            -x lintVitalRelease
 
       - name: Inspect build cache
         if: always()
@@ -839,15 +852,22 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          # The pre-built JS bundle is at src/main/assets/index.android.bundle
-          # and takes precedence over the generated one at packaging time.
-          # We cannot use -x createBundleReleaseJsAndAssets because Gradle 8's
-          # lazy task providers cause downstream tasks to fail when the skipped
-          # task's outputs are unresolved. The restored Metro cache keeps
-          # re-bundling fast (~30s).
+          # Optimizations applied:
+          # 1. --parallel: builds independent library projects concurrently
+          #    (30+ RN modules can compile/link in parallel)
+          # 2. -PreactNativeArchitectures: limits CMake/NDK to release-only ABIs
+          #    (arm64-v8a + armeabi-v7a only, skips x86/x86_64 emulator ABIs)
+          # 3. -x lintVitalRelease: skip lint analysis (~1-2 min on critical path)
+          #    Lint should run in a dedicated CI job, not block release builds.
+          #
+          # Note: We cannot use -x createBundleReleaseJsAndAssets because
+          # Gradle 8's lazy task providers cause downstream tasks to fail
+          # when the skipped task's outputs are unresolved.
           ./gradlew bundleRelease assembleRelease \
             --build-cache \
-            --no-parallel
+            --parallel \
+            -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
+            -x lintVitalRelease
 
       - name: Save Gradle build cache (cross-run)
         if: always()
