@@ -58,12 +58,35 @@ fs.mkdirSync(path.dirname(bundleOutput), { recursive: true });
 fs.copyFileSync(prebuiltBundle, bundleOutput);
 console.log(`copy-bundle.cjs: Copied pre-built bundle to ${bundleOutput}`);
 
-// Create assets directory (images extracted by Metro are not needed here
-// because the prepare job already handled bundling; native drawable
-// resources live in app/src/main/res which is always included).
+// Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro in
+// the prepare job. These live in the drawable-* resource directories
+// alongside the pre-built bundle. Without these, require('./image.png')
+// resolves to missing files at runtime.
 if (assetsDest) {
   fs.mkdirSync(assetsDest, { recursive: true });
-  console.log(`copy-bundle.cjs: Created assets directory at ${assetsDest}`);
+
+  // The pre-built assets are in sibling drawable-* directories under
+  // src/main/res, placed there by the "Download pre-built JS assets"
+  // workflow step. Copy them to Gradle's expected output res directory.
+  const prebuiltResDir = path.resolve(__dirname, '..', 'src', 'main', 'res');
+  const drawableDirs = fs.readdirSync(prebuiltResDir).filter(
+    (d) => d.startsWith('drawable-') && fs.statSync(path.join(prebuiltResDir, d)).isDirectory()
+  );
+
+  let assetCount = 0;
+  for (const dir of drawableDirs) {
+    const srcDir = path.join(prebuiltResDir, dir);
+    const destDir = path.join(assetsDest, dir);
+    fs.mkdirSync(destDir, { recursive: true });
+    for (const file of fs.readdirSync(srcDir)) {
+      const srcFile = path.join(srcDir, file);
+      if (fs.statSync(srcFile).isFile()) {
+        fs.copyFileSync(srcFile, path.join(destDir, file));
+        assetCount++;
+      }
+    }
+  }
+  console.log(`copy-bundle.cjs: Copied ${assetCount} asset files from ${drawableDirs.length} drawable dirs to ${assetsDest}`);
 }
 
 // Write a minimal valid sourcemap so Hermes can produce a combined map.
