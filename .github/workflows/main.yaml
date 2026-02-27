@@ -332,6 +332,7 @@ jobs:
     needs: [check-secrets, check-vars, early-exit-check, prepare]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
+      fail-fast: false
       matrix:
         include:
           - variant: 'bcwallet-prod'
@@ -475,14 +476,8 @@ jobs:
           git status && \
           git diff ios/Podfile.lock
 
-      - name: Restore Metro cache
-        uses: actions/cache/restore@v4
-        with:
-          path: app/.metro-cache
-          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-
+      # Metro cache restore removed — SKIP_BUNDLING=1 uses pre-built JS bundle,
+      # so Metro is never invoked during the Xcode archive build.
 
       - name: Download pre-built iOS JS bundle
         uses: actions/download-artifact@v4
@@ -589,6 +584,9 @@ jobs:
           BUNDLE_DIR="xbuild/Build/Products/Release-iphoneos/AriesBifold.app"
           mkdir -p "$BUNDLE_DIR"
           cp jsbundle/ios-main.jsbundle "$BUNDLE_DIR/main.jsbundle"
+          # Build optimizations:
+          # - COMPILER_INDEX_STORE_ENABLE=NO: skip index-store writes (not needed in CI)
+          # - parallelizeTargets: build independent targets in parallel
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
@@ -601,6 +599,8 @@ jobs:
           -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
           -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
           -sdk iphoneos \
+          -parallelizeTargets \
+          COMPILER_INDEX_STORE_ENABLE=NO \
           -verbose \
           archive
 

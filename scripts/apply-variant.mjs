@@ -48,6 +48,18 @@ const DEFAULTS = {
   IOS_DISPLAY_NAME: 'BC Wallet',
 }
 
+/**
+ * Quote a value for OpenStep plist format (used by .pbxproj files).
+ * Simple alphanumeric/dot/underscore/slash values can remain unquoted.
+ * Values containing special characters ($, (), spaces, +, etc.) MUST be double-quoted.
+ */
+function pbxprojQuote(value) {
+  if (/^[A-Za-z0-9._/]+$/.test(value)) {
+    return value
+  }
+  return `"${value}"`
+}
+
 // Files that get template substitution
 const TEMPLATE_FILES = {
   // Android
@@ -91,14 +103,17 @@ const TEMPLATE_FILES = {
   ],
 
   // iOS
+  // Note: In OpenStep plist format (used by .pbxproj), values containing
+  // special characters ($, (), spaces, etc.) MUST be double-quoted.
+  // Simple alphanumeric/dot/underscore values can be unquoted.
   'app/ios/AriesBifold.xcodeproj/project.pbxproj': [
     {
       pattern: /PRODUCT_BUNDLE_IDENTIFIER = [^;]+;/g,
-      replacement: (env) => `PRODUCT_BUNDLE_IDENTIFIER = ${env.IOS_BUNDLE_ID};`,
+      replacement: (env) => `PRODUCT_BUNDLE_IDENTIFIER = ${pbxprojQuote(env.IOS_BUNDLE_ID)};`,
     },
     {
       pattern: /PRODUCT_NAME = [^;]+;/g,
-      replacement: (env) => `PRODUCT_NAME = ${env.IOS_PRODUCT_NAME};`,
+      replacement: (env) => `PRODUCT_NAME = ${pbxprojQuote(env.IOS_PRODUCT_NAME)};`,
     },
   ],
   'app/ios/AriesBifold/Info.plist': [
