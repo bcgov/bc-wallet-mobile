@@ -6,6 +6,7 @@ import { BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
   alreadyVerifiedErrorPolicy,
+  attestationPollingErrorPolicy,
   AxiosAppError,
   birthdateLockoutErrorPolicy,
   cardExpiredErrorPolicy,
@@ -454,6 +455,59 @@ describe('clientErrorPolicies', () => {
             params: { errorType: VerificationCardError.CardExpired },
           },
         ])
+      })
+    })
+  })
+
+  describe('attestationPollingErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match 404 on attestation endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 404,
+          endpoint: '/api/attestation/some-jwt-id',
+          apiEndpoints: {
+            attestation: '/api/attestation',
+          },
+        }
+        expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match 404 on other endpoints', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 404,
+          endpoint: '/api/other',
+          apiEndpoints: {
+            attestation: '/api/attestation',
+          },
+        }
+        expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other status codes on attestation endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 500,
+          endpoint: '/api/attestation/some-jwt-id',
+          apiEndpoints: {
+            attestation: '/api/attestation',
+          },
+        }
+        expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should log expected info message', () => {
+        const error = newError('unknown_server_error')
+        const loggerMock = { info: jest.fn() }
+        const context = { logger: loggerMock }
+        attestationPollingErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[AttestationPollingErrorPolicy] 404 expected during polling — attestation not yet consumed'
+        )
       })
     })
   })
