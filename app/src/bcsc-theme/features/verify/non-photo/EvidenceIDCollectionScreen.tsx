@@ -257,7 +257,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         index: 1,
         routes: [
           { name: BCSCScreens.SetupSteps },
-          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto } },
+          {
+            name: BCSCScreens.EvidenceTypeList,
+            params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto },
+          },
         ],
       })
     )

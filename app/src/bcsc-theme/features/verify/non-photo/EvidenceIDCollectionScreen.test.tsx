@@ -1,6 +1,6 @@
+import { initialBCSCSecureState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { initialBCSCSecureState } from '@/store'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
