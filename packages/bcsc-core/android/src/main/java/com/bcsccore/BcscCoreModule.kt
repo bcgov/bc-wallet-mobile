@@ -101,8 +101,9 @@ import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
 
-
-private enum class AccountFileName(val value: String) {
+private enum class AccountFileName(
+    val value: String,
+) {
     KEYPAIR_INFO("keypairinfo"),
     PROVIDERS("providers"),
     DEVICE_INFO("device_info"),
@@ -2684,7 +2685,7 @@ class BcscCoreModule(
             }
 
             Log.d(NAME, "getAuthorizationRequest: authRequest=$authRequest")
-            
+
             // Convert to WritableMap for React Native
             val result =
                 Arguments.createMap().apply {
@@ -2968,9 +2969,19 @@ class BcscCoreModule(
                 return
             }
 
-            // Read from account-specific SharedPreferences (v3 compatible)
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            // Read from SharedPreferences
+            // v3 hardcoded "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY" as the prefs name prefix,
+            // while v4 uses the current packageName. Fall back to the v3 name if the v4 location is empty.
+            val v4PrefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
+            val v4Prefs = reactApplicationContext.getSharedPreferences(v4PrefsName, Context.MODE_PRIVATE)
+            val prefs =
+                if (v4Prefs.all.isNotEmpty()) {
+                    v4Prefs
+                } else {
+                    val v3PrefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+                    Log.d(NAME, "getAccountFlags: v4 prefs empty, trying v3 location: $v3PrefsName")
+                    reactApplicationContext.getSharedPreferences(v3PrefsName, Context.MODE_PRIVATE)
+                }
 
             val result = Arguments.createMap()
 
@@ -3128,9 +3139,18 @@ class BcscCoreModule(
                 return
             }
 
-            // Read from account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            // Read from account-specific SharedPreferences.
+            // Fall back to v3 hardcoded name if v4 location is empty (see getAccountFlags for details).
+            val v4EvidencePrefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
+            val v4EvidencePrefs = reactApplicationContext.getSharedPreferences(v4EvidencePrefsName, Context.MODE_PRIVATE)
+            val prefs =
+                if (v4EvidencePrefs.all.isNotEmpty()) {
+                    v4EvidencePrefs
+                } else {
+                    val v3EvidencePrefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+                    Log.d(NAME, "getEvidenceMetadata: v4 prefs empty, trying v3 location: $v3EvidencePrefsName")
+                    reactApplicationContext.getSharedPreferences(v3EvidencePrefsName, Context.MODE_PRIVATE)
+                }
             var evidenceJson = prefs.getString("evidence_metadata", null)
 
             if (evidenceJson == null) {
@@ -3150,75 +3170,13 @@ class BcscCoreModule(
             val result = Arguments.createArray()
 
             val trimmedEvidenceJson = evidenceJson.trim()
+            // v4 stores a JSON array [{...}]
+            // v3 stored a JSON object {"evidence1":{...}, "evidence2":{...}}
+            // Check for an array and handle accordingly
             if (trimmedEvidenceJson.startsWith("[")) {
-                val jsonArray = JSONArray(trimmedEvidenceJson)
-                for (i in 0 until jsonArray.length()) {
-                    val item = jsonArray.getJSONObject(i)
-                    val map = Arguments.createMap()
-
-                    item.keys().forEach { key ->
-                        when (val value = item.get(key)) {
-                            is String -> map.putString(key, value)
-                            is Int -> map.putInt(key, value)
-                            is Double -> map.putDouble(key, value)
-                            is Boolean -> map.putBoolean(key, value)
-                            is JSONObject -> map.putMap(key, convertJsonToMap(value))
-                            is JSONArray -> map.putArray(key, convertJsonToArray(value))
-                            is Long -> map.putDouble(key, value.toDouble())
-                            JSONObject.NULL -> map.putNull(key)
-                        }
-                    }
-
-                    result.pushMap(map)
-                }
+                addEvidenceMetadataFromArrayJson(trimmedEvidenceJson, result)
             } else {
-                val evidenceUploadObject = JSONObject(trimmedEvidenceJson)
-                evidenceUploadObject.keys().forEach { key ->
-                    val evidenceEntry = evidenceUploadObject.optJSONObject(key) ?: return@forEach
-                    val metadataEntry = Arguments.createMap()
-
-                    evidenceEntry.optJSONObject("evidencetype")?.let { evidenceType ->
-                        metadataEntry.putMap("evidenceType", convertJsonToMap(evidenceType))
-                    }
-
-                    evidenceEntry
-                        .optJSONObject("evidencedetails")
-                        ?.optString("document_number")
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { metadataEntry.putString("documentNumber", it) }
-
-                    val metadataArray = Arguments.createArray()
-                    val evidencePhotos = evidenceEntry.optJSONObject("images")?.optJSONArray("evidencePhotos")
-                    if (evidencePhotos != null) {
-                        for (i in 0 until evidencePhotos.length()) {
-                            val photo = evidencePhotos.optJSONObject(i) ?: continue
-                            val photoMetadata = Arguments.createMap()
-                            val filePath = photo.optString("filepath", "")
-                            val filePathLower = filePath.lowercase(Locale.US)
-                            val contentType =
-                                when {
-                                    filePathLower.endsWith(".jpeg") || filePathLower.endsWith(".jpg") -> "image/jpeg"
-                                    filePathLower.endsWith(".png") -> "image/png"
-                                    else -> ""
-                                }
-
-                            photoMetadata.putString("label", photo.optString("label", ""))
-                            photoMetadata.putString("content_type", contentType)
-                            photoMetadata.putInt("content_length", 0)
-                            photoMetadata.putDouble("date", photo.optLong("timestamp", 0L).toDouble())
-                            photoMetadata.putString("sha256", "")
-                            photoMetadata.putString("file_path", filePath)
-                            if (filePath.isNotEmpty()) {
-                                photoMetadata.putString("filename", File(filePath).name)
-                            }
-
-                            metadataArray.pushMap(photoMetadata)
-                        }
-                    }
-
-                    metadataEntry.putArray("metadata", metadataArray)
-                    result.pushMap(metadataEntry)
-                }
+                addEvidenceMetadataFromObjectJson(trimmedEvidenceJson, result)
             }
 
             Log.d(NAME, "getEvidenceMetadata: Successfully read evidence metadata")
@@ -3226,6 +3184,85 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "getEvidenceMetadata error: ${e.message}", e)
             promise.reject("E_GET_EVIDENCE_METADATA_ERROR", "Error getting evidence metadata: ${e.message}", e)
+        }
+    }
+
+    private fun addEvidenceMetadataFromArrayJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val jsonArray = JSONArray(trimmedEvidenceJson)
+        for (i in 0 until jsonArray.length()) {
+            val item = jsonArray.getJSONObject(i)
+            val map = Arguments.createMap()
+
+            item.keys().forEach { key ->
+                when (val value = item.get(key)) {
+                    is String -> map.putString(key, value)
+                    is Int -> map.putInt(key, value)
+                    is Double -> map.putDouble(key, value)
+                    is Boolean -> map.putBoolean(key, value)
+                    is JSONObject -> map.putMap(key, convertJsonToMap(value))
+                    is JSONArray -> map.putArray(key, convertJsonToArray(value))
+                    is Long -> map.putDouble(key, value.toDouble())
+                    JSONObject.NULL -> map.putNull(key)
+                }
+            }
+
+            result.pushMap(map)
+        }
+    }
+
+    private fun addEvidenceMetadataFromObjectJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val evidenceUploadObject = JSONObject(trimmedEvidenceJson)
+        evidenceUploadObject.keys().forEach { key ->
+            val evidenceEntry = evidenceUploadObject.optJSONObject(key) ?: return@forEach
+            val metadataEntry = Arguments.createMap()
+
+            evidenceEntry.optJSONObject("evidencetype")?.let { evidenceType ->
+                metadataEntry.putMap("evidenceType", convertJsonToMap(evidenceType))
+            }
+
+            evidenceEntry
+                .optJSONObject("evidencedetails")
+                ?.optString("document_number")
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { metadataEntry.putString("documentNumber", it) }
+
+            val metadataArray = Arguments.createArray()
+            val evidencePhotos = evidenceEntry.optJSONObject("images")?.optJSONArray("evidencePhotos")
+            if (evidencePhotos != null) {
+                for (i in 0 until evidencePhotos.length()) {
+                    val photo = evidencePhotos.optJSONObject(i) ?: continue
+                    val photoMetadata = Arguments.createMap()
+                    val filePath = photo.optString("filepath", "")
+                    val filePathLower = filePath.lowercase(Locale.US)
+                    val contentType =
+                        when {
+                            filePathLower.endsWith(".jpeg") || filePathLower.endsWith(".jpg") -> "image/jpeg"
+                            filePathLower.endsWith(".png") -> "image/png"
+                            else -> ""
+                        }
+
+                    photoMetadata.putString("label", photo.optString("label", ""))
+                    photoMetadata.putString("content_type", contentType)
+                    photoMetadata.putInt("content_length", 0)
+                    photoMetadata.putDouble("date", photo.optLong("timestamp", 0L).toDouble())
+                    photoMetadata.putString("sha256", "")
+                    photoMetadata.putString("file_path", filePath)
+                    if (filePath.isNotEmpty()) {
+                        photoMetadata.putString("filename", File(filePath).name)
+                    }
+
+                    metadataArray.pushMap(photoMetadata)
+                }
+            }
+
+            metadataEntry.putArray("metadata", metadataArray)
+            result.pushMap(metadataEntry)
         }
     }
 
@@ -3404,7 +3441,14 @@ class BcscCoreModule(
             )
             return null
         }
-        return nativeStorage.readEncryptedFile(providersFile)?.takeIf { it.isNotBlank() }
+
+        val providersFileContents = nativeStorage.readEncryptedFile(providersFile)
+        Log.d(
+            NAME,
+            "getCredential: Fallback providers file contents from ${providersFile.absolutePath}: $providersFileContents",
+        )
+
+        return providersFileContents?.takeIf { it.isNotBlank() }
     }
 
     /**
@@ -3775,6 +3819,7 @@ class BcscCoreModule(
     // TODO: (al) - refactor to use this function
     // TODO: (al) - refactor to remove file names and use AccountFileName enum
     // TODO: (al) - refactor to create a similar function to readFirstAccountEncryptedFile for the sharedpreferences
+
     /**
      * A helper function to read user account files for migration
      */
