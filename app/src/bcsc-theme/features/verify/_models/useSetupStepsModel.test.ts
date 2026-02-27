@@ -68,6 +68,7 @@ describe('useSetupStepsModel', () => {
       additionalEvidenceData: [],
       cardProcess: 'combined',
       walletKey: 'wallet-key',
+      registrationAccessToken: 'registration-access-token',
     },
   }
 
@@ -469,7 +470,7 @@ describe('useSetupStepsModel', () => {
   })
 
   describe('handleResetCardRegistration', () => {
-    it('should throw error if no account', async () => {
+    it('logs error if no account', async () => {
       getAccount.mockResolvedValue(null)
 
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
@@ -480,9 +481,8 @@ describe('useSetupStepsModel', () => {
     })
 
     it('should display factory reset alert if error', async () => {
-      const factoryResetAlertSpy = jest
-        .spyOn(useAlertsModule, 'useAlerts')
-        .mockReturnValue({ factoryResetAlert: jest.fn() } as any)
+      const mockFactoryResetAlert = jest.fn()
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ factoryResetAlert: mockFactoryResetAlert } as any)
       getAccount.mockResolvedValue(null)
 
       const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
@@ -490,7 +490,7 @@ describe('useSetupStepsModel', () => {
       await result.current.handleResetCardRegistration()
 
       expect(mockLogger.error).toHaveBeenCalled()
-      expect(factoryResetAlertSpy).toHaveBeenCalled()
+      expect(mockFactoryResetAlert).toHaveBeenCalled()
     })
 
     it('should delete and clear all registration and verification data', async () => {
@@ -512,6 +512,7 @@ describe('useSetupStepsModel', () => {
         hasAccount: true,
         isHydrated: true,
         walletKey: 'wallet-key',
+        registrationAccessToken: 'registration-access-token',
       })
       expect(mockDeleteVerificationData).toHaveBeenCalledWith()
     })

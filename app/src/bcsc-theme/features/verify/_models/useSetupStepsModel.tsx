@@ -27,9 +27,8 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  const { cancelVerificationRequestAlert } = useAlerts(navigation)
+  const { cancelVerificationRequestAlert, factoryResetAlert } = useAlerts(navigation)
   const registrationService = useRegistrationService()
-  const { factoryResetAlert } = useAlerts(navigation)
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -63,7 +62,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         // 4. Delete any persisted verification data in device file system
         await deleteVerificationData()
         // 5. Re-register the device and generate a new account (prevents "client is in invalid state/statue" errors)
-        await registrationService.register(securityMethod)
+        await registrationService.createRegistration(securityMethod)
       })
     } catch (error) {
       logger.error('[handleResetCardRegistration] Error resetting card registration', error as Error)
