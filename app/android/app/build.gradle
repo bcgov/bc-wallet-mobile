@@ -51,6 +51,14 @@ react {
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
 
+    // CI optimization: When SKIP_METRO_BUNDLE=1 is set, use a lightweight
+    // copy script instead of running Metro (~4 min savings). The pre-built
+    // bundle is downloaded from the prepare job's artifact. Hermes bytecode
+    // compilation still runs normally on the copied bundle.
+    if (System.getenv("SKIP_METRO_BUNDLE") == "1") {
+        cliFile = file("scripts/copy-bundle.cjs")
+    }
+
     /* Autolinking */
     autolinkLibrariesWithApp()
 }
