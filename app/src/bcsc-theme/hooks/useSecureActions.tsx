@@ -234,7 +234,7 @@ export const useSecureActions = () => {
 
       if (userInfo.email !== undefined) {
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_EMAIL,
+          type: BCDispatchAction.UPDATE_SECURE_EMAIL_ADDRESS,
           payload: [userInfo.email],
         })
       }
@@ -700,7 +700,6 @@ export const useSecureActions = () => {
 
         birthdate: authRequest?.birthdate ? new Date(authRequest.birthdate * 1000) : undefined,
         serial: authRequest?.csn,
-        email: authRequest?.verifiedEmail,
         isEmailVerified: accountFlags.isEmailVerified ?? !!authRequest?.verifiedEmail,
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
@@ -714,7 +713,7 @@ export const useSecureActions = () => {
         verified,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
-        emailAddress: accountFlags.emailAddress,
+        emailAddress: accountFlags.emailAddress ?? authRequest?.verifiedEmail,
         temporaryEmailId: accountFlags.temporaryEmailId,
         userSubmittedVerificationVideo: accountFlags.userSubmittedVerificationVideo,
 
