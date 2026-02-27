@@ -121,6 +121,14 @@ export type DeviceSecurityUnlockResult = {
   migrated?: boolean; // true if this was a v3 user migration (PIN was just created)
 };
 
+export type NativeFilesScan = {
+  bundleID: string;
+  bundleDirectory: string;
+  bundleDirectoryExists: boolean;
+  files: string[];
+  fileCount: number;
+};
+
 export type NativeAddress = {
   streetAddress?: string;
   locality?: string;
@@ -223,6 +231,7 @@ export interface Spec extends TurboModule {
   deleteToken(tokenType: number): Promise<boolean>;
   setIssuer(issuer: string): Promise<boolean>;
   getIssuer(): Promise<string | null>;
+  getNativeFilesScan(): Promise<NativeFilesScan>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;

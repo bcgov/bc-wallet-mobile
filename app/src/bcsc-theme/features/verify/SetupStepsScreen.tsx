@@ -146,7 +146,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           {steps.email.completed ? (
             <>
               <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
-                {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.email })}
+                {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.emailAddress })}
               </ThemedText>
               <TouchableOpacity
                 onPress={stepActions.email}
@@ -223,7 +223,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
       {accountType === AccountSetupType.AddAccount ? renderAddAccountSteps() : renderTransferAccountSteps()}
 
-      {store.bcscSecure.userSubmittedVerificationVideo ? (
+      {store.bcscSecure.userSubmittedVerificationVideo || store.bcscSecure.verificationRequestId ? (
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity

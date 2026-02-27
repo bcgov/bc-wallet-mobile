@@ -416,7 +416,7 @@ class StorageService {
       let remainder = host.dropFirst(2) // remove "id"
 
       if let env = remainder.split(separator: ".").first, !env.isEmpty {
-        return String(env) // "dev", "test"
+        return String(env).uppercased() // "DEV", "TEST"
       }
     }
 

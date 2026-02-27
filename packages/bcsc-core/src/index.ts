@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type LoginChallengeResult,
   type NativeAccount,
   type NativeAuthorizationRequest,
+  type NativeFilesScan,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -14,6 +15,7 @@ export type {
   NativeAccount,
   NativeAddress,
   NativeAuthorizationRequest,
+  NativeFilesScan,
 } from './NativeBcscCore';
 
 /**
@@ -269,6 +271,14 @@ export const setIssuer = (issuer: string): Promise<boolean> => {
  */
 export const getIssuer = (): Promise<string | null> => {
   return BcscCore.getIssuer();
+};
+
+/**
+ * Scans the native Application Support directory and returns all file paths.
+ * Useful for diagnosing v3 vs v4 storage layouts.
+ */
+export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
+  return BcscCore.getNativeFilesScan();
 };
 
 /**
@@ -796,7 +806,7 @@ export interface EvidenceType {
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
-  evidenceType: EvidenceType;
+  evidenceType?: EvidenceType;
   /** Photo metadata array */
   metadata: PhotoMetadata[];
   /** Document number/reference */
