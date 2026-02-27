@@ -241,7 +241,16 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
-          cache: 'gradle'
+
+      - name: Restore Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /mnt/gradle-cache/caches
+            /mnt/gradle-cache/wrapper
+            !/mnt/gradle-cache/caches/build-cache-1
+          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
@@ -714,9 +723,18 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
-          cache: 'gradle'
           server-id: github
           settings-path: ${{ github.workspace }}
+
+      - name: Restore Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            /mnt/gradle-cache/caches
+            /mnt/gradle-cache/wrapper
+            !/mnt/gradle-cache/caches/build-cache-1
+          key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-deps-${{ runner.os }}-
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
