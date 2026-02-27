@@ -204,7 +204,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainLoading]: undefined
   [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
-  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
@@ -214,6 +214,7 @@ export type BCSCMainStackParams = {
     serviceClientId?: string
     serviceTitle?: string
     pairingCode?: string
+    fromAppSwitch?: boolean
   }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
