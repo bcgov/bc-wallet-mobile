@@ -275,20 +275,10 @@ jobs:
 
       - name: Free up disk space
         run: |
-          echo "=== Disk space before cleanup ==="
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /opt/microsoft /opt/google
-          sudo rm -rf /opt/az
-          sudo rm -rf /usr/local/julia*
-          sudo docker image prune --all --force || true
-          sudo docker system prune -af || true
-          sudo docker builder prune -af || true
-          sudo apt-get clean
-          echo "=== Disk space after cleanup ==="
-          df -h
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL \
+            /opt/microsoft /opt/google /opt/az /usr/local/julia*
+          sudo docker image prune --all --force 2>/dev/null || true
+          sudo apt-get clean 2>/dev/null || true
 
       - name: Restore Gradle build cache (cross-run)
         uses: actions/cache/restore@v4
@@ -688,12 +678,10 @@ jobs:
 
   build-android:
     name: Build Android - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare, prepare-android]
+    needs: [check-secrets, check-vars, early-exit-check, prepare]
     if: |-
-      always() &&
       needs.early-exit-check.outputs.should_skip_build != 'true' &&
-      needs.prepare.result == 'success' &&
-      !contains(needs.*.result, 'cancelled')
+      needs.prepare.result == 'success'
     strategy:
       matrix:
         include:
@@ -756,12 +744,12 @@ jobs:
           echo "ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME}" >> "$GITHUB_ENV"
           echo "APP_NAME=${APP_NAME}" >> "$GITHUB_ENV"
 
-      - name: Check initial disk space
+      - name: Free up disk space
         run: |
-          echo "=== Disk space before cleanup ==="
-          df -h
-          echo "=== Largest directories ==="
-          du -sh /* 2>/dev/null | sort -hr | head -20 || true
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL \
+            /opt/microsoft /opt/google /opt/az /usr/local/julia*
+          sudo docker image prune --all --force 2>/dev/null || true
+          sudo apt-get clean 2>/dev/null || true
 
       - uses: actions/setup-python@v5
         with:
@@ -800,24 +788,6 @@ jobs:
         run: |
           yarn install --immutable && \
           git status
-
-      - name: Free up disk space
-        run: |
-          echo "=== Disk space before cleanup ==="
-          df -h
-          echo "Removing unnecessary system files to free disk space..."
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /opt/microsoft /opt/google
-          sudo rm -rf /opt/az
-          sudo rm -rf /usr/local/julia*
-          sudo docker image prune --all --force || true
-          sudo docker system prune -af || true
-          sudo docker builder prune -af || true
-          sudo apt-get clean
-          echo "=== Disk space after cleanup ==="
-          df -h
 
       - name: Restore Gradle build cache
         uses: actions/cache/restore@v4
@@ -963,7 +933,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - early-exit-check
-      - prepare-android
       - build-android
       - build-ios
     if: always()
