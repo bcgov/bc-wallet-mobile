@@ -101,6 +101,19 @@ import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
 
+
+private enum class AccountFileName(val value: String) {
+    KEYPAIR_INFO("keypairinfo"),
+    PROVIDERS("providers"),
+    DEVICE_INFO("device_info"),
+    ATTESTATION_INFO("attestation_info"),
+    EVIDENCE_CONFIG("evidence_config"),
+    EVIDENCE_UPLOAD("evidence_upload"),
+    ADD_CARD_INFO("add_card_info"),
+    TOKENS("tokens"),
+    AUTHORIZATION_REQUEST("authorization_request"),
+}
+
 /**
  * BC Services Card React Native Module
  *
@@ -2670,6 +2683,8 @@ class BcscCoreModule(
                 return
             }
 
+            Log.d(NAME, "getAuthorizationRequest: authRequest=$authRequest")
+            
             // Convert to WritableMap for React Native
             val result =
                 Arguments.createMap().apply {
@@ -3116,36 +3131,94 @@ class BcscCoreModule(
             // Read from account-specific SharedPreferences
             val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
             val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            val evidenceJson = prefs.getString("evidence_metadata", null)
+            var evidenceJson = prefs.getString("evidence_metadata", null)
 
             if (evidenceJson == null) {
-                // No evidence metadata stored yet - return empty array
+                Log.d(
+                    NAME,
+                    "getEvidenceMetadata: No evidence metadata found in SharedPreferences, trying account file fallback",
+                )
+                evidenceJson = readFirstAccountEncryptedFile(AccountFileName.EVIDENCE_UPLOAD)
+            }
+
+            if (evidenceJson.isNullOrBlank()) {
                 Log.d(NAME, "getEvidenceMetadata: No evidence metadata found")
                 promise.resolve(Arguments.createArray())
                 return
             }
 
-            // Parse JSON array and convert to WritableArray
-            val jsonArray = JSONArray(evidenceJson)
             val result = Arguments.createArray()
 
-            for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.getJSONObject(i)
-                val map = Arguments.createMap()
+            val trimmedEvidenceJson = evidenceJson.trim()
+            if (trimmedEvidenceJson.startsWith("[")) {
+                val jsonArray = JSONArray(trimmedEvidenceJson)
+                for (i in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(i)
+                    val map = Arguments.createMap()
 
-                // Convert each evidence metadata object
-                item.keys().forEach { key ->
-                    when (val value = item.get(key)) {
-                        is String -> map.putString(key, value)
-                        is Int -> map.putInt(key, value)
-                        is Double -> map.putDouble(key, value)
-                        is Boolean -> map.putBoolean(key, value)
-                        is JSONObject -> map.putMap(key, convertJsonToMap(value))
-                        is JSONArray -> map.putArray(key, convertJsonToArray(value))
-                        JSONObject.NULL -> map.putNull(key)
+                    item.keys().forEach { key ->
+                        when (val value = item.get(key)) {
+                            is String -> map.putString(key, value)
+                            is Int -> map.putInt(key, value)
+                            is Double -> map.putDouble(key, value)
+                            is Boolean -> map.putBoolean(key, value)
+                            is JSONObject -> map.putMap(key, convertJsonToMap(value))
+                            is JSONArray -> map.putArray(key, convertJsonToArray(value))
+                            is Long -> map.putDouble(key, value.toDouble())
+                            JSONObject.NULL -> map.putNull(key)
+                        }
                     }
+
+                    result.pushMap(map)
                 }
-                result.pushMap(map)
+            } else {
+                val evidenceUploadObject = JSONObject(trimmedEvidenceJson)
+                evidenceUploadObject.keys().forEach { key ->
+                    val evidenceEntry = evidenceUploadObject.optJSONObject(key) ?: return@forEach
+                    val metadataEntry = Arguments.createMap()
+
+                    evidenceEntry.optJSONObject("evidencetype")?.let { evidenceType ->
+                        metadataEntry.putMap("evidenceType", convertJsonToMap(evidenceType))
+                    }
+
+                    evidenceEntry
+                        .optJSONObject("evidencedetails")
+                        ?.optString("document_number")
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { metadataEntry.putString("documentNumber", it) }
+
+                    val metadataArray = Arguments.createArray()
+                    val evidencePhotos = evidenceEntry.optJSONObject("images")?.optJSONArray("evidencePhotos")
+                    if (evidencePhotos != null) {
+                        for (i in 0 until evidencePhotos.length()) {
+                            val photo = evidencePhotos.optJSONObject(i) ?: continue
+                            val photoMetadata = Arguments.createMap()
+                            val filePath = photo.optString("filepath", "")
+                            val filePathLower = filePath.lowercase(Locale.US)
+                            val contentType =
+                                when {
+                                    filePathLower.endsWith(".jpeg") || filePathLower.endsWith(".jpg") -> "image/jpeg"
+                                    filePathLower.endsWith(".png") -> "image/png"
+                                    else -> ""
+                                }
+
+                            photoMetadata.putString("label", photo.optString("label", ""))
+                            photoMetadata.putString("content_type", contentType)
+                            photoMetadata.putInt("content_length", 0)
+                            photoMetadata.putDouble("date", photo.optLong("timestamp", 0L).toDouble())
+                            photoMetadata.putString("sha256", "")
+                            photoMetadata.putString("file_path", filePath)
+                            if (filePath.isNotEmpty()) {
+                                photoMetadata.putString("filename", File(filePath).name)
+                            }
+
+                            metadataArray.pushMap(photoMetadata)
+                        }
+                    }
+
+                    metadataEntry.putArray("metadata", metadataArray)
+                    result.pushMap(metadataEntry)
+                }
             }
 
             Log.d(NAME, "getEvidenceMetadata: Successfully read evidence metadata")
@@ -3699,6 +3772,36 @@ class BcscCoreModule(
             promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
         }
     }
+    // TODO: (al) - refactor to use this function
+    // TODO: (al) - refactor to remove file names and use AccountFileName enum
+    // TODO: (al) - refactor to create a similar function to readFirstAccountEncryptedFile for the sharedpreferences
+    /**
+     * A helper function to read user account files for migration
+     */
+    private fun readFirstAccountEncryptedFile(accountFileName: AccountFileName): String? {
+        val account = getAccountSync()
+        val accountId = account?.getString("id")
+        val issuer = account?.getString("issuer")
+
+        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+            Log.d(NAME, "readFirstAccountEncryptedFile: no account/issuer found")
+            return null
+        }
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+        val targetFile =
+            File(
+                reactApplicationContext.filesDir,
+                "$issuerName${File.separator}$accountId${File.separator}${accountFileName.value}",
+            )
+
+        if (!targetFile.exists() || !targetFile.isFile) {
+            Log.d(NAME, "readFirstAccountEncryptedFile: file not found at ${targetFile.absolutePath}")
+            return null
+        }
+
+        return nativeStorage.readEncryptedFile(targetFile)
+    }
 
     // MARK: - PIN Penalty Helper Methods
 
@@ -3968,6 +4071,8 @@ class BcscCoreModule(
                         allFiles.forEach { file ->
                             Log.i(NAME, "[Native File Scan] $file")
                         }
+
+                        // logEvidenceFileContents(filesDir, allFiles)
                     } else {
                         putArray("files", Arguments.createArray())
                         putInt("fileCount", 0)
@@ -4020,4 +4125,49 @@ class BcscCoreModule(
             Log.w(NAME, "recursiveFileScan: Error scanning directory: ${e.message}", e)
         }
     }
+
+    // private fun logEvidenceFileContents(
+    //     baseDirectory: File,
+    //     scannedRelativePaths: List<String>,
+    // ) {
+    //     val evidenceFileNames = setOf("evidence_config", "evidence_upload")
+
+    //     scannedRelativePaths.forEach { relativePath ->
+    //         val segments = relativePath.split(File.separator).filter { it.isNotBlank() }
+    //         if (segments.size < 2) {
+    //             return@forEach
+    //         }
+
+    //         val fileName = segments.last()
+    //         if (fileName !in evidenceFileNames) {
+    //             return@forEach
+    //         }
+
+    //         val file = File(baseDirectory, relativePath)
+    //         if (!file.exists() || !file.isFile) {
+    //             return@forEach
+    //         }
+
+    //         try {
+    //             val content = nativeStorage.readEncryptedFile(file)
+    //             if (content != null) {
+    //                 Log.i(
+    //                     NAME,
+    //                     "[Native File Scan] ${file.absolutePath} contents:\n$content",
+    //                 )
+    //             } else {
+    //                 Log.w(
+    //                     NAME,
+    //                     "[Native File Scan] ${file.absolutePath} could not be decrypted/read as text",
+    //                 )
+    //             }
+    //         } catch (e: Exception) {
+    //             Log.w(
+    //                 NAME,
+    //                 "[Native File Scan] Failed to read ${file.absolutePath}: ${e.message}",
+    //                 e,
+    //             )
+    //         }
+    //     }
+    // }
 }
