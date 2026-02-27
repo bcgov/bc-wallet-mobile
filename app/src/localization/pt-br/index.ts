@@ -344,7 +344,6 @@ const translation = {
       "EditEmail": "Edit (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
-      "ResetData": "Reset data (PT-BR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -520,6 +519,7 @@ const translation = {
       "Heading": "Provide the card serial number on the back right side of your card. (PT-BR)",
       "Paragraph": "When scanning, you should place the card in front of a white background for best results. (PT-BR)",
       "ScanBarcode": "Scan Barcode with Camera (PT-BR)",
+      "ToggleOverlay": "Toggle overlay (PT-BR)",
       "EnterManually": "Enter Serial Number Manually (PT-BR)",
     },
     "Scan": {

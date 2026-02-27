@@ -73,10 +73,11 @@ const useEvidenceUploadModel = (
       // Upload metadata for each evidence type to get upload URIs
       const metadataPayload = {
         type: evidenceItem.evidenceType.evidence_type,
-        number: evidenceItem.documentNumber,
+        number: evidenceItem.documentNumber ?? '',
         images: evidenceItem.metadata.map((data) => {
           return { ...data, file_path: undefined }
         }),
+        ...(evidenceItem.barcodes && evidenceItem.barcodes.length > 0 && { barcodes: evidenceItem.barcodes }),
       }
 
       const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)

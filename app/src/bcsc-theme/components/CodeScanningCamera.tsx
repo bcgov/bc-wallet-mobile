@@ -62,11 +62,18 @@ const PINCH_SCALE_FULL_ZOOM = 3
 
 export interface CodeScanningCameraProps {
   /**
-   * Callback function called when a code is successfully scanned
+   * Callback function called when a code is successfully scanned.
+   *
+   * Return a Promise that if resolves to `false` signals that the
+   * scanned codes were rejected (e.g. DL-only with no BCSC serial).  The
+   * camera will automatically reset to the scanning state so the user can
+   * try again.  Any other return value (including `void`) is treated as
+   * accepted.
+   *
    * @param codes Array of scanned codes with position and orientation metadata
    * @param frame The camera frame information
    */
-  onCodeScanned: (codes: EnhancedCode[], frame: CodeScannerFrame) => void
+  onCodeScanned: (codes: EnhancedCode[], frame: CodeScannerFrame) => Promise<void | boolean>
 
   /**
    * Custom style for the camera container
@@ -148,6 +155,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   // Track if we're currently processing a scan to prevent multiple callbacks
   const isProcessingScan = useRef(false)
+
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -183,9 +191,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
 
   // Track scan zone position for alignment detection
-  const [scanZoneBounds, setScanZoneBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(
-    null
-  )
+  const [scanZoneBounds, setScanZoneBounds] = useState<{
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null>(null)
 
   // Frozen camera preview — stores a snapshot URI when scanning is locked
   const [frozenFrameUri, setFrozenFrameUri] = useState<string | null>(null)
@@ -623,19 +634,17 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }, [hasPermission, requestPermission])
 
-  // Auto-confirm: when manual confirm is disabled, immediately fire the callback on lock
-  useEffect(() => {
-    if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked' && lockedScanRef.current) {
-      onCodeScanned(lockedScanRef.current.codes, lockedScanRef.current.frame)
-    }
-  }, [scanState, onCodeScanned])
-
   // Capture a snapshot to freeze the camera preview when scanning locks
   useEffect(() => {
     if (scanState === 'locked' && camera.current && !frozenFrameUri) {
       camera.current
         .takeSnapshot({ quality: 85 })
         .then((photo) => {
+          // Guard: if scanning was reset before the snapshot resolved, discard it.
+          // Without this, the frozen frame would re-appear after resetScanningState().
+          if (!isLockedRef.current) {
+            return
+          }
           setFrozenFrameUri(`file://${photo.path}`)
         })
         .catch((err) => {
@@ -716,7 +725,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       camera.current.focus({ x: focusX, y: focusY }).catch((err) => {
         // Silently ignore focus errors (canceled, not supported, etc.)
         if (!(err instanceof CameraCaptureError && err.code === 'capture/focus-canceled')) {
-          logger.debug('Auto-focus cycle error', { zone: zoneIndex, undetected: undetectedIndices, error: String(err) })
+          logger.debug('Auto-focus cycle error', {
+            zone: zoneIndex,
+            undetected: undetectedIndices,
+            error: String(err),
+          })
         }
       })
 
@@ -871,13 +884,25 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }, [resetScanningState])
 
   /** Confirm the locked scan — fires the parent callback without resuming the camera.
-   *  The parent is expected to navigate away; if it doesn't, the user can tap "Try Again". */
-  const handleConfirmScan = useCallback(() => {
+   *  The parent is expected to navigate away; if it doesn't, the user can tap "Try Again".
+   *  If the callback returns `false`, reset the scanner so the user can retry. */
+  const confirmScan = useCallback(async () => {
     const locked = lockedScanRef.current
     if (locked) {
-      onCodeScanned(locked.codes, locked.frame)
+      const result = await onCodeScanned(locked.codes, locked.frame)
+      if (result === false) {
+        resetScanningState()
+      }
     }
-  }, [onCodeScanned])
+  }, [onCodeScanned, resetScanningState])
+
+  // Auto-confirm: when manual confirm is disabled, immediately fire the callback on lock.
+  // If the callback returns `false`, the scan was rejected — reset so the user can retry.
+  useEffect(() => {
+    if (!ENABLE_MANUAL_CONFIRM && scanState === 'locked') {
+      confirmScan()
+    }
+  }, [scanState, confirmScan])
 
   const styles = StyleSheet.create({
     container: {
@@ -1360,7 +1385,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             </>
           ) : (
             <>
-              <Pressable style={styles.confirmButton} onPress={handleConfirmScan} testID="confirm-scan-button">
+              <Pressable style={styles.confirmButton} onPress={confirmScan} testID="confirm-scan-button">
                 <Text style={styles.confirmButtonText}>{'\u2714'} Confirm</Text>
               </Pressable>
               <Pressable style={styles.continueButton} onPress={handleContinueScanning} testID="try-again-button">

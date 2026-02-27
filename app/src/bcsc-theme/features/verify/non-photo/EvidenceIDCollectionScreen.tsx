@@ -36,7 +36,7 @@ type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
-  route: { params: { cardType: EvidenceType } }
+  route: { params: { cardType: EvidenceType; documentNumber?: string } }
 }
 
 /**
@@ -56,17 +56,30 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { ButtonLoading } = useAnimatedComponents()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
+  const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
+    (e) => e.evidenceType.evidence_type === cardType.evidence_type
+  )
+  // Fields other than documentNumber are required only for the first evidence piece.
+  // We detect "first" by checking if this cardType is the first entry in additionalEvidenceData.
+  // By the time subsequent evidence screens open, the first entry (with metadata) is already saved,
+  // so findIndex will be > 0 (or -1 if not yet added, which also means it's the first).
+  const additionalEvidenceRequired = evidenceIndex <= 0
+
+  // If we have a document number from the route params (ie: from scanning), use that.
+  // Otherwise, if this cardType already has an entry in additionalEvidenceData, use the
+  // document number from there (ie: user is going back to edit). Otherwise,
+  // default to empty string.
+  const initialDocumentNumber =
+    route.params.documentNumber ?? store.bcscSecure.additionalEvidenceData[evidenceIndex]?.documentNumber ?? ''
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
-    documentNumber: '', // make the user re-enter every time
+    documentNumber: initialDocumentNumber,
     firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
     middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
     lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
     birthDate: store.bcscSecure.birthdate?.toISOString().split('T')[0] ?? '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
-
-  const additionalEvidenceRequired = store.bcscSecure.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -213,6 +226,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             last: formState.lastName.trim(),
             middle: formState.middleNames.trim(),
           },
+          // Preserve address data if it has already been set (eg. from a barcode scan)
+          ...(store.bcscSecure.userMetadata?.address && {
+            address: store.bcscSecure.userMetadata.address,
+          }),
         })
       }
 

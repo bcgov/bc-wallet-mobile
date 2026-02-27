@@ -105,7 +105,12 @@ export const decodeScannedCode = (
 ): DecodedCode | null => {
   for (const strategy of decoderStrategies) {
     if (strategy.canDecode(code)) {
-      return strategy.decode(code)
+      try {
+        return strategy.decode(code)
+      } catch {
+        // Decoder matched but failed to parse — try the next strategy
+        continue
+      }
     }
   }
 

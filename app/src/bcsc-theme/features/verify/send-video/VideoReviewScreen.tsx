@@ -58,7 +58,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       position: 'relative',
       flexGrow: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-      marginTop: Spacing.xl,
     },
     videoContainer: {
       flexGrow: 1,
@@ -83,12 +82,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       marginTop: Spacing.lg,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    controlsContainer: {
-      padding: Spacing.md,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
     },
   })
 
@@ -156,25 +149,18 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
       />
-      <View style={styles.secondButton}>
-        <Button
-          buttonType={ButtonType.Tertiary}
-          onPress={onPressRetake}
-          testID={testIdWithKey('RetakeVideo')}
-          title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-          accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-        />
-      </View>
+      <Button
+        buttonType={ButtonType.Tertiary}
+        onPress={onPressRetake}
+        testID={testIdWithKey('RetakeVideo')}
+        title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+      />
     </>
   )
 
   return (
-    <ScreenWrapper
-      padded={false}
-      style={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper edges={['top', 'bottom', 'left', 'right']} style={styles.pageContainer} controls={controls}>
       <View style={styles.videoContainer}>
         <ThemedText variant={'headingFour'} style={styles.heading}>
           {t('BCSC.SendVideo.VideoReview.Heading')}

@@ -344,7 +344,6 @@ const translation = {
       "EditEmail": "Edit",
       "CheckStatus": "Check status",
       "ChooseAnotherWayToVerify": "Choose another way to verify",
-      "ResetData": "Reset data",
     },
     "SystemChecks": {
       "Devices": {
@@ -519,6 +518,7 @@ const translation = {
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card.",
       "Paragraph": "When scanning, you should place the card in front of a white background for best results.",
+      "ToggleOverlay": "Toggle overlay",
       "ScanBarcode": "Scan Barcode with Camera",
       "EnterManually": "Enter Serial Number Manually",
     },

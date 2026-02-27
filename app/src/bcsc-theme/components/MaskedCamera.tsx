@@ -1,9 +1,9 @@
 import { useAlerts } from '@/hooks/useAlerts'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useIsFocused } from '@react-navigation/native'
+import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
@@ -16,7 +16,7 @@ import {
 } from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
-  navigation: any
+  navigation: NavigationProp<ParamListBase>
   cameraFace: 'front' | 'back'
   cameraFormatFilter?: FormatFilter[]
   cameraInstructions?: string
@@ -101,10 +101,15 @@ const MaskedCamera = ({
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
 
   if (!device) {
+    // provide back button if they get into stuck state with no working camera
+    navigation.setOptions({
+      headerShown: true,
+    })
+
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device })}</Text>
+          <ThemedText>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}</ThemedText>
         </View>
       </SafeAreaView>
     )
@@ -121,9 +126,14 @@ const MaskedCamera = ({
   const takePhoto = async () => {
     try {
       if (cameraRef.current && isActive) {
-        const photo = await cameraRef.current.takePhoto({
-          flash: 'off',
-          enableShutterSound: false,
+        // Use takeSnapshot (captures from the video feed at video resolution)
+        // instead of takePhoto (full sensor resolution, e.g. 12MP).
+        // Xcode 26 / iOS 26 SDK changed the default photo encoding to HEIF,
+        // which takes 5-10s to decode at 12MP in RN's Image component.
+        // Snapshot at quality 90 produces a ~1080p JPEG that decodes instantly
+        // and is still well above the resolution needed for backend barcode processing.
+        const photo = await cameraRef.current.takeSnapshot({
+          quality: 90,
         })
 
         onPhotoTaken(photo.path)
@@ -151,6 +161,7 @@ const MaskedCamera = ({
         format={format}
         isActive={isFocused && isActive}
         photo={true}
+        video={true}
         onInitialized={() => setIsActive(true)}
         onError={onError}
         codeScanner={codeScanner}

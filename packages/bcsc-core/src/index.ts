@@ -801,7 +801,39 @@ export interface EvidenceMetadata {
   metadata: PhotoMetadata[];
   /** Document number/reference */
   documentNumber?: string;
+  /** Raw barcode data captured during evidence photo capture, sent to backend with document upload */
+  barcodes?: BarcodePayload[];
 }
+
+/** Address block sent inside a PDF-417 barcode entry (matches v3 iOS structure). */
+export interface BarcodeAddressPayload {
+  street_address: string;
+  locality: string;
+  province: string;
+  postal_code: string;
+  country: string;
+}
+
+/** A single barcode entry in the evidence upload payload (matches v3 iOS structure). */
+export type BarcodePayload =
+  | {
+      type: 'PDF_417';
+      content_type: 'AAMVA_3TRACK_PDF417';
+      version?: string;
+      jurisdiction_version?: string;
+      iso_iin?: string;
+      customer_id?: string;
+      document_number?: string;
+      expires?: string;
+      family_name?: string;
+      given_names?: string;
+      birthdate?: string;
+      address?: BarcodeAddressPayload;
+    }
+  | {
+      type: 'CODE_128';
+      value: string;
+    };
 
 /**
  * Gets evidence metadata from native storage.
