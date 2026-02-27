@@ -121,8 +121,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * Generates attestation, fetches notification tokens, creates registration body,
    * and submits to BCSC. Stores returned client credentials and updates local account storage.
    *
-   * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
+   * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   *
+   * @returns Promise resolving to registration response data or void if account exists
    */
   const createRegistration = useCallback(
     async (securityMethod: AccountSecurityMethod) => {
@@ -198,10 +200,13 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * and notification tokens, then submits PUT request to update client registration.
    * Updates local account storage with new credentials.
    *
+   * @throws Error if client not ready, missing parameters, or update fails
+   * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
+   *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
    * @returns Promise resolving to updated registration response data
-   * @throws Error if client not ready, missing parameters, or update fails
    */
   const updateRegistration = useCallback(
     async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
@@ -229,13 +234,19 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
         }
 
-        let updatedRegistrationData: RegistrationResponseData | null = null
-
+        // Deserialize the body and add required fields for the update request (client_id and scope)
+        let updatePayload
         try {
-          const updatePayload = body ? JSON.parse(body) : body
+          updatePayload = body ? JSON.parse(body) : body
           // Add required fields for PUT request: client_id and scope
           updatePayload.client_id = account.clientID
           updatePayload.scope = 'openid profile email address offline_access'
+        } catch (error) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
+        }
+
+        let updatedRegistrationData: RegistrationResponseData | null = null
+        try {
           const { data } = await apiClient.put<RegistrationResponseData>(
             `${apiClient.endpoints.registration}/${account.clientID}`,
             updatePayload,
