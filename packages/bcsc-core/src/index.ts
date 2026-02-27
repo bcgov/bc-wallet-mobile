@@ -806,7 +806,7 @@ export interface EvidenceType {
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
-  evidenceType: EvidenceType;
+  evidenceType?: EvidenceType;
   /** Photo metadata array */
   metadata: PhotoMetadata[];
   /** Document number/reference */
