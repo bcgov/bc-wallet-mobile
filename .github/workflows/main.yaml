@@ -161,8 +161,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Metro bundler cache
-        uses: actions/cache@v4
+      # ── Cache strategy: save on main only ────────────────────────
+      # With squash-merge to main, only main commits produce durable
+      # cache entries. PR builds restore from main's latest cache but
+      # never save, avoiding storage waste from short-lived PR branches.
+      - name: Restore Metro bundler cache
+        uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
           key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
@@ -205,6 +209,13 @@ jobs:
           name: ios-jsbundle
           path: /tmp/ios-main.jsbundle
           retention-days: 1
+
+      - name: Save Metro bundler cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: app/.metro-cache
+          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
 
   # ─── Android Build-Cache Warm-Up ──────────────────────────────────────
   # Runs a release build (minus JS bundling) using the committed debug
@@ -321,7 +332,7 @@ jobs:
           df -h
 
       - name: Save Gradle build cache
-        if: always()
+        if: github.ref == 'refs/heads/main' && always()
         uses: actions/cache/save@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
@@ -429,7 +440,7 @@ jobs:
           ccache --set-config=inode_cache=true
 
       - name: Restore ccache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
           key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
@@ -464,7 +475,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-run${{ github.run_number }}
+          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-
             ${{ runner.os }}-dd-${{ matrix.variant }}-
@@ -633,6 +644,13 @@ jobs:
         if: always()
         run: ccache --show-stats || true
 
+      - name: Save ccache
+        if: github.ref == 'refs/heads/main' && always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
@@ -652,11 +670,11 @@ jobs:
 
       - name: Save cache for derived data
         id: cache-dd-save
-        if: always()
+        if: github.ref == 'refs/heads/main' && always()
         uses: actions/cache/save@v4
         with:
           path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-run${{ github.run_number }}
+          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-${{ github.sha }}
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for iOS failure
@@ -888,7 +906,7 @@ jobs:
             -x lintVitalRelease
 
       - name: Save Gradle build cache (cross-run)
-        if: always()
+        if: github.ref == 'refs/heads/main' && always()
         uses: actions/cache/save@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
