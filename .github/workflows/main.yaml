@@ -1013,6 +1013,7 @@ jobs:
           echo "✅ All builds passed!"
 
   ship-to-saucelabs:
+    name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
     if: github.event.pull_request.head.repo.fork != true
     needs: [build-ios, build-android, build-summary]
     continue-on-error: true
