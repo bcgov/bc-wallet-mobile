@@ -624,19 +624,6 @@ jobs:
           SKIP_BUNDLING: '1'
           FORCE_BUNDLING: ''
         run: |
-          # Copy pre-built JS bundle and assets to where xcodebuild archive outputs them.
-          # SKIP_BUNDLING=1 tells react-native-xcode.sh to skip Metro+Hermes.
-          # The JS bundle is already compiled; Xcode embeds it directly.
-          BUNDLE_DIR="xbuild/Build/Products/Release-iphoneos/AriesBifold.app"
-          mkdir -p "$BUNDLE_DIR"
-          cp jsbundle/ios-main.jsbundle "$BUNDLE_DIR/main.jsbundle"
-          # Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro
-          # in the prepare job. Without these, require('./image.png') resolves
-          # to missing files at runtime.
-          if [ -d jsassets/assets ]; then
-            cp -R jsassets/assets/* "$BUNDLE_DIR/" 2>/dev/null || true
-            echo "Copied $(find jsassets/assets -type f | wc -l | tr -d ' ') iOS asset files"
-          fi
           # Build optimizations:
           # - ccache via CC/CXX: cache C/C++/ObjC compilations across builds
           # - COMPILER_INDEX_STORE_ENABLE=NO: skip index-store writes (not needed in CI)
@@ -659,6 +646,21 @@ jobs:
           COMPILER_INDEX_STORE_ENABLE=NO \
           -verbose \
           archive
+
+          # SKIP_BUNDLING=1 causes react-native-xcode.sh to exit immediately,
+          # so no JS bundle or assets are placed in the .app. Copy them into
+          # the archive's .app AFTER xcodebuild finishes so they are included
+          # in the export/IPA.
+          ARCHIVE_APP="../../AriesBifold.xcarchive/Products/Applications/AriesBifold.app"
+          cp jsbundle/ios-main.jsbundle "$ARCHIVE_APP/main.jsbundle"
+          echo "Copied main.jsbundle into archive"
+          # Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro
+          # in the prepare job. Without these, require('./image.png') resolves
+          # to missing files at runtime.
+          if [ -d jsassets/assets ]; then
+            cp -R jsassets/assets/* "$ARCHIVE_APP/" 2>/dev/null || true
+            echo "Copied $(find jsassets/assets -type f | wc -l | tr -d ' ') iOS asset files into archive"
+          fi
 
       - name: Show ccache stats
         if: always()
