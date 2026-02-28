@@ -59,11 +59,20 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
+    const givenName = data.user.given_name?.trim()
+    const familyName = data.user.family_name?.trim()
+    let fullname_formatted = ''
+    if (givenName && familyName) {
+      fullname_formatted = `${familyName}, ${givenName}`
+    } else {
+      fullname_formatted = familyName || givenName || ''
+    }
+
     return {
       account: {
         ...data.user,
         picture: data.picture ?? null,
-        fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
+        fullname_formatted,
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,
