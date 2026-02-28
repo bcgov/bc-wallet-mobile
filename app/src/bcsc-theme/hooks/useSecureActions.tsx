@@ -566,7 +566,7 @@ export const useSecureActions = () => {
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, metadata } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, metadata } : evidence
       )
 
       dispatch({
@@ -585,7 +585,26 @@ export const useSecureActions = () => {
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, documentNumber } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
+      )
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+    },
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+  )
+
+  /**
+   * Remove a specific evidence type from secure state
+   */
+  const removeEvidenceByType = useCallback(
+    async (evidenceType: EvidenceType) => {
+      const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
+        (evidence) => evidence.evidenceType.evidence_type !== evidenceType.evidence_type
       )
 
       dispatch({
@@ -843,6 +862,7 @@ export const useSecureActions = () => {
     addEvidenceType,
     updateEvidenceMetadata,
     updateEvidenceDocumentNumber,
+    removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,
     handleSuccessfulAuth,

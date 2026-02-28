@@ -49,13 +49,15 @@ type EvidenceIDCollectionScreenProps = {
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store] = useStore<BCState>()
-  const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
+  const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber, removeEvidenceByType } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [openDatePicker, setOpenDatePicker] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
+
+  const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: '', // make the user re-enter every time
@@ -65,8 +67,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     birthDate: store.bcscSecure.birthdate?.toISOString().split('T')[0] ?? '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
-
-  const additionalEvidenceRequired = store.bcscSecure.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -107,10 +107,14 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   /**
+   * Checks if the birthdate is of minimum age.
+   */
+  const isOfMinimumAge = (value: string, minimumAge: number): boolean => {
+    return moment().diff(moment(value, 'YYYY-MM-DD'), 'years') >= minimumAge
+  }
+
+  /**
    * Validates the birth date format (YYYY-MM-DD) and checks if it's a valid date.
-   *
-   * @param {string} [value] - The birth date to validate.
-   * @returns {boolean} True if the birth date is valid, false otherwise.
    */
   const isDateValid = (value?: string): boolean => {
     if (!value) {
@@ -123,38 +127,23 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       return false
     }
 
-    // invalid dates return NaN for getTime()
     return !isNaN(new Date(value).getTime())
-  }
-
-  /**
-   * Checks if the birthdate is of minimum age.
-   *
-   * @see MINIMUM_VERIFICATION_AGE in constants.ts
-   * @param value - The birth date to check.
-   * @param minimumAge - The minimum age required for verification.
-   * @returns True if the birth date is of minimum age, false otherwise.
-   *
-   */
-  const isOfMinimumAge = (value: string, minimumAge: number): boolean => {
-    return moment().diff(moment(value, 'YYYY-MM-DD'), 'years') >= minimumAge
   }
 
   /**
    * Validates the formState form fields.
    *
    * @param {EvidenceCollectionFormState} values - The current form values.
-   * @param {boolean} additionalEvidenceRequired - Whether additional formState fields are required.
    * @returns {*} {EvidenceCollectionFormErrors} An object containing validation errors
    */
-  const validateEvidence = (values: EvidenceCollectionFormState, additionalEvidenceRequired: boolean) => {
+  const validateEvidence = (values: EvidenceCollectionFormState) => {
     const errors: EvidenceCollectionFormErrors = {}
 
     if (!isDocumentNumberValid(values.documentNumber)) {
       errors.documentNumber = t('BCSC.EvidenceIDCollection.DocumentNumberError')
     }
 
-    if (!additionalEvidenceRequired) {
+    if (!personalInfoRequired) {
       return errors
     }
 
@@ -192,7 +181,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       // clear previous validation errors
       setFormErrors({})
 
-      const evidenceFormErrors = validateEvidence(formState, additionalEvidenceRequired)
+      const evidenceFormErrors = validateEvidence(formState)
 
       // if there are validation errors, display them and do not proceed
       if (Object.keys(evidenceFormErrors).length > 0) {
@@ -200,15 +189,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         return
       }
 
-      // update the store with the collected user metadata formState
-      if (additionalEvidenceRequired) {
+      if (personalInfoRequired) {
         await updateUserInfo({
           birthdate: new Date(formState.birthDate),
         })
 
         await updateUserMetadata({
           name: {
-            // trim whitespace from names just in case
             first: formState.firstName.trim(),
             last: formState.lastName.trim(),
             middle: formState.middleNames.trim(),
@@ -258,6 +245,27 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     )
   }
 
+  const handleOnCancel = async () => {
+    try {
+      await removeEvidenceByType(cardType)
+    } catch (error) {
+      logger.error('Error removing evidence on cancel', error as Error)
+    }
+
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.EvidenceTypeList,
+            params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto },
+          },
+        ],
+      })
+    )
+  }
+
   const controls = (
     <>
       <Button
@@ -275,7 +283,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         accessibilityLabel={'Cancel'}
         testID={testIdWithKey('EvidenceIDCollectionCancel')}
         buttonType={ButtonType.Tertiary}
-        onPress={() => navigation.goBack()}
+        onPress={handleOnCancel}
       />
     </>
   )
@@ -299,7 +307,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           textInputProps={{ autoCorrect: false }}
         />
 
-        {additionalEvidenceRequired ? (
+        {personalInfoRequired ? (
           <>
             <InputWithValidation
               id={'lastName'}
