@@ -659,7 +659,7 @@ jobs:
           # in the prepare job. Without these, require('./image.png') resolves
           # to missing files at runtime.
           if [ -d jsassets/assets ]; then
-            cp -R jsassets/assets/* "$ARCHIVE_APP/" 2>/dev/null || true
+            cp -R jsassets/assets "$ARCHIVE_APP/"
             echo "Copied $(find jsassets/assets -type f | wc -l | tr -d ' ') iOS asset files into archive"
           fi
 
