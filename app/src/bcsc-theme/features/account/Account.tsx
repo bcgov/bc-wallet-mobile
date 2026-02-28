@@ -142,9 +142,7 @@ const Account: React.FC = () => {
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
           <AccountPhoto photoUri={account.picture} />
           <ThemedText variant={'headingTwo'} style={styles.name}>
-            {account.given_name && account.family_name
-              ? `${account.family_name}, ${account.given_name}`
-              : account.family_name || account.given_name || ''}
+            {account.fullname_formatted}
           </ThemedText>
         </View>
         <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
