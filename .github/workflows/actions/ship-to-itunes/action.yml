@@ -47,13 +47,16 @@ runs:
       run: |
         export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
 
-        GROUPS=()
+        GROUP_LIST=""
         while IFS= read -r group; do
           group="$(echo "$group" | xargs)"
-          [ -n "$group" ] && GROUPS+=("$group")
+          if [ -n "$group" ]; then
+            [ -n "$GROUP_LIST" ] && GROUP_LIST+=", "
+            GROUP_LIST+="$group"
+          fi
         done <<< "$BETA_GROUPS"
 
-        if [ ${#GROUPS[@]} -eq 0 ]; then
+        if [ -z "$GROUP_LIST" ]; then
           echo "Error: no beta groups provided"
           exit 1
         fi
@@ -62,5 +65,5 @@ runs:
         --enable-package-validation \
         --max-build-processing-wait 10 \
         --testflight \
-        --beta-group "${GROUPS[@]}" \
+        --beta-group "$GROUP_LIST" \
         --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
