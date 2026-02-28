@@ -468,9 +468,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-
+            ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-
+            ${{ runner.os }}-ccache-${{ matrix.variant }}-
             ${{ runner.os }}-ccache-
 
       - name: Cached pip dependencies
@@ -689,7 +690,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
 
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
