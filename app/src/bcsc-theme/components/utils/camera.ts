@@ -363,7 +363,23 @@ export const determineScanState = (
 
 /**
  * Scan zones for the BC Services Card / Driver's License serial number scan screen.
- * Describes the expected position of the Code 39 serial number barcode on a CR-80 ID card.
- * Coordinates are normalized (0–1) relative to the camera container.
+ * Describes the expected barcode positions on a CR-80 ID card.
+ * Coordinates are normalized (0–1) relative to the camera container (portrait).
+ *
+ * Physical card layout (landscape):
+ *   - 1D barcode (Code-39/Code-128): vertical strip on the RIGHT edge of the card
+ *   - 2D barcode (PDF-417): horizontal rectangle LEFT-ALIGNED along the BOTTOM of the card
+ *
+ * The zone(s) below add padding around those captured positions so
+ * alignment detection works across different devices & card placements.
+ * They also allow detection of the 1D barcodes in both zones to reduce friction for users
+ * with older cards that only have the 1D barcode
+ *
+ * NOTE (bm + cv): For now, we are only using one visual zone for alignment detection to reduce
+ * confusion around the two separate barcodes, which can be more difficult to scan and may not be
+ * present on older cards. We may want to revisit this in the future to allow either zone
+ * to trigger alignment, with clear user feedback on which barcode is being detected.
  */
-export const BCSC_SN_SCAN_ZONES: ScanZone[] = [{ types: ['code-39'], box: { x: 0.1, y: 0.3, width: 0.8, height: 0.1 } }]
+export const BCSC_SN_SCAN_ZONES: ScanZone[] = [
+  { types: ['code-39', 'code-128', 'pdf-417'], box: { x: 0.07, y: 0.3, width: 0.86, height: 0.1 } },
+]

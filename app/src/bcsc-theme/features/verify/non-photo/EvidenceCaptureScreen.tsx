@@ -5,18 +5,29 @@ import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
 import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
-import { MaskType, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
-import { EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
+
+/**
+ * Builds the barcodes array for the evidence upload payload, matching the
+ * v3 structure (see BarcodeData.toServerJSON in ias-ios)
+ *
+ * Each scanned barcode type produces one entry:
+ * - Code-39 or Code-128 (BCSC serial): `{ type, value }`
+ * - PDF-417 (driver's licence): `{ type, content_type, document_number, family_name, ... address }`
+ */
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
@@ -30,6 +41,8 @@ enum CaptureState {
 
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
+  const [store] = useStore<BCState>()
+  const isNonBCSCFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
   const { clearAdditionalEvidence, updateEvidenceMetadata } = useSecureActions()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
@@ -112,26 +125,40 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     }
 
     /**
-     * Combo card
-     * Additional evidence: Not needed
-     * Next Step: Navigate to setup steps verification
+     * Short-circuit paths: only applicable in the Non-BCSC flow.
+     * In the Non-Photo BCSC flow we've already done authorizeDevice,
+     * so we skip these and continue to evidence photo capture.
+     *
+     * handleScanComboCard returns `false` when authorization fails in the
+     * Non-BCSC flow (e.g. a code-128 barcode on a DL is not a real BCSC
+     * serial).  In that case we clear the serial and fall through to the
+     * normal evidence-capture path (matching v3 iOS behaviour).
      */
-    if (bcscSerialRef.current && licenseRef.current) {
-      await Promise.all([
-        clearAdditionalEvidence(),
-        scanner.handleScanComboCard(bcscSerialRef.current, licenseRef.current),
-      ])
-      return
-    }
+    if (isNonBCSCFlow) {
+      /**
+       * Both BCSC serial and DL barcode scanned
+       * Next Step: Navigate to setup steps verification (if authorization succeeds)
+       */
+      if (bcscSerialRef.current && licenseRef.current) {
+        const [, success] = await Promise.all([
+          clearAdditionalEvidence(),
+          scanner.handleScanComboCard(bcscSerialRef.current, licenseRef.current),
+        ])
+        if (success) {
+          return
+        }
+        // Authorization failed — not a real BCSC serial. Clear it and continue.
+        bcscSerialRef.current = null
+      }
 
-    /**
-     * BC Services card
-     * Additional evidence: Not needed
-     * Next Step: Navigate to birthdate entry -> setup steps verification
-     */
-    if (bcscSerialRef.current) {
-      await Promise.all([clearAdditionalEvidence(), scanner.handleScanBCServicesCard(bcscSerialRef.current)])
-      return
+      /**
+       * Only BCSC serial scanned
+       * Next Step: Navigate to birthdate entry -> setup steps verification
+       */
+      if (bcscSerialRef.current) {
+        await Promise.all([clearAdditionalEvidence(), scanner.handleScanBCServicesCard(bcscSerialRef.current)])
+        return
+      }
     }
 
     /**
@@ -151,9 +178,16 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     setCapturedPhotos(newPhotos)
 
     if (isLastSide) {
-      await updateEvidenceMetadata(route.params.cardType, newPhotos)
+      // Build barcode payload to include in the single dispatch alongside photo metadata.
+      // This avoids stale-closure issues from calling two store updates back-to-back.
+      const barcodes = buildBarcodePayload(bcscSerialRef.current, licenseRef.current)
+      await updateEvidenceMetadata(cardType, newPhotos, barcodes.length > 0 ? barcodes : undefined)
+
       // All photos captured, navigate to form screen
-      navigation.navigate(BCSCScreens.EvidenceIDCollection, { cardType })
+      navigation.navigate(BCSCScreens.EvidenceIDCollection, {
+        cardType,
+        documentNumber: licenseRef.current?.licenseNumber,
+      })
       return
     }
 

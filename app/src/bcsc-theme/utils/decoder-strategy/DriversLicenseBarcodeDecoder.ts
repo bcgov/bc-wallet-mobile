@@ -7,14 +7,26 @@ import {
 } from './DecoderStrategy'
 
 /**
- * Decoder for British Columbia Driver’s Licence PDF-417 barcodes.
+ * Decoder for British Columbia Driver's Licence PDF-417 barcodes.
  *
- * These barcodes encode driver’s licence and cardholder data
- * in a single PDF-417 barcode located on the bottom of the card.
+ * These barcodes encode driver's licence and cardholder data in AAMVA
+ * 3-track magnetic stripe format inside a single PDF-417 barcode.
+ *
+ * Track layout:
+ *   Track 1: `%[city]^[last],[first middle]^[address]?`
+ *   Track 2: `;[IIN(6)][license#]=[YYMM_expiry][YYYYMMDD_birth]=?`
+ *   Track 3: `_[additional data]?`
+ *
+ * Some cards insert an extra `^` between track 1 and track 2 (`...3Y8^?;636...`)
+ * while others do not (`...3Y5?;636...`). The parser handles both formats by
+ * extracting track 2 data via regex rather than relying on `^` delimiter count.
  *
  * @example
- * // Example BC drivers license barcode:
+ * // 4-caret format (extra ^ before track separator):
  * `"%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"`
+ *
+ * // 3-caret format (no extra ^):
+ * `"%BCVICTORIA^CPSIJSIT,$STANDALONE CITZ FOUR^910 GOVERNMENT ST$VICTORIA BC V8W 3Y5?;636028004023964=270419850410=?_%0AV8W3Y5                     F            9873904417                00C00015303?"`
  *
  * @class
  * @implements {DecoderStrategy}
@@ -25,7 +37,8 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
       barcode.type === 'pdf-417' &&
       typeof barcode.value === 'string' &&
       barcode.value.startsWith('%') &&
-      barcode.value.endsWith('?')
+      barcode.value.endsWith('?') &&
+      /;\d+=\d+=/.test(barcode.value) // Basic check for track 2 format
     )
   }
 
@@ -72,7 +85,15 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     province: string
     postalCode: string
   } {
-    const addressSection = value.split('^')[2]
+    let addressSection = value.split('^')[2]
+
+    // Truncate at the track 1 terminator '?' to prevent track 2/3 data from
+    // leaking into address fields. Some cards omit the extra '^' between
+    // track 1 and track 2, so the address section may contain ';636028...' garbage.
+    const trackEnd = addressSection.indexOf('?')
+    if (trackEnd !== -1) {
+      addressSection = addressSection.substring(0, trackEnd)
+    }
 
     const streetAddress = addressSection.split('$')[0]
     const city = addressSection.split('$')[1].split(' ')[0]
@@ -86,16 +107,22 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     }
   }
 
+  /**
+   * Extract dates from AAMVA track 2.
+   * Track 2 format: `;[IIN(6)][license#]=[YYMM_expiry][YYYYMMDD_birth]=?`
+   */
   private parseLicenseDates(value: string): { expiryDate: Date; birthDate: Date } {
-    const licenseSection = value.split('^')[3]
-    const rawBirthdate = licenseSection.split('=')[1]
+    const match = value.match(/;\d+=(\d{4})(\d{4})(\d{2})(\d{2})=/)
+    if (!match) {
+      throw new Error('Failed to parse dates from AAMVA track 2')
+    }
 
-    const birthYear = Number.parseInt(rawBirthdate.slice(4, 8))
-    const birthMonth = Number.parseInt(rawBirthdate.slice(8, 10)) - 1 // Months are zero-indexed
-    const birthDay = Number.parseInt(rawBirthdate.slice(10, 12))
+    const expiryYear = Number.parseInt(match[1].slice(0, 2))
+    const expiryMonth = Number.parseInt(match[1].slice(2, 4)) - 1 // Months are zero-indexed
 
-    const expiryYear = Number.parseInt(rawBirthdate.slice(0, 2))
-    const expiryMonth = Number.parseInt(rawBirthdate.slice(2, 4)) - 1 // Months are zero-indexed
+    const birthYear = Number.parseInt(match[2])
+    const birthMonth = Number.parseInt(match[3]) - 1 // Months are zero-indexed
+    const birthDay = Number.parseInt(match[4])
 
     const currentCenturyBase = Math.floor(new Date().getFullYear() / 100) * 100
     const adjustedExpiryYear = currentCenturyBase + expiryYear
@@ -106,9 +133,15 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     }
   }
 
+  /**
+   * Extract license number from AAMVA track 2.
+   * Track 2 format: `;[IIN(6)][license#]=[dates]=?`
+   */
   private parseLicenseNumber(value: string): string {
-    const licenseSection = value.split('^')[3]
-    const rawLicenseNumber = licenseSection.split('=')[0]
-    return rawLicenseNumber.slice(8).trim()
+    const match = value.match(/;\d{6}(\d+)=/)
+    if (!match) {
+      throw new Error('Failed to parse license number from AAMVA track 2')
+    }
+    return match[1].trim()
   }
 }

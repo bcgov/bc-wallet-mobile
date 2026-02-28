@@ -192,7 +192,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
     cameraRef.current.startRecording({
       fileType: 'mp4',
-      videoCodec: 'h265',
+      videoCodec: 'h264',
       onRecordingError: (error) => {
         stopTimer() // Stop timer on error
 

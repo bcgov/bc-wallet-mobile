@@ -171,7 +171,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
-  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType }
+  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
   [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours?: string }

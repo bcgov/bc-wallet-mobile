@@ -7,7 +7,7 @@ exports[`VideoReview renders correctly 1`] = `
       "bottom": "additive",
       "left": "additive",
       "right": "additive",
-      "top": "off",
+      "top": "additive",
     }
   }
   style={
@@ -19,7 +19,6 @@ exports[`VideoReview renders correctly 1`] = `
       {
         "backgroundColor": "#F2F2F2",
         "flexGrow": 1,
-        "marginTop": 32,
         "position": "relative",
       },
     ]
@@ -28,7 +27,9 @@ exports[`VideoReview renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
-        false,
+        {
+          "padding": 16,
+        },
         undefined,
       ]
     }
@@ -192,10 +193,11 @@ exports[`VideoReview renders correctly 1`] = `
         {
           "gap": 16,
         },
-        false,
         {
-          "padding": 16,
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
         },
+        undefined,
       ]
     }
   >
@@ -278,80 +280,72 @@ exports[`VideoReview renders correctly 1`] = `
       </View>
     </View>
     <View
-      style={
+      accessibilityLabel="BCSC.SendVideo.VideoReview.RetakeVideo"
+      accessibilityRole="button"
+      accessibilityState={
         {
-          "marginTop": 8,
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
         }
       }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "opacity": 1,
+        }
+      }
+      testID="com.ariesbifold:id/RetakeVideo"
     >
       <View
-        accessibilityLabel="BCSC.SendVideo.VideoReview.RetakeVideo"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
         style={
           {
-            "opacity": 1,
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
           }
         }
-        testID="com.ariesbifold:id/RetakeVideo"
       >
-        <View
+        <Text
+          maxFontSizeMultiplier={2}
           style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                undefined,
+                false,
+                false,
+                false,
+              ],
+            ]
           }
         >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  undefined,
-                  false,
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            BCSC.SendVideo.VideoReview.RetakeVideo
-          </Text>
-        </View>
+          BCSC.SendVideo.VideoReview.RetakeVideo
+        </Text>
       </View>
     </View>
   </View>
