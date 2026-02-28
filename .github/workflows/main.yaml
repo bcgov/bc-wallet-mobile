@@ -141,7 +141,7 @@ jobs:
   #     bcsc-dev on pull requests, all variants on main/dispatch.
   #   - Upload pre-built iOS JS bundle and use SKIP_BUNDLING=1 in
   #     xcodebuild to skip Metro entirely for iOS too.
-  prepare:
+  prepare-ios:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     runs-on: ubuntu-22.04
@@ -169,24 +169,12 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
-          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
           restore-keys: |
-            metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-
+            metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
+            metro-ios-
 
-      - name: Build Android JS bundle
-        working-directory: app
-        run: |
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res \
-            --verbose
-
-      - name: Build iOS JS bundle (warm Metro cache)
+      - name: Build iOS JS bundle
         working-directory: app
         run: |
           npx react-native bundle \
@@ -196,21 +184,6 @@ jobs:
             --bundle-output /tmp/ios-main.jsbundle \
             --assets-dest /tmp/ios-assets \
             --verbose
-
-      - name: Upload Android JS bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-jsbundle
-          path: app/android/app/src/main/assets/index.android.bundle
-          retention-days: 1
-
-      - name: Upload Android JS assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-jsassets
-          path: app/android/app/src/main/res/drawable-*
-          retention-days: 1
-          if-no-files-found: warn
 
       - name: Upload iOS JS bundle
         uses: actions/upload-artifact@v4
@@ -232,20 +205,22 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: app/.metro-cache
-          key: metro-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
 
-  # ─── Android Build-Cache Warm-Up ──────────────────────────────────────
-  # Runs a release build (minus JS bundling) using the committed debug
-  # keystore.  The Gradle build cache captures task outputs that are
-  # identical across all variants: CMake/NDK native compilation (4 ABIs),
-  # Kotlin & Java compilation of library modules, and resource processing.
-  # Variant builds then restore this cache and only rebuild the delta
-  # (package name, app icons, strings, signing, final packaging).
+  # ─── Android Prepare: JS Bundle + Gradle Build-Cache Warm-Up ──────────
+  # 1. Runs Metro to produce the Android JS bundle and image assets,
+  #    then uploads them as artifacts for the variant build jobs.
+  # 2. Runs a release build (minus JS bundling) using the committed debug
+  #    keystore.  The Gradle build cache captures task outputs that are
+  #    identical across all variants: CMake/NDK native compilation (4 ABIs),
+  #    Kotlin & Java compilation of library modules, and resource processing.
+  #    Variant builds then restore this cache and only rebuild the delta
+  #    (package name, app icons, strings, signing, final packaging).
   #
   # Build cache lives at the default $GRADLE_USER_HOME/caches/build-cache-1
   # and is saved/restored with a dedicated cache action for cross-run reuse.
   #
-  # Runs in parallel with `prepare` and `build-ios`, so it does NOT
+  # Runs in parallel with `prepare-ios` and `build-ios`, so it does NOT
   # extend the iOS critical path.
   prepare-android:
     needs: [early-exit-check]
@@ -297,6 +272,49 @@ jobs:
           sudo docker image prune --all --force 2>/dev/null || true
           sudo apt-get clean 2>/dev/null || true
 
+      - name: Restore Metro bundler cache
+        uses: actions/cache/restore@v4
+        with:
+          path: app/.metro-cache
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          restore-keys: |
+            metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
+            metro-android-
+
+      - name: Build Android JS bundle
+        working-directory: app
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res \
+            --verbose
+
+      - name: Upload Android JS bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-jsbundle
+          path: app/android/app/src/main/assets/index.android.bundle
+          retention-days: 1
+
+      - name: Upload Android JS assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-jsassets
+          path: app/android/app/src/main/res/drawable-*
+          retention-days: 1
+          if-no-files-found: warn
+
+      - name: Save Metro bundler cache (Android)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: app/.metro-cache
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+
       - name: Restore Gradle build cache (cross-run)
         uses: actions/cache/restore@v4
         with:
@@ -347,7 +365,7 @@ jobs:
 
   build-ios:
     name: Build iOS - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-ios]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       fail-fast: false
@@ -656,7 +674,7 @@ jobs:
           cp jsbundle/ios-main.jsbundle "$ARCHIVE_APP/main.jsbundle"
           echo "Copied main.jsbundle into archive"
           # Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro
-          # in the prepare job. Without these, require('./image.png') resolves
+          # in the prepare-ios job. Without these, require('./image.png') resolves
           # to missing files at runtime.
           if [ -d jsassets/assets ]; then
             cp -R jsassets/assets "$ARCHIVE_APP/"
@@ -711,10 +729,10 @@ jobs:
 
   build-android:
     name: Build Android - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-android]
     if: |-
       needs.early-exit-check.outputs.should_skip_build != 'true' &&
-      needs.prepare.result == 'success'
+      needs.prepare-android.result == 'success'
     strategy:
       matrix:
         include:
@@ -839,7 +857,7 @@ jobs:
 
       # Metro cache restore is NOT needed here because SKIP_METRO_BUNDLE=1
       # uses copy-bundle.cjs instead of Metro. The Metro cache is only
-      # used by the prepare job and iOS builds.
+      # used by the prepare-ios job.
 
       - name: Download pre-built JS bundle
         uses: actions/download-artifact@v4
@@ -895,7 +913,7 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
           # Skip Metro bundling: use the pre-built JS bundle from the
-          # prepare job instead of re-running Metro (~4 min savings).
+          # prepare-android job instead of re-running Metro (~4 min savings).
           # Hermes bytecode compilation still runs on the copied bundle.
           SKIP_METRO_BUNDLE: '1'
         run: |
