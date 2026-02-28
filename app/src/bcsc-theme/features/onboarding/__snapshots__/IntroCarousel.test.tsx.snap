@@ -128,7 +128,7 @@ exports[`IntroCarouselScreen Rendering should render correctly 1`] = `
               <View
                 style={
                   {
-                    "marginTop": 40,
+                    "marginTop": 16,
                   }
                 }
               >
