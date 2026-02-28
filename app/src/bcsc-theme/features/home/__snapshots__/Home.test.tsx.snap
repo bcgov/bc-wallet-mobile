@@ -1,0 +1,1337 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Home renders full name in header when both names are present 1`] = `
+[
+  <View />,
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "off",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignSelf": "center",
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 8,
+                  "margin": 24,
+                  "padding": 8,
+                }
+              }
+            >
+              <
+                height={45}
+                width={72}
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {},
+                  ],
+                ]
+              }
+            >
+              Brule, Steve
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 16,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseDescription
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerDescription
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "marginVertical": 24,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginBottom": 8,
+                "marginHorizontal": 16,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#606060",
+                    "fontSize": 24,
+                  },
+                  {
+                    "marginLeft": -4,
+                    "marginRight": 8,
+                  },
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰃀
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#606060",
+                  },
+                ]
+              }
+            >
+              BCSC.Services.SavedServices
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#606060",
+                  "fontWeight": "normal",
+                  "paddingHorizontal": 16,
+                },
+              ]
+            }
+          >
+            BCSC.Services.NoSavedServices
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>,
+]
+`;
+
+exports[`Home renders only family_name in header when given_name is empty string (mononym) 1`] = `
+[
+  <View />,
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "off",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignSelf": "center",
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 8,
+                  "margin": 24,
+                  "padding": 8,
+                }
+              }
+            >
+              <
+                height={45}
+                width={72}
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {},
+                  ],
+                ]
+              }
+            >
+              Cher
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 16,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseDescription
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerDescription
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "marginVertical": 24,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginBottom": 8,
+                "marginHorizontal": 16,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#606060",
+                    "fontSize": 24,
+                  },
+                  {
+                    "marginLeft": -4,
+                    "marginRight": 8,
+                  },
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰃀
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#606060",
+                  },
+                ]
+              }
+            >
+              BCSC.Services.SavedServices
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#606060",
+                  "fontWeight": "normal",
+                  "paddingHorizontal": 16,
+                },
+              ]
+            }
+          >
+            BCSC.Services.NoSavedServices
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>,
+]
+`;
+
+exports[`Home renders only family_name in header when given_name is undefined (mononym) 1`] = `
+[
+  <View />,
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "off",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignSelf": "center",
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 8,
+                  "margin": 24,
+                  "padding": 8,
+                }
+              }
+            >
+              <
+                height={45}
+                width={72}
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {},
+                  ],
+                ]
+              }
+            >
+              Madonna
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 16,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseDescription
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerDescription
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "marginVertical": 24,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginBottom": 8,
+                "marginHorizontal": 16,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#606060",
+                    "fontSize": 24,
+                  },
+                  {
+                    "marginLeft": -4,
+                    "marginRight": 8,
+                  },
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰃀
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#606060",
+                  },
+                ]
+              }
+            >
+              BCSC.Services.SavedServices
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#606060",
+                  "fontWeight": "normal",
+                  "paddingHorizontal": 16,
+                },
+              ]
+            }
+          >
+            BCSC.Services.NoSavedServices
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>,
+]
+`;
+
+exports[`Home renders only given_name in header when family_name is undefined 1`] = `
+[
+  <View />,
+  <RNCSafeAreaView
+    edges={
+      {
+        "bottom": "off",
+        "left": "additive",
+        "right": "additive",
+        "top": "off",
+      }
+    }
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      }
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignSelf": "center",
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 8,
+                  "margin": 24,
+                  "padding": 8,
+                }
+              }
+            >
+              <
+                height={45}
+                width={72}
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {},
+                  ],
+                ]
+              }
+            >
+              Prince
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "marginBottom": 16,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.WhereToUseDescription
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#606060",
+                "borderRadius": 8,
+                "borderWidth": 1,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#003366",
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerTitle
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#606060",
+                    "marginTop": 8,
+                  },
+                ]
+              }
+            >
+              BCSC.Home.LogInFromComputerDescription
+            </Text>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "marginVertical": 24,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginBottom": 8,
+                "marginHorizontal": 16,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#606060",
+                    "fontSize": 24,
+                  },
+                  {
+                    "marginLeft": -4,
+                    "marginRight": 8,
+                  },
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰃀
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#606060",
+                  },
+                ]
+              }
+            >
+              BCSC.Services.SavedServices
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#606060",
+                  "fontWeight": "normal",
+                  "paddingHorizontal": 16,
+                },
+              ]
+            }
+          >
+            BCSC.Services.NoSavedServices
+          </Text>
+        </View>
+      </View>
+    </RCTScrollView>
+  </RNCSafeAreaView>,
+]
+`;
