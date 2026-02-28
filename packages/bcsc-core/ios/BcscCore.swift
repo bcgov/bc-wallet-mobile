@@ -60,6 +60,41 @@ class BcscCore: NSObject {
     return deviceId
   }
 
+
+  /**
+   * Returns the current account synchronously.
+   * Eliminates repeated StorageService().readData(file: .accountMetadata, ...) boilerplate.
+   */
+  private func getAccountSync() -> Account? {
+    let storage = StorageService()
+    return storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
+   * Reads a named file from the current account's directory using StorageService.
+   * Analogous to Android's readFirstAccountEncryptedFile — reduces per-function boilerplate
+   * for reading account-scoped NSCoding-archived data.
+   *
+   * @param file The AccountFiles case identifying which file to read
+   * @returns The decoded object, or nil if no account is found or the read fails
+   */
+  private func readFirstAccountFile<T: NSObject & NSCoding & NSSecureCoding>(
+    _ file: AccountFiles
+  ) -> T? {
+    let storage = StorageService()
+    guard storage.currentAccountID != nil else {
+      logger.log("readFirstAccountFile: no account found, cannot read \(file.rawValue)")
+      return nil
+    }
+    return storage.readData(
+      file: file,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
   /**
    * Creates a signed JWT client assertion for OAuth requests
    * @param audience The audience for the JWT (typically issuer or clientID)
@@ -1894,6 +1929,14 @@ class BcscCore: NSObject {
 
       let data = try Data(contentsOf: fileUrl)
       logger.log("getAuthorizationRequest: Read \(data.count) bytes")
+
+      // Log raw plist structure before any decoding or mapping — useful for diagnosing
+      // key name mismatches between v3 and v4 (e.g. "street_address" vs "streetAddress")
+      if let rawPlist = try? PropertyListSerialization.propertyList(
+        from: data, options: [], format: nil
+      ) {
+        logger.log("getAuthorizationRequest: Raw archived plist: \(rawPlist)")
+      }
 
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
       unarchiver.requiresSecureCoding = false
