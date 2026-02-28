@@ -308,7 +308,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('lastName', value)}
               error={formErrors.lastName}
               subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-family', textContentType: 'familyName' }}
             />
 
             <InputWithValidation
@@ -318,7 +318,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('firstName', value)}
               error={formErrors.firstName}
               subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-given', textContentType: 'givenName' }}
             />
 
             <InputWithValidation
@@ -328,7 +328,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('middleNames', value)}
               error={formErrors.middleNames}
               subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-middle', textContentType: 'middleName' }}
             />
 
             <DatePicker
