@@ -651,7 +651,8 @@ jobs:
           # so no JS bundle or assets are placed in the .app. Copy them into
           # the archive's .app AFTER xcodebuild finishes so they are included
           # in the export/IPA.
-          ARCHIVE_APP="../../AriesBifold.xcarchive/Products/Applications/AriesBifold.app"
+          ARCHIVE_APP=$(find ../../AriesBifold.xcarchive/Products/Applications -maxdepth 1 -name '*.app' -print -quit)
+          echo "Archive .app path: $ARCHIVE_APP"
           cp jsbundle/ios-main.jsbundle "$ARCHIVE_APP/main.jsbundle"
           echo "Copied main.jsbundle into archive"
           # Copy pre-built image assets (PNG, JPEG, etc.) extracted by Metro
