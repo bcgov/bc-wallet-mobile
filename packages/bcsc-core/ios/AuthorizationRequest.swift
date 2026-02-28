@@ -19,12 +19,14 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   var country: String?
   var region: String?
 
+  // Raw values match the keys used by v3 (snake_case via Codable CodingKeys).
+  // "locality", "country", and "region" are identical in both versions.
   enum CodingKeys: String {
-    case streetAddress
-    case locality
-    case postalCode
-    case country
-    case region
+    case streetAddress = "street_address"
+    case locality = "locality"
+    case postalCode = "postal_code"
+    case country = "country"
+    case region = "region"
   }
 
   override init() {
@@ -191,7 +193,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     case deviceCode
     case verified_email
     case verificationOptions
-    case verificationURIVideo
+    case verificationURIVideo = "verificationVideoURI" // v3 stored as "verificationVideoURI"
     case backCheckVerificationId
     case backCheckSubmittedDate
     case firstName

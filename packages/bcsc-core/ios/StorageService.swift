@@ -41,6 +41,18 @@ class StorageService {
     return "https://id.gov.bc.ca"
   }
 
+  /// Maps environment directory names (as produced by getIssuerNameFromIssuer) to issuer URLs.
+  /// Priority order matters: prod is checked first, then non-prod environments.
+  private let issuerDirectoryToURL: [(name: String, url: String)] = [
+    ("prod", "https://id.gov.bc.ca"),
+    ("SIT", "https://idsit.gov.bc.ca"),
+    ("QA", "https://idqa.gov.bc.ca"),
+    ("DEV", "https://iddev.gov.bc.ca"),
+    ("DEV2", "https://iddev2.gov.bc.ca"),
+    ("PREPROD", "https://idpreprod.gov.bc.ca"),
+    ("TEST", "https://idtest.gov.bc.ca"),
+  ]
+
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
   var nativeModuleName: String {
@@ -117,7 +129,13 @@ class StorageService {
       return try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
     } catch {
-      logger.error("currentIssuer: Could not access account_list to read issuer: \(error).")
+      logger.error("currentIssuer: Could not read issuer file: \(error).")
+      // Fallback: infer issuer from directory structure (v3 migration path)
+      if let inferred = findIssuerFromAccountDirectories() {
+        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred)")
+        return inferred
+      }
+      logger.log("currentIssuer: Defaulting to production issuer")
       return productionIssuer
     }
   }
@@ -393,16 +411,71 @@ class StorageService {
 
     let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
-    // For custom types, unwrap from provider dictionary
-    // For Foundation collection types, return directly
+    // For custom types, unwrap from provider dictionary.
+    // For Foundation collection types, return directly — but first unwrap v3's
+    // "storable_source_default_id" wrapper if present (used by AccountFlagSource in v3).
     if !isFoundationCollectionType {
       if let decodedDict = decoded as? [String: T] {
         return decodedDict[provider]
       }
       return nil
     } else {
-      return decoded as? T
+      guard let result = decoded as? T else { return nil }
+
+      // V3 compatibility: AccountFlagSource archived data as
+      // {"storable_source_default_id": {actualFlags}} — unwrap the inner dict if present.
+      if T.self == NSDictionary.self,
+         let wrapper = result as? NSDictionary,
+         let inner = wrapper["storable_source_default_id"] as? NSDictionary
+      {
+        logger.log("decodeArchivedObject: Unwrapping v3 'storable_source_default_id' wrapper")
+        return inner as? T
+      }
+
+      return result
     }
+  }
+
+  /// Scans the accounts_dir for known environment subdirectories containing UUID-format account
+  /// directories. Returns the issuer URL for the first match in priority order.
+  /// Used as a fallback when the issuer file is missing (e.g. V3 migrated users).
+  private func findIssuerFromAccountDirectories() -> String? {
+    guard let rootURL = try? FileManager.default.url(
+      for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+    ) else { return nil }
+
+    let accountsDirURL = rootURL
+      .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
+
+    guard let uuidRegex = try? NSRegularExpression(
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      options: .caseInsensitive
+    ) else { return nil }
+
+    for entry in issuerDirectoryToURL {
+      let envDirURL = accountsDirURL.appendingPathComponent(entry.name)
+      guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
+      ) else { continue }
+
+      let hasUUIDSubdir = contents.contains { url in
+        guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+        else { return false }
+        let name = url.lastPathComponent
+        return uuidRegex.firstMatch(
+          in: name, range: NSRange(name.startIndex..., in: name)
+        ) != nil
+      }
+
+      if hasUUIDSubdir {
+        logger.log(
+          "findIssuerFromAccountDirectories: Found accounts in '\(entry.name)', using issuer \(entry.url)"
+        )
+        return entry.url
+      }
+    }
+
+    return nil
   }
 
   /// https://id.gov.bc.ca -> "prod"
