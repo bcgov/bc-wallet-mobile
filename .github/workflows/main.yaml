@@ -1145,6 +1145,7 @@ jobs:
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           PLATFORM_NAME: ${{ matrix.platform }}
           APP_FILENAME: ${{ matrix.app_filename }}
+          VARIANT: ${{ matrix.variant }}
           TEST_NAME: 'App Launch - ${{ matrix.variant }} ${{ matrix.platform }}'
           BUILD_NAME: 'build-${{ github.run_number }}'
         run: node scripts/saucelabs-app-launch-test.mjs
