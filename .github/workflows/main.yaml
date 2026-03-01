@@ -452,18 +452,10 @@ jobs:
           sudo xcode-select --switch /Applications/Xcode_26.2.app
           sudo xcode-select -p
 
-      - name: Restore ccache binary
-        id: ccache-bin
-        uses: actions/cache@v4
-        with:
-          path: /opt/homebrew/Cellar/ccache
-          key: ${{ runner.os }}-ccache-bin-${{ runner.arch }}
-
       - name: Install ccache
         run: |
-          if ! command -v ccache >/dev/null 2>&1; then
-            brew install ccache 2>/dev/null || brew link ccache
-          fi
+          # ccache is pre-installed on macOS runner images but may not be linked
+          brew list ccache &>/dev/null && brew link --overwrite ccache 2>/dev/null || brew install ccache
           ccache --version
           # Configure ccache: 2GB max, no compression (faster), sloppiness for Xcode
           ccache --set-config=max_size=2G
