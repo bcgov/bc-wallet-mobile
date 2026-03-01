@@ -462,7 +462,7 @@ jobs:
       - name: Install ccache
         run: |
           if ! command -v ccache >/dev/null 2>&1; then
-            brew install ccache
+            brew install ccache 2>/dev/null || brew link ccache
           fi
           ccache --version
           # Configure ccache: 2GB max, no compression (faster), sloppiness for Xcode
