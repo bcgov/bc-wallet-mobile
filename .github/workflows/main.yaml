@@ -465,6 +465,7 @@ jobs:
           ccache --set-config=inode_cache=true
 
       - name: Restore ccache
+        id: ccache-restore
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
@@ -689,7 +690,7 @@ jobs:
       # app version file differs). Saving once avoids cache key conflicts
       # and halves storage usage.
       - name: Save ccache
-        if: always() && matrix.variant == 'bcsc-dev'
+        if: always() && matrix.variant == 'bcsc-dev' && steps.ccache-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
