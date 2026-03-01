@@ -1103,81 +1103,48 @@ jobs:
           artifact_ref: ${{ matrix.artifact_ref }}
           artifact_name: ${{ matrix.artifact_name }}
 
+  # ─── App Launch Verification ──────────────────────────────────────────
+  # Lightweight smoke test: verifies each app/bundle can be installed and
+  # launched on a real device via SauceLabs Appium.  No AATH agents,
+  # SauceConnect tunnels, or mobile test harness are needed — just the
+  # W3C WebDriver protocol via Node.js native fetch.
+  #
+  # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
   run-on-device-tests:
-    # if: github.ref_name == 'main'
-    if: false # Disabled
+    name: "App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}"
     needs: [ship-to-saucelabs]
+    if: github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     strategy:
-      max-parallel: 4
+      max-parallel: 2
       fail-fast: false
       matrix:
         include:
-          - mobile-platform: '-p Android'
-            app-file-name: '-a BCWallet-${{ github.run_number }}.aab'
-            report-project: 'android-bc-wallet-one-device-smoke'
-          # - mobile-platform: "-p Android"
-          #   app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.aab"
-          #   report-project: "android-single-app-one-device-smoke"
-          - mobile-platform: '-p iOS'
-            app-file-name: '-a BCWallet-${{ github.run_number }}.ipa'
-            report-project: 'ios-bc-wallet-one-device-smoke'
-          # - mobile-platform: "-p iOS"
-          #   app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.ipa"
-          #   report-project: "ios-single-app-one-device-smoke"
-    timeout-minutes: 60
+          - platform: 'iOS'
+            variant: 'bcwallet-prod'
+            app_filename: 'BCWallet-${{ github.run_number }}.ipa'
+          - platform: 'iOS'
+            variant: 'bcsc-dev'
+            app_filename: 'BCSC-Dev-${{ github.run_number }}.ipa'
+          - platform: 'Android'
+            variant: 'bcwallet-prod'
+            app_filename: 'BCWallet-${{ github.run_number }}.aab'
+          - platform: 'Android'
+            variant: 'bcsc-dev'
+            app_filename: 'BCSC-Dev-${{ github.run_number }}.aab'
     steps:
       - uses: actions/checkout@v4
 
-      - name: run-aath-agents
-        if: matrix.mobile-platform=='-p iOS'
-        uses: ./.github/workflows/actions/run-aath-agents
-        with:
-          USE_NGROK: ''
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
 
-      - name: run-aath-agents-ngrok
-        if: matrix.mobile-platform=='-p Android'
-        uses: ./.github/workflows/actions/run-aath-agents
-        with:
-          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
-          USE_NGROK: '-n'
-
-      - name: run-sauce-connect-tunnel
-        if: matrix.mobile-platform=='-p iOS'
-        uses: saucelabs/sauce-connect-action@v2
-        with:
-          username: ${{ secrets.SAUCE_USERNAME }}
-          accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-          directDomains: aries-mediator-agent.vonx.io,apple.com
-
-      - name: Fetch mobile test harness repo
-        uses: actions/checkout@v4
-        with:
-          repository: hyperledger/aries-mobile-test-harness
-          path: aries-mobile-test-harness
-          ref: main
-
-      - name: Run SauceLabs smoke-test
-        uses: ./.github/workflows/actions/run-test-harness
+      - name: Verify app launches on real device
         env:
-          LEDGER_URL_CONFIG: 'http://test.bcovrin.vonx.io'
-          REGION: 'us-west-1'
-        with:
-          MOBILE_WALLET: '-w bc_wallet'
-          ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
-          VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9030"'
-          DEVICE_CLOUD: '-d SauceLabs'
-          DEVICE_CLOUD_USER: '-u ${{ secrets.SAUCE_USERNAME }}'
-          DEVICE_CLOUD_KEY: '-k ${{ secrets.SAUCE_ACCESS_KEY }}'
-          MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
-          APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: '-t @bc_wallet -t @SmokeTest'
-          REPORT_PROJECT: ${{ matrix.report-project }}
-
-      - name: Upload smoke-test results to Allure
-        if: always()
-        uses: ./.github/workflows/actions/run-send-gen-test-results-secure
-        with:
-          REPORT_PROJECT: ${{ matrix.report-project }}
-          ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
-          ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          PLATFORM_NAME: ${{ matrix.platform }}
+          APP_FILENAME: ${{ matrix.app_filename }}
+          TEST_NAME: 'App Launch - ${{ matrix.variant }} ${{ matrix.platform }}'
+          BUILD_NAME: 'build-${{ github.run_number }}'
+        run: node scripts/saucelabs-app-launch-test.mjs
