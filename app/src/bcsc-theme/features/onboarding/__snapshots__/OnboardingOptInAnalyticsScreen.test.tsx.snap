@@ -34,12 +34,12 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <View
+      <Text
         accessibilityLabel="OnboardingOptInAnalytics"
-        accessibilityRole="none"
-        accessible={true}
         style={
           {
+            "color": "transparent",
+            "fontSize": 1,
             "height": 1,
             "overflow": "hidden",
             "position": "absolute",
@@ -47,7 +47,9 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
           }
         }
         testID="ScreenMarker"
-      />
+      >
+        OnboardingOptInAnalytics
+      </Text>
       <View
         style={
           {
