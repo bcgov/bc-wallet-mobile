@@ -202,6 +202,35 @@ async function takeScreenshot(headers, sessionId) {
   return data.value || null
 }
 
+/**
+ * Poll for an element to appear, retrying every `intervalMs` up to `timeoutMs`.
+ * Returns the element id string, or null if not found within the timeout.
+ */
+async function waitForElement(headers, sessionId, resourceId, isIOS, timeoutMs = 15_000, intervalMs = 2_000) {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const el = await findElementByResourceId(headers, sessionId, resourceId, isIOS)
+    if (el) return el
+    await sleep(intervalMs)
+  }
+  return null
+}
+
+/**
+ * Wait for an element to appear and tap it.
+ * Returns true if the element was found and tapped, false if it timed out.
+ */
+async function waitForElementAndTap(headers, sessionId, resourceId, isIOS, timeoutMs = 15_000) {
+  console.log(`  Waiting for "${resourceId}" …`)
+  const el = await waitForElement(headers, sessionId, resourceId, isIOS, timeoutMs)
+  if (!el) {
+    throw new Error(`"${resourceId}" did not appear within ${timeoutMs / 1000}s`)
+  }
+  console.log(`  Found "${resourceId}" — tapping …`)
+  await clickElement(headers, sessionId, el)
+  console.log(`  Tapped "${resourceId}" successfully`)
+}
+
 async function deleteSession(headers, sessionId) {
   try {
     await fetch(`${APPIUM_URL}/session/${sessionId}`, {
@@ -267,16 +296,20 @@ async function interactBCSC(headers, sessionId, isIOS) {
   console.log('Running BCSC variant interactions …')
 
   // Try accessibility id first, then resource-id
-  let el = await findElementByAccessibilityId(headers, sessionId, 'AddAccount')
-  if (!el) {
-    el = await findElementByResourceId(headers, sessionId, 'com.ariesbifold:id/AddAccount', isIOS)
-  }
+  let el = await findElementByResourceId(headers, sessionId, 'com.ariesbifold:id/AddAccount', isIOS)
 
   if (el) {
     console.log('  Found "Add Account" button — tapping …')
     await clickElement(headers, sessionId, el)
-    await sleep(POST_TAP_DELAY_MS)
-    console.log('  Tapped "Add Account" successfully')
+
+    // Wait for the "Continue" button to appear on the next screen and tap it
+    await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/Continue', isIOS)
+    await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/CarouselNext', isIOS)
+    await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/CarouselNext', isIOS)
+    await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/CarouselNext', isIOS)
+    //Privacy Screen
+    await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/Continue', isIOS)
+
     return true
   }
 
@@ -302,29 +335,14 @@ async function interactBCWallet(headers, sessionId, isIOS) {
   if (checkbox) {
     console.log('  Found "I Agree" checkbox — tapping …')
     await clickElement(headers, sessionId, checkbox)
-    await sleep(2_000)
     console.log('  Tapped "I Agree" checkbox')
   } else {
     console.warn('  Warning: "I Agree" checkbox not found on screen')
     return false
   }
 
-  // Step 2: Tap the "Continue" button
-  let continueBtn = await findElementByAccessibilityId(headers, sessionId, 'Continue')
-  if (!continueBtn) {
-    continueBtn = await findElementByResourceId(headers, sessionId, 'com.ariesbifold:id/Continue', isIOS)
-  }
-
-  if (continueBtn) {
-    console.log('  Found "Continue" button — tapping …')
-    await clickElement(headers, sessionId, continueBtn)
-    await sleep(POST_TAP_DELAY_MS)
-    console.log('  Tapped "Continue" successfully')
-    return true
-  }
-
-  console.warn('  Warning: "Continue" button not found on screen')
-  return false
+  // Step 2: Wait for and tap the "Continue" button
+  return await waitForElementAndTap(headers, sessionId, 'com.ariesbifold:id/Continue', isIOS)
 }
 
 // ── Main ───────────────────────────────────────────────────────────────
