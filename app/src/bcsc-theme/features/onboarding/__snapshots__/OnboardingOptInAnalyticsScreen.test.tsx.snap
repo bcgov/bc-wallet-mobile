@@ -35,14 +35,14 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
   >
     <View>
       <View
-        accessibilityElementsHidden={true}
         accessibilityLabel="OnboardingOptInAnalytics"
-        importantForAccessibility="no-hide-descendants"
+        accessible={false}
         style={
           {
-            "height": 0,
+            "height": 1,
+            "opacity": 0,
             "position": "absolute",
-            "width": 0,
+            "width": 1,
           }
         }
         testID="ScreenMarker"
