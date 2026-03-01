@@ -35,6 +35,18 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
   >
     <View>
       <View
+        accessibilityElementsHidden={true}
+        importantForAccessibility="no-hide-descendants"
+        style={
+          {
+            "height": 0,
+            "position": "absolute",
+            "width": 0,
+          }
+        }
+        testID="Screen:OnboardingOptInAnalytics"
+      />
+      <View
         style={
           {
             "alignItems": "center",
@@ -244,6 +256,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
+        testID="Accept"
       >
         <View
           style={
@@ -321,6 +334,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
+        testID="Decline"
       >
         <View
           style={

@@ -1,3 +1,4 @@
+import ScreenMarker from '@/bcsc-theme/components/ScreenMarker'
 import { ONBOARDING_ICON_IMAGE_SIZE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
@@ -77,17 +78,20 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         title={t('BCSC.Onboarding.AcceptAnalytics')}
         buttonType={ButtonType.Primary}
         onPress={handleAcceptPressed}
+        testID='Accept'
       />
       <Button
         title={t('BCSC.Onboarding.DenyAnalytics')}
         buttonType={ButtonType.Secondary}
         onPress={handleDeniedPressed}
+        testID='Decline'
       />
     </View>
   )
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.sectionContainer}>
+      <ScreenMarker screenName="OnboardingOptInAnalytics" />
       <View style={styles.iconContainer}>
         <Icon
           name={'analytics'}
