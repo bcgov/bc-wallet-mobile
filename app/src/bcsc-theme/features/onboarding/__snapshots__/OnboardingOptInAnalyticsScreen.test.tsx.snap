@@ -36,11 +36,12 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     <View>
       <View
         accessibilityLabel="OnboardingOptInAnalytics"
-        accessible={false}
+        accessibilityRole="none"
+        accessible={true}
         style={
           {
             "height": 1,
-            "opacity": 0,
+            "overflow": "hidden",
             "position": "absolute",
             "width": 1,
           }

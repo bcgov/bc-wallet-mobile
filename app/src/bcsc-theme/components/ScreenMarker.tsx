@@ -13,13 +13,12 @@ interface ScreenMarkerProps {
  *                               accessibilityIdentifier on iOS)
  * - accessibilityLabel       → carries the screen name, readable via
  *                               content-desc (Android) / label (iOS)
- * - accessible={false}       → not focusable by VoiceOver / TalkBack, but
- *                               still present in the view hierarchy so Appium
- *                               (XCUITest / UiAutomator2) can find it
- *
- * Note: accessibilityElementsHidden and importantForAccessibility="no-hide-
- * descendants" are intentionally NOT used — they remove the element from the
- * accessibility tree entirely, which also hides it from Appium.
+ * - accessible={true}        → REQUIRED for Appium discovery — both XCUITest
+ *                               and UiAutomator2 query the accessibility tree;
+ *                               elements not in the tree are invisible to them
+ * - accessibilityRole="none" → minimizes screen reader impact (no semantic
+ *                               announcement); 1×1 absolute-positioned element
+ *                               is virtually unreachable by swipe navigation
  *
  * Usage in Appium tests:
  *   1. Find element by resource-id / accessibility-id "ScreenMarker"
@@ -28,9 +27,10 @@ interface ScreenMarkerProps {
 const ScreenMarker: React.FC<ScreenMarkerProps> = ({ screenName }) => (
   <View
     testID="ScreenMarker"
+    accessible={true}
     accessibilityLabel={screenName}
-    accessible={false}
-    style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
+    accessibilityRole="none"
+    style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden' }}
   />
 )
 
