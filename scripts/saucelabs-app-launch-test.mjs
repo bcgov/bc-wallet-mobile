@@ -231,6 +231,37 @@ async function waitForElementAndTap(headers, sessionId, resourceId, isIOS, timeo
   console.log(`  Tapped "${resourceId}" successfully`)
 }
 
+/**
+ * Read an attribute value from an element.
+ * Common attributes: "content-desc" (Android), "label" (iOS), "text", "name".
+ */
+async function getElementAttribute(headers, sessionId, elementId, attributeName) {
+  const res = await fetch(
+    `${APPIUM_URL}/session/${sessionId}/element/${elementId}/attribute/${attributeName}`,
+    { method: 'GET', headers }
+  )
+  if (!res.ok) return null
+  const data = await res.json()
+  return data.value ?? null
+}
+
+/**
+ * Get the current screen name from the ScreenMarker component.
+ * The marker uses testID="ScreenMarker" (resource-id / accessibilityIdentifier)
+ * and carries the screen name in accessibilityLabel (content-desc / label).
+ * Returns the screen name string, or null if no marker is found.
+ */
+async function getCurrentScreenName(headers, sessionId, isIOS) {
+  const el = await findElementByResourceId(headers, sessionId, 'ScreenMarker', isIOS)
+  if (!el) return null
+  // Android: content-desc, iOS: label — try both
+  const name =
+    (await getElementAttribute(headers, sessionId, el, 'content-desc')) ||
+    (await getElementAttribute(headers, sessionId, el, 'label')) ||
+    (await getElementAttribute(headers, sessionId, el, 'name'))
+  return name || null
+}
+
 async function deleteSession(headers, sessionId) {
   try {
     await fetch(`${APPIUM_URL}/session/${sessionId}`, {
