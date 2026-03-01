@@ -35,7 +35,8 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
   >
     <View>
       <Text
-        accessibilityLabel="OnboardingOptInAnalytics"
+        accessibilityLabel=""
+        accessibilityRole="none"
         style={
           {
             "color": "transparent",
@@ -46,7 +47,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "width": 1,
           }
         }
-        testID="ScreenMarker"
+        testID="com.ariesbifold:id/ScreenMarker"
       >
         OnboardingOptInAnalytics
       </Text>
