@@ -62,6 +62,7 @@ export default [
       '**/metro.config.js',
       '.yarn/',
       'bifold/**/*',
+      'android/app/scripts/**/*',
     ],
   },
   {

@@ -34,6 +34,23 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
+      <Text
+        accessibilityLabel=""
+        accessibilityRole="none"
+        style={
+          {
+            "color": "transparent",
+            "fontSize": 1,
+            "height": 1,
+            "overflow": "hidden",
+            "position": "absolute",
+            "width": 1,
+          }
+        }
+        testID="com.ariesbifold:id/ScreenMarker"
+      >
+        OnboardingOptInAnalytics
+      </Text>
       <View
         style={
           {
@@ -244,6 +261,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/Accept"
       >
         <View
           style={
@@ -321,6 +339,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/Decline"
       >
         <View
           style={

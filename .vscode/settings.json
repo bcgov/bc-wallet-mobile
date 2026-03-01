@@ -73,5 +73,11 @@
   "emmet.includeLanguages": {
     "javascript": "javascriptreact",
     "typescript": "typescriptreact"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "uniq": true,
+    "diff": true,
+    "paste": true,
+    "git rev-parse": true
   }
 }
