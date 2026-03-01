@@ -468,10 +468,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-
-            ${{ runner.os }}-ccache-${{ matrix.variant }}-
+            ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-
             ${{ runner.os }}-ccache-
 
       - name: Cached pip dependencies
@@ -685,12 +684,16 @@ jobs:
         if: always()
         run: ccache --show-stats || true
 
+      # Save from one variant only — native Pod compilations are identical
+      # across all variants (1435/1436 CompileC targets are Pods; only the
+      # app version file differs). Saving once avoids cache key conflicts
+      # and halves storage usage.
       - name: Save ccache
-        if: always()
+        if: always() && matrix.variant == 'bcsc-dev'
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
 
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
