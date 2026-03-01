@@ -452,9 +452,18 @@ jobs:
           sudo xcode-select --switch /Applications/Xcode_26.2.app
           sudo xcode-select -p
 
+      - name: Restore ccache binary
+        id: ccache-bin
+        uses: actions/cache@v4
+        with:
+          path: /opt/homebrew/Cellar/ccache
+          key: ${{ runner.os }}-ccache-bin-${{ runner.arch }}
+
       - name: Install ccache
         run: |
-          brew install ccache
+          if ! command -v ccache >/dev/null 2>&1; then
+            brew install ccache
+          fi
           ccache --version
           # Configure ccache: 2GB max, no compression (faster), sloppiness for Xcode
           ccache --set-config=max_size=2G
@@ -495,16 +504,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      - name: Restore cached derived data
-        id: cache-dd-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-
-            ${{ runner.os }}-dd-${{ matrix.variant }}-
-            ${{ runner.os }}-dd-
+      # Derived data cache removed — xcodebuild recompiles all 1436 C/C++
+      # files regardless of cached derived data (file timestamps and build
+      # descriptions are invalidated by cache extraction and version bumps).
+      # ccache provides the actual compilation reuse instead.
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
@@ -712,14 +715,6 @@ jobs:
           version_code: ${{ env.APP_BUILD_NUMBER }}
           version_name: ${{ env.APP_VERSION }}
           beta_groups: ${{ matrix.beta_groups }}
-
-      - name: Save cache for derived data
-        id: cache-dd-save
-        if: github.ref == 'refs/heads/main' && always()
-        uses: actions/cache/save@v4
-        with:
-          path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-${{ matrix.variant }}-${{ hashFiles('**/Podfile.lock', '**/firebase.json') }}-${{ github.sha }}
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for iOS failure
