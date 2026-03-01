@@ -36,6 +36,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
     <View>
       <View
         accessibilityElementsHidden={true}
+        accessibilityLabel="OnboardingOptInAnalytics"
         importantForAccessibility="no-hide-descendants"
         style={
           {
@@ -44,7 +45,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "width": 0,
           }
         }
-        testID="Screen:OnboardingOptInAnalytics"
+        testID="ScreenMarker"
       />
       <View
         style={
@@ -256,7 +257,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
-        testID="Accept"
+        testID="com.ariesbifold:id/Accept"
       >
         <View
           style={
@@ -334,7 +335,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
-        testID="Decline"
+        testID="com.ariesbifold:id/Decline"
       >
         <View
           style={

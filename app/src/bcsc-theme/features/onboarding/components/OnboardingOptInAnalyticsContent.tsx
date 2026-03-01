@@ -7,6 +7,7 @@ import {
   ButtonType,
   ContentGradient,
   ScreenWrapper,
+  testIdWithKey,
   ThemedText,
   TOKENS,
   useServices,
@@ -78,13 +79,13 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         title={t('BCSC.Onboarding.AcceptAnalytics')}
         buttonType={ButtonType.Primary}
         onPress={handleAcceptPressed}
-        testID='Accept'
+        testID={testIdWithKey('Accept')}
       />
       <Button
         title={t('BCSC.Onboarding.DenyAnalytics')}
         buttonType={ButtonType.Secondary}
         onPress={handleDeniedPressed}
-        testID='Decline'
+        testID={testIdWithKey('Decline')}
       />
     </View>
   )
