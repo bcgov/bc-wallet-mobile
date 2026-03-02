@@ -134,14 +134,13 @@ jobs:
 
   # ─── Shared Preparation ─────────────────────────────────────────────
   # Builds the JS bundle once for all variants, saving ~2-3 min per
-  # variant build. Also warms the Metro bundler cache so that any
-  # residual re-bundling in iOS xcodebuild is near-instant.
+  # variant build.  The pre-built bundle is uploaded as an artifact and
+  # downloaded by build-ios (SKIP_BUNDLING=1) and build-android
+  # (SKIP_METRO_BUNDLE=1), so Metro is never invoked during native builds.
   #
   # Future optimizations:
   #   - Use dynamic matrix (fromJSON) to build only bcwallet-prod +
   #     bcsc-dev on pull requests, all variants on main/dispatch.
-  #   - Upload pre-built iOS JS bundle and use SKIP_BUNDLING=1 in
-  #     xcodebuild to skip Metro entirely for iOS too.
   prepare-ios:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
