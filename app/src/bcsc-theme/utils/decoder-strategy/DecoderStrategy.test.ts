@@ -35,7 +35,8 @@ describe('decodeScannedCode', () => {
       value: 'mock-value',
     }
 
-    const value = decodeScannedCode(mockCode, [mockStrategy])
+    const mockLogger = { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() } as any
+    const value = decodeScannedCode(mockCode, mockLogger, [mockStrategy])
 
     expect(mockStrategy.canDecode).toHaveBeenCalledWith(mockCode)
     expect(mockStrategy.decode).toHaveBeenCalledWith(mockCode)
@@ -53,7 +54,8 @@ describe('decodeScannedCode', () => {
       value: 'mock-value',
     }
 
-    const value = decodeScannedCode(mockCode, [mockStrategy])
+    const mockLogger = { warn: jest.fn(), debug: jest.fn(), error: jest.fn(), info: jest.fn() } as any
+    const value = decodeScannedCode(mockCode, mockLogger, [mockStrategy])
 
     expect(mockStrategy.canDecode).toHaveBeenCalledWith(mockCode)
     expect(mockStrategy.decode).not.toHaveBeenCalled()

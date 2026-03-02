@@ -1,10 +1,12 @@
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
-import { BCDispatchAction } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { CodeType } from 'react-native-vision-camera'
 import useApi from '../api/hooks/useApi'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
@@ -44,20 +46,21 @@ type DriversLicenseMetadataStub = { birthDate: Date }
 export const useCardScanner = () => {
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [, dispatch] = useStore()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scannerEnabledRef = useRef(true)
-  const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
+  const { updateUserInfo, updateUserMetadata, updateDeviceCodes, updateCardProcess, updateVerificationOptions } =
+    useSecureActions()
 
   /**
    * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
    *
    * @param bcscSerial - The BCSC card serial number.
    * @param license - The driver's license metadata.
-   * @returns A promise that resolves when the scanning process is complete.
+   * @returns `true` if authorization succeeded, `false` if silently skipped (Non-BCSC flow).
    */
   const handleScanComboCard = useCallback(
-    async (bcscSerial: string, license: DriversLicenseMetadataStub) => {
+    async (bcscSerial: string, license: DriversLicenseMetadataStub): Promise<boolean> => {
       if (!license.birthDate || Number.isNaN(license.birthDate.getTime())) {
         // Should never happen, probably a decoder error
         throw new Error('handleScanComboCard: License birthdate is missing or invalid')
@@ -83,9 +86,20 @@ export const useCardScanner = () => {
         await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
         navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+        return true
       } catch (error) {
         if (isHandledAppError(error)) {
-          return
+          return true
+        }
+
+        // In the Non-BCSC flow the camera may pick up a code-128 barcode on a
+        // DL that looks like a BCSC serial but isn't valid.  Silently continue
+        // so the user stays in the evidence-capture flow (matching v3 behaviour).
+        if (store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC) {
+          logger.info('[CardScanner] Authorization failed in Non-BCSC flow, continuing silently', {
+            error: String(error),
+          })
+          return false
         }
 
         logger.error('Device authorization failed during combo card scan', error as Error)
@@ -99,9 +113,19 @@ export const useCardScanner = () => {
             },
           ],
         })
+        return true
       }
     },
-    [authorization, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, logger, navigation]
+    [
+      authorization,
+      updateUserInfo,
+      updateDeviceCodes,
+      updateCardProcess,
+      updateVerificationOptions,
+      logger,
+      navigation,
+      store.bcscSecure.cardProcess,
+    ]
   )
 
   /**
@@ -126,27 +150,27 @@ export const useCardScanner = () => {
    */
   const handleScanDriversLicense = useCallback(
     async (license: DriversLicenseMetadata) => {
-      dispatch({
-        type: BCDispatchAction.UPDATE_SECURE_USER_METADATA,
-        payload: [
-          {
-            name: {
-              first: license.firstName,
-              last: license.lastName,
-              middle: license.middleNames,
-            },
-            address: {
-              streetAddress: license.streetAddress,
-              postalCode: license.postalCode,
-              city: license.city,
-              province: license.province,
-              country: 'CA', // currently we only support Canada licenses
-            },
-          },
-        ],
+      await updateUserMetadata({
+        name: {
+          first: license.firstName,
+          last: license.lastName,
+          middle: license.middleNames,
+        },
+        address: {
+          streetAddress: license.streetAddress,
+          postalCode: license.postalCode,
+          city: license.city,
+          province: license.province as ProvinceCode,
+          country: 'CA', // currently we only support Canada licenses
+        },
       })
+
+      // Save birthdate from barcode so downstream screens can prepopulate
+      if (license.birthDate && !Number.isNaN(license.birthDate.getTime())) {
+        await updateUserInfo({ birthdate: license.birthDate })
+      }
     },
-    [dispatch]
+    [updateUserMetadata, updateUserInfo]
   )
 
   /**
@@ -199,7 +223,7 @@ export const useCardScanner = () => {
         if (__DEV__) {
           logger.debug(`[CardScanner] decoding barcode`, { code: code })
         }
-        const decodedCode = decodeScannedCode(code)
+        const decodedCode = decodeScannedCode(code, logger)
 
         if (!decodedCode) {
           // This is usually from a barcode that was partially out of frame
