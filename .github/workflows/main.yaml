@@ -383,7 +383,7 @@ jobs:
               IDIM Team
           - variant: 'bcsc-dev'
             build_target: 'bcsc'
-            export_method: 'app-store-connect'
+            export_method: 'app-store'
             provisioning_profile_uuid: '4f031630-16e4-4f8d-8723-a3d920577416'
             provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SADEV_BASE64'
             google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64'
@@ -393,7 +393,7 @@ jobs:
           # TODO: Create secrets for bcsc-test/qa/prod variants and update UUIDs
           # - variant: 'bcsc-test'
           #   build_target: 'bcsc'
-          #   export_method: 'app-store-connect'
+          #   export_method: 'app-store'
           #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_TEST_PROV_PROFILE_UUID'
           #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SATEST_BASE64'
           #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64'
@@ -402,7 +402,7 @@ jobs:
           #     IDIM testers for TEST env
           # - variant: 'bcsc-qa'
           #   build_target: 'bcsc'
-          #   export_method: 'app-store-connect'
+          #   export_method: 'app-store'
           #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_QA_PROV_PROFILE_UUID'
           #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SAQA_BASE64'
           #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64'
@@ -411,7 +411,7 @@ jobs:
           #     IDIM testers for QA env
           # - variant: 'bcsc-prod'
           #   build_target: 'bcsc'
-          #   export_method: 'app-store-connect'
+          #   export_method: 'app-store'
           #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_PROD_PROV_PROFILE_UUID'
           #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SA_BASE64'
           #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SA_BASE64'
