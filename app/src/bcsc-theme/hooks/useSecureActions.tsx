@@ -3,6 +3,7 @@ import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import {
   AccountFlags,
+  BarcodePayload,
   BCSCAccountType,
   BCSCCardProcess,
   BCSCCardType,
@@ -564,9 +565,9 @@ export const useSecureActions = () => {
    * Update evidence metadata for a specific evidence type and persist to native storage
    */
   const updateEvidenceMetadata = useCallback(
-    async (evidenceType: EvidenceType, metadata: PhotoMetadata[]) => {
+    async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, metadata } : evidence
+        evidence.evidenceType === evidenceType ? { ...evidence, metadata, barcodes } : evidence
       )
 
       dispatch({

@@ -184,6 +184,289 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                 BCSC.EvidenceIDCollection.DocumentNumberSubtext 123456789
               </Text>
             </View>
+            <View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "fontWeight": "bold",
+                    },
+                    [
+                      {
+                        "marginBottom": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/lastName-label"
+              >
+                BCSC.EvidenceIDCollection.LastNameLabel
+              </Text>
+              <TextInput
+                accessibilityLabel="BCSC.EvidenceIDCollection.LastNameLabel"
+                autoCorrect={false}
+                onChange={[Function]}
+                style={
+                  [
+                    {
+                      "backgroundColor": "#D3D3D3",
+                      "borderColor": "#D3D3D3",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "padding": 10,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/lastName-input"
+                value=""
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "marginTop": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/lastName-subtext"
+              >
+                BCSC.EvidenceIDCollection.LastNameSubtext
+              </Text>
+            </View>
+            <View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "fontWeight": "bold",
+                    },
+                    [
+                      {
+                        "marginBottom": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/firstName-label"
+              >
+                BCSC.EvidenceIDCollection.FirstNameLabel
+              </Text>
+              <TextInput
+                accessibilityLabel="BCSC.EvidenceIDCollection.FirstNameLabel"
+                autoCorrect={false}
+                onChange={[Function]}
+                style={
+                  [
+                    {
+                      "backgroundColor": "#D3D3D3",
+                      "borderColor": "#D3D3D3",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "padding": 10,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/firstName-input"
+                value=""
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "marginTop": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/firstName-subtext"
+              >
+                BCSC.EvidenceIDCollection.FirstNameSubtext
+              </Text>
+            </View>
+            <View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "fontWeight": "bold",
+                    },
+                    [
+                      {
+                        "marginBottom": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/middleNames-label"
+              >
+                BCSC.EvidenceIDCollection.MiddleNamesLabel
+              </Text>
+              <TextInput
+                accessibilityLabel="BCSC.EvidenceIDCollection.MiddleNamesLabel"
+                autoCorrect={false}
+                onChange={[Function]}
+                style={
+                  [
+                    {
+                      "backgroundColor": "#D3D3D3",
+                      "borderColor": "#D3D3D3",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "padding": 10,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/middleNames-input"
+                value=""
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "marginTop": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/middleNames-subtext"
+              >
+                BCSC.EvidenceIDCollection.MiddleNamesSubtext
+              </Text>
+            </View>
+            <DatePicker
+              accessibilityLabel="BCSC.EvidenceIDCollection.BirthDatePickerAccessibilityLabel"
+              date={2026-01-01T00:00:00.000Z}
+              modal={true}
+              mode="date"
+              onCancel={[Function]}
+              onConfirm={[Function]}
+              open={false}
+              testID="com.ariesbifold:id/BirthDatePicker"
+              title="BCSC.EvidenceIDCollection.BirthDatePickerLabel"
+            />
+            <View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "fontWeight": "bold",
+                    },
+                    [
+                      {
+                        "marginBottom": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/birthDate-label"
+              >
+                BCSC.EvidenceIDCollection.BirthDateLabel
+              </Text>
+              <TextInput
+                accessibilityLabel="BCSC.EvidenceIDCollection.BirthDateLabel"
+                onChange={[Function]}
+                onPressIn={[Function]}
+                style={
+                  [
+                    {
+                      "backgroundColor": "#D3D3D3",
+                      "borderColor": "#D3D3D3",
+                      "borderRadius": 4,
+                      "borderWidth": 1,
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "padding": 10,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/birthDate-input"
+                value=""
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 14,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "marginTop": 8,
+                      },
+                      undefined,
+                    ],
+                  ]
+                }
+                testID="com.ariesbifold:id/birthDate-subtext"
+              >
+                BCSC.EvidenceIDCollection.BirthDateSubtext
+              </Text>
+            </View>
           </View>
         </View>
         <View
