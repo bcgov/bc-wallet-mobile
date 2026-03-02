@@ -40,18 +40,15 @@ export function trackErrorInAnalytics(
   interactionType: AlertInteractionEvent,
   actionLabel?: string
 ): void {
-  // Track the error event (mobile_error schema)
-  Analytics.trackErrorEvent({
-    code: String(definition.statusCode),
-    message: definition.appEvent,
-  })
-
-  // Track the alert display event (action schema)
   if (interactionType === AlertInteractionEvent.ALERT_DISPLAY) {
+    // Track the error event once when the alert is first displayed (mobile_error schema)
+    Analytics.trackErrorEvent({
+      code: String(definition.statusCode),
+      message: definition.appEvent,
+    })
     Analytics.trackAlertDisplayEvent(definition.appEvent)
   }
 
-  // Track the alert action event when user presses Report (action schema)
   if (interactionType === AlertInteractionEvent.ALERT_ACTION) {
     Analytics.trackAlertActionEvent(definition.appEvent, actionLabel ?? 'Report this problem')
   }

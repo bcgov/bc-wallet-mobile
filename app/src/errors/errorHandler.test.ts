@@ -97,12 +97,12 @@ describe('errorHandler', () => {
       expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.appEvent)
     })
 
-    it('should not track alert display for non-display events', () => {
+    it('should not track error event or alert display for action events', () => {
       const definition = ErrorRegistry.SERVER_ERROR
 
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
 
-      expect(Analytics.trackErrorEvent).toHaveBeenCalled()
+      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
       expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
     })
 
@@ -111,10 +111,7 @@ describe('errorHandler', () => {
 
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, 'Report this problem')
 
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(definition.statusCode),
-        message: definition.appEvent,
-      })
+      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
       expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
     })
 

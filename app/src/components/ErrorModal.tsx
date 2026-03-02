@@ -1,8 +1,8 @@
 import { getErrorDefinitionFromAppEventCode, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { AlertInteractionEvent } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { EventTypes, testIdWithKey } from '@bifold/core'
-import React, { useCallback, useEffect, useState } from 'react'
+import { EventTypes, testIdWithKey, useTheme } from '@bifold/core'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   DeviceEventEmitter,
@@ -34,6 +34,14 @@ const isErrorPayload = (payload: unknown): payload is ErrorModalPayload =>
   'description' in payload &&
   typeof (payload as ErrorModalPayload).description === 'string'
 
+/**
+ * Normalizes an incoming event payload into a typed ErrorModalPayload.
+ *
+ * Accepts both plain-object payloads (emitted by ErrorAlertContext) and
+ * BifoldError instances (emitted by legacy code paths like attestation.ts
+ * and BCIDHelper.ts). BifoldError duck-types to this shape because it
+ * exposes title, description, message, and code as own properties.
+ */
 const normalizePayload = (payload: unknown): ErrorModalPayload | null => {
   if (!isErrorPayload(payload)) {
     return null
@@ -53,12 +61,13 @@ interface BCSCErrorModalProps {
 }
 
 /**
- * Custom error modal with white background, black text, and Snowplow analytics.
- * Replaces Bifold's ErrorModal for full control over styling and "Report" behavior.
+ * Custom error modal replacing Bifold's ErrorModal for full control
+ * over styling and Snowplow analytics "Report" behavior.
  */
 export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = true }) => {
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
+  const { ColorPalette } = useTheme()
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState<ErrorModalPayload | null>(null)
   const [showDetails, setShowDetails] = useState(false)
@@ -112,11 +121,11 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
 
   const formattedDetails = error ? `${t('Error.ErrorCode')} ${error.code} - ${error.message}` : ''
 
+  const styles = useMemo(() => createStyles(width, ColorPalette), [width, ColorPalette])
+
   if (!visible || !error) {
     return null
   }
-
-  const styles = createStyles(width)
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -125,7 +134,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
           <View style={styles.card}>
             {/* Header */}
             <View style={styles.header}>
-              <Icon name="error" size={30} color="#1F2937" style={styles.icon} />
+              <Icon name="error" size={30} color={ColorPalette.grayscale.darkGrey} style={styles.icon} />
               <View style={styles.headerTextContainer}>
                 <Text style={styles.titleText} testID={testIdWithKey('HeaderText')}>
                   {error.title}
@@ -133,7 +142,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
               </View>
             </View>
 
-            {/* Body */}
+            {/* Scrollable body */}
             <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
               <Text style={styles.bodyText} testID={testIdWithKey('BodyText')}>
                 {error.description}
@@ -156,12 +165,12 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
                 >
                   <View style={styles.showDetailsRow}>
                     <Text style={styles.showDetailsText}>{t('Global.ShowDetails')} </Text>
-                    <Icon name="chevron-right" size={30} color="#2563EB" />
+                    <Icon name="chevron-right" size={30} color={ColorPalette.brand.link} />
                   </View>
                 </TouchableOpacity>
               )}
 
-              {/* Buttons - Report first (primary), Okay second (secondary) */}
+              {/* Buttons */}
               <View style={styles.buttons}>
                 {enableReport && (
                   <TouchableOpacity
@@ -174,7 +183,14 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
                     activeOpacity={0.8}
                   >
                     <View style={styles.primaryButtonContent}>
-                      {reported && <Icon name="check-circle" size={18} color="#059669" style={styles.reportIcon} />}
+                      {reported && (
+                        <Icon
+                          name="check-circle"
+                          size={18}
+                          color={ColorPalette.semantic.success}
+                          style={styles.reportIcon}
+                        />
+                      )}
                       <Text style={styles.primaryButtonText}>
                         {reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
                       </Text>
@@ -206,11 +222,11 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
   )
 }
 
-const createStyles = (width: number) =>
+const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorPalette']) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: colors.notification.popupOverlay,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -219,12 +235,12 @@ const createStyles = (width: number) =>
       maxWidth: width - 50,
     },
     card: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.grayscale.white,
       borderRadius: 8,
       borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: colors.grayscale.lightGrey,
       padding: 16,
-      shadowColor: '#000',
+      shadowColor: colors.grayscale.black,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 8,
@@ -246,7 +262,7 @@ const createStyles = (width: number) =>
     titleText: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.grayscale.darkGrey,
     },
     body: {
       marginTop: 8,
@@ -255,13 +271,13 @@ const createStyles = (width: number) =>
     },
     bodyText: {
       fontSize: 16,
-      color: '#1F2937',
+      color: colors.grayscale.darkGrey,
       marginVertical: 12,
       lineHeight: 24,
     },
     detailsText: {
       fontSize: 14,
-      color: '#4B5563',
+      color: colors.grayscale.mediumGrey,
       marginTop: 8,
       marginBottom: 4,
       lineHeight: 20,
@@ -276,16 +292,17 @@ const createStyles = (width: number) =>
     showDetailsText: {
       fontSize: 16,
       fontWeight: '500',
-      color: '#2563EB',
+      color: colors.brand.link,
     },
     buttons: {
       paddingTop: 16,
+      paddingHorizontal: 4,
     },
     reportButtonWrapper: {
       marginBottom: 12,
     },
     primaryButton: {
-      backgroundColor: '#1E3A5F',
+      backgroundColor: colors.brand.modalPrimary,
       borderRadius: 8,
       paddingVertical: 14,
       paddingHorizontal: 24,
@@ -293,8 +310,7 @@ const createStyles = (width: number) =>
       justifyContent: 'center',
     },
     primaryButtonDisabled: {
-      backgroundColor: '#9CA3AF',
-      opacity: 0.8,
+      backgroundColor: colors.brand.primaryDisabled,
     },
     primaryButtonContent: {
       flexDirection: 'row',
@@ -307,11 +323,13 @@ const createStyles = (width: number) =>
     primaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#FFFFFF',
+      color: colors.brand.text,
     },
     secondaryButton: {
-      backgroundColor: '#F59E0B',
+      backgroundColor: colors.brand.modalSecondaryBackground,
       borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: colors.brand.modalSecondaryBackground,
       paddingVertical: 14,
       paddingHorizontal: 24,
       alignItems: 'center',
@@ -320,13 +338,13 @@ const createStyles = (width: number) =>
     secondaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#FFFFFF',
+      color: colors.grayscale.white,
     },
     footer: {
       marginTop: 16,
       paddingTop: 8,
       alignSelf: 'center',
       fontSize: 12,
-      color: '#6B7280',
+      color: colors.grayscale.mediumGrey,
     },
   })

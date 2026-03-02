@@ -48,7 +48,7 @@ export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(nul
  * TODO (MD): Provide state to prevent multiple modals/alerts from stacking
  *
  * Provides a single entry point for:
- * - Error modals (via BifoldError/ErrorModal)
+ * - Error modals (via BCSCErrorModal)
  * - Native alerts (via React Native Alert)
  * - Analytics tracking
  * - Error logging
