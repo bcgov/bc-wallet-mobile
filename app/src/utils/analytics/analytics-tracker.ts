@@ -13,7 +13,7 @@ const AnalyticsClient = {
 type AnalyticsClient = typeof AnalyticsClient
 
 interface AnalyticsError {
-  code: string // TODO (MD): Use AlertEvent or ErrorEvent codes
+  code: string
   message: string
 }
 
