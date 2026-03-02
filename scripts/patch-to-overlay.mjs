@@ -25,7 +25,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname, basename } from 'path'
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -33,8 +33,20 @@ function ensureDir(dir) {
   mkdirSync(dir, { recursive: true })
 }
 
-function run(cmd, opts = {}) {
-  return execSync(cmd, { encoding: 'utf-8', ...opts }).trim()
+function run(cmd, args = [], opts = {}) {
+  const encoding = opts.encoding ?? 'utf-8'
+  const result = spawnSync(cmd, args, { encoding, shell: false, ...opts })
+  if (result.error) {
+    throw result.error
+  }
+  if (result.status !== 0) {
+    const msg = encoding === 'buffer'
+      ? (result.stderr || '').toString().trim()
+      : (result.stderr || result.stdout || '').trim()
+    throw new Error(`Command failed: ${cmd} ${args.join(' ')}\n${msg}`)
+  }
+  if (encoding === 'buffer') return result.stdout
+  return (result.stdout || '').trim()
 }
 
 // ─── Patch parser ───────────────────────────────────────────────
@@ -176,7 +188,7 @@ function main() {
         const destPath = join(overlayDir, filePath)
         ensureDir(dirname(destPath))
         try {
-          const content = execSync(`git show ${applyRef}:${filePath}`, { encoding: 'buffer' })
+          const content = run('git', ['show', `${applyRef}:${filePath}`], { encoding: 'buffer' })
           writeFileSync(destPath, content)
           console.log(`  Extracted: ${filePath}`)
         } catch (e) {
