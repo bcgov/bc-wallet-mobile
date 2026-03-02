@@ -1,18 +1,20 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
+import { BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Pressable, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
+import useSetupStepsModel from './_models/useSetupStepsModel'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
 const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
@@ -27,13 +29,32 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const [store] = useStore<BCState>()
   const { updateCardProcess } = useSecureActions()
-
+  const { handleResetCardRegistration } = useSetupStepsModel(navigation)
   const styles = StyleSheet.create({
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
   })
+
+  // Reset the card registration process when the user navigates back
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+      if (
+        (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
+        store.bcscSecure.deviceCode &&
+        store.bcscSecure.userCode
+      ) {
+        // If the user has registered and backs out, reset the card registration process
+        handleResetCardRegistration()
+      }
+
+      return false
+    })
+
+    return unsubscribe
+  }, [handleResetCardRegistration, navigation, store.bcscSecure])
 
   /**
    * This fixes an issue where the user has selected Non-BCSC ID,

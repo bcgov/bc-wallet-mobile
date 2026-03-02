@@ -13,6 +13,7 @@ const navigation = {
   pop: jest.fn(),
   reset: jest.fn(),
   dispatch: jest.fn(),
+  addListener: jest.fn(),
 }
 
 const useNavigation = () => {
