@@ -29,9 +29,9 @@
  *   variants/bcsc-dev/delete.txt
  */
 
-import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync, statSync, copyFileSync, mkdirSync } from 'fs'
-import { join, dirname, resolve } from 'path'
 import { spawnSync } from 'child_process'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs'
+import { dirname, join, resolve } from 'path'
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -188,7 +188,8 @@ function copyDirRecursive(src, dest) {
 }
 
 /**
- * Apply URL schemes to Info.plist for BCSC variants.
+ * Replace URL schemes in Info.plist for BCSC variants.
+ * Replaces the entire CFBundleURLTypes array with the variant's schemes.
  */
 function applyUrlSchemes(env) {
   const schemes = env.IOS_URL_SCHEMES
@@ -201,31 +202,93 @@ function applyUrlSchemes(env) {
 
   const schemeList = schemes.split(',').map((s) => s.trim())
 
-  // Build the URL scheme dict XML
-  const schemeEntries = schemeList.map((s) => `\t\t\t\t<string>${s}</string>`).join('\n')
-  const urlSchemeDict = `\t\t<dict>
+  // Build one dict per scheme (matching v3 ias-ios pattern)
+  const schemeDicts = schemeList
+    .map(
+      (s) => `\t\t<dict>
 \t\t\t<key>CFBundleURLSchemes</key>
 \t\t\t<array>
-${schemeEntries}
+\t\t\t\t<string>${s}</string>
 \t\t\t</array>
 \t\t</dict>`
+    )
+    .join('\n')
 
-  // Check if this URL scheme dict already exists
-  if (content.includes(schemeList[0])) {
-    console.log('  URL schemes already present in Info.plist, skipping')
+  const newUrlTypes = `<key>CFBundleURLTypes</key>
+\t<array>
+${schemeDicts}
+\t</array>`
+
+  // Find the CFBundleURLTypes block using nesting-aware parsing
+  const startMarker = '<key>CFBundleURLTypes</key>'
+  const startIdx = content.indexOf(startMarker)
+  if (startIdx === -1) {
+    console.warn('  WARN: Could not find CFBundleURLTypes in Info.plist')
     return
   }
 
-  // Insert before the closing </array> of CFBundleURLTypes
-  // Find the CFBundleURLTypes array and add our dict before its closing </array>
-  const urlTypesPattern = /(<key>CFBundleURLTypes<\/key>\s*<array>)([\s\S]*?)(\s*<\/array>)/
-  const match = content.match(urlTypesPattern)
-  if (match) {
-    content = content.replace(urlTypesPattern, `$1$2\n${urlSchemeDict}$3`)
-    writeFileSync(plistPath, content)
-    console.log(`  Added ${schemeList.length} URL schemes to Info.plist`)
+  // Find the <array> that follows, then track nesting to find matching </array>
+  const arrayStart = content.indexOf('<array>', startIdx)
+  if (arrayStart === -1) {
+    console.warn('  WARN: Could not find <array> after CFBundleURLTypes')
+    return
+  }
+
+  let depth = 0
+  let i = arrayStart
+  let endIdx = -1
+  while (i < content.length) {
+    if (content.startsWith('<array>', i)) {
+      depth++
+      i += '<array>'.length
+    } else if (content.startsWith('</array>', i)) {
+      depth--
+      if (depth === 0) {
+        endIdx = i + '</array>'.length
+        break
+      }
+      i += '</array>'.length
+    } else {
+      i++
+    }
+  }
+
+  if (endIdx === -1) {
+    console.warn('  WARN: Could not find closing </array> for CFBundleURLTypes')
+    return
+  }
+
+  content = content.slice(0, startIdx) + newUrlTypes + content.slice(endIdx)
+  writeFileSync(plistPath, content)
+  console.log(`  Replaced URL schemes in Info.plist: ${schemeList.join(', ')}`)
+}
+
+/**
+ * Replace URL schemes in AndroidManifest.xml for BCSC variants.
+ * Replaces the browsable intent-filter data schemes with the variant's schemes.
+ */
+function applyAndroidUrlSchemes(env) {
+  const schemes = env.ANDROID_URL_SCHEMES
+  if (!schemes) return
+
+  const manifestPath = join(ROOT_DIR, 'app/android/app/src/main/AndroidManifest.xml')
+  if (!existsSync(manifestPath)) return
+
+  let content = readFileSync(manifestPath, 'utf-8')
+
+  const schemeList = schemes.split(',').map((s) => s.trim())
+  const schemeLines = schemeList.map((s) => `        <data android:scheme="${s}" />`).join('\n')
+
+  // Replace the browsable intent-filter's data schemes
+  const intentFilterPattern =
+    /(<intent-filter>\s*<action android:name="android\.intent\.action\.VIEW" \/>\s*<category android:name="android\.intent\.category\.DEFAULT" \/>\s*<category android:name="android\.intent\.category\.BROWSABLE" \/>)\s*(?:<data android:scheme="[^"]+" \/>\s*)+(<\/intent-filter>)/
+
+  if (content.match(intentFilterPattern)) {
+    content = content.replace(intentFilterPattern, `$1\n${schemeLines}\n      $2`)
+    writeFileSync(manifestPath, content)
+    console.log(`  Replaced URL schemes in AndroidManifest.xml: ${schemeList.join(', ')}`)
   } else {
-    console.warn('  WARN: Could not find CFBundleURLTypes in Info.plist')
+    console.warn('  WARN: Could not find browsable intent-filter in AndroidManifest.xml')
   }
 }
 
@@ -252,7 +315,10 @@ function applyPbxprojStructuralFixes(env) {
       'g'
     )
 
-    if (content.match(sectionPattern) && !content.includes(`inputPaths = (\n\t\t\t);\n\t\t\tname = "[CP] ${section}"`)) {
+    if (
+      content.match(sectionPattern) &&
+      !content.includes(`inputPaths = (\n\t\t\t);\n\t\t\tname = "[CP] ${section}"`)
+    ) {
       content = content.replace(sectionPattern, `$1$2inputPaths = (\n\t\t\t);\n\t\t\t$3`)
     }
 
@@ -376,6 +442,12 @@ function applyVariant(variantName) {
   if (env.IOS_URL_SCHEMES) {
     console.log(`\n→ Applying iOS URL schemes...`)
     applyUrlSchemes(env)
+  }
+
+  // 5b. Apply URL schemes (Android)
+  if (env.ANDROID_URL_SCHEMES) {
+    console.log(`\n→ Applying Android URL schemes...`)
+    applyAndroidUrlSchemes(env)
   }
 
   // 6. Apply pbxproj target name change
