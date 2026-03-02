@@ -57,7 +57,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
 
-  const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+  // Personal info (name, DOB) is only collected on the first of two IDs in the NonBCSC flow.
+  // The second ID only needs a document number since personal info was already captured.
+  const isFirstAdditionalID = store.bcscSecure.additionalEvidenceData.length === 1
+  const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: '', // make the user re-enter every time

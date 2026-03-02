@@ -91,7 +91,11 @@ describe('EvidenceIDCollection', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
-          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.NonBCSC },
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+          },
         }}
       >
         <EvidenceIDCollectionScreen
