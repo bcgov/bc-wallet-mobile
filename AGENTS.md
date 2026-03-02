@@ -248,3 +248,27 @@ Pull request titles should follow the same conventional commit format to maintai
 - Keep Views thin—move logic to ViewModels
 - Keep tests close to the code they are testing
 - Follow established naming conventions for clarity
+
+## Variant Configuration Files (`variant.env`)
+
+### Quoting Rules
+
+- **Prefer single quotes** (`'...'`) for all values by default. Single quotes denote literal strings and prevent unintended shell expansion (e.g., `$(...)` is preserved as-is).
+- **Use double quotes** (`"..."`) only when shell variable substitution or interpolation is explicitly required.
+- When in doubt, use single quotes.
+
+#### Examples
+
+```dotenv
+# Correct — literal values use single quotes
+APP_NAME='BC Services Card'
+IOS_BUNDLE_ID='ca.bc.gov.iddev.servicescard'
+IOS_PRODUCT_NAME='$(TARGET_NAME)'
+
+# Incorrect — double quotes risk shell expansion of $(...) and similar syntax
+IOS_PRODUCT_NAME="$(TARGET_NAME)"
+```
+
+### Rationale
+
+These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
