@@ -33,8 +33,9 @@ const mockEvidenceType = {
   document_reference_sample: '123456789',
   image_sides: [
     {
-      side: 'FRONT',
-      label: 'Front of Passport',
+      image_side_name: 'FRONT_SIDE' as const,
+      image_side_label: 'Front of Passport',
+      image_side_tip: 'Take a photo of the front of your passport',
     },
   ],
   evidence_type_label: 'Passport',
