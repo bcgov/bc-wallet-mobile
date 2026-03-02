@@ -209,6 +209,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               </Text>
               <TextInput
                 accessibilityLabel="BCSC.EvidenceIDCollection.LastNameLabel"
+                autoComplete="name-family"
                 autoCorrect={false}
                 onChange={[Function]}
                 style={
@@ -227,6 +228,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   ]
                 }
                 testID="com.ariesbifold:id/lastName-input"
+                textContentType="familyName"
                 value=""
               />
               <Text
@@ -277,6 +279,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               </Text>
               <TextInput
                 accessibilityLabel="BCSC.EvidenceIDCollection.FirstNameLabel"
+                autoComplete="name-given"
                 autoCorrect={false}
                 onChange={[Function]}
                 style={
@@ -295,6 +298,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   ]
                 }
                 testID="com.ariesbifold:id/firstName-input"
+                textContentType="givenName"
                 value=""
               />
               <Text
@@ -345,6 +349,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               </Text>
               <TextInput
                 accessibilityLabel="BCSC.EvidenceIDCollection.MiddleNamesLabel"
+                autoComplete="name-middle"
                 autoCorrect={false}
                 onChange={[Function]}
                 style={
@@ -363,6 +368,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   ]
                 }
                 testID="com.ariesbifold:id/middleNames-input"
+                textContentType="middleName"
                 value=""
               />
               <Text
