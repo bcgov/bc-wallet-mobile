@@ -339,14 +339,19 @@ describe('BCSCErrorModal', () => {
 
   describe('cleanup', () => {
     it('should remove event listeners on unmount', () => {
-      const removeSpy = jest.spyOn(DeviceEventEmitter, 'removeAllListeners')
       const { unmount } = render(<BCSCErrorModal />)
 
-      const listenerCount = DeviceEventEmitter.listenerCount(EventTypes.ERROR_ADDED)
-      expect(listenerCount).toBeGreaterThan(0)
+      const addedCountBefore = DeviceEventEmitter.listenerCount(EventTypes.ERROR_ADDED)
+      const removedCountBefore = DeviceEventEmitter.listenerCount(EventTypes.ERROR_REMOVED)
+      expect(addedCountBefore).toBeGreaterThan(0)
+      expect(removedCountBefore).toBeGreaterThan(0)
 
       unmount()
-      removeSpy.mockRestore()
+
+      const addedCountAfter = DeviceEventEmitter.listenerCount(EventTypes.ERROR_ADDED)
+      const removedCountAfter = DeviceEventEmitter.listenerCount(EventTypes.ERROR_REMOVED)
+      expect(addedCountAfter).toBe(0)
+      expect(removedCountAfter).toBe(0)
     })
   })
 })

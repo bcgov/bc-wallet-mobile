@@ -22,6 +22,7 @@ import {
   AuthProvider,
   ContainerProvider,
   ErrorBoundaryWrapper,
+  ErrorModal,
   initLanguages,
   initStoredLanguage,
   MainContainer,
@@ -96,7 +97,7 @@ const App = () => {
                     <AnimatedComponentsProvider value={animatedComponents}>
                       <AuthProvider>
                         <NetworkProvider>
-                          <BCSCErrorModal enableReport />
+                          {appMode === Mode.BCSC ? <BCSCErrorModal enableReport /> : <ErrorModal enableReport />}
                           <WebDisplay
                             destinationUrl={surveyMonkeyUrl}
                             exitUrl={surveyMonkeyExitUrl}

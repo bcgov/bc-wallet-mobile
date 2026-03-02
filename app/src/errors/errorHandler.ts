@@ -33,7 +33,7 @@ export function extractErrorMessage(error: unknown): string {
  *
  * @param definition - Error definition with statusCode and appEvent
  * @param interactionType - ALERT_DISPLAY when modal is shown, ALERT_ACTION when user takes action (e.g. Report)
- * @param actionLabel - Optional label for ALERT_ACTION (e.g. "Report this problem"). Defaults to 'Report this problem'.
+ * @param actionLabel - Optional label for ALERT_ACTION (e.g. "Report this problem"). Defaults to i18n Error.ReportThisProblem.
  */
 export function trackErrorInAnalytics(
   definition: ErrorDefinition,
@@ -50,7 +50,7 @@ export function trackErrorInAnalytics(
   }
 
   if (interactionType === AlertInteractionEvent.ALERT_ACTION) {
-    Analytics.trackAlertActionEvent(definition.appEvent, actionLabel ?? 'Report this problem')
+    Analytics.trackAlertActionEvent(definition.appEvent, actionLabel ?? i18next.t('Error.ReportThisProblem'))
   }
 
   appLogger.debug(`Analytics: ${interactionType} - ${definition.appEvent}`, {

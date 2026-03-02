@@ -37,6 +37,10 @@ jest.mock('../../src/utils/logger', () => ({
   },
 }))
 
+jest.mock('i18next', () => ({
+  t: jest.fn((key: string) => (key === 'Error.ReportThisProblem' ? 'Report this problem' : key)),
+}))
+
 describe('errorHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks()

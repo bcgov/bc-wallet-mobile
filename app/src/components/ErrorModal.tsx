@@ -127,7 +127,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
       <SafeAreaView style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.card}>
@@ -322,7 +322,7 @@ const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorP
     primaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.grayscale.black,
+      color: colors.brand.text,
     },
     primaryButtonTextDisabled: {
       fontSize: 16,
@@ -333,7 +333,7 @@ const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorP
       backgroundColor: colors.grayscale.white,
       borderRadius: 8,
       borderWidth: 1.5,
-      borderColor: colors.brand.modalSecondaryBackground,
+      borderColor: colors.grayscale.darkGrey,
       paddingVertical: 14,
       paddingHorizontal: 24,
       alignItems: 'center',
@@ -342,7 +342,7 @@ const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorP
     secondaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.brand.modalSecondaryBackground,
+      color: colors.grayscale.darkGrey,
     },
     footer: {
       marginTop: 16,
