@@ -14,9 +14,9 @@ jobs:
     name: Lint, Format, Typecheck, Test, and Coverage
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -28,7 +28,7 @@ jobs:
           brew install swiftformat clang-format ktlint
 
       - name: Cache node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -38,7 +38,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Cache bcsc-core build output
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: packages/bcsc-core/lib
           key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
@@ -54,7 +54,7 @@ jobs:
       - name: Generate coverage report
         run: yarn coverage
 
-      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
+      - uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de #V5 (v5.5.1) pinning for SonarQube
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
         if: always()

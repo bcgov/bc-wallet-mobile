@@ -86,7 +86,7 @@ jobs:
     outputs:
       should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
@@ -157,9 +157,9 @@ jobs:
       APP_VERSION: ${{ matrix.app_version }}
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -178,7 +178,7 @@ jobs:
           sudo xcode-select -p
 
       - name: Cached pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: pip-cache
         with:
           path: ~/.cache/pip
@@ -188,7 +188,7 @@ jobs:
 
       - name: Cache pod dependencies
         id: pod-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             app/ios/Pods
@@ -200,7 +200,7 @@ jobs:
 
       - name: Restore cached derived data
         id: cache-dd-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode
@@ -316,7 +316,7 @@ jobs:
 
       - name: Save cache for derived data
         id: cache-dd-save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
@@ -360,7 +360,7 @@ jobs:
       ANDROID_PACKAGE_NAME: ${{ matrix.android_package_name }}
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check initial disk space
         run: |
@@ -369,7 +369,7 @@ jobs:
           echo "=== Largest directories ==="
           du -sh /* 2>/dev/null | sort -hr | head -20 || true
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -470,7 +470,7 @@ jobs:
           find . -type f -name '*.aab'
 
       - name: Upload Android AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
@@ -478,7 +478,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Android APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact_name }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
@@ -588,7 +588,7 @@ jobs:
             sauce_labs_description: 'Android BC Wallet Single App'
             artifact_name: 'app-release.aab'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Ship Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
@@ -624,7 +624,7 @@ jobs:
           #   report-project: "ios-single-app-one-device-smoke"
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: run-aath-agents
         if: matrix.mobile-platform=='-p iOS'
@@ -641,14 +641,14 @@ jobs:
 
       - name: run-sauce-connect-tunnel
         if: matrix.mobile-platform=='-p iOS'
-        uses: saucelabs/sauce-connect-action@v2
+        uses: saucelabs/sauce-connect-action@v3
         with:
           username: ${{ secrets.SAUCE_USERNAME }}
           accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
           directDomains: aries-mediator-agent.vonx.io,apple.com
 
       - name: Fetch mobile test harness repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: hyperledger/aries-mobile-test-harness
           path: aries-mobile-test-harness
