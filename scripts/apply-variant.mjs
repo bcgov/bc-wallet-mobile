@@ -31,7 +31,7 @@
 
 import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync, statSync, copyFileSync, mkdirSync } from 'fs'
 import { join, dirname, resolve } from 'path'
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
 
 // ─── Constants ──────────────────────────────────────────────────
 
@@ -131,8 +131,16 @@ function ensureDir(dir) {
   mkdirSync(dir, { recursive: true })
 }
 
-function run(cmd, opts = {}) {
-  return execSync(cmd, { encoding: 'utf-8', cwd: ROOT_DIR, ...opts }).trim()
+function run(cmd, args = [], opts = {}) {
+  const result = spawnSync(cmd, args, { encoding: 'utf-8', shell: false, cwd: ROOT_DIR, ...opts })
+  if (result.error) {
+    throw result.error
+  }
+  if (result.status !== 0) {
+    const msg = (result.stderr || result.stdout || '').trim()
+    throw new Error(`Command failed: ${cmd} ${args.join(' ')}\n${msg}`)
+  }
+  return (result.stdout || '').trim()
 }
 
 /**
@@ -385,13 +393,13 @@ function applyVariant(variantName) {
       for (const patchFile of patchFiles) {
         const patchPath = join(patchesDir, patchFile)
         try {
-          run(`git apply --verbose "${patchPath}"`)
+          run('git', ['apply', '--verbose', patchPath])
           console.log(`  Applied: ${patchFile}`)
         } catch (e) {
           console.error(`  FAILED to apply ${patchFile}: ${e.message}`)
           // Try with more context
           try {
-            run(`git apply --verbose -C1 "${patchPath}"`)
+            run('git', ['apply', '--verbose', '-C1', patchPath])
             console.log(`  Applied with reduced context: ${patchFile}`)
           } catch (e2) {
             console.error(`  FATAL: Could not apply ${patchFile}`)
@@ -454,7 +462,7 @@ function applyBaseVariant(baseName) {
     for (const patchFile of patchFiles) {
       const patchPath = join(patchesDir, patchFile)
       try {
-        run(`git apply --verbose "${patchPath}"`)
+        run('git', ['apply', '--verbose', patchPath])
         console.log(`  Applied base patch: ${patchFile}`)
       } catch (e) {
         console.warn(`  WARN: Could not apply base patch ${patchFile}: ${e.message}`)
