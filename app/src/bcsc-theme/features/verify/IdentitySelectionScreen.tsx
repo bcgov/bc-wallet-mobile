@@ -40,17 +40,15 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 
   // Reset the card registration process when the user navigates back
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+    const unsubscribe = navigation.addListener('beforeRemove', async (event) => {
       if (
         (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
         store.bcscSecure.deviceCode &&
         store.bcscSecure.userCode
       ) {
         // If the user has registered and backs out, reset the card registration process
-        handleResetCardRegistration()
+        await handleResetCardRegistration()
       }
-
-      return false
     })
 
     return unsubscribe
