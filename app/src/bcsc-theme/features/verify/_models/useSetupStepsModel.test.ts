@@ -8,6 +8,7 @@ import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { getAccount, getAccountSecurityMethod } from '@mocks/react-native-bcsc-core'
+import { useFocusEffect } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
@@ -466,6 +467,115 @@ describe('useSetupStepsModel', () => {
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('useFocusEffect guard (invalid steps detection)', () => {
+    const useFocusEffectMock = jest.mocked(useFocusEffect)
+
+    beforeEach(() => {
+      // Make useFocusEffect execute its callback immediately
+      useFocusEffectMock.mockImplementation((cb: () => void) => cb())
+    })
+
+    afterEach(() => {
+      useFocusEffectMock.mockReset()
+    })
+
+    it('should NOT call handleResetCardRegistration when NonPhoto BCSC needs additional card (id incomplete, address complete)', () => {
+      // Simulates the state after a NonPhoto BCSC 2D barcode is scanned:
+      // - serial and deviceCode are set (so address step is complete)
+      // - id step is incomplete (user still needs to add photo ID evidence)
+      // - nonPhotoBcscNeedsAdditionalCard is true
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: true,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should NOT call handleResetCardRegistration when id step is completed', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: true,
+          focused: false,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: true, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should NOT call handleResetCardRegistration when address and email are both incomplete', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: false, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should call handleResetCardRegistration when id is incomplete and address is complete (not NonPhoto BCSC)', async () => {
+      // This is the case the guard is designed to catch: user backed out mid-step-2 leaving
+      // partial state (address/email completed but id not)
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+      getAccountSecurityMethod.mockResolvedValue('DeviceAuth')
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      // The focus effect should trigger the reset
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid steps detected'),
+        expect.any(Object)
+      )
     })
   })
 

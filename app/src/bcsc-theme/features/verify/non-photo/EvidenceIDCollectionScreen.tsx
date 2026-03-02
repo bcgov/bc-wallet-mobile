@@ -2,7 +2,7 @@ import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MINIMUM_VERIFICATION_AGE } from '@/constants'
-import { BCState } from '@/store'
+import { BCState, NonBCSCUserMetadata } from '@/store'
 import {
   Button,
   ButtonType,
@@ -36,7 +36,7 @@ type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
-  route: { params: { cardType: EvidenceType } }
+  route: { params: { cardType: EvidenceType; documentNumber?: string } }
 }
 
 /**
@@ -56,6 +56,21 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { ButtonLoading } = useAnimatedComponents()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
+  const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
+    (e) => e.evidenceType.evidence_type === cardType.evidence_type
+  )
+  // Fields other than documentNumber are required only for the first evidence piece.
+  // We detect "first" by checking if this cardType is the first entry in additionalEvidenceData.
+  // By the time subsequent evidence screens open, the first entry (with metadata) is already saved,
+  // so findIndex will be > 0 (or -1 if not yet added, which also means it's the first).
+  const additionalEvidenceRequired = evidenceIndex <= 0
+
+  // If we have a document number from the route params (ie: from scanning), use that.
+  // Otherwise, if this cardType already has an entry in additionalEvidenceData, use the
+  // document number from there (ie: user is going back to edit). Otherwise,
+  // default to empty string.
+  const initialDocumentNumber =
+    route.params.documentNumber ?? store.bcscSecure.additionalEvidenceData[evidenceIndex]?.documentNumber ?? ''
 
   // Personal info (name, DOB) is only collected on the first of two IDs in the NonBCSC flow.
   // The second ID only needs a document number since personal info was already captured.
@@ -63,7 +78,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
-    documentNumber: '', // make the user re-enter every time
+    documentNumber: initialDocumentNumber,
     firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
     middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
     lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
@@ -197,13 +212,20 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           birthdate: new Date(formState.birthDate),
         })
 
-        await updateUserMetadata({
+        const newUserMetadata: NonBCSCUserMetadata = {
           name: {
             first: formState.firstName.trim(),
             last: formState.lastName.trim(),
             middle: formState.middleNames.trim(),
           },
-        })
+        }
+
+        // Preserve address data if it has already been set (eg. from a barcode scan)
+        if (store.bcscSecure.userMetadata?.address) {
+          newUserMetadata.address = store.bcscSecure.userMetadata.address
+        }
+
+        await updateUserMetadata(newUserMetadata)
       }
 
       await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
@@ -319,7 +341,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('lastName', value)}
               error={formErrors.lastName}
               subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-family', textContentType: 'familyName' }}
             />
 
             <InputWithValidation
@@ -329,7 +351,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('firstName', value)}
               error={formErrors.firstName}
               subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-given', textContentType: 'givenName' }}
             />
 
             <InputWithValidation
@@ -339,7 +361,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('middleNames', value)}
               error={formErrors.middleNames}
               subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
-              textInputProps={{ autoCorrect: false }}
+              textInputProps={{ autoCorrect: false, autoComplete: 'name-middle', textContentType: 'middleName' }}
             />
 
             <DatePicker

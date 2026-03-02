@@ -81,8 +81,13 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
   useFocusEffect(
     useCallback(() => {
-      if (steps.id.completed || (!steps.address.completed && !steps.email.completed)) {
-        // If ID step completed or address and email are both incomplete, we can assume workflow is normal
+      if (
+        steps.id.completed ||
+        (!steps.address.completed && !steps.email.completed) ||
+        steps.id.nonPhotoBcscNeedsAdditionalCard
+      ) {
+        // If ID step completed, address and email are both incomplete, or a NonPhoto BCSC card
+        // was scanned but still needs an additional photo ID, we can assume workflow is normal
         return
       }
 
@@ -93,7 +98,14 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         emailStepCompleted: steps.email.completed,
       })
       handleResetCardRegistration()
-    }, [handleResetCardRegistration, logger, steps.address.completed, steps.email.completed, steps.id.completed])
+    }, [
+      handleResetCardRegistration,
+      logger,
+      steps.address.completed,
+      steps.email.completed,
+      steps.id.completed,
+      steps.id.nonPhotoBcscNeedsAdditionalCard,
+    ])
   )
 
   /**

@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
@@ -45,6 +46,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { liveCallHavingTroubleAlert } = useAlerts(navigation)
+  const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -228,6 +230,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       InCallManager.stop()
     }
   }, [])
+
+  useEffect(() => {
+    pauseActivityTracking()
+    return () => {
+      resumeActivityTracking()
+    }
+  }, [pauseActivityTracking, resumeActivityTracking])
 
   // loading / error user-facing state message
   const stateMessage = useMemo(() => {

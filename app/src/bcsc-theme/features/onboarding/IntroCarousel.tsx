@@ -134,7 +134,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
       <ThemedText>{t(pageData.bodyContentA)}</ThemedText>
       {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
       {pageData.key === 'access' ? (
-        <View style={{ marginTop: Spacing.xxl }}>
+        <View style={{ marginTop: Spacing.md }}>
           <CardButton
             title={t('BCSC.Home.WhereToUseTitle')}
             onPress={() =>
