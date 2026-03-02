@@ -4,7 +4,7 @@ import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
-import { BifoldError, EventTypes } from '@bifold/core'
+import { EventTypes } from '@bifold/core'
 import i18next from 'i18next'
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo } from 'react'
 import { DeviceEventEmitter } from 'react-native'
@@ -78,9 +78,14 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
     trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, {
+      title,
+      description,
+      message: technicalMessage,
+      code: definition.statusCode,
+      appEvent: definition.appEvent,
+    })
   }, [])
 
   /**

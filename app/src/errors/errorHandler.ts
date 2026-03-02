@@ -30,17 +30,30 @@ export function extractErrorMessage(error: unknown): string {
 
 /**
  * Track error in Snowplow analytics
+ *
+ * @param definition - Error definition with statusCode and appEvent
+ * @param interactionType - ALERT_DISPLAY when modal is shown, ALERT_ACTION when user takes action (e.g. Report)
+ * @param actionLabel - Optional label for ALERT_ACTION (e.g. "Report this problem"). Defaults to 'Report this problem'.
  */
-export function trackErrorInAnalytics(definition: ErrorDefinition, interactionType: AlertInteractionEvent): void {
-  // Track the error event
+export function trackErrorInAnalytics(
+  definition: ErrorDefinition,
+  interactionType: AlertInteractionEvent,
+  actionLabel?: string
+): void {
+  // Track the error event (mobile_error schema)
   Analytics.trackErrorEvent({
     code: String(definition.statusCode),
     message: definition.appEvent,
   })
 
-  // Track the alert display event
+  // Track the alert display event (action schema)
   if (interactionType === AlertInteractionEvent.ALERT_DISPLAY) {
     Analytics.trackAlertDisplayEvent(definition.appEvent)
+  }
+
+  // Track the alert action event when user presses Report (action schema)
+  if (interactionType === AlertInteractionEvent.ALERT_ACTION) {
+    Analytics.trackAlertActionEvent(definition.appEvent, actionLabel ?? 'Report this problem')
   }
 
   appLogger.debug(`Analytics: ${interactionType} - ${definition.appEvent}`, {

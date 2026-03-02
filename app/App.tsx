@@ -6,6 +6,7 @@ import {
   VerificationResponseService,
   VerificationResponseServiceProvider,
 } from '@/bcsc-theme/features/verification-response'
+import { BCSCErrorModal } from '@/components/ErrorModal'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
@@ -21,7 +22,6 @@ import {
   AuthProvider,
   ContainerProvider,
   ErrorBoundaryWrapper,
-  ErrorModal,
   initLanguages,
   initStoredLanguage,
   MainContainer,
@@ -96,7 +96,7 @@ const App = () => {
                     <AnimatedComponentsProvider value={animatedComponents}>
                       <AuthProvider>
                         <NetworkProvider>
-                          <ErrorModal enableReport />
+                          <BCSCErrorModal enableReport />
                           <WebDisplay
                             destinationUrl={surveyMonkeyUrl}
                             exitUrl={surveyMonkeyExitUrl}

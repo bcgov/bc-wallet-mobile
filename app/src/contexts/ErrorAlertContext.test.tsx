@@ -30,24 +30,13 @@ jest.mock('../errors/errorHandler', () => {
 })
 
 jest.mock('@bifold/core', () => ({
-  BifoldError: class BifoldError extends Error {
-    title: string
-    description: string
-    code: number
-    constructor(title: string, description: string, message: string, code: number) {
-      super(message)
-      this.title = title
-      this.description = description
-      this.code = code
-    }
-  },
   EventTypes: {
     ERROR_ADDED: 'ERROR_ADDED',
     ERROR_REMOVED: 'ERROR_REMOVED',
   },
 }))
 
-const { BifoldError, EventTypes } = jest.requireMock('@bifold/core')
+const { EventTypes } = jest.requireMock('@bifold/core')
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -109,7 +98,16 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(appLogger.error).toHaveBeenCalled()
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_ADDED, expect.any(BifoldError))
+      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(
+        EventTypes.ERROR_ADDED,
+        expect.objectContaining({
+          title: expect.any(String),
+          description: expect.any(String),
+          message: expect.any(String),
+          code: expect.any(Number),
+          appEvent: expect.any(String),
+        })
+      )
     })
 
     it('should track analytics', () => {

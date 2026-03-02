@@ -106,6 +106,26 @@ describe('errorHandler', () => {
       expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
     })
 
+    it('should track alert action event when user reports', () => {
+      const definition = ErrorRegistry.GENERAL_ERROR
+
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, 'Report this problem')
+
+      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
+        code: String(definition.statusCode),
+        message: definition.appEvent,
+      })
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
+    })
+
+    it('should use default action label when not provided for ALERT_ACTION', () => {
+      const definition = ErrorRegistry.NO_INTERNET
+
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
+
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
+    })
+
     it('should log debug information', () => {
       const definition = ErrorRegistry.GENERAL_ERROR
 

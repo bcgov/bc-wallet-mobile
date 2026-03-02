@@ -2,12 +2,15 @@
 const translation = {
   "Global": {
     "OK": "OK",
+    "Okay": "OK",
     "Cancel": "Cancelar",
     "Continue": "Continuar",
     "Back": "Voltar",
     "GoBack": "Voltar",
     "Loading": "Carregando...",
     "Close": "Close (PT-BR)",
+    "ShowDetails": "Mostrar detalhes",
+    "Dismiss": "Dispensar",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
@@ -30,6 +33,11 @@ const translation = {
     "Message2033": "There was a problem while loading the services. Please try again later. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
     "OK": "OK (PT-BR)",
+    "ErrorCode": "Código de erro",
+    "ReportThisProblem": "Reportar este problema",
+    "Reported": "Reportado",
+    "Unknown": "Desconhecido",
+    "Problem": "Algo deu errado",
   },
   "Screens": {
     "Preface": "BC Wallet (PT-BR)",
@@ -108,6 +116,7 @@ const translation = {
     "Done": "Done (PT-BR)",
   },
   "Settings": {
+    "Version": "Versão",
     "Help": "Help (PT-BR)",
     "MoreInformation": "More Information (PT-BR)",
     "PlayWithBCWallet": "Play with BC Wallet (PT-BR)",
