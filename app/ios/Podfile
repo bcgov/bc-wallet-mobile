@@ -71,5 +71,19 @@ target 'AriesBifold' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
+    # The wrapper scripts fall through to plain clang when ccache is not installed,
+    # so this is safe for both local dev and CI.
+    ccache_clang   = File.join(__dir__, 'scripts', 'ccache-clang.sh')
+    ccache_clangpp = File.join(__dir__, 'scripts', 'ccache-clang++.sh')
+    if File.exist?(ccache_clang)
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |build_config|
+          build_config.build_settings['CC']  = ccache_clang
+          build_config.build_settings['CXX'] = ccache_clangpp
+        end
+      end
+    end
   end
 end

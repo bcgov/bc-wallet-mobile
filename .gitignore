@@ -17,6 +17,7 @@ api*.json
 !PINSecret.swift
 *secrets*
 .env
+.env.saucelabs
 google-services.json
 GoogleService-Info.plist
 .idea/
@@ -77,3 +78,4 @@ app/vendor/
 
 coverage/
 .settings/
+tmp/
