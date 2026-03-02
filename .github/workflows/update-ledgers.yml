@@ -31,13 +31,13 @@ jobs:
       contents: read
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -89,13 +89,13 @@ jobs:
       TARGET_BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
