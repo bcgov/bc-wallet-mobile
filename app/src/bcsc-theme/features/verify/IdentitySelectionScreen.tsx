@@ -54,7 +54,12 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     })
 
     return unsubscribe
-  }, [handleResetCardRegistration, navigation, store.bcscSecure])
+  }, [
+    handleResetCardRegistration,
+    navigation,
+    store.bcscSecure?.deviceCode,
+    store.bcscSecure?.userCode,
+  ])
 
   /**
    * This fixes an issue where the user has selected Non-BCSC ID,
