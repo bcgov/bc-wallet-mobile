@@ -46,13 +46,12 @@ const normalizePayload = (payload: unknown): ErrorModalPayload | null => {
   if (!isErrorPayload(payload)) {
     return null
   }
-  const p = payload as ErrorModalPayload
   return {
-    title: p.title,
-    description: p.description,
-    message: p.message ?? '',
-    code: p.code ?? 0,
-    appEvent: p.appEvent,
+    title: payload.title,
+    description: payload.description,
+    message: payload.message ?? '',
+    code: payload.code ?? 0,
+    appEvent: payload.appEvent,
   }
 }
 
@@ -191,7 +190,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
                           style={styles.reportIcon}
                         />
                       )}
-                      <Text style={styles.primaryButtonText}>
+                      <Text style={reported ? styles.primaryButtonTextDisabled : styles.primaryButtonText}>
                         {reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
                       </Text>
                     </View>
@@ -323,10 +322,15 @@ const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorP
     primaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.brand.text,
+      color: colors.grayscale.black,
+    },
+    primaryButtonTextDisabled: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.grayscale.white,
     },
     secondaryButton: {
-      backgroundColor: colors.brand.modalSecondaryBackground,
+      backgroundColor: colors.grayscale.white,
       borderRadius: 8,
       borderWidth: 1.5,
       borderColor: colors.brand.modalSecondaryBackground,
@@ -338,7 +342,7 @@ const createStyles = (width: number, colors: ReturnType<typeof useTheme>['ColorP
     secondaryButtonText: {
       fontSize: 16,
       fontWeight: '600',
-      color: colors.grayscale.white,
+      color: colors.brand.modalSecondaryBackground,
     },
     footer: {
       marginTop: 16,
