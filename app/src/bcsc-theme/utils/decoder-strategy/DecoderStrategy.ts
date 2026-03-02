@@ -1,3 +1,4 @@
+import { AbstractBifoldLogger } from '@bifold/core'
 import { CodeType } from 'react-native-vision-camera'
 import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
@@ -101,11 +102,18 @@ export const getDecoderStrategies = (): DecoderStrategy[] => {
  */
 export const decodeScannedCode = (
   code: ScanableCode,
+  logger: AbstractBifoldLogger,
   decoderStrategies: DecoderStrategy[] = getDecoderStrategies()
 ): DecodedCode | null => {
   for (const strategy of decoderStrategies) {
     if (strategy.canDecode(code)) {
-      return strategy.decode(code)
+      try {
+        return strategy.decode(code)
+      } catch (error) {
+        logger.warn(`Error decoding ${code.type} barcode`, { error })
+        // Decoder matched but failed to parse — try the next strategy
+        continue
+      }
     }
   }
 

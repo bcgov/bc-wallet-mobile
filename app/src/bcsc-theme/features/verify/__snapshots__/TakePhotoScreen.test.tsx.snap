@@ -56,6 +56,7 @@ exports[`TakePhoto renders correctly 1`] = `
         }
       }
       torch="off"
+      video={true}
     />
     <RNSVGSvgView
       bbHeight={1334}

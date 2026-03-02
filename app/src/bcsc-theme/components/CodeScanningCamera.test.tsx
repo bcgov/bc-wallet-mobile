@@ -347,7 +347,7 @@ describe('CodeScanningCamera', () => {
       const { useCodeScanner } = require('react-native-vision-camera')
       expect(useCodeScanner).toHaveBeenCalledWith(
         expect.objectContaining({
-          codeTypes: ['code-39'],
+          codeTypes: ['code-39', 'code-128', 'pdf-417'],
           onCodeScanned: expect.any(Function),
         })
       )

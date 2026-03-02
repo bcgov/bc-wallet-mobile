@@ -8,10 +8,15 @@ const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B =
 const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
   '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
 
+// 3-caret format (no extra ^ before track separator) — some real-world cards use this variant
+const BC_DL_BARCODE_3_CARET =
+  '%BCVICTORIA^CPSIJSIT,$STANDALONE CITZ FOUR^910 GOVERNMENT ST$VICTORIA BC V8W 3Y5?;636028004023964=270419850410=?_%0AV8W3Y5                     F            9873904417                00C00015303?'
+
 const VALID_BC_DL_BARCODES = [
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
   BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+  BC_DL_BARCODE_3_CARET,
 ]
 
 describe('DriversLicenseBarcodeDecoder', () => {
@@ -131,6 +136,31 @@ describe('DriversLicenseBarcodeDecoder', () => {
       }
 
       expect(() => decoder.decode(barcode)).toThrow()
+    })
+
+    it('should correctly decode a 3-caret format barcode (no extra ^ before track separator)', () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_DL_BARCODE_3_CARET,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded).toEqual({
+        kind: 'DriversLicenseBarcode',
+        licenseNumber: '004023964',
+        firstName: 'standalone',
+        middleNames: 'citz four',
+        lastName: 'cpsijsit',
+        birthDate: new Date('1985-04-10'),
+        expiryDate: new Date('2027-04-10'),
+        streetAddress: '910 government st',
+        postalCode: 'V8W 3Y5',
+        city: 'victoria',
+        province: 'BC',
+      })
     })
 
     it('should handle century rollover edge case for expiry dates', () => {
