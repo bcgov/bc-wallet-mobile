@@ -41,6 +41,13 @@ runs:
       run: |
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           TAGS='pr,pr-${{ github.event.pull_request.number }}'
+        elif [ "${{ github.event_name }}" == "merge_group" ]; then
+          if [ "${{ github.event.merge_group.base_ref }}" == "refs/heads/main" ]; then
+            TAGS='rc'
+          else
+            PR_NUMBER=$(grep -oP 'pr-\K[0-9]+' <<< "${{ github.event.merge_group.head_ref }}")
+            TAGS="pr,pr-${PR_NUMBER}"
+          fi
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
           TAGS='rc'
         else
@@ -59,7 +66,7 @@ runs:
         TAGS: ${{ steps.set_tags.outputs.tags }}
       run: |
         echo "Uploading with tags: $TAGS"
-        curl \
+        curl --fail-with-body \
           -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
           -X POST \
           "https://api.us-west-1.saucelabs.com/v1/storage/upload" \
