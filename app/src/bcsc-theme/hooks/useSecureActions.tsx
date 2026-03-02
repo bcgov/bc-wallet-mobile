@@ -567,7 +567,9 @@ export const useSecureActions = () => {
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, metadata, barcodes } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type
+          ? { ...evidence, metadata, barcodes }
+          : evidence
       )
 
       dispatch({
