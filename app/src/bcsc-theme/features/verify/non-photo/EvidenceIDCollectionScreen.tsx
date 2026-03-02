@@ -59,11 +59,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
     (e) => e.evidenceType.evidence_type === cardType.evidence_type
   )
-  // Fields other than documentNumber are required only for the first evidence piece.
-  // We detect "first" by checking if this cardType is the first entry in additionalEvidenceData.
-  // By the time subsequent evidence screens open, the first entry (with metadata) is already saved,
-  // so findIndex will be > 0 (or -1 if not yet added, which also means it's the first).
-  const additionalEvidenceRequired = evidenceIndex <= 0
 
   // If we have a document number from the route params (ie: from scanning), use that.
   // Otherwise, if this cardType already has an entry in additionalEvidenceData, use the
