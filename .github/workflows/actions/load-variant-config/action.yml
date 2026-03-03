@@ -14,8 +14,10 @@ runs:
   steps:
     - name: Export variant variables to GITHUB_ENV
       shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
       run: |
-        VARIANT_FILE="variants/${{ inputs.variant }}/variant.env"
+        VARIANT_FILE="variants/${VARIANT}/variant.env"
         if [ ! -f "$VARIANT_FILE" ]; then
           echo "::error::Variant file not found: $VARIANT_FILE"
           exit 1
