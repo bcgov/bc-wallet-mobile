@@ -1933,14 +1933,6 @@ class BcscCore: NSObject {
       let data = try Data(contentsOf: fileUrl)
       logger.log("getAuthorizationRequest: Read \(data.count) bytes")
 
-      // Log raw plist structure before any decoding or mapping — useful for diagnosing
-      // key name mismatches between v3 and v4 (e.g. "street_address" vs "streetAddress")
-      if let rawPlist = try? PropertyListSerialization.propertyList(
-        from: data, options: [], format: nil
-      ) {
-        logger.log("getAuthorizationRequest: Raw archived plist: \(rawPlist)")
-      }
-
       let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
       unarchiver.requiresSecureCoding = false
 
@@ -2834,7 +2826,7 @@ class BcscCore: NSObject {
 
       resolve(result)
     } catch {
-      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \\(error.localizedDescription)", error)
+      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
     }
   }
 

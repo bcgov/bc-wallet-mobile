@@ -2684,8 +2684,6 @@ class BcscCoreModule(
                 return
             }
 
-            Log.d(NAME, "getAuthorizationRequest: authRequest=$authRequest")
-
             // Convert to WritableMap for React Native
             val result =
                 Arguments.createMap().apply {
@@ -3447,10 +3445,6 @@ class BcscCoreModule(
         }
 
         val providersFileContents = nativeStorage.readEncryptedFile(providersFile)
-        Log.d(
-            NAME,
-            "getCredential: Fallback providers file contents from ${providersFile.absolutePath}: $providersFileContents",
-        )
 
         return providersFileContents?.takeIf { it.isNotBlank() }
     }

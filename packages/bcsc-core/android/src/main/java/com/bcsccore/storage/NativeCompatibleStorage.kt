@@ -131,7 +131,7 @@ class NativeCompatibleStorage(
 
     /**
      * Check file directories for user accounts. This will return the first issuer found.
-     * Account direcotries follow this pattern:
+     * Account directories follow this pattern:
      *  ~/files/sit/{account UUID}/
      *  ~/files/prod/{account UUID}/
      *
@@ -142,7 +142,7 @@ class NativeCompatibleStorage(
             return null
         }
 
-        // loops through issuer direcotries and checks for any account UUID directories
+        // loops through issuer directories and checks for any account UUID directories
         for (issuerName in IssuerEnvironmentMap.issuerNamesInPriorityOrder) {
             val issuerDirectory = File(filesDir, issuerName)
             if (!issuerDirectory.exists() || !issuerDirectory.isDirectory) {
