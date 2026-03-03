@@ -1037,7 +1037,7 @@ jobs:
               The Team
               IDIM Team
           - build_type: 'single-app'
-            bundle_id: 'ca.bc.gov.id.servicescard.dev'
+            bundle_id: 'ca.bc.gov.iddev.servicescard'
             beta_groups: |-
               IDIM testers for DEV env
     steps:
