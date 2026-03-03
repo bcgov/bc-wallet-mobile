@@ -57,7 +57,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
   const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
-    (e) => e.evidenceType.evidence_type === cardType.evidence_type
+    (e) => e.evidenceType?.evidence_type === cardType.evidence_type
   )
 
   // If we have a document number from the route params (ie: from scanning), use that.
@@ -232,7 +232,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     }
 
     const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
-      return item.evidenceType.has_photo
+      return item?.evidenceType?.has_photo
     })
 
     if (hasPhotoEvidence) {
