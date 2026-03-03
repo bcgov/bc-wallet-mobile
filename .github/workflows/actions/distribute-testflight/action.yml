@@ -92,7 +92,7 @@ runs:
 
         # Resolve bundle ID to App Store Connect app resource ID
         echo "Resolving app ID for bundle: ${BUNDLE_ID}..."
-        APP_RESPONSE=$(curl -sf -H "$AUTH" \
+        APP_RESPONSE=$(curl -sfg -H "$AUTH" \
           "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" \
           2>/dev/null || echo '{"data":[]}')
         APP_ID=$(echo "$APP_RESPONSE" | \
@@ -112,7 +112,7 @@ runs:
         BUILD_ID=""
 
         while [ $ELAPSED -lt $MAX_SECONDS ]; do
-          RESPONSE=$(curl -sf -H "$AUTH" \
+          RESPONSE=$(curl -sfg -H "$AUTH" \
             "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" \
             2>/dev/null || echo '{"data":[]}')
 
