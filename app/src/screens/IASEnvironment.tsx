@@ -50,7 +50,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
 
       shouldDismissModal()
     },
-    [factoryReset, dispatch, logger, shouldDismissModal]
+    [shouldDismissModal, factoryReset, dispatch, logger]
   )
 
   return <EnvironmentSelector onEnvironmentChange={handleEnvironmentChange} onCancel={shouldDismissModal} />
