@@ -32,7 +32,10 @@ import {
   TourProvider,
 } from '@bifold/core'
 import WebDisplay from '@screens/WebDisplay'
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import React, { useEffect, useMemo, useState } from 'react'
+import { Alert } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
@@ -78,6 +81,15 @@ const App = () => {
 
   useEffect(() => {
     deepLinkViewModel.initialize()
+    fcmViewModel.setErrorHandler((error) => {
+      if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
+        Alert.alert(
+          t('Alerts.ProblemWithApp.Title', { errorCode: '112' }),
+          t('Alerts.ProblemWithApp.Description', { errorCode: '112' }),
+          [{ text: t('Global.OK') }]
+        )
+      }
+    })
     fcmViewModel.initialize()
   }, [])
 
