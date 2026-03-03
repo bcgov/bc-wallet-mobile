@@ -1,0 +1,257 @@
+name: Distribute to TestFlight
+description: |
+  Wait for App Store Connect to finish processing a build, then
+  distribute it to the specified TestFlight beta groups.
+  Runs on ubuntu (no macOS needed — purely API calls).
+
+inputs:
+  app_store_connect_issuer_id:
+    description: The App Store Connect API issuer ID
+    required: true
+  app_store_connect_key_identifier:
+    description: The App Store Connect API key identifier
+    required: true
+  app_store_connect_private_key:
+    description: The App Store Connect API private key (.p8 contents)
+    required: true
+  bundle_id:
+    description: The iOS bundle identifier (e.g. ca.bc.gov.BCWallet)
+    required: true
+  version_code:
+    description: |
+      The build number to wait for. i.e 1471
+    required: true
+  version_name:
+    description: |
+      The version name for the release notes. i.e 1.0.1
+    required: true
+  beta_groups:
+    description: |
+      Newline-separated TestFlight beta group names to distribute
+      the build to. One group per line.
+    required: true
+  max_wait_minutes:
+    description: Maximum minutes to wait for Apple processing
+    required: false
+    default: '15'
+
+runs:
+  using: composite
+  steps:
+    - name: Generate JWT for App Store Connect API
+      id: jwt
+      shell: bash
+      env:
+        ASC_KEY_ID: ${{ inputs.app_store_connect_key_identifier }}
+        ASC_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
+        ASC_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
+      run: |
+        # Build a JWT for App Store Connect API using only openssl + base64
+        HEADER=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ASC_KEY_ID" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+        NOW=$(date +%s)
+        EXP=$((NOW + 1200))
+        PAYLOAD=$(printf '{"iss":"%s","iat":%d,"exp":%d,"aud":"appstoreconnect-v1"}' "$ASC_ISSUER_ID" "$NOW" "$EXP" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+
+        # Write the private key to a temp file
+        KEY_FILE=$(mktemp)
+        echo "$ASC_PRIVATE_KEY" > "$KEY_FILE"
+
+        # openssl dgst outputs DER-encoded ECDSA signatures, but JWT ES256
+        # requires raw R||S format (64 bytes for P-256). Convert via python3.
+        SIGNATURE=$(printf '%s.%s' "$HEADER" "$PAYLOAD" | \
+          openssl dgst -sha256 -sign "$KEY_FILE" -binary | \
+          python3 -c "
+        import sys
+        d = sys.stdin.buffer.read()
+        # Parse DER: SEQUENCE(INTEGER(r), INTEGER(s))
+        i = 2
+        rl = d[i+1]; r = d[i+2:i+2+rl]; i += 2 + rl
+        sl = d[i+1]; s = d[i+2:i+2+sl]
+        # Pad/trim each to 32 bytes for P-256 curve
+        sys.stdout.buffer.write(r[-32:].rjust(32, b'\x00') + s[-32:].rjust(32, b'\x00'))
+        " | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+        rm -f "$KEY_FILE"
+
+        JWT="${HEADER}.${PAYLOAD}.${SIGNATURE}"
+        echo "::add-mask::${JWT}"
+        echo "token=${JWT}" >> "$GITHUB_OUTPUT"
+
+    - name: Wait for build processing & distribute
+      shell: bash
+      env:
+        ASC_TOKEN: ${{ steps.jwt.outputs.token }}
+        BUNDLE_ID: ${{ inputs.bundle_id }}
+        VERSION_CODE: ${{ inputs.version_code }}
+        VERSION_NAME: ${{ inputs.version_name }}
+        BETA_GROUPS: ${{ inputs.beta_groups }}
+        MAX_WAIT: ${{ inputs.max_wait_minutes }}
+      run: |
+        set -euo pipefail
+        API="https://api.appstoreconnect.apple.com/v1"
+        AUTH="Authorization: Bearer ${ASC_TOKEN}"
+
+        # Resolve bundle ID to App Store Connect app resource ID
+        echo "Resolving app ID for bundle: ${BUNDLE_ID}..."
+        APP_RESPONSE=$(curl -sf -H "$AUTH" \
+          "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" \
+          2>/dev/null || echo '{"data":[]}')
+        APP_ID=$(echo "$APP_RESPONSE" | \
+          python3 -c "import sys,json; d=json.load(sys.stdin)['data']; print(d[0]['id'] if d else '')")
+        if [ -z "$APP_ID" ]; then
+          echo "❌ Could not find app with bundle ID: ${BUNDLE_ID}"
+          exit 1
+        fi
+        echo "Resolved app ID: ${APP_ID}"
+
+        echo "::group::Waiting for build ${VERSION_CODE} to finish processing..."
+
+        # Poll until the build appears and finishes processing
+        ELAPSED=0
+        INTERVAL=30
+        MAX_SECONDS=$((MAX_WAIT * 60))
+        BUILD_ID=""
+
+        while [ $ELAPSED -lt $MAX_SECONDS ]; do
+          RESPONSE=$(curl -sf -H "$AUTH" \
+            "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" \
+            2>/dev/null || echo '{"data":[]}')
+
+          PROCESSING_STATE=$(echo "$RESPONSE" | python3 -c "
+        import sys, json
+        data = json.load(sys.stdin).get('data', [])
+        if data:
+            print(data[0]['attributes'].get('processingState', 'UNKNOWN'))
+            print(data[0]['id'])
+        else:
+            print('NOT_FOUND')
+            print('')
+        " 2>/dev/null || echo -e "ERROR\n")
+
+          STATE=$(echo "$PROCESSING_STATE" | head -1)
+          BUILD_ID=$(echo "$PROCESSING_STATE" | tail -1)
+
+          echo "  [${ELAPSED}s] Build processing state: ${STATE}"
+
+          if [ "$STATE" = "VALID" ]; then
+            echo "✅ Build processing complete!"
+            break
+          elif [ "$STATE" = "INVALID" ]; then
+            echo "❌ Build was marked INVALID by App Store Connect"
+            exit 1
+          fi
+
+          sleep $INTERVAL
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
+
+        if [ -z "$BUILD_ID" ]; then
+          echo "❌ Timed out waiting for build ${VERSION_CODE} after ${MAX_WAIT} minutes"
+          exit 1
+        fi
+
+        echo "::endgroup::"
+
+        # --- Distribute to beta groups ---
+        echo "::group::Distributing build to TestFlight beta groups..."
+
+        # Collect beta group names
+        GROUPS=()
+        while IFS= read -r group; do
+          group="$(echo "$group" | xargs)"
+          [ -n "$group" ] && GROUPS+=("$group")
+        done <<< "$BETA_GROUPS"
+
+        if [ ${#GROUPS[@]} -eq 0 ]; then
+          echo "⚠️ No beta groups provided, skipping distribution"
+          exit 0
+        fi
+
+        # Fetch all beta groups for the app (APP_ID was resolved above)
+        ALL_GROUPS=$(curl -sf -H "$AUTH" \
+          "${API}/apps/${APP_ID}/betaGroups?limit=50" \
+          2>/dev/null || echo '{"data":[]}')
+
+        # Build the list of group IDs that match requested names
+        GROUP_IDS=$(echo "$ALL_GROUPS" | python3 -c "
+        import sys, json
+        groups = json.load(sys.stdin).get('data', [])
+        requested = set('''${BETA_GROUPS}'''.strip().split('\n'))
+        requested = {g.strip() for g in requested if g.strip()}
+        ids = []
+        for g in groups:
+            name = g['attributes'].get('name', '')
+            if name in requested:
+                ids.append(g['id'])
+                print(f'  Matched group: {name} -> {g[\"id\"]}', file=sys.stderr)
+        for gid in ids:
+            print(gid)
+        " 2>&1)
+
+        # Separate stderr (info) from stdout (IDs)
+        echo "$GROUP_IDS" | grep '^ ' || true
+        ID_LIST=$(echo "$GROUP_IDS" | grep -v '^ ' || true)
+
+        if [ -z "$ID_LIST" ]; then
+          echo "⚠️ No matching beta groups found for: ${GROUPS[*]}"
+          echo "Available groups in response:"
+          echo "$ALL_GROUPS" | python3 -c "
+        import sys, json
+        for g in json.load(sys.stdin).get('data', []):
+            print(f'  - {g[\"attributes\"].get(\"name\", \"unknown\")}')
+        " 2>/dev/null || true
+          exit 1
+        fi
+
+        # Add build to each beta group
+        PAYLOAD=$(echo "$ID_LIST" | python3 -c "
+        import sys, json
+        ids = [line.strip() for line in sys.stdin if line.strip()]
+        data = [{'type': 'betaGroups', 'id': gid} for gid in ids]
+        print(json.dumps({'data': data}))
+        ")
+
+        curl -sf -X POST \
+          -H "$AUTH" \
+          -H "Content-Type: application/json" \
+          -d "$PAYLOAD" \
+          "${API}/builds/${BUILD_ID}/relationships/betaGroups"
+
+        echo ""
+        echo "✅ Build ${VERSION_CODE} distributed to ${#GROUPS[@]} beta group(s)"
+
+        # Add release notes (what's new)
+        # First, get the build's betaBuildLocalizations
+        WHATS_NEW="Release ${VERSION_NAME}-${VERSION_CODE}"
+        LOC_RESPONSE=$(curl -sf -H "$AUTH" \
+          "${API}/builds/${BUILD_ID}/betaBuildLocalizations" \
+          2>/dev/null || echo '{"data":[]}')
+
+        LOC_ID=$(echo "$LOC_RESPONSE" | python3 -c "
+        import sys, json
+        data = json.load(sys.stdin).get('data', [])
+        for loc in data:
+            if loc['attributes'].get('locale', '') == 'en-US':
+                print(loc['id'])
+                break
+        else:
+            print('')
+        " 2>/dev/null || echo '')
+
+        if [ -n "$LOC_ID" ]; then
+          curl -sf -X PATCH \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d "{\"data\":{\"type\":\"betaBuildLocalizations\",\"id\":\"${LOC_ID}\",\"attributes\":{\"whatsNew\":\"${WHATS_NEW}\"}}}" \
+            "${API}/betaBuildLocalizations/${LOC_ID}" > /dev/null || true
+          echo "✅ Release notes set: ${WHATS_NEW}"
+        else
+          # Create a new localization
+          curl -sf -X POST \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d "{\"data\":{\"type\":\"betaBuildLocalizations\",\"attributes\":{\"locale\":\"en-US\",\"whatsNew\":\"${WHATS_NEW}\"},\"relationships\":{\"build\":{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\"}}}}}" \
+            "${API}/betaBuildLocalizations" > /dev/null || true
+          echo "✅ Release notes created: ${WHATS_NEW}"
+        fi
+
+        echo "::endgroup::"

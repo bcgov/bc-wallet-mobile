@@ -697,16 +697,12 @@ jobs:
           export_options: export-options.plist
           output_artifact_ref: ${{ matrix.artifact_name }}
 
-      - name: Ship to iTunes
-        if: github.ref_name == 'main'
+      - name: Ship to Apple App Store
+        #if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          version_code: ${{ env.APP_BUILD_NUMBER }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ matrix.beta_groups }}
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for iOS failure
@@ -1020,6 +1016,43 @@ jobs:
           fi
 
           echo "✅ All builds passed!"
+
+  # ─── TestFlight Distribution ────────────────────────────────────────
+  # Runs on ubuntu (cheap) AFTER builds complete. Waits for Apple's
+  # server-side processing then distributes to beta groups.
+  # Decoupled from build-ios so the upload→process wait no longer
+  # blocks the iOS build critical path.
+  distribute-testflight:
+    name: "Distribute TestFlight - ${{ matrix.build_type }}"
+    if: github.ref_name == 'main'
+    needs: [build-ios, build-summary]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - build_type: 'bc-wallet'
+            bundle_id: 'ca.bc.gov.BCWallet'
+            beta_groups: |-
+              The Team
+              IDIM Team
+          - build_type: 'single-app'
+            bundle_id: 'ca.bc.gov.id.servicescard.dev'
+            beta_groups: |-
+              IDIM testers for DEV env
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Distribute to TestFlight
+        uses: ./.github/workflows/actions/distribute-testflight
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          bundle_id: ${{ matrix.bundle_id }}
+          version_code: ${{ github.run_number }}
+          version_name: ${{ matrix.build_type == 'bc-wallet' && '1.0.27' || '4.0.0' }}
+          beta_groups: ${{ matrix.beta_groups }}
 
   ship-to-saucelabs:
     name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
