@@ -960,7 +960,9 @@ const translation = {
       "Description": "Use an ID that has the same name as on your BC Services Card.",
       "NonBCSCDescription": "Use an ID that has the same name as your first ID.",
       "FirstID": "Choose your first ID",
-      "SecondID": "Choose your second ID"
+      "SecondID": "Choose your second ID",
+      "OtherOptions": "Other Options",
+      "IDontHaveAnyOfThese": "I don't have any of these"
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information",
