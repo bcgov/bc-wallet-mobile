@@ -2823,9 +2823,13 @@ class BcscCore: NSObject {
         result["files"] = allFiles
         result["fileCount"] = allFiles.count
         logger.log("[Native File Scan] Found \(allFiles.count) files/directories")
-        for file in allFiles {
-          logger.log("[Native File Scan] \(file)")
-        }
+        #if DEBUG
+          // Log each file/directory only in debug builds to avoid leaking sensitive paths
+          // and to reduce logging overhead in production.
+          for file in allFiles {
+            logger.log("[Native File Scan] \(file)")
+          }
+        #endif
       } else {
         result["files"] = []
         result["fileCount"] = 0
