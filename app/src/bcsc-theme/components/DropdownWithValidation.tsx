@@ -1,7 +1,8 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, Modal, Pressable, SafeAreaView, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export type DropdownOption<T> = {
