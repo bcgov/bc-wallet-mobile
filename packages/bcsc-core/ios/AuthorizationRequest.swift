@@ -23,10 +23,10 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   // "locality", "country", and "region" are identical in both versions.
   enum CodingKeys: String {
     case streetAddress = "street_address"
-    case locality = "locality"
+    case locality
     case postalCode = "postal_code"
-    case country = "country"
-    case region = "region"
+    case country
+    case region
   }
 
   override init() {

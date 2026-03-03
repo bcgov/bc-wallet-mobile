@@ -60,7 +60,6 @@ class BcscCore: NSObject {
     return deviceId
   }
 
-
   /**
    * Returns the current account synchronously.
    * Eliminates repeated StorageService().readData(file: .accountMetadata, ...) boilerplate.
@@ -1894,6 +1893,8 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Retrieves the pending authorization request from storage, this value is cleared once a user is verified. 
+  //  Expect this to be empty when migrating a verified v3 user since the v3 app clears this value immediately after verification, but it will be populated for users who were pending verification during migration and for all new users. This reads from the same location used by the v3 native app, so it can be set by either version.
   ///   - resolve: Returns the authorization request as a dictionary, or null if not found
   ///   - reject: Returns error on failure
   func getAuthorizationRequest(
@@ -1950,9 +1951,7 @@ class BcscCore: NSObject {
       )
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
-
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
          let authRequest = requestsDict.values.first
