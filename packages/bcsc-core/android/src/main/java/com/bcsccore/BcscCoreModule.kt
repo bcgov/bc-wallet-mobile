@@ -4117,8 +4117,10 @@ class BcscCoreModule(
                             NAME,
                             "[Native File Scan] Found ${allFiles.size} files/directories in Android storage",
                         )
-                        allFiles.forEach { file ->
-                            Log.i(NAME, "[Native File Scan] $file")
+                        if (Log.isLoggable(NAME, Log.DEBUG)) {
+                            allFiles.forEach { file ->
+                                Log.d(NAME, "[Native File Scan] $file")
+                            }
                         }
 
                         // logEvidenceFileContents(filesDir, allFiles)
