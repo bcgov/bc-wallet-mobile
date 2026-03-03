@@ -133,7 +133,6 @@ export class FcmViewModel {
 
       if (!result.verified) {
         const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
-        appError.handled = true
         this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWS verification failed`)
         this.onError?.(appError)
         return
