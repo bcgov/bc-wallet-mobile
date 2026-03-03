@@ -312,6 +312,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         },
         hasTroubleContainer: {
           marginLeft: 'auto',
+          marginRight: Spacing.xs,
         },
         selfieVideoContainer: {
           width: width / 4,
