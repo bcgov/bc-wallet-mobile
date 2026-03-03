@@ -2,12 +2,15 @@
 const translation = {
   "Global": {
     "OK": "OK",
+    "Okay": "Okay",
     "Cancel": "Cancel",
     "Continue": "Continue",
     "Back": "Back",
     "GoBack": "Go Back",
     "Loading": "Loading...",
     "Close": "Close",
+    "ShowDetails": "Show Details",
+    "Dismiss": "Dismiss",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
@@ -30,6 +33,11 @@ const translation = {
     "Message2033": "There was a problem while loading the services. Please try again later.",
     "OK": "OK",
     "NoMessage": "No Message",
+    "ErrorCode": "Error Code",
+    "ReportThisProblem": "Report this problem",
+    "Reported": "Reported",
+    "Unknown": "Unknown",
+    "Problem": "Something went wrong",
   },
   "Screens": {
     "Preface": "BC Wallet",
@@ -108,6 +116,7 @@ const translation = {
     "Done": "Done",
   },
   "Settings": {
+    "Version": "Version",
     "Help": "Help",
     "MoreInformation": "More Information",
     "PlayWithBCWallet": "Play with BC Wallet",

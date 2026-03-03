@@ -37,6 +37,10 @@ jest.mock('../../src/utils/logger', () => ({
   },
 }))
 
+jest.mock('i18next', () => ({
+  t: jest.fn((key: string) => (key === 'Error.ReportThisProblem' ? 'Report this problem' : key)),
+}))
+
 describe('errorHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -97,13 +101,30 @@ describe('errorHandler', () => {
       expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.appEvent)
     })
 
-    it('should not track alert display for non-display events', () => {
+    it('should not track error event or alert display for action events', () => {
       const definition = ErrorRegistry.SERVER_ERROR
 
       trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
 
-      expect(Analytics.trackErrorEvent).toHaveBeenCalled()
+      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
       expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
+    })
+
+    it('should track alert action event when user reports', () => {
+      const definition = ErrorRegistry.GENERAL_ERROR
+
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, 'Report this problem')
+
+      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
+    })
+
+    it('should use default action label when not provided for ALERT_ACTION', () => {
+      const definition = ErrorRegistry.NO_INTERNET
+
+      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
+
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
     })
 
     it('should log debug information', () => {
