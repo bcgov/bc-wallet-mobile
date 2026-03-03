@@ -134,7 +134,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       for (const evidence of store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
-            evidenceType: evidence.evidenceType.evidence_type,
+            evidenceType: evidence.evidenceType?.evidence_type,
             documentNumber: evidence.documentNumber,
           })
         )

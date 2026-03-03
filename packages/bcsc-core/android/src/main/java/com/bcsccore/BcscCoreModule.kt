@@ -3142,7 +3142,11 @@ class BcscCoreModule(
             // Read from account-specific SharedPreferences.
             // Fall back to v3 hardcoded name if v4 location is empty (see getAccountFlags for details).
             val v4EvidencePrefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val v4EvidencePrefs = reactApplicationContext.getSharedPreferences(v4EvidencePrefsName, Context.MODE_PRIVATE)
+            val v4EvidencePrefs =
+                reactApplicationContext.getSharedPreferences(
+                    v4EvidencePrefsName,
+                    Context.MODE_PRIVATE,
+                )
             val prefs =
                 if (v4EvidencePrefs.all.isNotEmpty()) {
                     v4EvidencePrefs
