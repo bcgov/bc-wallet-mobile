@@ -15,7 +15,6 @@ on:
       - .github/workflows/**
   pull_request:
     branches: [main]
-  merge_group:
 
 jobs:
   check-secrets:
