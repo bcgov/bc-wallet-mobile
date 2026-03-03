@@ -4090,9 +4090,9 @@ class BcscCoreModule(
 
             val result =
                 Arguments.createMap().apply {
-                    putString("packageName", packageName)
-                    putString("filesDirectory", filesDir.absolutePath)
-                    putBoolean("filesDirExists", filesDirExists)
+                    putString("bundleID", packageName)
+                    putString("bundleDirectory", filesDir.absolutePath)
+                    putBoolean("bundleDirectoryExists", filesDirExists)
 
                     if (filesDirExists) {
                         // Recursively scan all files starting from filesDir
@@ -4111,8 +4111,10 @@ class BcscCoreModule(
                             NAME,
                             "[Native File Scan] Found ${allFiles.size} files/directories in Android storage",
                         )
-                        allFiles.forEach { file ->
-                            Log.i(NAME, "[Native File Scan] $file")
+                        if (Log.isLoggable(NAME, Log.DEBUG)) {
+                            allFiles.forEach { file ->
+                                Log.d(NAME, "[Native File Scan] $file")
+                            }
                         }
 
                         // logEvidenceFileContents(filesDir, allFiles)
