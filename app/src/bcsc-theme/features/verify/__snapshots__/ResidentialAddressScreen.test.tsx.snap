@@ -115,6 +115,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
             </Text>
             <TextInput
               accessibilityLabel="BCSC.Address.StreetAddressLabel"
+              autoComplete="address-line1"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -133,6 +134,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 ]
               }
               testID="com.ariesbifold:id/streetAddress1-input"
+              textContentType="streetAddressLine1"
               value=""
             />
             <Text
@@ -183,6 +185,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
             </Text>
             <TextInput
               accessibilityLabel="BCSC.Address.StreetAddress2Label"
+              autoComplete="address-line2"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -201,6 +204,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 ]
               }
               testID="com.ariesbifold:id/streetAddress2-input"
+              textContentType="streetAddressLine2"
               value=""
             />
             <Text
@@ -251,6 +255,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
             </Text>
             <TextInput
               accessibilityLabel="BCSC.Address.CityLabel"
+              autoComplete="postal-address-locality"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -269,6 +274,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 ]
               }
               testID="com.ariesbifold:id/city-input"
+              textContentType="addressCity"
               value=""
             />
             <Text
@@ -462,6 +468,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
             <TextInput
               accessibilityLabel="BCSC.Address.PostalCodeLabel"
               autoCapitalize="characters"
+              autoComplete="postal-code"
               autoCorrect={false}
               onChange={[Function]}
               style={
@@ -480,6 +487,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 ]
               }
               testID="com.ariesbifold:id/postalCode-input"
+              textContentType="postalCode"
               value=""
             />
             <Text

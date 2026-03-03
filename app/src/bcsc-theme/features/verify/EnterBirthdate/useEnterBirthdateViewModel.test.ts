@@ -78,8 +78,8 @@ describe('EnterBirthdateViewModel', () => {
     jest.clearAllMocks()
   })
 
-  describe('authorizeDevice - BCSCPhoto process', () => {
-    it('should navigate to SetupSteps for BCSCPhoto process', async () => {
+  describe('authorizeDevice', () => {
+    it('should navigate to SetupSteps', async () => {
       const mockDeviceAuth = {
         device_code: 'test-device-code',
         user_code: 'ABCD1234',
@@ -155,59 +155,6 @@ describe('EnterBirthdateViewModel', () => {
           email: undefined,
           isEmailVerified: false,
         })
-      })
-    })
-  })
-
-  describe('authorizeDevice - BCSCNonPhoto process', () => {
-    it('should navigate to AdditionalIdentificationRequired for BCSCNonPhoto process', async () => {
-      const mockDeviceAuth = {
-        device_code: 'test-device-code',
-        user_code: 'ABCD1234',
-        verified_email: 'test@example.com',
-        expires_in: 3600,
-        verification_options: 'video_call back_check',
-        process: BCSCCardProcess.BCSCNonPhoto,
-      }
-
-      mockAuthorizeDevice.mockResolvedValue(mockDeviceAuth)
-
-      const { result } = renderHook(() => useEnterBirthdateViewModel(mockNavigation))
-
-      await result.current.authorizeDevice(mockSerial, mockBirthdate)
-
-      await waitFor(() => {
-        // Verify secure actions were called
-        expect(mockUpdateUserInfo).toHaveBeenCalledWith({ birthdate: mockBirthdate })
-        expect(mockUpdateCardProcess).toHaveBeenCalledWith(mockDeviceAuth.process)
-        expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
-
-        // Verify navigation
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
-      })
-    })
-  })
-
-  describe('authorizeDevice - NonBCSC process', () => {
-    it('should navigate to AdditionalIdentificationRequired for NonBCSC process', async () => {
-      const mockDeviceAuth = {
-        device_code: 'test-device-code',
-        user_code: 'ABCD1234',
-        verified_email: 'test@example.com',
-        expires_in: 3600,
-        verification_options: 'video_call counter',
-        process: BCSCCardProcess.NonBCSC,
-      }
-
-      mockAuthorizeDevice.mockResolvedValue(mockDeviceAuth)
-
-      const { result } = renderHook(() => useEnterBirthdateViewModel(mockNavigation))
-
-      await result.current.authorizeDevice(mockSerial, mockBirthdate)
-
-      await waitFor(() => {
-        expect(mockUpdateCardProcess).toHaveBeenCalledWith(mockDeviceAuth.process)
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
       })
     })
   })
