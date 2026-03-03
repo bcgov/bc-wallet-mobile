@@ -273,6 +273,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       unableToDecryptIdTokenAlert: _createBasicAlert(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: '105' }),
       failedToDeserializeJsonAlert: _createBasicAlert(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON, 'ProblemWithApp', { errorCode: '109' }),
       unableToDecryptJweAlert: _createBasicAlert(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', { errorCode: '110' }),
+      missingJwkAlert: _createBasicAlert(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'ProblemWithApp', { errorCode: '111' }),
       loginServerErrorAlert: _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
       loginRejected401Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401'),

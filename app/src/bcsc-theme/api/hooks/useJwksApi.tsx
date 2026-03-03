@@ -1,4 +1,6 @@
 import { useCallback, useMemo } from 'react'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import BCSCApiClient from '../client'
 
 export interface JWK {
@@ -24,9 +26,12 @@ const useJwksApi = (apiClient: BCSCApiClient) => {
     return keys
   }, [apiClient])
 
-  const getFirstJwk = useCallback(async (): Promise<JWK | null> => {
+  const getFirstJwk = useCallback(async (): Promise<JWK> => {
     const keys = await getJwks()
-    return keys.length > 0 ? keys[0] : null
+    if (keys.length === 0) {
+      throw AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+    }
+    return keys[0]
   }, [getJwks])
 
   return useMemo(

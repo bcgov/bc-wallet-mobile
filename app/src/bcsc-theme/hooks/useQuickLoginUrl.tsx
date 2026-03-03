@@ -1,4 +1,8 @@
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import useApi from '../api/hooks/useApi'
@@ -29,6 +33,8 @@ export const useQuickLoginURL = () => {
   const { jwks } = useApi()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const alerts = useAlerts(navigation)
 
   /**
    * Generates a quick login URL for the given service client.
@@ -61,10 +67,6 @@ export const useQuickLoginURL = () => {
           return { success: false, error: 'No account data received' }
         }
 
-        if (!jwk) {
-          return { success: false, error: 'No JWK received from server' }
-        }
-
         const loginHint = await createQuickLoginJWT(
           client.tokens.access_token,
           account.clientID,
@@ -78,11 +80,15 @@ export const useQuickLoginURL = () => {
         const encodedTokenHint = encodeURIComponent(loginHint)
         return { success: true, url: `${serviceClient.initiate_login_uri}?login_hint=${encodedTokenHint}` }
       } catch (error) {
+        if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
+          alerts.missingJwkAlert()
+        }
+
         logger.error('Error creating quick login URL', error as Error)
         return { success: false, error: `Error creating quick login URL: ${(error as Error).message}` }
       }
     },
-    [client, jwks, logger]
+    [alerts, client, jwks, logger]
   )
 
   return getQuickLoginURL
