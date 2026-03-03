@@ -1,10 +1,10 @@
 import { BCSCActivityProvider } from '@/bcsc-theme/contexts/BCSCActivityContext'
+import { FcmService, FcmServiceProvider } from '@/bcsc-theme/features/fcm'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { CROP_DELAY_MS } from '@/constants'
-import { FcmService, FcmServiceProvider } from '@/bcsc-theme/features/fcm'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, act } from '@testing-library/react-native'
+import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import LiveCallScreen from './LiveCallScreen'
 
