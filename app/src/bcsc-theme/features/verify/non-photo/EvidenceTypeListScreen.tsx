@@ -180,7 +180,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
     if (photoFilter === 'nonPhoto') {
       // Non-photo BCSC "Other Options" — showing non-photo IDs
-      return [t('BCSC.EvidenceTypeList.FirstID'), '']
+      return [t('BCSC.EvidenceTypeList.OtherIDOptionsHeading'), t('BCSC.EvidenceTypeList.OtherIDOptionsDescription')]
     }
 
     // Choose your first ID
@@ -260,7 +260,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                   pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
                 ]}
               >
-                <ThemedText>{t('BCSC.EvidenceTypeList.IDontHaveAnyOfThese')}</ThemedText>
+                <ThemedText>{t('BCSC.EvidenceTypeList.ShowMoreOptions')}</ThemedText>
               </Pressable>
             </>
           ) : null

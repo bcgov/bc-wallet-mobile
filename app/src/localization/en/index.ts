@@ -962,7 +962,9 @@ const translation = {
       "FirstID": "Choose your first ID",
       "SecondID": "Choose your second ID",
       "OtherOptions": "Other Options",
-      "IDontHaveAnyOfThese": "I don't have any of these"
+      "ShowMoreOptions": "Show more options",
+      "OtherIDOptionsHeading": "Other ID options",
+      "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID."
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information",

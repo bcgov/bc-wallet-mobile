@@ -47,8 +47,7 @@ describe('EvidenceTypeList', () => {
       </BasicAppContext>
     )
 
-    expect(getByText('BCSC.EvidenceTypeList.OtherOptions')).toBeTruthy()
-    expect(getByText('BCSC.EvidenceTypeList.IDontHaveAnyOfThese')).toBeTruthy()
+    expect(getByText('BCSC.EvidenceTypeList.ShowMoreOptions')).toBeTruthy()
     expect(getByTestId('com.ariesbifold:id/EvidenceTypeListOtherOptions')).toBeTruthy()
   })
 
@@ -83,7 +82,6 @@ describe('EvidenceTypeList', () => {
       </BasicAppContext>
     )
 
-    expect(queryByText('BCSC.EvidenceTypeList.OtherOptions')).toBeNull()
-    expect(queryByText('BCSC.EvidenceTypeList.IDontHaveAnyOfThese')).toBeNull()
+    expect(queryByText('BCSC.EvidenceTypeList.ShowMoreOptions')).toBeNull()
   })
 })

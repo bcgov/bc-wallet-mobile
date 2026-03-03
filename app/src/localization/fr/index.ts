@@ -961,8 +961,10 @@ const translation = {
       "NonBCSCDescription": "Use an ID that has the same name as your first ID. (FR)",
       "FirstID": "Choose your first ID (FR)",
       "SecondID": "Choose your second ID (FR)",
-      "OtherOptions": "Other Options (FR)",
-      "IDontHaveAnyOfThese": "I don't have any of these (FR)"
+      "OtherOptions": "Other options (FR)",
+      "ShowMoreOptions": "Show more options (FR)",
+      "OtherIDOptionsHeading": "Other ID options (FR)",
+      "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID. (FR)"
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information (FR)",
