@@ -7,7 +7,6 @@ import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +19,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
  * - Navigation actions for each step
  * - Handlers for checking status and cancelling verification
  */
-const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>) => {
+const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { updateVerificationRequest, updateAccountFlags, deleteVerificationData, clearSecureState } = useSecureActions()
@@ -38,6 +37,8 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    *
    * Note: This will reset the completion of all setup steps excluding step 1 (account nickname).
    * Why? Account nickname is excluded as it is independent to the card registration process (setup step 2).
+   *
+   * @see `IdentitySelectionScreen.tsx` for where this is used
    *
    * @returns Promise that resolves when the reset process is complete
    */
@@ -78,35 +79,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     store.bcscSecure.registrationAccessToken,
     store.bcscSecure.walletKey,
   ])
-
-  useFocusEffect(
-    useCallback(() => {
-      if (
-        steps.id.completed ||
-        (!steps.address.completed && !steps.email.completed) ||
-        steps.id.nonPhotoBcscNeedsAdditionalCard
-      ) {
-        // If ID step completed, address and email are both incomplete, or a NonPhoto BCSC card
-        // was scanned but still needs an additional photo ID, we can assume workflow is normal
-        return
-      }
-
-      // This can be triggered by users backing out when they have partially completed step 2 (id collection)
-      logger.debug('[useSetupStepsModel] Invalid steps detected, cancelling registration and resetting state.', {
-        idStepCompleted: steps.id.completed,
-        addressStepCompleted: steps.address.completed,
-        emailStepCompleted: steps.email.completed,
-      })
-      handleResetCardRegistration()
-    }, [
-      handleResetCardRegistration,
-      logger,
-      steps.address.completed,
-      steps.email.completed,
-      steps.id.completed,
-      steps.id.nonPhotoBcscNeedsAdditionalCard,
-    ])
-  )
 
   /**
    * Check the status of a pending verification request
