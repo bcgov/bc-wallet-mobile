@@ -6,10 +6,11 @@ import {
   VerificationResponseService,
   VerificationResponseServiceProvider,
 } from '@/bcsc-theme/features/verification-response'
-import { BCSCErrorModal } from '@/errors/components/ErrorModal'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
+import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
+import { BCSCErrorModal } from '@/errors/components/ErrorModal'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
@@ -21,7 +22,6 @@ import {
   AnimatedComponentsProvider,
   AuthProvider,
   ContainerProvider,
-  ErrorBoundaryWrapper,
   ErrorModal,
   initLanguages,
   initStoredLanguage,
