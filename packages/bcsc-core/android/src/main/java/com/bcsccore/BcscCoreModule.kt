@@ -4090,9 +4090,9 @@ class BcscCoreModule(
 
             val result =
                 Arguments.createMap().apply {
-                    putString("packageName", packageName)
-                    putString("filesDirectory", filesDir.absolutePath)
-                    putBoolean("filesDirExists", filesDirExists)
+                    putString("bundleID", packageName)
+                    putString("bundleDirectory", filesDir.absolutePath)
+                    putBoolean("bundleDirectoryExists", filesDirExists)
 
                     if (filesDirExists) {
                         // Recursively scan all files starting from filesDir
