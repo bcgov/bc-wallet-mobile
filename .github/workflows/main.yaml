@@ -1024,7 +1024,7 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: "Distribute TestFlight - ${{ matrix.build_type }}"
-    if: github.ref_name == 'main'
+    #if: github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
     strategy:
