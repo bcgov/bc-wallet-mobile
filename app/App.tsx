@@ -9,7 +9,9 @@ import {
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
+import { isAppError } from '@/errors/appError'
 import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
+import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
@@ -32,11 +34,10 @@ import {
   TourProvider,
 } from '@bifold/core'
 import WebDisplay from '@screens/WebDisplay'
-import { isAppError } from '@/errors/appError'
-import { AppEventCode } from '@/events/appEventCode'
+import i18next from 'i18next'
 import React, { useEffect, useMemo, useState } from 'react'
-import { Alert } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { Alert } from 'react-native'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -81,12 +82,15 @@ const App = () => {
 
   useEffect(() => {
     deepLinkViewModel.initialize()
+    // Uses i18next.t() directly instead of the useTranslation hook's t() to avoid
+    // adding a dependency to this init-only effect. The callback runs asynchronously
+    // on FCM error, so i18next.t() resolves the current language at call time.
     fcmViewModel.setErrorHandler((error) => {
       if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
         Alert.alert(
-          t('Alerts.ProblemWithApp.Title', { errorCode: '112' }),
-          t('Alerts.ProblemWithApp.Description', { errorCode: '112' }),
-          [{ text: t('Global.OK') }]
+          i18next.t('Alerts.ProblemWithApp.Title', { errorCode: '112' }),
+          i18next.t('Alerts.ProblemWithApp.Description', { errorCode: '112' }),
+          [{ text: i18next.t('Global.OK') }]
         )
       }
     })
