@@ -895,6 +895,7 @@ const translation = {
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (PT-BR)",
       "DeviceCodeError": "Missing device or user code (PT-BR)",
       "ServiceBC": "Service BC (PT-BR)",
+      "CallingAgent": "Calling agent to verify your identity... (PT-BR)",
       "BeforeYouCallTitle": "Before you call (PT-BR)",
       "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",

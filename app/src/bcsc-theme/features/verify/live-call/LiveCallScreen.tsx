@@ -321,6 +321,21 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         selfieVideo: {
           flex: 1,
         },
+        cropOverlay: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '15%',
+          backgroundColor: 'black',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: Spacing.xl,
+        },
+        cropOverlayText: {
+          color: ColorPalette.grayscale.white,
+          textAlign: 'center',
+        },
       }),
     [width, Spacing, ColorPalette]
   )
@@ -347,6 +362,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   return (
     <View style={styles.container}>
       {remoteStream && <RTCView style={styles.agentVideo} objectFit={'contain'} streamURL={remoteStream.toURL()} />}
+
+      {!callStartTime && (
+        <View style={styles.cropOverlay}>
+          <ThemedText style={styles.cropOverlayText}>{t('BCSC.VideoCall.CallingAgent')}</ThemedText>
+        </View>
+      )}
 
       <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: NavigationTheme.colors.primary }} />
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
