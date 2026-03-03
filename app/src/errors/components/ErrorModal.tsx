@@ -1,10 +1,10 @@
 import { getErrorDefinitionFromAppEventCode, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { AlertInteractionEvent } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { EventTypes, useTheme } from '@bifold/core'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTheme } from '@bifold/core'
+import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Modal, StyleSheet } from 'react-native'
+import { Modal, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
 
@@ -14,35 +14,6 @@ export interface ErrorModalPayload {
   message: string
   code: number
   appEvent?: string
-}
-
-const isErrorPayload = (payload: unknown): payload is ErrorModalPayload =>
-  payload != null &&
-  typeof payload === 'object' &&
-  'title' in payload &&
-  typeof (payload as ErrorModalPayload).title === 'string' &&
-  'description' in payload &&
-  typeof (payload as ErrorModalPayload).description === 'string'
-
-/**
- * Normalizes an incoming event payload into a typed ErrorModalPayload.
- *
- * Accepts both plain-object payloads (emitted by ErrorAlertContext) and
- * BifoldError instances (emitted by legacy code paths like attestation.ts
- * and BCIDHelper.ts). BifoldError duck-types to this shape because it
- * exposes title, description, message, and code as own properties.
- */
-const normalizePayload = (payload: unknown): ErrorModalPayload | null => {
-  if (!isErrorPayload(payload)) {
-    return null
-  }
-  return {
-    title: payload.title,
-    description: payload.description,
-    message: payload.message ?? '',
-    code: payload.code ?? 0,
-    appEvent: payload.appEvent,
-  }
 }
 
 const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette']): ErrorInfoCardColors => ({
@@ -63,7 +34,11 @@ const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette
   secondaryButtonText: palette.grayscale.darkGrey,
 })
 
-interface BCSCErrorModalProps {
+export interface BCSCErrorModalProps {
+  error: ErrorModalPayload | null
+  visible: boolean
+  errorKey: number
+  onDismiss: () => void
   enableReport?: boolean
 }
 
@@ -71,42 +46,18 @@ interface BCSCErrorModalProps {
  * Custom error modal replacing Bifold's ErrorModal for full control
  * over styling and Snowplow analytics "Report" behavior.
  *
- * Listens for ERROR_ADDED / ERROR_REMOVED events and renders the shared
- * ErrorInfoCard inside a Modal overlay with theme colors.
+ * Rendered by ErrorAlertProvider and driven by its state — no event
+ * emitters or listeners involved.
  */
-export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = true }) => {
+export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
+  error,
+  visible,
+  errorKey,
+  onDismiss,
+  enableReport = true,
+}) => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
-  const [visible, setVisible] = useState(false)
-  const [error, setError] = useState<ErrorModalPayload | null>(null)
-  const [errorKey, setErrorKey] = useState(0)
-
-  useEffect(() => {
-    const addHandler = DeviceEventEmitter.addListener(EventTypes.ERROR_ADDED, (payload: unknown) => {
-      const normalized = normalizePayload(payload)
-      if (normalized) {
-        setError(normalized)
-        setErrorKey((prev) => prev + 1)
-        setVisible(true)
-      }
-    })
-
-    const removeHandler = DeviceEventEmitter.addListener(EventTypes.ERROR_REMOVED, () => {
-      setError(null)
-      setVisible(false)
-    })
-
-    return () => {
-      addHandler.remove()
-      removeHandler.remove()
-    }
-  }, [])
-
-  const handleDismiss = useCallback(() => {
-    setVisible(false)
-    setError(null)
-    DeviceEventEmitter.emit(EventTypes.ERROR_REMOVED)
-  }, [])
 
   const handleReport = useCallback(() => {
     if (!error) {
@@ -145,7 +96,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleDismiss}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <SafeAreaView style={overlayStyle.overlay}>
         <ErrorInfoCard
           key={errorKey}
@@ -153,7 +104,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ enableReport = t
           description={error.description}
           message={error.message}
           code={error.code}
-          onDismiss={handleDismiss}
+          onDismiss={onDismiss}
           onReport={handleReport}
           enableReport={enableReport}
           colors={cardColors}

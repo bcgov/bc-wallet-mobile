@@ -10,7 +10,6 @@ import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
-import { BCSCErrorModal } from '@/errors/components/ErrorModal'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
@@ -97,7 +96,7 @@ const App = () => {
                     <AnimatedComponentsProvider value={animatedComponents}>
                       <AuthProvider>
                         <NetworkProvider>
-                          {appMode === Mode.BCSC ? <BCSCErrorModal enableReport /> : <ErrorModal enableReport />}
+                          <ErrorModal enableReport />
                           <WebDisplay
                             destinationUrl={surveyMonkeyUrl}
                             exitUrl={surveyMonkeyExitUrl}
@@ -105,7 +104,7 @@ const App = () => {
                             onClose={() => setSurveyVisible(false)}
                           />
                           <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                            <ErrorAlertProvider>
+                            <ErrorAlertProvider enableReport>
                               <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
                                 <Root />
                               </KeyboardProvider>

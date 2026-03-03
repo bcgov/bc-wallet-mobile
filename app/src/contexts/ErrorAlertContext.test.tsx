@@ -1,7 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native'
 import i18next from 'i18next'
 import React from 'react'
-import { DeviceEventEmitter } from 'react-native'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../errors/errorRegistry'
 import { AppEventCode } from '../events/appEventCode'
 import { showAlert } from '../utils/alert'
@@ -9,13 +8,17 @@ import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
-// Mock dependencies
+jest.mock('@/errors/components/ErrorModal', () => ({
+  BCSCErrorModal: () => null,
+}))
+
 jest.mock('react-native', () => ({
-  DeviceEventEmitter: {
-    emit: jest.fn(),
-  },
   Alert: {
     alert: jest.fn(),
+  },
+  Modal: 'Modal',
+  StyleSheet: {
+    create: jest.fn((styles) => styles),
   },
   Platform: {
     OS: 'ios',
@@ -23,20 +26,34 @@ jest.mock('react-native', () => ({
   },
 }))
 
-// Mock errorHandler utilities - use actual implementations
 jest.mock('../errors/errorHandler', () => {
   const actual = jest.requireActual('../errors/errorHandler')
   return { ...actual }
 })
 
 jest.mock('@bifold/core', () => ({
-  EventTypes: {
-    ERROR_ADDED: 'ERROR_ADDED',
-    ERROR_REMOVED: 'ERROR_REMOVED',
-  },
+  testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
+  useTheme: () => ({
+    ColorPalette: {
+      grayscale: {
+        black: '#000000',
+        darkGrey: '#313132',
+        mediumGrey: '#606060',
+        lightGrey: '#D3D3D3',
+        white: '#FFFFFF',
+      },
+      brand: {
+        primary: '#003366',
+        primaryDisabled: '#757575',
+        modalPrimary: '#FCBA19',
+        link: '#1A5A96',
+        text: '#01264C',
+      },
+      semantic: { success: '#2E8540' },
+      notification: { popupOverlay: 'rgba(0, 0, 0, 0.5)' },
+    },
+  }),
 }))
-
-const { EventTypes } = jest.requireMock('@bifold/core')
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -68,6 +85,13 @@ jest.mock('../utils/logger', () => ({
   },
 }))
 
+jest.mock('react-native-device-info', () => ({
+  getVersion: () => '1.0.0',
+  getBuildNumber: () => '42',
+}))
+
+jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
+
 describe('ErrorAlertContext', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -89,8 +113,8 @@ describe('ErrorAlertContext', () => {
     })
   })
 
-  describe('error()', () => {
-    it('should show error modal by default', () => {
+  describe('emitErrorModal()', () => {
+    it('should log and track analytics', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
       act(() => {
@@ -98,16 +122,6 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(appLogger.error).toHaveBeenCalled()
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(
-        EventTypes.ERROR_ADDED,
-        expect.objectContaining({
-          title: expect.any(String),
-          description: expect.any(String),
-          message: expect.any(String),
-          code: expect.any(Number),
-          appEvent: expect.any(String),
-        })
-      )
     })
 
     it('should track analytics', () => {
@@ -132,7 +146,7 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key'))
-      expect(DeviceEventEmitter.emit).toHaveBeenCalled()
+      expect(appLogger.error).toHaveBeenCalled()
     })
 
     it('should extract error message from Error object', () => {
@@ -176,7 +190,7 @@ describe('ErrorAlertContext', () => {
     })
   })
 
-  describe('alert()', () => {
+  describe('emitAlert()', () => {
     it('should show native alert', () => {
       const { result } = renderHook(() => useErrorAlert(), { wrapper })
 
@@ -192,18 +206,6 @@ describe('ErrorAlertContext', () => {
         undefined,
         AppEventCode.GENERAL
       )
-    })
-  })
-
-  describe('dismiss()', () => {
-    it('should emit ERROR_REMOVED event', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.dismiss()
-      })
-
-      expect(DeviceEventEmitter.emit).toHaveBeenCalledWith(EventTypes.ERROR_REMOVED)
     })
   })
 })
