@@ -7,7 +7,6 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 /**
  * useEnterBirthdateViewModel - Handles business logic for authorizing a device based on manually entered CSN + birthdate
@@ -41,17 +40,12 @@ export const useEnterBirthdateViewModel = (
 
       logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 
-      // Navigate based on card process
-      if (deviceAuth.process === BCSCCardProcess.BCSCPhoto) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
-        )
-      } else {
-        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-      }
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.SetupSteps }],
+        })
+      )
     },
     [authorization, navigation, logger, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions]
   )
