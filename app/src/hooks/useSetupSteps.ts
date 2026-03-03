@@ -249,7 +249,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     store.bcscSecure.cardProcess,
     store.bcscSecure.deviceCode,
     store.bcscSecure.deviceCodeExpiresAt,
-    store.bcscSecure.email,
+    store.bcscSecure.emailAddress,
     store.bcscSecure.isEmailVerified,
     store.bcscSecure.serial,
     store.bcscSecure.userMetadata?.address,

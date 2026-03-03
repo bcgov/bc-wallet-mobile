@@ -567,7 +567,7 @@ export const useSecureActions = () => {
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType.evidence_type === evidenceType.evidence_type
+        evidence.evidenceType?.evidence_type === evidenceType.evidence_type
           ? { ...evidence, metadata, barcodes }
           : evidence
       )
@@ -588,7 +588,7 @@ export const useSecureActions = () => {
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
+        evidence.evidenceType?.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
       )
 
       dispatch({
@@ -607,7 +607,7 @@ export const useSecureActions = () => {
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
-        (evidence) => evidence.evidenceType.evidence_type !== evidenceType.evidence_type
+        (evidence) => evidence.evidenceType?.evidence_type !== evidenceType.evidence_type
       )
 
       dispatch({
