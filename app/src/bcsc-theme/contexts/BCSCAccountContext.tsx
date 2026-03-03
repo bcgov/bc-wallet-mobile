@@ -4,9 +4,9 @@ import { TOKENS, useServices } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import { DeviceEventEmitter } from 'react-native'
-import useApi from '../api/hooks/useApi'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
+import { useUserService } from '../services/hooks/useUserService'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
   picture: string | null // URI to the user's profile picture
@@ -28,10 +28,10 @@ export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(n
  * @returns {*} {React.ReactElement} The BCSCAccountProvider component wrapping its children.
  */
 export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
-  const api = useApi()
+  const userService = useUserService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const { data, load, isLoading, refresh } = useDataLoader(api.user.getUserMetadata, {
+  const { data, load, isLoading, refresh } = useDataLoader(userService.getUserMetadata, {
     onError: (error) => {
       logger.error('BCSCAccountProvider: Failed to load user metadata', { error })
     },
@@ -59,11 +59,20 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
+    const givenName = data.user.given_name?.trim()
+    const familyName = data.user.family_name?.trim()
+    let fullname_formatted = ''
+    if (givenName && familyName) {
+      fullname_formatted = `${familyName}, ${givenName}`
+    } else {
+      fullname_formatted = familyName || givenName || ''
+    }
+
     return {
       account: {
         ...data.user,
         picture: data.picture ?? null,
-        fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
+        fullname_formatted,
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,

@@ -1,5 +1,5 @@
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCThemeNames } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import {
   Button,
@@ -13,9 +13,10 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import moment from 'moment'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Keyboard, StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
@@ -25,18 +26,16 @@ type EnterBirthdateScreenProps = {
 }
 
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
-  const today = new Date()
   const { t } = useTranslation()
-  const { themeName, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const vm = useEnterBirthdateViewModel(navigation)
 
   const [loading, setLoading] = useState(false)
-  const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
-  const [date, setDate] = useState(vm.initialDate ?? today)
-  const dateRef = useRef(vm.initialDate ?? today)
+  const [openDatePicker, setOpenDatePicker] = useState(false)
+  const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY-MM-DD') : '')
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -47,17 +46,11 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     },
   })
 
-  // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
-  const onDateChange = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const day = date.getDate()
-    const realDate = new Date(year, month, day, 12, 0, 0, 0)
-    setDate(realDate)
-    dateRef.current = realDate
-  }
-
   const handleSubmit = async () => {
+    if (!birthDate) {
+      return
+    }
+
     try {
       setLoading(true)
       if (!vm.serial) {
@@ -66,7 +59,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         return null
       }
 
-      await vm.authorizeDevice(vm.serial, dateRef.current)
+      await vm.authorizeDevice(vm.serial, moment(birthDate, 'YYYY-MM-DD').toDate())
     } catch (error) {
       if (isHandledAppError(error)) {
         return
@@ -86,14 +79,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       title={t('Global.Done')}
       accessibilityLabel={t('Global.Done')}
       testID={testIdWithKey('Done')}
-      onPress={() => {
-        if (pickerState === 'spinning') {
-          return
-        }
-        handleSubmit()
-      }}
+      onPress={handleSubmit}
       buttonType={ButtonType.Primary}
-      disabled={loading}
+      disabled={loading || !birthDate}
     >
       {loading && <ButtonLoading />}
     </Button>
@@ -108,14 +96,36 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.Birthdate.Heading')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
-      <View style={{ flex: 1, alignItems: 'center' }}>
+      <View style={{ marginVertical: Spacing.md, width: '100%' }}>
         <DatePicker
-          theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
-          mode={'date'}
-          date={date}
-          onDateChange={onDateChange}
-          onStateChange={setPickerState}
+          modal
+          open={openDatePicker}
+          mode="date"
+          title={t('BCSC.Birthdate.Label')}
+          date={birthDate ? moment(birthDate).toDate() : new Date()}
+          onConfirm={(date) => {
+            setOpenDatePicker(false)
+            setBirthDate(moment(date).format('YYYY-MM-DD'))
+          }}
+          onCancel={() => {
+            setOpenDatePicker(false)
+          }}
+          testID={testIdWithKey('BirthDatePicker')}
+          accessibilityLabel={t('BCSC.Birthdate.Label')}
+        />
+        <InputWithValidation
+          id={'birthDate'}
+          label={t('BCSC.Birthdate.Label')}
+          value={birthDate}
+          textInputProps={{ placeholder: 'YYYY-MM-DD' }}
+          onChange={() => {
+            // no-op to disable manual input
+          }}
+          onPressIn={() => {
+            Keyboard.dismiss()
+            setOpenDatePicker(true)
+          }}
+          subtext={t('BCSC.Birthdate.Paragraph')}
         />
       </View>
     </ScreenWrapper>

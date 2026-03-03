@@ -113,7 +113,9 @@ describe('useDeviceAttestationApi', () => {
       const { result } = renderHook(() => useDeviceAttestationApi(mockApiClient))
       const response = await result.current.checkAttestationStatus(mockJwtID)
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/attestation/mock_jwt_id_123', {})
+      expect(mockApiClient.get).toHaveBeenCalledWith('/attestation/mock_jwt_id_123', {
+        suppressStatusCodeLogs: [404],
+      })
       expect(response).toBe(true)
     })
 

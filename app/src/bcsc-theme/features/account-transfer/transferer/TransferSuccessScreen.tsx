@@ -32,7 +32,7 @@ const TransferSuccessScreen: React.FC = () => {
         buttonType={ButtonType.Critical}
         title={t('BCSC.Account.RemoveAccount')}
         onPress={() => {
-          navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+          navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
         }}
       />
     </>

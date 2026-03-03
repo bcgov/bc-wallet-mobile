@@ -1,5 +1,6 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, ScreenWrapper } from '@bifold/core'
@@ -44,6 +45,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         cameraInstructions={t('BCSC.SendVideo.TakePhoto.CameraInstructions')}
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
+        cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
       />
     </ScreenWrapper>
   )

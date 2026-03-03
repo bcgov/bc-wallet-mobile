@@ -1,14 +1,19 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
+import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { getAccount, getAccountSecurityMethod } from '@mocks/react-native-bcsc-core'
+import { useFocusEffect } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
+jest.mock('react-native-bcsc-core')
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/hooks/useSetupSteps')
 jest.mock('@bifold/core', () => {
@@ -23,12 +28,16 @@ jest.mock('@bifold/core', () => {
 const mockUpdateTokens = jest.fn().mockResolvedValue(undefined)
 const mockUpdateVerificationRequest = jest.fn()
 const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
+const mockClearSecureState = jest.fn()
+const mockDeleteVerificationData = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateTokens: mockUpdateTokens,
     updateVerificationRequest: mockUpdateVerificationRequest,
     updateAccountFlags: mockUpdateAccountFlags,
+    clearSecureState: mockClearSecureState,
+    deleteVerificationData: mockDeleteVerificationData,
   })),
 }))
 
@@ -59,6 +68,8 @@ describe('useSetupStepsModel', () => {
       verificationRequestId: 'test-verification-id',
       additionalEvidenceData: [],
       cardProcess: 'combined',
+      walletKey: 'wallet-key',
+      registrationAccessToken: 'registration-access-token',
     },
   }
 
@@ -456,6 +467,164 @@ describe('useSetupStepsModel', () => {
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('useFocusEffect guard (invalid steps detection)', () => {
+    const useFocusEffectMock = jest.mocked(useFocusEffect)
+
+    beforeEach(() => {
+      // Make useFocusEffect execute its callback immediately
+      useFocusEffectMock.mockImplementation((cb: () => void) => cb())
+    })
+
+    afterEach(() => {
+      useFocusEffectMock.mockReset()
+    })
+
+    it('should NOT call handleResetCardRegistration when NonPhoto BCSC needs additional card (id incomplete, address complete)', () => {
+      // Simulates the state after a NonPhoto BCSC 2D barcode is scanned:
+      // - serial and deviceCode are set (so address step is complete)
+      // - id step is incomplete (user still needs to add photo ID evidence)
+      // - nonPhotoBcscNeedsAdditionalCard is true
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: true,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should NOT call handleResetCardRegistration when id step is completed', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: true,
+          focused: false,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: true, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should NOT call handleResetCardRegistration when address and email are both incomplete', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: false, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      expect(mockClearSecureState).not.toHaveBeenCalled()
+      expect(mockDeleteVerificationData).not.toHaveBeenCalled()
+    })
+
+    it('should call handleResetCardRegistration when id is incomplete and address is complete (not NonPhoto BCSC)', async () => {
+      // This is the case the guard is designed to catch: user backed out mid-step-2 leaving
+      // partial state (address/email completed but id not)
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          completed: false,
+          focused: true,
+          subtext: [],
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+        address: { completed: true, focused: false, subtext: [] },
+        email: { completed: false, focused: false, subtext: [] },
+      })
+
+      getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+      getAccountSecurityMethod.mockResolvedValue('DeviceAuth')
+
+      renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      // The focus effect should trigger the reset
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid steps detected'),
+        expect.any(Object)
+      )
+    })
+  })
+
+  describe('handleResetCardRegistration', () => {
+    it('logs error if no account', async () => {
+      getAccount.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should display factory reset alert if error', async () => {
+      const mockFactoryResetAlert = jest.fn()
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ factoryResetAlert: mockFactoryResetAlert } as any)
+      getAccount.mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockLogger.error).toHaveBeenCalled()
+      expect(mockFactoryResetAlert).toHaveBeenCalled()
+    })
+
+    it('should delete and clear all registration and verification data', async () => {
+      const mockDeleteRegistration = jest.fn()
+      const mockRegister = jest.fn()
+      getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+      getAccountSecurityMethod.mockResolvedValue('DeviceAuth')
+      jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue({
+        deleteRegistration: mockDeleteRegistration,
+        register: mockRegister,
+      } as any)
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      await result.current.handleResetCardRegistration()
+
+      expect(mockDeleteRegistration).toHaveBeenCalledWith('test-client-id')
+      expect(mockClearSecureState).toHaveBeenCalledWith({
+        hasAccount: true,
+        isHydrated: true,
+        walletKey: 'wallet-key',
+        registrationAccessToken: 'registration-access-token',
+      })
+      expect(mockDeleteVerificationData).toHaveBeenCalledWith()
     })
   })
 })

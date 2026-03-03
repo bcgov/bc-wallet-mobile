@@ -344,7 +344,6 @@ const translation = {
       "EditEmail": "Edit (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
-      "ResetData": "Reset data (FR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -451,7 +450,9 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (FR)",
       "CompletionTitle": "You're done in this app (FR)",
+      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (FR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
+      "AppSwitchArrowLabel": "Arrow pointing to browser navigation (FR)",
       "BookmarkService": "Save link to: (FR)",
       "ToggleBookmark": "Toggle bookmark (FR)",
     },
@@ -542,6 +543,7 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
       "Heading": "Enter your birthdate (FR)",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
+      "Label": "Birthdate (FR)",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it. (FR)",
@@ -1147,6 +1149,11 @@ const translation = {
       "Title": "Problem with Connection (FR)",
       "Description": "Please try again. (FR)"
     },
+    "FactoryReset": {
+      "Title": "Problem with App (FR)",
+      "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
+      "Action1": "Reset App (FR)"
+    }
 	},
   "BCWalletError": {
     // TODO (MD): Fill in translations once all english errors are completed

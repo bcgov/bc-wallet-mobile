@@ -3,6 +3,7 @@ import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import {
   AccountFlags,
+  BarcodePayload,
   BCSCAccountType,
   BCSCCardProcess,
   BCSCCardType,
@@ -564,9 +565,11 @@ export const useSecureActions = () => {
    * Update evidence metadata for a specific evidence type and persist to native storage
    */
   const updateEvidenceMetadata = useCallback(
-    async (evidenceType: EvidenceType, metadata: PhotoMetadata[]) => {
+    async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, metadata } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type
+          ? { ...evidence, metadata, barcodes }
+          : evidence
       )
 
       dispatch({
@@ -585,7 +588,26 @@ export const useSecureActions = () => {
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType === evidenceType ? { ...evidence, documentNumber } : evidence
+        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
+      )
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+    },
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+  )
+
+  /**
+   * Remove a specific evidence type from secure state
+   */
+  const removeEvidenceByType = useCallback(
+    async (evidenceType: EvidenceType) => {
+      const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
+        (evidence) => evidence.evidenceType.evidence_type !== evidenceType.evidence_type
       )
 
       dispatch({
@@ -745,12 +767,16 @@ export const useSecureActions = () => {
    * Clears secure state from store (does not delete from native storage).
    * Call this on logout or app lock.
    */
-  const clearSecureState = useCallback(() => {
-    logger.info('Clearing secure state from memory')
-    dispatch({
-      type: BCDispatchAction.CLEAR_SECURE_STATE,
-    })
-  }, [logger, dispatch])
+  const clearSecureState = useCallback(
+    (secureState?: Partial<BCSCSecureState>) => {
+      logger.info('Clearing secure state from memory')
+      dispatch({
+        type: BCDispatchAction.CLEAR_SECURE_STATE,
+        payload: [secureState],
+      })
+    },
+    [logger, dispatch]
+  )
 
   /**
    * Logs out the user by clearing secure state from memory and marking as not authenticated.
@@ -838,6 +864,7 @@ export const useSecureActions = () => {
     addEvidenceType,
     updateEvidenceMetadata,
     updateEvidenceDocumentNumber,
+    removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,
     handleSuccessfulAuth,

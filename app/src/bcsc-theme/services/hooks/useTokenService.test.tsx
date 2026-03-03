@@ -1,17 +1,9 @@
 import * as useTokenApiModule from '@/bcsc-theme/api/hooks/useTokens'
-import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
+import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
 import { useTokenService } from './useTokenService'
-
-const newMockError = (code: string): AppError => {
-  return new AppError('test error', 'This is a test error', {
-    appEvent: code as AppEventCode,
-    category: ErrorCategory.GENERAL,
-    statusCode: 5000,
-  })
-}
 
 describe('useTokenService', () => {
   describe('getCachedIdTokenMetadata', () => {
@@ -33,7 +25,7 @@ describe('useTokenService', () => {
     })
 
     it('should show alert on decryption error and rethrow error', async () => {
-      const mockError = newMockError(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)
+      const mockError = mockAppError(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)
       const tokenApi = {
         getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
       } as any
@@ -50,7 +42,7 @@ describe('useTokenService', () => {
     })
 
     it('should rethrow error without showing alert if error is not decryption error', async () => {
-      const mockError = newMockError('ERR_SOME_OTHER_ERROR')
+      const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const tokenApi = {
         getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
       } as any

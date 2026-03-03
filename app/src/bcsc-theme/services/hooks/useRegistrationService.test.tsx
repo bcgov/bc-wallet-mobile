@@ -1,17 +1,9 @@
 import * as useRegistrationApiModule from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
+import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
 import { useRegistrationService } from './useRegistrationService'
-
-const newMockAppError = (code: string): AppError => {
-  return new AppError('test error', 'This is a test error', {
-    appEvent: code as AppEventCode,
-    category: ErrorCategory.GENERAL,
-    statusCode: 5000,
-  })
-}
 
 jest.mock('react-native-bcsc-core')
 
@@ -79,7 +71,7 @@ describe('useRegistrationService', () => {
 
     describe('App error ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL', () => {
       it('should show the alert for the app error', async () => {
-        const mockError = newMockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
+        const mockError = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
         const registrationApi = {
           register: jest.fn().mockRejectedValue(mockError),
         } as any
@@ -97,7 +89,7 @@ describe('useRegistrationService', () => {
       })
 
       it('should rethrow error without showing alert if error is not client registration null error', async () => {
-        const mockError = newMockAppError('ERR_SOME_OTHER_ERROR')
+        const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
         const registrationApi = {
           register: jest.fn().mockRejectedValue(mockError),
         } as any
@@ -116,7 +108,7 @@ describe('useRegistrationService', () => {
     })
 
     it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
-      const mockError = newMockAppError('ERR_SOME_OTHER_ERROR')
+      const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
         register: jest.fn().mockRejectedValue(mockError),
       } as any
@@ -176,7 +168,7 @@ describe('useRegistrationService', () => {
 
     describe('App error ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL', () => {
       it('should show the alert for the app error', async () => {
-        const mockError = newMockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
+        const mockError = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
         const registrationApi = {
           updateRegistration: jest.fn().mockRejectedValue(mockError),
         } as any
@@ -195,7 +187,7 @@ describe('useRegistrationService', () => {
     })
 
     it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
-      const mockError = newMockAppError('ERR_SOME_OTHER_ERROR')
+      const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
         updateRegistration: jest.fn().mockRejectedValue(mockError),
       } as any
@@ -212,6 +204,26 @@ describe('useRegistrationService', () => {
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('App error ERR_109_FAILED_TO_DESERIALIZE_JSON', () => {
+    it('should show the alert for the app error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
+      const registrationApi = {
+        updateRegistration: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const failedToDeserializeJsonAlert = jest.fn()
+      const mockAlerts = { failedToDeserializeJsonAlert }
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useRegistrationService())
+
+      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      expect(failedToDeserializeJsonAlert).toHaveBeenCalled()
     })
   })
 

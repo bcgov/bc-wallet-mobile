@@ -142,7 +142,7 @@ const Account: React.FC = () => {
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
           <AccountPhoto photoUri={account.picture} />
           <ThemedText variant={'headingTwo'} style={styles.name}>
-            {account.family_name}, {account.given_name}
+            {account.fullname_formatted}
           </ThemedText>
         </View>
         <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
@@ -176,7 +176,7 @@ const Account: React.FC = () => {
             description={t('BCSC.Account.AccountDetailsDescription')}
           />
           <SectionButton
-            onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
+            onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
             title={t('BCSC.Account.RemoveAccount')}
           />
         </View>

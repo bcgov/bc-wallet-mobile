@@ -11,6 +11,7 @@ import { renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useContext } from 'react'
 import * as FactoryReset from '../api/hooks/useFactoryReset'
+import { BCSCStackProvider } from './BCSCStackContext'
 
 jest.mock('@/bcsc-theme/api/client')
 
@@ -52,7 +53,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -89,7 +92,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -123,7 +128,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -158,7 +165,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -208,7 +217,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -248,7 +259,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -292,7 +305,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 

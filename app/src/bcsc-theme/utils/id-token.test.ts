@@ -36,10 +36,7 @@ describe('ID Token Utils', () => {
       )
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'getIdTokenMetadata -> Failed to decode ID token payload',
-        mockError
-      )
+      expect(mockLogger.error).toHaveBeenCalledWith('[getIdTokenMetadata] Failed to decode ID token payload', mockError)
     })
 
     it('should set bcsc_card_type to Other if undefined and bcsc_account_type is Other', async () => {

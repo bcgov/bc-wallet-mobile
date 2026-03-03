@@ -14,8 +14,8 @@ import { AccountSecurityMethod, BcscNativeErrorCodes, isBcscNativeError } from '
  * @returns Registration service
  */
 export const useRegistrationService = () => {
-  const { client } = useBCSCApiClientState()
-  const registrationApi = useRegistrationApi(client)
+  const { client, isClientReady } = useBCSCApiClientState()
+  const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
@@ -62,6 +62,10 @@ export const useRegistrationService = () => {
 
         if (isAppError(error, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)) {
           alerts.clientRegistrationNullAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
+          alerts.failedToDeserializeJsonAlert()
         }
 
         throw error

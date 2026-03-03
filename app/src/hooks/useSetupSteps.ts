@@ -242,5 +242,19 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       currentStep: getCurrentStep(),
       allCompleted: step1Completed && step2Completed && step3Completed && step4Completed && step5Completed,
     }
-  }, [store, t])
+  }, [
+    store.bcsc.accountSetupType,
+    store.bcsc.selectedNickname,
+    store.bcscSecure.additionalEvidenceData,
+    store.bcscSecure.cardProcess,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.deviceCodeExpiresAt,
+    store.bcscSecure.email,
+    store.bcscSecure.isEmailVerified,
+    store.bcscSecure.serial,
+    store.bcscSecure.userMetadata?.address,
+    store.bcscSecure.userSubmittedVerificationVideo,
+    store.bcscSecure.verified,
+    t,
+  ])
 }

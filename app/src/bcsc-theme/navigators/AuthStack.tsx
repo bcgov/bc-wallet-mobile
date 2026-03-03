@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import AccountSelector from '../features/auth/AccountSelectorScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
@@ -15,7 +16,7 @@ import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { AuthWebViewScreen } from '../features/webview/AuthWebViewScreen'
-import { BCSCAuthStackParams, BCSCModals, BCSCScreens } from '../types/navigators'
+import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -28,6 +29,7 @@ const AuthStack = (): React.ReactElement => {
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCAuthStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  useBCSCStack(BCSCStacks.Auth)
 
   return (
     <Stack.Navigator

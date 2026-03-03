@@ -207,7 +207,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,
   route,
 }: ServiceLoginScreenProps) => {
-  const { serviceClientId, serviceTitle, pairingCode } = route.params ?? {}
+  const { serviceClientId, serviceTitle, pairingCode, fromAppSwitch } = route.params ?? {}
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
@@ -288,12 +288,13 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       navigation.navigate(BCSCScreens.PairingConfirmation, {
         serviceId: client.client_ref_id,
         serviceName: client.client_name,
+        fromAppSwitch,
       })
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       Alert.alert(t('BCSC.Services.LoginErrorTitle'), (error as Error).message)
     }
-  }, [state.pairingCode, pairing, navigation, logger, t])
+  }, [state.pairingCode, pairing, navigation, logger, t, fromAppSwitch])
 
   const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {

@@ -89,13 +89,23 @@ export interface IdToken {
 /**
  * Decode and parse the BCSC ID token to extract metadata.
  *
- * @param {string} idToken - The BCSC ID token (JWE).
- * @param {BifoldLogger} logger - Logger instance for error logging.
- * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a IdToken object.
+ * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails
+ * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if JSON parsing of the payload fails.
+ *
+ * @param idToken - The BCSC ID token (JWE).
+ * @param logger - Logger instance for error logging.
+ * @returns Parsed ID token payload as a IdToken object.
  */
 export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
+  let payloadString: string
   try {
-    const payloadString = await decodePayload(idToken)
+    payloadString = await decodePayload(idToken)
+  } catch (error) {
+    logger.error('[getIdTokenMetadata] Failed to decode ID token payload', error as Error)
+    throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
+  }
+
+  try {
     const payload: IdToken = JSON.parse(payloadString)
 
     // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
@@ -105,7 +115,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
 
     return payload
   } catch (error) {
-    logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
-    throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
+    logger.error('[getIdTokenMetadata] Failed to parse json', error as Error)
+    throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
   }
 }

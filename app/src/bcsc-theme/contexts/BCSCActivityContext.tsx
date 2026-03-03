@@ -82,7 +82,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
     [clearInactivityTimeoutIfExists, handleInactivityTimeout]
   )
 
-  // TODO (bm): use these in live call
   const pauseActivityTracking = useCallback(() => {
     logger.info('BCSC Activity: Pausing activity tracking')
     isPausedRef.current = true

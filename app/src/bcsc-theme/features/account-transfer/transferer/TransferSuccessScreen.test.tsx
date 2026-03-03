@@ -12,11 +12,6 @@ describe('TransferSuccess', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
-    jest.useFakeTimers()
-  })
-
-  afterEach(() => {
-    jest.useRealTimers()
   })
 
   describe('Render tests', () => {
@@ -59,7 +54,7 @@ describe('TransferSuccess', () => {
         fireEvent.press(removeAccountButton)
       })
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.RemoveAccountConfirmation)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 })

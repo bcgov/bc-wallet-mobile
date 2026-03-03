@@ -1,3 +1,4 @@
+import { BCSCActivityProvider } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { FcmService, FcmServiceProvider } from '@/bcsc-theme/features/fcm'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -22,9 +23,11 @@ describe('LiveCall', () => {
     const fcmService = new FcmService()
     const tree = render(
       <BasicAppContext>
-        <FcmServiceProvider service={fcmService}>
-          <LiveCallScreen navigation={mockNavigation as never} />
-        </FcmServiceProvider>
+        <BCSCActivityProvider>
+          <FcmServiceProvider service={fcmService}>
+            <LiveCallScreen navigation={mockNavigation as never} />
+          </FcmServiceProvider>
+        </BCSCActivityProvider>
       </BasicAppContext>
     )
 
@@ -39,9 +42,11 @@ describe('LiveCall', () => {
 
     const tree = render(
       <BasicAppContext>
-        <FcmServiceProvider service={fcmService}>
-          <LiveCallScreen navigation={mockNavigation as never} />
-        </FcmServiceProvider>
+        <BCSCActivityProvider>
+          <FcmServiceProvider service={fcmService}>
+            <LiveCallScreen navigation={mockNavigation as never} />
+          </FcmServiceProvider>
+        </BCSCActivityProvider>
       </BasicAppContext>
     )
 
