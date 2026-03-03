@@ -194,9 +194,8 @@ export class FcmViewModel {
         this.lastJwkBaseUrl = apiClient.baseURL
         this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
-        // Construct AppError (auto-tracked on creation) and mark as handled since this error is intentionally consumed
+        // Construct AppError for analytics tracking (auto-tracked on creation); not thrown, so no `handled` flag needed
         const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
-        appError.handled = true
         this.logger.warn(
           `[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`
         )
