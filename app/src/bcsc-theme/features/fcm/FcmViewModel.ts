@@ -197,7 +197,9 @@ export class FcmViewModel {
         // Construct AppError to trigger analytics tracking (auto-tracked on creation)
         const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
         appError.handled = true
-        this.logger.warn(`[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`)
+        this.logger.warn(
+          `[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`
+        )
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)

@@ -1,6 +1,6 @@
-import { useCallback, useMemo } from 'react'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { useCallback, useMemo } from 'react'
 import BCSCApiClient from '../client'
 
 export interface JWK {
