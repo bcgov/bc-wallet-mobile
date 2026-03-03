@@ -9,6 +9,10 @@ import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+  createNavigatorFactory: jest.fn(),
+}))
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
@@ -122,7 +126,7 @@ describe('useQuickLoginURL', () => {
     const hook = renderHook(() => useQuickLoginURL())
     const result = await hook.result.current({ client_ref_id: 'test', initiate_login_uri: 'https://example.com' })
 
-    expect(result).toEqual({ success: false, error: expect.stringContaining('Error creating quick login URL') })
+    expect(result).toEqual({ success: false, handled: true })
     expect(mockAlerts.missingJwkAlert).toHaveBeenCalled()
 
     expect(tokensMock.getNotificationTokens).toHaveBeenCalledTimes(1)

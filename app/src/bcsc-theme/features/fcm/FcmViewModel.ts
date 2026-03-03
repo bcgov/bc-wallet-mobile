@@ -194,7 +194,7 @@ export class FcmViewModel {
         this.lastJwkBaseUrl = apiClient.baseURL
         this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
-        // Construct AppError to trigger analytics tracking (auto-tracked on creation)
+        // Construct AppError (auto-tracked on creation) and mark as handled since this error is intentionally consumed
         const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
         appError.handled = true
         this.logger.warn(

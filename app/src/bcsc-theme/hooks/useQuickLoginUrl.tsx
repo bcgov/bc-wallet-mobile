@@ -14,7 +14,10 @@ import { useBCSCApiClient } from './useBCSCApiClient'
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
 
 // Discriminated union for clearer guarantees
-type QuickLoginURLResult = { success: true; url: string } | { success: false; error: string }
+type QuickLoginURLResult =
+  | { success: true; url: string }
+  | { success: false; error: string }
+  | { success: false; handled: true }
 
 // Represents a stub service client with an empty client_ref_id
 export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
@@ -82,6 +85,7 @@ export const useQuickLoginURL = () => {
       } catch (error) {
         if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
           alerts.missingJwkAlert()
+          return { success: false, handled: true }
         }
 
         logger.error('Error creating quick login URL', error as Error)
