@@ -23,6 +23,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
     data={
       [
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_prod",
           "appToAppUrl": "ca.bc.gov.id.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==",
           "iasApiBaseUrl": "https://id.gov.bc.ca",
@@ -30,6 +31,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "Prod (id)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_preprod",
           "appToAppUrl": "ca.bc.gov.idpreprod.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "",
           "iasApiBaseUrl": "https://idpreprod.gov.bc.ca",
@@ -37,6 +39,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "Preprod (idpreprod)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_qa",
           "appToAppUrl": "ca.bc.gov.idqa.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "",
           "iasApiBaseUrl": "https://idqa.gov.bc.ca",
@@ -44,6 +47,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "QA (idqa)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_test",
           "appToAppUrl": "ca.bc.gov.idtest.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "",
           "iasApiBaseUrl": "https://idtest.gov.bc.ca",
@@ -51,6 +55,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "Test (idtest)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_sit",
           "appToAppUrl": "ca.bc.gov.idsit.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "https://idim-sit-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZDFkMDk5MDQtN2ZlOC00YzlkLTk4YjUtZmNmYmEwODkzZTAzIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKFNJVCkiLCAicmVjaXBpZW50S2V5cyI6IFsiNVgzblBoZkVIOU4zb05kcHdqdUdjM0ZhVzNQbmhiY05QemRGbzFzS010dEoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tc2l0LWFnZW50LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyJ9",
           "iasApiBaseUrl": "https://idsit.gov.bc.ca",
@@ -58,6 +63,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "Sit (idsit)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_dev",
           "appToAppUrl": "ca.bc.gov.iddev.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "https://idim-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiY2U1NWFiZDctNWRmYy00YjQ5LWExODYtOWUzMzQ1ZjEyZThkIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKERldikiLCAicmVjaXBpZW50S2V5cyI6IFsiM0I0bnlDMVg4R1E0M0NLczR4clVXOFdnbWE5MUpMem50cVVYdlo0UjQ4TXQiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQtZGV2LmFwcHMuc2lsdmVyLmRldm9wcy5nb3YuYmMuY2EiLCAiaW1hZ2VVcmwiOiAiaHR0cHM6Ly9pZC5nb3YuYmMuY2Evc3RhdGljL0dvdi0yLjAvaW1hZ2VzL2Zhdmljb24uaWNvIn0=",
           "iasApiBaseUrl": "https://iddev.gov.bc.ca",
@@ -65,6 +71,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
           "name": "Dev (iddev)",
         },
         {
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_dev2",
           "appToAppUrl": "ca.bc.gov.iddev2.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "",
           "iasApiBaseUrl": "https://iddev2.gov.bc.ca",

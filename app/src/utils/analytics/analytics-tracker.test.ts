@@ -3,7 +3,7 @@ import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 
 describe('Analytics Tracker', () => {
   it('should contstruct properly', () => {
-    const analytics = new AnalyticsTracker('namespace', 'endpoint')
+    const analytics = new AnalyticsTracker('endpoint')
 
     expect(analytics).toBeInstanceOf(AnalyticsTracker)
   })
@@ -15,10 +15,10 @@ describe('Analytics Tracker', () => {
         newTracker: mockNewTracker,
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       // First initialization
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
       expect(mockNewTracker).toHaveBeenCalledTimes(1)
     })
   })
@@ -29,15 +29,15 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn().mockReturnValue({}),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       expect(analytics.hasTracker()).toBe(true)
     })
 
     it('should return false if tracker is not initialized', () => {
-      const analytics = new AnalyticsTracker('namespace', 'endpoint')
+      const analytics = new AnalyticsTracker('endpoint')
 
       expect(analytics.hasTracker()).toBe(false)
     })
@@ -47,7 +47,7 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn(),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       expect(analytics.hasTracker()).toBe(false)
     })
@@ -60,7 +60,7 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn(),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       analytics.trackScreenEvent('HomeScreen')
 
@@ -73,7 +73,7 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn(),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       analytics.trackScreenEvent('HomeScreen', 'HomeScreen')
 
@@ -88,9 +88,9 @@ describe('Analytics Tracker', () => {
         }),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackScreenEvent('HomeScreen', 'NewScreen')
 
@@ -108,7 +108,7 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn(),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
@@ -123,9 +123,9 @@ describe('Analytics Tracker', () => {
         }),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
@@ -145,7 +145,7 @@ describe('Analytics Tracker', () => {
           newTracker: jest.fn(),
         }
 
-        const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+        const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
         analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
@@ -160,9 +160,9 @@ describe('Analytics Tracker', () => {
           }),
         }
 
-        const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+        const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
-        await analytics.initializeTracker()
+        await analytics.initializeTracker('testAppId')
 
         analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
@@ -184,7 +184,7 @@ describe('Analytics Tracker', () => {
         newTracker: jest.fn(),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
       analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
@@ -199,9 +199,9 @@ describe('Analytics Tracker', () => {
         }),
       }
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
