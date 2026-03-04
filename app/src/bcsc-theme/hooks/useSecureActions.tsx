@@ -7,6 +7,7 @@ import {
   BCSCAccountType,
   BCSCCardProcess,
   BCSCCardType,
+  CredentialInfo,
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
@@ -656,6 +657,29 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
+   * Hydrates the 'verified' status in secure state by checking for existing credential or refresh token in native storage.
+   * Note: There might be an unknown edge case that is causing `getCredential` to return null which indirectly loses the users verified status.
+   */
+  const hydrateVerifiedState = useCallback(
+    async (credential: CredentialInfo | null, refreshToken?: string) => {
+      if (credential) {
+        return true
+      }
+
+      if (refreshToken) {
+        logger.warn(
+          '[HydrateVerifiedState] Bug detected!!! No credential found but refresh token exists.',
+          { store } // Log the store to help with debugging
+        )
+        await updateVerified(true) // sets the credential
+        return true
+      }
+
+      return false
+    },
+    [logger, store, updateVerified]
+  )
+  /**
    * Loads sensitive data from native secure storage and dispatches to store.
    * Call this after successful authentication.
    */
@@ -685,9 +709,11 @@ export const useSecureActions = () => {
       const refreshToken = refreshTokenObj?.token
       const registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
-      const verified = !!credential
 
-      await updateTokens({ refreshToken, registrationAccessToken, accessToken })
+      const [verified] = await Promise.all([
+        hydrateVerifiedState(credential, refreshToken),
+        updateTokens({ refreshToken, registrationAccessToken, accessToken }),
+      ])
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
@@ -762,7 +788,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throw error
     }
-  }, [logger, dispatch, updateTokens])
+  }, [logger, updateTokens, hydrateVerifiedState, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).

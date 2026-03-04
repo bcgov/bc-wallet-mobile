@@ -3034,6 +3034,7 @@ class BcscCoreModule(
             }
 
             editor.apply()
+            editor.commit()
 
             Log.d(NAME, "setAccountFlags: Successfully saved account flags")
             promise.resolve(true)
@@ -3355,6 +3356,7 @@ class BcscCoreModule(
             val editor = sharedPreferences.edit()
             editor.putString("provider", providerData.toString())
             editor.apply()
+            editor.commit() // Ensure it's written before resolving promise
 
             Log.d(NAME, "setCredential: Successfully saved credential")
             promise.resolve(true)
@@ -3403,6 +3405,7 @@ class BcscCoreModule(
                 val editor = sharedPreferences.edit()
                 editor.putString("provider", providerData.toString())
                 editor.apply()
+                editor.commit() // Ensure it's written before resolving promise
 
                 Log.d(NAME, "deleteCredential: Successfully removed credential")
             } else {
