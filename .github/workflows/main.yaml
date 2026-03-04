@@ -158,15 +158,27 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
 
       # ── Cache strategy: save on main only ────────────────────────
       # With squash-merge to main, only main commits produce durable
@@ -176,10 +188,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
-          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-ios-
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
+          restore-keys: metro-ios-
 
       - name: Build iOS JS bundle
         working-directory: app
@@ -212,7 +222,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: app/.metro-cache
-          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
 
   # ─── Android Prepare: JS Bundle + Gradle Build-Cache Warm-Up ──────────
   # 1. Runs Metro to produce the Android JS bundle and image assets,
@@ -262,15 +272,27 @@ jobs:
           key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
 
       - name: Free up disk space
         run: |
@@ -283,10 +305,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
-          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-android-
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
+          restore-keys: metro-android-
 
       - name: Build Android JS bundle
         working-directory: app
@@ -320,16 +340,14 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: app/.metro-cache
-          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
 
       - name: Restore Gradle build cache (cross-run)
         uses: actions/cache/restore@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
-            gradle-build-cache-
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
+          restore-keys: gradle-build-cache-
 
       - name: Warm Gradle build cache
         working-directory: app/android
@@ -368,7 +386,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
 
   build-ios:
     name: Build iOS - ${{ matrix.variant }}
@@ -427,10 +445,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-
-            ${{ runner.os }}-ccache-
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-ccache-
 
       - name: Cached pip dependencies
         uses: actions/cache@v4
@@ -458,17 +474,28 @@ jobs:
       # descriptions are invalidated by cache extraction and version bumps).
       # ccache provides the actual compilation reuse instead.
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable && \
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
           git status
 
       - name: Create .xcode.env.local file
@@ -645,7 +672,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
 
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
@@ -731,27 +758,36 @@ jobs:
           key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable && \
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
           git status
 
       - name: Restore Gradle build cache
         uses: actions/cache/restore@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
-            gradle-build-cache-
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
+          restore-keys: gradle-build-cache-
 
       - name: Inspect restored build cache
         run: |
@@ -836,12 +872,10 @@ jobs:
             -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
             -x lintVitalRelease
 
-      - name: Save Gradle build cache (cross-run)
-        if: github.ref == 'refs/heads/main' && always()
-        uses: actions/cache/save@v4
-        with:
-          path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}-${{ matrix.variant }}
+      # Gradle build cache is NOT saved here — prepare-android already
+      # saves the comprehensive library cache. Variant builds only add
+      # :app: module outputs (~17s of work) which aren't worth the ~1.5GB
+      # cache entry per variant per run.
 
       - name: List Artifacts
         run: |
