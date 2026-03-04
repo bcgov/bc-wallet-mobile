@@ -8,10 +8,12 @@ import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
+  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
+  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -123,6 +125,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    *
    * @throws Error if BCSC client is not ready or registration fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -137,7 +140,15 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         getNotificationTokens(logger),
       ])
 
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      let body: string | null
+      try {
+        body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      } catch (error) {
+        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.SERIALIZE_JSON_ERROR, { cause: error })
+        }
+        throw error
+      }
 
       if (!body) {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
@@ -203,6 +214,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws Error if client not ready, missing parameters, or update fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
@@ -228,7 +240,15 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
+        let body: string | null
+        try {
+          body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
+        } catch (error) {
+          if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED) {
+            throw AppError.fromErrorDefinition(ErrorRegistry.SERIALIZE_JSON_ERROR, { cause: error })
+          }
+          throw error
+        }
 
         if (!body) {
           throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
