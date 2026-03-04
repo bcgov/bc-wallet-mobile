@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Security
 
 enum KeychainError: Error {
   case keyAlreadyExists
@@ -228,7 +229,9 @@ class KeyPairManager: KeyPairManagerProtocol {
     var privateKey: SecKey?
     let status = SecKeyGeneratePair(parameters, &publicKey, &privateKey)
     if errSecSuccess != status {
-      // log.error("unable to generate pair. status=\(status)")
+      if status == errSecDuplicateItem {
+        throw KeychainError.keyAlreadyExists
+      }
       throw KeychainError.keyGenError
     }
 
