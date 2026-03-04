@@ -66,11 +66,15 @@ describe('useConfigApi', () => {
   describe('getTermsOfUse', () => {
     it('calls the correct endpoint', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { terms: 'Sample terms' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { version: '8', date: '2025-06-06', html: '<p>Terms content</p>' },
+      })
       const response = await config.getTermsOfUse()
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`)
-      expect(response).toEqual({ terms: 'Sample terms' })
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`, {
+        skipBearerAuth: true,
+      })
+      expect(response).toEqual({ version: '8', date: '2025-06-06', html: '<p>Terms content</p>' })
     })
 
     it('handles API errors gracefully', async () => {

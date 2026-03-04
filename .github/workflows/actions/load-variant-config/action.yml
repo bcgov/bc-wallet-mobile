@@ -1,0 +1,35 @@
+name: Load Variant Config
+description: |
+  Source a variant.env file and export all its variables to GITHUB_ENV.
+  Handles multi-line values (e.g. TESTFLIGHT_BETA_GROUPS) automatically
+  using the GITHUB_ENV heredoc delimiter syntax.
+
+inputs:
+  variant:
+    description: 'Variant name (directory under variants/), e.g. bcwallet-prod'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Export variant variables to GITHUB_ENV
+      shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+      run: |
+        VARIANT_FILE="variants/${VARIANT}/variant.env"
+        if [ ! -f "$VARIANT_FILE" ]; then
+          echo "::error::Variant file not found: $VARIANT_FILE"
+          exit 1
+        fi
+        set -a
+        source "$VARIANT_FILE"
+        set +a
+        while read -r key; do
+          val="${!key}"
+          if [[ "$val" == *$'\n'* ]]; then
+            { echo "${key}<<__VARIANT_EOF__"; echo "$val"; echo "__VARIANT_EOF__"; } >> "$GITHUB_ENV"
+          else
+            echo "${key}=${val}" >> "$GITHUB_ENV"
+          fi
+        done < <(grep -E '^[A-Za-z_][A-Za-z_0-9]*=' "$VARIANT_FILE" | sed 's/=.*//')
