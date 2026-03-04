@@ -95,6 +95,12 @@ export interface BCSCState {
   credentialMetadata?: CredentialMetadata
 }
 
+export enum VerificationStatus {
+  VERIFIED = 'VERIFIED',
+  REVOKED = 'REVOKED',
+  NONE = 'NONE',
+}
+
 /**
  * Secure state containing PII and sensitive data.
  *
@@ -112,6 +118,8 @@ export interface BCSCSecureState {
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
+  /** Account verification status value (VERIFIED, REVOKED, NONE) */
+  verifiedStatus: VerificationStatus
 
   // === from Tokens ===
   /** OAuth refresh token for API authentication */
@@ -174,6 +182,7 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
+  verificationStatus: VerificationStatus.NONE,
 }
 
 export enum Mode {

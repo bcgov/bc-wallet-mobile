@@ -1,3 +1,4 @@
+import { BCSCSecureState, VerificationStatus } from '@/store'
 import { BCSCAccountType, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
 
 /**
@@ -28,4 +29,25 @@ export function createMinimalCredential(
     lastUsed: Math.floor(Date.now() / 1000),
     updatedDate: Math.floor(Date.now() / 1000),
   }
+}
+
+/**
+ * Determines if the user's verification status should be considered successful based on the secure state.
+ *
+ * @param secureState The current secure state of the user
+ * @returns boolean indicating if the user is verified
+ */
+export function isVerificationSuccess(secureState: BCSCSecureState): boolean {
+  if (secureState.verified) {
+    // If already verified, we can trust the state and skip checks
+    return true
+  }
+
+  if (secureState.refreshToken && secureState.verifiedStatus !== VerificationStatus.REVOKED) {
+    // If we have a refresh token and the status is not revoked, we can consider it verified
+    return true
+  }
+
+  // In all other cases, we should not consider the user verified
+  return false
 }

@@ -1,4 +1,4 @@
-import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata } from '@/store'
+import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import {
@@ -659,15 +659,22 @@ export const useSecureActions = () => {
   /**
    * Determining verification status based on credential and refresh token presence.
    */
-  const isVerified = useCallback(
-    (credential: CredentialInfo | null, refreshToken?: string): boolean => {
+  const getVerificationStatus = useCallback(
+    (credential: CredentialInfo | null, refreshToken?: string): VerificationStatus => {
       if (!credential && refreshToken) {
         // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
-        logger.warn('[HydrateVerifiedState] No credential found but refresh token exists — treating as not verified.')
+        logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
       }
 
-      // If credential exists and event is not Cancel or Expire -> verified
-      return !!credential && credential.bcscEvent !== 'Cancel' && credential.bcscEvent !== 'Expire'
+      if (!credential) {
+        return VerificationStatus.NONE
+      }
+
+      if (credential.bcscEvent === 'Cancel' || credential.bcscEvent === 'Expire') {
+        return VerificationStatus.REVOKED
+      }
+
+      return VerificationStatus.VERIFIED
     },
     [logger]
   )
@@ -732,6 +739,8 @@ export const useSecureActions = () => {
         }
       }
 
+      const verificationStatus = getVerificationStatus(credential, refreshToken)
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
@@ -748,7 +757,8 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
-        verified: isVerified(credential, refreshToken),
+        verified: verificationStatus === VerificationStatus.VERIFIED,
+        verifiedStatus: getVerificationStatus(credential, refreshToken),
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress,
@@ -777,7 +787,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throw error
     }
-  }, [logger, updateTokens, isVerified, dispatch])
+  }, [logger, updateTokens, getVerificationStatus, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
