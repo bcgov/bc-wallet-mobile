@@ -12,29 +12,60 @@ const formatLongDate = (dateStr: string): string => {
 }
 
 /**
- * Creates the full Terms of Use HTML with a header block prepended, matching v3 (ias-ios) layout.
+ * Strips outer document tags (<html>, <head>, <body> and their closing tags) from HTML content,
+ * leaving only the inner body content. This prevents invalid nested HTML when wrapping
+ * API-returned HTML in our own document structure.
+ */
+const stripOuterDocumentTags = (html: string): string => {
+  return html
+    .replace(/<\/?html[^>]*>/gi, '')
+    .replace(/<\/?head[^>]*>/gi, '')
+    .replace(/<\/?body[^>]*>/gi, '')
+    .replace(/<!DOCTYPE[^>]*>/gi, '')
+    .trim()
+}
+
+export interface TermsOfUseHtmlOptions {
+  termsOfUse: TermsOfUseResponseData
+  colorPalette: IColorPalette
+  headerText: string
+  subtitlePrefix: string
+  versionLabel: string
+}
+
+/**
+ * Creates a well-formed HTML document for the Terms of Use, matching v3 (ias-ios) layout.
  * Embeds all styling directly in the HTML so it works reliably on both iOS and Android
  * without relying on JS injection timing.
  *
  * Header includes:
- * - Bold text: "Before you use the Service, you must read and accept the terms set out in this Agreement"
- * - Subtitle: "BC Login Service Terms of Use\nVersion {version}, {date}"
+ * - Bold header text (from i18n)
+ * - Subtitle with version and formatted date (from i18n)
  *
- * @param {TermsOfUseResponseData} termsOfUse - The terms of use data from the API
- * @param {IColorPalette} colorPalette - The color palette for theming
- * @returns {string} Full HTML string with embedded styles, header, and terms body
+ * @param {TermsOfUseHtmlOptions} options - The terms data, color palette, and i18n strings
+ * @returns {string} A complete HTML document string
  */
-export const createTermsOfUseHtml = (termsOfUse: TermsOfUseResponseData, colorPalette: IColorPalette): string => {
+export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions): string => {
+  const { termsOfUse, colorPalette, headerText, subtitlePrefix, versionLabel } = options
   const formattedDate = formatLongDate(termsOfUse.date)
-  return `<meta name="viewport" content="width=device-width, initial-scale=1">
+  const bodyContent = stripOuterDocumentTags(termsOfUse.html)
+  // iOS doesn't support the textZoom prop, so we scale the base font-size with the device fontScale.
+  // Android handles this via the WebView textZoom prop in WebViewContent.
+  const fontScale = Platform.OS === 'ios' ? Dimensions.get('window').fontScale : 1
+  const baseFontSize = Math.round(18 * fontScale)
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body {
     background-color: ${colorPalette.brand.primaryBackground};
     color: ${colorPalette.brand.secondary};
     font-family: -apple-system, system-ui, sans-serif;
-    font-size: 18px;
+    font-size: ${baseFontSize}px;
     padding: 0 16px 16px 16px;
     line-height: 1.6;
+    margin: 0;
   }
   body, body * {
     background-color: ${colorPalette.brand.primaryBackground} !important;
@@ -49,9 +80,13 @@ export const createTermsOfUseHtml = (termsOfUse: TermsOfUseResponseData, colorPa
     border-color: ${colorPalette.brand.link} !important;
   }
 </style>
-<h4>Before you use the Service, you must read and accept the terms set out in this Agreement</h4>
-<p>BC Login Service Terms of Use<br/>Version ${termsOfUse.version}, ${formattedDate}</p>
-${termsOfUse.html}`
+</head>
+<body>
+<h4>${headerText}</h4>
+<p>${subtitlePrefix}<br/>${versionLabel} ${termsOfUse.version}, ${formattedDate}</p>
+${bodyContent}
+</body>
+</html>`
 }
 
 export const createFontScalingScript = (): string => {
@@ -68,63 +103,10 @@ export const createFontScalingScript = (): string => {
 }
 
 /**
- * Creates webview javascript injection to modify the HTML content.
- *
- * This includes setting the background color, text color, and link colors to match the app theme.
- * It also removes nav sections from the page.
- *
- * @param {IColorPalette} colorPalette - The color palette object containing brand colors
- * @returns {*} {string} JavaScript string to be injected into the WebView
- */
-/**
- * Creates a themed style injection for raw HTML content (e.g. from the /v3/terms API).
- *
- * Unlike createWebViewJavascriptInjection, this does NOT strip page elements (header, footer, h1, nav)
- * since API HTML contains only the content body. It applies font scaling and theme colors.
- *
- * @param {IColorPalette} colorPalette - The color palette object containing brand colors
- * @returns {*} {string} JavaScript string to be injected into the WebView
- */
-export const createHtmlContentInjection = (colorPalette: IColorPalette): string => {
-  return `
-    document.addEventListener('DOMContentLoaded', function() {
-      document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
-      document.body.style.color = '${colorPalette.brand.secondary}';
-      document.body.style.fontFamily = '-apple-system, system-ui, sans-serif';
-      document.body.style.fontSize = '18px';
-      document.body.style.padding = '0 16px 16px 16px';
-      document.body.style.lineHeight = '1.6';
-
-      const style = document.createElement('style');
-      style.textContent = \`
-        body, body * {
-          background-color: ${colorPalette.brand.primaryBackground} !important;
-          color: ${colorPalette.brand.secondary} !important;
-        }
-        p, li, dd, dt {
-          margin-bottom: 0.75em;
-        }
-        a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
-          color: ${colorPalette.brand.link} !important;
-          text-decoration-color: ${colorPalette.brand.link} !important;
-          border-color: ${colorPalette.brand.link} !important;
-        }
-      \`;
-      document.head.appendChild(style);
-      document.querySelectorAll('a').forEach(el => {
-        el.style.setProperty('color', '${colorPalette.brand.link}', 'important');
-        el.style.setProperty('text-decoration-color', '${colorPalette.brand.link}', 'important');
-        el.style.setProperty('border-color', '${colorPalette.brand.link}', 'important');
-      });
-    });
-  `
-}
-
-/**
  * Creates webview javascript injection to modify the HTML content loaded from a full web page URL.
  *
  * This includes setting the background color, text color, and link colors to match the app theme.
- * It also removes nav sections from the page.
+ * It also removes page chrome (header, footer, nav, h1) since the static page includes full navigation.
  *
  * @param {IColorPalette} colorPalette - The color palette object containing brand colors
  * @returns {*} {string} JavaScript string to be injected into the WebView

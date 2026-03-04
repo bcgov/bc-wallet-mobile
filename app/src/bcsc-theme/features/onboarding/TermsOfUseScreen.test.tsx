@@ -10,7 +10,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi')
 const mockTermsOfUseResponse = {
   version: '1.0',
   date: '2024-01-01',
-  html: '<html><body><p>Terms of Use content</p></body></html>',
+  html: '<p>Terms of Use content</p>',
 }
 
 describe('TermsOfUse', () => {

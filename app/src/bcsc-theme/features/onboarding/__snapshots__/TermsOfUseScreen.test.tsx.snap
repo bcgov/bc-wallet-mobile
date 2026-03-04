@@ -24,38 +24,6 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     allowsBackForwardNavigationGestures={true}
     bounces={false}
     domStorageEnabled={true}
-    injectedJavaScriptBeforeContentLoaded="
-    document.addEventListener('DOMContentLoaded', function() {
-      document.body.style.backgroundColor = '#F2F2F2';
-      document.body.style.color = '#FFFFFFFF';
-      document.body.style.fontFamily = '-apple-system, system-ui, sans-serif';
-      document.body.style.fontSize = '18px';
-      document.body.style.padding = '0 16px 16px 16px';
-      document.body.style.lineHeight = '1.6';
-
-      const style = document.createElement('style');
-      style.textContent = \`
-        body, body * {
-          background-color: #F2F2F2 !important;
-          color: #FFFFFFFF !important;
-        }
-        p, li, dd, dt {
-          margin-bottom: 0.75em;
-        }
-        a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
-          color: #1A5A96 !important;
-          text-decoration-color: #1A5A96 !important;
-          border-color: #1A5A96 !important;
-        }
-      \`;
-      document.head.appendChild(style);
-      document.querySelectorAll('a').forEach(el => {
-        el.style.setProperty('color', '#1A5A96', 'important');
-        el.style.setProperty('text-decoration-color', '#1A5A96', 'important');
-        el.style.setProperty('border-color', '#1A5A96', 'important');
-      });
-    });
-  "
     javaScriptEnabled={true}
     mixedContentMode="compatibility"
     onError={[Function]}
@@ -72,15 +40,19 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     source={
       {
         "baseUrl": "",
-        "html": "<meta name="viewport" content="width=device-width, initial-scale=1">
+        "html": "<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body {
     background-color: #F2F2F2;
     color: #FFFFFFFF;
     font-family: -apple-system, system-ui, sans-serif;
-    font-size: 18px;
+    font-size: 36px;
     padding: 0 16px 16px 16px;
     line-height: 1.6;
+    margin: 0;
   }
   body, body * {
     background-color: #F2F2F2 !important;
@@ -95,9 +67,13 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     border-color: #1A5A96 !important;
   }
 </style>
-<h4>Before you use the Service, you must read and accept the terms set out in this Agreement</h4>
-<p>BC Login Service Terms of Use<br/>Version 1.0, January 1, 2024</p>
-<html><body><p>Terms of Use content</p></body></html>",
+</head>
+<body>
+<h4>BCSC.Onboarding.TermsOfUseHeader</h4>
+<p>BCSC.Onboarding.TermsOfUseSubtitle<br/>BCSC.Onboarding.TermsOfUseVersion 1.0, January 1, 2024</p>
+<p>Terms of Use content</p>
+</body>
+</html>",
       }
     }
     startInLoadingState={true}

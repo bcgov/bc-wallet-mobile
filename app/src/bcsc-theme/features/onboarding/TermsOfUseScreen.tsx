@@ -36,16 +36,20 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   const { config } = useApi()
   const [termsOfUse, setTermsOfUse] = useState<TermsOfUseResponseData | null>(null)
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
 
   const fetchTermsOfUse = useCallback(async () => {
     try {
-      setError(false)
+      setIsLoading(true)
       const data = await config.getTermsOfUse()
+      setError(false)
       setTermsOfUse(data)
     } catch (err) {
       logger.error('Failed to fetch Terms of Use', err as Error)
       setError(true)
+    } finally {
+      setIsLoading(false)
     }
   }, [config, logger])
 
@@ -75,6 +79,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
           onPress={fetchTermsOfUse}
           testID={testIdWithKey('RetryTermsOfUse')}
           accessibilityLabel={t('Init.Retry')}
+          disabled={isLoading}
         />
       ) : (
         <Button
@@ -92,7 +97,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
-          disabled={!webViewIsLoaded}
+          disabled={!webViewIsLoaded || isLoading}
         />
       )}
     </View>
@@ -102,7 +107,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
     return (
       <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
         <View style={styles.loadingContainer}>
-          {error ? (
+          {error && !isLoading ? (
             <View style={{ flexDirection: 'row' }}>
               <ThemedText style={{ flexWrap: 'wrap', flexShrink: 1, textAlign: 'center' }}>
                 {t('BCSC.Onboarding.TermsOfUseLoadError')}
@@ -118,7 +123,16 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
 
   return (
     <ScreenWrapper scrollable={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
-      <WebViewContent html={createTermsOfUseHtml(termsOfUse, ColorPalette)} onLoaded={() => setWebViewIsLoaded(true)} />
+      <WebViewContent
+        html={createTermsOfUseHtml({
+          termsOfUse,
+          colorPalette: ColorPalette,
+          headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
+          subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
+          versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
+        })}
+        onLoaded={() => setWebViewIsLoaded(true)}
+      />
     </ScreenWrapper>
   )
 }

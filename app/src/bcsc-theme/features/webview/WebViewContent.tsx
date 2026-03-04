@@ -1,24 +1,24 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { createHtmlContentInjection, createWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
+import { createWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
-interface WebViewContentProps {
-  /**
-   * The URL to load in the WebView.
-   *
-   * @type {string}
-   */
-  url?: string
-  /**
-   * Raw HTML content to render in the WebView (alternative to url).
-   *
-   * @type {string}
-   */
-  html?: string
+interface WebViewUrlSource {
+  /** The URL to load in the WebView. */
+  url: string
+  html?: never
+}
+
+interface WebViewHtmlSource {
+  /** Raw HTML content to render in the WebView. */
+  html: string
+  url?: never
+}
+
+type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
   /**
    * Optional callback function that is called when the WebView has finished loading.
    * Loading test url: 'https://httpbin.org/delay/2'
@@ -74,6 +74,15 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
     [logger]
   )
 
+  if (!html && !url) {
+    logger.error('WebViewContent: Neither url nor html provided')
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size={'large'} />
+      </View>
+    )
+  }
+
   return (
     <WebView
       source={
@@ -81,7 +90,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
           ? { html, baseUrl: '' }
           : {
               // helpful testing url 'https://httpbin.org/delay/2'
-              uri: url ?? '',
+              uri: url!,
               headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
             }
       }
@@ -105,9 +114,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={
-        html ? createHtmlContentInjection(ColorPalette) : createWebViewJavascriptInjection(ColorPalette)
-      }
+      injectedJavaScriptBeforeContentLoaded={html ? undefined : createWebViewJavascriptInjection(ColorPalette)}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />
