@@ -132,6 +132,12 @@ export class FcmViewModel {
       )
 
       if (!result.verified) {
+        if (!this.serverJwk) {
+          const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+          this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWK unavailable, cannot verify JWS`)
+          this.onError?.(appError)
+          return
+        }
         const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
         this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWS verification failed`)
         this.onError?.(appError)

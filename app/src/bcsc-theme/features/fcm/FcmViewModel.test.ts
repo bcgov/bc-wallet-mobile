@@ -278,6 +278,57 @@ describe('FcmViewModel', () => {
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
 
+    it('emits ERR_111 when verified is false and server JWK is unavailable', async () => {
+      // Create a fresh viewModel where JWK fetch returns null
+      mockFetchJwk.mockResolvedValue(null)
+      // eslint-disable-next-line prefer-const
+      let localHandler: ((message: FcmMessage) => void) | undefined
+      const localFcmService = {
+        init: jest.fn(),
+        destroy: jest.fn(),
+        subscribe: jest.fn((h: (message: FcmMessage) => void) => {
+          localHandler = h
+          return jest.fn()
+        }),
+      } as unknown as jest.Mocked<FcmService>
+
+      const noJwkViewModel = new FcmViewModel(
+        localFcmService,
+        mockLogger as any,
+        mockPairingService,
+        mockVerificationResponseService,
+        Mode.BCSC
+      )
+
+      const mockErrorHandler = jest.fn()
+      noJwkViewModel.setErrorHandler(mockErrorHandler)
+      noJwkViewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      const mockResult = {
+        verified: false,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'unverified-jwt' },
+      } as FcmMessage
+
+      await localHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('JWK unavailable'))
+    })
+
     it('calls error handler and does not process pairing when verified is false', async () => {
       const mockErrorHandler = jest.fn()
       viewModel.setErrorHandler(mockErrorHandler)

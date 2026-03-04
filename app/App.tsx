@@ -86,7 +86,13 @@ const App = () => {
     // adding a dependency to this init-only effect. The callback runs asynchronously
     // on FCM error, so i18next.t() resolves the current language at call time.
     fcmViewModel.setErrorHandler((error) => {
-      if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
+      if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
+        Alert.alert(
+          i18next.t('Alerts.ProblemWithApp.Title', { errorCode: '111' }),
+          i18next.t('Alerts.ProblemWithApp.Description', { errorCode: '111' }),
+          [{ text: i18next.t('Global.OK') }]
+        )
+      } else if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
         Alert.alert(
           i18next.t('Alerts.ProblemWithApp.Title', { errorCode: '112' }),
           i18next.t('Alerts.ProblemWithApp.Description', { errorCode: '112' }),
