@@ -275,7 +275,8 @@ describe('FcmViewModel', () => {
       await capturedMessageHandler?.(message)
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify')
+        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify'),
+        expect.objectContaining({ appEvent: 'err_114_failed_to_get_claims_set_after_decrypt_and_verify' })
       )
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })

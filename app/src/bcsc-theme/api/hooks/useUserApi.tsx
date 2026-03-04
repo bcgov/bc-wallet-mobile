@@ -52,7 +52,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
         throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
       }
 
-      if (!parsed || typeof parsed !== 'object') {
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
       }
 

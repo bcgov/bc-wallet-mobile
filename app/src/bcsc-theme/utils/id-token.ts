@@ -113,7 +113,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
   }
 
-  if (!payload || typeof payload !== 'object') {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
   }
 
