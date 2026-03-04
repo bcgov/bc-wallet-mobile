@@ -520,6 +520,46 @@ class NativeCompatibleStorage(
     }
 
     /**
+     * Reads the registration access token from the V3 providers file.
+     *
+     * @param issuerName The issuer name
+     * @param accountUuid The account UUID
+     * @return The registration access token string, or null if not found
+     */
+    fun readRegistrationTokenFromV3Provider(
+        issuerName: String,
+        accountUuid: String,
+    ): String? {
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
+        val providerFile = File(context.filesDir, providerPath)
+
+        Log.d(TAG, "readRegistrationTokenFromV3Provider: Attempting to read v3 provider file from: ${providerPath}")
+        if (!providerFile.exists()) {
+            Log.d(TAG, "readRegistrationTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}")
+            return null
+        }
+
+        Log.d(TAG, "readRegistrationTokenFromV3Provider: Reading v3 provider file: ${providerFile.absolutePath}")
+
+        val jsonContent = readEncryptedFile(providerFile) ?: return null
+
+        return try {
+            val jsonObject = org.json.JSONObject(jsonContent)
+            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
+            val token = clientReg.optString("registration_access_token", null)
+            if (!token.isNullOrEmpty()) {
+                Log.d(TAG, "readRegistrationTokenFromV3Provider: Found registration access token")
+                token
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "readRegistrationTokenFromV3Provider: Failed to parse v3 provider file", e)
+            null
+        }
+    }
+
+    /**
      * Attempts to read authorization request from v3 Provider file and migrate it.
      * V3 stored AuthorizationRequest nested in Provider->ClientRegistration.
      *
