@@ -15,6 +15,7 @@ on:
       - .github/workflows/**
   pull_request:
     branches: [main]
+  merge_group:
 
 jobs:
   check-secrets:
@@ -101,6 +102,13 @@ jobs:
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             echo "Manual workflow_dispatch run detected; forcing build regardless of diff."
             echo "result=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Merge queue: skip all builds — only build-summary (required check) needs to pass.
+          if [ "${GITHUB_EVENT_NAME}" = "merge_group" ]; then
+            echo "Merge queue run detected; skipping builds."
+            echo "result=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
@@ -933,7 +941,7 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: "Distribute TestFlight - ${{ matrix.variant }}"
-    if: github.ref_name == 'main'
+    if: success() && github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
     strategy:
@@ -961,9 +969,10 @@ jobs:
 
   ship-to-saucelabs:
     name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
-    if: github.event.pull_request.head.repo.fork != true
+    if: >-
+      success() &&
+      github.event.pull_request.head.repo.fork != true
     needs: [build-ios, build-android, build-summary]
-    continue-on-error: true
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -1014,7 +1023,9 @@ jobs:
   run-on-device-tests:
     name: "App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}"
     needs: [ship-to-saucelabs]
-    if: github.event.pull_request.head.repo.fork != true
+    if: >-
+      success() &&
+      github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
