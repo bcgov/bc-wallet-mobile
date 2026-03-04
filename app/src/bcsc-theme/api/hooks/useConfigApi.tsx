@@ -47,7 +47,9 @@ const useConfigApi = (apiClient: BCSCApiClient) => {
   }, [apiClient])
 
   const getTermsOfUse = useCallback(async () => {
-    const { data } = await apiClient.get<TermsOfUseResponseData>(`${apiClient.endpoints.cardTap}/v3/terms`)
+    const { data } = await apiClient.get<TermsOfUseResponseData>(`${apiClient.endpoints.cardTap}/v3/terms`, {
+      skipBearerAuth: true, // this endpoint does not require an access token
+    })
     return data
   }, [apiClient])
 
