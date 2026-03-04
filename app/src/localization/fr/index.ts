@@ -895,6 +895,7 @@ const translation = {
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (FR)",
       "DeviceCodeError": "Missing device or user code (FR)",
       "ServiceBC": "Service BC (FR)",
+      "CallingAgent": "Calling agent to verify your identity... (FR)",
       "BeforeYouCallTitle": "Before you call (FR)",
       "WiFiRecommended": "Wi-Fi Recommended (FR)",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (FR)",
