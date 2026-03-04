@@ -646,7 +646,7 @@ jobs:
           output_artifact_ref: ios-${{ matrix.variant }}
 
       - name: Ship to Apple App Store
-        #if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -933,7 +933,7 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: "Distribute TestFlight - ${{ matrix.variant }}"
-    #if: github.ref_name == 'main'
+    if: github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
     strategy:
