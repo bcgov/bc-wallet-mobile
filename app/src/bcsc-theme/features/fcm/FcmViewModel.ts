@@ -1,3 +1,5 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
@@ -192,7 +194,11 @@ export class FcmViewModel {
         this.lastJwkBaseUrl = apiClient.baseURL
         this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
-        this.logger.warn(`[FcmViewModel] No keys found in JWKS response`)
+        // Construct AppError for analytics tracking (auto-tracked on creation); not thrown, so no `handled` flag needed
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+        this.logger.warn(
+          `[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`
+        )
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)
