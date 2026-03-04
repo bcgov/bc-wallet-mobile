@@ -105,6 +105,13 @@ jobs:
             exit 0
           fi
 
+          # Merge queue: skip all builds — only build-summary (required check) needs to pass.
+          if [ "${GITHUB_EVENT_NAME}" = "merge_group" ]; then
+            echo "Merge queue run detected; skipping builds."
+            echo "result=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             # On main branch, compare with the previous
             # commit otherwise (for PRs) compare with the
@@ -151,15 +158,27 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
 
       # ── Cache strategy: save on main only ────────────────────────
       # With squash-merge to main, only main commits produce durable
@@ -169,10 +188,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
-          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-ios-
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
+          restore-keys: metro-ios-
 
       - name: Build iOS JS bundle
         working-directory: app
@@ -205,7 +222,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: app/.metro-cache
-          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-ios-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
 
   # ─── Android Prepare: JS Bundle + Gradle Build-Cache Warm-Up ──────────
   # 1. Runs Metro to produce the Android JS bundle and image assets,
@@ -255,15 +272,27 @@ jobs:
           key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
 
       - name: Free up disk space
         run: |
@@ -276,10 +305,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: app/.metro-cache
-          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
-          restore-keys: |
-            metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-
-            metro-android-
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
+          restore-keys: metro-android-
 
       - name: Build Android JS bundle
         working-directory: app
@@ -313,16 +340,14 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: app/.metro-cache
-          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}-${{ github.sha }}
+          key: metro-android-${{ hashFiles('yarn.lock', 'app/metro.config.js') }}
 
       - name: Restore Gradle build cache (cross-run)
         uses: actions/cache/restore@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
-            gradle-build-cache-
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
+          restore-keys: gradle-build-cache-
 
       - name: Warm Gradle build cache
         working-directory: app/android
@@ -361,7 +386,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
 
   build-ios:
     name: Build iOS - ${{ matrix.variant }}
@@ -370,54 +395,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: 'bcwallet-prod'
-            build_target: 'bcwallet'
-            export_method: 'app-store'
-            provisioning_profile_uuid: '7a6bfbda-8f83-441e-b709-b57b1863b627'
-            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_BASE64'
-            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64'
-            artifact_name: 'ios-bcwallet-prod'
-            beta_groups: |-
-              The Team
-              IDIM Team
-          - variant: 'bcsc-dev'
-            build_target: 'bcsc'
-            export_method: 'app-store'
-            provisioning_profile_uuid: '4f031630-16e4-4f8d-8723-a3d920577416'
-            provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SADEV_BASE64'
-            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64'
-            artifact_name: 'ios-bcsc-dev'
-            beta_groups: |-
-              IDIM testers for DEV env
-          # TODO: Create secrets for bcsc-test/qa/prod variants and update UUIDs
-          # - variant: 'bcsc-test'
-          #   build_target: 'bcsc'
-          #   export_method: 'app-store'
-          #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_TEST_PROV_PROFILE_UUID'
-          #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SATEST_BASE64'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64'
-          #   artifact_name: 'ios-bcsc-test'
-          #   beta_groups: |-
-          #     IDIM testers for TEST env
-          # - variant: 'bcsc-qa'
-          #   build_target: 'bcsc'
-          #   export_method: 'app-store'
-          #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_QA_PROV_PROFILE_UUID'
-          #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SAQA_BASE64'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64'
-          #   artifact_name: 'ios-bcsc-qa'
-          #   beta_groups: |-
-          #     IDIM testers for QA env
-          # - variant: 'bcsc-prod'
-          #   build_target: 'bcsc'
-          #   export_method: 'app-store'
-          #   provisioning_profile_uuid: 'REPLACE_WITH_BCSC_PROD_PROV_PROFILE_UUID'
-          #   provisioning_profile_secret: 'BUILD_PROVISION_PROFILE_SA_BASE64'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_IOS_SA_BASE64'
-          #   artifact_name: 'ios-bcsc-prod'
-          #   beta_groups: |-
-          #     IDIM testers for PROD env
+        variant: [bcwallet-prod, bcsc-dev]
+        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -426,13 +405,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Load variant config
-        run: |
-          set -a
-          source "variants/${{ matrix.variant }}/variant.env"
-          set +a
-          echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
-          echo "IOS_BUNDLE_ID=${IOS_BUNDLE_ID}" >> "$GITHUB_ENV"
-          echo "APP_NAME=${APP_NAME}" >> "$GITHUB_ENV"
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
 
       - uses: actions/setup-python@v5
         with:
@@ -470,10 +445,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-
-            ${{ runner.os }}-ccache-
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-ccache-
 
       - name: Cached pip dependencies
         uses: actions/cache@v4
@@ -501,17 +474,28 @@ jobs:
       # descriptions are invalidated by cache extraction and version bumps).
       # ccache provides the actual compilation reuse instead.
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable && \
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
           git status
 
       - name: Create .xcode.env.local file
@@ -561,7 +545,7 @@ jobs:
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
-          build_target: ${{ matrix.build_target }}
+          build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
@@ -569,7 +553,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[matrix.google_services_secret] }}
+          google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
           platform: ios
 
       - name: Update APS environment
@@ -579,7 +563,6 @@ jobs:
 
       - name: Generate iOS signing config
         run: |
-          set -a; source "variants/${{ matrix.variant }}/variant.env"; set +a
           cat > export-options.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -588,7 +571,7 @@ jobs:
             <key>teamID</key>
             <string>L796QSLV3E</string>
             <key>method</key>
-            <string>${{ matrix.export_method }}</string>
+            <string>${{ env.IOS_EXPORT_METHOD }}</string>
             <key>signingStyle</key>
             <string>manual</string>
             <key>stripSwiftSymbols</key>
@@ -600,7 +583,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>${IOS_BUNDLE_ID}</key>
-              <string>${{ matrix.provisioning_profile_uuid }}</string>
+              <string>${{ env.IOS_PROVISIONING_PROFILE_UUID }}</string>
             </dict>
           </dict>
           </plist>
@@ -609,7 +592,7 @@ jobs:
           DEVELOPMENT_TEAM = L796QSLV3E
           CODE_SIGN_STYLE = Manual
           CODE_SIGN_IDENTITY = iPhone Distribution
-          PROVISIONING_PROFILE_SPECIFIER = ${{ matrix.provisioning_profile_uuid }}
+          PROVISIONING_PROFILE_SPECIFIER = ${{ env.IOS_PROVISIONING_PROFILE_UUID }}
           CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/AriesBifold/AriesBifold.entitlements
           XCEOF
           echo "Generated export-options.plist:"
@@ -626,7 +609,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
+          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -689,24 +672,20 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Podfile.lock') }}
 
       - name: Export production archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: export-options.plist
-          output_artifact_ref: ${{ matrix.artifact_name }}
+          output_artifact_ref: ios-${{ matrix.variant }}
 
-      - name: Ship to iTunes
+      - name: Ship to Apple App Store
         if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          version_code: ${{ env.APP_BUILD_NUMBER }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ matrix.beta_groups }}
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for iOS failure
@@ -726,43 +705,8 @@ jobs:
       needs.prepare-android.result == 'success'
     strategy:
       matrix:
-        include:
-          - variant: 'bcwallet-prod'
-            build_target: 'bcwallet'
-            jks_base64_secret: 'PLAY_STORE_JKS_BASE64'
-            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS'
-            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD'
-            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64'
-            artifact_name: 'android-bcwallet-prod'
-          - variant: 'bcsc-dev'
-            build_target: 'bcsc'
-            jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SADEV'
-            jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SADEV'
-            jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SADEV'
-            google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64'
-            artifact_name: 'android-bcsc-dev'
-          # TODO: Create secrets for bcsc-test/qa/prod variants
-          # - variant: 'bcsc-test'
-          #   build_target: 'bcsc'
-          #   jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SATEST'
-          #   jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SATEST'
-          #   jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SATEST'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64'
-          #   artifact_name: 'android-bcsc-test'
-          # - variant: 'bcsc-qa'
-          #   build_target: 'bcsc'
-          #   jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SAQA'
-          #   jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SAQA'
-          #   jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SAQA'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64'
-          #   artifact_name: 'android-bcsc-qa'
-          # - variant: 'bcsc-prod'
-          #   build_target: 'bcsc'
-          #   jks_base64_secret: 'PLAY_STORE_JKS_BASE64_SA'
-          #   jks_alias_secret: 'PLAY_STORE_JKS_ALIAS_SA'
-          #   jks_passwd_secret: 'PLAY_STORE_JKS_PASSWD_SA'
-          #   google_services_secret: 'GOOGLE_SERVICES_CREDENTIALS_ANDROID_SA_BASE64'
-          #   artifact_name: 'android-bcsc-prod'
+        variant: [bcwallet-prod, bcsc-dev]
+        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -778,13 +722,9 @@ jobs:
           sudo chown -R $USER:$USER /mnt/gradle-cache
 
       - name: Load variant config
-        run: |
-          set -a
-          source "variants/${{ matrix.variant }}/variant.env"
-          set +a
-          echo "APP_VERSION=${APP_VERSION}" >> "$GITHUB_ENV"
-          echo "ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME}" >> "$GITHUB_ENV"
-          echo "APP_NAME=${APP_NAME}" >> "$GITHUB_ENV"
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
 
       - name: Free up disk space
         run: |
@@ -818,27 +758,36 @@ jobs:
           key: gradle-deps-${{ runner.os }}-${{ hashFiles('app/android/**/*.gradle*', 'app/android/**/*.lockfile', 'app/android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-deps-${{ runner.os }}-
 
-      - name: Cache Yarn dependencies
+      - name: Cache Yarn dependencies and node_modules
         uses: actions/cache@v4
         with:
-          path: .yarn/cache
-          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
-          restore-keys: yarn-${{ runner.os }}-
+          path: |
+            .yarn/cache
+            node_modules
+            app/node_modules
+            packages/bcsc-core/node_modules
+          key: yarn-deps-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-deps-${{ runner.os }}-
+            yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+            yarn-${{ runner.os }}-
 
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable && \
+          for attempt in 1 2 3; do
+            yarn install --immutable && break
+            echo "⚠️ yarn install failed (attempt $attempt/3), retrying in 10s..."
+            sleep 10
+          done
           git status
 
       - name: Restore Gradle build cache
         uses: actions/cache/restore@v4
         with:
           path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}
-          restore-keys: |
-            gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-
-            gradle-build-cache-
+          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}
+          restore-keys: gradle-build-cache-
 
       - name: Inspect restored build cache
         run: |
@@ -870,7 +819,7 @@ jobs:
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
-          build_target: ${{ matrix.build_target }}
+          build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
@@ -878,7 +827,7 @@ jobs:
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[matrix.google_services_secret] }}
+          google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
           platform: android
 
       - name: Create release keystore
@@ -887,9 +836,9 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets[matrix.jks_base64_secret] }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
+          PLAY_STORE_JKS_BASE64: ${{ secrets[env.ANDROID_JKS_BASE64_SECRET] }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -899,8 +848,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
           # Skip Metro bundling: use the pre-built JS bundle from the
@@ -923,12 +872,10 @@ jobs:
             -PreactNativeArchitectures=armeabi-v7a,arm64-v8a \
             -x lintVitalRelease
 
-      - name: Save Gradle build cache (cross-run)
-        if: github.ref == 'refs/heads/main' && always()
-        uses: actions/cache/save@v4
-        with:
-          path: /mnt/gradle-cache/caches/build-cache-1
-          key: gradle-build-cache-${{ hashFiles('app/android/**/*.gradle*', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'yarn.lock') }}-${{ github.sha }}-${{ matrix.variant }}
+      # Gradle build cache is NOT saved here — prepare-android already
+      # saves the comprehensive library cache. Variant builds only add
+      # :app: module outputs (~17s of work) which aren't worth the ~1.5GB
+      # cache entry per variant per run.
 
       - name: List Artifacts
         run: |
@@ -938,7 +885,7 @@ jobs:
       - name: Upload Android AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}.aab
+          name: android-${{ matrix.variant }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
@@ -946,7 +893,7 @@ jobs:
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}.apk
+          name: android-${{ matrix.variant }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -1021,87 +968,84 @@ jobs:
 
           echo "✅ All builds passed!"
 
+  # ─── TestFlight Distribution ────────────────────────────────────────
+  # Runs on ubuntu (cheap) AFTER builds complete. Waits for Apple's
+  # server-side processing then distributes to beta groups.
+  # Decoupled from build-ios so the upload→process wait no longer
+  # blocks the iOS build critical path.
+  distribute-testflight:
+    name: "Distribute TestFlight - ${{ matrix.variant }}"
+    if: success() && github.ref_name == 'main'
+    needs: [build-ios, build-summary]
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [bcwallet-prod, bcsc-dev]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Distribute to TestFlight
+        uses: ./.github/workflows/actions/distribute-testflight
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          bundle_id: ${{ env.IOS_BUNDLE_ID }}
+          version_code: ${{ github.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
+
   ship-to-saucelabs:
     name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
-    if: github.event.pull_request.head.repo.fork != true
+    if: >-
+      success() &&
+      github.event.pull_request.head.repo.fork != true
     needs: [build-ios, build-android, build-summary]
-    continue-on-error: true
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        include:
-          - platform: 'ios'
-            variant: 'bcwallet-prod'
-            artifact_ref: 'ios-bcwallet-prod.ipa'
-            sauce_labs_name: 'BCWallet-${{ github.run_number }}.ipa'
-            sauce_labs_description: 'iOS BC Wallet App'
-            artifact_name: 'BCWallet.ipa'
-          - platform: 'ios'
-            variant: 'bcsc-dev'
-            artifact_ref: 'ios-bcsc-dev.ipa'
-            sauce_labs_name: 'BCSC-Dev-${{ github.run_number }}.ipa'
-            sauce_labs_description: 'iOS BC Services Card Dev'
-            artifact_name: 'BCWallet.ipa'
-          # - platform: 'ios'
-          #   variant: 'bcsc-test'
-          #   artifact_ref: 'ios-bcsc-test.ipa'
-          #   sauce_labs_name: 'BCSC-Test-${{ github.run_number }}.ipa'
-          #   sauce_labs_description: 'iOS BC Services Card Test'
-          #   artifact_name: 'BCWallet.ipa'
-          # - platform: 'ios'
-          #   variant: 'bcsc-qa'
-          #   artifact_ref: 'ios-bcsc-qa.ipa'
-          #   sauce_labs_name: 'BCSC-QA-${{ github.run_number }}.ipa'
-          #   sauce_labs_description: 'iOS BC Services Card QA'
-          #   artifact_name: 'BCWallet.ipa'
-          # - platform: 'ios'
-          #   variant: 'bcsc-prod'
-          #   artifact_ref: 'ios-bcsc-prod.ipa'
-          #   sauce_labs_name: 'BCSC-Prod-${{ github.run_number }}.ipa'
-          #   sauce_labs_description: 'iOS BC Services Card Prod'
-          #   artifact_name: 'BCWallet.ipa'
-          - platform: 'android'
-            variant: 'bcwallet-prod'
-            artifact_ref: 'android-bcwallet-prod.aab'
-            sauce_labs_name: 'BCWallet-${{ github.run_number }}.aab'
-            sauce_labs_description: 'Android BC Wallet App'
-            artifact_name: 'app-release.aab'
-          - platform: 'android'
-            variant: 'bcsc-dev'
-            artifact_ref: 'android-bcsc-dev.aab'
-            sauce_labs_name: 'BCSC-Dev-${{ github.run_number }}.aab'
-            sauce_labs_description: 'Android BC Services Card Dev'
-            artifact_name: 'app-release.aab'
-          # - platform: 'android'
-          #   variant: 'bcsc-test'
-          #   artifact_ref: 'android-bcsc-test.aab'
-          #   sauce_labs_name: 'BCSC-Test-${{ github.run_number }}.aab'
-          #   sauce_labs_description: 'Android BC Services Card Test'
-          #   artifact_name: 'app-release.aab'
-          # - platform: 'android'
-          #   variant: 'bcsc-qa'
-          #   artifact_ref: 'android-bcsc-qa.aab'
-          #   sauce_labs_name: 'BCSC-QA-${{ github.run_number }}.aab'
-          #   sauce_labs_description: 'Android BC Services Card QA'
-          #   artifact_name: 'app-release.aab'
-          # - platform: 'android'
-          #   variant: 'bcsc-prod'
-          #   artifact_ref: 'android-bcsc-prod.aab'
-          #   sauce_labs_name: 'BCSC-Prod-${{ github.run_number }}.aab'
-          #   sauce_labs_description: 'Android BC Services Card Prod'
-          #   artifact_name: 'app-release.aab'
+        platform: [ios, android]
+        variant: [bcwallet-prod, bcsc-dev]
+        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
     steps:
       - uses: actions/checkout@v4
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Derive platform artifact names
+        run: |
+          if [ "${{ matrix.platform }}" = "ios" ]; then
+            EXT="ipa"
+            INNER_FILENAME="BCWallet.ipa"
+          else
+            EXT="aab"
+            INNER_FILENAME="app-release.aab"
+          fi
+          cat >> "$GITHUB_ENV" <<EOF
+          SAUCE_LABS_NAME=${SAUCE_LABS_PREFIX}-${{ github.run_number }}.${EXT}
+          SAUCE_LABS_DESCRIPTION=${{ matrix.platform }} ${APP_NAME}
+          ARTIFACT_REF=${{ matrix.platform }}-${{ matrix.variant }}.${EXT}
+          ARTIFACT_INNER_NAME=${INNER_FILENAME}
+          EOF
 
       - name: Ship Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
           sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
           sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
-          sauce_labs_name: ${{ matrix.sauce_labs_name }}
-          sauce_labs_description: ${{ matrix.sauce_labs_description }}
-          artifact_ref: ${{ matrix.artifact_ref }}
-          artifact_name: ${{ matrix.artifact_name }}
+          sauce_labs_name: ${{ env.SAUCE_LABS_NAME }}
+          sauce_labs_description: ${{ env.SAUCE_LABS_DESCRIPTION }}
+          artifact_ref: ${{ env.ARTIFACT_REF }}
+          artifact_name: ${{ env.ARTIFACT_INNER_NAME }}
 
   # ─── App Launch Verification ──────────────────────────────────────────
   # Lightweight smoke test: verifies each app/bundle can be installed and
@@ -1113,28 +1057,30 @@ jobs:
   run-on-device-tests:
     name: "App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}"
     needs: [ship-to-saucelabs]
-    if: github.event.pull_request.head.repo.fork != true
+    if: >-
+      success() &&
+      github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     strategy:
       max-parallel: 2
       fail-fast: false
       matrix:
-        include:
-          - platform: 'iOS'
-            variant: 'bcwallet-prod'
-            app_filename: 'BCWallet-${{ github.run_number }}.ipa'
-          - platform: 'iOS'
-            variant: 'bcsc-dev'
-            app_filename: 'BCSC-Dev-${{ github.run_number }}.ipa'
-          - platform: 'Android'
-            variant: 'bcwallet-prod'
-            app_filename: 'BCWallet-${{ github.run_number }}.aab'
-          - platform: 'Android'
-            variant: 'bcsc-dev'
-            app_filename: 'BCSC-Dev-${{ github.run_number }}.aab'
+        platform: [iOS, Android]
+        variant: [bcwallet-prod, bcsc-dev]
+        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
     steps:
       - uses: actions/checkout@v4
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Derive platform artifact filename
+        run: |
+          if [ "${{ matrix.platform }}" = "iOS" ]; then EXT="ipa"; else EXT="aab"; fi
+          echo "APP_FILENAME=${SAUCE_LABS_PREFIX}-${{ github.run_number }}.${EXT}" >> "$GITHUB_ENV"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -1144,7 +1090,7 @@ jobs:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           PLATFORM_NAME: ${{ matrix.platform }}
-          APP_FILENAME: ${{ matrix.app_filename }}
+          APP_FILENAME: ${{ env.APP_FILENAME }}
           VARIANT: ${{ matrix.variant }}
           TEST_NAME: 'App Launch - ${{ matrix.variant }} ${{ matrix.platform }}'
           BUILD_NAME: 'build-${{ github.run_number }}'

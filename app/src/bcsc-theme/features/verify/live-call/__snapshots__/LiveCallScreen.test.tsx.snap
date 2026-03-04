@@ -124,7 +124,7 @@ exports[`LiveCall renders correctly 1`] = `
             ]
           }
         >
-          BCSC.VideoCall.CallStates.UploadingDocuments
+          BCSC.VideoCall.CallStates.Initializing
         </Text>
         <
           height={200}
