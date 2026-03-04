@@ -660,19 +660,14 @@ export const useSecureActions = () => {
    * Determining verification status based on credential and refresh token presence.
    */
   const isVerified = useCallback(
-    (credential: CredentialInfo | null, refreshToken?: string) => {
-      if (credential) {
-        // If credential exists and event is not Cancel or Expire -> verified
-        return credential.bcscEvent !== 'Cancel' && credential.bcscEvent !== 'Expire'
-      }
-
+    (credential: CredentialInfo | null, refreshToken?: string): boolean => {
       if (!credential && refreshToken) {
-        // Potential bug detected: No credential but refresh token exists. Missed cleanup?
+        // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
         logger.warn('[HydrateVerifiedState] No credential found but refresh token exists — treating as not verified.')
       }
 
-      // No credential and no refresh token -> not verified
-      return false
+      // If credential exists and event is not Cancel or Expire -> verified
+      return !!credential && credential.bcscEvent !== 'Cancel' && credential.bcscEvent !== 'Expire'
     },
     [logger]
   )
