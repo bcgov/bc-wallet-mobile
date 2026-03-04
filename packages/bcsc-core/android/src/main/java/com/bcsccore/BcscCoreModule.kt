@@ -3033,8 +3033,12 @@ class BcscCoreModule(
                 }
             }
 
-            editor.apply()
-            editor.commit() // Ensure it's written before resolving promise
+            val committed = editor.commit() // Synchronously persist changes before resolving promise
+            if (!committed) {
+                Log.e(NAME, "setAccountFlags: Failed to commit account flags to SharedPreferences")
+                promise.reject("E_SET_ACCOUNT_FLAGS_PERSISTENCE", "Failed to persist account flags")
+                return
+            }
 
             Log.d(NAME, "setAccountFlags: Successfully saved account flags")
             promise.resolve(true)
