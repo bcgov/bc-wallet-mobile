@@ -101,6 +101,10 @@ import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
 
+// TODO: (al) - refactor to use readFirstAccountEncryptedFile function
+// TODO: (al) - refactor to remove file names and use AccountFileName enum
+// TODO: (al) - refactor to create a similar function to readFirstAccountEncryptedFile for the sharedpreferences
+
 private enum class AccountFileName(
     val value: String,
 ) {
@@ -3814,9 +3818,6 @@ class BcscCoreModule(
             promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
         }
     }
-    // TODO: (al) - refactor to use this function
-    // TODO: (al) - refactor to remove file names and use AccountFileName enum
-    // TODO: (al) - refactor to create a similar function to readFirstAccountEncryptedFile for the sharedpreferences
 
     /**
      * A helper function to read user account files for migration
