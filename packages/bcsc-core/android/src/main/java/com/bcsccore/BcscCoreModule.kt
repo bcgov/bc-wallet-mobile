@@ -3034,7 +3034,7 @@ class BcscCoreModule(
             }
 
             editor.apply()
-            editor.commit()
+            editor.commit() // Ensure it's written before resolving promise
 
             Log.d(NAME, "setAccountFlags: Successfully saved account flags")
             promise.resolve(true)
