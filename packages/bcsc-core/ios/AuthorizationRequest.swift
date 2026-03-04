@@ -19,8 +19,8 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   var country: String?
   var region: String?
 
-  // Raw values match the keys used by v3 (snake_case via Codable CodingKeys).
-  // "locality", "country", and "region" are identical in both versions.
+  /// Raw values match the keys used by v3 (snake_case via Codable CodingKeys).
+  /// "locality", "country", and "region" are identical in both versions.
   enum CodingKeys: String {
     case streetAddress = "street_address"
     case locality
