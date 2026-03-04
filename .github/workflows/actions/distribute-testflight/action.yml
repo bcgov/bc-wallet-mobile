@@ -90,11 +90,28 @@ runs:
         API="https://api.appstoreconnect.apple.com/v1"
         AUTH="Authorization: Bearer ${ASC_TOKEN}"
 
+        # Helper: GET from ASC API with full response-body logging on errors.
+        # Prints JSON response to stdout on success; returns 1 and prints
+        # the error response body to stderr on HTTP >= 400 or connection failure.
+        asc_get() {
+          local url="$1"
+          local _rf; _rf=$(mktemp)
+          local _code
+          _code=$(curl -sg -o "$_rf" -w '%{http_code}' -H "$AUTH" "$url") || _code="000"
+          if [ "$_code" -ge 400 ] 2>/dev/null || [ "$_code" = "000" ]; then
+            echo "⚠️  ASC API error (HTTP ${_code}): GET ${url}" >&2
+            python3 -m json.tool < "$_rf" >&2 2>/dev/null || cat "$_rf" >&2 2>/dev/null || true
+            rm -f "$_rf"
+            return 1
+          fi
+          cat "$_rf"
+          rm -f "$_rf"
+        }
+
         # Resolve bundle ID to App Store Connect app resource ID
         echo "Resolving app ID for bundle: ${BUNDLE_ID}..."
-        APP_RESPONSE=$(curl -sfg -H "$AUTH" \
-          "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" \
-          2>/dev/null || echo '{"data":[]}')
+        APP_RESPONSE=$(asc_get "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1") \
+          || APP_RESPONSE='{"data":[]}'
         APP_ID=$(echo "$APP_RESPONSE" | \
           python3 -c "import sys,json; d=json.load(sys.stdin)['data']; print(d[0]['id'] if d else '')")
         if [ -z "$APP_ID" ]; then
@@ -105,16 +122,19 @@ runs:
 
         echo "::group::Waiting for build ${VERSION_CODE} to finish processing..."
 
-        # Poll until the build appears and finishes processing
+        # Poll until the build appears and finishes processing.
+        # If the build stays NOT_FOUND for >3 min, bail early — the upload
+        # step was probably skipped or failed.
         ELAPSED=0
         INTERVAL=30
         MAX_SECONDS=$((MAX_WAIT * 60))
+        NOT_FOUND_THRESHOLD=180  # seconds — bail early if build never appears
         BUILD_ID=""
 
         while [ $ELAPSED -lt $MAX_SECONDS ]; do
-          RESPONSE=$(curl -sfg -H "$AUTH" \
-            "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" \
-            2>/dev/null || echo '{"data":[]}')
+          RESPONSE=$(asc_get \
+            "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1") \
+            || RESPONSE='{"data":[]}'
 
           PROCESSING_STATE=$(echo "$RESPONSE" | python3 -c "
         import sys, json
@@ -138,6 +158,12 @@ runs:
           elif [ "$STATE" = "INVALID" ]; then
             echo "❌ Build was marked INVALID by App Store Connect"
             exit 1
+          elif [ "$STATE" = "NOT_FOUND" ] && [ "$ELAPSED" -ge "$NOT_FOUND_THRESHOLD" ]; then
+            echo ""
+            echo "❌ Build ${VERSION_CODE} (${VERSION_NAME}) not found after ${NOT_FOUND_THRESHOLD}s."
+            echo "   The build was likely never uploaded to App Store Connect."
+            echo "   Check that the 'Ship to Apple App Store' step completed successfully."
+            exit 1
           fi
 
           sleep $INTERVAL
@@ -147,6 +173,58 @@ runs:
         if [ -z "$BUILD_ID" ]; then
           echo "❌ Timed out waiting for build ${VERSION_CODE} after ${MAX_WAIT} minutes"
           exit 1
+        fi
+
+        echo "::endgroup::"
+
+        # --- Set export compliance (required before distribution) ---
+        echo "::group::Setting export compliance..."
+
+        # Check if the build already has compliance info set
+        COMPLIANCE=$(asc_get "${API}/builds/${BUILD_ID}/buildBetaDetail") \
+          || COMPLIANCE='{}'
+
+        AUTO_NOTIFY=$(echo "$COMPLIANCE" | python3 -c "
+        import sys, json
+        data = json.load(sys.stdin).get('data', {})
+        attrs = data.get('attributes', {}) if isinstance(data, dict) else {}
+        enc = attrs.get('externalBuildState', '')
+        print(enc)
+        " 2>/dev/null || echo '')
+
+        echo "External build state: ${AUTO_NOTIFY}"
+
+        # Check if non-exempt encryption usage needs to be declared
+        ENCRYPT_STATUS=$(asc_get "${API}/builds/${BUILD_ID}") \
+          || ENCRYPT_STATUS='{"data":{}}'
+
+        USES_ENCRYPT=$(echo "$ENCRYPT_STATUS" | python3 -c "
+        import sys, json
+        data = json.load(sys.stdin).get('data', {})
+        attrs = data.get('attributes', {})
+        print(attrs.get('usesNonExemptEncryption', 'UNSET'))
+        " 2>/dev/null || echo 'UNSET')
+
+        echo "usesNonExemptEncryption: ${USES_ENCRYPT}"
+
+        # If encryption usage hasn't been declared, set it to false
+        # (standard HTTPS/TLS is exempt from export compliance)
+        if [ "$USES_ENCRYPT" = "None" ] || [ "$USES_ENCRYPT" = "UNSET" ] || [ -z "$USES_ENCRYPT" ]; then
+          echo "Setting usesNonExemptEncryption = false..."
+          HTTP_CODE=$(curl -s -o /tmp/compliance_response.json -w '%{http_code}' \
+            -X PATCH \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d "{\"data\":{\"type\":\"builds\",\"id\":\"${BUILD_ID}\",\"attributes\":{\"usesNonExemptEncryption\":false}}}" \
+            "${API}/builds/${BUILD_ID}")
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "⚠️ Failed to set export compliance (HTTP ${HTTP_CODE}), continuing..."
+            cat /tmp/compliance_response.json 2>/dev/null || true
+          else
+            echo "✅ Export compliance set"
+          fi
+        else
+          echo "✅ Export compliance already declared"
         fi
 
         echo "::endgroup::"
@@ -167,9 +245,8 @@ runs:
         fi
 
         # Fetch all beta groups for the app (APP_ID was resolved above)
-        ALL_GROUPS=$(curl -sf -H "$AUTH" \
-          "${API}/apps/${APP_ID}/betaGroups?limit=50" \
-          2>/dev/null || echo '{"data":[]}')
+        ALL_GROUPS=$(asc_get "${API}/apps/${APP_ID}/betaGroups?limit=50") \
+          || ALL_GROUPS='{"data":[]}'
 
         # Build the list of group IDs that match requested names
         GROUP_IDS=$(echo "$ALL_GROUPS" | python3 -c "
@@ -210,11 +287,18 @@ runs:
         print(json.dumps({'data': data}))
         ")
 
-        curl -sf -X POST \
+        HTTP_CODE=$(curl -s -o /tmp/beta_group_response.json -w '%{http_code}' \
+          -X POST \
           -H "$AUTH" \
           -H "Content-Type: application/json" \
           -d "$PAYLOAD" \
-          "${API}/builds/${BUILD_ID}/relationships/betaGroups"
+          "${API}/builds/${BUILD_ID}/relationships/betaGroups")
+
+        if [ "$HTTP_CODE" -ge 400 ]; then
+          echo "❌ Failed to add build to beta groups (HTTP ${HTTP_CODE}):"
+          cat /tmp/beta_group_response.json 2>/dev/null | python3 -m json.tool 2>/dev/null || cat /tmp/beta_group_response.json 2>/dev/null || true
+          exit 1
+        fi
 
         echo ""
         echo "✅ Build ${VERSION_CODE} distributed to ${#GROUPS[@]} beta group(s)"
@@ -222,9 +306,8 @@ runs:
         # Add release notes (what's new)
         # First, get the build's betaBuildLocalizations
         WHATS_NEW="Release ${VERSION_NAME}-${VERSION_CODE}"
-        LOC_RESPONSE=$(curl -sf -H "$AUTH" \
-          "${API}/builds/${BUILD_ID}/betaBuildLocalizations" \
-          2>/dev/null || echo '{"data":[]}')
+        LOC_RESPONSE=$(asc_get "${API}/builds/${BUILD_ID}/betaBuildLocalizations") \
+          || LOC_RESPONSE='{"data":[]}'
 
         LOC_ID=$(echo "$LOC_RESPONSE" | python3 -c "
         import sys, json
