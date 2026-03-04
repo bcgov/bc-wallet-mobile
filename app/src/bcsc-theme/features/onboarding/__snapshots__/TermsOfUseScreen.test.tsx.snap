@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TermsOfUse renders correctly 1`] = `
+exports[`TermsOfUse renders correctly after loading terms 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -20,41 +20,27 @@ exports[`TermsOfUse renders correctly 1`] = `
     ]
   }
 >
-  <RCTScrollView
-    contentContainerStyle={
-      [
-        {
-          "padding": 16,
-        },
-        {
-          "flex": 1,
-          "paddingHorizontal": 8,
-        },
-      ]
-    }
-    showsVerticalScrollIndicator={false}
-  >
-    <View>
-      <View
-        allowsBackForwardNavigationGestures={true}
-        bounces={false}
-        domStorageEnabled={true}
-        injectedJavaScriptBeforeContentLoaded="
+  <View
+    allowsBackForwardNavigationGestures={true}
+    bounces={false}
+    domStorageEnabled={true}
+    injectedJavaScriptBeforeContentLoaded="
     document.addEventListener('DOMContentLoaded', function() {
-      
-      const fontScale = 2;
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    
-      document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '#F2F2F2';
       document.body.style.color = '#FFFFFFFF';
+      document.body.style.fontFamily = '-apple-system, system-ui, sans-serif';
+      document.body.style.fontSize = '18px';
+      document.body.style.padding = '0 16px 16px 16px';
+      document.body.style.lineHeight = '1.6';
 
       const style = document.createElement('style');
       style.textContent = \`
         body, body * {
           background-color: #F2F2F2 !important;
           color: #FFFFFFFF !important;
+        }
+        p, li, dd, dt {
+          margin-bottom: 0.75em;
         }
         a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
           color: #1A5A96 !important;
@@ -70,39 +56,60 @@ exports[`TermsOfUse renders correctly 1`] = `
       });
     });
   "
-        javaScriptEnabled={true}
-        mixedContentMode="compatibility"
-        onError={[Function]}
-        onHttpError={[Function]}
-        onLoad={[Function]}
-        onMessage={[Function]}
-        originWhitelist={
-          [
-            "*",
-          ]
-        }
-        renderLoading={[Function]}
-        sharedCookiesEnabled={true}
-        source={
-          {
-            "headers": {
-              "Authorization": "Bearer undefined",
-            },
-            "uri": "https://id.gov.bc.ca/static/termsOfUse.html",
-          }
-        }
-        startInLoadingState={true}
-        style={
-          {
-            "backgroundColor": "#F2F2F2",
-          }
-        }
-        testID="mocked-webview"
-        thirdPartyCookiesEnabled={true}
-        userAgent="Single App"
-      />
-    </View>
-  </RCTScrollView>
+    javaScriptEnabled={true}
+    mixedContentMode="compatibility"
+    onError={[Function]}
+    onHttpError={[Function]}
+    onLoad={[Function]}
+    onMessage={[Function]}
+    originWhitelist={
+      [
+        "*",
+      ]
+    }
+    renderLoading={[Function]}
+    sharedCookiesEnabled={true}
+    source={
+      {
+        "baseUrl": "",
+        "html": "<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    background-color: #F2F2F2;
+    color: #FFFFFFFF;
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: 18px;
+    padding: 0 16px 16px 16px;
+    line-height: 1.6;
+  }
+  body, body * {
+    background-color: #F2F2F2 !important;
+    color: #FFFFFFFF !important;
+  }
+  p, li, dd, dt {
+    margin-bottom: 0.75em;
+  }
+  a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
+    color: #1A5A96 !important;
+    text-decoration-color: #1A5A96 !important;
+    border-color: #1A5A96 !important;
+  }
+</style>
+<h4>Before you use the Service, you must read and accept the terms set out in this Agreement</h4>
+<p>BC Login Service Terms of Use<br/>Version 1.0, January 1, 2024</p>
+<html><body><p>Terms of Use content</p></body></html>",
+      }
+    }
+    startInLoadingState={true}
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+      }
+    }
+    testID="mocked-webview"
+    thirdPartyCookiesEnabled={true}
+    userAgent="Single App"
+  />
   <View
     style={
       [
@@ -127,18 +134,18 @@ exports[`TermsOfUse renders correctly 1`] = `
       <View
         style={
           {
-            "height": 60,
+            "height": 30,
             "position": "absolute",
-            "top": -60,
+            "top": -30,
             "width": "100%",
           }
         }
       >
         <RNSVGSvgView
-          bbHeight="60"
+          bbHeight="30"
           bbWidth="100%"
           focusable={false}
-          height="60"
+          height="30"
           style={
             [
               {
@@ -154,7 +161,7 @@ exports[`TermsOfUse renders correctly 1`] = `
               },
               {
                 "flex": 0,
-                "height": 60,
+                "height": 30,
                 "width": "100%",
               },
             ]
@@ -195,7 +202,251 @@ exports[`TermsOfUse renders correctly 1`] = `
                   "type": 1,
                 }
               }
-              height="60"
+              height="30"
+              propList={
+                [
+                  "fill",
+                ]
+              }
+              width="100%"
+              x={0}
+              y={0}
+            />
+          </RNSVGGroup>
+        </RNSVGSvgView>
+      </View>
+      <View
+        accessibilityLabel="BCSC.Onboarding.AcceptAndContinueButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": true,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={false}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#757575",
+            "borderRadius": 4,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/AcceptAndContinue"
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                ],
+              ]
+            }
+          >
+            BCSC.Onboarding.AcceptAndContinueButton
+          </Text>
+        </View>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
+
+exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        {
+          "padding": 16,
+        },
+        {
+          "flex": 1,
+          "paddingHorizontal": 8,
+        },
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "justifyContent": "center",
+          }
+        }
+      >
+        <ActivityIndicator
+          size="large"
+        />
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "width": "100%",
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "height": 30,
+            "position": "absolute",
+            "top": -30,
+            "width": "100%",
+          }
+        }
+      >
+        <RNSVGSvgView
+          bbHeight="30"
+          bbWidth="100%"
+          focusable={false}
+          height="30"
+          style={
+            [
+              {
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
+              },
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "flex": 0,
+                "height": 30,
+                "width": "100%",
+              },
+            ]
+          }
+          width="100%"
+        >
+          <RNSVGGroup
+            fill={
+              {
+                "payload": 4278190080,
+                "type": 0,
+              }
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGLinearGradient
+                gradient={
+                  [
+                    0,
+                    15921906,
+                    1,
+                    -855310,
+                  ]
+                }
+                gradientTransform={null}
+                gradientUnits={0}
+                name="gradient"
+                x1="0%"
+                x2="0%"
+                y1="0%"
+                y2="100%"
+              />
+            </RNSVGDefs>
+            <RNSVGRect
+              fill={
+                {
+                  "brushRef": "gradient",
+                  "type": 1,
+                }
+              }
+              height="30"
               propList={
                 [
                   "fill",

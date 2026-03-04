@@ -470,6 +470,7 @@ const translation = {
       "CarouselNext": "Next (PT-BR)",
       "CarouselBack": "Back (PT-BR)",
       "AcceptAndContinueButton": "Accept and continue (PT-BR)",
+      "TermsOfUseLoadError": "Terms of use failed to load, please retry (PT-BR)",
       "CarouselServicesHeader": "Access services online (PT-BR)",
       "CarouselProveHeader": "Prove who you are online (PT-BR)",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (PT-BR)",

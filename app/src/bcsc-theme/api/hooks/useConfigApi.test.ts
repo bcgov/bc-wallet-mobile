@@ -69,7 +69,9 @@ describe('useConfigApi', () => {
       ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { terms: 'Sample terms' } })
       const response = await config.getTermsOfUse()
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`)
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`, {
+        skipBearerAuth: true,
+      })
       expect(response).toEqual({ terms: 'Sample terms' })
     })
 
