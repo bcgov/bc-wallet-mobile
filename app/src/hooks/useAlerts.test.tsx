@@ -537,7 +537,47 @@ describe('useAlerts', () => {
     })
   })
 
-  describe('setupExpiredAlert', () => {})
+  describe('setupExpiredAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.setupExpiredAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.SetupExpired.Title', 'Alerts.SetupExpired.Description', {
+        event: AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST,
+        actions: [
+          {
+            text: 'Global.OK',
+            onPress: expect.any(Function),
+          },
+        ],
+      })
+    })
+
+    it('onPress should factory reset the app', async () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      const mockFactoryReset = jest.fn().mockResolvedValue({ success: true })
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      jest.spyOn(useFactoryResetModule, 'useFactoryReset').mockReturnValue(mockFactoryReset as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.setupExpiredAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
+      expect(action).toBeDefined()
+
+      await action.onPress()
+
+      expect(mockFactoryReset).toHaveBeenCalled()
+    })
+  })
 
   describe('liveCallFileUploadErrorAlert', () => {
     it('should show an alert with the correct title and message', () => {
@@ -720,6 +760,308 @@ describe('useAlerts', () => {
       action.onPress()
 
       expect(mockAction).toHaveBeenCalled()
+    })
+  })
+
+  describe('failedToWriteToLocalStorageAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToWriteToLocalStorageAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('failedToReadFromLocalStorageAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToReadFromLocalStorageAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('clientRegistrationNullAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.clientRegistrationNullAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('unableToDecryptIdTokenAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.unableToDecryptIdTokenAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('failedToDeserializeJsonAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToDeserializeJsonAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('unableToDecryptJweAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.unableToDecryptJweAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('toJsonMethodFailureAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.toJsonMethodFailureAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_TOJSON_METHOD_FAILURE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('toJsonStringMethodFailureAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.toJsonStringMethodFailureAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('keychainKeyExistsAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.keychainKeyExistsAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('keychainKeyDoesntExistAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.keychainKeyDoesntExistAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('keychainKeyGenerationAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.keychainKeyGenerationAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('jwtDeviceInfoAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.jwtDeviceInfoAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('noTokensReturnedAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.noTokensReturnedAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.ProblemWithAccount.Title',
+        'Alerts.ProblemWithAccount.Description',
+        {
+          event: AppEventCode.NO_TOKENS_RETURNED,
+          actions: [
+            {
+              text: 'Global.Close',
+              style: 'cancel',
+            },
+            {
+              text: 'Alerts.ProblemWithAccount.Action1',
+              style: 'destructive',
+              onPress: expect.any(Function),
+            },
+          ],
+        }
+      )
+    })
+
+    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.noTokensReturnedAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+    })
+  })
+
+  describe('invalidTokenAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidTokenAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith(
+        'Alerts.ProblemWithAccount.Title',
+        'Alerts.ProblemWithAccount.Description',
+        {
+          event: AppEventCode.INVALID_TOKEN,
+          actions: [
+            {
+              text: 'Global.Close',
+              style: 'cancel',
+            },
+            {
+              text: 'Alerts.ProblemWithAccount.Action1',
+              style: 'destructive',
+              onPress: expect.any(Function),
+            },
+          ],
+        }
+      )
+    })
+
+    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidTokenAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
     })
   })
 
