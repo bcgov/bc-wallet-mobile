@@ -134,7 +134,7 @@ export interface CredentialInfo {
   updatedDate?: number | null; // Unix timestamp in seconds
 
   // BCSC specific fields
-  bcscEvent: string;
+  bcscEvent: 'Authorization' | 'Renewal' | 'Replace' | 'Cancel' | 'Expire';
   bcscReason: string; // Maps to BcscReason enum
   bcscStatusDate?: number | null; // Unix timestamp in seconds
   bcscEventDate?: number | null; // Unix timestamp in seconds

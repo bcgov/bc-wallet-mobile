@@ -21,8 +21,8 @@ export function createMinimalCredential(
     subject,
     label: 'BC Services Card', // Default label matching v3
     created: Math.floor(Date.now() / 1000), // Unix timestamp in seconds
-    bcscEvent: 'VERIFIED', // Standard verification event
-    bcscReason: 'SUCCESSFUL_VERIFICATION', // Standard reason
+    bcscEvent: 'Authorization', // Standard verification event
+    bcscReason: 'SUCCESSFUL_VERIFICATION', // Standard reason // FIXME (MD): This is not a valid reason
     cardType,
     accountType,
     lastUsed: Math.floor(Date.now() / 1000),

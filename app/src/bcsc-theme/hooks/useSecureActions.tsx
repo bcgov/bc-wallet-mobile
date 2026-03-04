@@ -657,27 +657,24 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Hydrates the 'verified' status in secure state by checking for existing credential or refresh token in native storage.
-   * Note: There might be an unknown edge case that is causing `getCredential` to return null which indirectly loses the users verified status.
+   * Determining verification status based on credential and refresh token presence.
    */
-  const hydrateVerifiedState = useCallback(
-    async (credential: CredentialInfo | null, refreshToken?: string) => {
+  const isVerified = useCallback(
+    (credential: CredentialInfo | null, refreshToken?: string) => {
       if (credential) {
-        return true
+        // If credential exists and event is not Cancel or Expire -> verified
+        return credential.bcscEvent !== 'Cancel' && credential.bcscEvent !== 'Expire'
       }
 
-      if (refreshToken) {
-        logger.warn(
-          '[HydrateVerifiedState] Bug detected!!! No credential found but refresh token exists.',
-          { store } // Log the store to help with debugging
-        )
-        await updateVerified(true) // sets the credential
-        return true
+      if (!credential && refreshToken) {
+        // Potential bug detected: No credential but refresh token exists. Missed cleanup?
+        logger.warn('[HydrateVerifiedState] No credential found but refresh token exists — treating as not verified.')
       }
 
+      // No credential and no refresh token -> not verified
       return false
     },
-    [logger, store, updateVerified]
+    [logger]
   )
   /**
    * Loads sensitive data from native secure storage and dispatches to store.
@@ -710,10 +707,7 @@ export const useSecureActions = () => {
       const registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
 
-      const [verified] = await Promise.all([
-        hydrateVerifiedState(credential, refreshToken),
-        updateTokens({ refreshToken, registrationAccessToken, accessToken }),
-      ])
+      await updateTokens({ refreshToken, registrationAccessToken, accessToken })
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
@@ -759,7 +753,7 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
-        verified,
+        verified: isVerified(credential, refreshToken),
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress,
@@ -788,7 +782,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throw error
     }
-  }, [logger, updateTokens, hydrateVerifiedState, dispatch])
+  }, [logger, updateTokens, isVerified, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
