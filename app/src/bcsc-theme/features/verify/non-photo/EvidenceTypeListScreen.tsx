@@ -5,7 +5,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
+import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,11 +14,7 @@ import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
-  route: {
-    params: {
-      cardProcess: BCSCCardProcess
-    }
-  }
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
 }
 
 interface SectionData {
@@ -45,7 +41,7 @@ const ItemSeparator = () => {
 }
 
 const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenProps) => {
-  const { cardProcess } = route.params
+  const { cardProcess, photoFilter } = route.params
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -120,6 +116,14 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
         // list is filtered differently based on when the user seeing this screen
         // first and second runs will show slightly different cards
         p.evidence_types.forEach((e) => {
+          // Apply photo filter if specified (used by non-photo BCSC flow)
+          if (photoFilter === 'photo' && !e.has_photo) {
+            return
+          }
+          if (photoFilter === 'nonPhoto' && e.has_photo) {
+            return
+          }
+
           if (shouldAddEvidence(e)) {
             cards = addToEvidenceDictionary(cards, e)
           }
@@ -128,7 +132,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     })
     const mappedData = mapEvidenceToSections(cards)
     setEvidenceSections(mappedData)
-  }, [data, cardProcess, shouldAddEvidence])
+  }, [data, cardProcess, photoFilter, shouldAddEvidence])
 
   const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
     const mappedData: { title: string; data: EvidenceType[] }[] = []
@@ -169,9 +173,29 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
       return [t('BCSC.EvidenceTypeList.Heading'), t('BCSC.EvidenceTypeList.Description')]
     }
 
+    if (photoFilter === 'photo') {
+      // Non-photo BCSC first visit — showing photo IDs
+      return [t('BCSC.EvidenceTypeList.Heading'), t('BCSC.EvidenceTypeList.Description')]
+    }
+
+    if (photoFilter === 'nonPhoto') {
+      // Non-photo BCSC "Other Options" — showing non-photo IDs
+      return [t('BCSC.EvidenceTypeList.OtherIDOptionsHeading'), t('BCSC.EvidenceTypeList.OtherIDOptionsDescription')]
+    }
+
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [store.bcscSecure.additionalEvidenceData.length, cardProcess, t])
+  }, [store.bcscSecure.additionalEvidenceData.length, cardProcess, photoFilter, t])
+
+  /**
+   * Whether the "Other Options" escape hatch should be shown.
+   * Only shown when:
+   * - Filtering for photo IDs (photoFilter === 'photo')
+   * - First evidence selection (no evidence selected yet)
+   * This matches v3 behavior: non-photo BCSC users who don't have a photo ID
+   * can choose a non-photo ID instead (but will still need a photo ID afterward).
+   */
+  const showOtherOptions = photoFilter === 'photo' && store.bcscSecure.additionalEvidenceData.length === 0
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
@@ -216,6 +240,31 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
             </View>
           </Pressable>
         )}
+        ListFooterComponent={
+          showOtherOptions ? (
+            <>
+              <SectionSeparator />
+              <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
+                {t('BCSC.EvidenceTypeList.OtherOptions')}
+              </ThemedText>
+              <Pressable
+                onPress={() => {
+                  navigation.replace(BCSCScreens.EvidenceTypeList, {
+                    cardProcess,
+                    photoFilter: 'nonPhoto',
+                  })
+                }}
+                testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+                style={({ pressed }) => [
+                  styles.cardSection,
+                  pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
+                ]}
+              >
+                <ThemedText>{t('BCSC.EvidenceTypeList.ShowMoreOptions')}</ThemedText>
+              </Pressable>
+            </>
+          ) : null
+        }
       />
     </ScreenWrapper>
   )

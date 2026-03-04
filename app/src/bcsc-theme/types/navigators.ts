@@ -169,7 +169,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
   [BCSCScreens.DualIdentificationRequired]: undefined
   [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
-  [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess }
+  [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
   [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
