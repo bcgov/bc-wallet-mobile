@@ -13,7 +13,7 @@ import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizatio
 import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
-import { ANALYTICS_APP_ID_PREFIX, ANALYTICS_APP_ID_V4_SUFFIX } from './constants'
+import { ANALYTICS_APP_ID_PREFIX } from './constants'
 
 const TESTFLIGHT_PACKAGE_NAME = 'TestFlight'
 
@@ -281,7 +281,7 @@ export const BCDispatchAction = {
 
 // TODO (MD): Move environment / analytic related utils to a separate file
 const getAnalyticsAppId = (domain: string): string => {
-  return `${ANALYTICS_APP_ID_PREFIX}${domain}${ANALYTICS_APP_ID_V4_SUFFIX}` // Note: Temp tagging with V4 to differentiate from V3 analytics in the production collector environment
+  return `${ANALYTICS_APP_ID_PREFIX}${domain}`
 }
 
 export const getInitialEnvironment = (): IASEnvironment => {
@@ -303,15 +303,14 @@ const createIASEnvironment = (config: {
   name: string
   subdomain: string
   agentInviteUrl: string | null
-  analyticsAppId: string
 }): IASEnvironment => {
   return {
-    name: `${config.name} (${config.subdomain})`,
+    name: `${config.name}`,
     iasAgentInviteUrl: config.agentInviteUrl ?? '',
-    iasPortalUrl: `https://${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
-    appToAppUrl: `ca.bc.gov.${config.subdomain}.servicescard.v2://credentials/person/v1`,
-    iasApiBaseUrl: `https://${config.subdomain}.gov.bc.ca`,
-    analyticsAppId: config.analyticsAppId,
+    iasPortalUrl: `https://id${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
+    appToAppUrl: `ca.bc.gov.id${config.subdomain}.servicescard.v2://credentials/person/v1`,
+    iasApiBaseUrl: `https://id${config.subdomain}.gov.bc.ca`,
+    analyticsAppId: getAnalyticsAppId(config.subdomain),
   }
 }
 
@@ -319,48 +318,41 @@ const createIASEnvironment = (config: {
 export const IASEnvironment = {
   PROD: createIASEnvironment({
     name: 'Prod',
-    subdomain: 'id',
+    subdomain: '', // no subdomain for prod environment
     agentInviteUrl:
       'https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==',
-    analyticsAppId: getAnalyticsAppId('prod'),
   }),
   PREPROD: createIASEnvironment({
     name: 'Preprod',
-    subdomain: 'idpreprod',
+    subdomain: 'preprod',
     agentInviteUrl: null,
-    analyticsAppId: getAnalyticsAppId('preprod'),
   }),
   QA: createIASEnvironment({
     name: 'QA',
-    subdomain: 'idqa',
+    subdomain: 'qa',
     agentInviteUrl: null,
-    analyticsAppId: getAnalyticsAppId('qa'),
   }),
   TEST: createIASEnvironment({
     name: 'Test',
-    subdomain: 'idtest',
+    subdomain: 'test',
     agentInviteUrl: null,
-    analyticsAppId: getAnalyticsAppId('test'),
   }),
   SIT: createIASEnvironment({
     name: 'Sit',
-    subdomain: 'idsit',
+    subdomain: 'sit',
     agentInviteUrl:
       'https://idim-sit-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZDFkMDk5MDQtN2ZlOC00YzlkLTk4YjUtZmNmYmEwODkzZTAzIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKFNJVCkiLCAicmVjaXBpZW50S2V5cyI6IFsiNVgzblBoZkVIOU4zb05kcHdqdUdjM0ZhVzNQbmhiY05QemRGbzFzS010dEoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tc2l0LWFnZW50LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyJ9',
-    analyticsAppId: getAnalyticsAppId('sit'),
   }),
   DEV: createIASEnvironment({
     name: 'Dev',
-    subdomain: 'iddev',
+    subdomain: 'dev',
     agentInviteUrl:
       'https://idim-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiY2U1NWFiZDctNWRmYy00YjQ5LWExODYtOWUzMzQ1ZjEyZThkIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKERldikiLCAicmVjaXBpZW50S2V5cyI6IFsiM0I0bnlDMVg4R1E0M0NLczR4clVXOFdnbWE5MUpMem50cVVYdlo0UjQ4TXQiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQtZGV2LmFwcHMuc2lsdmVyLmRldm9wcy5nb3YuYmMuY2EiLCAiaW1hZ2VVcmwiOiAiaHR0cHM6Ly9pZC5nb3YuYmMuY2Evc3RhdGljL0dvdi0yLjAvaW1hZ2VzL2Zhdmljb24uaWNvIn0=',
-    analyticsAppId: getAnalyticsAppId('dev'),
   }),
   DEV2: createIASEnvironment({
     name: 'Dev2',
-    subdomain: 'iddev2',
+    subdomain: 'dev2',
     agentInviteUrl: null,
-    analyticsAppId: getAnalyticsAppId('dev2'),
   }),
 }
 

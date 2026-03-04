@@ -555,6 +555,7 @@ jobs:
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
           platform: ios
+          snowplow_collector_url: ${{ secrets.SNOWPLOW_COLLECTOR_URL }}
 
       - name: Update APS environment
         run: |
@@ -829,6 +830,7 @@ jobs:
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
           platform: android
+          snowplow_collector_url: ${{ secrets.SNOWPLOW_COLLECTOR_URL }}
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access

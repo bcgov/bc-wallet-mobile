@@ -122,4 +122,3 @@ export const MINIMUM_VERIFICATION_AGE = 12
 
 // Analytics constants
 export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'
-export const ANALYTICS_APP_ID_V4_SUFFIX = '_v4'

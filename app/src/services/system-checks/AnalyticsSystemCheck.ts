@@ -29,6 +29,10 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - True if the analytics tracker is initialized, false otherwise.
    */
   runCheck(): boolean {
+    if (!this.analyticsEnabled) {
+      return true // If analytics is not enabled, we consider the check as passed
+    }
+
     return this.analyticsTracker.hasTracker()
   }
 
@@ -38,10 +42,6 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
    * @return {*} {Promise<void>}
    */
   async onFail() {
-    if (!this.analyticsEnabled) {
-      return
-    }
-
     try {
       await this.analyticsTracker.initializeTracker(this.analyticsAppId)
     } catch (error) {

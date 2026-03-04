@@ -70,6 +70,7 @@ export class AnalyticsTracker {
   /**
    * Initializes the analytics tracker with the provided options.
    *
+   * @param {string} appId - The application ID to use for tracking.
    * @returns {*} {Promise<void>}
    */
   async initializeTracker(appId: string): Promise<void> {
