@@ -160,7 +160,9 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR, { cause: error })
+      appError.handled = true
+      this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${error}`)
     }
   }
 

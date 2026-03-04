@@ -263,7 +263,7 @@ describe('FcmViewModel', () => {
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
 
-    it('logs error when decodeLoginChallenge throws', async () => {
+    it('logs error with ERR_114 event code when decodeLoginChallenge throws', async () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockRejectedValue(new Error('Invalid JWT'))
 
@@ -274,7 +274,9 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify')
+      )
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
 

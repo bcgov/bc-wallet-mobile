@@ -105,17 +105,22 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
   }
 
+  let payload: IdToken
   try {
-    const payload: IdToken = JSON.parse(payloadString)
-
-    // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
-    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.NoBcscCard) {
-      payload.bcsc_card_type = BCSCCardType.NonBcsc
-    }
-
-    return payload
+    payload = JSON.parse(payloadString)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to parse json', error as Error)
     throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
   }
+
+  if (!payload || typeof payload !== 'object') {
+    throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
+  }
+
+  // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
+  if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.NoBcscCard) {
+    payload.bcsc_card_type = BCSCCardType.NonBcsc
+  }
+
+  return payload
 }

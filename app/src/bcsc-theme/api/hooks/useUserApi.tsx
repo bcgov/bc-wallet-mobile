@@ -45,11 +45,18 @@ const useUserApi = (apiClient: BCSCApiClient) => {
         throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: error })
       }
 
+      let parsed: UserInfoResponseData
       try {
-        return JSON.parse(userInfoString)
+        parsed = JSON.parse(userInfoString)
       } catch (error) {
         throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
       }
+
+      if (!parsed || typeof parsed !== 'object') {
+        throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
+      }
+
+      return parsed
     })
   }, [apiClient])
 
