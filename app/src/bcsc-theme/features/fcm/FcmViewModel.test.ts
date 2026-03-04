@@ -309,7 +309,7 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found in JWKS response'))
     })
 
     it('logs error when fetch fails', async () => {
