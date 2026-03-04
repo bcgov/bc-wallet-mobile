@@ -3361,17 +3361,16 @@ class BcscCoreModule(
             editor.putString("provider", providerData.toString())
 
             val committed = editor.commit() // Ensure it's written before resolving promise
-
-            if (committed) {
-                Log.d(NAME, "setCredential: Successfully saved credential")
-                promise.resolve(true)
-            } else {
+            if (!committed) {
                 Log.e(NAME, "setCredential: Failed to persist credential to SharedPreferences")
                 promise.reject(
                     "E_SET_CREDENTIAL_PERSISTENCE_ERROR",
                     "Error setting credential: failed to persist to SharedPreferences",
                 )
             }
+
+            Log.d(NAME, "setCredential: Successfully saved credential")
+            promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "setCredential error: \${e.message}", e)
             promise.reject("E_SET_CREDENTIAL_ERROR", "Error setting credential: \${e.message}", e)
