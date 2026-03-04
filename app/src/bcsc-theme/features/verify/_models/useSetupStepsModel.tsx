@@ -201,6 +201,12 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       },
 
       verify: () => {
+        // Note: This ensures that if the user somehow got to the steps screen with a refresh token (shouldn't be possible but just in case), we navigate them to the success screen
+        if (store.bcscSecure.refreshToken) {
+          navigation.navigate(BCSCScreens.VerificationSuccess)
+          return
+        }
+
         navigation.navigate(BCSCScreens.VerificationMethodSelection)
       },
       transfer: () => {
@@ -213,6 +219,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       steps.id.nonPhotoBcscNeedsAdditionalCard,
       steps.id.completed,
       store.bcscSecure.cardProcess,
+      store.bcscSecure.refreshToken,
     ]
   )
 
