@@ -3416,8 +3416,12 @@ class BcscCoreModule(
                 providerData.put("clientRegistration", clientRegistration)
                 val editor = sharedPreferences.edit()
                 editor.putString("provider", providerData.toString())
-                editor.apply()
-                editor.commit() // Ensure it's written before resolving promise
+                val committed = editor.commit() // Ensure it's written before resolving promise
+                if (!committed) {
+                    Log.e(NAME, "deleteCredential: Failed to persist updated provider data")
+                    promise.resolve(false)
+                    return
+                }
 
                 Log.d(NAME, "deleteCredential: Successfully removed credential")
             } else {
