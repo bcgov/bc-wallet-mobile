@@ -1,10 +1,36 @@
 import useUserApi from '@/bcsc-theme/api/hooks/useUserApi'
 import { AppEventCode } from '@/events/appEventCode'
+import { AppError, ErrorRegistry } from '@/errors'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
 describe('useUserApi', () => {
   describe('getUserInfo', () => {
+    it('should throw ERR_117 when decodePayload fails with E_FAILED_TO_PARSE_JWS', async () => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      const nativeError = Object.assign(new Error('Invalid JWS'), { code: 'E_FAILED_TO_PARSE_JWS' })
+      decodePayloadMock.mockRejectedValue(nativeError)
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
+        await expect(hook.result.current.getUserInfo()).rejects.toThrow(
+          AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: nativeError })
+        )
+      })
+    })
+
     it('should fetch user info successfully', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
       const getAccountMock = jest.mocked(BcscCore).getAccount

@@ -860,6 +860,23 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('failedToParseJwsAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToParseJwsAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_117_FAILED_TO_PARSE_JWS,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
   describe('clientRegistrationNullAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

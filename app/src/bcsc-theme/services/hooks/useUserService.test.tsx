@@ -64,6 +64,12 @@ describe('useUserService', () => {
         getUserInfo: jest.fn().mockRejectedValue(mockError),
       } as any
       const mockAlerts = { failedToGetClaimsSetAlert: jest.fn() }
+    it('should show alert on JWS parse error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { failedToParseJwsAlert: jest.fn() }
 
       jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -73,6 +79,7 @@ describe('useUserService', () => {
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
     })
   })
 
@@ -154,6 +161,12 @@ describe('useUserService', () => {
         getUserInfo: jest.fn().mockRejectedValue(mockError),
       } as any
       const mockAlerts = { failedToGetClaimsSetAlert: jest.fn() }
+    it('should show alert on JWS parse error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { failedToParseJwsAlert: jest.fn() }
 
       jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -163,6 +176,7 @@ describe('useUserService', () => {
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
     })
   })
 
