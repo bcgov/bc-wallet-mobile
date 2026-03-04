@@ -323,8 +323,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       }
     }
 
-    logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
-    Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
+    if ('error' in result) {
+      logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
+      Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
+    }
   }, [getQuickLoginURL, logger, state.service, navigation, t])
 
   const onContinue = useCallback(async () => {

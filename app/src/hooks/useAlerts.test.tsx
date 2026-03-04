@@ -270,6 +270,27 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('missingJwkAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.missingJwkAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK,
+        actions: [
+          {
+            text: 'Global.OK',
+          },
+        ],
+      })
+    })
+  })
+
   describe('loginServerErrorAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

@@ -2,12 +2,15 @@
 const translation = {
   "Global": {
     "OK": "OK",
+    "Okay": "OK",
     "Cancel": "Cancelar",
     "Continue": "Continuar",
     "Back": "Voltar",
     "GoBack": "Voltar",
     "Loading": "Carregando...",
     "Close": "Close (PT-BR)",
+    "ShowDetails": "Mostrar detalhes",
+    "Dismiss": "Dispensar",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
@@ -30,6 +33,11 @@ const translation = {
     "Message2033": "There was a problem while loading the services. Please try again later. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
     "OK": "OK (PT-BR)",
+    "ErrorCode": "Código de erro",
+    "ReportThisProblem": "Reportar este problema",
+    "Reported": "Reportado",
+    "Unknown": "Desconhecido",
+    "Problem": "Algo deu errado",
   },
   "Screens": {
     "Preface": "BC Wallet (PT-BR)",
@@ -108,6 +116,7 @@ const translation = {
     "Done": "Done (PT-BR)",
   },
   "Settings": {
+    "Version": "Versão",
     "Help": "Help (PT-BR)",
     "MoreInformation": "More Information (PT-BR)",
     "PlayWithBCWallet": "Play with BC Wallet (PT-BR)",
@@ -461,6 +470,10 @@ const translation = {
       "CarouselNext": "Next (PT-BR)",
       "CarouselBack": "Back (PT-BR)",
       "AcceptAndContinueButton": "Accept and continue (PT-BR)",
+      "TermsOfUseLoadError": "Terms of use failed to load, please retry (PT-BR)",
+      "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (PT-BR)",
+      "TermsOfUseSubtitle": "BC Login Service Terms of Use (PT-BR)",
+      "TermsOfUseVersion": "Version (PT-BR)",
       "CarouselServicesHeader": "Access services online (PT-BR)",
       "CarouselProveHeader": "Prove who you are online (PT-BR)",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (PT-BR)",
@@ -882,6 +895,7 @@ const translation = {
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update (PT-BR)",
       "DeviceCodeError": "Missing device or user code (PT-BR)",
       "ServiceBC": "Service BC (PT-BR)",
+      "CallingAgent": "Calling agent to verify your identity... (PT-BR)",
       "BeforeYouCallTitle": "Before you call (PT-BR)",
       "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",
@@ -946,7 +960,11 @@ const translation = {
       "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
       "NonBCSCDescription": "Use an ID that has the same name as your first ID. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
-      "SecondID": "Choose your second ID (PT-BR)"
+      "SecondID": "Choose your second ID (PT-BR)",
+      "OtherOptions": "Other options (PT-BR)",
+      "ShowMoreOptions": "Show more options (PT-BR)",
+      "OtherIDOptionsHeading": "Other ID options (PT-BR)",
+      "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID. (PT-BR)"
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information (PT-BR)",

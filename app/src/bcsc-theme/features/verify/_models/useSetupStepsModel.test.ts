@@ -249,6 +249,24 @@ describe('useSetupStepsModel', () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
     })
+
+    it('should navigate to VerificationSuccess if refreshToken exists', () => {
+      const storeWithRefreshToken = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          refreshToken: 'existing-refresh-token',
+        },
+      } as any
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithRefreshToken, mockDispatch])
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      result.current.stepActions.verify()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+    })
   })
 
   describe('stepActions.transfer', () => {

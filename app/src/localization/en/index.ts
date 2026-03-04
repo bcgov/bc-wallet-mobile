@@ -2,12 +2,15 @@
 const translation = {
   "Global": {
     "OK": "OK",
+    "Okay": "Okay",
     "Cancel": "Cancel",
     "Continue": "Continue",
     "Back": "Back",
     "GoBack": "Go Back",
     "Loading": "Loading...",
     "Close": "Close",
+    "ShowDetails": "Show Details",
+    "Dismiss": "Dismiss",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
@@ -30,6 +33,11 @@ const translation = {
     "Message2033": "There was a problem while loading the services. Please try again later.",
     "OK": "OK",
     "NoMessage": "No Message",
+    "ErrorCode": "Error Code",
+    "ReportThisProblem": "Report this problem",
+    "Reported": "Reported",
+    "Unknown": "Unknown",
+    "Problem": "Something went wrong",
   },
   "Screens": {
     "Preface": "BC Wallet",
@@ -108,6 +116,7 @@ const translation = {
     "Done": "Done",
   },
   "Settings": {
+    "Version": "Version",
     "Help": "Help",
     "MoreInformation": "More Information",
     "PlayWithBCWallet": "Play with BC Wallet",
@@ -461,6 +470,10 @@ const translation = {
       "CarouselNext": "Next",
       "CarouselBack": "Back",
       "AcceptAndContinueButton": "Accept and continue",
+      "TermsOfUseLoadError": "Terms of use failed to load, please retry",
+      "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
+      "TermsOfUseSubtitle": "BC Login Service Terms of Use",
+      "TermsOfUseVersion": "Version",
       "CarouselServicesHeader": "Access services online",
       "CarouselProveHeader": "Prove who you are online",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
@@ -882,6 +895,7 @@ const translation = {
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
       "ServiceBC": "Service BC",
+      "CallingAgent": "Calling agent to verify your identity...",
       "BeforeYouCallTitle": "Before you call",
       "WiFiRecommended": "Wi-Fi Recommended",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network.",
@@ -946,7 +960,11 @@ const translation = {
       "Description": "Use an ID that has the same name as on your BC Services Card.",
       "NonBCSCDescription": "Use an ID that has the same name as your first ID.",
       "FirstID": "Choose your first ID",
-      "SecondID": "Choose your second ID"
+      "SecondID": "Choose your second ID",
+      "OtherOptions": "Other Options",
+      "ShowMoreOptions": "Show more options",
+      "OtherIDOptionsHeading": "Other ID options",
+      "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID."
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information",

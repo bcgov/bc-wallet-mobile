@@ -6,7 +6,8 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
@@ -67,6 +68,7 @@ const VerifyStack = () => {
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  const [store] = useStore<BCState>()
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
@@ -74,7 +76,8 @@ const VerifyStack = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.SetupSteps}
+      // If the user has a refresh token, they have completed setup and should go to success screen. Otherwise, start at setup steps.
+      initialRouteName={store.bcscSecure.refreshToken ? BCSCScreens.VerificationSuccess : BCSCScreens.SetupSteps}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,

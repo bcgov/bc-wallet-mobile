@@ -16,14 +16,23 @@ interface ErrorAlertTestProps {
   onBack: () => void
 }
 
+const ERROR_BOUNDARY_TEST_MESSAGE =
+  'Unhandled render error (ErrorBoundaryWrapper test). This error is not caught by error modals or alerts.'
+
 const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const { emitErrorModal, emitAlert, dismiss } = useErrorAlert()
+  const { emitErrorModal, emitAlert } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const alerts = useAlerts(navigation as any)
+  const [throwInRender, setThrowInRender] = React.useState(false)
+
+  // Throw during render so only ErrorBoundaryWrapper catches it (not modals/alerts).
+  if (throwInRender) {
+    throw new Error(ERROR_BOUNDARY_TEST_MESSAGE)
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -357,18 +366,20 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           ))}
         </View>
 
-        {/* Dismiss Error Modal */}
+        {/* Error Boundary (unhandled render error) */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{t('Developer.DismissErrorModal')}</Text>
-          <Text style={styles.description}>{t('Developer.DismissErrorModalDescription')}</Text>
-
+          <Text style={styles.sectionHeader}>{'Error Boundary (unhandled)'}</Text>
+          <Text style={styles.description}>
+            Throws during render. Only the ErrorBoundaryWrapper catches this — not error modals or alerts. The app will
+            show the boundary fallback UI.
+          </Text>
           <View style={styles.buttonRow}>
             <Button
-              title={t('Developer.DismissCurrentError')}
-              accessibilityLabel={t('Developer.DismissCurrentError')}
-              testID="dismiss-error"
+              title="Trigger Error Boundary"
+              accessibilityLabel="Trigger unhandled error for Error Boundary"
+              testID="error-boundary-trigger"
               buttonType={ButtonType.Primary}
-              onPress={dismiss}
+              onPress={() => setThrowInRender(true)}
             />
           </View>
         </View>

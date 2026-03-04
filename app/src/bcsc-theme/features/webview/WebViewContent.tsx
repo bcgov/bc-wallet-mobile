@@ -6,13 +6,19 @@ import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } fr
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
-interface WebViewContentProps {
-  /**
-   * The URL to load in the WebView.
-   *
-   * @type {string}
-   */
+interface WebViewUrlSource {
+  /** The URL to load in the WebView. */
   url: string
+  html?: never
+}
+
+interface WebViewHtmlSource {
+  /** Raw HTML content to render in the WebView. */
+  html: string
+  url?: never
+}
+
+type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
   /**
    * Optional callback function that is called when the WebView has finished loading.
    * Loading test url: 'https://httpbin.org/delay/2'
@@ -29,7 +35,7 @@ interface WebViewContentProps {
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {React.ReactElement} The rendered WebView component.
  */
-const WebViewContent: React.FC<WebViewContentProps> = ({ url, onLoaded }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -68,13 +74,26 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, onLoaded }) => {
     [logger]
   )
 
+  if (!html && !url) {
+    logger.error('WebViewContent: Neither url nor html provided')
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size={'large'} />
+      </View>
+    )
+  }
+
   return (
     <WebView
-      source={{
-        // helpful testing url 'https://httpbin.org/delay/2'
-        uri: url,
-        headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
-      }}
+      source={
+        html
+          ? { html, baseUrl: '' }
+          : {
+              // helpful testing url 'https://httpbin.org/delay/2'
+              uri: url!,
+              headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
+            }
+      }
       startInLoadingState={true}
       javaScriptEnabled={true}
       domStorageEnabled={true}
@@ -95,7 +114,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, onLoaded }) => {
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={createWebViewJavascriptInjection(ColorPalette)}
+      injectedJavaScriptBeforeContentLoaded={html ? undefined : createWebViewJavascriptInjection(ColorPalette)}
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />

@@ -15,6 +15,10 @@ import { BCSCStackProvider } from './BCSCStackContext'
 
 jest.mock('@/bcsc-theme/api/client')
 
+jest.mock('@/errors/components/ErrorModal', () => ({
+  BCSCErrorModal: () => null,
+}))
+
 jest.mock('@bifold/core')
 
 jest.mock('../api/hooks/useFactoryReset')
