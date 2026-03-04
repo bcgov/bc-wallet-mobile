@@ -1556,8 +1556,8 @@ class BcscCoreModule(
 
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
-            if (jwtSegments.size < 2) {
-                promise.reject("E_INVALID_JWT", "Invalid JWT format in decrypted payload")
+            if (jwtSegments.size < 3) {
+                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
                 return
             }
 
@@ -4088,6 +4088,9 @@ class BcscCoreModule(
                 }
 
             promise.resolve(result)
+        } catch (e: java.text.ParseException) {
+            Log.e(NAME, "decodeLoginChallenge: JWS parse error: ${e.message}", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to parse JWS: ${e.message}", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodeLoginChallenge: Unexpected error: ${e.message}", e)
             promise.reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge", e)

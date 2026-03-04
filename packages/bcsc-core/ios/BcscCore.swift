@@ -1085,6 +1085,10 @@ class BcscCore: NSObject {
 
       // Break down and decode JWT
       let segments = payload.components(separatedBy: ".")
+      guard segments.count >= 3 else {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        return
+      }
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1129,10 +1133,19 @@ class BcscCore: NSObject {
       return
     }
 
+    // 1. Parse the JWT
+    let jws: JWS
     do {
-      // 1. Parse the JWT
-      let jws = try JWS.parse(s: jwt)
+      jws = try JWS.parse(s: jwt)
+    } catch {
+      reject(
+        "E_FAILED_TO_PARSE_JWS",
+        "Failed to parse JWS: \(error.localizedDescription)", error
+      )
+      return
+    }
 
+    do {
       // 2. Extract claims
       guard let claimsSet = try jws.getJwtClaimsSet() else {
         reject("E_INVALID_JWT", "Unable to parse JWT claims", nil)
