@@ -44,10 +44,18 @@ export enum BCSCAccountType {
 }
 
 export const BcscNativeErrorCodes = {
-  /** Secure hardware / keystore could not generate a new keypair */
-  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
-  /** Keypair exists but could not be retrieved from secure storage */
-  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
+  TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
+  /** toJSONString method failed while serializing device info JWT (error 120-2) */
+  TOJSONSTRING_METHOD_FAILURE: 'E_120_TOJSONSTRING_METHOD_FAILURE',
+  /** Keychain key already exists during key pair generation (error 120-3) */
+  KEYCHAIN_KEY_EXISTS: 'E_120_KEYCHAIN_KEY_EXISTS_ERROR',
+  /** Keychain key does not exist when retrieving key pair (error 120-4) */
+  KEYCHAIN_KEY_DOESNT_EXIST: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+  /** Keychain key generation error during key pair generation (error 120-5) */
+  KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
+  /** Error creating device info JWT during client registration (error 120-6) */
+  JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
 } as const
 
 export const isBcscNativeError = jest.fn().mockReturnValue(true)
