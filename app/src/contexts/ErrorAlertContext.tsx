@@ -1,13 +1,12 @@
 import { extractErrorMessage } from '@/errors'
+import { BCSCErrorModal, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
 import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { appLogger } from '@/utils/logger'
-import { BifoldError, EventTypes } from '@bifold/core'
 import i18next from 'i18next'
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo } from 'react'
-import { DeviceEventEmitter } from 'react-native'
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 
 export interface ErrorOptions {
   /** Original error for technical details */
@@ -42,23 +41,31 @@ export interface ErrorAlertContextType {
 
 export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(null)
 
+interface ErrorAlertProviderProps extends PropsWithChildren {
+  enableReport?: boolean
+}
+
 /**
  * ErrorAlertProvider - Unified error and alert handling for BC Wallet
  *
- * TODO (MD): Provide state to prevent multiple modals/alerts from stacking
+ * Owns the error modal state and renders BCSCErrorModal directly,
+ * eliminating the DeviceEventEmitter indirection.
  *
  * Provides a single entry point for:
- * - Error modals (via BifoldError/ErrorModal)
+ * - Error modals (via BCSCErrorModal, rendered internally)
  * - Native alerts (via React Native Alert)
  * - Analytics tracking
  * - Error logging
  *
  */
-export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
+export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlertProviderProps) => {
+  const [error, setError] = useState<ErrorModalPayload | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [errorKey, setErrorKey] = useState(0)
+
   /**
    * Show error via ErrorModal
    * Uses i18next.t() directly to avoid stale closure issues with useCallback
-   *
    */
   const emitErrorModal = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
     const definition = ErrorRegistry[key]
@@ -74,13 +81,20 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
 
     logError(key, definition, technicalMessage, context)
 
-    // Use i18next.t() directly to ensure translations are always current
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
     trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+
+    setError({
+      title,
+      description,
+      message: technicalMessage,
+      code: definition.statusCode,
+      appEvent: definition.appEvent,
+    })
+    setErrorKey((prev) => prev + 1)
+    setVisible(true)
   }, [])
 
   /**
@@ -94,7 +108,8 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
    * Dismiss the currently displayed error modal
    */
   const dismiss = useCallback((): void => {
-    DeviceEventEmitter.emit(EventTypes.ERROR_REMOVED)
+    setError(null)
+    setVisible(false)
   }, [])
 
   const value: ErrorAlertContextType = useMemo(
@@ -106,15 +121,25 @@ export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
     [emitErrorModal, emitAlert, dismiss]
   )
 
-  return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
+  return (
+    <ErrorAlertContext.Provider value={value}>
+      {children}
+      <BCSCErrorModal
+        error={error}
+        visible={visible}
+        errorKey={errorKey}
+        onDismiss={dismiss}
+        enableReport={enableReport}
+      />
+    </ErrorAlertContext.Provider>
+  )
 }
 
 /**
  * Hook to access error and alert functionality
  *
- * @returns Error alert context with methods: error, errorAsAlert, alert, dismiss
+ * @returns Error alert context with methods: emitErrorModal, emitAlert, dismiss
  * @throws Error if used outside of ErrorAlertProvider
- *
  */
 export const useErrorAlert = (): ErrorAlertContextType => {
   const context = useContext(ErrorAlertContext)
