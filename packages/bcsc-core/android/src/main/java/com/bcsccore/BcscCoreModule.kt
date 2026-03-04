@@ -1555,7 +1555,7 @@ class BcscCoreModule(
             val jwtPayload = jweObject.payload.toString()
 
             // Parse the JWT to extract and decode the payload (claims)
-            val jwtSegments = jwtPayload.split(".")
+            val jwtSegments = jwtPayload.split(".", limit = 3)
             if (jwtSegments.size < 3) {
                 promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
                 return
