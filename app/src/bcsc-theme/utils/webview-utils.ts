@@ -1,5 +1,93 @@
 import { IColorPalette } from '@bifold/core'
 import { Dimensions, Platform } from 'react-native'
+import { TermsOfUseResponseData } from '../api/hooks/useConfigApi'
+
+/**
+ * Formats a date string (yyyy-MM-dd) to a long date format (e.g. "June 6, 2025").
+ */
+const formatLongDate = (dateStr: string): string => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+/**
+ * Strips outer document tags (<html>, <head>, <body> and their closing tags) from HTML content,
+ * leaving only the inner body content. This prevents invalid nested HTML when wrapping
+ * API-returned HTML in our own document structure.
+ */
+const stripOuterDocumentTags = (html: string): string => {
+  return html
+    .replace(/<\/?html[^>]*>/gi, '')
+    .replace(/<\/?head[^>]*>/gi, '')
+    .replace(/<\/?body[^>]*>/gi, '')
+    .replace(/<!DOCTYPE[^>]*>/gi, '')
+    .trim()
+}
+
+export interface TermsOfUseHtmlOptions {
+  termsOfUse: TermsOfUseResponseData
+  colorPalette: IColorPalette
+  headerText: string
+  subtitlePrefix: string
+  versionLabel: string
+}
+
+/**
+ * Creates a well-formed HTML document for the Terms of Use, matching v3 (ias-ios) layout.
+ * Embeds all styling directly in the HTML so it works reliably on both iOS and Android
+ * without relying on JS injection timing.
+ *
+ * Header includes:
+ * - Bold header text (from i18n)
+ * - Subtitle with version and formatted date (from i18n)
+ *
+ * @param {TermsOfUseHtmlOptions} options - The terms data, color palette, and i18n strings
+ * @returns {string} A complete HTML document string
+ */
+export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions): string => {
+  const { termsOfUse, colorPalette, headerText, subtitlePrefix, versionLabel } = options
+  const formattedDate = formatLongDate(termsOfUse.date)
+  const bodyContent = stripOuterDocumentTags(termsOfUse.html)
+  // iOS doesn't support the textZoom prop, so we scale the base font-size with the device fontScale.
+  // Android handles this via the WebView textZoom prop in WebViewContent.
+  const fontScale = Platform.OS === 'ios' ? Dimensions.get('window').fontScale : 1
+  const baseFontSize = Math.round(18 * fontScale)
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    background-color: ${colorPalette.brand.primaryBackground};
+    color: ${colorPalette.brand.secondary};
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: ${baseFontSize}px;
+    padding: 0 16px 16px 16px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  body, body * {
+    background-color: ${colorPalette.brand.primaryBackground} !important;
+    color: ${colorPalette.brand.secondary} !important;
+  }
+  p, li, dd, dt {
+    margin-bottom: 0.75em;
+  }
+  a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
+    color: ${colorPalette.brand.link} !important;
+    text-decoration-color: ${colorPalette.brand.link} !important;
+    border-color: ${colorPalette.brand.link} !important;
+  }
+</style>
+</head>
+<body>
+<h4>${headerText}</h4>
+<p>${subtitlePrefix}<br/>${versionLabel} ${termsOfUse.version}, ${formattedDate}</p>
+${bodyContent}
+</body>
+</html>`
+}
 
 export const createFontScalingScript = (): string => {
   const fontScale = Dimensions.get('window').fontScale
@@ -15,10 +103,10 @@ export const createFontScalingScript = (): string => {
 }
 
 /**
- * Creates webview javascript injection to modify the HTML content.
+ * Creates webview javascript injection to modify the HTML content loaded from a full web page URL.
  *
  * This includes setting the background color, text color, and link colors to match the app theme.
- * It also removes nav sections from the page.
+ * It also removes page chrome (header, footer, nav, h1) since the static page includes full navigation.
  *
  * @param {IColorPalette} colorPalette - The color palette object containing brand colors
  * @returns {*} {string} JavaScript string to be injected into the WebView
