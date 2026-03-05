@@ -97,10 +97,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Step completion states ----
     // Calculating Step 5 first, if this is true, it is safe to assume all other steps are complete
     const step5Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
-    const step1Completed = Boolean(nickname) || step5Completed
-    const step2Completed = bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered || step5Completed
-    const step3Completed = Boolean(store.bcscSecure.deviceCode) || step5Completed
-    const step4Completed = Boolean(emailAddress && isEmailVerified) || step5Completed
+    const step1Completed = step5Completed || Boolean(nickname)
+    const step2Completed = step5Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
+    const step3Completed = step5Completed || (step2Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
+    const step4Completed = step5Completed || (step2Completed && Boolean(emailAddress && isEmailVerified)) // Step 2 must be completed before step 4 can be completed
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
