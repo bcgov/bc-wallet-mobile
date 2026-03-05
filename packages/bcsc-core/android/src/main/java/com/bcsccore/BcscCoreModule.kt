@@ -337,21 +337,37 @@ class BcscCoreModule(
                                         if (idTokenObj.has("rawToken")) {
                                             // V4 format: registration_access_token stored as rawToken
                                             val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
-                                            Log.d(NAME, "getToken: Returning V4 registration token, id=${token.getString("id")}")
+                                            Log.d(
+                                                NAME,
+                                                "getToken: Returning V4 registration token, id=${token.getString(
+                                                    "id",
+                                                )}",
+                                            )
                                             promise.resolve(token)
                                             return
                                         }
-                                        Log.d(NAME, "getToken: idToken has no rawToken (V3 identity token), falling back to providers file")
+                                        Log.d(
+                                            NAME,
+                                            "getToken: idToken has no rawToken (V3 identity token), falling back to providers file",
+                                        )
                                     }
 
                                     Log.d(NAME, "getToken : trying V3 providers fallback")
-                                    val v3RegistrationToken = nativeStorage.readRegistrationTokenFromV3Provider(issuerName, accountId)
+                                    val v3RegistrationToken =
+                                        nativeStorage.readRegistrationTokenFromV3Provider(
+                                            issuerName,
+                                            accountId,
+                                        )
                                     if (v3RegistrationToken != null) {
-                                        Log.d(NAME, "getToken : V3 registration token found, migrating to V4 tokens file")
+                                        Log.d(
+                                            NAME,
+                                            "getToken : V3 registration token found, migrating to V4 tokens file",
+                                        )
                                         val existingTokensForMigration = nativeStorage.readTokens(issuerName, accountId)
                                         val migratedIdToken = NativeIdToken(rawToken = v3RegistrationToken)
-                                        val migratedTokens = existingTokensForMigration?.copy(idToken = migratedIdToken)
-                                            ?: NativeTokens(issuer = issuer, idToken = migratedIdToken)
+                                        val migratedTokens =
+                                            existingTokensForMigration?.copy(idToken = migratedIdToken)
+                                                ?: NativeTokens(issuer = issuer, idToken = migratedIdToken)
                                         nativeStorage.saveTokens(migratedTokens, issuerName, accountId)
                                         Log.d(NAME, "getToken : V3 token migrated and saved to V4 tokens file")
                                         val token: WritableMap = Arguments.createMap()
@@ -361,7 +377,10 @@ class BcscCoreModule(
                                         promise.resolve(token)
                                         return
                                     }
-                                    Log.w(NAME, "getToken : No registration token found in V4 tokens file or V3 providers file")
+                                    Log.w(
+                                        NAME,
+                                        "getToken : No registration token found in V4 tokens file or V3 providers file",
+                                    )
                                 }
                             }
 
@@ -375,7 +394,10 @@ class BcscCoreModule(
                         promise.resolve(null)
                     }
                 } else {
-                    Log.w(NAME, "getToken: token file not found or empty at $tokenFilePath — returning null for type $tokenType")
+                    Log.w(
+                        NAME,
+                        "getToken: token file not found or empty at $tokenFilePath — returning null for type $tokenType",
+                    )
                     promise.resolve(null)
                 }
             } catch (e: DecryptionException) {

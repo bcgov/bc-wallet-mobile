@@ -529,9 +529,12 @@ class NativeCompatibleStorage(
         val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
         val providerFile = File(context.filesDir, providerPath)
 
-        Log.d(TAG, "readRegistrationTokenFromV3Provider: Attempting to read v3 provider file from: ${providerPath}")
+        Log.d(TAG, "readRegistrationTokenFromV3Provider: Attempting to read v3 provider file from: $providerPath")
         if (!providerFile.exists()) {
-            Log.d(TAG, "readRegistrationTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}")
+            Log.d(
+                TAG,
+                "readRegistrationTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
+            )
             return null
         }
 

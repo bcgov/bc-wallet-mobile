@@ -42,6 +42,7 @@ class PinService(
         }
         return issuer ?: ""
     }
+
     // Outputs {issuer}.{account}
     // e.g. "bcsc-issuer.1234-5678-9012"
     private fun buildAlias(accountId: String): String = "${getIssuer(accountId)}.$accountId"

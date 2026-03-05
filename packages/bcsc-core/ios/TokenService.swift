@@ -180,7 +180,13 @@ extension KeychainTokenStorageService {
 
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
-    let migratedToken = Token(id: newId, type: v3Token.type, token: v3Token.token, created: v3Token.created, expiry: v3Token.expiry)
+    let migratedToken = Token(
+      id: newId,
+      type: v3Token.type,
+      token: v3Token.token,
+      created: v3Token.created,
+      expiry: v3Token.expiry
+    )
     let migratedData = NSKeyedArchiver.archivedData(withRootObject: migratedToken)
 
     let addAttributes: NSDictionary = [
