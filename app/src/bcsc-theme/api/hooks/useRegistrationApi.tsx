@@ -71,6 +71,7 @@ const dcrNativeErrorMap = new Map<string, ErrorDefinition>([
   [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, ErrorRegistry.KEYCHAIN_KEY_EXISTS],
   [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
   [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, ErrorRegistry.JWT_DEVICE_INFO_ERROR],
+  [BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED, ErrorRegistry.SERIALIZE_JSON_ERROR],
 ])
 
 function throwDcrNativeError(error: unknown): never {
@@ -157,6 +158,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
    * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -249,6 +251,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set

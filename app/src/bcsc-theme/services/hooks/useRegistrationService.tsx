@@ -21,6 +21,7 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.problemWithAppAlert,
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
   [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
+  [AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON]: alerts.failedToSerializeJsonAlert,
 })
 
 /**
@@ -56,6 +57,7 @@ export const useRegistrationService = () => {
         return await registrationApi.register(securityMethod)
       } catch (error) {
         emitRegistrationAlert(error)
+
         throw error
       }
     },
@@ -75,6 +77,7 @@ export const useRegistrationService = () => {
         return await registrationApi.updateRegistration(registrationAccessToken, selectedNickname)
       } catch (error) {
         emitRegistrationAlert(error)
+
         throw error
       }
     },

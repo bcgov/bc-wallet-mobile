@@ -1292,6 +1292,13 @@ class BcscCoreModule(
                 "Error creating dynamic client registration with bcsc-keypair-port: ${e.devMessage}",
                 e,
             )
+        } catch (e: org.json.JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: JSON serialization error: ${e.message}", e)
+            promise.reject(
+                "E_JSON_SERIALIZATION_FAILED",
+                "Failed to serialize client registration data: ${e.message}",
+                e,
+            )
         } catch (e: Exception) {
             Log.e(NAME, "getDynamicClientRegistrationBody: Unexpected error: ${e.message}", e)
             promise.reject("E_DCR_ERROR", "Unexpected error creating dynamic client registration: ${e.message}", e)

@@ -51,6 +51,7 @@ exports[`EvidenceTypeList renders correctly 1`] = `
     </Text>
   </View>
   <RCTScrollView
+    ListFooterComponent={null}
     data={[]}
     getItem={[Function]}
     getItemCount={[Function]}
