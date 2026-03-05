@@ -68,6 +68,66 @@ describe('useLoadingScreen hook', () => {
     })
     expect(result.current?.isLoading).toBe(false)
   })
+
+  it('should stay loading until all concurrent loaders have stopped', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
+
+    let stopA: (() => void) | undefined
+    let stopB: (() => void) | undefined
+
+    act(() => {
+      stopA = result.current?.startLoading()
+      stopB = result.current?.startLoading()
+    })
+    expect(result.current?.isLoading).toBe(true)
+
+    act(() => {
+      stopA?.()
+    })
+    expect(result.current?.isLoading).toBe(true) // B is still active
+
+    act(() => {
+      stopB?.()
+    })
+    expect(result.current?.isLoading).toBe(false)
+  })
+
+  it('should display the message of the most recently started loader that has one', () => {
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
+
+    let stopA: (() => void) | undefined
+    let stopB: (() => void) | undefined
+
+    act(() => {
+      stopA = result.current?.startLoading('Message A')
+    })
+    expect(result.current?.isLoading).toBe(true)
+
+    // Starting a loader without a message should not overwrite "Message A"
+    act(() => {
+      stopB = result.current?.startLoading()
+    })
+    expect(result.current?.isLoading).toBe(true)
+
+    // Stopping B (no message) should restore "Message A"
+    act(() => {
+      stopB?.()
+    })
+    expect(result.current?.isLoading).toBe(true)
+
+    act(() => {
+      stopA?.()
+    })
+    expect(result.current?.isLoading).toBe(false)
+  })
 })
 
 describe('LoadingScreen component', () => {

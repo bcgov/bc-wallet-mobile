@@ -1,5 +1,14 @@
 import { testIdWithKey } from '@bifold/core'
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  createContext,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
 
@@ -64,7 +73,11 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     const loadingToken = Symbol()
     loadersRef.current.add(loadingToken)
     setIsLoading(true)
-    setLoadingMessage(message ?? null)
+
+    if (message) {
+      // Only update the message if it's intentional (not undefined, but allowing null to clear the message)
+      setLoadingMessage(message)
+    }
 
     return () => {
       loadersRef.current.delete(loadingToken)
@@ -130,7 +143,7 @@ export const useLoadingScreen = () => {
 export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
   const loadingScreen = useLoadingScreen()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Start loading when the component mounts
     const stopLoading = loadingScreen.startLoading(message)
 
