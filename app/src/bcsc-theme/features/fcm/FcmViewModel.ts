@@ -4,7 +4,13 @@ import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
-import { BcscNativeErrorCodes, decodeLoginChallenge, isBcscNativeError, JWK, showLocalNotification } from 'react-native-bcsc-core'
+import {
+  BcscNativeErrorCodes,
+  decodeLoginChallenge,
+  isBcscNativeError,
+  JWK,
+  showLocalNotification,
+} from 'react-native-bcsc-core'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
