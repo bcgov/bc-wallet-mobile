@@ -1,7 +1,6 @@
 import { testIdWithKey } from '@bifold/core'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import NonProdOverlay from '../components/NonProdOverlay'
 import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
 
 interface BCSCLoadingContextType {
@@ -76,7 +75,6 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       {/** Mount LoadingScreenContent component when loading **/}
       <View style={loadingStyle} testID={testIdWithKey('BCSCLoadingProviderOverlay')}>
         <LoadingScreenContent message={loadingMessage ?? undefined} />
-        <NonProdOverlay />
       </View>
     </BCSCLoadingContext.Provider>
   )
