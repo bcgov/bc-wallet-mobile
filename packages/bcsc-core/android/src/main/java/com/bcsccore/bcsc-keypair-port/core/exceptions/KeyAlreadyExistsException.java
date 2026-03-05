@@ -1,6 +1,6 @@
 package com.bcsccore.keypair.core.exceptions;
 
-/**d
+/**
  * Exception thrown when a key pair generation is attempted but the alias
  * already exists in the Android KeyStore.
  *
