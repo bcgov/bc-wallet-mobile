@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
-import { isVerificationSuccess } from '@/bcsc-theme/utils/bcsc-credential'
+import { isVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
@@ -87,7 +87,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const handleCheckStatus = useCallback(async () => {
     setIsCheckingStatus(true)
     try {
-      if (isVerificationSuccess(store.bcscSecure)) {
+      if (isVerified(store.bcscSecure)) {
         // If we have a refresh token we can assume verification is complete
         // Scenario: user checked their status but closed the app before completing VerificationSuccess
         navigation.navigate(BCSCScreens.VerificationSuccess)
@@ -203,7 +203,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
       verify: () => {
         // Note: This ensures that if the user somehow got to the steps screen with a refresh token (shouldn't be possible but just in case), we navigate them to the success screen
-        if (isVerificationSuccess(store.bcscSecure)) {
+        if (isVerified(store.bcscSecure)) {
           navigation.navigate(BCSCScreens.VerificationSuccess)
           return
         }

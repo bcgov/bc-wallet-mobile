@@ -1,5 +1,6 @@
 import { BCSCSecureState, VerificationStatus } from '@/store'
 import { BCSCAccountType, BCSCCardType, CredentialInfo } from 'react-native-bcsc-core'
+import { BCSCEvent } from './id-token'
 
 /**
  * Creates a minimal credential object for account verification.
@@ -22,7 +23,7 @@ export function createMinimalCredential(
     subject,
     label: 'BC Services Card', // Default label matching v3
     created: Math.floor(Date.now() / 1000), // Unix timestamp in seconds
-    bcscEvent: 'Authorization', // Standard verification event
+    bcscEvent: BCSCEvent.Authorization, // Standard verification event
     bcscReason: 'SUCCESSFUL_VERIFICATION', // Standard reason // FIXME (MD): This is not a valid reason
     cardType,
     accountType,
@@ -32,13 +33,13 @@ export function createMinimalCredential(
 }
 
 /**
- * Determines if the user's verification status should be considered successful based on the secure state.
+ * Determines if the user is verified based on their secure state.
  *
  * @param secureState The current secure state of the user
  * @returns boolean indicating if the user is verified
  */
-export function isVerificationSuccess(secureState: BCSCSecureState): boolean {
-  if (secureState.verified) {
+export function isVerified(secureState: BCSCSecureState): boolean {
+  if (secureState.verified || secureState.verifiedStatus === VerificationStatus.VERIFIED) {
     // If already verified, we can trust the state and skip checks
     return true
   }

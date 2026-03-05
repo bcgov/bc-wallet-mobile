@@ -1249,6 +1249,13 @@ class BcscCoreModule(
                 "Error creating dynamic client registration with bcsc-keypair-port: ${e.devMessage}",
                 e,
             )
+        } catch (e: org.json.JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: JSON serialization error: ${e.message}", e)
+            promise.reject(
+                "E_JSON_SERIALIZATION_FAILED",
+                "Failed to serialize client registration data: ${e.message}",
+                e,
+            )
         } catch (e: Exception) {
             Log.e(NAME, "getDynamicClientRegistrationBody: Unexpected error: ${e.message}", e)
             promise.reject("E_DCR_ERROR", "Unexpected error creating dynamic client registration: ${e.message}", e)
@@ -3033,12 +3040,7 @@ class BcscCoreModule(
                 }
             }
 
-            val committed = editor.commit() // Synchronously persist changes before resolving promise
-            if (!committed) {
-                Log.e(NAME, "setAccountFlags: Failed to commit account flags to SharedPreferences")
-                promise.reject("E_SET_ACCOUNT_FLAGS_PERSISTENCE", "Failed to persist account flags")
-                return
-            }
+            editor.apply()
 
             Log.d(NAME, "setAccountFlags: Successfully saved account flags")
             promise.resolve(true)
@@ -3359,15 +3361,7 @@ class BcscCoreModule(
             // Save back to SharedPreferences
             val editor = sharedPreferences.edit()
             editor.putString("provider", providerData.toString())
-
-            val committed = editor.commit() // Ensure it's written before resolving promise
-            if (!committed) {
-                Log.e(NAME, "setCredential: Failed to persist credential to SharedPreferences")
-                promise.reject(
-                    "E_SET_CREDENTIAL_PERSISTENCE_ERROR",
-                    "Error setting credential: failed to persist to SharedPreferences",
-                )
-            }
+            editor.apply()
 
             Log.d(NAME, "setCredential: Successfully saved credential")
             promise.resolve(true)
@@ -3415,12 +3409,7 @@ class BcscCoreModule(
                 providerData.put("clientRegistration", clientRegistration)
                 val editor = sharedPreferences.edit()
                 editor.putString("provider", providerData.toString())
-                val committed = editor.commit() // Ensure it's written before resolving promise
-                if (!committed) {
-                    Log.e(NAME, "deleteCredential: Failed to persist updated provider data")
-                    promise.resolve(false)
-                    return
-                }
+                editor.apply()
 
                 Log.d(NAME, "deleteCredential: Successfully removed credential")
             } else {
