@@ -2,7 +2,7 @@ import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 
 describe('Analytics Tracker', () => {
-  it('should contstruct properly', () => {
+  it('should construct properly', () => {
     const analytics = new AnalyticsTracker('endpoint')
 
     expect(analytics).toBeInstanceOf(AnalyticsTracker)

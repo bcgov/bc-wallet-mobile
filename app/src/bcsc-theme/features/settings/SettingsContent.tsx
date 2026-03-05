@@ -139,8 +139,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
 
     try {
-      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
       await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
+      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',

@@ -27,7 +27,7 @@ const AnalyticsClient = {
  *
  * @class
  * @example
- * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
+ * const analyticsTracker = new AnalyticsTracker('https://endpoint.com')
  *
  * await analyticsTracker.initializeTracker()
  *
