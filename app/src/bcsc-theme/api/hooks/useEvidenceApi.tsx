@@ -67,7 +67,7 @@ export interface EvidenceMetadataResponseData {
   }[]
 }
 export interface EvidenceMetadataPayload {
-  type: string
+  type?: string
   number?: string
   images: VerificationPhotoUploadPayload[]
   barcodes?: BarcodePayload[]

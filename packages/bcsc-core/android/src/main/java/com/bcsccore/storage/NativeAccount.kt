@@ -40,12 +40,12 @@ data class NativePenalty(
 enum class NativeAccountSecurityType(
     val type: String,
 ) {
-    @SerializedName("DeviceSecurity")
+    @SerializedName(value = "DeviceSecurity", alternate = ["device_authentication"])
     DeviceSecurity("DeviceSecurity"),
 
-    @SerializedName("PinNoDeviceAuth")
+    @SerializedName(value = "PinNoDeviceAuth", alternate = ["AppPIN", "app_pin", "app_pin_no_device_authn"])
     PinNoDeviceAuth("PinNoDeviceAuth"),
 
-    @SerializedName("PinWithDeviceAuth")
+    @SerializedName(value = "PinWithDeviceAuth", alternate = ["app_pin_has_device_authn"])
     PinWithDeviceAuth("PinWithDeviceAuth"),
 }

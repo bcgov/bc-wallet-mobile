@@ -17,6 +17,7 @@ export interface UserInfoResponseData {
   address: { formatted: string }
   picture: string
   card_type: any
+  email: string
   /**
    * Backend team clarification:
    * This value is **NOT** the physical card expiration date.
