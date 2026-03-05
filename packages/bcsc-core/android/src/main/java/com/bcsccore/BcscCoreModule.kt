@@ -3645,7 +3645,7 @@ class BcscCoreModule(
     }
 
     private val pinService: PinService by lazy {
-        PinService(reactApplicationContext)
+        PinService(reactApplicationContext, nativeStorage)
     }
 
     // MARK: - JSON Conversion Helpers

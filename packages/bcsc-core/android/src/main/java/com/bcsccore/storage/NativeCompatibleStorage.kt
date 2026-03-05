@@ -448,12 +448,8 @@ class NativeCompatibleStorage(
     }
 
     private fun parseSecurityType(value: String): NativeAccountSecurityType =
-        when (value) {
-            "DeviceSecurity", "device_authentication" -> NativeAccountSecurityType.DeviceSecurity
-            "PinNoDeviceAuth", "app_pin_no_device_authn" -> NativeAccountSecurityType.PinNoDeviceAuth
-            "PinWithDeviceAuth", "app_pin_has_device_authn" -> NativeAccountSecurityType.PinWithDeviceAuth
-            else -> NativeAccountSecurityType.DeviceSecurity
-        }
+        gson.fromJson("\"$value\"", NativeAccountSecurityType::class.java)
+            ?: NativeAccountSecurityType.DeviceSecurity
 
     // MARK: - Authorization Request Storage
 
