@@ -57,7 +57,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 }: SecurityMethodSelectorProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [isDeviceAuthAvailable, setIsDeviceAuthAvailable] = useState(false)
@@ -85,8 +85,8 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   useEffect(() => {
     const loadDeviceAuthInfo = async () => {
+      const stopLoading = startLoading()
       try {
-        startLoading()
         const [deviceAuthAvailable, biometricType] = await Promise.all([
           canPerformDeviceAuthentication(),
           getAvailableBiometricType(),
@@ -103,11 +103,11 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     }
 
     loadDeviceAuthInfo()
-  }, [logger, startLoading, stopLoading])
+  }, [logger, startLoading])
 
   const handleDeviceAuthentication = async () => {
+    const stopLoading = startLoading()
     try {
-      startLoading()
 
       if (isDeviceAuthAvailable) {
         try {

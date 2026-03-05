@@ -116,8 +116,8 @@ const useEvidenceUploadModel = (
   )
 
   const handleSend = useCallback(async () => {
+    const stopLoading = loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
     try {
-      loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
 
       if (!photoPath || !videoPath || !videoDuration) {
         throw new Error('Missing photo or video data')
@@ -180,7 +180,7 @@ const useEvidenceUploadModel = (
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
       fileUploadErrorAlert()
     } finally {
-      loadingScreen.stopLoading()
+      stopLoading()
     }
   }, [
     fileUploadErrorAlert,

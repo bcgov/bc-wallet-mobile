@@ -21,14 +21,9 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
 
   useEffect(() => {
     if (!context || context.isLoadingAccount || !context.account) {
-      loadingScreen.startLoading()
-      return () => {
-        // Ensure loading screen is stopped if the component unmounts while still loading
-        loadingScreen.stopLoading()
-      }
+      const stopLoading = loadingScreen.startLoading()
+      return stopLoading
     }
-
-    loadingScreen.stopLoading()
 
     const route = isAccountExpired(context.account.account_expiration_date)
       ? { name: BCSCScreens.AccountExpired } // Navigate to Account Expired screen when account is expired
@@ -40,10 +35,6 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
         routes: [route],
       })
     )
-
-    return () => {
-      loadingScreen.stopLoading()
-    }
   }, [context, context?.isLoadingAccount, context?.account, loadingScreen, navigation])
 
   return null

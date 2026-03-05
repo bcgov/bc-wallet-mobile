@@ -1,12 +1,11 @@
 import { testIdWithKey } from '@bifold/core'
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
 
 interface BCSCLoadingContextType {
   isLoading: boolean
-  startLoading: (message?: string) => void
-  stopLoading: () => void
+  startLoading: (message?: string) => () => void
   updateLoadingMessage: (message: string) => void
 }
 
@@ -22,12 +21,12 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
  *
  *   loadingScreen.startLoading("Loading data...");
  *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
- *   loadingScreen.stopLoading();
  *
  * @param {PropsWithChildren} props - The props containing child components.
  * @returns {*} {React.ReactElement} The BCSCLoadingProvider component wrapping its children.
  */
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
+  const loadersRef = useRef(new Set<symbol>()) // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
 
@@ -38,31 +37,42 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     },
     hidden: {
       display: 'none',
-      pointerEvents: 'none', // Ensure hidden content doesn't intercept touches
+      pointerEvents: 'none', // Ensure hidden view doesn't intercept touches
     },
   })
 
   const childrenStyle = isLoading ? styles.hidden : styles.visible
   const loadingStyle = isLoading ? styles.visible : styles.hidden
 
+  /**
+   * Starts the loading state and returns a function to stop it.
+   *
+   * @param - Optional message to display on the loading screen.
+   * @returns A function that, when called, will stop the loading state.
+   */
   const startLoading = useCallback((message?: string) => {
+    const loadingToken = Symbol()
+    loadersRef.current.add(loadingToken)
     setIsLoading(true)
     setLoadingMessage(message ?? null)
-  }, [])
 
-  const stopLoading = useCallback(() => {
-    setIsLoading(false)
-    setLoadingMessage(null)
+    return () => {
+      loadersRef.current.delete(loadingToken)
+      // Only once all loaders have been stopped do we hide the loading screen
+      if (loadersRef.current.size === 0) {
+        setIsLoading(false)
+        setLoadingMessage(null)
+      }
+    }
   }, [])
 
   const loadingContext = useMemo(
     () => ({
       isLoading,
       startLoading,
-      stopLoading,
       updateLoadingMessage: setLoadingMessage,
     }),
-    [isLoading, startLoading, stopLoading]
+    [isLoading, startLoading]
   )
 
   return (
@@ -88,7 +98,6 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
  *
  *   loadingScreen.startLoading("Loading data...");
  *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
- *   loadingScreen.stopLoading();
  *
  * @returns {*} {BCSCLoadingContextType} The loading screen context.
  */
@@ -113,11 +122,10 @@ export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
 
   useEffect(() => {
     // Start loading when the component mounts
-    loadingScreen.startLoading(message)
-    return () => {
-      // Stop loading when the component unmounts
-      loadingScreen.stopLoading()
-    }
+    const stopLoading = loadingScreen.startLoading(message)
+
+    // Stop loading when the component unmounts
+    return stopLoading
   }, [loadingScreen, message])
 
   // This component doesn't render anything itself, it just manages the loading state
