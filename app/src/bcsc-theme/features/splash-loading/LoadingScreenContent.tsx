@@ -1,55 +1,26 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import HomeHeader from '../home/components/HomeHeader'
 
-interface LoadingScreenContentPropsA {
-  /**
-   * Indicates whether the loading process is ongoing.
-   * Pairs with `onLoaded` callback
-   *
-   * @type {boolean}
-   */
-  loading: boolean
-  /**
-   * Callback function to be called when loading is complete. ie: navigation
-   * Pairs with `loading` prop
-   *
-   * @type {() => void}
-   */
-  onLoaded: () => void
+export interface LoadingScreenContentProps {
   /**
    * The optional message to override the default loading message.
    * default: "A secure way to prove who you are online"
-   *
-   * QUESTION (MD): Does this need to cycle through different messages?
-   *
    * @type {string | undefined}
    */
   message?: string
 }
 
-interface LoadingScreenContentPropsB {
-  loading?: never
-  onLoaded?: never
-  message?: string
-}
-
-type LoadingScreenContentProps = LoadingScreenContentPropsA | LoadingScreenContentPropsB
-
 /**
  * Renders the LoadingScreenContent component with a message and an activity indicator.
  *
- * Note: Props `loading` + `onLoaded` are optional, but must be provided together.
- *
- * @returns {*} {React.ReactElement} The LoadingScreenContent component.
+ * @returns The LoadingScreenContent component.
  */
-export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScreenContentProps) => {
+export const LoadingScreenContent = ({ message }: LoadingScreenContentProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, Assets } = useTheme()
-  const callOnLoadedOnceRef = useRef(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -85,15 +56,6 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
       height: 150,
     },
   })
-
-  useEffect(() => {
-    if (loading || !onLoaded || callOnLoadedOnceRef.current) {
-      return
-    }
-
-    callOnLoadedOnceRef.current = true
-    onLoaded()
-  }, [loading, onLoaded])
 
   return (
     <SafeAreaView style={styles.container} testID={testIdWithKey('LoadingScreenContent')}>

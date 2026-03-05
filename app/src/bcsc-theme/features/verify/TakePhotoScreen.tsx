@@ -1,6 +1,7 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, ScreenWrapper } from '@bifold/core'
@@ -8,7 +9,6 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { useCameraPermission } from 'react-native-vision-camera'
-import { LoadingScreenContent } from '../splash-loading/LoadingScreenContent'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
@@ -30,7 +30,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
 
   if (isLoading) {
-    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasPermission) {

@@ -1,7 +1,8 @@
 import { testIdWithKey } from '@bifold/core'
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
+import NonProdOverlay from '../components/NonProdOverlay'
+import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
 
 interface BCSCLoadingContextType {
   isLoading: boolean
@@ -38,8 +39,12 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     },
     hidden: {
       display: 'none',
+      pointerEvents: 'none', // Ensure hidden content doesn't intercept touches
     },
   })
+
+  const childrenStyle = isLoading ? styles.hidden : styles.visible
+  const loadingStyle = isLoading ? styles.visible : styles.hidden
 
   const startLoading = useCallback((message?: string) => {
     setIsLoading(true)
@@ -64,12 +69,15 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   return (
     <BCSCLoadingContext.Provider value={loadingContext}>
       {/** When loading make children invisible (still mounted) **/}
-      <View style={isLoading ? styles.hidden : styles.visible} testID={testIdWithKey('BCSCLoadingProviderChildren')}>
+      <View style={childrenStyle} testID={testIdWithKey('BCSCLoadingProviderChildren')}>
         {children}
       </View>
 
       {/** Mount LoadingScreenContent component when loading **/}
-      {isLoading ? <LoadingScreenContent message={loadingMessage ?? undefined} /> : null}
+      <View style={loadingStyle} testID={testIdWithKey('BCSCLoadingProviderOverlay')}>
+        <LoadingScreenContent message={loadingMessage ?? undefined} />
+        <NonProdOverlay />
+      </View>
     </BCSCLoadingContext.Provider>
   )
 }
@@ -94,4 +102,26 @@ export const useLoadingScreen = () => {
   }
 
   return context
+}
+
+/**
+ * A wrapper component that manages the loading state using the useLoadingScreen hook.
+ *
+ * @param props - The props for the LoadingScreen component, including an optional message to display.
+ * @returns The LoadingScreen component that starts the loading state on mount and stops it on unmount.
+ */
+export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
+  const loadingScreen = useLoadingScreen()
+
+  useEffect(() => {
+    // Start loading when the component mounts
+    loadingScreen.startLoading(message)
+    return () => {
+      // Stop loading when the component unmounts
+      loadingScreen.stopLoading()
+    }
+  }, [loadingScreen, message])
+
+  // This component doesn't render anything itself, it just manages the loading state
+  return null
 }

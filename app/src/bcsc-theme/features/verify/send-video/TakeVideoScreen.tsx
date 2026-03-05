@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   hitSlop,
@@ -25,7 +26,6 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -282,7 +282,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   if (isCameraLoading || isMicrophoneLoading) {
-    return <LoadingScreenContent loading={isCameraLoading || isMicrophoneLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
