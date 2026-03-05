@@ -483,7 +483,6 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -911,7 +910,6 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1455,7 +1453,6 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

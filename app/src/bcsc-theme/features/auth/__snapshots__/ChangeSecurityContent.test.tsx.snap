@@ -483,7 +483,6 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1122,7 +1121,6 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1629,7 +1627,6 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

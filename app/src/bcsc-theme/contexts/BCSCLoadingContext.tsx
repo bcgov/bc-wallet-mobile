@@ -37,7 +37,6 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     },
     hidden: {
       display: 'none',
-      pointerEvents: 'none', // Ensure hidden view doesn't intercept touches
     },
   })
 

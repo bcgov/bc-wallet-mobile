@@ -388,7 +388,6 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -816,7 +815,6 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

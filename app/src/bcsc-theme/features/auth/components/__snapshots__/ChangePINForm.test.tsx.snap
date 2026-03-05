@@ -723,7 +723,6 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

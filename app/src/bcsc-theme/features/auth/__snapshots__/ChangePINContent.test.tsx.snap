@@ -723,7 +723,6 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1451,7 +1450,6 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

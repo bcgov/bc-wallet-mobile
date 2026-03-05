@@ -572,7 +572,6 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

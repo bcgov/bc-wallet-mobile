@@ -572,7 +572,6 @@ exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] =
     style={
       {
         "display": "none",
-        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
