@@ -23,7 +23,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
     data={
       [
         {
-          "analyticsAppId": "Snowplow_standalone_IDIMapp_",
+          "analyticsAppId": "Snowplow_standalone_IDIMapp_prod",
           "appToAppUrl": "ca.bc.gov.id.servicescard.v2://credentials/person/v1",
           "iasAgentInviteUrl": "https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==",
           "iasApiBaseUrl": "https://id.gov.bc.ca",
