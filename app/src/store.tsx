@@ -136,8 +136,6 @@ export interface BCSCSecureState {
   birthdate?: Date
   /** BC Services Card serial number */
   serial?: string
-  /** User's email address */
-  email?: string
   /** Whether user's email has been verified */
   isEmailVerified?: boolean
   /** Verification request ID for evidence upload */
@@ -587,11 +585,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_BIRTHDATE: {
       const birthdate = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, birthdate }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.UPDATE_SECURE_EMAIL: {
-      const email = (action?.payload || []).pop() ?? undefined
-      const bcscSecure = { ...state.bcscSecure, email }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_DEVICE_CODE: {

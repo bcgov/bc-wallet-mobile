@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type LoginChallengeResult,
   type NativeAccount,
   type NativeAuthorizationRequest,
+  type NativeFilesScan,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -14,6 +15,7 @@ export type {
   NativeAccount,
   NativeAddress,
   NativeAuthorizationRequest,
+  NativeFilesScan,
 } from './NativeBcscCore';
 
 /**
@@ -22,10 +24,18 @@ export type {
  * Access via `error.code` on caught native module errors.
  */
 export const BcscNativeErrorCodes = {
-  /** Secure hardware / keystore could not generate a new keypair */
-  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
-  /** Keypair exists but could not be retrieved from secure storage */
-  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
+  TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
+  /** toJSONString method failed while serializing device info JWT (error 120-2) */
+  TOJSONSTRING_METHOD_FAILURE: 'E_120_TOJSONSTRING_METHOD_FAILURE',
+  /** Keychain key already exists during key pair generation (error 120-3) */
+  KEYCHAIN_KEY_EXISTS: 'E_120_KEYCHAIN_KEY_EXISTS_ERROR',
+  /** Keychain key does not exist when retrieving key pair (error 120-4) */
+  KEYCHAIN_KEY_DOESNT_EXIST: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+  /** Keychain key generation error during key pair generation (error 120-5) */
+  KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
+  /** Error creating device info JWT during client registration (error 120-6) */
+  JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
   /** JSON serialization failed in the native module */
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
 } as const;
@@ -271,6 +281,32 @@ export const setIssuer = (issuer: string): Promise<boolean> => {
  */
 export const getIssuer = (): Promise<string | null> => {
   return BcscCore.getIssuer();
+};
+
+/**
+ * Scans the native Application Support directory and returns all file paths.
+ * Useful for diagnosing v3 vs v4 storage layouts.
+ * Example code to place in App.tsx:
+ *
+ * useEffect(() => {
+ *   getNativeFilesScan()
+ *     .then((scan) => {
+ *       logger.info(`[Native File Scan] bundleID: ${scan.bundleID}`)
+ *       logger.info(`[Native File Scan] bundleDirectory: ${scan.bundleDirectory}`)
+ *       logger.info(`[Native File Scan] bundleDirectoryExists: ${scan.bundleDirectoryExists}`)
+ *       logger.info(`[Native File Scan] fileCount: ${scan.fileCount}`)
+ *       scan.files.forEach((file) => {
+ *         logger.info(`[Native File Scan] ${file}`)
+ *       })
+ *     })
+ *     .catch((error) => {
+ *       const errorMsg = error instanceof Error ? error.message : String(error)
+ *       logger.error(`[Native File Scan] Error: ${errorMsg}`)
+ *     })
+ * }, [logger])
+ */
+export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
+  return BcscCore.getNativeFilesScan();
 };
 
 /**
@@ -798,7 +834,7 @@ export interface EvidenceType {
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
-  evidenceType: EvidenceType;
+  evidenceType?: EvidenceType;
   /** Photo metadata array */
   metadata: PhotoMetadata[];
   /** Document number/reference */

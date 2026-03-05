@@ -65,7 +65,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Derived state from store ----
     const nickname = store.bcsc.selectedNickname || null
     const bcscSerialNumber = store.bcscSecure.serial || null
-    const emailAddress = store.bcscSecure.email || null
+    const emailAddress = store.bcscSecure.emailAddress || null
     const isEmailVerified = Boolean(store.bcscSecure.isEmailVerified)
     const hasSerial = Boolean(bcscSerialNumber)
 
@@ -80,7 +80,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     // Check if user has any completed photo ID evidence
     const hasCompletedPhotoIdEvidence = store.bcscSecure.additionalEvidenceData.some(
-      (item) => item.evidenceType.has_photo && isEvidenceComplete(item)
+      (item) => item.evidenceType?.has_photo && isEvidenceComplete(item)
     )
 
     // Non-photo BCSC needs an additional photo ID card if serial is present but no completed photo evidence
@@ -95,11 +95,12 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const nonBcscRegistered = isNonBCSCCards && completedEvidenceCount === 2
 
     // ---- Step completion states ----
-    const step1Completed = Boolean(nickname)
-    const step2Completed = bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
-    const step3Completed = step2Completed && Boolean(store.bcscSecure.deviceCode) // Step 2 must be completed before step 3 can be completed
-    const step4Completed = step2Completed && Boolean(emailAddress && isEmailVerified) // Step 2 must be completed before step 4 can be completed
+    // Calculating Step 5 first, if this is true, it is safe to assume all other steps are complete
     const step5Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
+    const step1Completed = step5Completed || Boolean(nickname)
+    const step2Completed = step5Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
+    const step3Completed = step5Completed || (step2Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
+    const step4Completed = step5Completed || (step2Completed && Boolean(emailAddress && isEmailVerified)) // Step 2 must be completed before step 4 can be completed
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
@@ -134,7 +135,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       for (const evidence of store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
-            evidenceType: evidence.evidenceType.evidence_type,
+            evidenceType: evidence.evidenceType?.evidence_type,
             documentNumber: evidence.documentNumber,
           })
         )
@@ -249,7 +250,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     store.bcscSecure.cardProcess,
     store.bcscSecure.deviceCode,
     store.bcscSecure.deviceCodeExpiresAt,
-    store.bcscSecure.email,
+    store.bcscSecure.emailAddress,
     store.bcscSecure.isEmailVerified,
     store.bcscSecure.serial,
     store.bcscSecure.userMetadata?.address,
