@@ -1,7 +1,7 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/error-utils'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/error-utils'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
