@@ -291,6 +291,27 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('jwsVerificationFailedAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.jwsVerificationFailedAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_112_JWS_VERIFICATION_FAILED,
+        actions: [
+          {
+            text: 'Global.OK',
+          },
+        ],
+      })
+    })
+  })
+
   describe('loginServerErrorAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -741,6 +762,27 @@ describe('useAlerts', () => {
       action.onPress()
 
       expect(mockAction).toHaveBeenCalled()
+    })
+  })
+
+  describe('failedToSerializeJsonAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToSerializeJsonAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON,
+        actions: [
+          {
+            text: 'Global.OK',
+          },
+        ],
+      })
     })
   })
 

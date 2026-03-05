@@ -38,6 +38,10 @@ export const useRegistrationService = () => {
           alerts.clientRegistrationNullAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON)) {
+          alerts.failedToSerializeJsonAlert()
+        }
+
         throw error
       }
     },
@@ -66,6 +70,10 @@ export const useRegistrationService = () => {
 
         if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
           alerts.failedToDeserializeJsonAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON)) {
+          alerts.failedToSerializeJsonAlert()
         }
 
         throw error
