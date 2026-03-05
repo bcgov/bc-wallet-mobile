@@ -12,6 +12,7 @@ import {
   cardExpiredErrorPolicy,
   ClientErrorHandlingPolicies,
   globalAlertErrorPolicy,
+  iasErrorPolicy,
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
@@ -29,7 +30,63 @@ const newError = (code: string): AxiosAppError => {
   return err as AxiosAppError
 }
 
+/**
+ * Single source of truth for IAS error codes 201–300: app event code string → alert method name.
+ * Used for table-driven tests so every IAS error has matching policy and alert.
+ */
+const IAS_ERROR_TEST_CASES: Array<[appEvent: string, alertMethod: string]> = [
+  ['add_card_server_configuration', 'serverConfigurationAlert'],
+  ['add_card_dynamic_registration', 'dynamicRegistrationErrorAlert'],
+  ['add_card_terms_of_use', 'termsOfUseErrorAlert'],
+  ['add_card_incorrect_os', 'incorrectOsAlert'],
+  ['add_card_provider', 'addCardNotAvailableAlert'],
+  ['err_206_missing_or_null_values_in_json_response', 'missingJsonValuesAlert'],
+  ['err_207_unable_to_sign_claims_set', 'signClaimsErrorAlert'],
+  ['err_208_unexpected_network_call_exception', 'unexpectedNetworkCallAlert'],
+  ['err_209_bad_request', 'badRequestAlert'],
+  ['err_210_unauthorized', 'unauthorizedAlert'],
+  ['err_211_server_outage', 'serverOutageAlert'],
+  ['err_212_retry_later', 'retryLaterAlert'],
+  ['err_213_failed_creating_client_registration', 'creatingClientRegistrationFailedAlert'],
+  ['err_299_keys_out_of_sync', 'keysOutOfSyncAlert'],
+  ['err_300_empty_response', 'emptyResponseAlert'],
+]
+
 describe('clientErrorPolicies', () => {
+  describe('iasErrorPolicy', () => {
+    describe('matches()', () => {
+      it.each(IAS_ERROR_TEST_CASES)('should match %s', (appEvent) => {
+        const error = newError(appEvent)
+        expect(iasErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match non-IAS app events', () => {
+        expect(iasErrorPolicy.matches(newError('no_internet'), {} as any)).toBeFalsy()
+        expect(iasErrorPolicy.matches(newError('server_error'), {} as any)).toBeFalsy()
+        expect(iasErrorPolicy.matches(newError('some_other_error'), {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle()', () => {
+      it.each(IAS_ERROR_TEST_CASES)('should call %s for app event %s', (appEvent, alertMethod) => {
+        const error = newError(appEvent)
+        const mockAlert = jest.fn()
+        const context = { alerts: { [alertMethod]: mockAlert } }
+        iasErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      it.each(IAS_ERROR_TEST_CASES)('should resolve to iasErrorPolicy for %s', (appEvent) => {
+        const error = newError(appEvent)
+        const context = { endpoint: 'https://example.com/device/register', statusCode: 400, apiEndpoints: {} }
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
+        expect(policy).toBe(iasErrorPolicy)
+      })
+    })
+  })
+
   describe('globalAlertErrorPolicy', () => {
     describe('matches()', () => {
       it('should match unsecured_network', () => {

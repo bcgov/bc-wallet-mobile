@@ -68,10 +68,48 @@ const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
+// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300)
+const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
+    [AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, alerts?.dynamicRegistrationErrorAlert],
+    [AppEventCode.ADD_CARD_TERMS_OF_USE, alerts?.termsOfUseErrorAlert],
+    [AppEventCode.ADD_CARD_INCORRECT_OS, alerts?.incorrectOsAlert],
+    [AppEventCode.ADD_CARD_PROVIDER, alerts?.addCardNotAvailableAlert],
+    [AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, alerts?.missingJsonValuesAlert],
+    [AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, alerts?.signClaimsErrorAlert],
+    [AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, alerts?.unexpectedNetworkCallAlert],
+    [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestAlert],
+    [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
+    [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
+    [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
+    [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
+    [AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, alerts?.keysOutOfSyncAlert],
+    [AppEventCode.ERR_300_EMPTY_RESPONSE, alerts?.emptyResponseAlert],
+  ])
+}
+
 // ----------------------------------------
 // Error Handling Policies
 // https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
 // ----------------------------------------
+
+// IAS errors 201–300 — server configuration, registration, terms of use, provider, JSON, network, auth, etc.
+export const iasErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return _getIasErrorAlertMap().has(error.appEvent)
+  },
+  handle: (error, context) => {
+    const alert = _getIasErrorAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[IasErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    alert()
+  },
+}
 
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
@@ -341,6 +379,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   invalidTokenReturnedPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  iasErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
   unexpectedServerErrorPolicy,
