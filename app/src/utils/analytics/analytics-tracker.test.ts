@@ -53,6 +53,38 @@ describe('Analytics Tracker', () => {
     })
   })
 
+  describe('setAppId', () => {
+    it('should set app ID when tracker exists', async () => {
+      const mockSetAppId = jest.fn()
+      const mockAnalyticsClient = {
+        newTracker: jest.fn().mockResolvedValue({
+          setAppId: mockSetAppId,
+        }),
+      }
+
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
+
+      await analytics.initializeTracker('testAppId')
+
+      analytics.setAppId('newAppId')
+
+      expect(mockSetAppId).toHaveBeenCalledWith('newAppId')
+    })
+
+    it('should not set app ID when tracker does not exist', () => {
+      const mockSetAppId = jest.fn()
+      const mockAnalyticsClient = {
+        newTracker: jest.fn(),
+      }
+
+      const analytics = new AnalyticsTracker('endpoint', mockAnalyticsClient)
+
+      analytics.setAppId('newAppId')
+
+      expect(mockSetAppId).not.toHaveBeenCalled()
+    })
+  })
+
   describe('trackScreenEvent', () => {
     it('should not track when missing tracker', async () => {
       const mockTrackScreenView = jest.fn()

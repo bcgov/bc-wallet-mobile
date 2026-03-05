@@ -68,6 +68,20 @@ export class AnalyticsTracker {
   }
 
   /**
+   * Sets the application ID for the tracker if the tracker is initialized.
+   *
+   * @param appId - The application ID to set for the tracker.
+   * @returns void
+   */
+  setAppId(appId: string): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.setAppId(appId)
+  }
+
+  /**
    * Initializes the analytics tracker with the provided options.
    *
    * @param {string} appId - The application ID to use for tracking.
