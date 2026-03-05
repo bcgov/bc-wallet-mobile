@@ -26,6 +26,8 @@ export const BcscNativeErrorCodes = {
   KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
   /** Keypair exists but could not be retrieved from secure storage */
   KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JSON serialization failed in the native module */
+  JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
 } as const;
 
 /**
