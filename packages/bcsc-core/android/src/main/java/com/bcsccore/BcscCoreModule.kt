@@ -143,6 +143,9 @@ class BcscCoreModule(
         // JWT expiration in seconds
         private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
 
+        // JWS compact serialization: header.payload.signature
+        private const val JWS_COMPACT_SEGMENT_COUNT = 3
+
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
@@ -1555,8 +1558,8 @@ class BcscCoreModule(
             val jwtPayload = jweObject.payload.toString()
 
             // Parse the JWT to extract and decode the payload (claims)
-            val jwtSegments = jwtPayload.split(".", limit = 3)
-            if (jwtSegments.size < 3) {
+            val jwtSegments = jwtPayload.split(".")
+            if (jwtSegments.size != JWS_COMPACT_SEGMENT_COUNT) {
                 promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
                 return
             }
@@ -1591,7 +1594,7 @@ class BcscCoreModule(
             promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE", e)
         } catch (e: IllegalArgumentException) {
             Log.e(NAME, "decodePayload: Base64 decode error: ${e.message}", e)
-            promise.reject("E_BASE64_DECODE_ERROR", "Failed to decode base64 payload", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
             promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
