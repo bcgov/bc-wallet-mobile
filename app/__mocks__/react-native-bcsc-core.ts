@@ -56,6 +56,8 @@ export const BcscNativeErrorCodes = {
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+  /** JSON serialization failed for a native request or payload */
+  JSON_SERIALIZATION_FAILED: 'E_120_JSON_SERIALIZATION_FAILED',
 } as const
 
 export const isBcscNativeError = jest.fn().mockReturnValue(true)
