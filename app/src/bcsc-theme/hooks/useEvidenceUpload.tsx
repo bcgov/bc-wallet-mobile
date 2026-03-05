@@ -54,7 +54,7 @@ const useEvidenceUpload = () => {
 
     for (const evidenceItem of additionalEvidence) {
       const metadataPayload: EvidenceMetadataPayload = {
-        type: evidenceItem.evidenceType.evidence_type,
+        type: evidenceItem?.evidenceType?.evidence_type,
         number: evidenceItem.documentNumber,
         images: evidenceItem.metadata.map((data) => {
           return { ...data, file_path: undefined }

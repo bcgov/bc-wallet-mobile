@@ -66,7 +66,7 @@ describe('useSetupSteps Hook', () => {
 
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
 
       hook.rerender(store)
 
@@ -116,7 +116,7 @@ describe('useSetupSteps Hook', () => {
 
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
 
       hook.rerender(store)
 
@@ -207,7 +207,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -221,7 +221,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -238,7 +238,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -253,7 +253,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = undefined
+      store.bcscSecure.emailAddress = undefined
       store.bcscSecure.deviceCode = 'ABCDEFGH'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -277,7 +277,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = ''
+      store.bcscSecure.emailAddress = ''
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.additionalEvidenceData = [
         {
@@ -307,7 +307,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = false
 
@@ -323,7 +323,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = undefined
+      store.bcscSecure.emailAddress = undefined
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = true
 
@@ -339,7 +339,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = true
 
@@ -357,7 +357,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = true
       store.bcscSecure.verified = false
@@ -374,7 +374,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = true
       store.bcscSecure.verified = true
@@ -393,7 +393,7 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
       store.bcscSecure.isEmailVerified = true
       store.bcscSecure.verified = true
@@ -436,7 +436,7 @@ describe('useSetupSteps Hook', () => {
 
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
-      store.bcscSecure.email = 'steveBrule@email.com'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
 
       hook.rerender(store)
 
@@ -515,7 +515,7 @@ describe('useSetupSteps Hook', () => {
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
-      store.bcscSecure.email = 'test@email.com'
+      store.bcscSecure.emailAddress = 'test@email.com'
       store.bcscSecure.isEmailVerified = true
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.currentStep).toBe('verify')
@@ -544,7 +544,7 @@ describe('useSetupSteps Hook', () => {
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
       store.bcscSecure.deviceCode = 'ABCDEFGH'
-      store.bcscSecure.email = 'test@email.com'
+      store.bcscSecure.emailAddress = 'test@email.com'
       store.bcscSecure.isEmailVerified = true
       store.bcscSecure.verified = true
       store.bcscSecure.userSubmittedVerificationVideo = false

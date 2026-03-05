@@ -61,6 +61,40 @@ class BcscCore: NSObject {
   }
 
   /**
+   * Returns the current account synchronously.
+   * Eliminates repeated StorageService().readData(file: .accountMetadata, ...) boilerplate.
+   */
+  private func getAccountSync() -> Account? {
+    let storage = StorageService()
+    return storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
+   * Reads a named file from the current account's directory using StorageService.
+   * Analogous to Android's readFirstAccountEncryptedFile — reduces per-function boilerplate
+   * for reading account-scoped NSCoding-archived data.
+   *
+   * @param file The AccountFiles case identifying which file to read
+   * @returns The decoded object, or nil if no account is found or the read fails
+   */
+  private func readFirstAccountFile<T: NSObject & NSCoding & NSSecureCoding>(
+    _ file: AccountFiles
+  ) -> T? {
+    let storage = StorageService()
+    guard storage.currentAccountID != nil else {
+      logger.log("readFirstAccountFile: no account found, cannot read \(file.rawValue)")
+      return nil
+    }
+    return storage.readData(
+      file: file,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
    * Creates a signed JWT client assertion for OAuth requests
    * @param audience The audience for the JWT (typically issuer or clientID)
    * @param issuer The issuer for the JWT iss claim
@@ -1859,6 +1893,10 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Retrieves the pending authorization request from storage, this value is cleared once a user is verified.
+  ///  Expect this to be empty when migrating a verified v3 user since the v3 app clears this value immediately after
+  ///  verification, but it will be populated for users who were pending verification during migration and for all new
+  ///  users. This reads from the same location used by the v3 native app, so it can be set by either version.
   ///   - resolve: Returns the authorization request as a dictionary, or null if not found
   ///   - reject: Returns error on failure
   func getAuthorizationRequest(
@@ -1907,9 +1945,7 @@ class BcscCore: NSObject {
       )
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
-
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
          let authRequest = requestsDict.values.first
@@ -2729,6 +2765,72 @@ class BcscCore: NSObject {
         "E_CHECK_FAILED", "Failed to check credential existence: \\(error.localizedDescription)",
         error
       )
+    }
+  }
+
+  // MARK: - Native File Scan (Diagnostics)
+
+  private func recursiveFileScan(at base: URL, relativeTo: URL) throws -> [String] {
+    var results: [String] = []
+    let enumerator = FileManager.default.enumerator(
+      at: base,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    while let fileURL = enumerator?.nextObject() as? URL {
+      let relativePath = fileURL.path.replacingOccurrences(of: relativeTo.path + "/", with: "")
+      let resourceValues = try fileURL.resourceValues(forKeys: [.isDirectoryKey])
+      let isDirectory = resourceValues.isDirectory ?? false
+      results.append(isDirectory ? "\(relativePath)/" : relativePath)
+    }
+
+    return results.sorted()
+  }
+
+  /// Scans the app's Application Support bundle directory and logs all files.
+  /// Useful for diagnosing v3 vs v4 migration and file systems
+  func getNativeFilesScan(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      let bundleID = Bundle.main.bundleIdentifier ?? "ca.bc.gov.iddev.servicescard"
+      let rootDirectory = try FileManager.default.url(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let bundleDirectory = rootDirectory.appendingPathComponent(bundleID)
+
+      var result: [String: Any] = [:]
+      result["bundleID"] = bundleID
+      result["bundleDirectory"] = bundleDirectory.path
+      let bundleExists = FileManager.default.fileExists(atPath: bundleDirectory.path)
+      result["bundleDirectoryExists"] = bundleExists
+
+      if bundleExists {
+        let allFiles = try recursiveFileScan(at: bundleDirectory, relativeTo: bundleDirectory)
+        result["files"] = allFiles
+        result["fileCount"] = allFiles.count
+        logger.log("[Native File Scan] Found \(allFiles.count) files/directories")
+        #if DEBUG
+          // Log each file/directory only in debug builds to avoid leaking sensitive paths
+          // and to reduce logging overhead in production.
+          for file in allFiles {
+            logger.log("[Native File Scan] \(file)")
+          }
+        #endif
+      } else {
+        result["files"] = []
+        result["fileCount"] = 0
+        logger.log("[Native File Scan] Bundle directory does not exist")
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
     }
   }
 

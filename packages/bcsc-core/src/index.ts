@@ -5,6 +5,7 @@ import NativeBcscCoreSpec, {
   type LoginChallengeResult,
   type NativeAccount,
   type NativeAuthorizationRequest,
+  type NativeFilesScan,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -14,6 +15,7 @@ export type {
   NativeAccount,
   NativeAddress,
   NativeAuthorizationRequest,
+  NativeFilesScan,
 } from './NativeBcscCore';
 
 /**
@@ -271,6 +273,32 @@ export const setIssuer = (issuer: string): Promise<boolean> => {
  */
 export const getIssuer = (): Promise<string | null> => {
   return BcscCore.getIssuer();
+};
+
+/**
+ * Scans the native Application Support directory and returns all file paths.
+ * Useful for diagnosing v3 vs v4 storage layouts.
+ * Example code to place in App.tsx:
+ *
+ * useEffect(() => {
+ *   getNativeFilesScan()
+ *     .then((scan) => {
+ *       logger.info(`[Native File Scan] bundleID: ${scan.bundleID}`)
+ *       logger.info(`[Native File Scan] bundleDirectory: ${scan.bundleDirectory}`)
+ *       logger.info(`[Native File Scan] bundleDirectoryExists: ${scan.bundleDirectoryExists}`)
+ *       logger.info(`[Native File Scan] fileCount: ${scan.fileCount}`)
+ *       scan.files.forEach((file) => {
+ *         logger.info(`[Native File Scan] ${file}`)
+ *       })
+ *     })
+ *     .catch((error) => {
+ *       const errorMsg = error instanceof Error ? error.message : String(error)
+ *       logger.error(`[Native File Scan] Error: ${errorMsg}`)
+ *     })
+ * }, [logger])
+ */
+export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
+  return BcscCore.getNativeFilesScan();
 };
 
 /**
@@ -798,7 +826,7 @@ export interface EvidenceType {
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
-  evidenceType: EvidenceType;
+  evidenceType?: EvidenceType;
   /** Photo metadata array */
   metadata: PhotoMetadata[];
   /** Document number/reference */
