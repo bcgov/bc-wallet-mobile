@@ -1,4 +1,5 @@
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { MainLoadingScreen } from '@/bcsc-theme/features/splash-loading/MainLoadingScreen'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
@@ -25,7 +26,9 @@ describe('MainLoadingScreen Component', () => {
           account: 'account' as any,
         }}
       >
-        <MainLoadingScreen navigation={navigationMock} />
+        <BCSCLoadingProvider>
+          <MainLoadingScreen navigation={navigationMock} />
+        </BCSCLoadingProvider>
       </BCSCAccountContext.Provider>
     )
 
@@ -46,7 +49,9 @@ describe('MainLoadingScreen Component', () => {
           account: null,
         }}
       >
-        <MainLoadingScreen navigation={navigationMock} />
+        <BCSCLoadingProvider>
+          <MainLoadingScreen navigation={navigationMock} />
+        </BCSCLoadingProvider>
       </BCSCAccountContext.Provider>
     )
 
@@ -62,7 +67,9 @@ describe('MainLoadingScreen Component', () => {
 
     const tree = render(
       <BCSCAccountContext.Provider value={null}>
-        <MainLoadingScreen navigation={navigationMock} />
+        <BCSCLoadingProvider>
+          <MainLoadingScreen navigation={navigationMock} />
+        </BCSCLoadingProvider>
       </BCSCAccountContext.Provider>
     )
 
@@ -88,7 +95,9 @@ describe('MainLoadingScreen Component', () => {
           } as any,
         }}
       >
-        <MainLoadingScreen navigation={navigationMock} />
+        <BCSCLoadingProvider>
+          <MainLoadingScreen navigation={navigationMock} />
+        </BCSCLoadingProvider>
       </BCSCAccountContext.Provider>
     )
 
@@ -121,7 +130,9 @@ describe('MainLoadingScreen Component', () => {
           } as any,
         }}
       >
-        <MainLoadingScreen navigation={navigationMock} />
+        <BCSCLoadingProvider>
+          <MainLoadingScreen navigation={navigationMock} />
+        </BCSCLoadingProvider>
       </BCSCAccountContext.Provider>
     )
 

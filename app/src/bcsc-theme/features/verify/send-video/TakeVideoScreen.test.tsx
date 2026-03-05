@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { render, waitFor } from '@testing-library/react-native'
@@ -61,7 +62,9 @@ describe('TakeVideoScreen', () => {
     const navigation = useNavigation()
     const { getByText } = render(
       <BasicAppContext>
-        <TakeVideoScreen navigation={navigation as never} />
+        <BCSCLoadingProvider>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
