@@ -65,40 +65,5 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
     }
   }, [context, context?.isLoadingAccount, context?.account, loadingScreen, navigation])
 
-  // const onLoaded = () => {
-  //   if (!context?.account) {
-  //     throw new Error('MainLoadingScreen: Account context is unavailable on load complete')
-  //   }
-  //
-  //   // Navigate to Account Expired screen when account is expired
-  //   if (isAccountExpired(context.account.account_expiration_date)) {
-  //     return navigation.dispatch(
-  //       CommonActions.reset({
-  //         index: 0,
-  //         routes: [
-  //           {
-  //             name: BCSCScreens.AccountExpired,
-  //           },
-  //         ],
-  //       })
-  //     )
-  //   }
-  //
-  //   // Navigate to Home screen when account is valid
-  //   navigation.dispatch(
-  //     CommonActions.reset({
-  //       index: 0,
-  //       routes: [
-  //         {
-  //           name: BCSCStacks.Tab,
-  //           params: {
-  //             screen: BCSCScreens.Home,
-  //           },
-  //         },
-  //       ],
-  //     })
-  //   )
-  // }
-
   return null
 }
