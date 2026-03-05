@@ -46,6 +46,17 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   /**
    * Starts the loading state and returns a function to stop it.
    *
+   * Note: All calls to startLoading must be stopped for the loading screen to disappear.
+   * Allowing for multiple overlapping loading states without prematurely hiding the screen.
+   *
+   * @example
+   *   const stopLoading = loadingScreen.startLoading("Loading data...");
+   *   try {
+   *      await someAsyncFunction();
+   *  } finally {
+   *      stopLoading(); // Call this once the async work is done to hide the loading screen
+   *  }
+   *
    * @param - Optional message to display on the loading screen.
    * @returns A function that, when called, will stop the loading state.
    */
