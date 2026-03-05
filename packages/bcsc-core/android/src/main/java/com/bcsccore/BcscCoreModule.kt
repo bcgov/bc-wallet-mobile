@@ -27,6 +27,7 @@ import com.facebook.react.module.annotations.ReactModule
 
 // Java/Kotlin standard library imports
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
@@ -65,6 +66,8 @@ import com.nimbusds.jwt.SignedJWT
 
 // BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
+import com.bcsccore.keypair.core.exceptions.KeyAlreadyExistsException
+import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
 import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
@@ -1247,7 +1250,26 @@ class BcscCoreModule(
             val deviceInfoClaims = deviceInfoClaimsBuilder.build()
 
             // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
-            val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
+            val deviceInfoJWTAsString =
+                try {
+                    createUnsignedJWT(deviceInfoClaims)
+                } catch (e: JSONException) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: toJSONString method failure: ${e.message}", e)
+                    promise.reject(
+                        "E_120_TOJSONSTRING_METHOD_FAILURE",
+                        "Failed to convert device info JWT to JSON string: ${e.message}",
+                        e,
+                    )
+                    return
+                } catch (e: Exception) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: JWT device info error: ${e.message}", e)
+                    promise.reject(
+                        "E_120_JWT_DEVICE_INFO_ERROR",
+                        "Error creating device info JWT: ${e.message}",
+                        e,
+                    )
+                    return
+                }
 
             // Use nickname if provided, otherwise fall back to device name
             val clientName = if (!nickname.isNullOrEmpty()) nickname else getDeviceName()
@@ -1302,11 +1324,32 @@ class BcscCoreModule(
 
             Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
             promise.resolve(registrationBodyAsString)
+        } catch (e: KeyAlreadyExistsException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key already exists: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+                "Key pair already exists: ${e.devMessage}",
+                e,
+            )
+        } catch (e: KeyNotFoundException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key not found: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+                "Key pair not found: ${e.devMessage}",
+                e,
+            )
         } catch (e: KeypairGenerationException) {
             Log.e(NAME, "getDynamicClientRegistrationBody: Keypair generation error: ${e.devMessage}", e)
             promise.reject(
-                "E_KEYPAIR_GENERATION_FAILED",
+                "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
                 "Failed to generate or retrieve key pair for client registration: ${e.devMessage}",
+                e,
+            )
+        } catch (e: JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: toJSON method failure: ${e.message}", e)
+            promise.reject(
+                "E_120_TOJSON_METHOD_FAILURE",
+                "Failed to serialize client registration data: ${e.message}",
                 e,
             )
         } catch (e: BcscException) {
