@@ -22,41 +22,22 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
   useEffect(() => {
     if (!context || context.isLoadingAccount || !context.account) {
       loadingScreen.startLoading()
-      return
-    }
-
-    if (!context?.account) {
-      throw new Error('MainLoadingScreen: Account context is unavailable on load complete')
+      return () => {
+        // Ensure loading screen is stopped if the component unmounts while still loading
+        loadingScreen.stopLoading()
+      }
     }
 
     loadingScreen.stopLoading()
 
-    // Navigate to Account Expired screen when account is expired
-    if (isAccountExpired(context.account.account_expiration_date)) {
-      return navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: BCSCScreens.AccountExpired,
-            },
-          ],
-        })
-      )
-    }
+    const route = isAccountExpired(context.account.account_expiration_date)
+      ? { name: BCSCScreens.AccountExpired } // Navigate to Account Expired screen when account is expired
+      : { name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } } // Navigate to Home screen when account is valid
 
-    // Navigate to Home screen when account is valid
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [
-          {
-            name: BCSCStacks.Tab,
-            params: {
-              screen: BCSCScreens.Home,
-            },
-          },
-        ],
+        routes: [route],
       })
     )
 
@@ -64,41 +45,6 @@ export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) =
       loadingScreen.stopLoading()
     }
   }, [context, context?.isLoadingAccount, context?.account, loadingScreen, navigation])
-
-  // const onLoaded = () => {
-  //   if (!context?.account) {
-  //     throw new Error('MainLoadingScreen: Account context is unavailable on load complete')
-  //   }
-  //
-  //   // Navigate to Account Expired screen when account is expired
-  //   if (isAccountExpired(context.account.account_expiration_date)) {
-  //     return navigation.dispatch(
-  //       CommonActions.reset({
-  //         index: 0,
-  //         routes: [
-  //           {
-  //             name: BCSCScreens.AccountExpired,
-  //           },
-  //         ],
-  //       })
-  //     )
-  //   }
-  //
-  //   // Navigate to Home screen when account is valid
-  //   navigation.dispatch(
-  //     CommonActions.reset({
-  //       index: 0,
-  //       routes: [
-  //         {
-  //           name: BCSCStacks.Tab,
-  //           params: {
-  //             screen: BCSCScreens.Home,
-  //           },
-  //         },
-  //       ],
-  //     })
-  //   )
-  // }
 
   return null
 }
