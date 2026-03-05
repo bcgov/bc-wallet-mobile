@@ -1,6 +1,5 @@
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
-import { Platform } from 'react-native'
 import { getBuildNumber, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
@@ -27,7 +26,7 @@ const AnalyticsClient = {
  *
  * @class
  * @example
- * const analyticsTracker = new AnalyticsTracker('https://endpoint.com')
+ * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
  *
  * await analyticsTracker.initializeTracker()
  *
@@ -42,8 +41,8 @@ export class AnalyticsTracker {
   private readonly client: AnalyticsClient
   private tracker?: ReactNativeTracker
 
-  constructor(endpoint: string, client = AnalyticsClient) {
-    this.namespace = Platform.OS === 'ios' ? 'iOS' : 'Android'
+  constructor(namespace: string, endpoint: string, client = AnalyticsClient) {
+    this.namespace = namespace
     this.endpoint = endpoint
     this.client = client
   }

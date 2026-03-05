@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import Config from 'react-native-config'
 import { AnalyticsTracker } from './analytics-tracker'
 
@@ -24,4 +25,7 @@ const getSnowplowEndpointUrl = (): string => {
 // Hot-reload safe singleton instance of AnalyticsTracker
 export const Analytics =
   globalThis.__ANALYTICS_TRACKER_SINGLETON__ ??
-  (globalThis.__ANALYTICS_TRACKER_SINGLETON__ = new AnalyticsTracker(getSnowplowEndpointUrl()))
+  (globalThis.__ANALYTICS_TRACKER_SINGLETON__ = new AnalyticsTracker(
+    Platform.OS === 'ios' ? 'iOS' : 'Android', // Note: Potentially case sensitive
+    getSnowplowEndpointUrl()
+  ))

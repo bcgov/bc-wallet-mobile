@@ -308,7 +308,7 @@ const createIASEnvironment = (config: {
     iasPortalUrl: `https://id${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
     appToAppUrl: `ca.bc.gov.id${config.subdomain}.servicescard.v2://credentials/person/v1`,
     iasApiBaseUrl: `https://id${config.subdomain}.gov.bc.ca`,
-    analyticsAppId: getAnalyticsAppId(config.subdomain),
+    analyticsAppId: getAnalyticsAppId(config.subdomain || 'prod'),
   }
 }
 
