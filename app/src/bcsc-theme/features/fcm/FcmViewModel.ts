@@ -27,6 +27,7 @@ export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
   private initialized = false
+  private onError?: (error: AppError) => void
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -42,6 +43,14 @@ export class FcmViewModel {
     private readonly verificationResponseService: VerificationResponseService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
+
+  /**
+   * Sets a callback for handling errors that need to be surfaced to the user.
+   * This bridges the non-React ViewModel to the React alert system.
+   */
+  public setErrorHandler(handler: (error: AppError) => void) {
+    this.onError = handler
+  }
 
   public initialize() {
     if (this.initialized) {
@@ -121,6 +130,19 @@ export class FcmViewModel {
       this.logger.info(
         `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`
       )
+
+      if (!result.verified) {
+        if (!this.serverJwk) {
+          const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+          this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWK unavailable, cannot verify JWS`)
+          this.onError?.(appError)
+          return
+        }
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
+        this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWS verification failed`)
+        this.onError?.(appError)
+        return
+      }
 
       // Extract pairing data and inject into deep link flow
       const serviceTitle = result.claims.bcsc_client_name

@@ -107,6 +107,44 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_115_FAILED_TO_SERIALIZE_JSON', () => {
+      it('should show the alert for the app error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const failedToSerializeJsonAlert = jest.fn()
+        const mockAlerts = { failedToSerializeJsonAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(failedToSerializeJsonAlert).toHaveBeenCalled()
+      })
+
+      it('should rethrow error without showing alert if error is not serialize json error', async () => {
+        const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const failedToSerializeJsonAlert = jest.fn()
+        const mockAlerts = { failedToSerializeJsonAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
+      })
+    })
+
     it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
       const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
@@ -114,7 +152,8 @@ describe('useRegistrationService', () => {
       } as any
       const problemWithAppAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
-      const mockAlerts = { problemWithAppAlert, clientRegistrationNullAlert }
+      const failedToSerializeJsonAlert = jest.fn()
+      const mockAlerts = { problemWithAppAlert, clientRegistrationNullAlert, failedToSerializeJsonAlert }
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -125,6 +164,7 @@ describe('useRegistrationService', () => {
       expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
+      expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
     })
   })
 
@@ -204,6 +244,26 @@ describe('useRegistrationService', () => {
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('App error ERR_115_FAILED_TO_SERIALIZE_JSON (updateRegistration)', () => {
+    it('should show the alert for the app error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON)
+      const registrationApi = {
+        updateRegistration: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const failedToSerializeJsonAlert = jest.fn()
+      const mockAlerts = { failedToSerializeJsonAlert }
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useRegistrationService())
+
+      await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+      expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      expect(failedToSerializeJsonAlert).toHaveBeenCalled()
     })
   })
 
