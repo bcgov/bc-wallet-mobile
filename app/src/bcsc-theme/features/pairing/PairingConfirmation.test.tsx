@@ -61,7 +61,7 @@ describe('PairingConfirmation', () => {
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.CompletionSubtitle')).toBeNull()
+      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeNull()
     })
 
     it('shows the Close button', () => {
@@ -89,7 +89,7 @@ describe('PairingConfirmation', () => {
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.CompletionSubtitle')).toBeNull()
+      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeNull()
     })
 
     it('shows the Close button', () => {

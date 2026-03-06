@@ -19,7 +19,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const showAppSwitchGuidance = Platform.OS === 'ios' && fromAppSwitch
 
   const onClose = () => {
-    if (fromAppSwitch) {
+    if (fromAppSwitch && Platform.OS === 'android') {
       BackHandler.exitApp() // Closes the app on Android, taking you back to browser
     } else {
       navigation.dispatch(
