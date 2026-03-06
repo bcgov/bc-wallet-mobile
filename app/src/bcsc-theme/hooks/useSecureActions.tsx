@@ -758,7 +758,7 @@ export const useSecureActions = () => {
         accessToken,
 
         verified: verificationStatus === VerificationStatus.VERIFIED,
-        verifiedStatus: getVerificationStatus(credential, refreshToken),
+        verifiedStatus: verificationStatus,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
         emailAddress: accountFlags.emailAddress,
