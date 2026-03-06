@@ -3,6 +3,7 @@
 exports[`ChangeSecurityContent when current method is Device Auth shows Device Auth as current method 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -480,9 +481,12 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -641,6 +645,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
 exports[`ChangeSecurityContent when current method is PIN and device auth is available renders security options with current method indicator 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -1118,9 +1123,12 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1279,6 +1287,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
 exports[`ChangeSecurityContent when device auth is NOT available shows message that device auth is not available 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -1624,9 +1633,12 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

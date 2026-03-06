@@ -3,6 +3,7 @@
 exports[`SecureApp renders correctly when device auth IS available 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -385,9 +386,12 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -546,6 +550,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
 exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -812,9 +817,12 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

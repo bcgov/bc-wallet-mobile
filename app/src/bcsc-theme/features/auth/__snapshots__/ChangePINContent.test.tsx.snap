@@ -3,6 +3,7 @@
 exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = true) renders ChangePINForm with current PIN field 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -720,9 +721,12 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -881,6 +885,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
 exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExistingPIN = false) renders PINEntryForm without current PIN field 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -1447,9 +1452,12 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

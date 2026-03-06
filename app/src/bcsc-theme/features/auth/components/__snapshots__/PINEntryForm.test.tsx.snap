@@ -3,6 +3,7 @@
 exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -569,9 +570,12 @@ exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] =
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

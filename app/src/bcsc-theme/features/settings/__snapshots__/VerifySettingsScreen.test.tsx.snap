@@ -3,6 +3,7 @@
 exports[`VerifySettings renders correctly 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -613,9 +614,12 @@ exports[`VerifySettings renders correctly 1`] = `
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"

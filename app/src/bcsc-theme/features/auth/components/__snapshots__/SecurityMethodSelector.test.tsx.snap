@@ -3,6 +3,7 @@
 exports[`SecurityMethodSelector in settings context (with currentMethod) disables current method option (Device Auth) 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -480,9 +481,12 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -641,6 +645,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
 exports[`SecurityMethodSelector when device auth is NOT available renders PIN-only view with buttons 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -907,9 +912,12 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
@@ -1068,6 +1076,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
 exports[`SecurityMethodSelector when device auth is available renders both device auth and PIN options 1`] = `
 [
   <View
+    importantForAccessibility="yes"
     style={
       {
         "display": "flex",
@@ -1450,9 +1459,12 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
     </RNCSafeAreaView>
   </View>,
   <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
     style={
       {
         "display": "none",
+        "pointerEvents": "none",
       }
     }
     testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
