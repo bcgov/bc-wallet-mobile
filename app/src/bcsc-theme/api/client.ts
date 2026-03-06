@@ -120,6 +120,11 @@ class BCSCApiClient {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, async (_error: AxiosError) => {
+      // Pass through errors that are already AppErrors (e.g. from request interceptor)
+      if (_error instanceof AppError) {
+        return Promise.reject(_error)
+      }
+
       // 1. Format the error - update error code and message properties from IAS response
       const error = formatIasAxiosResponseError(_error)
 
