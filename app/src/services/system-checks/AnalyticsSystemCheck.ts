@@ -7,10 +7,17 @@ import { SystemCheckStrategy } from './system-checks'
  */
 export class AnalyticsSystemCheck implements SystemCheckStrategy {
   private readonly analyticsEnabled: boolean
+  private readonly analyticsAppId: string
   private readonly analyticsTracker: AnalyticsTracker
   private readonly logger: BifoldLogger
 
-  constructor(analyticsEnabled: boolean, analyticsTracker: AnalyticsTracker, logger: BifoldLogger) {
+  constructor(
+    analyticsEnabled: boolean,
+    analyticsAppId: string,
+    analyticsTracker: AnalyticsTracker,
+    logger: BifoldLogger
+  ) {
+    this.analyticsAppId = analyticsAppId
     this.analyticsEnabled = analyticsEnabled
     this.analyticsTracker = analyticsTracker
     this.logger = logger
@@ -22,6 +29,10 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - True if the analytics tracker is initialized, false otherwise.
    */
   runCheck(): boolean {
+    if (!this.analyticsEnabled) {
+      return true // If analytics is not enabled, we consider the check as passed
+    }
+
     return this.analyticsTracker.hasTracker()
   }
 
@@ -31,12 +42,8 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
    * @return {*} {Promise<void>}
    */
   async onFail() {
-    if (!this.analyticsEnabled) {
-      return
-    }
-
     try {
-      await this.analyticsTracker.initializeTracker()
+      await this.analyticsTracker.initializeTracker(this.analyticsAppId)
     } catch (error) {
       this.logger.error(
         'Failed to initialize analytics tracker',

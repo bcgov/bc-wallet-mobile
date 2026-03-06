@@ -11,6 +11,8 @@ import com.bcsccore.keypair.core.utils.SimpleLog;
 import com.bcsccore.keypair.core.exceptions.AlertKey;
 import com.bcsccore.keypair.core.models.BcscKeyPair;
 import com.bcsccore.keypair.core.exceptions.BcscException;
+import com.bcsccore.keypair.core.exceptions.KeyAlreadyExistsException;
+import com.bcsccore.keypair.core.exceptions.KeyNotFoundException;
 import com.bcsccore.keypair.core.exceptions.KeypairGenerationException;
 import com.bcsccore.keypair.core.models.KeyPairInfo;
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource;
@@ -95,7 +97,13 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         generateKeyPair(info.getAlias());
       }
 
-      final KeyPair keyPair = getKeyPair(keyStore, info.getAlias());
+      final KeyPair keyPair;
+      try {
+        keyPair = getKeyPair(keyStore, info.getAlias());
+      } catch (Exception e) {
+        throw new KeyNotFoundException(
+            "Failed to retrieve key pair for alias '" + info.getAlias() + "': " + e.getMessage(), e);
+      }
       SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
     } catch (KeypairGenerationException e) {
@@ -151,7 +159,13 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       keyPairInfoSource.saveKeyPairInfo(newInfo);
 
       generateKeyPair(alias);
-      final KeyPair keyPair = getKeyPair(keyStore, alias);
+      final KeyPair keyPair;
+      try {
+        keyPair = getKeyPair(keyStore, alias);
+      } catch (Exception e) {
+        throw new KeyNotFoundException(
+            "Failed to retrieve newly generated key pair for alias '" + alias + "': " + e.getMessage(), e);
+      }
       SimpleLog.d(TAG, "Generated new key pair " + alias);
       return new BcscKeyPair(keyPair, newInfo);
     } catch (KeypairGenerationException e) {
@@ -235,6 +249,11 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    */
   private void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
+      KeyStore keyStore = loadAndroidKeyStore();
+      if (keyStore.containsAlias(alias)) {
+        throw new KeyAlreadyExistsException(
+            "Key pair already exists for alias '" + alias + "'");
+      }
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
           alias,
@@ -259,9 +278,14 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
           KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
       gen.initialize(spec);
       gen.generateKeyPair();
+    } catch (KeyAlreadyExistsException e) {
+      throw e;
     } catch (InvalidAlgorithmParameterException
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
+      SimpleLog.e(TAG, "Failed to generate key pair", e);
+      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+    } catch (Exception e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
       throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
     }

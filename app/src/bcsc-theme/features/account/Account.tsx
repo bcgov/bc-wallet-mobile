@@ -8,8 +8,7 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
-import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
@@ -27,7 +26,6 @@ type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
  */
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
   const { metadata } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
@@ -153,7 +151,7 @@ const Account: React.FC = () => {
         />
         <AccountField label={t('BCSC.Account.AccountInfo.Address')} value={account.address?.formatted ?? ''} />
         <AccountField label={t('BCSC.Account.AccountInfo.DateOfBirth')} value={account.birthdate ?? ''} />
-        <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={store.bcscSecure.email ?? ''} />
+        <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={account.email ?? ''} />
 
         <View style={styles.buttonsContainer}>
           <SectionButton

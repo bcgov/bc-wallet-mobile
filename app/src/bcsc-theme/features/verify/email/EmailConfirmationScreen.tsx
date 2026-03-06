@@ -84,7 +84,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       setLoading(true)
       await evidence.sendEmailVerificationCode(code, id)
       await updateUserInfo({
-        email: store.bcscSecure.email,
+        email: store.bcscSecure.emailAddress,
         isEmailVerified: true,
       })
       navigation.dispatch(
@@ -106,12 +106,12 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     try {
       setResendLoading(true)
 
-      if (!store.bcscSecure.email) {
+      if (!store.bcscSecure.emailAddress) {
         logger.error('No email address found in store')
         throw new Error('No email address found in store, cannot resend verification code')
       }
 
-      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.email)
+      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.emailAddress)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
@@ -179,7 +179,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       </ThemedText>
       <ThemedText>
         {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
-        <ThemedText variant={'bold'}>{store.bcscSecure.email}</ThemedText>
+        <ThemedText variant={'bold'}>{store.bcscSecure.emailAddress}</ThemedText>
       </ThemedText>
       <CodeField
         {...props}

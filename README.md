@@ -148,6 +148,7 @@ PROOF_TEMPLATE_URL=<url>
 REMOTE_LOGGING_URL=<url>
 LOG_LEVEL=<debug | info | warn | error | fatal | trace | test>
 INDY_VDR_PROXY_URL=<url>
+SNOWPLOW_COLLECTOR_URL=<url>
 ```
 
 Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly.
