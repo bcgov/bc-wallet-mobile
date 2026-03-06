@@ -273,7 +273,7 @@ export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
 // Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
 export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
-    return error.cause.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    return error.cause.response?.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
   },
   handle: (error, context) => {
     context.logger.info(`[BirthdateLockoutErrorPolicy] Lockout with error:`, { error })
