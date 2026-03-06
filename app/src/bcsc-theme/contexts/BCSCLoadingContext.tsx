@@ -14,6 +14,7 @@ import { LoadingScreenContent, LoadingScreenContentProps } from '../features/spl
 
 interface BCSCLoadingContextType {
   isLoading: boolean
+  loadingMessage: string | null
   startLoading: (message?: string) => () => void
   updateLoadingMessage: (message: string) => void
 }
@@ -94,10 +95,11 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   const loadingContext = useMemo(
     () => ({
       isLoading,
+      loadingMessage,
       startLoading,
       updateLoadingMessage: setLoadingMessage,
     }),
-    [isLoading, startLoading]
+    [isLoading, loadingMessage, startLoading]
   )
 
   return (
@@ -111,7 +113,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
         {children}
       </View>
 
-      {/** Mount LoadingScreenContent component when loading **/}
+      {/** When loading make loading overlay visible **/}
       <View
         style={loadingStyle}
         testID={testIdWithKey('BCSCLoadingProviderOverlay')}

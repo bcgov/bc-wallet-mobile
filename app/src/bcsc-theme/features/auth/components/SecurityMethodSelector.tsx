@@ -100,7 +100,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     }
 
     loadDeviceAuthInfo()
-  }, [logger, startLoading])
+  }, [logger])
 
   const handleDeviceAuthentication = async () => {
     const stopLoading = startLoading()
