@@ -1092,6 +1092,18 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
     },
+    "ProblemWithService": {
+      "Title": "Problem with Service (FR)",
+      "Description": "Please try again later. (error {{ errorCode }}) (FR)"
+    },
+    "DynamicRegistrationError": {
+      "Title": "Problem with Service (FR)",
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202) (FR)"
+    },
+    "AddCardNotAvailable": {
+      "Title": "Add Card Not Available (FR)",
+      "Description": "Please try again later. (error 205) (FR)"
+    },
     "ForgetPairings": {
       "Title": "Success (FR)",
       "Description": "You have successfully unpaired your device. (FR)"
