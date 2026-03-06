@@ -1101,7 +1101,7 @@ class BcscCore: NSObject {
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
       guard let decodedData = Data(base64Encoded: base64String),
-        let base64Decoded = String(data: decodedData, encoding: .utf8)
+            let base64Decoded = String(data: decodedData, encoding: .utf8)
       else {
         reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
         return
