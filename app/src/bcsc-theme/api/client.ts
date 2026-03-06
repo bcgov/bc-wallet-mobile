@@ -1,5 +1,7 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { RemoteLogger } from '@bifold/remote-logs'
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
@@ -117,7 +119,17 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, async (_error: AxiosError) => {
+    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
+      // Pass through errors that are already AppErrors (e.g. from request interceptor)
+      if (_error instanceof AppError) {
+        return Promise.reject(_error)
+      }
+
+      // Only handle AxiosErrors here; pass through all other error types unchanged
+      if (!axios.isAxiosError(_error)) {
+        return Promise.reject(_error)
+      }
+
       // 1. Format the error - update error code and message properties from IAS response
       const error = formatIasAxiosResponseError(_error)
 
@@ -203,7 +215,7 @@ class BCSCApiClient {
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
         this.logger.error('[BCSCApiClient] Missing tokens - call getTokensForRefreshToken to initialize tokens')
-        throw new Error('Client missing tokens')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
