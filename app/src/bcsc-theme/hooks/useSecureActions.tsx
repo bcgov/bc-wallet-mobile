@@ -7,7 +7,6 @@ import {
   BCSCAccountType,
   BCSCCardProcess,
   BCSCCardType,
-  CredentialInfo,
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
@@ -33,7 +32,7 @@ import {
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
-import { createMinimalCredential } from '../utils/bcsc-credential'
+import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -657,28 +656,6 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Determining verification status based on credential and refresh token presence.
-   */
-  const getVerificationStatus = useCallback(
-    (credential: CredentialInfo | null, refreshToken?: string): VerificationStatus => {
-      if (!credential && refreshToken) {
-        // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
-        logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
-      }
-
-      if (!credential) {
-        return VerificationStatus.UNVERIFIED
-      }
-
-      if (credential.bcscEvent === 'Cancel' || credential.bcscEvent === 'Expire') {
-        return VerificationStatus.REVOKED
-      }
-
-      return VerificationStatus.VERIFIED
-    },
-    [logger]
-  )
-  /**
    * Loads sensitive data from native secure storage and dispatches to store.
    * Call this after successful authentication.
    */
@@ -708,6 +685,11 @@ export const useSecureActions = () => {
       const refreshToken = refreshTokenObj?.token
       const registrationAccessToken = registrationAccessTokenObj?.token
       const accessToken = accessTokenObj?.token
+
+      if (!credential && refreshToken) {
+        // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
+        logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
+      }
 
       await updateTokens({ refreshToken, registrationAccessToken, accessToken })
 
@@ -739,7 +721,7 @@ export const useSecureActions = () => {
         }
       }
 
-      const verificationStatus = getVerificationStatus(credential, refreshToken)
+      const verificationStatus = getCredentialVerificationStatus(credential)
 
       const secureData: BCSCSecureState = {
         isHydrated: true,

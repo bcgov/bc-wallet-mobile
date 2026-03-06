@@ -33,19 +33,37 @@ export function createMinimalCredential(
 }
 
 /**
+ * Determines the verification status of a credential based on its properties.
+ *
+ * @param credential The credential information to evaluate
+ * @returns VerificationStatus indicating if the credential is VERIFIED, DEACTIVATED, or UNVERIFIED
+ */
+export function getCredentialVerificationStatus(credential: CredentialInfo | null): VerificationStatus {
+  if (!credential) {
+    return VerificationStatus.UNVERIFIED
+  }
+
+  if (credential.bcscEvent === 'Cancel' || credential.bcscEvent === 'Expire') {
+    return VerificationStatus.DEACTIVATED
+  }
+
+  return VerificationStatus.VERIFIED
+}
+
+/**
  * Determines if the user is verified based on their secure state.
  *
  * @param secureState The current secure state of the user
  * @returns boolean indicating if the user is verified
  */
-export function isVerified(secureState: BCSCSecureState): boolean {
+export function isUserVerified(secureState: BCSCSecureState): boolean {
   if (secureState.verified || secureState.verifiedStatus === VerificationStatus.VERIFIED) {
     // If already verified, we can trust the state and skip checks
     return true
   }
 
-  if (secureState.refreshToken && secureState.verifiedStatus !== VerificationStatus.REVOKED) {
-    // If we have a refresh token and the status is not revoked, we can consider it verified
+  if (secureState.refreshToken && secureState.verifiedStatus !== VerificationStatus.DEACTIVATED) {
+    // If we have a refresh token and the status is not deactivated, we can consider it verified
     return true
   }
 

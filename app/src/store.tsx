@@ -97,9 +97,8 @@ export interface BCSCState {
 
 export enum VerificationStatus {
   VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
-  REVOKED = 'REVOKED', // Credential was revoked (cancelled or expired)
-  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we havn't verified it's status
-  // QUESTION (MD): Do we want a separate UNKNOWN status?
+  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
+  DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
 }
 
 /**
