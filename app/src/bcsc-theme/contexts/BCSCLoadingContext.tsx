@@ -35,7 +35,8 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
  * @returns {*} {React.ReactElement} The BCSCLoadingProvider component wrapping its children.
  */
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
-  const loadersRef = useRef(new Set<symbol>()) // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
+  // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
+  const loadersRef = useRef(new Set<symbol>())
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
 
@@ -75,7 +76,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
     setIsLoading(true)
 
     if (message) {
-      // Only update the message if it's intentional (not undefined, but allowing null to clear the message)
+      // Only update the message if it's intentional
       setLoadingMessage(message)
     }
 
@@ -143,6 +144,7 @@ export const useLoadingScreen = () => {
 export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
   const loadingScreen = useLoadingScreen()
 
+  // Runs before the component is painted to the screen, ensuring the loading state is active immediately on mount and cleaned up on unmount
   useLayoutEffect(() => {
     // Start loading when the component mounts
     const stopLoading = loadingScreen.startLoading(message)
