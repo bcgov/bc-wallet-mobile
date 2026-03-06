@@ -29,7 +29,6 @@
  *   variants/bcsc-dev/delete.txt
  */
 
-import { spawnSync } from 'child_process'
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import { dirname, join, resolve } from 'path'
 
@@ -37,16 +36,6 @@ import { dirname, join, resolve } from 'path'
 
 const ROOT_DIR = resolve(import.meta.dirname, '..')
 const VARIANTS_DIR = join(ROOT_DIR, 'variants')
-
-// Default values from BCWallet (the project defaults)
-const DEFAULTS = {
-  APP_NAME: 'BC Wallet',
-  ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet',
-  ANDROID_ICON_REF: 'ic_launcher',
-  IOS_BUNDLE_ID: 'ca.bc.gov.BCWallet',
-  IOS_PRODUCT_NAME: 'BCWallet',
-  IOS_DISPLAY_NAME: 'BC Wallet',
-}
 
 /**
  * Quote a value for OpenStep plist format (used by .pbxproj files).
@@ -106,7 +95,7 @@ const TEMPLATE_FILES = {
   // Note: In OpenStep plist format (used by .pbxproj), values containing
   // special characters ($, (), spaces, etc.) MUST be double-quoted.
   // Simple alphanumeric/dot/underscore values can be unquoted.
-  'app/ios/AriesBifold.xcodeproj/project.pbxproj': [
+  'app/ios/BCWallet.xcodeproj/project.pbxproj': [
     {
       pattern: /PRODUCT_BUNDLE_IDENTIFIER = [^;]+;/g,
       replacement: (env) => `PRODUCT_BUNDLE_IDENTIFIER = ${pbxprojQuote(env.IOS_BUNDLE_ID)};`,
@@ -116,7 +105,7 @@ const TEMPLATE_FILES = {
       replacement: (env) => `PRODUCT_NAME = ${pbxprojQuote(env.IOS_PRODUCT_NAME)};`,
     },
   ],
-  'app/ios/AriesBifold/Info.plist': [
+  'app/ios/BCWallet/Info.plist': [
     {
       // Replace CFBundleDisplayName value
       pattern: /(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]+(<\/string>)/g,
@@ -129,18 +118,6 @@ const TEMPLATE_FILES = {
 
 function ensureDir(dir) {
   mkdirSync(dir, { recursive: true })
-}
-
-function run(cmd, args = [], opts = {}) {
-  const result = spawnSync(cmd, args, { encoding: 'utf-8', shell: false, cwd: ROOT_DIR, ...opts })
-  if (result.error) {
-    throw result.error
-  }
-  if (result.status !== 0) {
-    const msg = (result.stderr || result.stdout || '').trim()
-    throw new Error(`Command failed: ${cmd} ${args.join(' ')}\n${msg}`)
-  }
-  return (result.stdout || '').trim()
 }
 
 /**
@@ -195,7 +172,7 @@ function applyUrlSchemes(env) {
   const schemes = env.IOS_URL_SCHEMES
   if (!schemes) return
 
-  const plistPath = join(ROOT_DIR, 'app/ios/AriesBifold/Info.plist')
+  const plistPath = join(ROOT_DIR, 'app/ios/BCWallet/Info.plist')
   if (!existsSync(plistPath)) return
 
   let content = readFileSync(plistPath, 'utf-8')
@@ -292,72 +269,6 @@ function applyAndroidUrlSchemes(env) {
   }
 }
 
-/**
- * Apply inputPaths/outputPaths fix to project.pbxproj for BCSC variants.
- * This is a structural change that can't be done via simple regex replacement.
- */
-function applyPbxprojStructuralFixes(env) {
-  if (!env.PBXPROJ_ADD_EMPTY_PATHS || env.PBXPROJ_ADD_EMPTY_PATHS !== 'true') return
-
-  const pbxprojPath = join(ROOT_DIR, 'app/ios/AriesBifold.xcodeproj/project.pbxproj')
-  if (!existsSync(pbxprojPath)) return
-
-  let content = readFileSync(pbxprojPath, 'utf-8')
-
-  // Add empty inputPaths/outputPaths after inputFileListPaths/outputFileListPaths
-  // for both "[CP] Embed Pods Frameworks" and "[CP] Copy Pods Resources"
-  const sections = ['Embed Pods Frameworks', 'Copy Pods Resources']
-
-  for (const section of sections) {
-    // Pattern: find inputFileListPaths block and add inputPaths if missing
-    const sectionPattern = new RegExp(
-      `(inputFileListPaths = \\([^)]*\\);)(\\s*)(name = "\\[CP\\] ${section.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}";)`,
-      'g'
-    )
-
-    if (
-      content.match(sectionPattern) &&
-      !content.includes(`inputPaths = (\n\t\t\t);\n\t\t\tname = "[CP] ${section}"`)
-    ) {
-      content = content.replace(sectionPattern, `$1$2inputPaths = (\n\t\t\t);\n\t\t\t$3`)
-    }
-
-    // Same for outputFileListPaths -> outputPaths
-    const outputPattern = new RegExp(
-      `(outputFileListPaths = \\([^)]*\\);)(\\s*)(runOnlyForDeploymentPostprocessing)`,
-      'g'
-    )
-
-    // Only apply this per-section, more carefully
-    // This is a simplified approach - the actual patch adds empty arrays
-  }
-
-  writeFileSync(pbxprojPath, content)
-}
-
-/**
- * Apply the product name change in pbxproj (name = AriesBifold -> name = BCWallet)
- * This is specific to bcsc variants.
- */
-function applyPbxprojNameChange(env) {
-  if (!env.IOS_PBXPROJ_TARGET_NAME) return
-
-  const pbxprojPath = join(ROOT_DIR, 'app/ios/AriesBifold.xcodeproj/project.pbxproj')
-  if (!existsSync(pbxprojPath)) return
-
-  let content = readFileSync(pbxprojPath, 'utf-8')
-
-  // Change: name = AriesBifold; (in the PBXNativeTarget section, near productName)
-  // The patch changes line 157 from "name = AriesBifold;" to "name = BCWallet;"
-  // We need to be careful to only change the one in the native target section
-  const pattern = /(dependencies = \(\s*\);\s*)name = AriesBifold;(\s*productName = AriesBifold;)/
-  if (content.match(pattern)) {
-    content = content.replace(pattern, `$1name = ${env.IOS_PBXPROJ_TARGET_NAME};$2`)
-    writeFileSync(pbxprojPath, content)
-    console.log(`  Updated pbxproj target name to ${env.IOS_PBXPROJ_TARGET_NAME}`)
-  }
-}
-
 // ─── Main apply logic ───────────────────────────────────────────
 
 function applyVariant(variantName) {
@@ -450,38 +361,6 @@ function applyVariant(variantName) {
     applyAndroidUrlSchemes(env)
   }
 
-  // 6. Apply pbxproj target name change
-  if (env.IOS_PBXPROJ_TARGET_NAME) {
-    console.log(`\n→ Applying pbxproj structural changes...`)
-    applyPbxprojNameChange(env)
-  }
-
-  // 7. Apply remaining patches
-  const patchesDir = join(variantDir, 'patches')
-  if (existsSync(patchesDir)) {
-    const patchFiles = readdirSync(patchesDir).filter((f) => f.endsWith('.patch'))
-    if (patchFiles.length > 0) {
-      console.log(`\n→ Applying ${patchFiles.length} remaining patches...`)
-      for (const patchFile of patchFiles) {
-        const patchPath = join(patchesDir, patchFile)
-        try {
-          run('git', ['apply', '--verbose', patchPath])
-          console.log(`  Applied: ${patchFile}`)
-        } catch (e) {
-          console.error(`  FAILED to apply ${patchFile}: ${e.message}`)
-          // Try with more context
-          try {
-            run('git', ['apply', '--verbose', '-C1', patchPath])
-            console.log(`  Applied with reduced context: ${patchFile}`)
-          } catch (e2) {
-            console.error(`  FATAL: Could not apply ${patchFile}`)
-            process.exit(1)
-          }
-        }
-      }
-    }
-  }
-
   console.log(`\n✓ Variant '${variantName}' applied successfully!`)
 
   // Output summary for CI use
@@ -525,21 +404,6 @@ function applyBaseVariant(baseName) {
   if (existsSync(overlayDir)) {
     console.log(`  Copying base overlay files...`)
     copyDirRecursive(overlayDir, ROOT_DIR)
-  }
-
-  // Apply base patches
-  const patchesDir = join(baseDir, 'patches')
-  if (existsSync(patchesDir)) {
-    const patchFiles = readdirSync(patchesDir).filter((f) => f.endsWith('.patch'))
-    for (const patchFile of patchFiles) {
-      const patchPath = join(patchesDir, patchFile)
-      try {
-        run('git', ['apply', '--verbose', patchPath])
-        console.log(`  Applied base patch: ${patchFile}`)
-      } catch (e) {
-        console.warn(`  WARN: Could not apply base patch ${patchFile}: ${e.message}`)
-      }
-    }
   }
 }
 
