@@ -57,7 +57,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 }: SecurityMethodSelectorProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [isDeviceAuthAvailable, setIsDeviceAuthAvailable] = useState(false)
@@ -86,7 +86,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   useEffect(() => {
     const loadDeviceAuthInfo = async () => {
       try {
-        startLoading()
         const [deviceAuthAvailable, biometricType] = await Promise.all([
           canPerformDeviceAuthentication(),
           getAvailableBiometricType(),
@@ -97,18 +96,15 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking device auth availability: ${errMessage}`)
         setIsDeviceAuthAvailable(false)
-      } finally {
-        stopLoading()
       }
     }
 
     loadDeviceAuthInfo()
-  }, [logger, startLoading, stopLoading])
+  }, [logger])
 
   const handleDeviceAuthentication = async () => {
+    const stopLoading = startLoading()
     try {
-      startLoading()
-
       if (isDeviceAuthAvailable) {
         try {
           const prompt = deviceAuthPrompt ?? t('BCSC.Security.AuthenticatePrompt')

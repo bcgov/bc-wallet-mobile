@@ -1,57 +1,353 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`RemoveAccountConfirmation renders correctly 1`] = `
-<View
-  style={
-    {
-      "display": "flex",
-      "flex": 1,
-    }
-  }
-  testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
->
-  <RNCSafeAreaView
-    edges={
-      {
-        "bottom": "additive",
-        "left": "additive",
-        "right": "additive",
-        "top": "off",
-      }
-    }
+[
+  <View
+    importantForAccessibility="yes"
     style={
       {
+        "display": "flex",
         "flex": 1,
-        "justifyContent": "space-between",
-        "padding": 16,
       }
     }
+    testID="com.ariesbifold:id/BCSCLoadingProviderChildren"
   >
-    <RCTScrollView
-      contentContainerStyle={
+    <RNCSafeAreaView
+      edges={
         {
-          "flexGrow": 1,
-          "gap": 16,
+          "bottom": "additive",
+          "left": "additive",
+          "right": "additive",
+          "top": "off",
+        }
+      }
+      style={
+        {
+          "flex": 1,
+          "justifyContent": "space-between",
+          "padding": 16,
         }
       }
     >
-      <View>
-        <Text
-          maxFontSizeMultiplier={2}
+      <RCTScrollView
+        contentContainerStyle={
+          {
+            "flexGrow": 1,
+            "gap": 16,
+          }
+        }
+      >
+        <View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.Account.RemoveAccountTitle
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.Account.RemoveAccountParagraph
+          </Text>
+        </View>
+      </RCTScrollView>
+      <View
+        style={
+          {
+            "gap": 16,
+            "marginTop": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.Account.RemoveAccount"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
+            {
+              "backgroundColor": "#D8292F",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
           }
         >
-          BCSC.Account.RemoveAccountTitle
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Account.RemoveAccount
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="Global.Cancel"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              Global.Cancel
+            </Text>
+          </View>
+        </View>
+      </View>
+    </RNCSafeAreaView>
+  </View>,
+  <View
+    accessible={false}
+    importantForAccessibility="no-hide-descendants"
+    style={
+      {
+        "display": "none",
+        "pointerEvents": "none",
+      }
+    }
+    testID="com.ariesbifold:id/BCSCLoadingProviderOverlay"
+  >
+    <RNCSafeAreaView
+      edges={
+        {
+          "bottom": "additive",
+          "left": "additive",
+          "right": "additive",
+          "top": "additive",
+        }
+      }
+      style={
+        {
+          "backgroundColor": "#F2F2F2",
+          "flex": 1,
+          "paddingHorizontal": 40,
+        }
+      }
+      testID="com.ariesbifold:id/LoadingScreenContent"
+    >
+      <View
+        style={
+          {
+            "flex": 4,
+            "justifyContent": "flex-end",
+            "marginBottom": 4,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "padding": 16,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignSelf": "center",
+                  "backgroundColor": "#FFFFFF",
+                  "borderRadius": 8,
+                  "margin": 24,
+                  "padding": 8,
+                }
+              }
+            >
+              <
+                height={75}
+                width={120}
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 26,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "fontSize": 18,
+                    },
+                  ],
+                ]
+              }
+            >
+              BCSC.FullTitle
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#003366",
+            "height": 1,
+            "width": "100%",
+          }
+        }
+      />
+      <View
+        style={
+          {
+            "flex": 6,
+            "justifyContent": "space-between",
+            "marginTop": 32,
+          }
+        }
+      >
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -60,180 +356,46 @@ exports[`RemoveAccountConfirmation renders correctly 1`] = `
                 "color": "#313132",
                 "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
-                "fontWeight": "normal",
+                "fontWeight": "bold",
               },
-              undefined,
+              {
+                "fontSize": 26,
+                "textAlign": "center",
+              },
             ]
           }
         >
-          BCSC.Account.RemoveAccountParagraph
+          BCSC.Loading.DefaultMessage
         </Text>
-      </View>
-    </RCTScrollView>
-    <View
-      style={
-        {
-          "gap": 16,
-          "marginTop": 24,
-        }
-      }
-    >
-      <View
-        accessibilityLabel="BCSC.Account.RemoveAccount"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "backgroundColor": "#D8292F",
-            "borderRadius": 4,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-      >
+        <ActivityIndicator
+          color="#D9EAF7"
+          size="large"
+        />
         <View
           style={
             {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
+              "alignSelf": "center",
+              "marginBottom": 30,
             }
           }
         >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                  false,
-                ],
-              ]
+          <Image
+            source={
+              {
+                "default": "",
+              }
             }
-          >
-            BCSC.Account.RemoveAccount
-          </Text>
+            style={
+              {
+                "height": 150,
+                "width": 150,
+              }
+            }
+            testID="com.ariesbifold:id/BCGovLogo"
+          />
         </View>
       </View>
-      <View
-        accessibilityLabel="Global.Cancel"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "borderColor": "#003366",
-            "borderRadius": 4,
-            "borderWidth": 2,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  {
-                    "color": "#003366",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            Global.Cancel
-          </Text>
-        </View>
-      </View>
-    </View>
-  </RNCSafeAreaView>
-</View>
+    </RNCSafeAreaView>
+  </View>,
+]
 `;
