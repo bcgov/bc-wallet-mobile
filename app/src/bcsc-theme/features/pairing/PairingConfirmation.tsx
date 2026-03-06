@@ -45,7 +45,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     <ScreenWrapper
       controls={controls}
       edges={['bottom', 'left', 'right', 'top']}
-      scrollViewContainerStyle={{ gap: Spacing.md }}
+      scrollViewContainerStyle={{ gap: Spacing.lg }}
     >
       {showAppSwitchGuidance && (
         <ArrowUp
@@ -66,14 +66,18 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
         <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
       )}
       {showAppSwitchGuidance && (
-        <ThemedText style={{ marginTop: Spacing.sm, color: ColorPalette.brand.primary }}>
+        <ThemedText style={{ color: ColorPalette.brand.primary }}>
           {t('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')}
         </ThemedText>
       )}
-      {fromAppSwitch ? null : (
-        <ThemedText style={{ marginVertical: Spacing.lg }}>
-          {t('BCSC.ManualPairing.CompletionDescription', { serviceName })}
-        </ThemedText>
+      {fromAppSwitch ? (
+        Platform.OS === 'ios' ? (
+          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionIOS')}</ThemedText>
+        ) : (
+          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionAndroid')}</ThemedText>
+        )
+      ) : (
+        <ThemedText>{t('BCSC.ManualPairing.CompletionDescription', { serviceName })}</ThemedText>
       )}
       <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
     </ScreenWrapper>

@@ -462,6 +462,8 @@ const translation = {
       "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }} (PT-BR)",
       "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (PT-BR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
+      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app. (PT-BR)",
+      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app. (PT-BR)",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (PT-BR)",
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
