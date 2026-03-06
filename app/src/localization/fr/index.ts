@@ -467,6 +467,7 @@ const translation = {
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (FR)",
       "BookmarkService": "Save link to: (FR)",
       "ToggleBookmark": "Toggle bookmark (FR)",
+      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
