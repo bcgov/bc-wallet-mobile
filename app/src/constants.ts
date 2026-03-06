@@ -106,6 +106,10 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
+export const enum LIVE_CALL_UNAVILABLE_REASONS {
+  MAINTANENCE = 'MAINTENANCE',
+  HOLIDAY = 'HOLIDAY',
+}
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB

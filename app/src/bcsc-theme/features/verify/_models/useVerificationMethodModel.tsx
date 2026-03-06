@@ -1,7 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
-import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
+import {
+  formatServiceAndUnavailableHours,
+  formatServiceHours,
+  isLiveCallAvailable,
+} from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -65,7 +69,20 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         videoCallApi.getVideoDestinations(),
         videoCallApi.getServiceHours(),
       ])
-
+      serviceHours.service_unavailable_periods = [
+        // {
+        //   start_date: 1772826180,
+        //   end_date: 1772834828,
+        //   reason: 'HOLIDAY',
+        //   reason_description: 'Thanksgiving yo',
+        // },
+        {
+          start_date: 1772826180,
+          end_date: 1772834828,
+          reason: 'MAINTENANCE',
+          reason_description: 'Marcos and Alfred testing',
+        },
+      ]
       const formattedHours = formatServiceHours(serviceHours)
 
       // TODO (bm): Look for prod queue(s) depending on environment
@@ -80,23 +97,23 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         })
         return
       }
-
-      const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
+      serviceHours
+      const isWithinServiceHours = isLiveCallAvailable(serviceHours)
 
       if (!isWithinServiceHours) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: false,
-          formattedHours,
+          formattedHours: formatServiceAndUnavailableHours(serviceHours),
         })
         return
       }
 
-      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
+      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours: formatServiceAndUnavailableHours(serviceHours) })
     } catch (error) {
       logger.error('Error checking service availability:', error as Error)
       navigation.navigate(BCSCScreens.CallBusyOrClosed, {
         busy: false,
-        formattedHours: 'Unavailable',
+        formattedHours: 'Unable to retrieve service hours at this time.',
       })
     } finally {
       setLiveCallLoading(false)

@@ -1,90 +1,97 @@
-import { DaysOfTheWeek } from '@/constants'
-import { ServiceHours } from '../api/hooks/useVideoCallApi'
+import { DaysOfTheWeek, LIVE_CALL_UNAVILABLE_REASONS } from '@/constants'
+import { ServiceHours, ServicePeriod, ServiceUnavailablePeriod } from '../api/hooks/useVideoCallApi'
 
-type NumberServicePeriod = {
-  day: string
-  start: number
-  end: number
+const PACIFIC_TIMEZONE = 'America/Vancouver'
+
+const normalizeAmPm = (time: string): string => time.replace('AM', 'am').replace('PM', 'pm')
+
+const getTimezoneDisplay = (timezone: string): string => (timezone === PACIFIC_TIMEZONE ? 'Pacific Time' : timezone)
+
+const formatTimeInTimezone = (epochSeconds: number, timezone: string): string => {
+  const date = new Date(epochSeconds * 1000)
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: timezone,
+  }).format(date)
+
+  return normalizeAmPm(formatted)
+}
+
+const formatDateInTimezone = (epochSeconds: number, timezone: string): string => {
+  const date = new Date(epochSeconds * 1000)
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: timezone,
+  }).format(date)
+}
+
+const formatUnavailableMaintenance = (period: ServiceUnavailablePeriod, timezone: string): string => {
+  const reasonText = (period.reason_description || period.reason || '').trim()
+  const startTime = formatTimeInTimezone(period.start_date, timezone)
+  const endTime = formatTimeInTimezone(period.end_date, timezone)
+  const startDate = formatDateInTimezone(period.start_date, timezone)
+  const timezoneDisplay = getTimezoneDisplay(timezone)
+
+  const title = `<b>Closed for ${reasonText}</b>`
+  const times = `Between ${startTime} - ${endTime} ${timezoneDisplay}`
+  const dateLine = `On ${startDate}`
+
+  return `${title}\n${times}\n${dateLine}`
+}
+
+export const formatServiceAndUnavailableHours = (serviceHours: ServiceHours): string =>
+  `${formatServiceHours(serviceHours)}\n\n${formatUnavailableHours(serviceHours, serviceHours.time_zone || PACIFIC_TIMEZONE)}`
+
+export const formatUnavailableHours = (serviceHours: ServiceHours, timezone: string = PACIFIC_TIMEZONE): string => {
+  if (!serviceHours?.service_unavailable_periods?.length) {
+    return ''
+  }
+  return serviceHours.service_unavailable_periods
+    .map((period) => {
+      if (period.reason === LIVE_CALL_UNAVILABLE_REASONS.MAINTANENCE) {
+        return formatUnavailableMaintenance(period, timezone)
+      }
+
+      return formatUnavailableHoliday(period, timezone)
+    })
+    .join('\n\n')
+}
+
+const formatUnavailableHoliday = (period: ServiceUnavailablePeriod, timezone: string) => {
+  const reasonText = (period.reason_description || period.reason || '').trim()
+  const startDate = formatDateInTimezone(period.start_date, timezone)
+
+  const title = `<b>Closed for ${reasonText}</b>`
+  const dateLine = `On ${startDate}`
+
+  return `${title}\n${dateLine}`
 }
 
 export const formatServiceHours = (serviceHours: ServiceHours): string => {
-  console.log('FORMAT SERVICE HOURS')
-  serviceHours.service_unavailable_periods = [
-    {
-      start_day: 'MONDAY',
-      end_day: 'MONDAY',
-      start_time: '12:00',
-      end_time: '13:00',
-    },
-    {
-      start_day: 'FRIDAY',
-      end_day: 'FRIDAY',
-      start_time: '05:00',
-      end_time: '23:00',
-    },
-  ]
   if (!serviceHours?.regular_service_periods?.length) {
     return 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
   }
-  console.log('service hours', serviceHours)
+
   const timezone = serviceHours.time_zone || 'America/Vancouver'
   const timezoneDisplay = timezone === 'America/Vancouver' ? 'Pacific Time' : timezone
 
-  const regularSeriviceHours = serviceHours.regular_service_periods
-  const unavailableHours = serviceHours.service_unavailable_periods
+  const servicePeriodDictionary = {} as { [key: string]: ServicePeriod[] }
 
-  // should these be grouped? just run against each other in the most horrific way ever
-  const regularServiceHourTimes: NumberServicePeriod[] = regularSeriviceHours.map((period) => ({
-    day: period.start_day,
-    start: parseTimeToMinutes(period.start_time) || 0,
-    end: parseTimeToMinutes(period.end_time) || 0,
-    period,
-  }))
-
-  const unavailableHourTimes: NumberServicePeriod[] = unavailableHours.map((period) => ({
-    day: period.start_day,
-    start: parseTimeToMinutes(period.start_time) || 0,
-    end: parseTimeToMinutes(period.end_time) || 0,
-    period,
-  }))
-
-  console.log('Regular service hours in minutes', regularServiceHourTimes)
-  console.log('Unavailable service hours in minutes', unavailableHourTimes)
-
-  let finalServicePeriods: NumberServicePeriod[] = []
-  if (unavailableHourTimes.length) {
-    regularServiceHourTimes.forEach((regular) => {
-      let shouldUseRegularPeriod = true
-      unavailableHourTimes.forEach((unavailable) => {
-        // this assumes there will be unavailable hours... if there aren't any it's going to
-        // we only want to compare periods on the same day
-        if (regular.day === unavailable.day) {
-          shouldUseRegularPeriod = false
-          finalServicePeriods.push(...splitServicePeriod(regular, unavailable))
-        }
-      })
-
-      if (shouldUseRegularPeriod) {
-        finalServicePeriods.push(regular)
-      }
-    })
-  } else {
-    // no unavailable hours, use regular hours
-    finalServicePeriods = regularServiceHourTimes
-  }
-
-  console.log(finalServicePeriods)
-
-  // ok so now I've got the days sorted, I think, now we map them
-
-  const servicePeriodDictionary = {} as { [key: string]: NumberServicePeriod[] }
-
-  finalServicePeriods.forEach((item: NumberServicePeriod) => {
-    if (item.day.toUpperCase() === DaysOfTheWeek.SATURDAY || item.day.toUpperCase() === DaysOfTheWeek.SUNDAY) {
-      // special cases, these don't combine
-      servicePeriodDictionary[`${item.day}-${item.start}-${item.end}`] = [item]
+  serviceHours.regular_service_periods.forEach((item: ServicePeriod) => {
+    // safe to assume start and end days are the same
+    if (
+      item.start_day.toUpperCase() === DaysOfTheWeek.SATURDAY ||
+      item.start_day.toUpperCase() === DaysOfTheWeek.SUNDAY
+    ) {
+      // weekends are special cases and do not group
+      servicePeriodDictionary[`${item.start_day}-${item.start_time}-${item.end_time}`] = [item]
     } else {
-      const key = `${item.start}-${item.end}`
+      const key = `${item.start_time}-${item.end_time}`
       if (servicePeriodDictionary[key]) {
         servicePeriodDictionary[key].push(item)
       } else {
@@ -93,73 +100,23 @@ export const formatServiceHours = (serviceHours: ServiceHours): string => {
     }
   })
 
-  console.log(servicePeriodDictionary)
-
-  Object.keys(servicePeriodDictionary).forEach((key) => {
+  const finalMessage = Object.keys(servicePeriodDictionary).map((key) => {
     const servicePeriods = servicePeriodDictionary[key]
-    servicePeriods
+    let startDay = ''
+    let endDay = ''
+
+    servicePeriods.forEach((period) => {
+      if (!startDay) {
+        startDay = dayOfTheWeekFormatter(period.start_day)
+      } else {
+        endDay = `to ${dayOfTheWeekFormatter(period.start_day)}`
+      }
+    })
+
+    return `${startDay} ${endDay}\n${formatTime12Hour(servicePeriods[0].start_time)} - ${formatTime12Hour(servicePeriods[0].end_time)} ${timezoneDisplay}`
   })
-  /*
-  Regular Service hours: 
-    M: 730am -6pm
-    T: 730am -6pm
-    W: 730am -6pm
-    Th: 730am -6pm
-    F: 730am -6pm
 
-    Sa: 10am - 4pm
-    Su: 9am - 3pm
-  unavailable hours:
-    M: 12pm - 1pm
-    F: 730am - 6pm (closed all day for a holiday)
-
-  output:
-    Monday: 730 - 12pm
-    Monday: 1pm - 6pm
-    Tuesdayto Thursday: 730am - 6:00pm
-
-    Saturday: 10am - 4pm
-    Sunday: 9am - 3pm
-  */
-
-  // convert each period to have time ranges
-  // do the same for unavailable hours
-  // compare each unavailable time range to the regular service hours and split them if they overlap
-  // group consecutive days with the same hours together
-
-  return ''
-}
-
-const splitServicePeriod = (regular: NumberServicePeriod, unavailable: NumberServicePeriod): NumberServicePeriod[] => {
-  // no intersection, return regular hours as is
-  if (unavailable.end <= regular.start || unavailable.start >= regular.end) {
-    return [regular]
-  }
-
-  // unavilable hours cover regular hours, return empty
-  if (unavailable.start <= regular.start && unavailable.end >= regular.end) {
-    return []
-  }
-
-  const remainingPeriods: NumberServicePeriod[] = []
-
-  if (unavailable.start > regular.start) {
-    remainingPeriods.push({
-      day: regular.day,
-      start: regular.start,
-      end: Math.min(regular.end, unavailable.start),
-    })
-  }
-
-  if (unavailable.end < regular.end) {
-    remainingPeriods.push({
-      day: regular.day,
-      start: Math.max(regular.start, unavailable.end),
-      end: regular.end,
-    })
-  }
-
-  return remainingPeriods
+  return finalMessage.join('\n\n')
 }
 
 export const formatTime12Hour = (time24: string): string => {
@@ -231,7 +188,11 @@ const isCurrentTimeInRange = (
   return currentTimeMinutes >= startTimeMinutes && currentTimeMinutes < endTimeMinutes
 }
 
-export const checkIfWithinServiceHours = (serviceHours: ServiceHours): boolean => {
+export const isLiveCallAvailable = (serviceHours: ServiceHours): boolean => {
+  return isCurrentTimeWithinServiceHours(serviceHours) && isCurrentTimeOutsideUnavailablePeriod(serviceHours)
+}
+
+export const isCurrentTimeWithinServiceHours = (serviceHours: ServiceHours): boolean => {
   if (!serviceHours?.regular_service_periods?.length) {
     return false
   }
@@ -266,6 +227,21 @@ export const checkIfWithinServiceHours = (serviceHours: ServiceHours): boolean =
   }
 
   return false
+}
+
+export const isCurrentTimeOutsideUnavailablePeriod = (serviceHours: ServiceHours): boolean => {
+  if (!serviceHours?.service_unavailable_periods?.length) {
+    return true
+  }
+
+  const currentTime = new Date().getTime() / 1000 // current time in seconds
+  for (const period of serviceHours.service_unavailable_periods) {
+    if (currentTime >= period.start_date && currentTime <= period.end_date) {
+      return false
+    }
+  }
+
+  return true
 }
 
 const dayOfTheWeekFormatter = (day: string): string => {

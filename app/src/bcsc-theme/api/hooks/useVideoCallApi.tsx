@@ -55,10 +55,17 @@ export interface ServicePeriod {
   end_time: string // e.g. "23:59"
 }
 
+export interface ServiceUnavailablePeriod {
+  start_date: number // seconds from epoch
+  end_date: number // seconds from epoch
+  reason: string // "MAINTENANCE" or "HOLIDAY"
+  reason_description: string // e.g. Thanksgiving closure, Scheduled maintence etc.
+}
+
 export interface ServiceHours {
   time_zone: string
   regular_service_periods: ServicePeriod[]
-  service_unavailable_periods: ServicePeriod[]
+  service_unavailable_periods: ServiceUnavailablePeriod[]
 }
 
 const useVideoCallApi = (apiClient: BCSCApiClient) => {
