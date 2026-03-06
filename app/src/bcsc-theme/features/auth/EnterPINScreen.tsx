@@ -15,7 +15,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager } from 'react-native'
 import {
@@ -40,10 +40,18 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
+  const isInitializingRef = useRef(false)
 
+  // FIXME (MD): Move this into a testable hook that handles app authentication explicitly
   useEffect(() => {
     const initializeAuthentication = async () => {
+      // Prevent multiple simultaneous initializations (ie: double biometric prompts)
+      if (isInitializingRef.current) {
+        return
+      }
+
       try {
+        isInitializingRef.current = true
         startLoading()
 
         const accountSecurityMethod = await getAccountSecurityMethod()
@@ -84,6 +92,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         logger.error(`Device authentication error: ${errMessage}`)
         navigation.goBack()
       } finally {
+        isInitializingRef.current = false
         stopLoading()
       }
     }
