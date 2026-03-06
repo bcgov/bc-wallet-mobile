@@ -118,7 +118,6 @@ const useEvidenceUploadModel = (
   const handleSend = useCallback(async () => {
     const stopLoading = loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
     try {
-
       if (!photoPath || !videoPath || !videoDuration) {
         throw new Error('Missing photo or video data')
       }

@@ -85,7 +85,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   useEffect(() => {
     const loadDeviceAuthInfo = async () => {
-      const stopLoading = startLoading()
       try {
         const [deviceAuthAvailable, biometricType] = await Promise.all([
           canPerformDeviceAuthentication(),
@@ -97,8 +96,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking device auth availability: ${errMessage}`)
         setIsDeviceAuthAvailable(false)
-      } finally {
-        stopLoading()
       }
     }
 
@@ -108,7 +105,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const handleDeviceAuthentication = async () => {
     const stopLoading = startLoading()
     try {
-
       if (isDeviceAuthAvailable) {
         try {
           const prompt = deviceAuthPrompt ?? t('BCSC.Security.AuthenticatePrompt')

@@ -45,7 +45,6 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     const initializeAuthentication = async () => {
       const stopLoading = startLoading()
       try {
-
         const accountSecurityMethod = await getAccountSecurityMethod()
 
         // Only attempt device authentication if that is the configured method
