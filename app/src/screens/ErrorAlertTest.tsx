@@ -1,7 +1,5 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from '@/bcsc-theme/utils/error-utils'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
@@ -265,17 +263,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     try {
       await client.get(endpoint ?? '/any-endpoint')
     } catch (error) {
-      // Request interceptor throws before the request is sent, so the response interceptor
-      // (which runs policies and shows alerts) never runs. Manually invoke the error handler
-      // so the injected error triggers the correct alert for manual QA verification.
-      const formatted = formatIasAxiosResponseError(error as AxiosError)
-      const appError = getAppErrorFromAxiosError(formatted) as AxiosAppError
-      client.onError?.(appError, {
-        endpoint: endpoint ?? '/any-endpoint',
-        statusCode: status ?? 0,
-        apiEndpoints: client.endpoints,
-      })
-      logger.debug(`Injected error code ${errorCode} into Axios response`)
+      // In Axios 1.x, a thrown request interceptor error still flows through the response
+      // interceptor chain, so client.onError has already been invoked. Avoid re-processing
+      // the error here; just log that the injected error was triggered for QA verification.
+      logger.debug(`Injected error code ${errorCode} into Axios response`, { error })
     }
   }
 

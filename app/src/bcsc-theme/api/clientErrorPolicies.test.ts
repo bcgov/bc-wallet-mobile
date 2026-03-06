@@ -68,12 +68,27 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle()', () => {
-      it.each(IAS_ERROR_TEST_CASES)('should call %s for app event %s', (appEvent, alertMethod) => {
-        const error = newError(appEvent)
-        const mockAlert = jest.fn()
-        const context = { alerts: { [alertMethod]: mockAlert } }
+      it.each(IAS_ERROR_TEST_CASES)(
+        'should call the correct alert for app event %s (alert: %s)',
+        (appEvent, alertMethod) => {
+          const error = newError(appEvent)
+          const mockAlert = jest.fn()
+          const context = { alerts: { [alertMethod]: mockAlert } }
+          iasErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalledTimes(1)
+        }
+      )
+
+      it('should log warning and not throw when alert is undefined for app event', () => {
+        const error = newError('add_card_server_configuration')
+        const context = {
+          alerts: {},
+          logger: { warn: jest.fn() },
+        }
         iasErrorPolicy.handle(error, context as any)
-        expect(mockAlert).toHaveBeenCalledTimes(1)
+        expect(context.logger.warn).toHaveBeenCalledWith(
+          '[IasErrorPolicy] No alert defined for app event: add_card_server_configuration'
+        )
       })
     })
 
@@ -132,6 +147,18 @@ describe('clientErrorPolicies', () => {
         const context = { alerts: { serverErrorAlert: mockAlert } }
         globalAlertErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should log warning and not throw when alert is undefined for app event', () => {
+        const error = newError('server_error')
+        const context = {
+          alerts: {},
+          logger: { warn: jest.fn() },
+        }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(context.logger.warn).toHaveBeenCalledWith(
+          '[GlobalAlertErrorPolicy] No alert defined for app event: server_error'
+        )
       })
 
       it('should show unsecured network alert', () => {
