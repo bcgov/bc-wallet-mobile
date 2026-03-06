@@ -1,3 +1,5 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
@@ -25,6 +27,7 @@ export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
   private initialized = false
+  private onError?: (error: AppError) => void
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -40,6 +43,14 @@ export class FcmViewModel {
     private readonly verificationResponseService: VerificationResponseService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
+
+  /**
+   * Sets a callback for handling errors that need to be surfaced to the user.
+   * This bridges the non-React ViewModel to the React alert system.
+   */
+  public setErrorHandler(handler: (error: AppError) => void) {
+    this.onError = handler
+  }
 
   public initialize() {
     if (this.initialized) {
@@ -120,6 +131,19 @@ export class FcmViewModel {
         `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`
       )
 
+      if (!result.verified) {
+        if (!this.serverJwk) {
+          const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+          this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWK unavailable, cannot verify JWS`)
+          this.onError?.(appError)
+          return
+        }
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
+        this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWS verification failed`)
+        this.onError?.(appError)
+        return
+      }
+
       // Extract pairing data and inject into deep link flow
       const serviceTitle = result.claims.bcsc_client_name
       const pairingCode = result.claims.bcsc_challenge
@@ -192,7 +216,11 @@ export class FcmViewModel {
         this.lastJwkBaseUrl = apiClient.baseURL
         this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
-        this.logger.warn(`[FcmViewModel] No keys found in JWKS response`)
+        // Construct AppError for analytics tracking (auto-tracked on creation); not thrown, so no `handled` flag needed
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+        this.logger.warn(
+          `[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`
+        )
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)

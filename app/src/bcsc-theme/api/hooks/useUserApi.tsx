@@ -17,6 +17,7 @@ export interface UserInfoResponseData {
   address: { formatted: string }
   picture: string
   card_type: any
+  email: string
   /**
    * Backend team clarification:
    * This value is **NOT** the physical card expiration date.
@@ -44,7 +45,6 @@ const useUserApi = (apiClient: BCSCApiClient) => {
       } catch (error) {
         throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: error })
       }
-
       try {
         return JSON.parse(userInfoString)
       } catch (error) {

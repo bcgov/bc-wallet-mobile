@@ -236,7 +236,7 @@ export const useSecureActions = () => {
 
       if (userInfo.email !== undefined) {
         dispatch({
-          type: BCDispatchAction.UPDATE_SECURE_EMAIL,
+          type: BCDispatchAction.UPDATE_SECURE_EMAIL_ADDRESS,
           payload: [userInfo.email],
         })
       }
@@ -568,7 +568,7 @@ export const useSecureActions = () => {
   const updateEvidenceMetadata = useCallback(
     async (evidenceType: EvidenceType, metadata: PhotoMetadata[], barcodes?: BarcodePayload[]) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType.evidence_type === evidenceType.evidence_type
+        evidence.evidenceType?.evidence_type === evidenceType.evidence_type
           ? { ...evidence, metadata, barcodes }
           : evidence
       )
@@ -589,7 +589,7 @@ export const useSecureActions = () => {
   const updateEvidenceDocumentNumber = useCallback(
     async (evidenceType: EvidenceType, documentNumber: string) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.map((evidence) =>
-        evidence.evidenceType.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
+        evidence.evidenceType?.evidence_type === evidenceType.evidence_type ? { ...evidence, documentNumber } : evidence
       )
 
       dispatch({
@@ -608,7 +608,7 @@ export const useSecureActions = () => {
   const removeEvidenceByType = useCallback(
     async (evidenceType: EvidenceType) => {
       const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
-        (evidence) => evidence.evidenceType.evidence_type !== evidenceType.evidence_type
+        (evidence) => evidence.evidenceType?.evidence_type !== evidenceType.evidence_type
       )
 
       dispatch({
@@ -746,7 +746,6 @@ export const useSecureActions = () => {
 
         birthdate: authRequest?.birthdate ? new Date(authRequest.birthdate * 1000) : undefined,
         serial: authRequest?.csn,
-        email: authRequest?.verifiedEmail,
         isEmailVerified: accountFlags.isEmailVerified ?? !!authRequest?.verifiedEmail,
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
@@ -761,7 +760,7 @@ export const useSecureActions = () => {
         verifiedStatus: verificationStatus,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
-        emailAddress: accountFlags.emailAddress,
+        emailAddress: accountFlags.emailAddress ?? authRequest?.verifiedEmail,
         temporaryEmailId: accountFlags.temporaryEmailId,
         userSubmittedVerificationVideo: accountFlags.userSubmittedVerificationVideo,
 

@@ -70,6 +70,8 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
                * @see EnterBirthdateViewModel.authorizeDevice()
                */
               cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.None,
+              // Non-photo BCSC users see photo IDs first, with an "Other Options" escape hatch
+              photoFilter: 'photo',
             })
           }}
           buttonType={ButtonType.Primary}

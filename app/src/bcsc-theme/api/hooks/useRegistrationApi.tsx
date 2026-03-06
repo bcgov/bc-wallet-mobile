@@ -1,6 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
+import { ErrorDefinition } from '@/errors/errorRegistry'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
@@ -8,10 +9,12 @@ import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
+  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
+  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -55,6 +58,31 @@ export interface NonceResponseData {
 }
 
 export type RegistrationApi = ReturnType<typeof useRegistrationApi>
+
+/**
+ * Maps native error codes from `getDynamicClientRegistrationBody` to their
+ * corresponding ErrorRegistry definitions. Unmatched codes fall through
+ * to CLIENT_REGISTRATION_FAILURE.
+ */
+const dcrNativeErrorMap = new Map<string, ErrorDefinition>([
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_GENERATION_ERROR, ErrorRegistry.KEYCHAIN_KEY_GENERATION_ERROR],
+  [BcscNativeErrorCodes.TOJSON_METHOD_FAILURE, ErrorRegistry.TOJSON_METHOD_FAILURE],
+  [BcscNativeErrorCodes.TOJSONSTRING_METHOD_FAILURE, ErrorRegistry.TOJSONSTRING_METHOD_FAILURE],
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, ErrorRegistry.KEYCHAIN_KEY_EXISTS],
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
+  [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, ErrorRegistry.JWT_DEVICE_INFO_ERROR],
+  [BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED, ErrorRegistry.SERIALIZE_JSON_ERROR],
+])
+
+function throwDcrNativeError(error: unknown): never {
+  if (isBcscNativeError(error)) {
+    const definition = dcrNativeErrorMap.get(error.code)
+    if (definition) {
+      throw AppError.fromErrorDefinition(definition, { cause: error })
+    }
+  }
+  throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_FAILURE, { cause: error })
+}
 
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
@@ -122,7 +150,15 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * and submits to BCSC. Stores returned client credentials and updates local account storage.
    *
    * @throws Error if BCSC client is not ready or registration fails
+   * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
+   * @throws AppError with code `ERR_120_TOJSONSTRING_METHOD_FAILURE` if device info JWT serialization fails
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_EXISTS_ERROR` if keychain key already exists
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
+   * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
+   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -137,7 +173,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         getNotificationTokens(logger),
       ])
 
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      let body: string | null
+      try {
+        body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      } catch (error) {
+        throwDcrNativeError(error)
+      }
 
       if (!body) {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
@@ -201,8 +242,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * Updates local account storage with new credentials.
    *
    * @throws Error if client not ready, missing parameters, or update fails
+   * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
+   * @throws AppError with code `ERR_120_TOJSONSTRING_METHOD_FAILURE` if device info JWT serialization fails
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_EXISTS_ERROR` if keychain key already exists
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
+   * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
+   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
@@ -228,7 +277,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
+        let body: string | null
+        try {
+          body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
+        } catch (error) {
+          throwDcrNativeError(error)
+        }
 
         if (!body) {
           throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)

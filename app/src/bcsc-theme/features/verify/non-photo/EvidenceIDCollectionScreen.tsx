@@ -15,13 +15,13 @@ import {
   useServices,
   useStore,
 } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, View } from 'react-native'
-import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import DatePicker from 'react-native-date-picker'
 
 type EvidenceCollectionFormState = {
@@ -36,7 +36,7 @@ type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
-  route: { params: { cardType: EvidenceType; documentNumber?: string } }
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
 }
 
 /**
@@ -57,7 +57,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
   const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
-    (e) => e.evidenceType.evidence_type === cardType.evidence_type
+    (e) => e.evidenceType?.evidence_type === cardType.evidence_type
   )
 
   // If we have a document number from the route params (ie: from scanning), use that.
@@ -232,7 +232,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     }
 
     const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
-      return item.evidenceType.has_photo
+      return item?.evidenceType?.has_photo
     })
 
     if (hasPhotoEvidence) {
@@ -258,6 +258,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             name: BCSCScreens.EvidenceTypeList,
             params: {
               cardProcess: BCSCCardProcess.BCSCNonPhoto,
+              // Second time around: must select a photo ID, no "Other Options" escape hatch
+              photoFilter: 'photo',
             },
           },
         ],
@@ -272,6 +274,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       logger.error('Error removing evidence on cancel', error as Error)
     }
 
+    const navParams: BCSCVerifyStackParams[BCSCScreens.EvidenceTypeList] = {
+      cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto,
+    }
+    if (store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto) {
+      navParams.photoFilter = 'photo'
+    }
+
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
@@ -279,7 +288,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           { name: BCSCScreens.SetupSteps },
           {
             name: BCSCScreens.EvidenceTypeList,
-            params: { cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto },
+            params: navParams,
           },
         ],
       })

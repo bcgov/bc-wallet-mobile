@@ -11,6 +11,7 @@ const navigation = {
   })),
   goBack: jest.fn(),
   pop: jest.fn(),
+  replace: jest.fn(),
   reset: jest.fn(),
   dispatch: jest.fn(),
   addListener: jest.fn(),

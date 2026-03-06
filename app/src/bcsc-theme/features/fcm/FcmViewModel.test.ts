@@ -1,3 +1,5 @@
+import { AppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
@@ -8,6 +10,12 @@ import { PairingService } from '../pairing'
 import { VerificationResponseService } from '../verification-response'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmMessage, FcmService } from './services/fcm-service'
+
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    trackErrorEvent: jest.fn(),
+  },
+}))
 
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
@@ -269,6 +277,113 @@ describe('FcmViewModel', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
+
+    it('emits ERR_111 when verified is false and server JWK is unavailable', async () => {
+      // Create a fresh viewModel where JWK fetch returns null
+      mockFetchJwk.mockResolvedValue(null)
+      // eslint-disable-next-line prefer-const
+      let localHandler: ((message: FcmMessage) => void) | undefined
+      const localFcmService = {
+        init: jest.fn(),
+        destroy: jest.fn(),
+        subscribe: jest.fn((h: (message: FcmMessage) => void) => {
+          localHandler = h
+          return jest.fn()
+        }),
+      } as unknown as jest.Mocked<FcmService>
+
+      const noJwkViewModel = new FcmViewModel(
+        localFcmService,
+        mockLogger as any,
+        mockPairingService,
+        mockVerificationResponseService,
+        Mode.BCSC
+      )
+
+      const mockErrorHandler = jest.fn()
+      noJwkViewModel.setErrorHandler(mockErrorHandler)
+      noJwkViewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      const mockResult = {
+        verified: false,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'unverified-jwt' },
+      } as FcmMessage
+
+      await localHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('JWK unavailable'))
+    })
+
+    it('calls error handler and does not process pairing when verified is false', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+
+      const mockResult = {
+        verified: false,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'unverified-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('JWS verification failed'))
+    })
+
+    it('processes pairing normally when verified is true', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+
+      const mockResult = {
+        verified: true,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'verified-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).not.toHaveBeenCalled()
+      expect(mockPairingService.handlePairing).toHaveBeenCalledWith({
+        serviceTitle: 'My Service',
+        pairingCode: 'code456',
+        source: 'fcm',
+      })
+    })
   })
 
   describe('handleGenericNotification', () => {
@@ -309,7 +424,7 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found in JWKS response'))
     })
 
     it('logs error when fetch fails', async () => {

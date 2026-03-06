@@ -16,6 +16,14 @@ const EditNicknameScreen: React.FC = () => {
 
   const handleSubmit = useCallback(
     async (trimmedNickname: string) => {
+      try {
+        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
+      } catch (apiError) {
+        logger.error('Failed to update registration', { error: apiError })
+        throw apiError
+      }
+
+      // only dispatch if the API is successful
       dispatch({
         type: BCDispatchAction.UPDATE_NICKNAME,
         payload: [{ nickname: store.bcsc.selectedNickname, newNickname: trimmedNickname }],
@@ -24,13 +32,6 @@ const EditNicknameScreen: React.FC = () => {
         type: BCDispatchAction.SELECT_ACCOUNT,
         payload: [trimmedNickname],
       })
-
-      try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
-      } catch (apiError) {
-        logger.error('Failed to update registration', { error: apiError })
-        throw apiError
-      }
 
       Toast.show({
         type: 'success',
