@@ -1,7 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { RemoteLogger } from '@bifold/remote-logs'
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
