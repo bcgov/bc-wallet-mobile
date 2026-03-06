@@ -459,7 +459,7 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
       "CompletionTitle": "You're done in this app",
-      "FromAppSwitchCompletionTitle": "You're done in the app, go back to {{ serviceName }}",
+      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }}",
       "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc.",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation",
