@@ -279,6 +279,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       keychainKeyDoesntExistAlert: _createBasicAlert(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, 'ProblemWithApp', { errorCode: '120-4' }),
       keychainKeyGenerationAlert: _createBasicAlert(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR, 'ProblemWithApp', { errorCode: '120-5' }),
       jwtDeviceInfoAlert: _createBasicAlert(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR, 'ProblemWithApp', { errorCode: '120-6' }),
+      clientRegistrationFailureAlert: _createBasicAlert(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'ProblemWithApp', { errorCode: '120' }),
       missingJwkAlert: _createBasicAlert(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'ProblemWithApp', { errorCode: '111' }),
       jwsVerificationFailedAlert: _createBasicAlert(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'ProblemWithApp', { errorCode: '112' }),
       failedToGetClaimsSetAlert: _createBasicAlert(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'ProblemWithApp', { errorCode: '114' }),
