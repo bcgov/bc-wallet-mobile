@@ -1,20 +1,20 @@
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
-import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
+import { getBuildNumber, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
 const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
 const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
-const AnalyticsClient = {
-  newTracker,
-}
-
 type AnalyticsClient = typeof AnalyticsClient
 
 interface AnalyticsError {
-  code: string // TODO (MD): Use AlertEvent or ErrorEvent codes
+  code: string
   message: string
+}
+
+const AnalyticsClient = {
+  newTracker,
 }
 
 /**
@@ -67,17 +67,32 @@ export class AnalyticsTracker {
   }
 
   /**
+   * Sets the application ID for the tracker if the tracker is initialized.
+   *
+   * @param appId - The application ID to set for the tracker.
+   * @returns void
+   */
+  setAppId(appId: string): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.setAppId(appId)
+  }
+
+  /**
    * Initializes the analytics tracker with the provided options.
    *
+   * @param {string} appId - The application ID to use for tracking.
    * @returns {*} {Promise<void>}
    */
-  async initializeTracker(): Promise<void> {
+  async initializeTracker(appId: string): Promise<void> {
     this.tracker = await this.client.newTracker({
       namespace: this.namespace,
       endpoint: this.endpoint,
+      appId: appId,
       protocol: __DEV__ ? 'http' : 'https',
       eventMethod: 'post',
-      appId: getBundleId(),
       appVersion: getVersion(),
       appBuild: getBuildNumber(),
       userId: getUniqueId(),

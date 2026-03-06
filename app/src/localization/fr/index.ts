@@ -237,7 +237,7 @@ const translation = {
       "ContactUs": "Contact us (FR)",
       "Feedback": "Feedback (FR)",
       "Accessibility": "Accessibility (FR)",
-      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
+      "AnalyticsOptIn": "Analytics Opt-In (FR)",
       "TermsOfUse": "Terms of use (FR)",
       "Analytics": "Analytics (FR)",
       "RemoveAccount": "Remove account (FR)",

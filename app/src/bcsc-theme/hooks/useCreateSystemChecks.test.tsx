@@ -92,6 +92,11 @@ describe('useGetSystemChecks', () => {
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
             bcsc: {
               analyticsOptIn: true,
             },
@@ -124,6 +129,11 @@ describe('useGetSystemChecks', () => {
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
             bcsc: {
               analyticsOptIn: true,
             },
@@ -164,6 +174,11 @@ describe('useGetSystemChecks', () => {
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
             bcsc: {
               analyticsOptIn: true,
             },
@@ -207,6 +222,11 @@ describe('useGetSystemChecks', () => {
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
             bcsc: {
               analyticsOptIn: true,
             },
@@ -239,6 +259,11 @@ describe('useGetSystemChecks', () => {
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
             bcsc: {
               analyticsOptIn: true,
             },

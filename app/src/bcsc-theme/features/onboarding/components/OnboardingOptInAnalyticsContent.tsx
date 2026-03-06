@@ -29,7 +29,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
 }: OnboardingOptInAnalyticsContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -53,7 +53,8 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     logger.info('User accepted analytics opt-in')
     onPress()
     try {
-      await Analytics.initializeTracker()
+      await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
+      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',
@@ -63,7 +64,6 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         error as Error
       )
     }
-    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
   }
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')

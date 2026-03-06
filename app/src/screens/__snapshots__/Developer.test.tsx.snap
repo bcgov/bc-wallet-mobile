@@ -271,7 +271,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 ]
               }
             >
-              Prod (id)
+              Prod
             </Text>
           </View>
         </View>

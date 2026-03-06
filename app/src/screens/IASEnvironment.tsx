@@ -1,4 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { setIssuer } from 'react-native-bcsc-core'
@@ -33,16 +34,19 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         // hard factory reset, no state saved
         await factoryReset()
 
-        dispatch({
-          type: BCDispatchAction.UPDATE_ENVIRONMENT,
-          payload: [environment],
-        })
-
         const success = await setIssuer(environment.iasApiBaseUrl)
+
+        // Update the analytics tracker with the new app ID for the selected environment
+        Analytics.setAppId(environment.analyticsAppId)
 
         logger.info('[BCSCCore] persisting issuer:', {
           issuer: environment.iasApiBaseUrl,
           success: success,
+        })
+
+        dispatch({
+          type: BCDispatchAction.UPDATE_ENVIRONMENT,
+          payload: [environment],
         })
       } catch (error) {
         logger.error('Error during factory reset for environment change:', error as Error)
@@ -50,7 +54,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
 
       shouldDismissModal()
     },
-    [factoryReset, dispatch, logger, shouldDismissModal]
+    [shouldDismissModal, factoryReset, dispatch, logger]
   )
 
   return <EnvironmentSelector onEnvironmentChange={handleEnvironmentChange} onCancel={shouldDismissModal} />
