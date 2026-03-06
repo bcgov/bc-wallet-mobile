@@ -12,7 +12,9 @@ describe('BCSCLoadingContext', () => {
     const { getByTestId } = render(<></>, { wrapper })
 
     expect(getByTestId(testIdWithKey('BCSCLoadingProviderChildren'))).toHaveStyle({ display: 'flex' })
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true })).toHaveStyle({ display: 'none' })
+    expect(getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true })).toHaveStyle({
+      display: 'none',
+    })
   })
 
   it('should show overlay and hide children when loading', () => {
@@ -23,7 +25,9 @@ describe('BCSCLoadingContext', () => {
     )
 
     expect(getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'))).toHaveStyle({ display: 'flex' })
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderChildren'), { includeHiddenElements: true })).toHaveStyle({ display: 'none' })
+    expect(getByTestId(testIdWithKey('BCSCLoadingProviderChildren'), { includeHiddenElements: true })).toHaveStyle({
+      display: 'none',
+    })
   })
 
   it('should set isLoading to true when startLoading is called', () => {
