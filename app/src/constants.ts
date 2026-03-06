@@ -88,6 +88,15 @@ export const ONBOARDING_ICON_IMAGE_SIZE = 125
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
+export const enum DaysOfTheWeek {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY',
+}
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
