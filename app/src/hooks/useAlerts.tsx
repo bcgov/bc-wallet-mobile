@@ -281,6 +281,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       jwtDeviceInfoAlert: _createBasicAlert(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR, 'ProblemWithApp', { errorCode: '120-6' }),
       missingJwkAlert: _createBasicAlert(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'ProblemWithApp', { errorCode: '111' }),
       jwsVerificationFailedAlert: _createBasicAlert(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'ProblemWithApp', { errorCode: '112' }),
+      failedToGetClaimsSetAlert: _createBasicAlert(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'ProblemWithApp', { errorCode: '114' }),
       failedToSerializeJsonAlert: _createBasicAlert(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON, 'ProblemWithApp', { errorCode: '115' }),
       loginServerErrorAlert: _createBasicAlert(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicAlert(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
