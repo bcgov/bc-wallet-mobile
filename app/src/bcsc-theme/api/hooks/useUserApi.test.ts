@@ -1,6 +1,6 @@
 import useUserApi from '@/bcsc-theme/api/hooks/useUserApi'
-import { AppEventCode } from '@/events/appEventCode'
 import { AppError, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
