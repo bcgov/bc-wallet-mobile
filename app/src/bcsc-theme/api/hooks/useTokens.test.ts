@@ -184,14 +184,14 @@ describe('useTokenApi', () => {
       expect(metadata).toEqual(mockMetadata)
     })
 
-    it('should throw error when no tokens are available', async () => {
+    it('should throw AppError with ERR_119 when no tokens are available', async () => {
       mockApiClient.tokens = null as any
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
-      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(
-        'No tokens available'
-      )
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toMatchObject({
+        appEvent: 'err_119_token_unexpectedly_null',
+      })
     })
 
     it('should handle refresh token errors', async () => {

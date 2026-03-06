@@ -42,6 +42,10 @@ export const useTokenService = () => {
           alerts.failedToGetClaimsSetAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
+          alerts.tokenUnexpectedlyNullAlert()
+        }
+
         throw error
       }
     },
