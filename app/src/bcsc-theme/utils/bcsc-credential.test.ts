@@ -30,11 +30,11 @@ describe('isVerified', () => {
     expect(success).toBe(true)
   })
 
-  it('should return true when verification status is NONE but we have a refresh token', async () => {
+  it('should return true when verification status is UNVERIFIED but we have a refresh token', async () => {
     const success = isVerified({
       verified: true,
       refreshToken: 'mockRefreshToken',
-      verifiedStatus: VerificationStatus.NONE,
+      verifiedStatus: VerificationStatus.UNVERIFIED,
     } as any)
 
     expect(success).toBe(true)

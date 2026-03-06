@@ -96,9 +96,10 @@ export interface BCSCState {
 }
 
 export enum VerificationStatus {
-  VERIFIED = 'VERIFIED',
-  REVOKED = 'REVOKED',
-  NONE = 'NONE',
+  VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
+  REVOKED = 'REVOKED', // Credential was revoked (cancelled or expired)
+  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we havn't verified it's status
+  // QUESTION (MD): Do we want a separate UNKNOWN status?
 }
 
 /**
@@ -182,7 +183,7 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
-  verificationStatus: VerificationStatus.NONE,
+  verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
 export enum Mode {
@@ -677,7 +678,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFIED: {
       const verified = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, verified }
+      const bcscSecure = {
+        ...state.bcscSecure,
+        verified,
+        // QUESTION (MD): Should we handle REVOKED here?
+        verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
+      }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {

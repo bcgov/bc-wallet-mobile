@@ -667,7 +667,7 @@ export const useSecureActions = () => {
       }
 
       if (!credential) {
-        return VerificationStatus.NONE
+        return VerificationStatus.UNVERIFIED
       }
 
       if (credential.bcscEvent === 'Cancel' || credential.bcscEvent === 'Expire') {

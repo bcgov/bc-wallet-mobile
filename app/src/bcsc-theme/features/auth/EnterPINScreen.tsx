@@ -42,6 +42,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { handleSuccessfulAuth } = useSecureActions()
   const isInitializingRef = useRef(false)
 
+  // FIXME (MD): Move this into a testable hook that handles app authentication explicitly
   useEffect(() => {
     const initializeAuthentication = async () => {
       // Prevent multiple simultaneous initializations (ie: double biometric prompts)
