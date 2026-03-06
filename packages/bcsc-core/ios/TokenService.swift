@@ -88,6 +88,9 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     NSKeyedUnarchiver.setClass(Token.self, forClassName: "bc_services_card.Token")
     NSKeyedUnarchiver.setClass(Token.self, forClassName: "bc_services_card_dev.Token")
 
+    // Migrate V3 key format ({clientID}/{type}/1) to V4 format ({clientID}/tokens/{type}/1)
+    migrateV3TokenIfNeeded(newId: id)
+
     let query: NSDictionary = [
       kSecClass: kSecClassKey,
       kSecAttrApplicationTag: id.data(using: .utf8)!,
@@ -150,5 +153,56 @@ extension KeychainTokenStorageService {
     ]
 
     _ = SecItemUpdate(query, updateAttributes)
+  }
+
+  /// Migrates a token stored at the V3 keychain key format ({clientID}/{type}/1)
+  /// to the V4 format ({clientID}/tokens/{type}/1), then deletes the old entry.
+  /// Must be called after NSKeyedUnarchiver class name registrations in get(id:).
+  private func migrateV3TokenIfNeeded(newId: String) {
+    // Derive V3 key by stripping the "/tokens" path segment
+    // V4 format: "{clientID}/tokens/{type}/1"
+    // V3 format: "{clientID}/{type}/1"
+    guard let range = newId.range(of: "/tokens/") else { return }
+    let v3Id = newId.replacingCharacters(in: range, with: "/")
+
+    // Read token data at V3 key
+    let readQuery: NSDictionary = [
+      kSecClass: kSecClassKey,
+      kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
+      kSecMatchLimit: kSecMatchLimitOne,
+      kSecReturnData: kCFBooleanTrue,
+    ]
+    var result: CFTypeRef?
+    guard SecItemCopyMatching(readQuery, &result) == errSecSuccess,
+          let data = result as? Data,
+          let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
+    else { return }
+
+    // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
+    NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
+    let migratedToken = Token(
+      id: newId,
+      type: v3Token.type,
+      token: v3Token.token,
+      created: v3Token.created,
+      expiry: v3Token.expiry
+    )
+    let migratedData = NSKeyedArchiver.archivedData(withRootObject: migratedToken)
+
+    let addAttributes: NSDictionary = [
+      kSecClass: kSecClassKey,
+      kSecAttrApplicationTag: newId.data(using: .utf8)!,
+      kSecAttrIsPermanent: kCFBooleanTrue,
+      kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+      kSecValueData: migratedData,
+    ]
+    SecItemAdd(addAttributes, nil)
+
+    // Delete the old V3 entry
+    let deleteQuery: NSDictionary = [
+      kSecClass: kSecClassKey,
+      kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
+    ]
+    SecItemDelete(deleteQuery)
   }
 }

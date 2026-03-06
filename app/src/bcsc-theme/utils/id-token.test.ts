@@ -1,5 +1,6 @@
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { AppError, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
@@ -37,6 +38,19 @@ describe('ID Token Utils', () => {
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
       expect(mockLogger.error).toHaveBeenCalledWith('[getIdTokenMetadata] Failed to decode ID token payload', mockError)
+    })
+
+    it('should throw ERR_114 when decoded payload is null', async () => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+      const mockLogger = new MockLogger()
+
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue('null')
+
+      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+        expect.objectContaining({
+          appEvent: AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY,
+        })
+      )
     })
 
     it('should set bcsc_card_type to Other if undefined and bcsc_account_type is Other', async () => {

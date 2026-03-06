@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -10,6 +11,7 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -32,7 +34,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { Spacing } = useTheme()
   const { evidence } = useApi()
   const { updateUserInfo } = useSecureActions()
-  const [email, setEmail] = useState('')
+  const [store] = useStore<BCState>()
+  const [email, setEmail] = useState(store.bcscSecure.emailAddress || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { cardProcess } = route.params

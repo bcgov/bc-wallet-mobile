@@ -61,6 +61,40 @@ class BcscCore: NSObject {
   }
 
   /**
+   * Returns the current account synchronously.
+   * Eliminates repeated StorageService().readData(file: .accountMetadata, ...) boilerplate.
+   */
+  private func getAccountSync() -> Account? {
+    let storage = StorageService()
+    return storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
+   * Reads a named file from the current account's directory using StorageService.
+   * Analogous to Android's readFirstAccountEncryptedFile — reduces per-function boilerplate
+   * for reading account-scoped NSCoding-archived data.
+   *
+   * @param file The AccountFiles case identifying which file to read
+   * @returns The decoded object, or nil if no account is found or the read fails
+   */
+  private func readFirstAccountFile<T: NSObject & NSCoding & NSSecureCoding>(
+    _ file: AccountFiles
+  ) -> T? {
+    let storage = StorageService()
+    guard storage.currentAccountID != nil else {
+      logger.log("readFirstAccountFile: no account found, cannot read \(file.rawValue)")
+      return nil
+    }
+    return storage.readData(
+      file: file,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
    * Creates a signed JWT client assertion for OAuth requests
    * @param audience The audience for the JWT (typically issuer or clientID)
    * @param issuer The issuer for the JWT iss claim
@@ -231,7 +265,7 @@ class BcscCore: NSObject {
     }
   }
 
-  private func generateKeyPair() -> String? {
+  private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
     let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
@@ -251,63 +285,37 @@ class BcscCore: NSObject {
         logger.log(
           "generateKeyPair - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)"
         )
-        do {
-          // Assuming default keyType and keySize are handled by KeyPairManager.generateKeyPair or are acceptable.
-          _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
-          )
-          return newKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
-          )
-          return nil // Failed to generate the specifically requested incremented key.
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
+        )
+        return newKeyId
       } else {
         // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
         // Fallback: generate a completely new key using a fresh initial ID pattern.
         logger.warning(
           "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
-        // Use the same pattern for the new key ID as in the 'no keys found' case for consistency, but with a new UUID.
         let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
         logger.log(
           "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
-        do {
-          _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
-          )
-          return freshGeneratedKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
-          )
-          return nil
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
+        )
+        return freshGeneratedKeyId
       }
     } else {
       // No keys found, attempt to generate a new one
       logger.log(
         "generateKeyPair - No keys found. Attempting to generate a new key with ID: \(initialKeyId)"
       )
-      do {
-        _ =
-          try keyPairManager
-            .generateKeyPair(withLabel: initialKeyId) // Assuming default keyType and keySize are handled by this method
-        // or are acceptable.
-        logger.log(
-          "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
-        )
-        return initialKeyId
-      } catch {
-        logger.error(
-          "generateKeyPair - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
-        )
-        return nil
-      }
+      _ = try keyPairManager.generateKeyPair(withLabel: initialKeyId)
+      logger.log(
+        "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
+      )
+      return initialKeyId
     }
   }
 
@@ -871,17 +879,40 @@ class BcscCore: NSObject {
         keyId = latestKeyInfo.tag
       } catch {
         reject(
-          "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
-          error
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "Failed to retrieve key pair: \(error.localizedDescription)", error
         )
         return
       }
     } else {
       // No keys found, generate a new one
-      guard let newKeyId = generateKeyPair() else {
+      let newKeyId: String
+      do {
+        newKeyId = try generateKeyPair()
+      } catch let error as KeychainError {
+        switch error {
+        case .keyAlreadyExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+            "Keychain key already exists: \(error.localizedDescription)", error
+          )
+        case .keyNotExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+            "Keychain key does not exist: \(error.localizedDescription)", error
+          )
+        case .keyGenError:
+          reject(
+            "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+            "Failed to generate key pair: \(error.localizedDescription)", error
+          )
+        }
+        return
+      } catch {
         reject(
-          "E_KEYPAIR_GENERATION_FAILED",
-          "Failed to generate or retrieve key pair for client registration", nil
+          "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
+          error
         )
         return
       }
@@ -891,7 +922,7 @@ class BcscCore: NSObject {
         keyId = newKeyId
       } catch {
         reject(
-          "E_KEYPAIR_RETRIEVAL_FAILED",
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
           "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
         )
         return
@@ -934,11 +965,14 @@ class BcscCore: NSObject {
       header: JWSHeader(alg: JWSAlgorithm("none"), kid: ""), payload: deviceInfoClaims
     )
 
-    // Convert device info JWT to JSON string
-    guard let deviceInfoJWTAsString = try? deviceInfoJWT.serialize() else {
+    // Convert device info JWT to JSON string (toJSONString)
+    let deviceInfoJWTAsString: String
+    do {
+      deviceInfoJWTAsString = try deviceInfoJWT.serialize()
+    } catch {
       reject(
-        "E_DEVICE_INFO_JWT_CONVERSION_FAILED", "Failed to convert device info JWT to JSON string",
-        nil
+        "E_120_TOJSONSTRING_METHOD_FAILURE",
+        "Failed to convert device info JWT to JSON string: \(error.localizedDescription)", error
       )
       return
     }
@@ -984,7 +1018,7 @@ class BcscCore: NSObject {
       resolve(jsonString)
     } catch {
       reject(
-        "E_JSON_SERIALIZATION_FAILED",
+        "E_120_TOJSON_METHOD_FAILURE",
         "Failed to serialize client registration data: \(error.localizedDescription)", error
       )
     }
@@ -1859,6 +1893,10 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Retrieves the pending authorization request from storage, this value is cleared once a user is verified.
+  ///  Expect this to be empty when migrating a verified v3 user since the v3 app clears this value immediately after
+  ///  verification, but it will be populated for users who were pending verification during migration and for all new
+  ///  users. This reads from the same location used by the v3 native app, so it can be set by either version.
   ///   - resolve: Returns the authorization request as a dictionary, or null if not found
   ///   - reject: Returns error on failure
   func getAuthorizationRequest(
@@ -1907,9 +1945,7 @@ class BcscCore: NSObject {
       )
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
-
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
          let authRequest = requestsDict.values.first
@@ -2729,6 +2765,72 @@ class BcscCore: NSObject {
         "E_CHECK_FAILED", "Failed to check credential existence: \\(error.localizedDescription)",
         error
       )
+    }
+  }
+
+  // MARK: - Native File Scan (Diagnostics)
+
+  private func recursiveFileScan(at base: URL, relativeTo: URL) throws -> [String] {
+    var results: [String] = []
+    let enumerator = FileManager.default.enumerator(
+      at: base,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    while let fileURL = enumerator?.nextObject() as? URL {
+      let relativePath = fileURL.path.replacingOccurrences(of: relativeTo.path + "/", with: "")
+      let resourceValues = try fileURL.resourceValues(forKeys: [.isDirectoryKey])
+      let isDirectory = resourceValues.isDirectory ?? false
+      results.append(isDirectory ? "\(relativePath)/" : relativePath)
+    }
+
+    return results.sorted()
+  }
+
+  /// Scans the app's Application Support bundle directory and logs all files.
+  /// Useful for diagnosing v3 vs v4 migration and file systems
+  func getNativeFilesScan(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      let bundleID = Bundle.main.bundleIdentifier ?? "ca.bc.gov.iddev.servicescard"
+      let rootDirectory = try FileManager.default.url(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let bundleDirectory = rootDirectory.appendingPathComponent(bundleID)
+
+      var result: [String: Any] = [:]
+      result["bundleID"] = bundleID
+      result["bundleDirectory"] = bundleDirectory.path
+      let bundleExists = FileManager.default.fileExists(atPath: bundleDirectory.path)
+      result["bundleDirectoryExists"] = bundleExists
+
+      if bundleExists {
+        let allFiles = try recursiveFileScan(at: bundleDirectory, relativeTo: bundleDirectory)
+        result["files"] = allFiles
+        result["fileCount"] = allFiles.count
+        logger.log("[Native File Scan] Found \(allFiles.count) files/directories")
+        #if DEBUG
+          // Log each file/directory only in debug builds to avoid leaking sensitive paths
+          // and to reduce logging overhead in production.
+          for file in allFiles {
+            logger.log("[Native File Scan] \(file)")
+          }
+        #endif
+      } else {
+        result["files"] = []
+        result["fileCount"] = 0
+        logger.log("[Native File Scan] Bundle directory does not exist")
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
     }
   }
 
