@@ -50,7 +50,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'AriesBifold' do
+target 'BCWallet' do
   config = use_native_modules!
 
   pod 'Firebase', :modular_headers => true
