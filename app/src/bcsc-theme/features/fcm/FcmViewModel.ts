@@ -166,17 +166,16 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR, { cause: error })
-      appError.handled = true
-      const causeMessage = error instanceof Error ? error.message : String(error)
-      this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
       if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.FAILED_TO_PARSE_JWS) {
         const appError = AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: error })
         this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to parse JWS in challenge request`)
         return
       }
 
-      this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR, { cause: error })
+      appError.handled = true
+      const causeMessage = error instanceof Error ? error.message : String(error)
+      this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
     }
   }
 
