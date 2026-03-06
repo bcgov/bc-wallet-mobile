@@ -21,6 +21,12 @@ jest.mock('@/utils/analytics/analytics-singleton', () => ({
 jest.mock('react-native-bcsc-core', () => ({
   decodeLoginChallenge: jest.fn(),
   showLocalNotification: jest.fn(),
+  isBcscNativeError: (error: unknown): boolean => {
+    return error instanceof Error && 'code' in error
+  },
+  BcscNativeErrorCodes: {
+    FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
+  },
 }))
 
 // Mock the API client getter
@@ -386,6 +392,23 @@ describe('FcmViewModel', () => {
         pairingCode: 'code456',
         source: 'fcm',
       })
+    })
+
+    it('logs ERR_117 and returns early when decodeLoginChallenge throws E_FAILED_TO_PARSE_JWS', async () => {
+      const nativeError = Object.assign(new Error('Invalid JWS format'), { code: 'E_FAILED_TO_PARSE_JWS' })
+      ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(nativeError)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'malformed-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('err_117_failed_to_parse_jws'))
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      // Should NOT fall through to the generic error log
+      expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
     })
   })
 

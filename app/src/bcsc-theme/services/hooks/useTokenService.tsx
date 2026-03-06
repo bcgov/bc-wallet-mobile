@@ -42,6 +42,10 @@ export const useTokenService = () => {
           alerts.failedToGetClaimsSetAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
+          alerts.failedToParseJwsAlert()
+        }
+
         throw error
       }
     },

@@ -40,6 +40,10 @@ export const useUserService = () => {
         alerts.failedToGetClaimsSetAlert()
       }
 
+      if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
+        alerts.failedToParseJwsAlert()
+      }
+
       throw error
     }
   }, [alerts, userApi])
@@ -71,6 +75,10 @@ export const useUserService = () => {
 
       if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
         alerts.failedToGetClaimsSetAlert()
+      }
+
+      if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
+        alerts.failedToParseJwsAlert()
       }
 
       throw error

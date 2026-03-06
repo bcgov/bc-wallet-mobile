@@ -109,13 +109,5 @@ export const useIdToken = () => {
     throw new Error('useIdToken must be used within a BCSCIdTokenProvider')
   }
 
-  if (context.isLoading) {
-    throw new Error('useIdToken: ID token is still loading')
-  }
-
-  if (!context.data) {
-    throw new Error('useIdToken: ID token is null')
-  }
-
   return { idToken: context.data, isLoading: context.isLoading, refreshIdToken: context.refreshData }
 }
