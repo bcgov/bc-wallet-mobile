@@ -119,9 +119,14 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, async (_error: AxiosError) => {
+    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
       // Pass through errors that are already AppErrors (e.g. from request interceptor)
       if (_error instanceof AppError) {
+        return Promise.reject(_error)
+      }
+
+      // Only handle AxiosErrors here; pass through all other error types unchanged
+      if (!axios.isAxiosError(_error)) {
         return Promise.reject(_error)
       }
 

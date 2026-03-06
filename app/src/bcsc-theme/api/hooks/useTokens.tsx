@@ -89,7 +89,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
       if (!apiClient.tokens) {
-        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+          cause: new Error('apiClient.tokens is null in getCachedIdTokenMetadata'),
+        })
       }
 
       if (config.refreshCache) {
