@@ -1,3 +1,4 @@
+import { getBaseScreenName } from '@/bcsc-theme/navigators/stack-utils'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native'
@@ -39,19 +40,23 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
           setNavigationReady(true)
         }}
         onStateChange={async () => {
-          const previousRouteName = routeNameRef.current
-          const currentRouteName = navigationRef.current?.getCurrentRoute()?.name
+          const _previousRouteName = routeNameRef.current
+          const _currentRouteName = navigationRef.current?.getCurrentRoute()?.name
 
-          const screenTransitionKey = `${previousRouteName}->${currentRouteName}`
+          // Extract the base screen names (without stack prefix) for analytics tracking
+          const previousScreenName = _previousRouteName ? getBaseScreenName(_previousRouteName) : undefined
+          const currentScreenName = _currentRouteName ? getBaseScreenName(_currentRouteName) : undefined
 
-          // Track the screen view event only if the route has changed
-          if (currentRouteName && screenTransitionKeyRef.current !== screenTransitionKey) {
-            Analytics.trackScreenEvent(currentRouteName, previousRouteName)
+          const screenTransitionKey = `${previousScreenName}->${currentScreenName}`
+
+          // Track the screen view event only if the screen has changed
+          if (currentScreenName && screenTransitionKeyRef.current !== screenTransitionKey) {
+            Analytics.trackScreenEvent(currentScreenName, previousScreenName)
 
             screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          routeNameRef.current = currentRouteName
+          routeNameRef.current = currentScreenName
         }}
       >
         {children}

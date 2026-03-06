@@ -257,19 +257,3 @@ export type BCSCAuthStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
 }
-
-/**
- * Gets the base screen name by removing the stack prefix from the screen name.
- *
- * @param screen - The screen name to get the base name from.
- * @returns The base screen name without the stack prefix.
- */
-export const getBaseScreenName = (screen: BCSCScreens): string => {
-  for (const stack in BCSCStacks) {
-    if (screen.startsWith(stack)) {
-      return screen.replace(stack, '').trim()
-    }
-  }
-
-  return screen
-}
