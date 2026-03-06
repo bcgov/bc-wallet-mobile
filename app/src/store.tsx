@@ -118,7 +118,7 @@ export interface BCSCSecureState {
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
-  /** Account verification status value (VERIFIED, REVOKED, NONE) */
+  /** Account verification status value (VERIFIED, UNVERIFIED, DEACTIVATED) */
   verifiedStatus: VerificationStatus
 
   // === from Tokens ===
@@ -673,7 +673,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = {
         ...state.bcscSecure,
         verified,
-        // QUESTION (MD): Should we handle REVOKED here?
+        // QUESTION (MD): Should we handle DEACTIVATED here?
         verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
       }
       return { ...state, bcscSecure }

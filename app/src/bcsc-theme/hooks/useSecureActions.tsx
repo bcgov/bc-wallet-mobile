@@ -768,7 +768,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throw error
     }
-  }, [logger, updateTokens, getVerificationStatus, dispatch])
+  }, [logger, updateTokens, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
