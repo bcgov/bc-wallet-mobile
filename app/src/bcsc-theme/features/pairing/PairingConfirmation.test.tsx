@@ -1,8 +1,8 @@
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { Platform } from 'react-native'
+import { BackHandler, Platform } from 'react-native'
 import PairingConfirmation from './PairingConfirmation'
 
 describe('PairingConfirmation', () => {
@@ -33,7 +33,7 @@ describe('PairingConfirmation', () => {
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.CompletionSubtitle')).toBeTruthy()
+      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeTruthy()
     })
 
     it('does not show the Close button', () => {
@@ -102,6 +102,39 @@ describe('PairingConfirmation', () => {
       )
 
       expect(queryByTestId('com.ariesbifold:id/Close')).toBeTruthy()
+    })
+
+    it('calls BackHandler.exitApp when Close is pressed', () => {
+      const exitAppSpy = jest.spyOn(BackHandler, 'exitApp').mockImplementation(jest.fn())
+      const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/Close'))
+
+      expect(exitAppSpy).toHaveBeenCalled()
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      exitAppSpy.mockRestore()
+    })
+  })
+
+  describe('when without fromAppSwitch', () => {
+    it('resets navigation to the Tab stack when Close is pressed', () => {
+      Platform.OS = 'android'
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={defaultRoute as never} />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/Close'))
+
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
     })
   })
 

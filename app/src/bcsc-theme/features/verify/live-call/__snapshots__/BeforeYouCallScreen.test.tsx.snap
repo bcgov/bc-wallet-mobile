@@ -321,7 +321,11 @@ exports[`BeforeYouCall renders correctly 1`] = `
           onStartShouldSetResponder={[Function]}
           style={
             {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
               "opacity": 1,
+              "padding": 16,
             }
           }
           testID="com.ariesbifold:id/Assistance"
@@ -346,7 +350,13 @@ exports[`BeforeYouCall renders correctly 1`] = `
                     "fontWeight": "normal",
                   },
                   [
-                    undefined,
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
                     false,
                     false,
                     false,
