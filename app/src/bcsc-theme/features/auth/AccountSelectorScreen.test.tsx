@@ -1,3 +1,4 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -41,7 +42,7 @@ describe('AccountSetup', () => {
       const nicknameButton = tree.getByText('John')
       fireEvent.press(nicknameButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCEnterPIN')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterPIN)
     })
   })
 
@@ -68,7 +69,7 @@ describe('AccountSetup', () => {
       const continueButton = tree.getByTestId('com.ariesbifold:id/ContinueSetup')
       fireEvent.press(continueButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCEnterPIN')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterPIN)
     })
   })
 })

@@ -1,4 +1,5 @@
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -135,7 +136,7 @@ describe('LockoutScreen', () => {
           expect.objectContaining({
             type: 'RESET',
             payload: expect.objectContaining({
-              routes: [{ name: 'BCSCEnterPIN' }],
+              routes: [{ name: BCSCScreens.EnterPIN }],
             }),
           })
         )
@@ -159,7 +160,7 @@ describe('LockoutScreen', () => {
           expect.objectContaining({
             type: 'RESET',
             payload: expect.objectContaining({
-              routes: [{ name: 'BCSCEnterPIN' }],
+              routes: [{ name: BCSCScreens.EnterPIN }],
             }),
           })
         )

@@ -1,3 +1,4 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { VerificationResponseService } from './VerificationResponseService'
 import { VerificationResponseNavigationEvent } from './types'
 
@@ -33,7 +34,7 @@ describe('VerificationResponseService', () => {
       expect(result).toBe(true) // Emitted immediately
       expect(navEvents).toHaveLength(1)
       expect(navEvents[0]).toMatchObject({
-        screen: expect.stringContaining('VerificationSuccess'),
+        screen: expect.stringContaining(BCSCScreens.VerificationSuccess),
         eventType: 'request_reviewed',
       })
       expect(service.hasPendingApproval).toBe(false)
@@ -94,7 +95,7 @@ describe('VerificationResponseService', () => {
 
     expect(navEvents).toHaveLength(1)
     expect(navEvents[0]).toMatchObject({
-      screen: expect.stringContaining('VerificationSuccess'),
+      screen: expect.stringContaining(BCSCScreens.VerificationSuccess),
       eventType: 'request_reviewed',
     })
   })

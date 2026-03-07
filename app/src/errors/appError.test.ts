@@ -71,7 +71,10 @@ describe('AppError', () => {
 
       error.track()
 
-      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.UNKNOWN_SERVER_ERROR,
+        message: `[${error.code}] ${error.message}`,
+      })
     })
   })
 
@@ -110,7 +113,10 @@ describe('AppError', () => {
 
       const error = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR)
 
-      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.GENERAL,
+        message: `[${error.code}] ${error.message}`,
+      })
     })
 
     it('should not track error event in analytics if specified false', () => {
@@ -126,7 +132,10 @@ describe('AppError', () => {
 
       const error = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR, { track: true })
 
-      expect(trackErrorEventSpy).toHaveBeenCalledWith(error)
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.GENERAL,
+        message: `[${error.code}] ${error.message}`,
+      })
     })
   })
 

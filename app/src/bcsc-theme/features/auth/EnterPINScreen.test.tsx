@@ -110,7 +110,7 @@ describe('EnterPINScreen', () => {
           expect.objectContaining({
             type: 'RESET',
             payload: expect.objectContaining({
-              routes: [{ name: 'BCSCLockout' }],
+              routes: [{ name: BCSCScreens.Lockout }],
             }),
           })
         )
@@ -166,7 +166,7 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCDeviceAuthAppReset')
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.DeviceAuthAppReset)
       })
     })
 
