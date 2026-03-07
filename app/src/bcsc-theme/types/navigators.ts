@@ -90,7 +90,7 @@ export enum BCSCScreens {
   OnboardingOptInAnalytics = 'BCSCOnboardingOptInAnalytics', // Does this exist in V3?
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
-  MainLoading = 'BCSCMainLoading',
+  MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
   MainContactUs = `${BCSCStacks.Main} Contact Us`,

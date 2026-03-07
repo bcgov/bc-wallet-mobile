@@ -1,3 +1,4 @@
+import { NavigationState } from '@react-navigation/native'
 import { StackNavigationOptions } from '@react-navigation/stack'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -34,4 +35,21 @@ export const getBaseScreenName = (screen: BCSCScreens | string): string => {
   }
 
   return screen
+}
+
+/**
+ * Gets the current screen name from the navigation state, accounting for nested navigators.
+ *
+ * @param state - The navigation state object.
+ * @returns The name of the current screen.
+ */
+export const getCurrentStateScreenName = (state: NavigationState): string => {
+  const currentRoute = state.routes[state.index]
+
+  if (!currentRoute.state || currentRoute.state.index === undefined || !currentRoute.state.routes) {
+    // If there is no nested state (ie: TabStack), return the current route name
+    return currentRoute.name
+  }
+
+  return currentRoute.state.routes[currentRoute.state.index].name
 }

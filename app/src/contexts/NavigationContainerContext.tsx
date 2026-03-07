@@ -1,4 +1,4 @@
-import { getBaseScreenName } from '@/bcsc-theme/navigators/stack-utils'
+import { getBaseScreenName, getCurrentStateScreenName } from '@/bcsc-theme/navigators/stack-utils'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native'
@@ -21,7 +21,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
   const screenTransitionKeyRef = useRef<string>('')
-  const routeNameRef = useRef<string | undefined>(undefined)
+  const previousScreenRef = useRef<string | undefined>(undefined)
 
   const navigationContext = useMemo(
     () => ({
@@ -36,16 +36,15 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
-          routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name
           setNavigationReady(true)
         }}
-        onStateChange={async () => {
-          const _previousRouteName = routeNameRef.current
-          const _currentRouteName = navigationRef.current?.getCurrentRoute()?.name
+        onStateChange={async (state) => {
+          if (!state) {
+            return
+          }
 
-          // Extract the base screen names (without stack prefix) for analytics tracking
-          const previousScreenName = _previousRouteName ? getBaseScreenName(_previousRouteName) : undefined
-          const currentScreenName = _currentRouteName ? getBaseScreenName(_currentRouteName) : undefined
+          const previousScreenName = previousScreenRef.current
+          const currentScreenName = getBaseScreenName(getCurrentStateScreenName(state))
 
           const screenTransitionKey = `${previousScreenName}->${currentScreenName}`
 
@@ -56,7 +55,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
             screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          routeNameRef.current = currentScreenName
+          previousScreenRef.current = currentScreenName
         }}
       >
         {children}
