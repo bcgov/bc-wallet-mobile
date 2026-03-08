@@ -7,6 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
+import ServicePeriodList from './components/ServicePeriodList'
 
 type BeforeYouCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.BeforeYouCall>
@@ -18,10 +19,9 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
   const { dataUseWarningAlert } = useAlerts(navigation)
-  const { formattedHours } = route.params || {}
+  const { formattedHours } = route.params
 
   // Use the passed formatted hours or fallback to default
-  const hoursText = formattedHours || t('BCSC.VideoCall.DefaultHours')
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({
@@ -70,7 +70,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
       <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
-      <ThemedText>{hoursText}</ThemedText>
+      <ServicePeriodList items={formattedHours} />
       <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
         {t('BCSC.VideoCall.ContactCentrePrivacy')}
       </ThemedText>

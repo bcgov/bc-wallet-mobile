@@ -1,12 +1,17 @@
 import { DaysOfTheWeek, LIVE_CALL_UNAVILABLE_REASONS } from '@/constants'
 import { ServiceHours, ServicePeriod, ServiceUnavailablePeriod } from '../api/hooks/useVideoCallApi'
 
-const PACIFIC_TIMEZONE = 'America/Vancouver'
+export interface FormattedServicePeriod {
+  title: string
+  hours?: string
+  dateLine?: string
+}
 
-const normalizeAmPm = (time: string): string => time.replace('AM', 'am').replace('PM', 'pm')
+const PACIFIC_TIMEZONE = 'America/Vancouver'
 
 const getTimezoneDisplay = (timezone: string): string => (timezone === PACIFIC_TIMEZONE ? 'Pacific Time' : timezone)
 
+// Converts an epoch tome into time format: 11:35pm
 const formatTimeInTimezone = (epochSeconds: number, timezone: string): string => {
   const date = new Date(epochSeconds * 1000)
   const formatted = new Intl.DateTimeFormat('en-US', {
@@ -16,9 +21,10 @@ const formatTimeInTimezone = (epochSeconds: number, timezone: string): string =>
     timeZone: timezone,
   }).format(date)
 
-  return normalizeAmPm(formatted)
+  return formatted.toLocaleLowerCase()
 }
 
+// Converts an epoch time into long format: March 6, 2026
 const formatDateInTimezone = (epochSeconds: number, timezone: string): string => {
   const date = new Date(epochSeconds * 1000)
   return new Intl.DateTimeFormat('en-US', {
@@ -30,51 +36,59 @@ const formatDateInTimezone = (epochSeconds: number, timezone: string): string =>
   }).format(date)
 }
 
-const formatUnavailableMaintenance = (period: ServiceUnavailablePeriod, timezone: string): string => {
+export const formatServiceAndUnavailableHours = (serviceHours: ServiceHours): FormattedServicePeriod[] => [
+  ...formatServiceHours(serviceHours),
+  ...formatUnavailableHours(serviceHours, serviceHours.time_zone || PACIFIC_TIMEZONE),
+]
+
+export const formatUnavailableHours = (
+  serviceHours: ServiceHours,
+  timezone: string = PACIFIC_TIMEZONE
+): FormattedServicePeriod[] => {
+  if (!serviceHours?.service_unavailable_periods?.length) {
+    return []
+  }
+  return serviceHours.service_unavailable_periods.map((period) => {
+    if (period.reason === LIVE_CALL_UNAVILABLE_REASONS.MAINTANENCE) {
+      return formatUnavailableMaintenance(period, timezone)
+    }
+
+    return formatUnavailableHoliday(period, timezone)
+  })
+}
+
+const formatUnavailableMaintenance = (period: ServiceUnavailablePeriod, timezone: string): FormattedServicePeriod => {
   const reasonText = (period.reason_description || period.reason || '').trim()
   const startTime = formatTimeInTimezone(period.start_date, timezone)
   const endTime = formatTimeInTimezone(period.end_date, timezone)
   const startDate = formatDateInTimezone(period.start_date, timezone)
   const timezoneDisplay = getTimezoneDisplay(timezone)
 
-  const title = `<b>Closed for ${reasonText}</b>`
-  const times = `Between ${startTime} - ${endTime} ${timezoneDisplay}`
-  const dateLine = `On ${startDate}`
-
-  return `${title}\n${times}\n${dateLine}`
-}
-
-export const formatServiceAndUnavailableHours = (serviceHours: ServiceHours): string =>
-  `${formatServiceHours(serviceHours)}\n\n${formatUnavailableHours(serviceHours, serviceHours.time_zone || PACIFIC_TIMEZONE)}`
-
-export const formatUnavailableHours = (serviceHours: ServiceHours, timezone: string = PACIFIC_TIMEZONE): string => {
-  if (!serviceHours?.service_unavailable_periods?.length) {
-    return ''
+  return {
+    title: `Closed for ${reasonText}`,
+    hours: `Between ${startTime} - ${endTime} ${timezoneDisplay}`,
+    dateLine: `On ${startDate}`,
   }
-  return serviceHours.service_unavailable_periods
-    .map((period) => {
-      if (period.reason === LIVE_CALL_UNAVILABLE_REASONS.MAINTANENCE) {
-        return formatUnavailableMaintenance(period, timezone)
-      }
-
-      return formatUnavailableHoliday(period, timezone)
-    })
-    .join('\n\n')
 }
 
 const formatUnavailableHoliday = (period: ServiceUnavailablePeriod, timezone: string) => {
   const reasonText = (period.reason_description || period.reason || '').trim()
   const startDate = formatDateInTimezone(period.start_date, timezone)
 
-  const title = `<b>Closed for ${reasonText}</b>`
-  const dateLine = `On ${startDate}`
-
-  return `${title}\n${dateLine}`
+  return {
+    title: `Closed for ${reasonText}`,
+    dateLine: `On ${startDate}`,
+  }
 }
 
-export const formatServiceHours = (serviceHours: ServiceHours): string => {
+export const formatServiceHours = (serviceHours: ServiceHours): FormattedServicePeriod[] => {
   if (!serviceHours?.regular_service_periods?.length) {
-    return 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+    return [
+      {
+        title: 'Monday to Friday',
+        hours: '7:30am - 5:00pm Pacific Time',
+      },
+    ]
   }
 
   const timezone = serviceHours.time_zone || 'America/Vancouver'
@@ -100,7 +114,7 @@ export const formatServiceHours = (serviceHours: ServiceHours): string => {
     }
   })
 
-  const finalMessage = Object.keys(servicePeriodDictionary).map((key) => {
+  const finalMessage: FormattedServicePeriod[] = Object.keys(servicePeriodDictionary).map((key) => {
     const servicePeriods = servicePeriodDictionary[key]
     let startDay = ''
     let endDay = ''
@@ -109,14 +123,17 @@ export const formatServiceHours = (serviceHours: ServiceHours): string => {
       if (!startDay) {
         startDay = dayOfTheWeekFormatter(period.start_day)
       } else {
+        // this is only added in cases where multiple days are grouped
         endDay = `to ${dayOfTheWeekFormatter(period.start_day)}`
       }
     })
-
-    return `${startDay} ${endDay}\n${formatTime12Hour(servicePeriods[0].start_time)} - ${formatTime12Hour(servicePeriods[0].end_time)} ${timezoneDisplay}`
+    return {
+      title: `${startDay} ${endDay}`,
+      hours: `${formatTime12Hour(servicePeriods[0].start_time)} - ${formatTime12Hour(servicePeriods[0].end_time)} ${timezoneDisplay}`,
+    }
   })
 
-  return finalMessage.join('\n\n')
+  return finalMessage
 }
 
 export const formatTime12Hour = (time24: string): string => {

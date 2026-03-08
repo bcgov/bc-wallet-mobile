@@ -63,7 +63,7 @@ export interface ServiceUnavailablePeriod {
 }
 
 export interface ServiceHours {
-  time_zone: string
+  time_zone: string // e.g. "America/Vancouver"
   regular_service_periods: ServicePeriod[]
   service_unavailable_periods: ServiceUnavailablePeriod[]
 }
