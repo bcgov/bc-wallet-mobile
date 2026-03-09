@@ -30,7 +30,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       const prev = appStateRef.current
       appStateRef.current = nextAppState
-      if ((prev === 'inactive' || prev === 'background') && nextAppState === 'active') {
+      if (prev === 'background' && nextAppState === 'active') {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
