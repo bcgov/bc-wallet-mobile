@@ -11,7 +11,10 @@ import {
   birthdateLockoutErrorPolicy,
   cardExpiredErrorPolicy,
   ClientErrorHandlingPolicies,
+  failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
+  invalidRegistrationRequestErrorPolicy,
+  invalidUrlErrorPolicy,
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
@@ -512,6 +515,81 @@ describe('clientErrorPolicies', () => {
     })
   })
 
+  describe('failedToRetrieveStringResourceErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE', () => {
+        const error = newError('err_400_failed_to_retrieve_string_resource')
+        expect(failedToRetrieveStringResourceErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(failedToRetrieveStringResourceErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call failedToRetrieveStringResourceAlert and mark error as handled', () => {
+        const error = newError('err_400_failed_to_retrieve_string_resource')
+        const mockAlert = jest.fn()
+        const context = { alerts: { failedToRetrieveStringResourceAlert: mockAlert } }
+        failedToRetrieveStringResourceErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
+  describe('invalidUrlErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_500_INVALID_URL', () => {
+        const error = newError('err_500_invalid_url')
+        expect(invalidUrlErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(invalidUrlErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call invalidUrlAlert and mark error as handled', () => {
+        const error = newError('err_500_invalid_url')
+        const mockAlert = jest.fn()
+        const context = { alerts: { invalidUrlAlert: mockAlert } }
+        invalidUrlErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
+  describe('invalidRegistrationRequestErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_501_INVALID_REGISTRATION_REQUEST', () => {
+        const error = newError('err_501_invalid_registration_request')
+        expect(invalidRegistrationRequestErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(invalidRegistrationRequestErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call invalidRegistrationRequestAlert and mark error as handled', () => {
+        const error = newError('err_501_invalid_registration_request')
+        const mockAlert = jest.fn()
+        const context = { alerts: { invalidRegistrationRequestAlert: mockAlert } }
+        invalidRegistrationRequestErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
   describe('ClientErrorHandlingPolicies', () => {
     describe('policy order', () => {
       it('should respect policy order when multiple policies match', () => {
@@ -556,6 +634,52 @@ describe('clientErrorPolicies', () => {
 
         // alreadyRegisteredErrorPolicy should come before globalAlertErrorPolicy
         expect(indexOfAlreadyRegistered).toBeLessThan(indexOfGlobalAlert)
+      })
+
+      it('should have alreadyRegisteredErrorPolicy before invalidRegistrationRequestErrorPolicy', () => {
+        const indexOfAlreadyRegistered = ClientErrorHandlingPolicies.indexOf(alreadyRegisteredErrorPolicy)
+        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
+
+        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfInvalidRegistration)
+      })
+
+      it('should have new IAS error policies before globalAlertErrorPolicy', () => {
+        const indexOfStringResource = ClientErrorHandlingPolicies.indexOf(failedToRetrieveStringResourceErrorPolicy)
+        const indexOfInvalidUrl = ClientErrorHandlingPolicies.indexOf(invalidUrlErrorPolicy)
+        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
+        const indexOfGlobalAlert = ClientErrorHandlingPolicies.indexOf(globalAlertErrorPolicy)
+
+        expect(indexOfStringResource).toBeLessThan(indexOfGlobalAlert)
+        expect(indexOfInvalidUrl).toBeLessThan(indexOfGlobalAlert)
+        expect(indexOfInvalidRegistration).toBeLessThan(indexOfGlobalAlert)
+      })
+
+      it('should prefer alreadyRegisteredErrorPolicy for ERR_501 with "client is in invalid" on deviceAuthorization', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
+      })
+
+      it('should fall through to invalidRegistrationRequestErrorPolicy for ERR_501 without "client is in invalid"', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('some other reason')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(invalidRegistrationRequestErrorPolicy)
       })
     })
   })

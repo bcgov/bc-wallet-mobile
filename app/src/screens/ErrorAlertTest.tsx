@@ -188,6 +188,11 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       onBack() // close modal first
       injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
     },
+    err_400_failed_to_retrieve_string_resource: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_400_failed_to_retrieve_string_resource'),
+    err_500_invalid_url: () => injectErrorCodeIntoAxiosResponse(client, 'err_500_invalid_url'),
+    err_501_invalid_registration_request: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_501_invalid_registration_request'),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {

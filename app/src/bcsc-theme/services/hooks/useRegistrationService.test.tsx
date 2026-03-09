@@ -244,6 +244,66 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE', () => {
+      it('should show failedToRetrieveStringResourceAlert on string resource error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const failedToRetrieveStringResourceAlert = jest.fn()
+        const mockAlerts = { failedToRetrieveStringResourceAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(failedToRetrieveStringResourceAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_500_INVALID_URL', () => {
+      it('should show invalidUrlAlert on invalid URL error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_500_INVALID_URL)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const invalidUrlAlert = jest.fn()
+        const mockAlerts = { invalidUrlAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(invalidUrlAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_501_INVALID_REGISTRATION_REQUEST', () => {
+      it('should show invalidRegistrationRequestAlert on invalid registration request error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const invalidRegistrationRequestAlert = jest.fn()
+        const mockAlerts = { invalidRegistrationRequestAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(invalidRegistrationRequestAlert).toHaveBeenCalled()
+      })
+    })
+
     it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
       const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
@@ -258,6 +318,9 @@ describe('useRegistrationService', () => {
       const problemWithAppAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
       const failedToSerializeJsonAlert = jest.fn()
+      const failedToRetrieveStringResourceAlert = jest.fn()
+      const invalidUrlAlert = jest.fn()
+      const invalidRegistrationRequestAlert = jest.fn()
 
       const mockAlerts = {
         toJsonMethodFailureAlert,
@@ -269,6 +332,9 @@ describe('useRegistrationService', () => {
         problemWithAppAlert,
         clientRegistrationNullAlert,
         failedToSerializeJsonAlert,
+        failedToRetrieveStringResourceAlert,
+        invalidUrlAlert,
+        invalidRegistrationRequestAlert,
       }
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
@@ -287,6 +353,9 @@ describe('useRegistrationService', () => {
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
       expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
+      expect(failedToRetrieveStringResourceAlert).not.toHaveBeenCalled()
+      expect(invalidUrlAlert).not.toHaveBeenCalled()
+      expect(invalidRegistrationRequestAlert).not.toHaveBeenCalled()
     })
   })
 
@@ -461,6 +530,9 @@ describe('useRegistrationService', () => {
       const jwtDeviceInfoAlert = jest.fn()
       const problemWithAppAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
+      const failedToRetrieveStringResourceAlert = jest.fn()
+      const invalidUrlAlert = jest.fn()
+      const invalidRegistrationRequestAlert = jest.fn()
       const mockAlerts = {
         toJsonMethodFailureAlert,
         toJsonStringMethodFailureAlert,
@@ -470,6 +542,9 @@ describe('useRegistrationService', () => {
         jwtDeviceInfoAlert,
         problemWithAppAlert,
         clientRegistrationNullAlert,
+        failedToRetrieveStringResourceAlert,
+        invalidUrlAlert,
+        invalidRegistrationRequestAlert,
       }
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
@@ -487,6 +562,9 @@ describe('useRegistrationService', () => {
       expect(jwtDeviceInfoAlert).not.toHaveBeenCalled()
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
+      expect(failedToRetrieveStringResourceAlert).not.toHaveBeenCalled()
+      expect(invalidUrlAlert).not.toHaveBeenCalled()
+      expect(invalidRegistrationRequestAlert).not.toHaveBeenCalled()
     })
   })
 

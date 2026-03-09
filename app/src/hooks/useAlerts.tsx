@@ -291,6 +291,9 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
       noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
       invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
+      failedToRetrieveStringResourceAlert: _createBasicAlert(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'ProblemWithApp', { errorCode: '400' }),
+      invalidUrlAlert: _createBasicAlert(AppEventCode.ERR_500_INVALID_URL, 'ProblemWithApp', { errorCode: '500' }),
+      invalidRegistrationRequestAlert: _createBasicAlert(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
     }),
     [
       appUpdateRequiredAlert,

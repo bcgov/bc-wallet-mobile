@@ -22,6 +22,9 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
   [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
   [AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON]: alerts.failedToSerializeJsonAlert,
+  [AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE]: alerts.failedToRetrieveStringResourceAlert,
+  [AppEventCode.ERR_500_INVALID_URL]: alerts.invalidUrlAlert,
+  [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST]: alerts.invalidRegistrationRequestAlert,
 })
 
 /**
