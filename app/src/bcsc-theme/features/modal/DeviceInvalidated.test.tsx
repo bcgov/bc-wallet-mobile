@@ -1,7 +1,7 @@
 import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { testIdWithKey } from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { RouteProp } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
