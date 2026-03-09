@@ -1,5 +1,7 @@
+import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { RouteProp } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import { DeviceInvalidated } from './DeviceInvalidated'
@@ -9,10 +11,10 @@ jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
   useFactoryReset: () => mockFactoryReset,
 }))
 
-const createRoute = (reason: BCSCReason) => ({
+const createRoute = (reason: BCSCReason): RouteProp<BCSCMainStackParams, BCSCModals.DeviceInvalidated> => ({
   params: { invalidationReason: reason },
   key: 'test-key',
-  name: 'DeviceInvalidated' as const,
+  name: BCSCModals.DeviceInvalidated as const,
 })
 
 describe('DeviceInvalidated', () => {
