@@ -1,5 +1,6 @@
 import { VerifyAttestationPayload } from '@/bcsc-theme/api/hooks/useDeviceAttestationApi'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
@@ -184,14 +185,14 @@ describe('useTokenApi', () => {
       expect(metadata).toEqual(mockMetadata)
     })
 
-    it('should throw error when no tokens are available', async () => {
+    it('should throw AppError with ERR_119 when no tokens are available', async () => {
       mockApiClient.tokens = null as any
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
-      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(
-        'No tokens available'
-      )
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
+      })
     })
 
     it('should handle refresh token errors', async () => {
