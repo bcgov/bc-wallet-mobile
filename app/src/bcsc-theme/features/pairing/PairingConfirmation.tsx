@@ -3,9 +3,9 @@ import ArrowUp from '@assets/img/arrowup.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BackHandler, Platform } from 'react-native'
+import { AppState, BackHandler, Platform } from 'react-native'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 const ARROW_SIZE = 80
@@ -17,6 +17,31 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const { t } = useTranslation()
   const { serviceName, serviceId, fromAppSwitch } = route.params
   const showAppSwitchGuidance = Platform.OS === 'ios' && fromAppSwitch
+  const appStateRef = useRef(AppState.currentState)
+
+  useEffect(() => {
+    if (!showAppSwitchGuidance) {
+      return
+    }
+
+    // On iOS, when coming from an app switch, we want to automatically navigate the user back
+    // to the home screen when they return to the app (since they've completed the action in
+    // the other app)
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      const prev = appStateRef.current
+      appStateRef.current = nextAppState
+      if ((prev === 'inactive' || prev === 'background') && nextAppState === 'active') {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCStacks.Tab }],
+          })
+        )
+      }
+    })
+
+    return subscription.remove
+  }, [showAppSwitchGuidance, navigation])
 
   const onClose = () => {
     if (fromAppSwitch && Platform.OS === 'android') {
@@ -45,7 +70,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     <ScreenWrapper
       controls={controls}
       edges={['bottom', 'left', 'right', 'top']}
-      scrollViewContainerStyle={{ gap: Spacing.lg }}
+      scrollViewContainerStyle={{ gap: Spacing.md }}
     >
       {showAppSwitchGuidance && (
         <ArrowUp
@@ -59,7 +84,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
         />
       )}
       {fromAppSwitch ? (
-        <ThemedText style={{ marginTop: Spacing.md }} variant={'headingThree'}>
+        <ThemedText style={{ marginTop: showAppSwitchGuidance ? undefined : Spacing.md }} variant={'headingThree'}>
           {t('BCSC.ManualPairing.FromAppSwitchCompletionTitle', { serviceName })}
         </ThemedText>
       ) : (
