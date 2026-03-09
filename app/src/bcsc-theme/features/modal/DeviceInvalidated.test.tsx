@@ -1,8 +1,9 @@
 import { BCSCMainStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCReason } from '@/bcsc-theme/utils/id-token'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { testIdWithKey } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { DeviceInvalidated } from './DeviceInvalidated'
 
@@ -60,5 +61,33 @@ describe('DeviceInvalidated', () => {
     expect(getByText('BCSC.Modals.DeviceInvalidated.Header')).toBeTruthy()
     expect(getByText('BCSC.Modals.DeviceInvalidated.OKButton')).toBeTruthy()
     expect(getByText('BCSC.Modals.DeviceInvalidated.ContentA')).toBeTruthy()
+  })
+
+  it('calls factory reset with clean slate params when OK is pressed for CanceledDueToInactivity', async () => {
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <DeviceInvalidated route={createRoute(BCSCReason.CanceledDueToInactivity)} navigation={jest.fn() as any} />
+      </BasicAppContext>
+    )
+
+    fireEvent.press(getByTestId(testIdWithKey('SystemModalButton')))
+
+    await waitFor(() => {
+      expect(mockFactoryReset).toHaveBeenCalledWith({})
+    })
+  })
+
+  it('calls factory reset with clean slate params when OK is pressed for CanceledByCardTypeChange', async () => {
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <DeviceInvalidated route={createRoute(BCSCReason.CanceledByCardTypeChange)} navigation={jest.fn() as any} />
+      </BasicAppContext>
+    )
+
+    fireEvent.press(getByTestId(testIdWithKey('SystemModalButton')))
+
+    await waitFor(() => {
+      expect(mockFactoryReset).toHaveBeenCalledWith({})
+    })
   })
 })

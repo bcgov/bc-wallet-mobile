@@ -64,7 +64,10 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     <SystemModal
       iconName="phonelink-erase"
       headerText={t('BCSC.Modals.DeviceInvalidated.Header')}
-      contentText={[contentTextMap[invalidationReason]!, t('BCSC.Modals.DeviceInvalidated.ContentA')]}
+      contentText={[
+        contentTextMap[invalidationReason] ?? t('BCSC.Modals.DeviceInvalidated.CancelledByCardCancel'),
+        t('BCSC.Modals.DeviceInvalidated.ContentA'),
+      ]}
       buttonText={t('BCSC.Modals.DeviceInvalidated.OKButton')}
       onButtonPress={handleFactoryReset}
     />
