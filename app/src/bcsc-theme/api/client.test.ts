@@ -1,6 +1,7 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { localization } from '@/localization'
 import { initLanguages } from '@bifold/core'
+import { AxiosError } from 'axios'
 
 describe('BCSC Client', () => {
   beforeAll(() => {
@@ -42,10 +43,23 @@ describe('BCSC Client', () => {
 
     const client = new BCSCApiClient(baseURL, mockLogger as any)
 
+    // Mock adapter to produce a proper AxiosError so interceptors run but no real HTTP call is made
+    client.client.defaults.adapter = (config: any) => {
+      return Promise.reject(
+        new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+          status: 500,
+          data: {},
+          statusText: 'Internal Server Error',
+          headers: {} as any,
+          config,
+        })
+      )
+    }
+
     const axiosGetSpy = jest.spyOn(client.client, 'get')
 
     try {
-      await client.get('/endpoint', { suppressStatusCodeLogs: [404] })
+      await client.get('/endpoint', { suppressStatusCodeLogs: [404], skipBearerAuth: true })
       expect(true).toBe(false) // Force fail if no error is thrown
     } catch (error) {
       expect(axiosGetSpy).toHaveBeenCalledWith(
