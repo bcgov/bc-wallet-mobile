@@ -138,11 +138,15 @@ class BCSCApiClient {
       }
 
       // 4. Invoke onError callback if provided which marks as handled
-      this.onError?.(appError as AxiosAppError, {
-        endpoint: String(error.config?.url),
-        statusCode: error.response?.status ?? 0,
-        apiEndpoints: this.endpoints,
-      })
+      try {
+        this.onError?.(appError as AxiosAppError, {
+          endpoint: String(error.config?.url),
+          statusCode: error.response?.status ?? 0,
+          apiEndpoints: this.endpoints,
+        })
+      } catch (handlerError) {
+        this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+      }
 
       return Promise.reject(appError)
     })

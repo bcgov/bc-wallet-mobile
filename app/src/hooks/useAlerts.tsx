@@ -156,6 +156,31 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
     })
   }, [emitAlert, logger, t, factoryReset])
 
+  // IAS error 202, 203, 204 — OK closes alert and returns to Start Setup
+  const _createProblemWithServiceReturnToSetupAlert = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return () => {
+        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
+          event,
+          actions: [
+            {
+              text: t('Global.OK'),
+              onPress: () => {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: BCSCScreens.SetupSteps }],
+                  })
+                )
+              },
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, navigation, t]
+  )
+
   const liveCallFileUploadAlert = useCallback(() => {
     emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
       event: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
@@ -291,6 +316,21 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
       noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
       invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
+      serverConfigurationAlert: _createBasicAlert(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
+      dynamicRegistrationErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError'),
+      termsOfUseErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
+      incorrectOsAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_INCORRECT_OS, 'ProblemWithService', { errorCode: '204' }),
+      addCardNotAvailableAlert: _createBasicAlert(AppEventCode.ADD_CARD_PROVIDER, 'AddCardNotAvailable'),
+      missingJsonValuesAlert: _createBasicAlert(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, 'ProblemWithApp', { errorCode: '206' }),
+      signClaimsErrorAlert: _createBasicAlert(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, 'ProblemWithApp', { errorCode: '207' }),
+      unexpectedNetworkCallAlert: _createBasicAlert(AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, 'ProblemWithApp', { errorCode: '208' }),
+      badRequestAlert: _createBasicAlert(AppEventCode.ERR_209_BAD_REQUEST, 'ProblemWithApp', { errorCode: '209' }),
+      unauthorizedAlert: _createBasicAlert(AppEventCode.ERR_210_UNAUTHORIZED, 'ProblemWithApp', { errorCode: '210' }),
+      serverOutageAlert: _createBasicAlert(AppEventCode.ERR_211_SERVER_OUTAGE, 'ProblemWithApp', { errorCode: '211' }),
+      retryLaterAlert: _createBasicAlert(AppEventCode.ERR_212_RETRY_LATER, 'ProblemWithApp', { errorCode: '212' }),
+      creatingClientRegistrationFailedAlert: _createBasicAlert(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'ProblemWithApp', { errorCode: '213' }),
+      keysOutOfSyncAlert: _createBasicAlert(AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, 'ProblemWithApp', { errorCode: '299' }),
+      emptyResponseAlert: _createBasicAlert(AppEventCode.ERR_300_EMPTY_RESPONSE, 'ProblemWithApp', { errorCode: '300' }),
     }),
     [
       appUpdateRequiredAlert,
@@ -302,6 +342,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       factoryResetAlert,
       _createBasicAlert,
       _createProblemWithAccountAlert,
+      _createProblemWithServiceReturnToSetupAlert,
     ]
   )
 }

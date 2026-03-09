@@ -76,15 +76,17 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         appEvent: error.appEvent,
       })
 
-      policy.handle(error, {
-        linking: Linking,
-        navigation,
-        translate: t,
-        logger,
-        alerts,
-      })
-
-      error.handled = true
+      try {
+        policy.handle(error, {
+          linking: Linking,
+          navigation,
+          translate: t,
+          logger,
+          alerts,
+        })
+      } finally {
+        error.handled = true
+      }
     },
     [alerts, logger, navigation, t]
   )
