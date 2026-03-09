@@ -59,7 +59,7 @@ export interface ServiceUnavailablePeriod {
   start_date: number // seconds from epoch
   end_date: number // seconds from epoch
   reason: string // "MAINTENANCE" or "HOLIDAY"
-  reason_description: string // e.g. Thanksgiving closure, Scheduled maintence etc.
+  reason_description: string // e.g. Thanksgiving closure, Scheduled maintenance etc.
 }
 
 export interface ServiceHours {

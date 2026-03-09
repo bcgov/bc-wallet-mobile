@@ -21,7 +21,6 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { dataUseWarningAlert } = useAlerts(navigation)
   const { formattedHours } = route.params
 
-  // Use the passed formatted hours or fallback to default
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({

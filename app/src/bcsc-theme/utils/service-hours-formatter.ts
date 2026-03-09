@@ -1,4 +1,4 @@
-import { DaysOfTheWeek, LIVE_CALL_UNAVILABLE_REASONS } from '@/constants'
+import { DaysOfTheWeek, LIVE_CALL_UNAVAILABLE_REASONS } from '@/constants'
 import { ServiceHours, ServicePeriod, ServiceUnavailablePeriod } from '../api/hooks/useVideoCallApi'
 
 export interface FormattedServicePeriod {
@@ -12,7 +12,7 @@ const PACIFIC_TIMEZONE = 'America/Vancouver'
 
 const getTimezoneDisplay = (timezone: string): string => (timezone === PACIFIC_TIMEZONE ? 'Pacific Time' : timezone)
 
-// Converts an epoch tome into time format: 11:35pm
+// Converts an epoch time into time format: 11:35pm
 const formatTimeInTimezone = (epochSeconds: number, timezone: string): string => {
   const date = new Date(epochSeconds * 1000)
   const formatted = new Intl.DateTimeFormat('en-US', {
@@ -50,7 +50,7 @@ export const formatUnavailableHours = (
     return []
   }
   return serviceHours.service_unavailable_periods.map((period) => {
-    if (period.reason === LIVE_CALL_UNAVILABLE_REASONS.MAINTANENCE) {
+    if (period.reason === LIVE_CALL_UNAVAILABLE_REASONS.MAINTENANCE) {
       return formatUnavailableMaintenance(period, timezone)
     }
 
@@ -94,8 +94,8 @@ export const formatServiceHours = (serviceHours: ServiceHours): FormattedService
     ]
   }
 
-  const timezone = serviceHours.time_zone || 'America/Vancouver'
-  const timezoneDisplay = timezone === 'America/Vancouver' ? 'Pacific Time' : timezone
+  const timezone = serviceHours.time_zone || PACIFIC_TIMEZONE
+  const timezoneDisplay = getTimezoneDisplay(timezone)
 
   const servicePeriodDictionary = {} as { [key: string]: ServicePeriod[] }
 
@@ -156,7 +156,7 @@ export const formatTime12Hour = (time24: string): string => {
     hours12 = hours
   }
 
-  const minutesStr = minutes === 0 ? '' : `:${minutes.toString().padStart(2, '0')}`
+  const minutesStr = `:${minutes.toString().padStart(2, '0')}`
 
   return `${hours12}${minutesStr}${period}`
 }
@@ -176,12 +176,22 @@ const getDayNumber = (dayName: string): number => {
 
 const getCurrentTimeInTimezone = (timezone: string): Date => {
   const now = new Date()
-  if (timezone === 'America/Vancouver') {
-    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000
-    const pacificOffset = -8 * 60 * 60000
-    return new Date(utcTime + pacificOffset)
+  try {
+    const formatted = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: timezone,
+    }).format(now)
+
+    return new Date(formatted)
+  } catch {
+    return now
   }
-  return now
 }
 
 const parseTimeToMinutes = (timeStr: string): number | null => {

@@ -17,7 +17,6 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
-  const serviceHours = formattedHours
 
   const onPressSendVideo = () => {
     navigation.dispatch(
@@ -54,7 +53,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
       <View style={{ marginBottom: Spacing.md }}>
-        <ServicePeriodList items={serviceHours} />
+        <ServicePeriodList items={formattedHours} />
       </View>
 
       <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
