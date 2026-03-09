@@ -35,7 +35,7 @@ inputs:
   APP_FILE_NAME:
     description: "Wallet App File Name that is in your Device Cloud Service"
     required: false
-    default: "-a AriesBifold-76.aab"
+    default: "-a BCWallet-76.aab"
   REPORT_PROJECT:
     description: "Name of the project the Allure Service is using to store these results"
     required: false

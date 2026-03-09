@@ -34,7 +34,7 @@ interface EnterPINScreenProps {
 export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
@@ -50,10 +50,10 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         return
       }
 
-      try {
-        isInitializingRef.current = true
-        startLoading()
+      const stopLoading = startLoading()
+      isInitializingRef.current = true
 
+      try {
         const accountSecurityMethod = await getAccountSecurityMethod()
 
         // Only attempt device authentication if that is the configured method
@@ -98,7 +98,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     }
 
     initializeAuthentication()
-  }, [startLoading, stopLoading, logger, navigation, handleSuccessfulAuth])
+  }, [startLoading, logger, navigation, handleSuccessfulAuth])
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {

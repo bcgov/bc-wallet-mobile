@@ -81,7 +81,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
-      new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics, logger),
+      new AnalyticsSystemCheck(
+        store.bcsc.analyticsOptIn,
+        store.developer.environment.analyticsAppId,
+        Analytics,
+        logger
+      ),
       new ServerStatusSystemCheck(serverStatus, utils),
       new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils),
     ]
@@ -92,7 +97,16 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
 
     return systemChecks
-  }, [configApi, emitAlert, isBCServicesCardBundle, logger, navigation, store.bcsc.analyticsOptIn, utils])
+  }, [
+    configApi,
+    emitAlert,
+    isBCServicesCardBundle,
+    logger,
+    navigation,
+    store.bcsc.analyticsOptIn,
+    store.developer.environment.analyticsAppId,
+    utils,
+  ])
 
   /**
    * Get system checks to run on main stack

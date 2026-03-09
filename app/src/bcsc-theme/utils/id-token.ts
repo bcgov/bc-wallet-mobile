@@ -1,6 +1,12 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import { BifoldLogger } from '@bifold/core'
-import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
+import {
+  BCSCAccountType,
+  BCSCCardType,
+  BcscNativeErrorCodes,
+  decodePayload,
+  isBcscNativeError,
+} from 'react-native-bcsc-core'
 import { StatusNotification } from '../features/fcm/services/fcm-service'
 
 /**
@@ -89,6 +95,7 @@ export interface IdToken {
 /**
  * Decode and parse the BCSC ID token to extract metadata.
  *
+ * @throws AppError with code `ERR_117_FAILED_TO_PARSE_JWS` when the JWS token format is invalid
  * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails
  * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if JSON parsing of the payload fails.
  *
@@ -102,20 +109,30 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     payloadString = await decodePayload(idToken)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to decode ID token payload', error as Error)
+
+    if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.FAILED_TO_PARSE_JWS) {
+      throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: error })
+    }
+
     throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: error })
   }
 
+  let payload: IdToken
   try {
-    const payload: IdToken = JSON.parse(payloadString)
-
-    // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
-    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.NoBcscCard) {
-      payload.bcsc_card_type = BCSCCardType.NonBcsc
-    }
-
-    return payload
+    payload = JSON.parse(payloadString)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to parse json', error as Error)
     throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
   }
+
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
+  }
+
+  // Transform undefined card_type to NonBcsc (ie: non-BCSC card) if account_type is OTHER
+  if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.NoBcscCard) {
+    payload.bcsc_card_type = BCSCCardType.NonBcsc
+  }
+
+  return payload
 }

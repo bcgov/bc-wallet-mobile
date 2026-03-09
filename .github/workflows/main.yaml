@@ -555,11 +555,12 @@ jobs:
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
           platform: ios
+          snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
 
       - name: Update APS environment
         run: |
-          plutil -replace aps-environment -string production app/ios/AriesBifold/AriesBifold.entitlements
-          plutil -p app/ios/AriesBifold/AriesBifold.entitlements
+          plutil -replace aps-environment -string production app/ios/BCWallet/BCWallet.entitlements
+          plutil -p app/ios/BCWallet/BCWallet.entitlements
 
       - name: Generate iOS signing config
         run: |
@@ -593,7 +594,7 @@ jobs:
           CODE_SIGN_STYLE = Manual
           CODE_SIGN_IDENTITY = iPhone Distribution
           PROVISIONING_PROFILE_SPECIFIER = ${{ env.IOS_PROVISIONING_PROFILE_UUID }}
-          CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/AriesBifold/AriesBifold.entitlements
+          CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/BCWallet/BCWallet.entitlements
           XCEOF
           echo "Generated export-options.plist:"
           cat export-options.plist
@@ -625,12 +626,12 @@ jobs:
           # - COMPILER_INDEX_STORE_ENABLE=NO: skip index-store writes (not needed in CI)
           # - parallelizeTargets: build independent targets in parallel
           xcodebuild \
-          -workspace AriesBifold.xcworkspace \
-          -scheme AriesBifold \
+          -workspace BCWallet.xcworkspace \
+          -scheme BCWallet \
           -configuration Release \
           -xcconfig ../../release-variant.xcconfig \
           -derivedDataPath xbuild \
-          -archivePath ../../AriesBifold.xcarchive \
+          -archivePath ../../BCWallet.xcarchive \
           -allowProvisioningUpdates \
           -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p9" \
           -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
@@ -647,7 +648,7 @@ jobs:
           # so no JS bundle or assets are placed in the .app. Copy them into
           # the archive's .app AFTER xcodebuild finishes so they are included
           # in the export/IPA.
-          ARCHIVE_APP=$(find ../../AriesBifold.xcarchive/Products/Applications -maxdepth 1 -name '*.app' -print -quit)
+          ARCHIVE_APP=$(find ../../BCWallet.xcarchive/Products/Applications -maxdepth 1 -name '*.app' -print -quit)
           echo "Archive .app path: $ARCHIVE_APP"
           cp jsbundle/ios-main.jsbundle "$ARCHIVE_APP/main.jsbundle"
           echo "Copied main.jsbundle into archive"
@@ -829,6 +830,7 @@ jobs:
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
           platform: android
+          snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access

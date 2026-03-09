@@ -14,8 +14,8 @@ const Root: React.FC = () => {
       <BCSCApiClientProvider>
         <BCSCLoadingProvider>
           <BCSCRootStack />
-          <NonProdOverlay />
         </BCSCLoadingProvider>
+        <NonProdOverlay />
       </BCSCApiClientProvider>
     </BCSCStackProvider>
   ) : (

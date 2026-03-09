@@ -2,6 +2,7 @@ import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -18,7 +19,6 @@ import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
-import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -208,7 +208,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   if (isCameraLoading) {
-    return <LoadingScreenContent loading={isCameraLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasPermission) {

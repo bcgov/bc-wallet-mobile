@@ -23,7 +23,7 @@ runs:
       run: |
         xcodebuild \
         -exportArchive \
-        -archivePath AriesBifold.xcarchive \
+        -archivePath BCWallet.xcarchive \
         -exportPath export \
         -exportOptionsPlist ./$EXPORT_OPTIONS \
         -verbose

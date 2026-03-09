@@ -56,7 +56,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 }: PINEntryFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checkboxError, setCheckboxError] = useState(false)
@@ -74,6 +74,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   const validateAndContinue = useCallback(
     async (pin1: string, pin2: string) => {
+      let stopLoading: (() => void) | undefined
       try {
         setLoading(true)
         setErrorMessage1(undefined)
@@ -104,7 +105,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         }
 
         // All validations passed, show a full screen loading indicator
-        startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
+        stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
 
         // Register with the appropriate security method
         const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -127,10 +128,10 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         logger.error(`PIN setup error: ${error}`)
       } finally {
         setLoading(false)
-        stopLoading()
+        stopLoading?.()
       }
     },
-    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger, stopLoading]
+    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger]
   )
 
   const onPressContinue = useCallback(async () => {

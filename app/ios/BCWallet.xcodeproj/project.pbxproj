@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0D918A04FB9191A76C945BBC /* libPods-AriesBifold.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B4B0A0C2D9BEF581AD105207 /* libPods-AriesBifold.a */; };
+		0D918A04FB9191A76C945BBC /* libPods-BCWallet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B4B0A0C2D9BEF581AD105207 /* libPods-BCWallet.a */; };
 		1A157F462BACCDEA00E30CDB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */; };
 		1A22E64D2F204BE200AD47E6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A22E64C2F204BE200AD47E6 /* AppDelegate.swift */; };
 		2F9994AE2A8D83CB004E773E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */; };
@@ -20,13 +20,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0EC285969FA9FFAADF41EA14 /* Pods-AriesBifold-AriesBifoldTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold-AriesBifoldTests.debug.xcconfig"; path = "Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests.debug.xcconfig"; sourceTree = "<group>"; };
+		0EC285969FA9FFAADF41EA14 /* Pods-BCWallet-BCWalletTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCWallet-BCWalletTests.debug.xcconfig"; path = "Target Support Files/Pods-BCWallet-BCWalletTests/Pods-BCWallet-BCWalletTests.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* BCWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BCWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AriesBifold/Info.plist; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BCWallet/Info.plist; sourceTree = "<group>"; };
 		1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		1A22E64C2F204BE200AD47E6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AriesBifold/AppDelegate.swift; sourceTree = "<group>"; };
-		1A22E64E2F204BEF00AD47E6 /* AriesBifold-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AriesBifold-Bridging-Header.h"; sourceTree = "<group>"; };
-		1A72D9212B217145008DE489 /* AriesBifold.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = AriesBifold.entitlements; path = AriesBifold/AriesBifold.entitlements; sourceTree = "<group>"; };
+		1A22E64C2F204BE200AD47E6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BCWallet/AppDelegate.swift; sourceTree = "<group>"; };
+		1A22E64E2F204BEF00AD47E6 /* BCWallet-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BCWallet-Bridging-Header.h"; sourceTree = "<group>"; };
+		1A72D9212B217145008DE489 /* BCWallet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BCWallet.entitlements; path = BCWallet/BCWallet.entitlements; sourceTree = "<group>"; };
 		2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		433E773D26557E1B00F569EE /* Indy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Indy.framework; path = Pods/Frameworks/Indy.framework; sourceTree = "<group>"; };
 		566FB1F1273B158E003E9BEE /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
@@ -34,12 +34,12 @@
 		56A83D5B27D95E24002FE8FE /* BCSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-Regular.ttf"; path = "../src/assets/fonts/BCSans-Regular.ttf"; sourceTree = "<group>"; };
 		56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-BoldItalic.ttf"; path = "../src/assets/fonts/BCSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 		56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-Italic.ttf"; path = "../src/assets/fonts/BCSans-Italic.ttf"; sourceTree = "<group>"; };
-		6228B39BEBDEB177D0C79D99 /* Pods-AriesBifold.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold.debug.xcconfig"; path = "Target Support Files/Pods-AriesBifold/Pods-AriesBifold.debug.xcconfig"; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AriesBifold/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		9A3EC584F52BD61A3ED8957C /* libPods-AriesBifold-AriesBifoldTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AriesBifold-AriesBifoldTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B4B0A0C2D9BEF581AD105207 /* libPods-AriesBifold.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AriesBifold.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		CD48035C19AD8C07DE719567 /* Pods-AriesBifold.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold/Pods-AriesBifold.release.xcconfig"; sourceTree = "<group>"; };
-		CD9BD2614B57493C581E5173 /* Pods-AriesBifold-AriesBifoldTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; sourceTree = "<group>"; };
+		6228B39BEBDEB177D0C79D99 /* Pods-BCWallet.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCWallet.debug.xcconfig"; path = "Target Support Files/Pods-BCWallet/Pods-BCWallet.debug.xcconfig"; sourceTree = "<group>"; };
+		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = BCWallet/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9A3EC584F52BD61A3ED8957C /* libPods-BCWallet-BCWalletTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BCWallet-BCWalletTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B4B0A0C2D9BEF581AD105207 /* libPods-BCWallet.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BCWallet.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD48035C19AD8C07DE719567 /* Pods-BCWallet.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCWallet.release.xcconfig"; path = "Target Support Files/Pods-BCWallet/Pods-BCWallet.release.xcconfig"; sourceTree = "<group>"; };
+		CD9BD2614B57493C581E5173 /* Pods-BCWallet-BCWalletTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCWallet-BCWalletTests.release.xcconfig"; path = "Target Support Files/Pods-BCWallet-BCWalletTests/Pods-BCWallet-BCWalletTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -48,23 +48,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D918A04FB9191A76C945BBC /* libPods-AriesBifold.a in Frameworks */,
+				0D918A04FB9191A76C945BBC /* libPods-BCWallet.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* AriesBifold */ = {
+		13B07FAE1A68108700A75B9A /* BCWallet */ = {
 			isa = PBXGroup;
 			children = (
 				1A22E64C2F204BE200AD47E6 /* AppDelegate.swift */,
-				1A72D9212B217145008DE489 /* AriesBifold.entitlements */,
+				1A72D9212B217145008DE489 /* BCWallet.entitlements */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
-				1A22E64E2F204BEF00AD47E6 /* AriesBifold-Bridging-Header.h */,
+				1A22E64E2F204BEF00AD47E6 /* BCWallet-Bridging-Header.h */,
 			);
-			name = AriesBifold;
+			name = BCWallet;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -72,8 +72,8 @@
 			children = (
 				433E773D26557E1B00F569EE /* Indy.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				B4B0A0C2D9BEF581AD105207 /* libPods-AriesBifold.a */,
-				9A3EC584F52BD61A3ED8957C /* libPods-AriesBifold-AriesBifoldTests.a */,
+				B4B0A0C2D9BEF581AD105207 /* libPods-BCWallet.a */,
+				9A3EC584F52BD61A3ED8957C /* libPods-BCWallet-BCWalletTests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -102,7 +102,7 @@
 				1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */,
 				2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */,
 				566FB1F1273B158E003E9BEE /* Media.xcassets */,
-				13B07FAE1A68108700A75B9A /* AriesBifold */,
+				13B07FAE1A68108700A75B9A /* BCWallet */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -125,10 +125,10 @@
 		8ACF6F3B2962FE31C0EE5408 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				6228B39BEBDEB177D0C79D99 /* Pods-AriesBifold.debug.xcconfig */,
-				CD48035C19AD8C07DE719567 /* Pods-AriesBifold.release.xcconfig */,
-				0EC285969FA9FFAADF41EA14 /* Pods-AriesBifold-AriesBifoldTests.debug.xcconfig */,
-				CD9BD2614B57493C581E5173 /* Pods-AriesBifold-AriesBifoldTests.release.xcconfig */,
+				6228B39BEBDEB177D0C79D99 /* Pods-BCWallet.debug.xcconfig */,
+				CD48035C19AD8C07DE719567 /* Pods-BCWallet.release.xcconfig */,
+				0EC285969FA9FFAADF41EA14 /* Pods-BCWallet-BCWalletTests.debug.xcconfig */,
+				CD9BD2614B57493C581E5173 /* Pods-BCWallet-BCWalletTests.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -136,9 +136,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* AriesBifold */ = {
+		13B07F861A680F5B00A75B9A /* BCWallet */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AriesBifold" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BCWallet" */;
 			buildPhases = (
 				4CEDB2CE40AFB66799F0C504 /* [CP] Check Pods Manifest.lock */,
 				FD10A7F022414F080027D42C /* Start Packager */,
@@ -154,8 +154,8 @@
 			);
 			dependencies = (
 			);
-			name = AriesBifold;
-			productName = AriesBifold;
+			name = BCWallet;
+			productName = BCWallet;
 			productReference = 13B07F961A680F5B00A75B9A /* BCWallet.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -172,7 +172,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AriesBifold" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BCWallet" */;
 			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -185,7 +185,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* AriesBifold */,
+				13B07F861A680F5B00A75B9A /* BCWallet */,
 			);
 		};
 /* End PBXProject section */
@@ -229,15 +229,15 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		1E37A21EEB545CBAC7AC1977 /* [CP] Copy Pods Resources */ = {
@@ -246,15 +246,15 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-resources-${CONFIGURATION}-input-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-resources-${CONFIGURATION}-output-files.xcfilelist",
+				"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AriesBifold/Pods-AriesBifold-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BCWallet/Pods-BCWallet-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		4CEDB2CE40AFB66799F0C504 /* [CP] Check Pods Manifest.lock */ = {
@@ -272,7 +272,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AriesBifold-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-BCWallet-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -327,17 +327,17 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6228B39BEBDEB177D0C79D99 /* Pods-AriesBifold.debug.xcconfig */;
+			baseConfigurationReference = 6228B39BEBDEB177D0C79D99 /* Pods-BCWallet.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = AriesBifold/AriesBifold.entitlements;
+				CODE_SIGN_ENTITLEMENTS = BCWallet/BCWallet.entitlements;
 				CURRENT_PROJECT_VERSION = 444;
 				DEVELOPMENT_TEAM = L796QSLV3E;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = AriesBifold/Info.plist;
+				INFOPLIST_FILE = BCWallet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -357,7 +357,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "AriesBifold-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "BCWallet-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -367,17 +367,17 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = CD48035C19AD8C07DE719567 /* Pods-AriesBifold.release.xcconfig */;
+			baseConfigurationReference = CD48035C19AD8C07DE719567 /* Pods-BCWallet.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = AriesBifold/AriesBifold.entitlements;
+				CODE_SIGN_ENTITLEMENTS = BCWallet/BCWallet.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L796QSLV3E;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = AriesBifold/Info.plist;
+				INFOPLIST_FILE = BCWallet/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -397,7 +397,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "AriesBifold-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "BCWallet-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -546,7 +546,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AriesBifold" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BCWallet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -555,7 +555,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "AriesBifold" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "BCWallet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,

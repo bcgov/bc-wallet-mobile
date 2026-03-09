@@ -125,17 +125,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     } finally {
       setIsCheckingStatus(false)
     }
-  }, [
-    store.bcscSecure.refreshToken,
-    store.bcscSecure.verificationRequestId,
-    store.bcscSecure.deviceCode,
-    store.bcscSecure.userCode,
-    evidence,
-    navigation,
-    t,
-    token,
-    logger,
-  ])
+  }, [store.bcscSecure, evidence, navigation, t, token, logger])
 
   /**
    * Cancel a pending verification request

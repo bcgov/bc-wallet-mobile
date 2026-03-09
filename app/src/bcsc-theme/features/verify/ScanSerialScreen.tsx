@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
@@ -12,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 import { BCSC_SN_SCAN_ZONES } from '../../components/utils/camera'
-import { LoadingScreenContent } from '../../features/splash-loading/LoadingScreenContent'
 
 type ScanSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
@@ -74,7 +74,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   })
 
   if (isLoading) {
-    return <LoadingScreenContent loading={isLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasPermission) {

@@ -34,6 +34,9 @@ inputs:
   platform:
     description: 'The platform (ios or android)'
     required: true
+  snowplow_collector_url:
+    description: 'The Snowplow collector URL'
+    required: true
 
 runs:
   using: composite
@@ -50,6 +53,7 @@ runs:
         PROOF_TEMPLATE_URL: ${{ inputs.proof_template_url }}
         REMOTE_LOGGING_URL: ${{ inputs.remote_logging_url }}
         INDY_VDR_PROXY_URL: ${{ inputs.indy_vdr_proxy_url }}
+        SNOWPLOW_COLLECTOR_URL: ${{ inputs.snowplow_collector_url }}
       run: |
         echo "BUILD_TARGET=${BUILD_TARGET}" >.env
         echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
@@ -59,6 +63,7 @@ runs:
         echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
         echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
         echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
+        echo "SNOWPLOW_COLLECTOR_URL=${SNOWPLOW_COLLECTOR_URL}" >>.env
 
     - name: Write Google Services credentials
       shell: bash
