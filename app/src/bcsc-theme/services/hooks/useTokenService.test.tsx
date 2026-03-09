@@ -58,6 +58,23 @@ describe('useTokenService', () => {
       expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalled()
     })
 
+    it('should show alert on JWS parse error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)
+      const tokenApi = {
+        getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { failedToParseJwsAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
+      expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
+      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
+    })
+
     it('should show alert on token unexpectedly null error and rethrow error', async () => {
       const mockError = mockAppError(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)
       const tokenApi = {

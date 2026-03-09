@@ -41,6 +41,8 @@ class BcscCore: NSObject {
   static let generalizedOsName = "iOS"
   static let provider = "https://idsit.gov.bc.ca/device/"
   static let clientName = "BC Services Wallet"
+  /// JWS compact serialization: header.payload.signature
+  static let jwsCompactSegmentCount = 3
 
   static func requiresMainQueueSetup() -> Bool {
     return false
@@ -1085,6 +1087,10 @@ class BcscCore: NSObject {
 
       // Break down and decode JWT
       let segments = payload.components(separatedBy: ".")
+      guard segments.count == BcscCore.jwsCompactSegmentCount else {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        return
+      }
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1094,14 +1100,12 @@ class BcscCore: NSObject {
       }
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
-      let decodedData = Data(
-        base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0))
-      )
-
-      let base64Decoded = String(
-        data: decodedData! as Data,
-        encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)
-      )!
+      guard let decodedData = Data(base64Encoded: base64String),
+            let base64Decoded = String(data: decodedData, encoding: .utf8)
+      else {
+        reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
+        return
+      }
       resolve(base64Decoded)
     } catch {
       reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
@@ -1129,10 +1133,19 @@ class BcscCore: NSObject {
       return
     }
 
+    // 1. Parse the JWT
+    let jws: JWS
     do {
-      // 1. Parse the JWT
-      let jws = try JWS.parse(s: jwt)
+      jws = try JWS.parse(s: jwt)
+    } catch {
+      reject(
+        "E_FAILED_TO_PARSE_JWS",
+        "Failed to parse JWS: \(error.localizedDescription)", error
+      )
+      return
+    }
 
+    do {
       // 2. Extract claims
       guard let claimsSet = try jws.getJwtClaimsSet() else {
         reject("E_INVALID_JWT", "Unable to parse JWT claims", nil)

@@ -38,6 +38,8 @@ export const BcscNativeErrorCodes = {
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
   /** JSON serialization failed in the native module */
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
+  /** JWS token could not be parsed (malformed or invalid format) */
+  FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
 } as const;
 
 /**

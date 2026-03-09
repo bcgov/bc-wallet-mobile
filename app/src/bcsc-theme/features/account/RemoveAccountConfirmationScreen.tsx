@@ -55,9 +55,8 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           buttonType={ButtonType.Critical}
           title={t('BCSC.Account.RemoveAccount')}
           onPress={async () => {
+            const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
             try {
-              loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
-
               logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
               const result = await factoryReset()
@@ -68,7 +67,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
             } catch (error) {
               logger.error('[RemoveAccount] Error during account removal', error as Error)
             } finally {
-              loadingScreen.stopLoading()
+              stopLoading()
             }
           }}
         />

@@ -1,4 +1,3 @@
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { TOKENS, useServices } from '@bifold/core'
@@ -28,12 +27,10 @@ export const ChangePINContent = ({
 }: ChangePINContentProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { stopLoading } = useLoadingScreen()
 
   // Handler for when user is changing their existing PIN
   const handleChangePINSuccess = useCallback(async () => {
     logger.info('PIN changed successfully')
-    stopLoading()
 
     Toast.show({
       type: 'success',
@@ -43,7 +40,7 @@ export const ChangePINContent = ({
     })
 
     onChangePINSuccess()
-  }, [logger, stopLoading, t, onChangePINSuccess])
+  }, [logger, t, onChangePINSuccess])
 
   // Handler for when user is switching from Device Auth to PIN
   const handleCreatePINSuccess = useCallback(async () => {
@@ -53,7 +50,6 @@ export const ChangePINContent = ({
     )
 
     logger.info('Switched to PIN security method')
-    stopLoading()
 
     Toast.show({
       type: 'success',
@@ -63,7 +59,7 @@ export const ChangePINContent = ({
     })
 
     onCreatePINSuccess()
-  }, [logger, stopLoading, t, onCreatePINSuccess])
+  }, [logger, t, onCreatePINSuccess])
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth
   if (isChangingExistingPIN) {

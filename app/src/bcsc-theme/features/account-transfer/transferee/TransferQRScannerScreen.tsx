@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -27,7 +28,6 @@ import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
-import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 /**
  * The TransferQRScannerScreen component allows users to scan a QR code to transfer their account from an old verified device to a new, unverified one.
@@ -177,7 +177,7 @@ const TransferQRScannerScreen: React.FC = () => {
   )
 
   if (isPermissionLoading) {
-    return <LoadingScreenContent loading={isPermissionLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasPermission) {

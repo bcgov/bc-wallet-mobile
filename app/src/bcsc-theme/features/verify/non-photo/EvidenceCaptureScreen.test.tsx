@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import * as AutoRequestPermissionHook from '@/hooks/useAutoRequestPermission'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
@@ -82,23 +83,25 @@ describe('EvidenceCapture', () => {
 
     const tree = render(
       <BasicAppContext>
-        <EvidenceCaptureScreen
-          navigation={mockNavigation as never}
-          route={
-            {
-              params: {
-                cardType: {
-                  image_sides: [
-                    {
-                      side: 'FRONT',
-                      label: 'Front of Passport',
-                    },
-                  ],
+        <BCSCLoadingProvider>
+          <EvidenceCaptureScreen
+            navigation={mockNavigation as never}
+            route={
+              {
+                params: {
+                  cardType: {
+                    image_sides: [
+                      {
+                        side: 'FRONT',
+                        label: 'Front of Passport',
+                      },
+                    ],
+                  },
                 },
-              },
-            } as never
-          }
-        />
+              } as never
+            }
+          />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 

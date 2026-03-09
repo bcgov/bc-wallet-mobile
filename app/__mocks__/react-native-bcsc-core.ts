@@ -58,9 +58,17 @@ export const BcscNativeErrorCodes = {
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
   /** JSON serialization failed for a native request or payload */
   JSON_SERIALIZATION_FAILED: 'E_120_JSON_SERIALIZATION_FAILED',
+  /** Secure hardware / keystore could not generate a new keypair */
+  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
+  /** Keypair exists but could not be retrieved from secure storage */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JWS token could not be parsed (malformed or invalid format) */
+  FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
 } as const
 
-export const isBcscNativeError = jest.fn().mockReturnValue(true)
+export const isBcscNativeError = jest.fn((error: unknown): boolean => {
+  return error instanceof Error && 'code' in error
+})
 
 // Issuer Management
 export const setIssuer = jest.fn().mockResolvedValue(true)

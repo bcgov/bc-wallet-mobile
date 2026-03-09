@@ -86,7 +86,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
           onPress={onPressContinue}
         />
         <Button
-          buttonType={ButtonType.Tertiary}
+          buttonType={ButtonType.Secondary}
           testID={testIdWithKey('Assistance')}
           accessibilityLabel={t('BCSC.VideoCall.Assistance')}
           title={t('BCSC.VideoCall.Assistance')}
