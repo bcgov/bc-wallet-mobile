@@ -311,7 +311,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         title="Cancel"
         accessibilityLabel={'Cancel'}
         testID={testIdWithKey('EvidenceIDCollectionCancel')}
-        buttonType={ButtonType.Tertiary}
+        buttonType={ButtonType.Secondary}
         onPress={handleOnCancel}
       />
     </>
