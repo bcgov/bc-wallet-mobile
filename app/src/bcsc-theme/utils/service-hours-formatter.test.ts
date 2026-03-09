@@ -24,11 +24,11 @@ const makeWeekdayPeriods = (startTime: string, endTime: string) =>
 
 describe('formatTime12Hour', () => {
   it('formats midnight as 12am', () => {
-    expect(formatTime12Hour('00:00')).toBe('12am')
+    expect(formatTime12Hour('00:00')).toBe('12:00am')
   })
 
   it('formats noon as 12pm', () => {
-    expect(formatTime12Hour('12:00')).toBe('12pm')
+    expect(formatTime12Hour('12:00')).toBe('12:00pm')
   })
 
   it('formats afternoon hours with minutes', () => {
@@ -40,7 +40,7 @@ describe('formatTime12Hour', () => {
   })
 
   it('omits minutes when zero', () => {
-    expect(formatTime12Hour('17:00')).toBe('5pm')
+    expect(formatTime12Hour('17:00')).toBe('5:00pm')
   })
 
   it('returns empty string unchanged', () => {
@@ -70,7 +70,7 @@ describe('formatServiceHours', () => {
     expect(result).toHaveLength(1)
     expect(result[0]).toEqual({
       title: 'Monday to Friday',
-      hours: '7:30am - 5pm Pacific Time',
+      hours: '7:30am - 5:00pm Pacific Time',
     })
     expect(result[0].isUnavailable).toBeFalsy()
   })
