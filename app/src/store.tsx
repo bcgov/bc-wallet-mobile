@@ -97,6 +97,12 @@ export interface BCSCState {
   credentialMetadata?: CredentialMetadata
 }
 
+export enum VerificationStatus {
+  VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
+  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
+  DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
+}
+
 /**
  * Secure state containing PII and sensitive data.
  *
@@ -114,6 +120,8 @@ export interface BCSCSecureState {
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
+  /** Account verification status value (VERIFIED, UNVERIFIED, DEACTIVATED) */
+  verifiedStatus: VerificationStatus
 
   // === from Tokens ===
   /** OAuth refresh token for API authentication */
@@ -174,6 +182,7 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
+  verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
 export enum Mode {
@@ -669,7 +678,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFIED: {
       const verified = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, verified }
+      const bcscSecure = {
+        ...state.bcscSecure,
+        verified,
+        // QUESTION (MD): Should we handle DEACTIVATED here?
+        verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
+      }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {

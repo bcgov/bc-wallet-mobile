@@ -188,6 +188,24 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       onBack() // close modal first
       injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
     },
+    // IAS errors 201–300
+    add_card_server_configuration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_server_configuration'),
+    add_card_dynamic_registration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_dynamic_registration'),
+    add_card_terms_of_use: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_terms_of_use'),
+    add_card_incorrect_os: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_incorrect_os'),
+    add_card_provider: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_provider'),
+    err_206_missing_or_null: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_206_missing_or_null_values_in_json_response'),
+    err_207_sign_claims: () => injectErrorCodeIntoAxiosResponse(client, 'err_207_unable_to_sign_claims_set'),
+    err_208_network_call: () => injectErrorCodeIntoAxiosResponse(client, 'err_208_unexpected_network_call_exception'),
+    err_209_bad_request: () => injectErrorCodeIntoAxiosResponse(client, 'err_209_bad_request'),
+    err_210_unauthorized: () => injectErrorCodeIntoAxiosResponse(client, 'err_210_unauthorized'),
+    err_211_server_outage: () => injectErrorCodeIntoAxiosResponse(client, 'err_211_server_outage'),
+    err_212_retry_later: () => injectErrorCodeIntoAxiosResponse(client, 'err_212_retry_later'),
+    err_213_client_reg: () => injectErrorCodeIntoAxiosResponse(client, 'err_213_failed_creating_client_registration'),
+    err_299_keys_out_of_sync: () => injectErrorCodeIntoAxiosResponse(client, 'err_299_keys_out_of_sync'),
+    err_300_empty_response: () => injectErrorCodeIntoAxiosResponse(client, 'err_300_empty_response'),
+    // IAS errors 400–501
     err_400_failed_to_retrieve_string_resource: () =>
       injectErrorCodeIntoAxiosResponse(client, 'err_400_failed_to_retrieve_string_resource'),
     err_500_invalid_url: () => injectErrorCodeIntoAxiosResponse(client, 'err_500_invalid_url'),
@@ -251,7 +269,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     try {
       await client.get(endpoint ?? '/any-endpoint')
     } catch (error) {
-      logger.debug(`Injected error code ${errorCode} into Axios response`)
+      // In Axios 1.x, a thrown request interceptor error still flows through the response
+      // interceptor chain, so client.onError has already been invoked. Avoid re-processing
+      // the error here; just log that the injected error was triggered for QA verification.
+      logger.debug(`Injected error code ${errorCode} into Axios response`, { error })
     }
   }
 
