@@ -309,7 +309,9 @@ describe('useVerificationMethodModel', () => {
 
       mockVideoCallApi.getVideoDestinations.mockReturnValue(destinationsPromise)
       mockVideoCallApi.getServiceHours.mockReturnValue(serviceHoursPromise)
-      jest.mocked(formatServiceAndUnavailableHours).mockReturnValue([{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }])
+      jest
+        .mocked(formatServiceAndUnavailableHours)
+        .mockReturnValue([{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }])
       jest.mocked(isLiveCallAvailable).mockReturnValue(true)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))

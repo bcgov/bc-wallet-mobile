@@ -1,13 +1,13 @@
+import { ServiceHours } from '../api/hooks/useVideoCallApi'
 import {
-  formatTime12Hour,
-  formatServiceHours,
-  formatUnavailableHours,
   formatServiceAndUnavailableHours,
-  isCurrentTimeWithinServiceHours,
+  formatServiceHours,
+  formatTime12Hour,
+  formatUnavailableHours,
   isCurrentTimeOutsideUnavailablePeriod,
+  isCurrentTimeWithinServiceHours,
   isLiveCallAvailable,
 } from './service-hours-formatter'
-import { ServiceHours } from '../api/hooks/useVideoCallApi'
 
 // 2024-01-15 (Monday) 4:00 PM Pacific = 2024-01-16T00:00:00Z
 const JAN_15_2024_4PM_PACIFIC_EPOCH = 1705363200
@@ -50,7 +50,11 @@ describe('formatTime12Hour', () => {
 
 describe('formatServiceHours', () => {
   it('returns default hours when no service periods are provided', () => {
-    const result = formatServiceHours({ time_zone: 'America/Vancouver', regular_service_periods: [], service_unavailable_periods: [] })
+    const result = formatServiceHours({
+      time_zone: 'America/Vancouver',
+      regular_service_periods: [],
+      service_unavailable_periods: [],
+    })
     expect(result).toEqual([{ title: 'Monday to Friday', hours: '7:30am - 5:00pm Pacific Time' }])
   })
 
@@ -283,9 +287,7 @@ describe('isCurrentTimeWithinServiceHours', () => {
 
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: '17:00' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: '17:00' }],
       service_unavailable_periods: [],
     }
     expect(isCurrentTimeWithinServiceHours(serviceHours)).toBe(true)
@@ -297,9 +299,7 @@ describe('isCurrentTimeWithinServiceHours', () => {
 
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: '17:00' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: '17:00' }],
       service_unavailable_periods: [],
     }
     expect(isCurrentTimeWithinServiceHours(serviceHours)).toBe(false)
