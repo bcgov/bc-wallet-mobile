@@ -2,7 +2,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { BackHandler, Platform } from 'react-native'
+import { AppState, AppStateStatus, BackHandler, Platform } from 'react-native'
 import PairingConfirmation from './PairingConfirmation'
 
 describe('PairingConfirmation', () => {
@@ -46,6 +46,54 @@ describe('PairingConfirmation', () => {
       )
 
       expect(queryByTestId('com.ariesbifold:id/Close')).toBeNull()
+    })
+
+    it('navigates home when the app returns from background', () => {
+      let appStateCallback: (state: AppStateStatus) => void
+      const removeSpy = jest.fn()
+      const addEventSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: AppStateStatus) => void
+        return { remove: removeSpy } as any
+      })
+
+      const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
+
+      render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
+        </BasicAppContext>
+      )
+
+      // Simulate background → foreground transition
+      appStateCallback!('background')
+      appStateCallback!('active')
+
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
+      addEventSpy.mockRestore()
+    })
+
+    it('does not navigate home on inactive → active (e.g. notification center dismissal)', () => {
+      let appStateCallback: (state: AppStateStatus) => void
+      const removeSpy = jest.fn()
+      const addEventSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: AppStateStatus) => void
+        return { remove: removeSpy } as any
+      })
+
+      const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
+
+      render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
+        </BasicAppContext>
+      )
+
+      // Simulate inactive → active (e.g. pulling down notification center)
+      appStateCallback!('inactive')
+      appStateCallback!('active')
+
+      expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+      addEventSpy.mockRestore()
     })
   })
 
