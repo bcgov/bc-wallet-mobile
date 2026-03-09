@@ -176,22 +176,12 @@ const getDayNumber = (dayName: string): number => {
 
 const getCurrentTimeInTimezone = (timezone: string): Date => {
   const now = new Date()
-  try {
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-      timeZone: timezone,
-    }).format(now)
-
-    return new Date(formatted)
-  } catch {
-    return now
+  if (timezone === PACIFIC_TIMEZONE) {
+    const utcTime = now.getTime() + now.getTimezoneOffset() * 60000
+    const pacificOffset = -8 * 60 * 60000
+    return new Date(utcTime + pacificOffset)
   }
+  return now
 }
 
 const parseTimeToMinutes = (timeStr: string): number | null => {
@@ -226,7 +216,7 @@ export const isCurrentTimeWithinServiceHours = (serviceHours: ServiceHours): boo
     return false
   }
 
-  const timezone = serviceHours.time_zone || 'America/Vancouver'
+  const timezone = serviceHours.time_zone || PACIFIC_TIMEZONE
   const currentTime = getCurrentTimeInTimezone(timezone)
   const currentDay = currentTime.getDay()
   const currentTimeInMinutes = currentTime.getHours() * 60 + currentTime.getMinutes()

@@ -71,7 +71,6 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       const availableDestination = destinations.find(
         (dest) => dest.destination_name === 'Test Harness Queue Destination'
       )
-
       if (!availableDestination) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
