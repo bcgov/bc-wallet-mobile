@@ -19,15 +19,8 @@ export const useUserService = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
-  /**
-   * Gets user information and handles errors related to JSON deserialization failures by showing an alert.
-   *
-   * @returns Promise resolving to user information response data
-   */
-  const getUserInfo = useCallback(async () => {
-    try {
-      return await userApi.getUserInfo()
-    } catch (error) {
+  const handleUserApiError = useCallback(
+    (error: unknown): never => {
       if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
         alerts.failedToDeserializeJsonAlert()
       }
@@ -49,8 +42,22 @@ export const useUserService = () => {
       }
 
       throw error
+    },
+    [alerts]
+  )
+
+  /**
+   * Gets user information and handles errors related to JSON deserialization failures by showing an alert.
+   *
+   * @returns Promise resolving to user information response data
+   */
+  const getUserInfo = useCallback(async () => {
+    try {
+      return await userApi.getUserInfo()
+    } catch (error) {
+      handleUserApiError(error)
     }
-  }, [alerts, userApi])
+  }, [handleUserApiError, userApi])
 
   /**
    * Gets user metadata, including fetching the user's picture if it exists, and handles errors related to JSON deserialization failures by showing an alert.
@@ -69,29 +76,9 @@ export const useUserService = () => {
 
       return { user: userMetadata, picture: pictureUri }
     } catch (error) {
-      if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
-        alerts.failedToDeserializeJsonAlert()
-      }
-
-      if (isAppError(error, AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE)) {
-        alerts.unableToDecryptJweAlert()
-      }
-
-      if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
-        alerts.failedToGetClaimsSetAlert()
-      }
-
-      if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
-        alerts.failedToParseJwsAlert()
-      }
-
-      if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
-        alerts.tokenUnexpectedlyNullAlert()
-      }
-
-      throw error
+      handleUserApiError(error)
     }
-  }, [alerts, userApi])
+  }, [handleUserApiError, userApi])
 
   return useMemo(
     () => ({
