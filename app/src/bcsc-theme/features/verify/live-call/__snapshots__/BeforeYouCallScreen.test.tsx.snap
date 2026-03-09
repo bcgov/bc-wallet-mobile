@@ -135,22 +135,49 @@ exports[`BeforeYouCall renders correctly 1`] = `
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
-      <Text
-        maxFontSizeMultiplier={2}
+      <View
         style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            undefined,
-          ]
+          {
+            "flex": 1,
+            "marginBottom": 16,
+          }
         }
       >
-        BCSC.VideoCall.DefaultHours
-      </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "fontWeight": "normal",
+              },
+            ]
+          }
+        >
+          Monday to Friday
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          8:00 AM - 5:00 PM Pacific Time
+        </Text>
+      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={

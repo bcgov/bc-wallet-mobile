@@ -2,7 +2,7 @@ import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCReason } from '../utils/id-token'
-import { FormattedServicePeriod } from '../utils/serviceHoursFormatter'
+import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',

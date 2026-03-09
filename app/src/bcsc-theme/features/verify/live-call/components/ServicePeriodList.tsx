@@ -1,4 +1,5 @@
-import { FormattedServicePeriod } from '@/bcsc-theme/utils/serviceHoursFormatter'
+import { FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
+import { ThemedText } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import ServicePeriod from './ServicePeriod'
 
@@ -8,12 +9,12 @@ type ServicePeriodListProps = {
 const ServicePeriodList = ({ items }: ServicePeriodListProps) => {
   const { t } = useTranslation()
   if (!items.length) {
-    return t('BCSC.VideoCall.DefaultHours')
+    return <ThemedText>{t('BCSC.VideoCall.DefaultHours')}</ThemedText>
   }
   return (
     <>
       {items.map((item) => (
-        <ServicePeriod servicePeriod={item} key={`${item}`} />
+        <ServicePeriod servicePeriod={item} key={`${JSON.stringify(item)}`} />
       ))}
     </>
   )

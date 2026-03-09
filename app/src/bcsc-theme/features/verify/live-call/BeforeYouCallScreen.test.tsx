@@ -17,7 +17,21 @@ describe('BeforeYouCall', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
+        <BeforeYouCallScreen
+          navigation={mockNavigation as never}
+          route={
+            {
+              params: {
+                formattedHours: [
+                  {
+                    title: 'Monday to Friday',
+                    hours: '8:00 AM - 5:00 PM Pacific Time',
+                  },
+                ],
+              },
+            } as never
+          }
+        />
       </BasicAppContext>
     )
 
@@ -27,7 +41,21 @@ describe('BeforeYouCall', () => {
   it('navigates to ContactUs when Assistance is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <BeforeYouCallScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
+        <BeforeYouCallScreen
+          navigation={mockNavigation as never}
+          route={
+            {
+              params: {
+                formattedHours: [
+                  {
+                    title: 'Monday to Friday',
+                    hours: '8:00 AM - 5:00 PM Pacific Time',
+                  },
+                ],
+              },
+            } as never
+          }
+        />
       </BasicAppContext>
     )
 

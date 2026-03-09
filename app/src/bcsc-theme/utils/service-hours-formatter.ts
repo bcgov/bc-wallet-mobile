@@ -5,6 +5,7 @@ export interface FormattedServicePeriod {
   title: string
   hours?: string
   dateLine?: string
+  isUnavailable?: boolean
 }
 
 const PACIFIC_TIMEZONE = 'America/Vancouver'
@@ -68,6 +69,7 @@ const formatUnavailableMaintenance = (period: ServiceUnavailablePeriod, timezone
     title: `Closed for ${reasonText}`,
     hours: `Between ${startTime} - ${endTime} ${timezoneDisplay}`,
     dateLine: `On ${startDate}`,
+    isUnavailable: true,
   }
 }
 
@@ -78,6 +80,7 @@ const formatUnavailableHoliday = (period: ServiceUnavailablePeriod, timezone: st
   return {
     title: `Closed for ${reasonText}`,
     dateLine: `On ${startDate}`,
+    isUnavailable: true,
   }
 }
 

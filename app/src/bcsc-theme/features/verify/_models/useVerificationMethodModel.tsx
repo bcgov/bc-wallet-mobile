@@ -5,7 +5,7 @@ import {
   formatServiceAndUnavailableHours,
   formatServiceHours,
   isLiveCallAvailable,
-} from '@/bcsc-theme/utils/serviceHoursFormatter'
+} from '@/bcsc-theme/utils/service-hours-formatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -69,22 +69,8 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         videoCallApi.getVideoDestinations(),
         videoCallApi.getServiceHours(),
       ])
-      serviceHours.service_unavailable_periods = [
-        // {
-        //   start_date: 1772826180,
-        //   end_date: 1772834828,
-        //   reason: 'HOLIDAY',
-        //   reason_description: 'Thanksgiving yo',
-        // },
-        {
-          start_date: 1772826180,
-          end_date: 1772834828,
-          reason: 'MAINTENANCE',
-          reason_description: 'Marcos and Alfred testing',
-        },
-      ]
-      const formattedHours = formatServiceHours(serviceHours)
 
+      const formattedHours = formatServiceHours(serviceHours)
       // TODO (bm): Look for prod queue(s) depending on environment
       const availableDestination = destinations.find(
         (dest) => dest.destination_name === 'Test Harness Queue Destination'
@@ -113,7 +99,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       logger.error('Error checking service availability:', error as Error)
       navigation.navigate(BCSCScreens.CallBusyOrClosed, {
         busy: false,
-        formattedHours: 'Unable to retrieve service hours at this time.',
+        formattedHours: [{ title: 'Unable to retrieve service hours at this time.' }],
       })
     } finally {
       setLiveCallLoading(false)
