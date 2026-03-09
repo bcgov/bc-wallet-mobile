@@ -27,6 +27,7 @@ import com.facebook.react.module.annotations.ReactModule
 
 // Java/Kotlin standard library imports
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.FileWriter
@@ -65,6 +66,8 @@ import com.nimbusds.jwt.SignedJWT
 
 // BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
+import com.bcsccore.keypair.core.exceptions.KeyAlreadyExistsException
+import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
 import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
@@ -139,6 +142,9 @@ class BcscCoreModule(
 
         // JWT expiration in seconds
         private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
+
+        // JWS compact serialization: header.payload.signature
+        private const val JWS_COMPACT_SEGMENT_COUNT = 3
 
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
@@ -1247,7 +1253,26 @@ class BcscCoreModule(
             val deviceInfoClaims = deviceInfoClaimsBuilder.build()
 
             // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
-            val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
+            val deviceInfoJWTAsString =
+                try {
+                    createUnsignedJWT(deviceInfoClaims)
+                } catch (e: JSONException) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: toJSONString method failure: ${e.message}", e)
+                    promise.reject(
+                        "E_120_TOJSONSTRING_METHOD_FAILURE",
+                        "Failed to convert device info JWT to JSON string: ${e.message}",
+                        e,
+                    )
+                    return
+                } catch (e: Exception) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: JWT device info error: ${e.message}", e)
+                    promise.reject(
+                        "E_120_JWT_DEVICE_INFO_ERROR",
+                        "Error creating device info JWT: ${e.message}",
+                        e,
+                    )
+                    return
+                }
 
             // Use nickname if provided, otherwise fall back to device name
             val clientName = if (!nickname.isNullOrEmpty()) nickname else getDeviceName()
@@ -1302,11 +1327,32 @@ class BcscCoreModule(
 
             Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
             promise.resolve(registrationBodyAsString)
+        } catch (e: KeyAlreadyExistsException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key already exists: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+                "Key pair already exists: ${e.devMessage}",
+                e,
+            )
+        } catch (e: KeyNotFoundException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key not found: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+                "Key pair not found: ${e.devMessage}",
+                e,
+            )
         } catch (e: KeypairGenerationException) {
             Log.e(NAME, "getDynamicClientRegistrationBody: Keypair generation error: ${e.devMessage}", e)
             promise.reject(
-                "E_KEYPAIR_GENERATION_FAILED",
+                "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
                 "Failed to generate or retrieve key pair for client registration: ${e.devMessage}",
+                e,
+            )
+        } catch (e: JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: toJSON method failure: ${e.message}", e)
+            promise.reject(
+                "E_120_TOJSON_METHOD_FAILURE",
+                "Failed to serialize client registration data: ${e.message}",
                 e,
             )
         } catch (e: BcscException) {
@@ -1513,8 +1559,8 @@ class BcscCoreModule(
 
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
-            if (jwtSegments.size < 2) {
-                promise.reject("E_INVALID_JWT", "Invalid JWT format in decrypted payload")
+            if (jwtSegments.size != JWS_COMPACT_SEGMENT_COUNT) {
+                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
                 return
             }
 
@@ -1548,7 +1594,7 @@ class BcscCoreModule(
             promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE", e)
         } catch (e: IllegalArgumentException) {
             Log.e(NAME, "decodePayload: Base64 decode error: ${e.message}", e)
-            promise.reject("E_BASE64_DECODE_ERROR", "Failed to decode base64 payload", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
             promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
@@ -4045,6 +4091,9 @@ class BcscCoreModule(
                 }
 
             promise.resolve(result)
+        } catch (e: java.text.ParseException) {
+            Log.e(NAME, "decodeLoginChallenge: JWS parse error: ${e.message}", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to parse JWS: ${e.message}", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodeLoginChallenge: Unexpected error: ${e.message}", e)
             promise.reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge", e)

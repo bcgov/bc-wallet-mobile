@@ -41,6 +41,8 @@ class BcscCore: NSObject {
   static let generalizedOsName = "iOS"
   static let provider = "https://idsit.gov.bc.ca/device/"
   static let clientName = "BC Services Wallet"
+  /// JWS compact serialization: header.payload.signature
+  static let jwsCompactSegmentCount = 3
 
   static func requiresMainQueueSetup() -> Bool {
     return false
@@ -265,7 +267,7 @@ class BcscCore: NSObject {
     }
   }
 
-  private func generateKeyPair() -> String? {
+  private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
     let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
@@ -285,63 +287,37 @@ class BcscCore: NSObject {
         logger.log(
           "generateKeyPair - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)"
         )
-        do {
-          // Assuming default keyType and keySize are handled by KeyPairManager.generateKeyPair or are acceptable.
-          _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
-          )
-          return newKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
-          )
-          return nil // Failed to generate the specifically requested incremented key.
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
+        )
+        return newKeyId
       } else {
         // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
         // Fallback: generate a completely new key using a fresh initial ID pattern.
         logger.warning(
           "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
-        // Use the same pattern for the new key ID as in the 'no keys found' case for consistency, but with a new UUID.
         let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
         logger.log(
           "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
-        do {
-          _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
-          )
-          return freshGeneratedKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
-          )
-          return nil
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
+        )
+        return freshGeneratedKeyId
       }
     } else {
       // No keys found, attempt to generate a new one
       logger.log(
         "generateKeyPair - No keys found. Attempting to generate a new key with ID: \(initialKeyId)"
       )
-      do {
-        _ =
-          try keyPairManager
-            .generateKeyPair(withLabel: initialKeyId) // Assuming default keyType and keySize are handled by this method
-        // or are acceptable.
-        logger.log(
-          "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
-        )
-        return initialKeyId
-      } catch {
-        logger.error(
-          "generateKeyPair - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
-        )
-        return nil
-      }
+      _ = try keyPairManager.generateKeyPair(withLabel: initialKeyId)
+      logger.log(
+        "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
+      )
+      return initialKeyId
     }
   }
 
@@ -905,17 +881,40 @@ class BcscCore: NSObject {
         keyId = latestKeyInfo.tag
       } catch {
         reject(
-          "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
-          error
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "Failed to retrieve key pair: \(error.localizedDescription)", error
         )
         return
       }
     } else {
       // No keys found, generate a new one
-      guard let newKeyId = generateKeyPair() else {
+      let newKeyId: String
+      do {
+        newKeyId = try generateKeyPair()
+      } catch let error as KeychainError {
+        switch error {
+        case .keyAlreadyExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+            "Keychain key already exists: \(error.localizedDescription)", error
+          )
+        case .keyNotExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+            "Keychain key does not exist: \(error.localizedDescription)", error
+          )
+        case .keyGenError:
+          reject(
+            "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+            "Failed to generate key pair: \(error.localizedDescription)", error
+          )
+        }
+        return
+      } catch {
         reject(
-          "E_KEYPAIR_GENERATION_FAILED",
-          "Failed to generate or retrieve key pair for client registration", nil
+          "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
+          error
         )
         return
       }
@@ -925,7 +924,7 @@ class BcscCore: NSObject {
         keyId = newKeyId
       } catch {
         reject(
-          "E_KEYPAIR_RETRIEVAL_FAILED",
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
           "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
         )
         return
@@ -968,11 +967,14 @@ class BcscCore: NSObject {
       header: JWSHeader(alg: JWSAlgorithm("none"), kid: ""), payload: deviceInfoClaims
     )
 
-    // Convert device info JWT to JSON string
-    guard let deviceInfoJWTAsString = try? deviceInfoJWT.serialize() else {
+    // Convert device info JWT to JSON string (toJSONString)
+    let deviceInfoJWTAsString: String
+    do {
+      deviceInfoJWTAsString = try deviceInfoJWT.serialize()
+    } catch {
       reject(
-        "E_DEVICE_INFO_JWT_CONVERSION_FAILED", "Failed to convert device info JWT to JSON string",
-        nil
+        "E_120_TOJSONSTRING_METHOD_FAILURE",
+        "Failed to convert device info JWT to JSON string: \(error.localizedDescription)", error
       )
       return
     }
@@ -1018,7 +1020,7 @@ class BcscCore: NSObject {
       resolve(jsonString)
     } catch {
       reject(
-        "E_JSON_SERIALIZATION_FAILED",
+        "E_120_TOJSON_METHOD_FAILURE",
         "Failed to serialize client registration data: \(error.localizedDescription)", error
       )
     }
@@ -1085,6 +1087,10 @@ class BcscCore: NSObject {
 
       // Break down and decode JWT
       let segments = payload.components(separatedBy: ".")
+      guard segments.count == BcscCore.jwsCompactSegmentCount else {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        return
+      }
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1094,14 +1100,12 @@ class BcscCore: NSObject {
       }
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
-      let decodedData = Data(
-        base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0))
-      )
-
-      let base64Decoded = String(
-        data: decodedData! as Data,
-        encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)
-      )!
+      guard let decodedData = Data(base64Encoded: base64String),
+            let base64Decoded = String(data: decodedData, encoding: .utf8)
+      else {
+        reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
+        return
+      }
       resolve(base64Decoded)
     } catch {
       reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
@@ -1129,10 +1133,19 @@ class BcscCore: NSObject {
       return
     }
 
+    // 1. Parse the JWT
+    let jws: JWS
     do {
-      // 1. Parse the JWT
-      let jws = try JWS.parse(s: jwt)
+      jws = try JWS.parse(s: jwt)
+    } catch {
+      reject(
+        "E_FAILED_TO_PARSE_JWS",
+        "Failed to parse JWS: \(error.localizedDescription)", error
+      )
+      return
+    }
 
+    do {
       // 2. Extract claims
       guard let claimsSet = try jws.getJwtClaimsSet() else {
         reject("E_INVALID_JWT", "Unable to parse JWT claims", nil)

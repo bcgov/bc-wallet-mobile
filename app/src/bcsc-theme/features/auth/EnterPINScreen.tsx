@@ -15,7 +15,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager } from 'react-native'
 import {
@@ -34,18 +34,26 @@ interface EnterPINScreenProps {
 export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
+  const isInitializingRef = useRef(false)
 
+  // FIXME (MD): Move this into a testable hook that handles app authentication explicitly
   useEffect(() => {
     const initializeAuthentication = async () => {
-      try {
-        startLoading()
+      // Prevent multiple simultaneous initializations (ie: double biometric prompts)
+      if (isInitializingRef.current) {
+        return
+      }
 
+      const stopLoading = startLoading()
+      isInitializingRef.current = true
+
+      try {
         const accountSecurityMethod = await getAccountSecurityMethod()
 
         // Only attempt device authentication if that is the configured method
@@ -84,12 +92,13 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         logger.error(`Device authentication error: ${errMessage}`)
         navigation.goBack()
       } finally {
+        isInitializingRef.current = false
         stopLoading()
       }
     }
 
     initializeAuthentication()
-  }, [startLoading, stopLoading, logger, navigation, handleSuccessfulAuth])
+  }, [startLoading, logger, navigation, handleSuccessfulAuth])
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {

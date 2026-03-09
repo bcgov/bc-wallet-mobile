@@ -39,7 +39,7 @@ interface ChangePINFormProps {
 export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loadingMessage }: ChangePINFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checkboxError, setCheckboxError] = useState(false)
@@ -56,6 +56,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
 
   const validateAndChangePIN = useCallback(
     async (current: string, newPin: string, confirm: string) => {
+      let stopLoading: (() => void) | undefined
       try {
         setLoading(true)
         setCurrentPINError(undefined)
@@ -98,7 +99,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         }
 
         // Show loading indicator
-        startLoading(loadingMessage ?? t('BCSC.ChangePIN.ChangingPIN'))
+        stopLoading = startLoading(loadingMessage ?? t('BCSC.ChangePIN.ChangingPIN'))
 
         // Verify current PIN first
         const verifyResult = await verifyPIN(current)
@@ -127,10 +128,10 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         logger.error(`PIN change error: ${error}`)
       } finally {
         setLoading(false)
-        stopLoading()
+        stopLoading?.()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, t]
+    [checked, logger, onSuccess, startLoading, loadingMessage, t]
   )
 
   const onPressChangePIN = useCallback(async () => {

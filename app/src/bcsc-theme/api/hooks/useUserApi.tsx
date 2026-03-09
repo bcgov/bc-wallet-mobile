@@ -1,6 +1,6 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import { useCallback, useMemo } from 'react'
-import { decodePayload } from 'react-native-bcsc-core'
+import { BcscNativeErrorCodes, decodePayload, isBcscNativeError } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -43,13 +43,25 @@ const useUserApi = (apiClient: BCSCApiClient) => {
       try {
         userInfoString = await decodePayload(data)
       } catch (error) {
+        if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.FAILED_TO_PARSE_JWS) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: error })
+        }
+
         throw AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: error })
       }
+
+      let parsed: UserInfoResponseData
       try {
-        return JSON.parse(userInfoString)
+        parsed = JSON.parse(userInfoString)
       } catch (error) {
         throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
       }
+
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
+      }
+
+      return parsed
     })
   }, [apiClient])
 

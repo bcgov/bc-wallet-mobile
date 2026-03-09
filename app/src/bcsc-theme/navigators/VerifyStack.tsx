@@ -62,6 +62,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
+import { isUserVerified } from '../utils/bcsc-credential'
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
@@ -77,7 +78,7 @@ const VerifyStack = () => {
   return (
     <Stack.Navigator
       // If the user has a refresh token, they have completed setup and should go to success screen. Otherwise, start at setup steps.
-      initialRouteName={store.bcscSecure.refreshToken ? BCSCScreens.VerificationSuccess : BCSCScreens.SetupSteps}
+      initialRouteName={isUserVerified(store.bcscSecure) ? BCSCScreens.VerificationSuccess : BCSCScreens.SetupSteps}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,

@@ -30,14 +30,14 @@ describe('useRegistrationService', () => {
       expect(data).toEqual(mockData)
     })
 
-    describe('native error E_KEYPAIR_GENERATION_FAILED', () => {
-      it('should show alert on bcsc native error keypair generation failed', async () => {
-        const mockError = new Error('test')
-        ;(mockError as any).code = 'E_KEYPAIR_GENERATION_FAILED'
+    describe('App error ERR_120_KEYCHAIN_KEY_GENERATION_ERROR', () => {
+      it('should show keychainKeyGenerationAlert on keypair generation error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR)
         const registrationApi = {
           register: jest.fn().mockRejectedValue(mockError),
         } as any
-        const mockAlerts = { problemWithAppAlert: jest.fn() }
+        const keychainKeyGenerationAlert = jest.fn()
+        const mockAlerts = { keychainKeyGenerationAlert }
 
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -46,17 +46,16 @@ describe('useRegistrationService', () => {
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
-        expect(mockAlerts.problemWithAppAlert).toHaveBeenCalled()
+        expect(keychainKeyGenerationAlert).toHaveBeenCalled()
       })
 
-      it('should rethrow error without showing alert if error is not keypair generation failed error', async () => {
-        const mockError = new Error('test')
-        ;(mockError as any).code = 'E_SOME_OTHER_ERROR'
+      it('should rethrow error without showing alert if error is not keychain key generation error', async () => {
+        const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
         const registrationApi = {
           register: jest.fn().mockRejectedValue(mockError),
         } as any
-        const problemWithAppAlert = jest.fn()
-        const mockAlerts = { problemWithAppAlert }
+        const keychainKeyGenerationAlert = jest.fn()
+        const mockAlerts = { keychainKeyGenerationAlert }
 
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -65,7 +64,107 @@ describe('useRegistrationService', () => {
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
-        expect(problemWithAppAlert).not.toHaveBeenCalled()
+        expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_TOJSON_METHOD_FAILURE', () => {
+      it('should show toJsonMethodFailureAlert on toJSON serialization error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_TOJSON_METHOD_FAILURE)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const toJsonMethodFailureAlert = jest.fn()
+        const mockAlerts = { toJsonMethodFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(toJsonMethodFailureAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_TOJSONSTRING_METHOD_FAILURE', () => {
+      it('should show toJsonStringMethodFailureAlert on toJSONString serialization error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const toJsonStringMethodFailureAlert = jest.fn()
+        const mockAlerts = { toJsonStringMethodFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(toJsonStringMethodFailureAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_KEYCHAIN_KEY_EXISTS_ERROR', () => {
+      it('should show keychainKeyExistsAlert on keychain key exists error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const keychainKeyExistsAlert = jest.fn()
+        const mockAlerts = { keychainKeyExistsAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(keychainKeyExistsAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR', () => {
+      it('should show keychainKeyDoesntExistAlert on keychain key not found error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const keychainKeyDoesntExistAlert = jest.fn()
+        const mockAlerts = { keychainKeyDoesntExistAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(keychainKeyDoesntExistAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_JWT_DEVICE_INFO_ERROR', () => {
+      it('should show jwtDeviceInfoAlert on JWT device info error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const jwtDeviceInfoAlert = jest.fn()
+        const mockAlerts = { jwtDeviceInfoAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(jwtDeviceInfoAlert).toHaveBeenCalled()
       })
     })
 
@@ -150,10 +249,27 @@ describe('useRegistrationService', () => {
       const registrationApi = {
         register: jest.fn().mockRejectedValue(mockError),
       } as any
+      const toJsonMethodFailureAlert = jest.fn()
+      const toJsonStringMethodFailureAlert = jest.fn()
+      const keychainKeyExistsAlert = jest.fn()
+      const keychainKeyDoesntExistAlert = jest.fn()
+      const keychainKeyGenerationAlert = jest.fn()
+      const jwtDeviceInfoAlert = jest.fn()
       const problemWithAppAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
       const failedToSerializeJsonAlert = jest.fn()
-      const mockAlerts = { problemWithAppAlert, clientRegistrationNullAlert, failedToSerializeJsonAlert }
+
+      const mockAlerts = {
+        toJsonMethodFailureAlert,
+        toJsonStringMethodFailureAlert,
+        keychainKeyExistsAlert,
+        keychainKeyDoesntExistAlert,
+        keychainKeyGenerationAlert,
+        jwtDeviceInfoAlert,
+        problemWithAppAlert,
+        clientRegistrationNullAlert,
+        failedToSerializeJsonAlert,
+      }
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -162,6 +278,12 @@ describe('useRegistrationService', () => {
 
       await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
       expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+      expect(toJsonMethodFailureAlert).not.toHaveBeenCalled()
+      expect(toJsonStringMethodFailureAlert).not.toHaveBeenCalled()
+      expect(keychainKeyExistsAlert).not.toHaveBeenCalled()
+      expect(keychainKeyDoesntExistAlert).not.toHaveBeenCalled()
+      expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
+      expect(jwtDeviceInfoAlert).not.toHaveBeenCalled()
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
       expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
@@ -186,14 +308,14 @@ describe('useRegistrationService', () => {
       expect(data).toEqual(mockData)
     })
 
-    describe('native error E_KEYPAIR_GENERATION_FAILED', () => {
-      it('should show alert on bcsc native error keypair generation failed', async () => {
-        const mockError = new Error('test')
-        ;(mockError as any).code = 'E_KEYPAIR_GENERATION_FAILED'
+    describe('App error ERR_120_KEYCHAIN_KEY_GENERATION_ERROR', () => {
+      it('should show keychainKeyGenerationAlert on keypair generation error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR)
         const registrationApi = {
           updateRegistration: jest.fn().mockRejectedValue(mockError),
         } as any
-        const mockAlerts = { problemWithAppAlert: jest.fn() }
+        const keychainKeyGenerationAlert = jest.fn()
+        const mockAlerts = { keychainKeyGenerationAlert }
 
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -202,7 +324,107 @@ describe('useRegistrationService', () => {
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
-        expect(mockAlerts.problemWithAppAlert).toHaveBeenCalled()
+        expect(keychainKeyGenerationAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_TOJSON_METHOD_FAILURE', () => {
+      it('should show toJsonMethodFailureAlert on toJSON serialization error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_TOJSON_METHOD_FAILURE)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const toJsonMethodFailureAlert = jest.fn()
+        const mockAlerts = { toJsonMethodFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(toJsonMethodFailureAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_TOJSONSTRING_METHOD_FAILURE', () => {
+      it('should show toJsonStringMethodFailureAlert on toJSONString serialization error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const toJsonStringMethodFailureAlert = jest.fn()
+        const mockAlerts = { toJsonStringMethodFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(toJsonStringMethodFailureAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_KEYCHAIN_KEY_EXISTS_ERROR', () => {
+      it('should show keychainKeyExistsAlert on keychain key exists error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const keychainKeyExistsAlert = jest.fn()
+        const mockAlerts = { keychainKeyExistsAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(keychainKeyExistsAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR', () => {
+      it('should show keychainKeyDoesntExistAlert on keychain key not found error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const keychainKeyDoesntExistAlert = jest.fn()
+        const mockAlerts = { keychainKeyDoesntExistAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(keychainKeyDoesntExistAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('App error ERR_120_JWT_DEVICE_INFO_ERROR', () => {
+      it('should show jwtDeviceInfoAlert on JWT device info error', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const jwtDeviceInfoAlert = jest.fn()
+        const mockAlerts = { jwtDeviceInfoAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(jwtDeviceInfoAlert).toHaveBeenCalled()
       })
     })
 
@@ -226,14 +448,29 @@ describe('useRegistrationService', () => {
       })
     })
 
-    it('should rethrow error without showing alert if error is not bcsc native error or client registration null app error', async () => {
+    it('should rethrow error without showing alert if error is not a handled app error', async () => {
       const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
       const registrationApi = {
         updateRegistration: jest.fn().mockRejectedValue(mockError),
       } as any
+      const toJsonMethodFailureAlert = jest.fn()
+      const toJsonStringMethodFailureAlert = jest.fn()
+      const keychainKeyExistsAlert = jest.fn()
+      const keychainKeyDoesntExistAlert = jest.fn()
+      const keychainKeyGenerationAlert = jest.fn()
+      const jwtDeviceInfoAlert = jest.fn()
       const problemWithAppAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
-      const mockAlerts = { problemWithAppAlert, clientRegistrationNullAlert }
+      const mockAlerts = {
+        toJsonMethodFailureAlert,
+        toJsonStringMethodFailureAlert,
+        keychainKeyExistsAlert,
+        keychainKeyDoesntExistAlert,
+        keychainKeyGenerationAlert,
+        jwtDeviceInfoAlert,
+        problemWithAppAlert,
+        clientRegistrationNullAlert,
+      }
 
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
@@ -242,6 +479,12 @@ describe('useRegistrationService', () => {
 
       await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+      expect(toJsonMethodFailureAlert).not.toHaveBeenCalled()
+      expect(toJsonStringMethodFailureAlert).not.toHaveBeenCalled()
+      expect(keychainKeyExistsAlert).not.toHaveBeenCalled()
+      expect(keychainKeyDoesntExistAlert).not.toHaveBeenCalled()
+      expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
+      expect(jwtDeviceInfoAlert).not.toHaveBeenCalled()
       expect(problemWithAppAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
     })

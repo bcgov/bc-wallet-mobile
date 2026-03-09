@@ -1,5 +1,7 @@
 import { ViewStyle } from 'react-native'
 
+// TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
@@ -130,3 +132,6 @@ export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999
 
 // Validation constants
 export const MINIMUM_VERIFICATION_AGE = 12
+
+// Analytics constants
+export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'

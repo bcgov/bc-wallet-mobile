@@ -44,8 +44,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 
 jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
   useLoadingScreen: () => ({
-    startLoading: jest.fn(),
-    stopLoading: jest.fn(),
+    startLoading: jest.fn().mockReturnValue(jest.fn()),
   }),
 }))
 

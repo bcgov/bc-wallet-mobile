@@ -8,7 +8,7 @@ import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarn
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
-import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
+import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import AuthStack from './AuthStack'
@@ -69,7 +69,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || loading || !isNavigationReady) {
-    return <LoadingScreenContent />
+    return <LoadingScreen />
   }
 
   if (!store.bcscSecure.hasAccount) {
