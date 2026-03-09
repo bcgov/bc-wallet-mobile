@@ -123,11 +123,11 @@ export const formatServiceHours = (serviceHours: ServiceHours): FormattedService
     let endDay = ''
 
     servicePeriods.forEach((period) => {
-      if (!startDay) {
-        startDay = dayOfTheWeekFormatter(period.start_day)
-      } else {
+      if (startDay) {
         // this is only added in cases where multiple days are grouped
         endDay = `to ${dayOfTheWeekFormatter(period.start_day)}`
+      } else {
+        startDay = dayOfTheWeekFormatter(period.start_day)
       }
     })
     return {
@@ -186,9 +186,8 @@ const getCurrentTimeInTimezone = (timezone: string): Date => {
 
 const parseTimeToMinutes = (timeStr: string): number | null => {
   const [hour, minute] = timeStr.split(':').map(Number)
-  if (isNaN(hour) || isNaN(minute)) {
-    // maybe this just needs to throw an error
-    // if these are un parsable, then we want to track the error and maybe display the default hours?
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    // TODO: this needs to throw an error or be handled upstream, the api response is malformed if this fails
     return null
   }
   return hour * 60 + minute
@@ -249,12 +248,20 @@ export const isCurrentTimeWithinServiceHours = (serviceHours: ServiceHours): boo
   return false
 }
 
+/**
+ * This function compares current time against the provided service hours
+ * If any unavailable periods are present
+ * it will calculate and return true if the current time falls OUTSIDE of those unavailable periods
+ *
+ * @param serviceHours Service hours to check against
+ * @returns boolean returns True
+ */
 export const isCurrentTimeOutsideUnavailablePeriod = (serviceHours: ServiceHours): boolean => {
   if (!serviceHours?.service_unavailable_periods?.length) {
     return true
   }
 
-  const currentTime = new Date().getTime() / 1000 // current time in seconds
+  const currentTime = Date.now() / 1000 // current time in seconds
   for (const period of serviceHours.service_unavailable_periods) {
     if (currentTime >= period.start_date && currentTime <= period.end_date) {
       return false
@@ -264,6 +271,7 @@ export const isCurrentTimeOutsideUnavailablePeriod = (serviceHours: ServiceHours
   return true
 }
 
+// Helper function to format day strings from 'MONDAY' -> 'Monday'
 const dayOfTheWeekFormatter = (day: string): string => {
   const normalizedDay = day.trim().toLowerCase()
   if (!normalizedDay) {

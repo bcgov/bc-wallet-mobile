@@ -83,7 +83,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         })
         return
       }
-      serviceHours
+
       const isWithinServiceHours = isLiveCallAvailable(serviceHours)
 
       if (!isWithinServiceHours) {
