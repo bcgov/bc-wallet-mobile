@@ -1,11 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
-import {
-  formatServiceAndUnavailableHours,
-  formatServiceHours,
-  isLiveCallAvailable,
-} from '@/bcsc-theme/utils/service-hours-formatter'
+import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -70,7 +66,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         videoCallApi.getServiceHours(),
       ])
 
-      const formattedHours = formatServiceHours(serviceHours)
+      const formattedHours = formatServiceAndUnavailableHours(serviceHours)
       // TODO (bm): Look for prod queue(s) depending on environment
       const availableDestination = destinations.find(
         (dest) => dest.destination_name === 'Test Harness Queue Destination'
@@ -89,12 +85,12 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       if (!isWithinServiceHours) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: false,
-          formattedHours: formatServiceAndUnavailableHours(serviceHours),
+          formattedHours,
         })
         return
       }
 
-      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours: formatServiceAndUnavailableHours(serviceHours) })
+      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
     } catch (error) {
       logger.error('Error checking service availability:', error as Error)
       navigation.navigate(BCSCScreens.CallBusyOrClosed, {
