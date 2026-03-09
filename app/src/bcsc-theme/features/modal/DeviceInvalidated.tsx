@@ -39,6 +39,8 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
       },
       [BCSCReason.CanceledByUser]: {}, // Empty for a 'new install state'
       [BCSCReason.CanceledByAdditionalCard]: {},
+      [BCSCReason.CanceledByCardTypeChange]: {},
+      [BCSCReason.CanceledDueToInactivity]: {},
     }
 
     const result = await factoryReset(factoryResetParams[invalidationReason])
@@ -54,6 +56,8 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     [BCSCReason.CanceledByAgent]: t('BCSC.Modals.DeviceInvalidated.CancelledByAgent'),
     [BCSCReason.CanceledByUser]: t('BCSC.Modals.DeviceInvalidated.CancelledByUser'),
     [BCSCReason.CanceledByAdditionalCard]: t('BCSC.Modals.DeviceInvalidated.CanceledByAdditionalCard'),
+    [BCSCReason.CanceledByCardTypeChange]: t('BCSC.Modals.DeviceInvalidated.CanceledByCardTypeChange'),
+    [BCSCReason.CanceledDueToInactivity]: t('BCSC.Modals.DeviceInvalidated.CanceledDueToInactivity'),
   }
 
   return (
