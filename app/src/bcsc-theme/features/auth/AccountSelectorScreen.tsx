@@ -1,6 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
-import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -17,7 +16,6 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const authentication = useAuthentication(navigation)
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -28,11 +26,11 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   })
 
   const handleAccountSelect = useCallback(
-    async (nickname: string) => {
+    (nickname: string) => {
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
-      await authentication.unlockApp()
+      navigation.navigate(BCSCScreens.EnterPIN)
     },
-    [authentication, dispatch]
+    [dispatch, navigation]
   )
 
   // This handles the case where user has completed onboarding but has not set a nickname yet
@@ -51,7 +49,7 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
       testID={testIdWithKey('ContinueSetup')}
       title={'Continue setting up account'}
       accessibilityLabel={'Continue setting up account'}
-      onPress={authentication.unlockApp}
+      onPress={() => navigation.navigate(BCSCScreens.EnterPIN)}
     />
   )
 
