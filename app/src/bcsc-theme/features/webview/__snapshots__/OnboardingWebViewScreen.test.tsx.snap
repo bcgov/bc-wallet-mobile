@@ -8,9 +8,9 @@ exports[`OnboardingWebView renders correctly 1`] = `
   injectedJavaScriptBeforeContentLoaded="
     document.addEventListener('DOMContentLoaded', function() {
       
-      const fontScale = 2;
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
+      const baseFontSizePx = 32;
+      document.documentElement.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+      if (document.body) document.body.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
     
       document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '#F2F2F2';
@@ -21,11 +21,13 @@ exports[`OnboardingWebView renders correctly 1`] = `
         body, body * {
           background-color: #F2F2F2 !important;
           color: #FFFFFFFF !important;
+          font-size: 32px !important;
         }
         a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
           color: #1A5A96 !important;
           text-decoration-color: #1A5A96 !important;
           border-color: #1A5A96 !important;
+          font-size: 32px !important;
         }
       \`;
       document.head.appendChild(style);
