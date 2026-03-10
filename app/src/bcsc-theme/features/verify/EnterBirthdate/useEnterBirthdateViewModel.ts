@@ -51,6 +51,13 @@ export const useEnterBirthdateViewModel = (
   )
 
   const isDateValid = (value: string): boolean => {
+    console.log(`Validating date: ${value}`)
+
+    const withoutDashes = value.split('-').join('')
+    if (withoutDashes.length !== 8) {
+      return true // allow partial input without showing an error
+    }
+
     const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
     if (!regex.test(value)) {
       return false

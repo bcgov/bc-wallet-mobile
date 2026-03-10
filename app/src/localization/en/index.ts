@@ -561,6 +561,7 @@ const translation = {
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
       "Label": "Birthdate",
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",

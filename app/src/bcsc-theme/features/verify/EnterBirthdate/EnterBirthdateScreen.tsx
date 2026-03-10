@@ -33,8 +33,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(false)
   const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY-MM-DD') : '')
-  // const [birthDateError, setBirthDateError] = useState<string | null>(null)
-  // const debounceBirthDate = useDebounce(birthDate, 500)
+  const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -80,7 +79,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       testID={testIdWithKey('Done')}
       onPress={handleSubmit}
       buttonType={ButtonType.Primary}
-      disabled={loading || !birthDate}
+      disabled={loading || !birthDate || !vm.isDateValid(birthDate) || !!birthDateError}
     >
       {loading && <ButtonLoading />}
     </Button>
@@ -103,9 +102,16 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           onChange={(date) => {
             // no-op to disable manual input
             console.log(date)
+
+            if (!vm.isDateValid(date)) {
+              setBirthDateError(t('BCSC.Birthdate.InvalidDate'))
+            } else {
+              setBirthDateError(undefined)
+            }
             setBirthDate(date)
           }}
           subtext={t('BCSC.Birthdate.Paragraph')}
+          error={birthDateError}
         />
       </View>
     </ScreenWrapper>
