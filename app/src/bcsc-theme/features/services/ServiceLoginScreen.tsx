@@ -35,6 +35,7 @@ type ServiceLoginDefaultViewProps = {
   navigation: ServiceLoginScreenProps['navigation']
   onContinue: () => Promise<void>
   onCancel: () => void
+  onOpenPrivacyPolicy: () => void
 }
 
 type ServiceLoginUnavailableViewProps = {
@@ -125,6 +126,7 @@ const ServiceLoginDefaultView = ({
   navigation,
   onContinue,
   onCancel,
+  onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -159,12 +161,7 @@ const ServiceLoginDefaultView = ({
                   accessibilityLabel={t('BCSC.Services.PrivacyPolicy')}
                   accessibilityRole="button"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={() => {
-                    navigation.navigate(BCSCScreens.MainWebView, {
-                      url: state.privacyPolicyUri!,
-                      title: t('BCSC.Services.PrivacyPolicy'),
-                    })
-                  }}
+                  onPress={onOpenPrivacyPolicy}
                 >
                   <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
                 </TouchableOpacity>
@@ -174,21 +171,7 @@ const ServiceLoginDefaultView = ({
           </View>
 
           {state.privacyPolicyUri ? (
-            <TouchableOpacity
-              testID={testIdWithKey('ReadPrivacyPolicy')}
-              onPress={() => {
-                try {
-                  navigation.navigate(BCSCScreens.MainWebView, {
-                    url: state.privacyPolicyUri!,
-                    title: t('BCSC.Services.PrivacyPolicy'),
-                  })
-                } catch (error) {
-                  logger.error(
-                    `ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`
-                  )
-                }
-              }}
-            >
+            <TouchableOpacity testID={testIdWithKey('ReadPrivacyPolicy')} onPress={onOpenPrivacyPolicy}>
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
                 <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
                 <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
@@ -370,6 +353,18 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
+  const onOpenPrivacyPolicy = useCallback(() => {
+    if (!state.privacyPolicyUri) return
+    try {
+      navigation.navigate(BCSCScreens.MainWebView, {
+        url: state.privacyPolicyUri,
+        title: t('BCSC.Services.PrivacyPolicy'),
+      })
+    } catch (error) {
+      logger.error(`ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`)
+    }
+  }, [state.privacyPolicyUri, navigation, t, logger])
+
   const onCancel = useCallback(() => {
     // For cold start pairing, clear the pending pairing so RootStack switches stacks
     if (pairingService.hasPendingPairing) {
@@ -426,6 +421,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           navigation={navigation}
           onContinue={onContinue}
           onCancel={onCancel}
+          onOpenPrivacyPolicy={onOpenPrivacyPolicy}
         />
       )
   }
