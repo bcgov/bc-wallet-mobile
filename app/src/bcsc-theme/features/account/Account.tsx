@@ -3,6 +3,7 @@ import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
@@ -11,7 +12,7 @@ import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningB
 import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
@@ -122,16 +123,9 @@ const Account: React.FC = () => {
     },
   })
 
-  const cardExpiryDate = useMemo(() => {
-    let dateString = account.card_expiry ?? ''
-    if (account.card_expiry) {
-      if (isAccountExpired(account.card_expiry)) {
-        dateString = 'Card expired!'
-      }
-    }
-
-    return dateString
-  }, [account])
+  if (!account) {
+    return <LoadingScreen />
+  }
 
   return (
     <TabScreenWrapper>
@@ -144,7 +138,10 @@ const Account: React.FC = () => {
           </ThemedText>
         </View>
         <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
-        <AccountField label={t('BCSC.Account.AccountInfo.AppExpiryDate')} value={cardExpiryDate} />
+        <AccountField
+          label={t('BCSC.Account.AccountInfo.AppExpiryDate')}
+          value={isAccountExpired(account.account_expiration_date) ? 'Card expired!' : account.card_expiry}
+        />
         <AccountField
           label={t('BCSC.Account.AccountInfo.AccountType')}
           value={account.card_type ?? t('BCSC.Account.AccountInfo.AccountTypeNonBCServicesCard')}

@@ -85,21 +85,13 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
 /**
  * Hook to access the BCSC account context.
  *
- * @returns {{ account: BCSCAccount }} The account data and loading state.
+ * @returns The account or null if loading
  */
 export const useAccount = () => {
   const context = useContext(BCSCAccountContext)
 
   if (!context) {
     throw new Error('useAccount must be used within a BCSCAccountProvider')
-  }
-
-  if (context.isLoadingAccount) {
-    throw new Error('userAccount: account is still loading')
-  }
-
-  if (!context.account) {
-    throw new Error('useAccount: account is null')
   }
 
   return context.account
