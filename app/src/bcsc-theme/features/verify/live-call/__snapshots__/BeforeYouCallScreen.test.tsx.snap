@@ -47,6 +47,7 @@ exports[`BeforeYouCall renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/BeforeYouCallTitle"
       >
         BCSC.VideoCall.BeforeYouCallTitle
       </Text>
@@ -132,51 +133,58 @@ exports[`BeforeYouCall renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/HoursOfServiceTitle"
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
       <View
-        style={
-          {
-            "flex": 1,
-            "marginBottom": 16,
-          }
-        }
+        testID="com.ariesbifold:id/BeforeYouCallTitle"
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "fontWeight": "normal",
-              },
-            ]
+            {
+              "flex": 1,
+              "marginBottom": 16,
+            }
           }
         >
-          Monday to Friday
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          8:00 AM - 5:00 PM Pacific Time
-        </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "fontWeight": "normal",
+                },
+              ]
+            }
+            testID="com.ariesbifold:id/ServicePeriodTitle"
+          >
+            Monday to Friday
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+            testID="com.ariesbifold:id/ServicePeriodHours"
+          >
+            8:00 AM - 5:00 PM Pacific Time
+          </Text>
+        </View>
       </View>
       <Text
         maxFontSizeMultiplier={2}
