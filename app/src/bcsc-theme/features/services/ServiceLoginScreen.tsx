@@ -193,24 +193,9 @@ const ServiceLoginDefaultView = ({
         <View>
           <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
           {state.serviceClientUri ? (
-            <TouchableOpacity
-              testID={testIdWithKey('GoToServiceLink')}
-              accessibilityLabel={`${t('BCSC.Services.Goto')} ${state.serviceClientUri}`}
-              accessibilityRole="link"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              onPress={async () => {
-                try {
-                  await Linking.openURL(state.serviceClientUri!)
-                } catch (error) {
-                  logger.error('ServiceLoginScreen: Failed to open service client URL', error as Error)
-                  Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
-                }
-              }}
-            >
-              <ThemedText style={styles.link}>
-                {t('BCSC.Services.Goto')}: {state.serviceClientUri}
-              </ThemedText>
-            </TouchableOpacity>
+            <ThemedText>
+              {t('BCSC.Services.Goto')}: {state.serviceClientUri}
+            </ThemedText>
           ) : null}
         </View>
       </View>
