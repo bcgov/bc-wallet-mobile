@@ -15,7 +15,7 @@ const getTimezoneDisplay = (timezone: string): string => (timezone === PACIFIC_T
 // Converts an epoch time into time format: 11:35pm
 const formatTimeInTimezone = (epochSeconds: number, timezone: string): string => {
   const date = new Date(epochSeconds * 1000)
-  const formatted = new Intl.DateTimeFormat('en-US', {
+  const formatted = new Intl.DateTimeFormat('en-CA', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -28,7 +28,7 @@ const formatTimeInTimezone = (epochSeconds: number, timezone: string): string =>
 // Converts an epoch time into long format: March 6, 2026
 const formatDateInTimezone = (epochSeconds: number, timezone: string): string => {
   const date = new Date(epochSeconds * 1000)
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('en-CA', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
