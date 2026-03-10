@@ -89,32 +89,38 @@ ${bodyContent}
 </html>`
 }
 
-export const createFontScalingScript = (): string => {
-  const fontScale = Dimensions.get('window').fontScale
-  if (Platform.OS === 'ios') {
-    return `
-      const fontScale = ${fontScale};
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    `
+/**
+ * Returns a script fragment that applies iOS font scaling (Dynamic Type) to the document.
+ * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
+ * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
+ */
+export const createFontScalingScript = (baseFontSizePx: number): string => {
+  if (Platform.OS !== 'ios' || baseFontSizePx <= 0) {
+    return ''
   }
-
-  return ''
+  return `
+      const baseFontSizePx = ${baseFontSizePx};
+      document.documentElement.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+      if (document.body) document.body.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+    `
 }
 
 /**
  * Creates webview javascript injection to modify the HTML content loaded from a full web page URL.
  *
- * This includes setting the background color, text color, and link colors to match the app theme.
- * It also removes page chrome (header, footer, nav, h1) since the static page includes full navigation.
+ * This includes applying iOS font scaling (Android uses WebView textZoom), setting the background
+ * color, text color, and link colors to match the app theme, and removing page chrome.
  *
- * @param {IColorPalette} colorPalette - The color palette object containing brand colors
- * @returns {*} {string} JavaScript string to be injected into the WebView
+ * @param colorPalette - The color palette object containing brand colors
+ * @param fontScale - Device font scale (e.g. from useWindowDimensions().fontScale)
  */
-export const createWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
+export const createWebViewJavascriptInjection = (colorPalette: IColorPalette, fontScale: number): string => {
+  const baseFontSizePx = fontScale > 0 ? Math.round(16 * fontScale) : 16
+  const applyFontScaling = Platform.OS === 'ios' && baseFontSizePx > 0
+  const fontSizeCss = applyFontScaling ? `font-size: ${baseFontSizePx}px !important;` : ''
   return `
     document.addEventListener('DOMContentLoaded', function() {
-      ${createFontScalingScript()}
+      ${createFontScalingScript(baseFontSizePx)}
       document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
       document.body.style.color = '${colorPalette.brand.secondary}';
@@ -124,11 +130,13 @@ export const createWebViewJavascriptInjection = (colorPalette: IColorPalette): s
         body, body * {
           background-color: ${colorPalette.brand.primaryBackground} !important;
           color: ${colorPalette.brand.secondary} !important;
+          ${fontSizeCss}
         }
         a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
           color: ${colorPalette.brand.link} !important;
           text-decoration-color: ${colorPalette.brand.link} !important;
           border-color: ${colorPalette.brand.link} !important;
+          ${fontSizeCss}
         }
       \`;
       document.head.appendChild(style);
