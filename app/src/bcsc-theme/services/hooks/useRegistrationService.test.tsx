@@ -168,6 +168,26 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_120_CLIENT_REGISTRATION_FAILURE', () => {
+      it('should show clientRegistrationFailureAlert on client registration failure', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+        const registrationApi = {
+          register: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const clientRegistrationFailureAlert = jest.fn()
+        const mockAlerts = { clientRegistrationFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+        expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
+        expect(clientRegistrationFailureAlert).toHaveBeenCalled()
+      })
+    })
+
     describe('App error ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL', () => {
       it('should show the alert for the app error', async () => {
         const mockError = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
@@ -315,7 +335,7 @@ describe('useRegistrationService', () => {
       const keychainKeyDoesntExistAlert = jest.fn()
       const keychainKeyGenerationAlert = jest.fn()
       const jwtDeviceInfoAlert = jest.fn()
-      const problemWithAppAlert = jest.fn()
+      const clientRegistrationFailureAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
       const failedToSerializeJsonAlert = jest.fn()
       const failedToRetrieveStringResourceAlert = jest.fn()
@@ -329,7 +349,7 @@ describe('useRegistrationService', () => {
         keychainKeyDoesntExistAlert,
         keychainKeyGenerationAlert,
         jwtDeviceInfoAlert,
-        problemWithAppAlert,
+        clientRegistrationFailureAlert,
         clientRegistrationNullAlert,
         failedToSerializeJsonAlert,
         failedToRetrieveStringResourceAlert,
@@ -350,7 +370,7 @@ describe('useRegistrationService', () => {
       expect(keychainKeyDoesntExistAlert).not.toHaveBeenCalled()
       expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
       expect(jwtDeviceInfoAlert).not.toHaveBeenCalled()
-      expect(problemWithAppAlert).not.toHaveBeenCalled()
+      expect(clientRegistrationFailureAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
       expect(failedToSerializeJsonAlert).not.toHaveBeenCalled()
       expect(failedToRetrieveStringResourceAlert).not.toHaveBeenCalled()
@@ -497,6 +517,26 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_120_CLIENT_REGISTRATION_FAILURE', () => {
+      it('should show clientRegistrationFailureAlert on client registration failure', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const clientRegistrationFailureAlert = jest.fn()
+        const mockAlerts = { clientRegistrationFailureAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
+        expect(clientRegistrationFailureAlert).toHaveBeenCalled()
+      })
+    })
+
     describe('App error ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL', () => {
       it('should show the alert for the app error', async () => {
         const mockError = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
@@ -528,7 +568,7 @@ describe('useRegistrationService', () => {
       const keychainKeyDoesntExistAlert = jest.fn()
       const keychainKeyGenerationAlert = jest.fn()
       const jwtDeviceInfoAlert = jest.fn()
-      const problemWithAppAlert = jest.fn()
+      const clientRegistrationFailureAlert = jest.fn()
       const clientRegistrationNullAlert = jest.fn()
       const failedToRetrieveStringResourceAlert = jest.fn()
       const invalidUrlAlert = jest.fn()
@@ -540,7 +580,7 @@ describe('useRegistrationService', () => {
         keychainKeyDoesntExistAlert,
         keychainKeyGenerationAlert,
         jwtDeviceInfoAlert,
-        problemWithAppAlert,
+        clientRegistrationFailureAlert,
         clientRegistrationNullAlert,
         failedToRetrieveStringResourceAlert,
         invalidUrlAlert,
@@ -560,7 +600,7 @@ describe('useRegistrationService', () => {
       expect(keychainKeyDoesntExistAlert).not.toHaveBeenCalled()
       expect(keychainKeyGenerationAlert).not.toHaveBeenCalled()
       expect(jwtDeviceInfoAlert).not.toHaveBeenCalled()
-      expect(problemWithAppAlert).not.toHaveBeenCalled()
+      expect(clientRegistrationFailureAlert).not.toHaveBeenCalled()
       expect(clientRegistrationNullAlert).not.toHaveBeenCalled()
       expect(failedToRetrieveStringResourceAlert).not.toHaveBeenCalled()
       expect(invalidUrlAlert).not.toHaveBeenCalled()

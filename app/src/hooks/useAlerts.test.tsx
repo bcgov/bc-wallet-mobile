@@ -1091,6 +1091,23 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('clientRegistrationFailureAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.clientRegistrationFailureAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
   describe('noTokensReturnedAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
