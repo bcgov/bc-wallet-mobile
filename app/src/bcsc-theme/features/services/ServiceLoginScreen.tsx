@@ -146,12 +146,22 @@ const ServiceLoginDefaultView = ({
                   {t('BCSC.Services.FromAccount')}
                 </ThemedText>
               </ThemedText>
-              <TouchableOpacity
-                testID={testIdWithKey('HelpButton')}
-                onPress={() => Linking.openURL('https://example.com')}
-              >
-                <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
-              </TouchableOpacity>
+              {state.privacyPolicyUri ? (
+                <TouchableOpacity
+                  testID={testIdWithKey('HelpButton')}
+                  accessibilityLabel={t('BCSC.Services.PrivacyPolicy')}
+                  accessibilityRole="button"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  onPress={() => {
+                    navigation.navigate(BCSCScreens.MainWebView, {
+                      url: state.privacyPolicyUri!,
+                      title: t('BCSC.Services.PrivacyPolicy'),
+                    })
+                  }}
+                >
+                  <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
+                </TouchableOpacity>
+              ) : null}
             </View>
             <ThemedText>{state.claimsDescription}</ThemedText>
           </View>
@@ -185,6 +195,9 @@ const ServiceLoginDefaultView = ({
           {state.serviceClientUri ? (
             <TouchableOpacity
               testID={testIdWithKey('GoToServiceLink')}
+              accessibilityLabel={`${t('BCSC.Services.Goto')} ${state.serviceClientUri}`}
+              accessibilityRole="link"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               onPress={async () => {
                 try {
                   await Linking.openURL(state.serviceClientUri!)
