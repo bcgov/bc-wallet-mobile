@@ -138,7 +138,14 @@ const ServiceLoginDefaultView = ({
 
         <View style={styles.cardsContainer}>
           <View style={styles.infoContainer}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: Spacing.sm,
+              }}
+            >
               <ThemedText style={styles.infoHeader}>
                 {t('BCSC.Services.FromAccountPrefix')}
                 <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
