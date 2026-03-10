@@ -183,9 +183,7 @@ const ServiceLoginDefaultView = ({
         <View>
           <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
           {state.serviceClientUri ? (
-            <ThemedText>
-              {t('BCSC.Services.GotoUrl', { url: state.serviceClientUri })}
-            </ThemedText>
+            <ThemedText>{t('BCSC.Services.GotoUrl', { url: state.serviceClientUri })}</ThemedText>
           ) : null}
         </View>
       </View>
