@@ -3,7 +3,6 @@ import { NotificationBannerContainer } from '@/bcsc-theme/components/Notificatio
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -21,7 +20,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()
   const account = useAccount()
-  const secureActions = useSecureActions()
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
@@ -41,7 +39,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   }
 
   const handlePairingCodePress = () => {
-    secureActions.clearSecureState()
+    navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
   return (
