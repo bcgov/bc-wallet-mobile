@@ -79,7 +79,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       testID={testIdWithKey('Done')}
       onPress={handleSubmit}
       buttonType={ButtonType.Primary}
-      disabled={loading || !birthDate || !vm.isDateValid(birthDate) || !!birthDateError}
+      disabled={loading || birthDate.length < 10 || !vm.isDateValid(birthDate) || !!birthDateError}
     >
       {loading && <ButtonLoading />}
     </Button>
@@ -94,15 +94,13 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.Birthdate.Heading')}
       </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
       <View style={{ marginVertical: Spacing.md, width: '100%' }}>
         <DateInput
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}
           onChange={(date) => {
-            // no-op to disable manual input
-            console.log(date)
-
             if (!vm.isDateValid(date)) {
               setBirthDateError(t('BCSC.Birthdate.InvalidDate'))
             } else {
@@ -110,7 +108,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             }
             setBirthDate(date)
           }}
-          subtext={t('BCSC.Birthdate.Paragraph')}
+          subtext={t('BCSC.Birthdate.ExampleDate')}
           error={birthDateError}
         />
       </View>
