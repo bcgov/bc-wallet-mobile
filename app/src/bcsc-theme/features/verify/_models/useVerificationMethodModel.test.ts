@@ -4,7 +4,11 @@ import useVerificationMethodModel from '@/bcsc-theme/features/verify/_models/use
 import { VerificationVideoCache } from '@/bcsc-theme/features/verify/send-video/VideoReviewScreen'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
-import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
+import {
+  formatServiceAndUnavailableHours,
+  formatServiceHours,
+  isLiveCallAvailable,
+} from '@/bcsc-theme/utils/service-hours-formatter'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -12,7 +16,7 @@ import { BCSCCardType } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/bcsc-theme/utils/file-info')
-jest.mock('@/bcsc-theme/utils/serviceHoursFormatter')
+jest.mock('@/bcsc-theme/utils/service-hours-formatter')
 jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
   VerificationVideoCache: {
     clearCache: jest.fn(),
@@ -230,14 +234,12 @@ describe('useVerificationMethodModel', () => {
     }
 
     it('should navigate to BeforeYouCall when destination is available and within service hours', async () => {
-      const formattedHours = 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      const formattedHours = [{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }]
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue(mockDestinations)
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      const formatServiceHoursMock = jest.mocked(formatServiceHours)
-      formatServiceHoursMock.mockReturnValue(formattedHours)
-      const checkIfWithinServiceHoursMock = jest.mocked(checkIfWithinServiceHours)
-      checkIfWithinServiceHoursMock.mockReturnValue(true)
+      jest.mocked(formatServiceAndUnavailableHours).mockReturnValue(formattedHours)
+      jest.mocked(isLiveCallAvailable).mockReturnValue(true)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -247,9 +249,6 @@ describe('useVerificationMethodModel', () => {
 
       expect(mockVideoCallApi.getVideoDestinations).toHaveBeenCalledTimes(1)
       expect(mockVideoCallApi.getServiceHours).toHaveBeenCalledTimes(1)
-      expect(formatServiceHoursMock).toHaveBeenCalledWith(mockServiceHours)
-      expect(checkIfWithinServiceHoursMock).toHaveBeenCalledWith(mockServiceHours)
-
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.BeforeYouCall, {
         formattedHours,
       })
@@ -257,12 +256,11 @@ describe('useVerificationMethodModel', () => {
     })
 
     it('should navigate to CallBusyOrClosed when no destination is found', async () => {
-      const formattedHours = 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      const formattedHours = [{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }]
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue([{ destination_name: 'Other Destination', id: 'test-2' }])
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      const formatServiceHoursMock = jest.mocked(formatServiceHours)
-      formatServiceHoursMock.mockReturnValue(formattedHours)
+      jest.mocked(formatServiceHours).mockReturnValue(formattedHours)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -278,14 +276,12 @@ describe('useVerificationMethodModel', () => {
     })
 
     it('should navigate to CallBusyOrClosed when outside service hours', async () => {
-      const formattedHours = 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      const formattedHours = [{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }]
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue(mockDestinations)
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      const formatServiceHoursMock = jest.mocked(formatServiceHours)
-      formatServiceHoursMock.mockReturnValue(formattedHours)
-      const checkIfWithinServiceHoursMock = jest.mocked(checkIfWithinServiceHours)
-      checkIfWithinServiceHoursMock.mockReturnValue(false)
+      jest.mocked(formatServiceAndUnavailableHours).mockReturnValue(formattedHours)
+      jest.mocked(isLiveCallAvailable).mockReturnValue(false)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -313,10 +309,10 @@ describe('useVerificationMethodModel', () => {
 
       mockVideoCallApi.getVideoDestinations.mockReturnValue(destinationsPromise)
       mockVideoCallApi.getServiceHours.mockReturnValue(serviceHoursPromise)
-      const formatServiceHoursMock = jest.mocked(formatServiceHours)
-      formatServiceHoursMock.mockReturnValue('Monday to Friday\n7:30am - 5:00pm Pacific Time')
-      const checkIfWithinServiceHoursMock = jest.mocked(checkIfWithinServiceHours)
-      checkIfWithinServiceHoursMock.mockReturnValue(true)
+      jest
+        .mocked(formatServiceAndUnavailableHours)
+        .mockReturnValue([{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }])
+      jest.mocked(isLiveCallAvailable).mockReturnValue(true)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -348,18 +344,17 @@ describe('useVerificationMethodModel', () => {
       expect(mockLogger.error).toHaveBeenCalledWith('Error checking service availability:', mockError)
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.CallBusyOrClosed, {
         busy: false,
-        formattedHours: 'Unavailable',
+        formattedHours: [{ title: 'Unable to retrieve service hours at this time.' }],
       })
       expect(result.current.liveCallLoading).toBe(false)
     })
 
     it('should handle empty destinations array', async () => {
-      const formattedHours = 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      const formattedHours = [{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }]
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue([])
       mockVideoCallApi.getServiceHours.mockResolvedValue(mockServiceHours)
-      const formatServiceHoursMock = jest.mocked(formatServiceHours)
-      formatServiceHoursMock.mockReturnValue(formattedHours)
+      jest.mocked(formatServiceHours).mockReturnValue(formattedHours)
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 

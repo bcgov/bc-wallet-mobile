@@ -20,6 +20,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
     container: {
       backgroundColor: ColorPalette.brand.secondaryBackground,
       padding: Spacing.md,
+      gap: Spacing.md,
     },
     row: {
       flexDirection: 'row',
@@ -57,6 +58,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
           <Icon size={32} color={ColorPalette.brand.icon} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />
         </TouchableOpacity>
       </View>
+      <ThemedText variant={'caption'}>{t('BCSC.ManualPairing.BookmarkDescription')}</ThemedText>
     </View>
   )
 }

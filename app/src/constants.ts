@@ -90,6 +90,15 @@ export const ONBOARDING_ICON_IMAGE_SIZE = 125
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
+export const enum DaysOfTheWeek {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY',
+}
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
@@ -99,6 +108,10 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
+export const enum LIVE_CALL_UNAVAILABLE_REASONS {
+  MAINTENANCE = 'MAINTENANCE',
+  HOLIDAY = 'HOLIDAY',
+}
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB

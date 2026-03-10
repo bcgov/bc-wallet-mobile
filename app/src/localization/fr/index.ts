@@ -459,11 +459,15 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (FR)",
       "CompletionTitle": "You're done in this app (FR)",
-      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (FR)",
+      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }} (FR)",
+      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (FR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
+      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app. (FR)",
+      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app. (FR)",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (FR)",
       "BookmarkService": "Save link to: (FR)",
       "ToggleBookmark": "Toggle bookmark (FR)",
+      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
@@ -1091,6 +1095,18 @@ const translation = {
     "ProblemWithApp": {
       "Title": "Problem with App (FR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
+    },
+    "ProblemWithService": {
+      "Title": "Problem with Service (FR)",
+      "Description": "Please try again later. (error {{ errorCode }}) (FR)"
+    },
+    "DynamicRegistrationError": {
+      "Title": "Problem with Service (FR)",
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202) (FR)"
+    },
+    "AddCardNotAvailable": {
+      "Title": "Add Card Not Available (FR)",
+      "Description": "Please try again later. (error 205) (FR)"
     },
     "ForgetPairings": {
       "Title": "Success (FR)",

@@ -190,7 +190,7 @@ const ServiceLoginDefaultView = ({
           title="Cancel"
           accessibilityLabel={'Cancel'}
           testID={testIdWithKey('ServiceLoginCancel')}
-          buttonType={ButtonType.Tertiary}
+          buttonType={ButtonType.Secondary}
           onPress={onCancel}
         />
       </View>
