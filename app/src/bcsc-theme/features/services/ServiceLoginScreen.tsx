@@ -92,7 +92,7 @@ const ServiceLoginUnavailableView = ({
         >
           <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
             <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
-              {t('BCSC.Services.Goto')} {state.serviceTitle}
+              {t('BCSC.Services.GotoService', { service: state.serviceTitle })}
             </ThemedText>
             <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
           </View>
@@ -184,7 +184,7 @@ const ServiceLoginDefaultView = ({
           <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
           {state.serviceClientUri ? (
             <ThemedText>
-              {t('BCSC.Services.Goto')}: {state.serviceClientUri}
+              {t('BCSC.Services.GotoUrl', { url: state.serviceClientUri })}
             </ThemedText>
           ) : null}
         </View>
@@ -361,7 +361,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         title: t('BCSC.Services.PrivacyPolicy'),
       })
     } catch (error) {
-      logger.error(`ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`)
+      logger.error('ServiceLoginScreen: Error navigating to the service client privacy policy webview', error as Error)
     }
   }, [state.privacyPolicyUri, navigation, t, logger])
 
