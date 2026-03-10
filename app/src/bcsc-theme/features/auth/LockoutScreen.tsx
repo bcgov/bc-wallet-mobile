@@ -1,4 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
@@ -10,7 +11,6 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -38,8 +38,8 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [remainingSeconds, setRemainingSeconds] = useState<number>(0)
-  const [shouldNavigateBack, setShouldNavigateBack] = useState(false)
   const factoryReset = useFactoryReset()
+  const authentication = useAuthentication(navigation)
 
   const styles = StyleSheet.create({
     hr: {
@@ -55,7 +55,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
         const { locked, remainingTime } = await isAccountLocked()
 
         if (!locked || remainingTime <= 0) {
-          setShouldNavigateBack(true)
+          await authentication.unlockApp()
           return
         }
 
@@ -72,17 +72,6 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
   }, [])
 
   useEffect(() => {
-    if (shouldNavigateBack) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.EnterPIN }],
-        })
-      )
-    }
-  }, [shouldNavigateBack, navigation])
-
-  useEffect(() => {
     if (remainingSeconds <= 0) {
       return
     }
@@ -91,7 +80,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       setRemainingSeconds((prev) => {
         const newValue = prev - 1
         if (newValue <= 0) {
-          setShouldNavigateBack(true)
+          authentication.unlockApp()
           return 0
         }
         return newValue
@@ -99,7 +88,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
     }, 1000)
 
     return () => clearInterval(intervalId)
-  }, [remainingSeconds])
+  }, [authentication, remainingSeconds])
 
   const onPressRemoveAccount = useCallback(async () => {
     try {
