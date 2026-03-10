@@ -72,15 +72,15 @@ const BCSCRootStack: React.FC = () => {
     return <LoadingScreen />
   }
 
-  if (!store.bcscSecure.hasAccount) {
+  if (store.bcscSecure.hasAccount === false) {
     return <OnboardingStack />
   }
 
-  if (!store.authentication.didAuthenticate) {
+  if (store.authentication.didAuthenticate === false) {
     return <AuthStack />
   }
 
-  if (!store.bcscSecure.verified) {
+  if (store.bcscSecure.verified === false) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />
@@ -88,15 +88,20 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
-  return (
-    <BCSCActivityProvider>
-      <BCSCAccountProvider>
-        <BCSCIdTokenProvider>
-          <BCSCMainStack />
-        </BCSCIdTokenProvider>
-      </BCSCAccountProvider>
-    </BCSCActivityProvider>
-  )
+  if (store.bcscSecure.verified === true) {
+    return (
+      <BCSCActivityProvider>
+        <BCSCAccountProvider>
+          <BCSCIdTokenProvider>
+            <BCSCMainStack />
+          </BCSCIdTokenProvider>
+        </BCSCAccountProvider>
+      </BCSCActivityProvider>
+    )
+  }
+
+  // Fallback to AuthStack if verification state is somehow lost
+  return <AuthStack />
 }
 
 export default BCSCRootStack

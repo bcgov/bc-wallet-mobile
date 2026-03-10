@@ -90,7 +90,9 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
-        clearSecureState()
+        clearSecureState({
+          hasAccount: false, // We know there is no account now
+        })
 
         dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
         client.clearTokens()
