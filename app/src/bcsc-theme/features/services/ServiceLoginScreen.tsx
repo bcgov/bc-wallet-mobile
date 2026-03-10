@@ -138,13 +138,21 @@ const ServiceLoginDefaultView = ({
 
         <View style={styles.cardsContainer}>
           <View style={styles.infoContainer}>
-            <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
-              {t('BCSC.Services.FromAccountPrefix')}
-              <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
-                {' '}
-                {t('BCSC.Services.FromAccount')}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
+              <ThemedText style={styles.infoHeader}>
+                {t('BCSC.Services.FromAccountPrefix')}
+                <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
+                  {' '}
+                  {t('BCSC.Services.FromAccount')}
+                </ThemedText>
               </ThemedText>
-            </ThemedText>
+              <TouchableOpacity
+                testID={testIdWithKey('HelpButton')}
+                onPress={() => Linking.openURL('https://example.com')}
+              >
+                <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
+              </TouchableOpacity>
+            </View>
             <ThemedText>{state.claimsDescription}</ThemedText>
           </View>
 
@@ -172,9 +180,26 @@ const ServiceLoginDefaultView = ({
           ) : null}
         </View>
 
-        <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
-        </ThemedText>
+        <View>
+          <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
+          {state.serviceClientUri ? (
+            <TouchableOpacity
+              testID={testIdWithKey('GoToServiceLink')}
+              onPress={async () => {
+                try {
+                  await Linking.openURL(state.serviceClientUri!)
+                } catch (error) {
+                  logger.error('ServiceLoginScreen: Failed to open service client URL', error as Error)
+                  Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
+                }
+              }}
+            >
+              <ThemedText style={styles.link}>
+                {t('BCSC.Services.Goto')}: {state.serviceClientUri}
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
       <View style={styles.buttonsContainer}>
         <View style={styles.continueButtonContainer}>
