@@ -50,9 +50,18 @@ export const useEnterBirthdateViewModel = (
     [authorization, navigation, logger, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions]
   )
 
+  const isDateValid = (value: string): boolean => {
+    const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+    if (!regex.test(value)) {
+      return false
+    }
+    return !isNaN(new Date(value).getTime())
+  }
+
   return {
     serial: store.bcscSecure.serial,
     initialDate: store.bcscSecure.birthdate,
     authorizeDevice,
+    isDateValid,
   }
 }

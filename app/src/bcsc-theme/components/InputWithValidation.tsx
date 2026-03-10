@@ -18,6 +18,7 @@ type InputWithValidationProps = {
   subtextProps?: StyleProp<TextStyle>
   errorProps?: StyleProp<TextStyle>
   textInputProps?: TextInputProps
+  keyboardType?: TextInputProps['keyboardType']
 }
 
 /**
@@ -57,6 +58,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         onPressIn={props.onPressIn}
         accessibilityLabel={props.label}
         testID={testIdWithKey(`${props.id}-input`)}
+        keyboardType={props.keyboardType}
         {...props.textInputProps}
       />
 
