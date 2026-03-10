@@ -3,7 +3,7 @@ import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningB
 import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
@@ -11,7 +11,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
-import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
+import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -52,7 +52,7 @@ const MainStack: React.FC = () => {
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const context = useContext(BCSCAccountContext)
+  const account = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -91,17 +91,11 @@ const MainStack: React.FC = () => {
   }, [pairingService, navigation])
 
   useEffect(() => {
-    if (!context?.account || !isAccountExpired(context.account.account_expiration_date)) {
-      return
+    if (account && isAccountExpired(account.account_expiration_date)) {
+      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
     }
-
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: BCSCScreens.AccountExpired }],
-      })
-    )
-  }, [context?.account, navigation])
+  }, [account, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
