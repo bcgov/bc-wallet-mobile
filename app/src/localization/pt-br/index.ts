@@ -459,11 +459,15 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (PT-BR)",
       "CompletionTitle": "You're done in this app (PT-BR)",
-      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (PT-BR)",
+      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }} (PT-BR)",
+      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (PT-BR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
+      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app. (PT-BR)",
+      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app. (PT-BR)",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (PT-BR)",
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
+      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
@@ -1091,6 +1095,18 @@ const translation = {
     "ProblemWithApp": {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (PT-BR)"
+    },
+    "ProblemWithService": {
+      "Title": "Problem with Service (PT-BR)",
+      "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
+    },
+    "DynamicRegistrationError": {
+      "Title": "Problem with Service (PT-BR)",
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202) (PT-BR)"
+    },
+    "AddCardNotAvailable": {
+      "Title": "Add Card Not Available (PT-BR)",
+      "Description": "Please try again later. (error 205) (PT-BR)"
     },
     "ForgetPairings": {
       "Title": "Success (PT-BR)",

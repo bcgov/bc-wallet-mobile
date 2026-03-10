@@ -46,6 +46,10 @@ export const useTokenService = () => {
           alerts.failedToParseJwsAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
+          alerts.tokenUnexpectedlyNullAlert()
+        }
+
         throw error
       }
     },
