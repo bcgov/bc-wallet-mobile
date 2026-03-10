@@ -24,6 +24,8 @@ export function getDefaultModalOptions(title?: string): StackNavigationOptions {
 /**
  * Gets the base screen name by removing the stack prefix from the screen name.
  *
+ * @example getBaseScreenName('BCSCAuthStack EnterPIN') // returns 'EnterPIN'
+ *
  * @param screen - The screen name to get the base name from.
  * @returns The base screen name without the stack prefix.
  */
@@ -51,5 +53,5 @@ export const getCurrentStateScreenName = (state: NavigationState): string => {
     return currentRoute.name
   }
 
-  return currentRoute.state.routes[currentRoute.state.index].name
+  return getCurrentStateScreenName(currentRoute.state as NavigationState)
 }

@@ -132,8 +132,8 @@ describe('ErrorAlertContext', () => {
       })
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(ErrorRegistry.CAMERA_BROKEN.statusCode),
-        message: ErrorRegistry.CAMERA_BROKEN.appEvent,
+        code: ErrorRegistry.CAMERA_BROKEN.appEvent,
+        message: '',
       })
       expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.appEvent)
     })
