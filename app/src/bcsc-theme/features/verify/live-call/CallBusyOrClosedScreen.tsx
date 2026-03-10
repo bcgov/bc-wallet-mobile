@@ -4,6 +4,8 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { View } from 'react-native'
+import ServicePeriodList from './components/ServicePeriodList'
 
 type CallBusyOrClosedScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CallBusyOrClosed>
@@ -15,7 +17,6 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
-  const serviceHours = formattedHours || t('BCSC.VideoCall.DefaultHours')
 
   const onPressSendVideo = () => {
     navigation.dispatch(
@@ -51,7 +52,9 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{serviceHours}</ThemedText>
+      <View style={{ marginBottom: Spacing.md }}>
+        <ServicePeriodList items={formattedHours} />
+      </View>
 
       <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
         {t('BCSC.VideoCall.CallBusyOrClosed.Reminder')}
