@@ -332,6 +332,9 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       creatingClientRegistrationFailedAlert: _createBasicAlert(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'ProblemWithApp', { errorCode: '213' }),
       keysOutOfSyncAlert: _createBasicAlert(AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, 'ProblemWithApp', { errorCode: '299' }),
       emptyResponseAlert: _createBasicAlert(AppEventCode.ERR_300_EMPTY_RESPONSE, 'ProblemWithApp', { errorCode: '300' }),
+      failedToRetrieveStringResourceAlert: _createBasicAlert(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'ProblemWithApp', { errorCode: '400' }),
+      invalidUrlAlert: _createBasicAlert(AppEventCode.ERR_500_INVALID_URL, 'ProblemWithApp', { errorCode: '500' }),
+      invalidRegistrationRequestAlert: _createBasicAlert(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
     }),
     [
       appUpdateRequiredAlert,

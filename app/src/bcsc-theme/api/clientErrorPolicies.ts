@@ -359,6 +359,39 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE — bad request due to malformed or misconfigured client
+export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE
+  },
+  handle: (error, context) => {
+    context.alerts.failedToRetrieveStringResourceAlert()
+    error.handled = true
+  },
+}
+
+// Error policy for ERR_500_INVALID_URL — server-side URL validation failure
+export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_500_INVALID_URL
+  },
+  handle: (error, context) => {
+    context.alerts.invalidUrlAlert()
+    error.handled = true
+  },
+}
+
+// Fallback error policy for ERR_501_INVALID_REGISTRATION_REQUEST cases not handled by alreadyRegisteredErrorPolicy
+export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST
+  },
+  handle: (error, context) => {
+    context.alerts.invalidRegistrationRequestAlert()
+    error.handled = true
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -377,6 +410,9 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
   invalidTokenReturnedPolicy,
+  failedToRetrieveStringResourceErrorPolicy,
+  invalidUrlErrorPolicy,
+  invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
   iasErrorPolicy,
