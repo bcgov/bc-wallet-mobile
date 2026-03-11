@@ -156,8 +156,9 @@ describe('useAuthentication', () => {
       jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
         startLoading: mockStartLoading,
       } as any)
-      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-      jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'test-key' })
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -176,7 +177,8 @@ describe('useAuthentication', () => {
       jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
         startLoading: mockStartLoading,
       } as any)
-      jest.mocked(getAccountSecurityMethod).mockRejectedValue(new Error('fail'))
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
+      jest.mocked(canPerformDeviceAuthentication).mockRejectedValue(new Error('fail'))
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -185,7 +187,26 @@ describe('useAuthentication', () => {
         await result.current.unlockApp()
       })
 
+      expect(mockStartLoading).toHaveBeenCalled()
       expect(mockStopLoading).toHaveBeenCalled()
+    })
+
+    it('does not start loading for early returns (PIN mode)', async () => {
+      const mockStartLoading = jest.fn()
+      jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
+        startLoading: mockStartLoading,
+      } as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(isAccountLocked).mockResolvedValue({ locked: false, remainingTime: 0 })
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(mockStartLoading).not.toHaveBeenCalled()
     })
   })
 })

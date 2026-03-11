@@ -33,7 +33,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    * @returns Promise that resolves when the unlock process is complete
    */
   const unlockApp = useCallback(async () => {
-    const stopLoading = loadingScreen.startLoading()
+    let stopLoading
+
     try {
       const accountSecurityMethod = await getAccountSecurityMethod()
 
@@ -56,6 +57,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         )
         return
       }
+
+      stopLoading = loadingScreen.startLoading()
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -80,7 +83,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.error('[Authentication:UnlockApp] Device authentication error', error as Error)
       // TODO (MD): What should be do if there is an error during the device authentication process?
     } finally {
-      stopLoading()
+      stopLoading?.()
     }
   }, [handleSuccessfulAuth, loadingScreen, logger, navigation])
 
