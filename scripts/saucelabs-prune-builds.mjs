@@ -67,7 +67,7 @@ const DEBUG = process.argv.includes('--debug')
 
 console.log(`SauceLabs Build Pruner`)
 console.log(`  Region:   ${SAUCE_REGION}`)
-console.log(`  User:     ${SAUCE_USERNAME}`)
+console.log(`  User:     ${SAUCE_USERNAME.slice(0, 3)}${'*'.repeat(SAUCE_USERNAME.length - 3)}`)
 console.log(`  API base: ${API_BASE}`)
 console.log(`  Mode:     ${DRY_RUN ? 'DRY RUN' : 'DELETE'}\n`)
 
@@ -214,12 +214,15 @@ const main = async () => {
 
     if (toDelete.length === 0) {
       console.log(`  No pr builds older than rc build #${latestRc.buildNumber}. Nothing to prune.`)
-      results.push({ deleted: 0, skipped: toKeep.length, prefix })
+      results.push({ deleted: 0, failed: 0, skipped: toKeep.length, prefix })
       continue
     }
 
     console.log(`  Found ${toDelete.length} pr build(s) to prune, ${toKeep.length} to keep.`)
     toDelete.sort((a, b) => a.buildNumber - b.buildNumber)
+
+    let deleted = 0
+    let failed = 0
 
     for (const file of toDelete) {
       if (DRY_RUN) {
@@ -229,13 +232,20 @@ const main = async () => {
         try {
           const result = await deleteFile(file.id)
           console.log(result === 'not_found' ? ' already gone' : ' done')
+          deleted++
         } catch (err) {
           console.log(` FAILED: ${err.message}`)
+          failed++
         }
       }
     }
 
-    results.push({ deleted: toDelete.length, skipped: toKeep.length, prefix })
+    results.push({
+      deleted: DRY_RUN ? toDelete.length : deleted,
+      failed,
+      skipped: toKeep.length,
+      prefix,
+    })
   }
 
   // Summary
@@ -244,12 +254,20 @@ const main = async () => {
   console.log('═'.repeat(60))
   for (const r of results) {
     const action = DRY_RUN ? 'would delete' : 'deleted'
-    console.log(`  ${r.prefix}: ${r.deleted} ${action}, ${r.skipped} kept`)
+    const failInfo = r.failed > 0 ? `, ${r.failed} failed` : ''
+    console.log(`  ${r.prefix}: ${r.deleted} ${action}${failInfo}, ${r.skipped} kept`)
   }
 
-  const total = results.reduce((sum, r) => sum + r.deleted, 0)
-  if (DRY_RUN && total > 0) {
-    console.log(`\nRe-run with --delete to remove ${total} file(s).`)
+  const totalDeleted = results.reduce((sum, r) => sum + r.deleted, 0)
+  const totalFailed = results.reduce((sum, r) => sum + r.failed, 0)
+
+  if (DRY_RUN && totalDeleted > 0) {
+    console.log(`\nRe-run with --delete to remove ${totalDeleted} file(s).`)
+  }
+
+  if (totalFailed > 0) {
+    console.error(`\n${totalFailed} deletion(s) failed.`)
+    process.exit(1)
   }
 }
 
