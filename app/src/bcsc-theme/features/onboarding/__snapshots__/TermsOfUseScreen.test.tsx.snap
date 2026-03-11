@@ -43,13 +43,13 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
         "html": "<!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">  
 <style>
   body {
     background-color: #F2F2F2;
     color: #FFFFFFFF;
     font-family: -apple-system, system-ui, sans-serif;
-    font-size: 36px;
+    font-size: 32px !important;
     padding: 0 16px 16px 16px;
     line-height: 1.6;
     margin: 0;
