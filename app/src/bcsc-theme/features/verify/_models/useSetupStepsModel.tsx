@@ -48,7 +48,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       await withAccount(async (account) => {
         // 1. Clear the secure state and trigger a setup steps re-render
         clearSecureState({
-          hasAccount: true,
           isHydrated: true,
           walletKey: store.bcscSecure.walletKey, // used for authentication
           registrationAccessToken: store.bcscSecure.registrationAccessToken, // used for authentication

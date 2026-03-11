@@ -80,6 +80,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   appVersion: string
+  hasAccount: boolean
   nicknames: string[]
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -114,9 +115,6 @@ export enum VerificationStatus {
 export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
-
-  /** Whether an account exists (not persisted, checked and set at app startup and on registration) */
-  hasAccount?: boolean
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
@@ -381,6 +379,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 export const initialBCSCState: BCSCState = {
   appVersion: getVersion(),
+  hasAccount: false,
   nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
@@ -480,6 +479,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCDispatchAction.SET_HAS_ACCOUNT: {
+      const hasAccount = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, hasAccount }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_APP_VERSION: {
       const bcsc = { ...state.bcsc, appVersion: getVersion() }
       const newState = { ...state, bcsc }
@@ -563,6 +569,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
+    // batched state update to prevent re-renders
+    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
+      const authentication = { ...state.authentication, didAuthenticate: true }
+      const bcsc = { ...state.bcsc, hasAccount: true }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return { ...state, bcsc, authentication }
+    }
     // Secure state management - not persisted to AsyncStorage
     case BCSCDispatchAction.HYDRATE_SECURE_STATE: {
       const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
@@ -573,17 +586,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // Optionally accept a partial BCSCSecure state to merge with the initial state
       const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
       const bcscSecure = { ...initialBCSCSecureState, ...partialSecureState }
-      return { ...state, bcscSecure }
-    }
-    // batched state update to prevent re-renders
-    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
-      const bcscSecure = { ...state.bcscSecure, hasAccount: true }
-      const authentication = { ...state.authentication, didAuthenticate: true }
-      return { ...state, bcscSecure, authentication }
-    }
-    case BCSCDispatchAction.SET_HAS_ACCOUNT: {
-      const hasAccount = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, hasAccount }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_SERIAL: {
