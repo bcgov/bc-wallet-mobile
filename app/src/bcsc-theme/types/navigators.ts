@@ -51,14 +51,24 @@ export enum BCSCScreens {
   VideoReview = 'Selfie Video Confirmation',
   VideoTooLong = 'Selfie Video Too Long',
   PendingReview = 'Send Video Check Status',
-  CancelledReview = 'BCSCCancelledReview',
+  CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
   ManualPairingCode = 'Login Device Pairing',
   PairingConfirmation = 'Login Complete with Paired Device',
   AdditionalIdentificationRequired = 'Photo ID Required',
-  DualIdentificationRequired = 'BCSCDualIdentificationRequired', // Secondary ID Options for Non-BCSC / Secondary ID for Non-Photo BC Services Card
+  DualIdentificationRequired = 'BCSCDualIdentificationRequired', // FIXME (MD): Not sure which V3 screen this maps to...
   IDPhotoInformation = 'ID Photo Instructions',
+  /**
+   * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3
+   *
+   * Screens:
+   * Secondary ID Options for Non-BCSC
+   * Secondary ID for Non-Photo BC Services Card
+   * Foundation Photo ID Options for Non-Photo BCSC
+   * Foundation ID Options for Non-BCSC
+   * Foundation Non-Photo ID Options for Non-Photo BCSC
+   */
   EvidenceTypeList = 'BCSCEvidenceTypeList',
   EvidenceCapture = 'Document Photo Capture',
   EvidenceIDCollection = 'Secondary ID Document Data Entry',
@@ -73,7 +83,7 @@ export enum BCSCScreens {
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
   TransferAccountInformation = 'Transfer Steps',
   TransferAccountInstructions = 'QR Get Instructions',
-  TransferAccountQRDisplay = 'QR Code Display', // Not sure about this one
+  TransferAccountQRDisplay = 'QR Code Display',
   TransferAccountQRScan = 'Scan QR Code',
   TransferAccountQRInformation = 'QR Get Overview',
   TransferAccountSuccess = 'QR Code Scan Complete',
