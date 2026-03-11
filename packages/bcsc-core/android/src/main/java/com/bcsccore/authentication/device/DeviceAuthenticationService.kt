@@ -4,6 +4,7 @@ import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.biometric.BiometricManager
 import androidx.fragment.app.FragmentActivity
 
@@ -43,6 +44,10 @@ interface DeviceAuthenticationService {
 class DeviceAuthenticationServiceImpl(
     private val context: Context,
 ) : DeviceAuthenticationService {
+    companion object {
+        private const val TAG = "DeviceAuthenticationService"
+    }
+
     private val keyguardManager: KeyguardManager by lazy {
         context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
     }
@@ -119,7 +124,11 @@ class DeviceAuthenticationServiceImpl(
 
                             override fun onAuthenticationFailed() {
                                 super.onAuthenticationFailed()
-                                callback(DeviceAuthenticationResult.FAILED)
+                                // onAuthenticationFailed is an intermediate callback — the
+                                // BiometricPrompt stays open and the user can retry. Only
+                                // onAuthenticationSucceeded and onAuthenticationError are
+                                // terminal, so we intentionally do NOT invoke the callback here.
+                                Log.d(TAG, "Biometric attempt failed, awaiting retry")
                             }
                         },
                     )
