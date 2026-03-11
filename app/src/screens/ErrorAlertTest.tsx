@@ -205,6 +205,12 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     err_213_client_reg: () => injectErrorCodeIntoAxiosResponse(client, 'err_213_failed_creating_client_registration'),
     err_299_keys_out_of_sync: () => injectErrorCodeIntoAxiosResponse(client, 'err_299_keys_out_of_sync'),
     err_300_empty_response: () => injectErrorCodeIntoAxiosResponse(client, 'err_300_empty_response'),
+    // IAS errors 400–501
+    err_400_failed_to_retrieve_string_resource: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_400_failed_to_retrieve_string_resource'),
+    err_500_invalid_url: () => injectErrorCodeIntoAxiosResponse(client, 'err_500_invalid_url'),
+    err_501_invalid_registration_request: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_501_invalid_registration_request'),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
