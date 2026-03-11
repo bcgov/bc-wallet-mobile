@@ -99,7 +99,7 @@ const fetchAllFiles = async (queryParams) => {
 const parseFilename = (filename) => {
   const match = filename.match(/^(.+)-(\d+)\.[a-z]+$/i)
   if (!match) return null
-  return { prefix: match[1], buildNumber: parseInt(match[2], 10) }
+  return { prefix: match[1], buildNumber: Number.parseInt(match[2], 10) }
 }
 
 /** Delete a single file from SauceLabs storage. Returns 'deleted' or 'not_found'. */
@@ -245,7 +245,9 @@ const main = async () => {
   }
 }
 
-main().catch((err) => {
+try {
+  await main()
+} catch (err) {
   console.error('\nFatal error:', err.message)
   process.exit(1)
-})
+}
