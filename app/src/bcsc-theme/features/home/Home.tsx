@@ -2,6 +2,7 @@ import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImag
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
@@ -40,6 +41,10 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   const handlePairingCodePress = () => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
+  }
+
+  if (!account) {
+    return <LoadingScreen />
   }
 
   return (

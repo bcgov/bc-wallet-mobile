@@ -1,6 +1,7 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +11,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -34,7 +36,6 @@ import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { MainLoadingScreen } from '../features/splash-loading/MainLoadingScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -51,6 +52,7 @@ const MainStack: React.FC = () => {
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const account = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -74,7 +76,7 @@ const MainStack: React.FC = () => {
       pairingCode,
     }
   }, [logger, pendingPairing])
-  const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
+  const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   useBCSCStack(BCSCStacks.Main)
 
@@ -87,6 +89,13 @@ const MainStack: React.FC = () => {
 
     return unsubscribe
   }, [pairingService, navigation])
+
+  useEffect(() => {
+    if (account && isAccountExpired(account.account_expiration_date)) {
+      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
+    }
+  }, [account, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -103,7 +112,6 @@ const MainStack: React.FC = () => {
           header: createHeaderWithoutBanner,
         }}
       >
-        <Stack.Screen name={BCSCScreens.MainLoading} component={MainLoadingScreen} />
         <Stack.Screen
           name={BCSCStacks.Tab}
           component={BCSCTabStack}
