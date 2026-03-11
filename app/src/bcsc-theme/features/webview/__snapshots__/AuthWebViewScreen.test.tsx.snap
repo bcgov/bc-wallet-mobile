@@ -8,9 +8,12 @@ exports[`AuthWebView renders correctly 1`] = `
   injectedJavaScriptBeforeContentLoaded="
     document.addEventListener('DOMContentLoaded', function() {
       
-      const fontScale = 2;
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
+      const baseFontSizePx = 32;
+      document.documentElement.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+      if (document.body) document.body.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+      var fontStyle = document.createElement('style');
+      fontStyle.textContent = 'html, body, body * { font-size: ' + baseFontSizePx + 'px !important; }';
+      document.head.appendChild(fontStyle);
     
       document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '#F2F2F2';
@@ -18,7 +21,7 @@ exports[`AuthWebView renders correctly 1`] = `
 
       const style = document.createElement('style');
       style.textContent = \`
-        body, body * {
+        html, body, body * {
           background-color: #F2F2F2 !important;
           color: #FFFFFFFF !important;
         }
