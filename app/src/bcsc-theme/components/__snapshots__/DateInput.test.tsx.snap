@@ -32,7 +32,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
     placeholder="YYYY/MM/DD"
     selection={
       {
-        "end": 0,
+        "end": 1,
         "start": 0,
       }
     }
@@ -52,7 +52,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
       ]
     }
     testID="com.ariesbifold:id/birthdate-input"
-    value=""
+    value="YYYY/MM/DD"
   />
 </View>
 `;
