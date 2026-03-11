@@ -36,7 +36,7 @@ export const useInitializeAccountStatus = () => {
         dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
       }
     } catch (error) {
-      logger.error('[useInitializeAccountSatus] Error checking for existing account:', error as Error)
+      logger.error('[useInitializeAccountStatus] Error checking for existing account:', error as Error)
       dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
     } finally {
       setHasCheckedAccount(true)

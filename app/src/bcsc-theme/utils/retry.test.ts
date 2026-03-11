@@ -55,6 +55,19 @@ describe('retryAsync', () => {
     }
   })
 
+  it('preserves retryIfNullish after an error recovery', async () => {
+    const fn = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed'))
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce('Success')
+
+    const result = await retryAsync(fn, 3, 100, true)
+
+    expect(result).toBe('Success')
+    expect(fn).toHaveBeenCalledTimes(3)
+  })
+
   it('throws an error if maxRetries is set to 0', async () => {
     const fn = jest.fn().mockRejectedValue(new Error('Failed'))
 

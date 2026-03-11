@@ -396,7 +396,6 @@ export enum BCLocalStorageKeys {
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
-  HasBCSCAccount = 'HasBCSCAccount',
   BCSC = 'BCSC',
   Mode = 'Mode',
 }

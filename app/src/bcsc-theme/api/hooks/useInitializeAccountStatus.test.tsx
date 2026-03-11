@@ -1,8 +1,8 @@
+import * as retryModule from '@/bcsc-theme/utils/retry'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { getAccount } from 'react-native-bcsc-core'
-import * as retryModule from '@/bcsc-theme/utils/retry'
 import { useInitializeAccountStatus } from './useInitializeAccountStatus'
 
 jest.mock('react-native-bcsc-core', () => ({
@@ -19,10 +19,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('returns initializingAccount as true when stateLoaded and hasAccount is false', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(null)
 
@@ -33,10 +32,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('returns initializingAccount as false when stateLoaded is false', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: false, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: false, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const { result } = renderHook(() => useInitializeAccountStatus())
@@ -46,10 +44,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('returns initializingAccount as false when hasAccount is already true', () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: true, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: true, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const { result } = renderHook(() => useInitializeAccountStatus())
@@ -59,10 +56,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('skips native call when store.bcsc.hasAccount is true', async () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: true, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: true, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const { result } = renderHook(() => useInitializeAccountStatus())
@@ -76,10 +72,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('does not run when stateLoaded is false', async () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: false, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: false, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue({ nickname: 'test' })
 
@@ -94,10 +89,9 @@ describe('useInitializeAccountStatus', () => {
   it('dispatches SET_HAS_ACCOUNT with true when account is found', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: 'My Wallet' }
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
 
@@ -115,10 +109,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('dispatches SET_HAS_ACCOUNT with false when account is null', async () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(null)
 
@@ -136,10 +129,12 @@ describe('useInitializeAccountStatus', () => {
   it('dispatches ADD_NICKNAME when account has a new nickname', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: 'New Wallet' }
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: ['Old Wallet'] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([
+        { stateLoaded: true, bcsc: { hasAccount: false, nicknames: ['Old Wallet'] } } as any,
+        mockDispatch,
+      ])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
 
@@ -156,10 +151,12 @@ describe('useInitializeAccountStatus', () => {
   it('does not dispatch ADD_NICKNAME when nickname already exists', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: 'Existing Wallet' }
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: ['Existing Wallet'] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([
+        { stateLoaded: true, bcsc: { hasAccount: false, nicknames: ['Existing Wallet'] } } as any,
+        mockDispatch,
+      ])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
 
@@ -167,18 +164,15 @@ describe('useInitializeAccountStatus', () => {
 
     await act(async () => {})
 
-    expect(mockDispatch).not.toHaveBeenCalledWith(
-      expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME })
-    )
+    expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME }))
   })
 
   it('does not dispatch ADD_NICKNAME when account has no nickname', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: undefined }
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
 
@@ -186,19 +180,16 @@ describe('useInitializeAccountStatus', () => {
 
     await act(async () => {})
 
-    expect(mockDispatch).not.toHaveBeenCalledWith(
-      expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME })
-    )
+    expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME }))
   })
 
   it('dispatches SET_HAS_ACCOUNT with false and logs error when getAccount throws', async () => {
     const mockDispatch = jest.fn()
     const mockLogger = { info: jest.fn(), error: jest.fn() }
     const mockError = new Error('Native bridge failure')
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
     jest.mocked(retryModule.retryAsync).mockRejectedValue(mockError)
 
@@ -219,10 +210,9 @@ describe('useInitializeAccountStatus', () => {
 
   it('sets initializingAccount to false even when an error occurs', async () => {
     const mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([
-      { stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any,
-      mockDispatch,
-    ])
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
     jest.mocked(retryModule.retryAsync).mockRejectedValue(new Error('fail'))
 

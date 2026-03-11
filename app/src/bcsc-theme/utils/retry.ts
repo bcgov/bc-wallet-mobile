@@ -29,7 +29,7 @@ export const retryAsync = async <T>(
   } catch (error) {
     if (attempts > 1) {
       await new Promise((resolve) => setTimeout(resolve, retryMs))
-      return retryAsync(callback, attempts - 1, retryMs)
+      return retryAsync(callback, attempts - 1, retryMs, retryIfNullish)
     }
 
     throw error
