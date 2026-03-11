@@ -114,7 +114,6 @@
     "react-native-collapsible": "~1.6.2",
     "react-native-config": "~1.5.5",
     "react-native-confirmation-code-field": "~7.3.2",
-    "react-native-date-picker": "5.0.13",
     "react-native-device-info": "~8.7.1",
     "react-native-fs": "~2.20.0",
     "react-native-gesture-handler": "~2.28.0",
