@@ -38,7 +38,6 @@
 
 import './saucelabs-env.mjs'
 import { writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 
 // ── Constants ──────────────────────────────────────────────────────────
 
