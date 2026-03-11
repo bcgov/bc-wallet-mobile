@@ -183,7 +183,7 @@ describe('useInitializeAccountStatus', () => {
     expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME }))
   })
 
-  it('dispatches SET_HAS_ACCOUNT with false and logs error when getAccount throws', async () => {
+  it('logs error when getAccount throws', async () => {
     const mockDispatch = jest.fn()
     const mockLogger = { info: jest.fn(), error: jest.fn() }
     const mockError = new Error('Native bridge failure')
@@ -201,10 +201,7 @@ describe('useInitializeAccountStatus', () => {
       '[useInitializeAccountStatus] Error checking for existing account:',
       mockError
     )
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.SET_HAS_ACCOUNT,
-      payload: [false],
-    })
+    expect(mockDispatch).not.toHaveBeenCalled()
     expect(result.current.initializingAccount).toBe(false)
   })
 

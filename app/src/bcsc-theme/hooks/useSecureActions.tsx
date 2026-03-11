@@ -851,7 +851,6 @@ export const useSecureActions = () => {
       await hydrateSecureState()
       updateWalletKey(walletKey)
       dispatch({ type: BCDispatchAction.SUCCESSFUL_AUTH })
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
     },
     [hydrateSecureState, updateWalletKey, dispatch]
   )

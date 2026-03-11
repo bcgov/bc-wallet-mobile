@@ -37,7 +37,6 @@ export const useInitializeAccountStatus = () => {
       }
     } catch (error) {
       logger.error('[useInitializeAccountStatus] Error checking for existing account:', error as Error)
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
     } finally {
       setHasCheckedAccount(true)
     }

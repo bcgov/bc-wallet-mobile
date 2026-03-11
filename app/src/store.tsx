@@ -569,6 +569,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
+    // batched state update to prevent re-renders
+    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
+      const authentication = { ...state.authentication, didAuthenticate: true }
+      const bcsc = { ...state.bcsc, hasAccount: true }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return { ...state, bcsc, authentication }
+    }
     // Secure state management - not persisted to AsyncStorage
     case BCSCDispatchAction.HYDRATE_SECURE_STATE: {
       const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
@@ -580,11 +587,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
       const bcscSecure = { ...initialBCSCSecureState, ...partialSecureState }
       return { ...state, bcscSecure }
-    }
-    // batched state update to prevent re-renders
-    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
-      const authentication = { ...state.authentication, didAuthenticate: true }
-      return { ...state, authentication }
     }
     case BCSCDispatchAction.UPDATE_SECURE_SERIAL: {
       const serial = (action?.payload || []).pop() ?? ''
