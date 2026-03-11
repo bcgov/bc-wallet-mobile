@@ -76,10 +76,10 @@ describe('DateInput Component', () => {
   })
 
   describe('Masking', () => {
-    test('shows empty input when no value is present', () => {
+    test('shows YYYY/MM/DD when no value is present', () => {
       renderDefault({ value: '' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('')
+      expect(input.props.value).toBe('YYYY/MM/DD')
     })
 
     test('overlays template helper characters after first digit', () => {
