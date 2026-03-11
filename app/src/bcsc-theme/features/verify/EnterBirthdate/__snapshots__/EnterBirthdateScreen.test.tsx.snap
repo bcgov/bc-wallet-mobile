@@ -78,6 +78,24 @@ exports[`EnterBirthdate renders correctly 1`] = `
       >
         BCSC.Birthdate.Heading
       </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "marginBottom": 16,
+            },
+          ]
+        }
+      >
+        BCSC.Birthdate.Paragraph
+      </Text>
       <View
         style={
           {
@@ -86,17 +104,6 @@ exports[`EnterBirthdate renders correctly 1`] = `
           }
         }
       >
-        <DatePicker
-          accessibilityLabel="BCSC.Birthdate.Label"
-          date={2025-12-03T00:00:00.000Z}
-          modal={true}
-          mode="date"
-          onCancel={[Function]}
-          onConfirm={[Function]}
-          open={false}
-          testID="com.ariesbifold:id/BirthDatePicker"
-          title="BCSC.Birthdate.Label"
-        />
         <View>
           <Text
             maxFontSizeMultiplier={2}
@@ -122,9 +129,17 @@ exports[`EnterBirthdate renders correctly 1`] = `
           </Text>
           <TextInput
             accessibilityLabel="BCSC.Birthdate.Label"
+            keyboardType="number-pad"
             onChange={[Function]}
-            onPressIn={[Function]}
-            placeholder="YYYY-MM-DD"
+            onChangeText={[Function]}
+            placeholder="YYYY/MM/DD"
+            placeholderTextColor="#000000"
+            selection={
+              {
+                "end": 1,
+                "start": 0,
+              }
+            }
             style={
               [
                 {
@@ -141,7 +156,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
               ]
             }
             testID="com.ariesbifold:id/birthDate-input"
-            value=""
+            value="YYYY/MM/DD"
           />
           <Text
             maxFontSizeMultiplier={2}
@@ -163,7 +178,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
             }
             testID="com.ariesbifold:id/birthDate-subtext"
           >
-            BCSC.Birthdate.Paragraph
+            BCSC.Birthdate.ExampleDate
           </Text>
         </View>
       </View>
