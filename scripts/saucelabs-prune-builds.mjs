@@ -141,7 +141,12 @@ const main = async () => {
   // 1. Fetch all rc-tagged builds and discover prefixes automatically
   console.log('Fetching rc-tagged builds...')
   const rcFiles = await fetchAllFiles({ tags: 'rc' })
-  const rcParsed = rcFiles.map((f) => ({ ...f, ...parseFilename(f.name) })).filter((f) => f.prefix != null)
+  const rcParsed = rcFiles
+    .map((f) => {
+      const parsed = parseFilename(f.name)
+      return parsed ? { ...f, ...parsed } : null
+    })
+    .filter((f) => f !== null)
 
   // Group rc builds by prefix, keep the highest build number per prefix
   const latestRcByPrefix = new Map()
@@ -163,7 +168,12 @@ const main = async () => {
   // 2. Fetch all pr-tagged builds
   console.log('Fetching pr-tagged builds...')
   const prFiles = await fetchAllFiles({ tags: 'pr' })
-  const prParsed = prFiles.map((f) => ({ ...f, ...parseFilename(f.name) })).filter((f) => f.prefix != null)
+  const prParsed = prFiles
+    .map((f) => {
+      const parsed = parseFilename(f.name)
+      return parsed ? { ...f, ...parsed } : null
+    })
+    .filter((f) => f !== null)
 
   // Group pr builds by prefix
   const prByPrefix = new Map()
@@ -206,7 +216,9 @@ const main = async () => {
         try {
           const result = await deleteFile(file.id)
           console.log(result === 'not_found' ? ' already gone' : ' done')
-          deleted++
+          if (result !== 'not_found') {
+            deleted++
+          }
         } catch (err) {
           console.log(` FAILED: ${err.message}`)
           failed++

@@ -26,7 +26,7 @@ if (existsSync(LOCAL_ENV_PATH)) {
     if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
       val = val.slice(1, -1)
     }
-    if (!process.env[key]) {
+    if (process.env[key] === undefined) {
       process.env[key] = val
     }
   }
