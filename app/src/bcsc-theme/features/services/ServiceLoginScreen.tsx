@@ -30,7 +30,7 @@ type ServiceLoginDefaultViewProps = {
   styles: ReturnType<typeof StyleSheet.create>
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   Spacing: ReturnType<typeof useTheme>['Spacing']
-  t: (key: string) => string
+  t: (key: string, options?: Record<string, unknown>) => string
   logger: any
   navigation: ServiceLoginScreenProps['navigation']
   onContinue: () => Promise<void>
@@ -42,7 +42,7 @@ type ServiceLoginUnavailableViewProps = {
   state: LocalState
   styles: ReturnType<typeof StyleSheet.create>
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  t: (key: string) => string
+  t: (key: string, options?: Record<string, unknown>) => string
   logger: any
   navigation: ServiceLoginScreenProps['navigation']
 }
