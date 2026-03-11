@@ -7,7 +7,8 @@ import { StyleProp, TextInput, TextInputProps, TextStyle, View } from 'react-nat
 type InputWithValidationProps = {
   id: string // unique input identifier
   value: string
-  onChange: (value: string) => void
+  onChange?: (value: string) => void
+  onChangeText?: (value: string) => void
   label: string
   onFocus?: () => void
   onPressIn?: () => void
@@ -18,6 +19,7 @@ type InputWithValidationProps = {
   subtextProps?: StyleProp<TextStyle>
   errorProps?: StyleProp<TextStyle>
   textInputProps?: TextInputProps
+  keyboardType?: TextInputProps['keyboardType']
 }
 
 /**
@@ -50,13 +52,13 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           props.inputProps,
         ]}
         value={props.value}
-        onChange={(e) => {
-          props.onChange(e.nativeEvent.text)
-        }}
+        onChangeText={props.onChangeText}
+        onChange={(e) => props.onChange?.(e.nativeEvent.text)}
         onFocus={props.onFocus}
         onPressIn={props.onPressIn}
         accessibilityLabel={props.label}
         testID={testIdWithKey(`${props.id}-input`)}
+        keyboardType={props.keyboardType}
         {...props.textInputProps}
       />
 

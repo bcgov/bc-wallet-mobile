@@ -52,7 +52,11 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
 
   return (
     <ScreenWrapper>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
+      <ThemedText
+        variant={'headingTwo'}
+        style={{ marginBottom: Spacing.md }}
+        testID={testIdWithKey('BeforeYouCallTitle')}
+      >
         {t('BCSC.VideoCall.BeforeYouCallTitle')}
       </ThemedText>
       <ThemedText variant={'headingFour'}>{t('BCSC.VideoCall.WiFiRecommended')}</ThemedText>
@@ -66,7 +70,11 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
       </ThemedText>
       <ThemedText>{t('BCSC.VideoCall.MakeSureOnlyYou')}</ThemedText>
 
-      <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginTop: Spacing.md }}
+        testID={testIdWithKey('HoursOfServiceTitle')}
+      >
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
       <ServicePeriodList items={formattedHours} />
