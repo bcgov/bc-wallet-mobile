@@ -36,35 +36,9 @@
  *   node scripts/saucelabs-app-launch-test.mjs
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { resolve, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-// ── Load local .env file if present ────────────────────────────────────
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const LOCAL_ENV_PATH = resolve(__dirname, '.env.saucelabs')
-
-if (existsSync(LOCAL_ENV_PATH)) {
-  console.log(`Loading local env from ${LOCAL_ENV_PATH}`)
-  const lines = readFileSync(LOCAL_ENV_PATH, 'utf-8').split('\n')
-  for (const raw of lines) {
-    const line = raw.trim()
-    if (!line || line.startsWith('#')) continue
-    const eq = line.indexOf('=')
-    if (eq === -1) continue
-    const key = line.slice(0, eq).trim()
-    let val = line.slice(eq + 1).trim()
-    // Strip surrounding quotes (single or double)
-    if ((val.startsWith("'") && val.endsWith("'")) || (val.startsWith('"') && val.endsWith('"'))) {
-      val = val.slice(1, -1)
-    }
-    if (!process.env[key]) {
-      process.env[key] = val
-    }
-  }
-  console.log('')
-}
+import './saucelabs-env.mjs'
+import { writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 // ── Constants ──────────────────────────────────────────────────────────
 
