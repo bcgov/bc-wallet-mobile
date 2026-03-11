@@ -119,7 +119,11 @@ class DeviceAuthenticationServiceImpl(
 
                             override fun onAuthenticationFailed() {
                                 super.onAuthenticationFailed()
-                                callback(DeviceAuthenticationResult.FAILED)
+                                // onAuthenticationFailed is an intermediate callback — the
+                                // BiometricPrompt stays open and the user can retry. Only
+                                // onAuthenticationSucceeded and onAuthenticationError are
+                                // terminal, so we intentionally do NOT invoke the callback here.
+                                android.util.Log.d("DeviceAuthenticationService", "Biometric attempt failed, awaiting retry")
                             }
                         },
                     )
