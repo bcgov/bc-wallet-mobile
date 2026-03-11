@@ -67,7 +67,7 @@ const DEBUG = process.argv.includes('--debug')
 
 console.log(`SauceLabs Build Pruner`)
 console.log(`  Region:   ${SAUCE_REGION}`)
-console.log(`  User:     ${SAUCE_USERNAME.slice(0, 3)}${'*'.repeat(SAUCE_USERNAME.length - 3)}`)
+console.log(`  User:     [hidden - from SAUCE_USERNAME env var]`)
 console.log(`  API base: ${API_BASE}`)
 console.log(`  Mode:     ${DRY_RUN ? 'DRY RUN' : 'DELETE'}\n`)
 
