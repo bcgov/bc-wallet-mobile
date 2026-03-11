@@ -1091,6 +1091,23 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('clientRegistrationFailureAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.clientRegistrationFailureAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
   describe('noTokensReturnedAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -1186,6 +1203,57 @@ describe('useAlerts', () => {
       action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+    })
+  })
+
+  describe('failedToRetrieveStringResourceAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToRetrieveStringResourceAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('invalidUrlAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidUrlAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_500_INVALID_URL,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('invalidRegistrationRequestAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidRegistrationRequestAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST,
+        actions: [{ text: 'Global.OK' }],
+      })
     })
   })
 

@@ -304,6 +304,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       keychainKeyDoesntExistAlert: _createBasicAlert(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, 'ProblemWithApp', { errorCode: '120-4' }),
       keychainKeyGenerationAlert: _createBasicAlert(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR, 'ProblemWithApp', { errorCode: '120-5' }),
       jwtDeviceInfoAlert: _createBasicAlert(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR, 'ProblemWithApp', { errorCode: '120-6' }),
+      clientRegistrationFailureAlert: _createBasicAlert(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'ProblemWithApp', { errorCode: '120' }),
       missingJwkAlert: _createBasicAlert(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'ProblemWithApp', { errorCode: '111' }),
       jwsVerificationFailedAlert: _createBasicAlert(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'ProblemWithApp', { errorCode: '112' }),
       failedToGetClaimsSetAlert: _createBasicAlert(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'ProblemWithApp', { errorCode: '114' }),
@@ -332,6 +333,9 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       creatingClientRegistrationFailedAlert: _createBasicAlert(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'ProblemWithApp', { errorCode: '213' }),
       keysOutOfSyncAlert: _createBasicAlert(AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, 'ProblemWithApp', { errorCode: '299' }),
       emptyResponseAlert: _createBasicAlert(AppEventCode.ERR_300_EMPTY_RESPONSE, 'ProblemWithApp', { errorCode: '300' }),
+      failedToRetrieveStringResourceAlert: _createBasicAlert(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'ProblemWithApp', { errorCode: '400' }),
+      invalidUrlAlert: _createBasicAlert(AppEventCode.ERR_500_INVALID_URL, 'ProblemWithApp', { errorCode: '500' }),
+      invalidRegistrationRequestAlert: _createBasicAlert(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
     }),
     [
       appUpdateRequiredAlert,
