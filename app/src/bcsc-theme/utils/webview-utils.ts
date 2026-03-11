@@ -127,16 +127,17 @@ export const createWebViewJavascriptInjection = (colorPalette: IColorPalette, fo
 
       const style = document.createElement('style');
       style.textContent = \`
+        html, body, body * {
+          ${fontSizeCss}
+        }
         body, body * {
           background-color: ${colorPalette.brand.primaryBackground} !important;
           color: ${colorPalette.brand.secondary} !important;
-          ${fontSizeCss}
         }
         a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
           color: ${colorPalette.brand.link} !important;
           text-decoration-color: ${colorPalette.brand.link} !important;
           border-color: ${colorPalette.brand.link} !important;
-          ${fontSizeCss}
         }
       \`;
       document.head.appendChild(style);
