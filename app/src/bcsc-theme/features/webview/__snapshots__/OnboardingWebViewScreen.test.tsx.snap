@@ -18,16 +18,17 @@ exports[`OnboardingWebView renders correctly 1`] = `
 
       const style = document.createElement('style');
       style.textContent = \`
+        html, body, body * {
+          font-size: 32px !important;
+        }
         body, body * {
           background-color: #F2F2F2 !important;
           color: #FFFFFFFF !important;
-          font-size: 32px !important;
         }
         a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
           color: #1A5A96 !important;
           text-decoration-color: #1A5A96 !important;
           border-color: #1A5A96 !important;
-          font-size: 32px !important;
         }
       \`;
       document.head.appendChild(style);
