@@ -2,14 +2,14 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
+import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
-import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -20,10 +20,9 @@ const BCSCRootStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const { isClientReady } = useBCSCApiClientState()
-  const [loading, setLoading] = useState(true)
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
-  const { hydrateAccount } = useSecureActions()
+  const { initializingAccount } = useInitializeAccountStatus()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -40,26 +39,12 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, emitErrorModal, store.stateLoaded])
 
-  useEffect(() => {
-    if (!store.stateLoaded || !loading) {
-      return
-    }
-
-    const asyncEffect = async () => {
-      await hydrateAccount()
-      setLoading(false)
-    }
-
-    asyncEffect()
-  }, [hydrateAccount, loading, store.stateLoaded])
-  //
-
   // Show loading screen if state, API client or navigation is not ready
-  if (!store.stateLoaded || !isClientReady || loading || !isNavigationReady) {
+  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
     return <LoadingScreen />
   }
 
-  if (store.bcscSecure.hasAccount === false) {
+  if (store.bcsc.hasAccount === false) {
     return <OnboardingStack />
   }
 

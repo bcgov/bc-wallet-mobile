@@ -527,7 +527,6 @@ describe('useSetupStepsModel', () => {
 
       expect(mockDeleteRegistration).toHaveBeenCalledWith('test-client-id')
       expect(mockClearSecureState).toHaveBeenCalledWith({
-        hasAccount: true,
         isHydrated: true,
         walletKey: 'wallet-key',
         registrationAccessToken: 'registration-access-token',

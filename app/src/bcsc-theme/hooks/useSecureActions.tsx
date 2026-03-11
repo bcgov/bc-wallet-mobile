@@ -33,11 +33,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
-import { retryAsync } from '../utils/retry'
 import { useBCSCApiClientState } from './useBCSCApiClient'
-
-const ACCOUNT_FETCH_MAX_RETRIES = 3
-const ACCOUNT_FETCH_RETRY_DELAY_MS = 500
 
 /**
  * Hook to manage secure state and actions for sensitive data.
@@ -660,27 +656,6 @@ export const useSecureActions = () => {
   // ============================================================================
 
   /**
-   * Loads account data from native storage to determine if an account exists and update store.
-   *
-   * @returns A promise that resolves when the account hydration process is complete.
-   */
-  const hydrateAccount = useCallback(async () => {
-    try {
-      // TEMP (MD): Fix until BcscCore package correctly bubbles errors (prevents transient errors)
-      const account = await retryAsync(getAccount, ACCOUNT_FETCH_MAX_RETRIES, ACCOUNT_FETCH_RETRY_DELAY_MS, true)
-
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
-
-      if (account?.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
-        dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
-      }
-    } catch (error) {
-      logger.error('Error checking for existing account:', error as Error)
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
-    }
-  }, [dispatch, logger, store.bcsc.nicknames])
-
-  /**
    * Loads sensitive data from native secure storage and dispatches to store.
    * Call this after successful authentication.
    */
@@ -876,6 +851,7 @@ export const useSecureActions = () => {
       await hydrateSecureState()
       updateWalletKey(walletKey)
       dispatch({ type: BCDispatchAction.SUCCESSFUL_AUTH })
+      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
     },
     [hydrateSecureState, updateWalletKey, dispatch]
   )
@@ -901,7 +877,6 @@ export const useSecureActions = () => {
     clearAdditionalEvidence,
     handleSuccessfulAuth,
     // Hydration & clearing
-    hydrateAccount,
     hydrateSecureState,
     clearSecureState,
     logout,

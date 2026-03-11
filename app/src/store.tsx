@@ -80,6 +80,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   appVersion: string
+  hasAccount: boolean
   nicknames: string[]
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -114,9 +115,6 @@ export enum VerificationStatus {
 export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
-
-  /** Whether an account exists (not persisted, checked and set at app startup and on registration) */
-  hasAccount?: boolean
 
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
@@ -381,6 +379,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 export const initialBCSCState: BCSCState = {
   appVersion: getVersion(),
+  hasAccount: false,
   nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
@@ -397,6 +396,7 @@ export enum BCLocalStorageKeys {
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
+  HasBCSCAccount = 'HasBCSCAccount',
   BCSC = 'BCSC',
   Mode = 'Mode',
 }
@@ -478,6 +478,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCDispatchAction.SET_HAS_ACCOUNT: {
+      const hasAccount = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, hasAccount }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_APP_VERSION: {
@@ -577,14 +584,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     // batched state update to prevent re-renders
     case BCSCDispatchAction.SUCCESSFUL_AUTH: {
-      const bcscSecure = { ...state.bcscSecure, hasAccount: true }
       const authentication = { ...state.authentication, didAuthenticate: true }
-      return { ...state, bcscSecure, authentication }
-    }
-    case BCSCDispatchAction.SET_HAS_ACCOUNT: {
-      const hasAccount = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, hasAccount }
-      return { ...state, bcscSecure }
+      return { ...state, authentication }
     }
     case BCSCDispatchAction.UPDATE_SECURE_SERIAL: {
       const serial = (action?.payload || []).pop() ?? ''
