@@ -16,7 +16,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { WebViewContent } from '../webview/WebViewContent'
 
@@ -38,6 +38,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
+  const { fontScale } = useWindowDimensions()
 
   const fetchTermsOfUse = useCallback(async () => {
     try {
@@ -124,13 +125,16 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   return (
     <ScreenWrapper scrollable={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <WebViewContent
-        html={createTermsOfUseHtml({
-          termsOfUse,
-          colorPalette: ColorPalette,
-          headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
-          subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
-          versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
-        })}
+        html={createTermsOfUseHtml(
+          {
+            termsOfUse,
+            colorPalette: ColorPalette,
+            headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
+            subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
+            versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
+          },
+          fontScale
+        )}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
     </ScreenWrapper>

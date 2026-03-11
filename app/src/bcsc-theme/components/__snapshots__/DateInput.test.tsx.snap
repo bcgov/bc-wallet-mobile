@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DateInput Component Rendering renders correctly 1`] = `
+<View>
+  <Text
+    maxFontSizeMultiplier={2}
+    style={
+      [
+        {
+          "color": "#313132",
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 16,
+          "fontWeight": "bold",
+        },
+        [
+          {
+            "marginBottom": 8,
+          },
+          undefined,
+        ],
+      ]
+    }
+    testID="com.ariesbifold:id/birthdate-label"
+  >
+    Date of Birth
+  </Text>
+  <TextInput
+    accessibilityLabel="Date of Birth"
+    keyboardType="number-pad"
+    onChange={[Function]}
+    onChangeText={[Function]}
+    placeholder="YYYY/MM/DD"
+    placeholderTextColor="#000000"
+    selection={
+      {
+        "end": 1,
+        "start": 0,
+      }
+    }
+    style={
+      [
+        {
+          "backgroundColor": "#D3D3D3",
+          "borderColor": "#D3D3D3",
+          "borderRadius": 4,
+          "borderWidth": 1,
+          "color": "#313132",
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 16,
+          "padding": 10,
+        },
+        undefined,
+      ]
+    }
+    testID="com.ariesbifold:id/birthdate-input"
+    value="YYYY/MM/DD"
+  />
+</View>
+`;

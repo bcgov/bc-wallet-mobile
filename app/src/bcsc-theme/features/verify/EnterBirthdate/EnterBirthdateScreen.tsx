@@ -1,4 +1,4 @@
-import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import DateInput from '@/bcsc-theme/components/DateInput'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isHandledAppError } from '@/errors/appError'
 import {
@@ -16,8 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, StyleSheet, View } from 'react-native'
-import DatePicker from 'react-native-date-picker'
+import { StyleSheet, View } from 'react-native'
 import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
@@ -26,16 +25,18 @@ type EnterBirthdateScreenProps = {
 }
 
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
+  const vm = useEnterBirthdateViewModel(navigation)
+
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const vm = useEnterBirthdateViewModel(navigation)
-
   const [loading, setLoading] = useState(false)
-  const [openDatePicker, setOpenDatePicker] = useState(false)
-  const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY-MM-DD') : '')
+  const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
+
+  const isBirthDateComplete = birthDate.length === 10
+  const isBirthDateInvalid = isBirthDateComplete && !vm.isDateValid(birthDate)
+  const birthDateError = isBirthDateInvalid ? t('BCSC.Birthdate.InvalidDate') : undefined
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -58,7 +59,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         navigation.goBack()
         return null
       }
-
+      // Converting date format from YYYY/MM/DD to YYYY-MM-DD for api
       await vm.authorizeDevice(vm.serial, moment(birthDate, 'YYYY-MM-DD').toDate())
     } catch (error) {
       if (isHandledAppError(error)) {
@@ -81,7 +82,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       testID={testIdWithKey('Done')}
       onPress={handleSubmit}
       buttonType={ButtonType.Primary}
-      disabled={loading || !birthDate}
+      disabled={loading || !isBirthDateComplete || isBirthDateInvalid}
     >
       {loading && <ButtonLoading />}
     </Button>
@@ -96,36 +97,15 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.Birthdate.Heading')}
       </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
       <View style={{ marginVertical: Spacing.md, width: '100%' }}>
-        <DatePicker
-          modal
-          open={openDatePicker}
-          mode="date"
-          title={t('BCSC.Birthdate.Label')}
-          date={birthDate ? moment(birthDate).toDate() : new Date()}
-          onConfirm={(date) => {
-            setOpenDatePicker(false)
-            setBirthDate(moment(date).format('YYYY-MM-DD'))
-          }}
-          onCancel={() => {
-            setOpenDatePicker(false)
-          }}
-          testID={testIdWithKey('BirthDatePicker')}
-          accessibilityLabel={t('BCSC.Birthdate.Label')}
-        />
-        <InputWithValidation
+        <DateInput
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}
-          textInputProps={{ placeholder: 'YYYY-MM-DD' }}
-          onChange={() => {
-            // no-op to disable manual input
-          }}
-          onPressIn={() => {
-            Keyboard.dismiss()
-            setOpenDatePicker(true)
-          }}
-          subtext={t('BCSC.Birthdate.Paragraph')}
+          onChange={setBirthDate}
+          subtext={t('BCSC.Birthdate.ExampleDate')}
+          error={birthDateError}
         />
       </View>
     </ScreenWrapper>
