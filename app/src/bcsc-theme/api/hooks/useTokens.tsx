@@ -1,5 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -87,7 +89,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
       if (!apiClient.tokens) {
-        throw new Error('No tokens available')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+          cause: new Error('apiClient.tokens is null in getCachedIdTokenMetadata'),
+        })
       }
 
       if (config.refreshCache) {

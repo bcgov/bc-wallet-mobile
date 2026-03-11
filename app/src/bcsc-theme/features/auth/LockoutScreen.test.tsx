@@ -1,5 +1,4 @@
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -10,6 +9,14 @@ const mockFactoryReset = jest.fn()
 
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
   useFactoryReset: () => mockFactoryReset,
+}))
+
+const mockUnlockApp = jest.fn()
+
+jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
+  useAuthentication: () => ({
+    unlockApp: mockUnlockApp,
+  }),
 }))
 
 describe('LockoutScreen', () => {
@@ -119,7 +126,7 @@ describe('LockoutScreen', () => {
   })
 
   describe('navigation', () => {
-    it('navigates to EnterPIN when account is not locked', async () => {
+    it('calls unlockApp when account is not locked', async () => {
       mockIsAccountLocked.mockResolvedValue({
         locked: false,
         remainingTime: 0,
@@ -132,18 +139,11 @@ describe('LockoutScreen', () => {
       )
 
       await waitFor(() => {
-        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'RESET',
-            payload: expect.objectContaining({
-              routes: [{ name: BCSCScreens.EnterPIN }],
-            }),
-          })
-        )
+        expect(mockUnlockApp).toHaveBeenCalled()
       })
     })
 
-    it('navigates to EnterPIN when remaining time is 0', async () => {
+    it('calls unlockApp when remaining time is 0', async () => {
       mockIsAccountLocked.mockResolvedValue({
         locked: true,
         remainingTime: 0,
@@ -156,14 +156,7 @@ describe('LockoutScreen', () => {
       )
 
       await waitFor(() => {
-        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'RESET',
-            payload: expect.objectContaining({
-              routes: [{ name: BCSCScreens.EnterPIN }],
-            }),
-          })
-        )
+        expect(mockUnlockApp).toHaveBeenCalled()
       })
     })
   })

@@ -1,5 +1,4 @@
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
@@ -15,17 +14,10 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager } from 'react-native'
-import {
-  AccountSecurityMethod,
-  canPerformDeviceAuthentication,
-  getAccountSecurityMethod,
-  isAccountLocked,
-  unlockWithDeviceSecurity,
-  verifyPIN,
-} from 'react-native-bcsc-core'
+import { verifyPIN } from 'react-native-bcsc-core'
 
 interface EnterPINScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.EnterPIN>
@@ -34,61 +26,11 @@ interface EnterPINScreenProps {
 export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
-
-  useEffect(() => {
-    const initializeAuthentication = async () => {
-      const stopLoading = startLoading()
-      try {
-        const accountSecurityMethod = await getAccountSecurityMethod()
-
-        // Only attempt device authentication if that is the configured method
-        if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
-          // If PIN is the method, check if account is locked and immediately show
-          // lockout screen if so
-          const { locked } = await isAccountLocked()
-          if (locked) {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: BCSCScreens.Lockout }],
-              })
-            )
-          }
-          return
-        }
-
-        // Check if they have changed their device auth settings
-        const deviceAuthAvailable = await canPerformDeviceAuthentication()
-
-        if (deviceAuthAvailable) {
-          const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
-          if (success) {
-            await handleSuccessfulAuth(walletKey)
-            logger.info('Device authentication successful')
-          } else {
-            logger.info('Device authentication failed - user cancelled or auth failed')
-            navigation.goBack()
-          }
-        } else {
-          navigation.navigate(BCSCScreens.DeviceAuthAppReset)
-        }
-      } catch (error) {
-        const errMessage = error instanceof Error ? error.message : String(error)
-        logger.error(`Device authentication error: ${errMessage}`)
-        navigation.goBack()
-      } finally {
-        stopLoading()
-      }
-    }
-
-    initializeAuthentication()
-  }, [startLoading, logger, navigation, handleSuccessfulAuth])
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {

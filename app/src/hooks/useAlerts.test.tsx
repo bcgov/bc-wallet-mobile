@@ -3,6 +3,7 @@ import { mockUseServices, mockUseStore } from '@/bcsc-theme/hooks/useCreateSyste
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
+import { CommonActions } from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { useAlerts } from './useAlerts'
@@ -622,7 +623,7 @@ describe('useAlerts', () => {
     })
   })
 
-  describe('liveCallFileUploadErrorAlert', () => {
+  describe('liveCallFileUploadAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
       const mockEmitAlert = jest.fn()
@@ -647,8 +648,29 @@ describe('useAlerts', () => {
       )
     })
 
-    // FIXME: Investigate mock issue with CommonActions.reset being undefined...
-    it.todo('should navigate back to the setupsteps screen when the action is pressed')
+    it('should reset navigation to SetupSteps and VerificationMethodSelection when OK is pressed', () => {
+      const mockDispatch = jest.fn()
+      const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.liveCallFileUploadAlert()
+
+      const alertOptions = mockEmitAlert.mock.calls[0][2]
+      const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
+      expect(action).toBeDefined()
+
+      action.onPress()
+
+      expect(mockDispatch).toHaveBeenCalledWith(
+        CommonActions.reset({
+          index: 1,
+          routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+        })
+      )
+    })
   })
 
   describe('dataUseWarningAlert', () => {
@@ -835,6 +857,27 @@ describe('useAlerts', () => {
 
       expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
         event: AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON,
+        actions: [
+          {
+            text: 'Global.OK',
+          },
+        ],
+      })
+    })
+  })
+
+  describe('tokenUnexpectedlyNullAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.tokenUnexpectedlyNullAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
         actions: [
           {
             text: 'Global.OK',
@@ -1048,6 +1091,23 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('clientRegistrationFailureAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.clientRegistrationFailureAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
   describe('noTokensReturnedAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -1146,6 +1206,57 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('failedToRetrieveStringResourceAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToRetrieveStringResourceAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('invalidUrlAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidUrlAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_500_INVALID_URL,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
+  describe('invalidRegistrationRequestAlert', () => {
+    it('should show an alert with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.invalidRegistrationRequestAlert()
+
+      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+        event: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST,
+        actions: [{ text: 'Global.OK' }],
+      })
+    })
+  })
+
   describe('factoryResetAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -1186,6 +1297,370 @@ describe('useAlerts', () => {
       action.onPress()
 
       expect(mockFactoryReset).toHaveBeenCalled()
+    })
+  })
+
+  describe('IAS error alerts (201–300)', () => {
+    describe('serverConfigurationAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.serverConfigurationAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.ProblemWithService.Title',
+          'Alerts.ProblemWithService.Description',
+          {
+            event: AppEventCode.ADD_CARD_SERVER_CONFIGURATION,
+            actions: [{ text: 'Global.OK' }],
+          }
+        )
+      })
+    })
+
+    describe('dynamicRegistrationErrorAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.dynamicRegistrationErrorAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.DynamicRegistrationError.Title',
+          'Alerts.DynamicRegistrationError.Description',
+          {
+            event: AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION,
+            actions: [
+              {
+                text: 'Global.OK',
+                onPress: expect.any(Function),
+              },
+            ],
+          }
+        )
+      })
+
+      it('should reset navigation to SetupSteps when OK is pressed', () => {
+        const mockDispatch = jest.fn()
+        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.dynamicRegistrationErrorAlert()
+
+        const alertOptions = mockEmitAlert.mock.calls[0][2]
+        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
+        expect(action).toBeDefined()
+
+        action.onPress()
+
+        expect(mockDispatch).toHaveBeenCalledWith(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      })
+    })
+
+    describe('termsOfUseErrorAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.termsOfUseErrorAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.ProblemWithService.Title',
+          'Alerts.ProblemWithService.Description',
+          {
+            event: AppEventCode.ADD_CARD_TERMS_OF_USE,
+            actions: [
+              {
+                text: 'Global.OK',
+                onPress: expect.any(Function),
+              },
+            ],
+          }
+        )
+      })
+
+      it('should reset navigation to SetupSteps when OK is pressed', () => {
+        const mockDispatch = jest.fn()
+        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.termsOfUseErrorAlert()
+
+        const alertOptions = mockEmitAlert.mock.calls[0][2]
+        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
+        expect(action).toBeDefined()
+
+        action.onPress()
+
+        expect(mockDispatch).toHaveBeenCalledWith(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      })
+    })
+
+    describe('incorrectOsAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.incorrectOsAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.ProblemWithService.Title',
+          'Alerts.ProblemWithService.Description',
+          {
+            event: AppEventCode.ADD_CARD_INCORRECT_OS,
+            actions: [
+              {
+                text: 'Global.OK',
+                onPress: expect.any(Function),
+              },
+            ],
+          }
+        )
+      })
+
+      it('should reset navigation to SetupSteps when OK is pressed', () => {
+        const mockDispatch = jest.fn()
+        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.incorrectOsAlert()
+
+        const alertOptions = mockEmitAlert.mock.calls[0][2]
+        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
+        expect(action).toBeDefined()
+
+        action.onPress()
+
+        expect(mockDispatch).toHaveBeenCalledWith(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      })
+    })
+
+    describe('addCardNotAvailableAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.addCardNotAvailableAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.AddCardNotAvailable.Title',
+          'Alerts.AddCardNotAvailable.Description',
+          {
+            event: AppEventCode.ADD_CARD_PROVIDER,
+            actions: [{ text: 'Global.OK' }],
+          }
+        )
+      })
+    })
+
+    describe('missingJsonValuesAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.missingJsonValuesAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('signClaimsErrorAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.signClaimsErrorAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('unexpectedNetworkCallAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.unexpectedNetworkCallAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('badRequestAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.badRequestAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_209_BAD_REQUEST,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('unauthorizedAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.unauthorizedAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_210_UNAUTHORIZED,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('serverOutageAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.serverOutageAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_211_SERVER_OUTAGE,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('retryLaterAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.retryLaterAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_212_RETRY_LATER,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('creatingClientRegistrationFailedAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.creatingClientRegistrationFailedAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('keysOutOfSyncAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.keysOutOfSyncAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_299_KEYS_OUT_OF_SYNC,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
+    })
+
+    describe('emptyResponseAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.emptyResponseAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.ProblemWithApp.Title', 'Alerts.ProblemWithApp.Description', {
+          event: AppEventCode.ERR_300_EMPTY_RESPONSE,
+          actions: [{ text: 'Global.OK' }],
+        })
+      })
     })
   })
 })

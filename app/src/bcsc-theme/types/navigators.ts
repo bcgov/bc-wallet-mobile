@@ -2,6 +2,7 @@ import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCReason } from '../utils/id-token'
+import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
@@ -179,9 +180,9 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
-  [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
+  [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
-  [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours?: string }
+  [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddress]: undefined

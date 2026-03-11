@@ -68,10 +68,48 @@ const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
+// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300)
+const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
+    [AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, alerts?.dynamicRegistrationErrorAlert],
+    [AppEventCode.ADD_CARD_TERMS_OF_USE, alerts?.termsOfUseErrorAlert],
+    [AppEventCode.ADD_CARD_INCORRECT_OS, alerts?.incorrectOsAlert],
+    [AppEventCode.ADD_CARD_PROVIDER, alerts?.addCardNotAvailableAlert],
+    [AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, alerts?.missingJsonValuesAlert],
+    [AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, alerts?.signClaimsErrorAlert],
+    [AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, alerts?.unexpectedNetworkCallAlert],
+    [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestAlert],
+    [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
+    [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
+    [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
+    [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
+    [AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, alerts?.keysOutOfSyncAlert],
+    [AppEventCode.ERR_300_EMPTY_RESPONSE, alerts?.emptyResponseAlert],
+  ])
+}
+
 // ----------------------------------------
 // Error Handling Policies
 // https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
 // ----------------------------------------
+
+// IAS errors 201–300 — server configuration, registration, terms of use, provider, JSON, network, auth, etc.
+export const iasErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return _getIasErrorAlertMap().has(error.appEvent)
+  },
+  handle: (error, context) => {
+    const alert = _getIasErrorAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[IasErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    alert()
+  },
+}
 
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
@@ -235,7 +273,7 @@ export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
 // Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
 export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
-    return error.cause.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    return error.cause.response?.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
   },
   handle: (error, context) => {
     context.logger.info(`[BirthdateLockoutErrorPolicy] Lockout with error:`, { error })
@@ -321,6 +359,39 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE — bad request due to malformed or misconfigured client
+export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE
+  },
+  handle: (error, context) => {
+    context.alerts.failedToRetrieveStringResourceAlert()
+    error.handled = true
+  },
+}
+
+// Error policy for ERR_500_INVALID_URL — server-side URL validation failure
+export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_500_INVALID_URL
+  },
+  handle: (error, context) => {
+    context.alerts.invalidUrlAlert()
+    error.handled = true
+  },
+}
+
+// Fallback error policy for ERR_501_INVALID_REGISTRATION_REQUEST cases not handled by alreadyRegisteredErrorPolicy
+export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST
+  },
+  handle: (error, context) => {
+    context.alerts.invalidRegistrationRequestAlert()
+    error.handled = true
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
@@ -339,8 +410,12 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   loginRejectedOnDeviceAuthorizationErrorPolicy,
   alreadyVerifiedErrorPolicy,
   invalidTokenReturnedPolicy,
+  failedToRetrieveStringResourceErrorPolicy,
+  invalidUrlErrorPolicy,
+  invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  iasErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
   unexpectedServerErrorPolicy,

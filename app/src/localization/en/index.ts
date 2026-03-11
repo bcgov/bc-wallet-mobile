@@ -317,6 +317,8 @@ const translation = {
         "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service.",
         "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device.",
         "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card.",
+        "CanceledByCardTypeChange": "Your card type was changed. Your account will be removed from this app.",
+        "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
       }
@@ -459,11 +461,15 @@ const translation = {
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
       "CompletionTitle": "You're done in this app",
-      "CompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc.",
+      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }}",
+      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc.",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
+      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app.",
+      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app.",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation",
       "BookmarkService": "Save link to:",
       "ToggleBookmark": "Toggle bookmark",
+      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -556,7 +562,9 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
-      "Label": "Birthdate",
+      "Label": "Enter Birthdate",
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
+      "ExampleDate": "The birthdate format is: YYYY/MM/DD",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
@@ -980,7 +988,7 @@ const translation = {
       "LastNameSubtext": "Also known as surname or family name",
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date",
-      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD)",
       "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
@@ -1091,6 +1099,18 @@ const translation = {
     "ProblemWithApp": {
       "Title": "Problem with App",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
+    },
+    "ProblemWithService": {
+      "Title": "Problem with Service",
+      "Description": "Please try again later. (error {{ errorCode }})"
+    },
+    "DynamicRegistrationError": {
+      "Title": "Problem with Service",
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202)"
+    },
+    "AddCardNotAvailable": {
+      "Title": "Add Card Not Available",
+      "Description": "Please try again later. (error 205)"
     },
     "ForgetPairings": {
       "Title": "Success",

@@ -18,10 +18,13 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR]: alerts.keychainKeyDoesntExistAlert,
   [AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR]: alerts.keychainKeyGenerationAlert,
   [AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR]: alerts.jwtDeviceInfoAlert,
-  [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.problemWithAppAlert,
+  [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.clientRegistrationFailureAlert,
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
   [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
   [AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON]: alerts.failedToSerializeJsonAlert,
+  [AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE]: alerts.failedToRetrieveStringResourceAlert,
+  [AppEventCode.ERR_500_INVALID_URL]: alerts.invalidUrlAlert,
+  [AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST]: alerts.invalidRegistrationRequestAlert,
 })
 
 /**

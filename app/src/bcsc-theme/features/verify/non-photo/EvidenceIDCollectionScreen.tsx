@@ -1,3 +1,4 @@
+import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -17,22 +18,14 @@ import {
 } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, View } from 'react-native'
+import { View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import DatePicker from 'react-native-date-picker'
-
-type EvidenceCollectionFormState = {
-  documentNumber: string
-  firstName: string
-  lastName: string
-  middleNames: string
-  birthDate: string
-}
-
-type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
+import useEvidenceIDCollectionModel, {
+  EvidenceCollectionFormErrors,
+  EvidenceCollectionFormState,
+} from './useEvidenceIDCollectionModel'
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
@@ -52,8 +45,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber, removeEvidenceByType } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
-  const [openDatePicker, setOpenDatePicker] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
+  const { toCanonicalBirthDate, validateEvidence } = useEvidenceIDCollectionModel()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { cardType } = route.params
   const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
@@ -95,95 +88,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   /**
-   * Validates the document number against the card type's input mask.
-   *
-   * @param {string} value - The document number to validate.
-   * @returns {boolean} True if the document number is valid, false otherwise.
-   */
-  const isDocumentNumberValid = (value: string): boolean => {
-    // no validation needed if no mask and empty value
-    if (!cardType.document_reference_input_mask && !value) {
-      return true
-    }
-
-    if (!value) {
-      return false
-    }
-
-    try {
-      const regex = new RegExp(cardType.document_reference_input_mask)
-      return regex.test(value)
-    } catch (error) {
-      logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error as Error)
-      return true
-    }
-  }
-
-  /**
-   * Checks if the birthdate is of minimum age.
-   */
-  const isOfMinimumAge = (value: string, minimumAge: number): boolean => {
-    return moment().diff(moment(value, 'YYYY-MM-DD'), 'years') >= minimumAge
-  }
-
-  /**
-   * Validates the birth date format (YYYY-MM-DD) and checks if it's a valid date.
-   */
-  const isDateValid = (value?: string): boolean => {
-    if (!value) {
-      return false
-    }
-
-    const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
-
-    if (!regex.test(value)) {
-      return false
-    }
-
-    return !isNaN(new Date(value).getTime())
-  }
-
-  /**
-   * Validates the formState form fields.
-   *
-   * @param {EvidenceCollectionFormState} values - The current form values.
-   * @returns {*} {EvidenceCollectionFormErrors} An object containing validation errors
-   */
-  const validateEvidence = (values: EvidenceCollectionFormState) => {
-    const errors: EvidenceCollectionFormErrors = {}
-
-    if (!isDocumentNumberValid(values.documentNumber)) {
-      errors.documentNumber = t('BCSC.EvidenceIDCollection.DocumentNumberError')
-    }
-
-    if (!personalInfoRequired) {
-      return errors
-    }
-
-    if (!values.firstName) {
-      errors.firstName = t('BCSC.EvidenceIDCollection.FirstNameError')
-    }
-
-    if (!values.lastName) {
-      errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
-    }
-
-    if (!isDateValid(values.birthDate)) {
-      errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateError')
-    }
-
-    if (isDateValid(values.birthDate) && !isOfMinimumAge(values.birthDate, MINIMUM_VERIFICATION_AGE)) {
-      errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge: MINIMUM_VERIFICATION_AGE })
-    }
-
-    if (values.middleNames && values.middleNames.split(' ').length > 2) {
-      errors.middleNames = t('BCSC.EvidenceIDCollection.MiddleNamesError')
-    }
-
-    return errors
-  }
-
-  /**
    * Handles the continue button press.
    *
    * @returns {*} {Promise<void>}
@@ -194,7 +98,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       // clear previous validation errors
       setFormErrors({})
 
-      const evidenceFormErrors = validateEvidence(formState)
+      const evidenceFormErrors = validateEvidence({
+        values: formState,
+        personalInfoRequired,
+        documentReferenceInputMask: cardType.document_reference_input_mask,
+        minimumAge: MINIMUM_VERIFICATION_AGE,
+        t,
+        onInvalidMask: (error) =>
+          logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error),
+      })
 
       // if there are validation errors, display them and do not proceed
       if (Object.keys(evidenceFormErrors).length > 0) {
@@ -203,8 +115,11 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       }
 
       if (personalInfoRequired) {
+        // Convert birth date to canonical format (YYYY-MM-DD) for storage and comparison
+        const canonicalBirthDate = toCanonicalBirthDate(formState.birthDate)
+
         await updateUserInfo({
-          birthdate: new Date(formState.birthDate),
+          birthdate: new Date(canonicalBirthDate),
         })
 
         const newUserMetadata: NonBCSCUserMetadata = {
@@ -311,7 +226,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         title="Cancel"
         accessibilityLabel={'Cancel'}
         testID={testIdWithKey('EvidenceIDCollectionCancel')}
-        buttonType={ButtonType.Tertiary}
+        buttonType={ButtonType.Secondary}
         onPress={handleOnCancel}
       />
     </>
@@ -368,34 +283,11 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               textInputProps={{ autoCorrect: false, autoComplete: 'name-middle', textContentType: 'middleName' }}
             />
 
-            <DatePicker
-              modal
-              open={openDatePicker}
-              mode="date"
-              title={t('BCSC.EvidenceIDCollection.BirthDatePickerLabel')}
-              date={formState.birthDate ? moment(formState.birthDate).toDate() : new Date()}
-              onConfirm={(date) => {
-                setOpenDatePicker(false)
-                handleChange('birthDate', moment(date).format('YYYY-MM-DD'))
-              }}
-              onCancel={() => {
-                setOpenDatePicker(false)
-              }}
-              testID={testIdWithKey('BirthDatePicker')}
-              accessibilityLabel={t('BCSC.EvidenceIDCollection.BirthDatePickerAccessibilityLabel')}
-            />
-
-            <InputWithValidation
+            <DateInput
               id={'birthDate'}
               label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
               value={formState.birthDate}
-              onChange={() => {
-                // no-op to disable manual input
-              }}
-              onPressIn={() => {
-                Keyboard.dismiss()
-                setOpenDatePicker(true)
-              }}
+              onChange={(date) => handleChange('birthDate', date)}
               error={formErrors.birthDate}
               subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
             />

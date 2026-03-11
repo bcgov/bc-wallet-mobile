@@ -11,7 +11,11 @@ import {
   birthdateLockoutErrorPolicy,
   cardExpiredErrorPolicy,
   ClientErrorHandlingPolicies,
+  failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
+  iasErrorPolicy,
+  invalidRegistrationRequestErrorPolicy,
+  invalidUrlErrorPolicy,
   noTokensReturnedErrorPolicy,
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
@@ -29,7 +33,78 @@ const newError = (code: string): AxiosAppError => {
   return err as AxiosAppError
 }
 
+/**
+ * Single source of truth for IAS error codes 201–300: app event code string → alert method name.
+ * Used for table-driven tests so every IAS error has matching policy and alert.
+ */
+const IAS_ERROR_TEST_CASES: Array<[appEvent: string, alertMethod: string]> = [
+  ['add_card_server_configuration', 'serverConfigurationAlert'],
+  ['add_card_dynamic_registration', 'dynamicRegistrationErrorAlert'],
+  ['add_card_terms_of_use', 'termsOfUseErrorAlert'],
+  ['add_card_incorrect_os', 'incorrectOsAlert'],
+  ['add_card_provider', 'addCardNotAvailableAlert'],
+  ['err_206_missing_or_null_values_in_json_response', 'missingJsonValuesAlert'],
+  ['err_207_unable_to_sign_claims_set', 'signClaimsErrorAlert'],
+  ['err_208_unexpected_network_call_exception', 'unexpectedNetworkCallAlert'],
+  ['err_209_bad_request', 'badRequestAlert'],
+  ['err_210_unauthorized', 'unauthorizedAlert'],
+  ['err_211_server_outage', 'serverOutageAlert'],
+  ['err_212_retry_later', 'retryLaterAlert'],
+  ['err_213_failed_creating_client_registration', 'creatingClientRegistrationFailedAlert'],
+  ['err_299_keys_out_of_sync', 'keysOutOfSyncAlert'],
+  ['err_300_empty_response', 'emptyResponseAlert'],
+]
+
 describe('clientErrorPolicies', () => {
+  describe('iasErrorPolicy', () => {
+    describe('matches()', () => {
+      it.each(IAS_ERROR_TEST_CASES)('should match %s', (appEvent) => {
+        const error = newError(appEvent)
+        expect(iasErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match non-IAS app events', () => {
+        expect(iasErrorPolicy.matches(newError('no_internet'), {} as any)).toBeFalsy()
+        expect(iasErrorPolicy.matches(newError('server_error'), {} as any)).toBeFalsy()
+        expect(iasErrorPolicy.matches(newError('some_other_error'), {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle()', () => {
+      it.each(IAS_ERROR_TEST_CASES)(
+        'should call the correct alert for app event %s (alert: %s)',
+        (appEvent, alertMethod) => {
+          const error = newError(appEvent)
+          const mockAlert = jest.fn()
+          const context = { alerts: { [alertMethod]: mockAlert } }
+          iasErrorPolicy.handle(error, context as any)
+          expect(mockAlert).toHaveBeenCalledTimes(1)
+        }
+      )
+
+      it('should log warning and not throw when alert is undefined for app event', () => {
+        const error = newError('add_card_server_configuration')
+        const context = {
+          alerts: {},
+          logger: { warn: jest.fn() },
+        }
+        iasErrorPolicy.handle(error, context as any)
+        expect(context.logger.warn).toHaveBeenCalledWith(
+          '[IasErrorPolicy] No alert defined for app event: add_card_server_configuration'
+        )
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      it.each(IAS_ERROR_TEST_CASES)('should resolve to iasErrorPolicy for %s', (appEvent) => {
+        const error = newError(appEvent)
+        const context = { endpoint: 'https://example.com/device/register', statusCode: 400, apiEndpoints: {} }
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
+        expect(policy).toBe(iasErrorPolicy)
+      })
+    })
+  })
+
   describe('globalAlertErrorPolicy', () => {
     describe('matches()', () => {
       it('should match unsecured_network', () => {
@@ -75,6 +150,18 @@ describe('clientErrorPolicies', () => {
         const context = { alerts: { serverErrorAlert: mockAlert } }
         globalAlertErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
+      })
+
+      it('should log warning and not throw when alert is undefined for app event', () => {
+        const error = newError('server_error')
+        const context = {
+          alerts: {},
+          logger: { warn: jest.fn() },
+        }
+        globalAlertErrorPolicy.handle(error, context as any)
+        expect(context.logger.warn).toHaveBeenCalledWith(
+          '[GlobalAlertErrorPolicy] No alert defined for app event: server_error'
+        )
       })
 
       it('should show unsecured network alert', () => {
@@ -512,6 +599,81 @@ describe('clientErrorPolicies', () => {
     })
   })
 
+  describe('failedToRetrieveStringResourceErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE', () => {
+        const error = newError('err_400_failed_to_retrieve_string_resource')
+        expect(failedToRetrieveStringResourceErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(failedToRetrieveStringResourceErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call failedToRetrieveStringResourceAlert and mark error as handled', () => {
+        const error = newError('err_400_failed_to_retrieve_string_resource')
+        const mockAlert = jest.fn()
+        const context = { alerts: { failedToRetrieveStringResourceAlert: mockAlert } }
+        failedToRetrieveStringResourceErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
+  describe('invalidUrlErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_500_INVALID_URL', () => {
+        const error = newError('err_500_invalid_url')
+        expect(invalidUrlErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(invalidUrlErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call invalidUrlAlert and mark error as handled', () => {
+        const error = newError('err_500_invalid_url')
+        const mockAlert = jest.fn()
+        const context = { alerts: { invalidUrlAlert: mockAlert } }
+        invalidUrlErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
+  describe('invalidRegistrationRequestErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ERR_501_INVALID_REGISTRATION_REQUEST', () => {
+        const error = newError('err_501_invalid_registration_request')
+        expect(invalidRegistrationRequestErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('server_error')
+        expect(invalidRegistrationRequestErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should call invalidRegistrationRequestAlert and mark error as handled', () => {
+        const error = newError('err_501_invalid_registration_request')
+        const mockAlert = jest.fn()
+        const context = { alerts: { invalidRegistrationRequestAlert: mockAlert } }
+        invalidRegistrationRequestErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+  })
+
   describe('ClientErrorHandlingPolicies', () => {
     describe('policy order', () => {
       it('should respect policy order when multiple policies match', () => {
@@ -556,6 +718,52 @@ describe('clientErrorPolicies', () => {
 
         // alreadyRegisteredErrorPolicy should come before globalAlertErrorPolicy
         expect(indexOfAlreadyRegistered).toBeLessThan(indexOfGlobalAlert)
+      })
+
+      it('should have alreadyRegisteredErrorPolicy before invalidRegistrationRequestErrorPolicy', () => {
+        const indexOfAlreadyRegistered = ClientErrorHandlingPolicies.indexOf(alreadyRegisteredErrorPolicy)
+        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
+
+        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfInvalidRegistration)
+      })
+
+      it('should have new IAS error policies before globalAlertErrorPolicy', () => {
+        const indexOfStringResource = ClientErrorHandlingPolicies.indexOf(failedToRetrieveStringResourceErrorPolicy)
+        const indexOfInvalidUrl = ClientErrorHandlingPolicies.indexOf(invalidUrlErrorPolicy)
+        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
+        const indexOfGlobalAlert = ClientErrorHandlingPolicies.indexOf(globalAlertErrorPolicy)
+
+        expect(indexOfStringResource).toBeLessThan(indexOfGlobalAlert)
+        expect(indexOfInvalidUrl).toBeLessThan(indexOfGlobalAlert)
+        expect(indexOfInvalidRegistration).toBeLessThan(indexOfGlobalAlert)
+      })
+
+      it('should prefer alreadyRegisteredErrorPolicy for ERR_501 with "client is in invalid" on deviceAuthorization', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('client is in invalid state')
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
+      })
+
+      it('should fall through to invalidRegistrationRequestErrorPolicy for ERR_501 without "client is in invalid"', () => {
+        const error = newError('err_501_invalid_registration_request')
+        error.cause = new AxiosError('some other reason')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(invalidRegistrationRequestErrorPolicy)
       })
     })
   })

@@ -1,9 +1,16 @@
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import AccountSelectorScreen from './AccountSelectorScreen'
+
+const mockUnlockApp = jest.fn()
+
+jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
+  useAuthentication: () => ({
+    unlockApp: mockUnlockApp,
+  }),
+}))
 
 describe('AccountSetup', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
@@ -32,7 +39,7 @@ describe('AccountSetup', () => {
       expect(tree).toMatchSnapshot()
     })
 
-    it('dispatches SELECT_ACCOUNT and navigates to EnterPIN when nickname is pressed', () => {
+    it('dispatches SELECT_ACCOUNT and calls unlockApp when nickname is pressed', () => {
       const tree = render(
         <BasicAppContext initialStateOverride={{ bcsc: { nicknames: ['John'] } as any }}>
           <AccountSelectorScreen navigation={mockNavigation as never} />
@@ -42,7 +49,7 @@ describe('AccountSetup', () => {
       const nicknameButton = tree.getByText('John')
       fireEvent.press(nicknameButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterPIN)
+      expect(mockUnlockApp).toHaveBeenCalled()
     })
   })
 
@@ -59,7 +66,7 @@ describe('AccountSetup', () => {
       expect(tree).toMatchSnapshot()
     })
 
-    it('navigates to EnterPIN when Continue button is pressed', () => {
+    it('calls unlockApp when Continue button is pressed', () => {
       const tree = render(
         <BasicAppContext initialStateOverride={{ bcsc: { nicknames: [] } as any }}>
           <AccountSelectorScreen navigation={mockNavigation as never} />
@@ -69,7 +76,7 @@ describe('AccountSetup', () => {
       const continueButton = tree.getByTestId('com.ariesbifold:id/ContinueSetup')
       fireEvent.press(continueButton)
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterPIN)
+      expect(mockUnlockApp).toHaveBeenCalled()
     })
   })
 })

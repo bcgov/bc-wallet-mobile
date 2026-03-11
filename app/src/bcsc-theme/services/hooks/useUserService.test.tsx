@@ -91,6 +91,23 @@ describe('useUserService', () => {
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
     })
+
+    it('should show alert on token unexpectedly null error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { tokenUnexpectedlyNullAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
+      expect(userApi.getUserInfo).toHaveBeenCalled()
+      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalled()
+    })
   })
 
   describe('getUserMetadata', () => {
@@ -197,6 +214,23 @@ describe('useUserService', () => {
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
       expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
+    })
+
+    it('should show alert on token unexpectedly null error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)
+      const userApi = {
+        getUserInfo: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { tokenUnexpectedlyNullAlert: jest.fn() }
+
+      jest.spyOn(useUserApiModule, 'default').mockReturnValue(userApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useUserService())
+
+      await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
+      expect(userApi.getUserInfo).toHaveBeenCalled()
+      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalled()
     })
   })
 

@@ -114,7 +114,9 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={html ? undefined : createWebViewJavascriptInjection(ColorPalette)}
+      injectedJavaScriptBeforeContentLoaded={
+        html ? undefined : createWebViewJavascriptInjection(ColorPalette, fontScale)
+      }
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />
