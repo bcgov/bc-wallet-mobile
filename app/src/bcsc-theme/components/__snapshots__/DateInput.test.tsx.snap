@@ -30,6 +30,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
     onChange={[Function]}
     onChangeText={[Function]}
     placeholder="YYYY/MM/DD"
+    placeholderTextColor="#000000"
     selection={
       {
         "end": 1,

@@ -32,8 +32,11 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(false)
-  const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY-MM-DD') : '')
-  const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
+  const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
+
+  const isBirthDateComplete = birthDate.length === 10
+  const isBirthDateInvalid = isBirthDateComplete && !vm.isDateValid(birthDate)
+  const birthDateError = isBirthDateInvalid ? t('BCSC.Birthdate.InvalidDate') : undefined
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -56,7 +59,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         navigation.goBack()
         return null
       }
-
+      // Converting date format from YYYY/MM/DD to YYYY-MM-DD for api
       await vm.authorizeDevice(vm.serial, moment(birthDate, 'YYYY-MM-DD').toDate())
     } catch (error) {
       if (isHandledAppError(error)) {
@@ -79,7 +82,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       testID={testIdWithKey('Done')}
       onPress={handleSubmit}
       buttonType={ButtonType.Primary}
-      disabled={loading || birthDate.length < 10 || !vm.isDateValid(birthDate) || !!birthDateError}
+      disabled={loading || !isBirthDateComplete || isBirthDateInvalid}
     >
       {loading && <ButtonLoading />}
     </Button>
@@ -100,14 +103,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}
-          onChange={(date) => {
-            if (!vm.isDateValid(date)) {
-              setBirthDateError(t('BCSC.Birthdate.InvalidDate'))
-            } else {
-              setBirthDateError(undefined)
-            }
-            setBirthDate(date)
-          }}
+          onChange={setBirthDate}
           subtext={t('BCSC.Birthdate.ExampleDate')}
           error={birthDateError}
         />
