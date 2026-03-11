@@ -1,5 +1,5 @@
 import { IColorPalette } from '@bifold/core'
-import { Dimensions, Platform } from 'react-native'
+import { Platform } from 'react-native'
 import { TermsOfUseResponseData } from '../api/hooks/useConfigApi'
 
 /**
@@ -25,6 +25,17 @@ const stripOuterDocumentTags = (html: string): string => {
     .trim()
 }
 
+/**
+ * Creates a CSS fragment that applies font scaling to the document.
+ * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
+ * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
+ */
+const createFontScalingCss = (fontScale: number): number => {
+  const baseFontSizePx = fontScale > 0 ? Math.round(16 * fontScale) : 16
+  const applyFontScaling = Platform.OS === 'ios' && baseFontSizePx > 0
+  return applyFontScaling ? baseFontSizePx : 0
+}
+
 export interface TermsOfUseHtmlOptions {
   termsOfUse: TermsOfUseResponseData
   colorPalette: IColorPalette
@@ -43,26 +54,24 @@ export interface TermsOfUseHtmlOptions {
  * - Subtitle with version and formatted date (from i18n)
  *
  * @param {TermsOfUseHtmlOptions} options - The terms data, color palette, and i18n strings
+ * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
  * @returns {string} A complete HTML document string
  */
-export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions): string => {
+export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: number): string => {
   const { termsOfUse, colorPalette, headerText, subtitlePrefix, versionLabel } = options
   const formattedDate = formatLongDate(termsOfUse.date)
   const bodyContent = stripOuterDocumentTags(termsOfUse.html)
-  // iOS doesn't support the textZoom prop, so we scale the base font-size with the device fontScale.
-  // Android handles this via the WebView textZoom prop in WebViewContent.
-  const fontScale = Platform.OS === 'ios' ? Dimensions.get('window').fontScale : 1
-  const baseFontSize = Math.round(18 * fontScale)
+  const fontSizeCss = createFontScalingCss(fontScale)
   return `<!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">  
 <style>
   body {
     background-color: ${colorPalette.brand.primaryBackground};
     color: ${colorPalette.brand.secondary};
     font-family: -apple-system, system-ui, sans-serif;
-    font-size: ${baseFontSize}px;
+    font-size: ${fontSizeCss}px !important;
     padding: 0 16px 16px 16px;
     line-height: 1.6;
     margin: 0;
@@ -93,6 +102,9 @@ ${bodyContent}
  * Returns a script fragment that applies iOS font scaling (Dynamic Type) to the document.
  * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
  * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
+ *
+ * Sets font-size on html, body, and all body descendants so that elements with explicit
+ * font-sizes from the page's own CSS (e.g. intro paragraphs) are overridden.
  */
 export const createFontScalingScript = (baseFontSizePx: number): string => {
   if (Platform.OS !== 'ios' || baseFontSizePx <= 0) {
@@ -102,6 +114,9 @@ export const createFontScalingScript = (baseFontSizePx: number): string => {
       const baseFontSizePx = ${baseFontSizePx};
       document.documentElement.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
       if (document.body) document.body.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
+      var fontStyle = document.createElement('style');
+      fontStyle.textContent = 'html, body, body * { font-size: ' + baseFontSizePx + 'px !important; }';
+      document.head.appendChild(fontStyle);
     `
 }
 
@@ -115,12 +130,10 @@ export const createFontScalingScript = (baseFontSizePx: number): string => {
  * @param fontScale - Device font scale (e.g. from useWindowDimensions().fontScale)
  */
 export const createWebViewJavascriptInjection = (colorPalette: IColorPalette, fontScale: number): string => {
-  const baseFontSizePx = fontScale > 0 ? Math.round(16 * fontScale) : 16
-  const applyFontScaling = Platform.OS === 'ios' && baseFontSizePx > 0
-  const fontSizeCss = applyFontScaling ? `font-size: ${baseFontSizePx}px !important;` : ''
+  const fontSizeCss = createFontScalingCss(fontScale)
   return `
     document.addEventListener('DOMContentLoaded', function() {
-      ${createFontScalingScript(baseFontSizePx)}
+      ${createFontScalingScript(fontSizeCss)}
       document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
       document.body.style.color = '${colorPalette.brand.secondary}';
@@ -128,9 +141,6 @@ export const createWebViewJavascriptInjection = (colorPalette: IColorPalette, fo
       const style = document.createElement('style');
       style.textContent = \`
         html, body, body * {
-          ${fontSizeCss}
-        }
-        body, body * {
           background-color: ${colorPalette.brand.primaryBackground} !important;
           color: ${colorPalette.brand.secondary} !important;
         }
