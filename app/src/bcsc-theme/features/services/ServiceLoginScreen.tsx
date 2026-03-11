@@ -31,8 +31,6 @@ type ServiceLoginDefaultViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
-  logger: any
-  navigation: ServiceLoginScreenProps['navigation']
   onContinue: () => Promise<void>
   onCancel: () => void
   onOpenPrivacyPolicy: () => void
@@ -122,8 +120,6 @@ const ServiceLoginDefaultView = ({
   ColorPalette,
   Spacing,
   t,
-  logger,
-  navigation,
   onContinue,
   onCancel,
   onOpenPrivacyPolicy,
@@ -352,7 +348,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
   const onOpenPrivacyPolicy = useCallback(() => {
-    if (!state.privacyPolicyUri) return
+    if (!state.privacyPolicyUri) {
+      return
+    }
     try {
       navigation.navigate(BCSCScreens.MainWebView, {
         url: state.privacyPolicyUri,
@@ -415,8 +413,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           ColorPalette={ColorPalette}
           Spacing={Spacing}
           t={t}
-          logger={logger}
-          navigation={navigation}
           onContinue={onContinue}
           onCancel={onCancel}
           onOpenPrivacyPolicy={onOpenPrivacyPolicy}
