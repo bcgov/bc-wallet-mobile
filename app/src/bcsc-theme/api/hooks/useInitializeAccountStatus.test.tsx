@@ -198,7 +198,7 @@ describe('useInitializeAccountStatus', () => {
     await act(async () => {})
 
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '[useInitializeAccountSatus] Error checking for existing account:',
+      '[useInitializeAccountStatus] Error checking for existing account:',
       mockError
     )
     expect(mockDispatch).toHaveBeenCalledWith({
