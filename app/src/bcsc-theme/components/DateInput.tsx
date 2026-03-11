@@ -68,7 +68,7 @@ const getSelectionRange = (displayValue: string, cursorPosition: number) => {
 }
 
 const DateInput = ({ id, label, value, onChange, error, subtext }: DateInputProps) => {
-  // Display date and actual value are held sepeartely to allow date formatting: 199Y/MM/DD
+  // Display date and actual value are held separately to allow date formatting: 199Y/MM/DD
   // while also allowing the user to delete digits without having to remove the extra format characters
   const [displayValue, setDisplayValue] = useState(dateToDisplay(value))
   const [cursorPosition, setCursorPosition] = useState(nextCursorPosition(value))
