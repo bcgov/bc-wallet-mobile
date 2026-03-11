@@ -27,6 +27,7 @@ export enum AppEventCode {
   ANDROID_DEVICE_PROTECTION_REQUIRED = 'android_device_protection_required',
   CARD_EXPIRED_WILL_REMOVE = 'card_expired_will_remove',
   CARD_STATUS_ADDITIONAL_CARD = 'card_status_additional_card',
+  CARD_CANCELLED_DUE_TO_INACTIVITY = 'card_cancelled_due_to_inactivity',
   CARD_STATUS_CANCELLED = 'card_status_cancelled',
   CARD_STATUS_CANCELLED_BY_USER = 'card_status_cancelled_by_user',
   CARD_STATUS_EXPIRED = 'card_status_expired',
