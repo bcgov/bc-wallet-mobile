@@ -24,9 +24,6 @@ const getDigits = (text: string): string =>
 // Builds the date to display
 const dateToDisplay = (date: string): string => {
   const digits = getDigits(date)
-  if (!digits) {
-    return ''
-  }
 
   const displayCharacters = DATE_TEMPLATE.split('')
   digits.split('').forEach((digit, index) => {
@@ -133,6 +130,7 @@ const DateInput = ({ id, label, value, onChange, error, subtext }: DateInputProp
       subtext={subtext}
       textInputProps={{
         placeholder: DATE_TEMPLATE,
+        placeholderTextColor: '#000000', // can be moved to theme if needed
         keyboardType: 'number-pad', // user will only be entering numbers
         selection,
       }}
