@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { REPORT_SUSPICIOUS_URL } from '@/constants'
+import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { BCState, Mode } from '@/store'
 import {
   Button,
@@ -30,18 +30,18 @@ type ServiceLoginDefaultViewProps = {
   styles: ReturnType<typeof StyleSheet.create>
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   Spacing: ReturnType<typeof useTheme>['Spacing']
-  t: (key: string) => string
-  logger: any
-  navigation: ServiceLoginScreenProps['navigation']
+  t: (key: string, options?: Record<string, unknown>) => string
   onContinue: () => Promise<void>
   onCancel: () => void
+  onOpenInfoShared: () => void
+  onOpenPrivacyPolicy: () => void
 }
 
 type ServiceLoginUnavailableViewProps = {
   state: LocalState
   styles: ReturnType<typeof StyleSheet.create>
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  t: (key: string) => string
+  t: (key: string, options?: Record<string, unknown>) => string
   logger: any
   navigation: ServiceLoginScreenProps['navigation']
 }
@@ -91,7 +91,7 @@ const ServiceLoginUnavailableView = ({
         >
           <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
             <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
-              {t('BCSC.Services.Goto')} {state.serviceTitle}
+              {t('BCSC.Services.GotoService', { service: state.serviceTitle })}
             </ThemedText>
             <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
           </View>
@@ -121,10 +121,10 @@ const ServiceLoginDefaultView = ({
   ColorPalette,
   Spacing,
   t,
-  logger,
-  navigation,
   onContinue,
   onCancel,
+  onOpenInfoShared,
+  onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -138,32 +138,36 @@ const ServiceLoginDefaultView = ({
 
         <View style={styles.cardsContainer}>
           <View style={styles.infoContainer}>
-            <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
-              {t('BCSC.Services.FromAccountPrefix')}
-              <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
-                {' '}
-                {t('BCSC.Services.FromAccount')}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: Spacing.sm,
+              }}
+            >
+              <ThemedText style={styles.infoHeader}>
+                {t('BCSC.Services.FromAccountPrefix')}
+                <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
+                  {' '}
+                  {t('BCSC.Services.FromAccount')}
+                </ThemedText>
               </ThemedText>
-            </ThemedText>
+              <TouchableOpacity
+                testID={testIdWithKey('HelpButton')}
+                accessibilityLabel={t('BCSC.Screens.HelpCentre')}
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={onOpenInfoShared}
+              >
+                <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
+              </TouchableOpacity>
+            </View>
             <ThemedText>{state.claimsDescription}</ThemedText>
           </View>
 
           {state.privacyPolicyUri ? (
-            <TouchableOpacity
-              testID={testIdWithKey('ReadPrivacyPolicy')}
-              onPress={() => {
-                try {
-                  navigation.navigate(BCSCScreens.MainWebView, {
-                    url: state.privacyPolicyUri!,
-                    title: t('BCSC.Services.PrivacyPolicy'),
-                  })
-                } catch (error) {
-                  logger.error(
-                    `ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`
-                  )
-                }
-              }}
-            >
+            <TouchableOpacity testID={testIdWithKey('ReadPrivacyPolicy')} onPress={onOpenPrivacyPolicy}>
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
                 <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
                 <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
@@ -172,9 +176,12 @@ const ServiceLoginDefaultView = ({
           ) : null}
         </View>
 
-        <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
-        </ThemedText>
+        <View>
+          <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
+          {state.serviceClientUri ? (
+            <ThemedText>{t('BCSC.Services.GotoUrl', { url: state.serviceClientUri })}</ThemedText>
+          ) : null}
+        </View>
       </View>
       <View style={styles.buttonsContainer}>
         <View style={styles.continueButtonContainer}>
@@ -340,6 +347,29 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
+  const onOpenInfoShared = useCallback(() => {
+    try {
+      navigation.navigate(BCSCScreens.MainWebView, {
+        url: HelpCentreUrl.INFO_SHARED,
+        title: t('BCSC.Screens.HelpCentre'),
+      })
+    } catch (error) {
+      logger.error('ServiceLoginScreen: Error navigating to info shared help page', error as Error)
+    }
+  }, [navigation, t, logger])
+
+  const onOpenPrivacyPolicy = useCallback(async () => {
+    if (!state.privacyPolicyUri) {
+      return
+    }
+    try {
+      await Linking.openURL(state.privacyPolicyUri)
+    } catch (error) {
+      logger.error('ServiceLoginScreen: Error opening privacy policy URL', error as Error)
+      Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
+    }
+  }, [state.privacyPolicyUri, logger, t])
+
   const onCancel = useCallback(() => {
     // For cold start pairing, clear the pending pairing so RootStack switches stacks
     if (pairingService.hasPendingPairing) {
@@ -392,10 +422,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           ColorPalette={ColorPalette}
           Spacing={Spacing}
           t={t}
-          logger={logger}
-          navigation={navigation}
           onContinue={onContinue}
           onCancel={onCancel}
+          onOpenInfoShared={onOpenInfoShared}
+          onOpenPrivacyPolicy={onOpenPrivacyPolicy}
         />
       )
   }
