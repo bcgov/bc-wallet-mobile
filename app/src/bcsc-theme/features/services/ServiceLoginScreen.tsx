@@ -358,19 +358,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [navigation, t, logger])
 
-  const onOpenPrivacyPolicy = useCallback(() => {
+  const onOpenPrivacyPolicy = useCallback(async () => {
     if (!state.privacyPolicyUri) {
       return
     }
     try {
-      navigation.navigate(BCSCScreens.MainWebView, {
-        url: state.privacyPolicyUri,
-        title: t('BCSC.Services.PrivacyPolicy'),
-      })
+      await Linking.openURL(state.privacyPolicyUri)
     } catch (error) {
-      logger.error('ServiceLoginScreen: Error navigating to privacy policy', error as Error)
+      logger.error('ServiceLoginScreen: Error opening privacy policy URL', error as Error)
+      Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
     }
-  }, [state.privacyPolicyUri, navigation, t, logger])
+  }, [state.privacyPolicyUri, logger, t])
 
   const onCancel = useCallback(() => {
     // For cold start pairing, clear the pending pairing so RootStack switches stacks
