@@ -2331,9 +2331,13 @@ class BcscCoreModule(
                         promise.reject("E_DEVICE_AUTH_CANCELLED", "Device authentication was cancelled by user")
                     }
 
-                    DeviceAuthenticationResult.FAILED,
-                    DeviceAuthenticationResult.ERROR,
-                    -> {
+                    DeviceAuthenticationResult.FAILED -> {
+                        // Intermediate biometric failure (e.g. wrong finger) — prompt is
+                        // still open so do not settle the promise.
+                        Log.d(NAME, "performDeviceAuthentication: intermediate biometric failure, awaiting retry")
+                    }
+
+                    DeviceAuthenticationResult.ERROR -> {
                         Log.e(NAME, "performDeviceAuthentication: failed")
                         promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed")
                     }
@@ -2687,9 +2691,13 @@ class BcscCoreModule(
                         promise.resolve(result)
                     }
 
-                    DeviceAuthenticationResult.FAILED,
-                    DeviceAuthenticationResult.ERROR,
-                    -> {
+                    DeviceAuthenticationResult.FAILED -> {
+                        // Intermediate biometric failure (e.g. wrong finger) — prompt is
+                        // still open so do not settle the promise.
+                        Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
+                    }
+
+                    DeviceAuthenticationResult.ERROR -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
                         promise.resolve(result)
