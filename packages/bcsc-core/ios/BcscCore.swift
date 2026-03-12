@@ -441,7 +441,8 @@ class BcscCore: NSObject {
     )
 
     guard let currentAccount = account else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
+      // No account means no tokens to delete — treat as success (idempotent)
+      resolve(true)
       return
     }
 

@@ -644,7 +644,8 @@ class BcscCoreModule(
             // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
+                // No account means no tokens to delete — treat as success (idempotent)
+                promise.resolve(true)
                 return
             }
 
@@ -652,7 +653,8 @@ class BcscCoreModule(
             val issuer = account.getString("issuer")
 
             if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID or issuer is null or empty")
+                // No valid account, nothing to delete — treat as success (idempotent)
+                promise.resolve(true)
                 return
             }
 
