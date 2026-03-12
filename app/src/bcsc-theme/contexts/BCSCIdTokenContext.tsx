@@ -1,6 +1,6 @@
 import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
-import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
+import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react'
 import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { IdToken } from '../utils/id-token'
@@ -67,8 +67,16 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  // On initial mount, use the cached tokens from hydrateSecureState or brand new verification
+  // Subsequent refreshes (e.g. refreshIdToken) fetch fresh tokens from the server
+  const isInitialLoad = useRef(true)
+
   const { data, load, isLoading, refresh } = useDataLoader(
-    () => api.token.getCachedIdTokenMetadata({ refreshCache: true }),
+    async () => {
+      const shouldRefresh = !isInitialLoad.current
+      isInitialLoad.current = false
+      return api.token.getCachedIdTokenMetadata({ refreshCache: shouldRefresh })
+    },
     {
       onError: (error) => logger.error('BCSCIdTokenProvider: Failed to load ID Token metadata', error as Error),
     }
