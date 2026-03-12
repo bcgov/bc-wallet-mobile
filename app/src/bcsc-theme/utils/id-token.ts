@@ -40,6 +40,7 @@ export enum BCSCReason {
   CanceledByAdditionalCard = 'Canceled by Additional Card',
   CanceledByCardTypeChange = 'Canceled by Card Type Change',
   CanceledDueToInactivity = 'Canceled due to Inactivity',
+  CanceledByCardExpire = 'Canceled by Card Expire', // Legacy: physical card expiry no longer cancels the mobile app
 }
 
 /**

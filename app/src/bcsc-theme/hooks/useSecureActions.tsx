@@ -180,18 +180,11 @@ export const useSecureActions = () => {
    */
   const updateTokens = useCallback(
     async (tokens: { refreshToken?: string; registrationAccessToken?: string; accessToken?: string }) => {
-      const promises = []
-
       if (tokens.refreshToken !== undefined) {
         dispatch({
           type: BCDispatchAction.UPDATE_SECURE_REFRESH_TOKEN,
           payload: [tokens.refreshToken],
         })
-
-        // Only sync to apiClient if client is ready AND we have a valid refresh token
-        if (isClientReady && apiClient && tokens.refreshToken) {
-          promises.push(apiClient.getTokensForRefreshToken(tokens.refreshToken))
-        }
       }
 
       if (tokens.registrationAccessToken !== undefined) {
@@ -208,10 +201,9 @@ export const useSecureActions = () => {
         })
       }
 
-      promises.push(persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken))
-      await Promise.all(promises)
+      await persistTokens(tokens.refreshToken, tokens.registrationAccessToken, tokens.accessToken)
     },
-    [dispatch, persistTokens, apiClient, isClientReady]
+    [dispatch, persistTokens]
   )
 
   /**
@@ -691,7 +683,21 @@ export const useSecureActions = () => {
         logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
       }
 
-      await updateTokens({ refreshToken, registrationAccessToken, accessToken })
+      let freshTokens: TokenResponse | null = null
+      if (refreshToken && apiClient && isClientReady) {
+        try {
+          freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
+        }
+      }
+
+      await updateTokens({
+        refreshToken: freshTokens?.refresh_token ?? refreshToken,
+        registrationAccessToken,
+        accessToken: freshTokens?.access_token ?? accessToken,
+      })
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined
@@ -768,7 +774,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throw error
     }
-  }, [logger, updateTokens, dispatch])
+  }, [logger, updateTokens, dispatch, apiClient, isClientReady])
 
   /**
    * Clears secure state from store (does not delete from native storage).

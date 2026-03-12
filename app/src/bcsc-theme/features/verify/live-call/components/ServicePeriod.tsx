@@ -12,15 +12,19 @@ const ServicePeriod = ({ servicePeriod }: ServicePeriodProps) => {
     <View style={{ flex: 1, marginBottom: Spacing.md }}>
       <ThemedText
         style={{ fontWeight: servicePeriod.isUnavailable ? 'bold' : 'normal' }}
-        testID={testIdWithKey('ServicePeriodTitle')}
+        testID={testIdWithKey('ServicePeriodTitle_' + servicePeriod.title)}
       >
         {servicePeriod.title}
       </ThemedText>
       {servicePeriod.hours && (
-        <ThemedText testID={testIdWithKey('ServicePeriodHours')}>{servicePeriod.hours}</ThemedText>
+        <ThemedText testID={testIdWithKey('ServicePeriodHours_' + servicePeriod.hours)}>
+          {servicePeriod.hours}
+        </ThemedText>
       )}
       {servicePeriod.dateLine && (
-        <ThemedText testID={testIdWithKey('ServicePeriodDate')}>{servicePeriod.dateLine}</ThemedText>
+        <ThemedText testID={testIdWithKey('ServicePeriodDate_' + servicePeriod.dateLine)}>
+          {servicePeriod.dateLine}
+        </ThemedText>
       )}
     </View>
   )

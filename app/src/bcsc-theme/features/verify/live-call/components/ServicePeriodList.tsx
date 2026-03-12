@@ -13,7 +13,7 @@ const ServicePeriodList = ({ items }: ServicePeriodListProps) => {
     return <ThemedText testID={testIdWithKey('ServiceHours')}>{t('BCSC.VideoCall.DefaultHours')}</ThemedText>
   }
   return (
-    <View testID={testIdWithKey('BeforeYouCallTitle')}>
+    <View testID={testIdWithKey('ServicePeriodList')}>
       {items.map((item) => (
         <ServicePeriod servicePeriod={item} key={`${JSON.stringify(item)}`} />
       ))}

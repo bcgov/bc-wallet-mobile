@@ -96,7 +96,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
         }
       >
         <View
-          testID="com.ariesbifold:id/BeforeYouCallTitle"
+          testID="com.ariesbifold:id/ServicePeriodList"
         >
           <View
             style={
@@ -121,7 +121,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
                   },
                 ]
               }
-              testID="com.ariesbifold:id/ServicePeriodTitle"
+              testID="com.ariesbifold:id/ServicePeriodTitle_Monday to Friday"
             >
               Monday to Friday
             </Text>
@@ -138,7 +138,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/ServicePeriodHours"
+              testID="com.ariesbifold:id/ServicePeriodHours_8:00 AM - 5:00 PM Pacific Time"
             >
               8:00 AM - 5:00 PM Pacific Time
             </Text>
