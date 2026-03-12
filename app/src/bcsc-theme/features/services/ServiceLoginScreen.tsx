@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
+import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { BCState, Mode } from '@/store'
 import {
   Button,
@@ -157,7 +157,7 @@ const ServiceLoginDefaultView = ({
                 testID={testIdWithKey('HelpButton')}
                 accessibilityLabel={t('BCSC.Screens.HelpCentre')}
                 accessibilityRole="button"
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                hitSlop={hitSlop}
                 onPress={onOpenInfoShared}
               >
                 <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
