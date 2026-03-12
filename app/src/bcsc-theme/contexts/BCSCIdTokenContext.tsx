@@ -2,6 +2,7 @@ import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react'
 import useApi from '../api/hooks/useApi'
+import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import useDataLoader from '../hooks/useDataLoader'
 import { IdToken } from '../utils/id-token'
 
@@ -65,6 +66,7 @@ export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> 
  */
 export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
   const api = useApi()
+  const apiClient = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // On initial mount, use the cached tokens from hydrateSecureState or brand new verification
@@ -73,7 +75,10 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
 
   const { data, load, isLoading, refresh } = useDataLoader(
     async () => {
-      const shouldRefresh = !isInitialLoad.current
+      // On initial mount, skip the server refresh if apiClient already has tokens
+      // (populated by hydrateSecureState). If tokens are missing, force a refresh
+      // so we don't throw TOKEN_NULL in some weird scenario
+      const shouldRefresh = !isInitialLoad.current || !apiClient.tokens
       isInitialLoad.current = false
       return api.token.getCachedIdTokenMetadata({ refreshCache: shouldRefresh })
     },
