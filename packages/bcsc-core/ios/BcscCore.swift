@@ -199,25 +199,21 @@ class BcscCore: NSObject {
   // MARK: - Public Methods
 
   func getAllKeys(
-    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
   ) {
-    do {
-      let keyPairManager = KeyPairManager()
-      let keys = keyPairManager.findAllPrivateKeys()
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
 
-      let result = keys.map { keyInfo -> [String: Any] in
-        return [
-          "keyType": keyInfo.keyType.name,
-          "keySize": keyInfo.keySize,
-          "id": keyInfo.tag,
-          "created": keyInfo.created.timeIntervalSince1970,
-        ]
-      }
-
-      resolve(result)
-    } catch {
-      reject("E_KEYSTORE_ERROR", "Error accessing keystore: \(error.localizedDescription)", error)
+    let result = keys.map { keyInfo -> [String: Any] in
+      return [
+        "keyType": keyInfo.keyType.name,
+        "keySize": keyInfo.keySize,
+        "id": keyInfo.tag,
+        "created": keyInfo.created.timeIntervalSince1970,
+      ]
     }
+
+    resolve(result)
   }
 
   func getKeyPair(

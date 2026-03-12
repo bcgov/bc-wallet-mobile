@@ -40,7 +40,7 @@ export const BcscNativeErrorCodes = {
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
 
-  // --- Shared error codes (aligned across iOS and Android) ---
+  // --- Native error codes (see per-entry docs for platform availability) ---
 
   // Account / Token
   /** Account not found in native storage */
