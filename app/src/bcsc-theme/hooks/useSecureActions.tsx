@@ -683,16 +683,21 @@ export const useSecureActions = () => {
         logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
       }
 
+      let freshTokens: TokenResponse | null = null
       if (refreshToken && apiClient && isClientReady) {
         try {
-          await apiClient.getTokensForRefreshToken(refreshToken)
+          freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
         }
       }
 
-      await updateTokens({ refreshToken, registrationAccessToken, accessToken })
+      await updateTokens({
+        refreshToken: freshTokens?.refresh_token ?? refreshToken,
+        registrationAccessToken,
+        accessToken: freshTokens?.access_token ?? accessToken,
+      })
 
       // Reconstruct userMetadata from authorizationRequest (matches IAS apps)
       let userMetadata: NonBCSCUserMetadata | undefined = undefined

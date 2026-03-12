@@ -15,9 +15,9 @@ import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
-// Refresh tokens 60 seconds before they actually expire to avoid
+// Refresh tokens 30 seconds before they actually expire to avoid
 // expiry-on-the-wire races when multiple requests fire near the boundary.
-const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000
+const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {

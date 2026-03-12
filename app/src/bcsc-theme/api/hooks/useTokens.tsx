@@ -62,10 +62,6 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         })
 
         try {
-          // Set apiClient.tokens BEFORE updateTokens so it can see that tokens are already
-          // fresh. Without this ordering, updateTokens calls getTokensForRefreshToken which
-          // posts to /device/token again — the new access token from that second call
-          // invalidates this one server-side, causing 500s on concurrent requests.
           apiClient.tokens = data
           await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
         } catch (error) {
