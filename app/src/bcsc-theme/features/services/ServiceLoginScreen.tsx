@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { REPORT_SUSPICIOUS_URL } from '@/constants'
+import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { BCState, Mode } from '@/store'
 import {
   Button,
@@ -33,6 +33,7 @@ type ServiceLoginDefaultViewProps = {
   t: (key: string, options?: Record<string, unknown>) => string
   onContinue: () => Promise<void>
   onCancel: () => void
+  onOpenInfoShared: () => void
   onOpenPrivacyPolicy: () => void
 }
 
@@ -122,6 +123,7 @@ const ServiceLoginDefaultView = ({
   t,
   onContinue,
   onCancel,
+  onOpenInfoShared,
   onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
@@ -151,17 +153,15 @@ const ServiceLoginDefaultView = ({
                   {t('BCSC.Services.FromAccount')}
                 </ThemedText>
               </ThemedText>
-              {state.privacyPolicyUri ? (
-                <TouchableOpacity
-                  testID={testIdWithKey('HelpButton')}
-                  accessibilityLabel={t('BCSC.Services.PrivacyPolicy')}
-                  accessibilityRole="button"
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  onPress={onOpenPrivacyPolicy}
-                >
-                  <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
-                </TouchableOpacity>
-              ) : null}
+              <TouchableOpacity
+                testID={testIdWithKey('HelpButton')}
+                accessibilityLabel={t('BCSC.Screens.HelpCentre')}
+                accessibilityRole="button"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                onPress={onOpenInfoShared}
+              >
+                <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
+              </TouchableOpacity>
             </View>
             <ThemedText>{state.claimsDescription}</ThemedText>
           </View>
@@ -347,6 +347,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
+  const onOpenInfoShared = useCallback(() => {
+    try {
+      navigation.navigate(BCSCScreens.MainWebView, {
+        url: HelpCentreUrl.INFO_SHARED,
+        title: t('BCSC.Screens.HelpCentre'),
+      })
+    } catch (error) {
+      logger.error('ServiceLoginScreen: Error navigating to info shared help page', error as Error)
+    }
+  }, [navigation, t, logger])
+
   const onOpenPrivacyPolicy = useCallback(() => {
     if (!state.privacyPolicyUri) {
       return
@@ -357,7 +368,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         title: t('BCSC.Services.PrivacyPolicy'),
       })
     } catch (error) {
-      logger.error('ServiceLoginScreen: Error navigating to the service client privacy policy webview', error as Error)
+      logger.error('ServiceLoginScreen: Error navigating to privacy policy', error as Error)
     }
   }, [state.privacyPolicyUri, navigation, t, logger])
 
@@ -415,6 +426,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           t={t}
           onContinue={onContinue}
           onCancel={onCancel}
+          onOpenInfoShared={onOpenInfoShared}
           onOpenPrivacyPolicy={onOpenPrivacyPolicy}
         />
       )
