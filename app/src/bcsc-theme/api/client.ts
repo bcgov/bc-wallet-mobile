@@ -15,6 +15,10 @@ import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
+// Refresh tokens 30 seconds before they actually expire to avoid
+// expiry-on-the-wire races when multiple requests fire near the boundary.
+const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
+
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -233,18 +237,25 @@ class BCSCApiClient {
         return this.tokens
       }
 
-      // access token is expired, fetch new tokens using refresh token
-      return this.getTokensForRefreshToken(this.tokens.refresh_token)
+      // access token is expired or about to expire, fetch new tokens using refresh token
+      // Set tokensPromise immediately to prevent concurrent callers from starting duplicate refreshes
+      this.tokensPromise = this.fetchTokens(this.tokens.refresh_token)
+      try {
+        this.tokens = await this.tokensPromise
+      } finally {
+        this.tokensPromise = null
+      }
+      return this.tokens
     })
   }
 
   private isTokenExpired(token?: string): boolean {
     let isExpired = true
-    // if no token is present, return that token is "expired" and fetch a new one
+    // if no token is present, or within the buffer limit of expiring, return that token is "expired" and fetch a new one
     if (token) {
       const decodedToken = jwtDecode(token)
       const exp = decodedToken.exp ?? 0
-      isExpired = Date.now() >= exp * 1000
+      isExpired = Date.now() >= exp * 1000 - TOKEN_EXPIRY_BUFFER_MS
     }
     return isExpired
   }

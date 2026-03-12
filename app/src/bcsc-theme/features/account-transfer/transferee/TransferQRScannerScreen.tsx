@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -44,6 +45,7 @@ import { useCameraPermission } from 'react-native-vision-camera'
  */
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
+  const apiClient = useBCSCApiClient()
   const { updateTokens } = useSecureActions()
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const [store] = useStore<BCState>()
@@ -161,6 +163,7 @@ const TransferQRScannerScreen: React.FC = () => {
             client_assertion: newDeviceJWT,
           })
 
+          apiClient.tokens = deviceToken
           await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
@@ -173,7 +176,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store, deviceAttestation, t, token, isLoading, scanError, navigator, updateTokens]
+    [store, deviceAttestation, t, token, isLoading, scanError, navigator, updateTokens, apiClient]
   )
 
   if (isPermissionLoading) {
