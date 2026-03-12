@@ -60,7 +60,7 @@ export enum BCSCScreens {
   DualIdentificationRequired = 'BCSCDualIdentificationRequired', // FIXME (MD): Not sure which V3 screen this maps to...
   IDPhotoInformation = 'ID Photo Instructions',
   /**
-   * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3
+   * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3 https://github.com/bcgov/bc-wallet-mobile/issues/3409
    *
    * Screens:
    * Secondary ID Options for Non-BCSC
