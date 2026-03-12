@@ -169,7 +169,7 @@ class BcscCore: NSObject {
       return try jwt.serialize()
     } catch {
       reject(
-        "E_JWT_SIGN_SERIALIZE_FAILED",
+        "E_JWT_SIGN_FAILED",
         "Failed to sign or serialize JWT: \(error.localizedDescription)", error
       )
       return nil
@@ -199,21 +199,25 @@ class BcscCore: NSObject {
   // MARK: - Public Methods
 
   func getAllKeys(
-    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
-    let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    do {
+      let keyPairManager = KeyPairManager()
+      let keys = keyPairManager.findAllPrivateKeys()
 
-    let result = keys.map { keyInfo -> [String: Any] in
-      return [
-        "keyType": keyInfo.keyType.name,
-        "keySize": keyInfo.keySize,
-        "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970, // Convert Date to timestamp
-      ]
+      let result = keys.map { keyInfo -> [String: Any] in
+        return [
+          "keyType": keyInfo.keyType.name,
+          "keySize": keyInfo.keySize,
+          "id": keyInfo.tag,
+          "created": keyInfo.created.timeIntervalSince1970,
+        ]
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Error accessing keystore: \(error.localizedDescription)", error)
     }
-
-    resolve(result)
   }
 
   func getKeyPair(
@@ -230,7 +234,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export public key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export public key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -241,7 +245,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export private key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export private key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -257,7 +261,7 @@ class BcscCore: NSObject {
     } catch KeychainError.keyNotExists {
       reject("E_KEY_NOT_FOUND", "Key pair with label '\(label)' not found.", nil)
     } catch {
-      reject("E_UNKNOWN", "An unexpected error occurred: \(error.localizedDescription)", error)
+      reject("E_KEY_ERROR", "An unexpected error occurred: \(error.localizedDescription)", error)
     }
   }
 

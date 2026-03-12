@@ -207,7 +207,7 @@ class BcscCoreModule(
 
             promise.resolve(keyPair)
         } catch (e: BcscException) {
-            promise.reject("E_BCSC_KEY_ERROR", "Error retrieving key pair using bcsc-keypair-port: ${e.devMessage}", e)
+            promise.reject("E_KEY_EXPORT_FAILED", "Error retrieving key pair: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEY_ERROR", "Unexpected error retrieving key pair: ${e.message}", e)
         }
@@ -239,7 +239,7 @@ class BcscCoreModule(
 
             promise.resolve(privateKeys)
         } catch (e: BcscException) {
-            promise.reject("E_BCSC_KEYSTORE_ERROR", "Error accessing bcsc keystore: ${e.devMessage}", e)
+            promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error accessing keystore: ${e.message}", e)
         }
@@ -255,15 +255,13 @@ class BcscCoreModule(
         // First, get the account to obtain the account ID
         val account = getAccountSync()
         if (account == null) {
-            Log.w(NAME, "getToken - Cannot get account, returning null")
-            promise.resolve(null)
+            promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
             return
         }
 
         val accountId = account.getString("id")
         if (accountId == null || accountId.isEmpty()) {
-            Log.w(NAME, "getToken - Account ID is null or empty, returning null")
-            promise.resolve(null)
+            promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID is null or empty")
             return
         }
 
@@ -288,8 +286,7 @@ class BcscCoreModule(
 
             val issuer = account.getString("issuer")
             if (issuer.isNullOrEmpty()) {
-                Log.w(NAME, "getToken - Account issuer is null or empty, cannot determine environment")
-                promise.resolve(null)
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account issuer is null or empty")
                 return
             }
 
@@ -647,8 +644,7 @@ class BcscCoreModule(
             // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
-                // No account means no tokens to delete
-                promise.resolve(true)
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
                 return
             }
 
@@ -656,8 +652,7 @@ class BcscCoreModule(
             val issuer = account.getString("issuer")
 
             if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                // No valid account, nothing to delete
-                promise.resolve(true)
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID or issuer is null or empty")
                 return
             }
 
@@ -1142,13 +1137,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "getRefreshTokenRequestBody: BCSC error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_REFRESH_TOKEN_ERROR",
-                "Error creating refresh token request with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error creating refresh token request: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "getRefreshTokenRequestBody: Unexpected error: ${e.message}", e)
-            promise.reject("E_REFRESH_TOKEN_ERROR", "Unexpected error creating refresh token request: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating refresh token request: ${e.message}", e)
         }
     }
 
@@ -1203,13 +1198,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "signPairingCode: BCSC signing error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_SIGNING_ERROR",
-                "Error signing pairing code with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error signing pairing code: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "signPairingCode: Unexpected error: ${e.message}", e)
-            promise.reject("E_SIGNING_ERROR", "Unexpected error signing pairing code: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error signing pairing code: ${e.message}", e)
         }
     }
 
@@ -1462,13 +1457,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "createPreVerificationJWT: BCSC signing error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_EVIDENCE_JWT_ERROR",
-                "Error creating pre-verification JWT with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error creating pre-verification JWT: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "createPreVerificationJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating pre-verification JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating pre-verification JWT: ${e.message}", e)
         }
     }
 
@@ -1498,10 +1493,10 @@ class BcscCoreModule(
             promise.resolve(signedJWT)
         } catch (e: BcscException) {
             Log.e(NAME, "createSignedJWT: BCSC signing error: ${e.devMessage}", e)
-            promise.reject("E_BCSC_CREATE_JWT_ERROR", "Error creating JWT with bcsc-keypair-port: ${e.devMessage}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Error creating signed JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
             Log.e(NAME, "createSignedJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_BCSC_CREATE_JWT_ERROR", "Unexpected error creating JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating signed JWT: ${e.message}", e)
         }
     }
 
@@ -1683,10 +1678,10 @@ class BcscCoreModule(
             promise.resolve(encryptedJWT)
         } catch (e: BcscException) {
             Log.e(NAME, "createQuickLoginJWT: BCSC error: ${e.devMessage}", e)
-            promise.reject("E_BCSC_QUICK_LOGIN_ERROR", "Error creating quick login JWT: ${e.devMessage}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Error creating quick login JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
             Log.e(NAME, "createQuickLoginJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_QUICK_LOGIN_ERROR", "Unexpected error creating quick login JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating quick login JWT: ${e.message}", e)
         }
     }
 
@@ -2142,7 +2137,7 @@ class BcscCoreModule(
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "setPIN error: ${e.message}", e)
-            promise.reject("E_SET_PIN_ERROR", "Error setting PIN: ${e.message}", e)
+            promise.reject("E_SET_PIN_FAILED", "Error setting PIN: ${e.message}", e)
         }
     }
 
@@ -2267,7 +2262,7 @@ class BcscCoreModule(
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "deletePIN error: ${e.message}", e)
-            promise.reject("E_DELETE_PIN_ERROR", "Error deleting PIN: ${e.message}", e)
+            promise.reject("E_DELETE_PIN_FAILED", "Error deleting PIN: ${e.message}", e)
         }
     }
 

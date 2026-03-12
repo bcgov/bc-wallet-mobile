@@ -75,8 +75,6 @@ struct PINService: PINServiceProtocol {
       if let error = keychainService.deleteSecret(secretID) {
         throw error
       }
-    } else {
-      throw PINKeychainServiceError.secretNotFound
     }
   }
 
