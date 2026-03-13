@@ -820,7 +820,6 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                     },
                     false,
                     false,
-                    false,
                   ],
                 ]
               }
@@ -897,7 +896,6 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
-                    false,
                     false,
                     false,
                   ],
