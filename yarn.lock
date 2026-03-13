@@ -3517,19 +3517,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/react-hooks@npm:0.6.1":
-  version: 0.6.1
-  resolution: "@credo-ts/react-hooks@npm:0.6.1"
-  dependencies:
-    rxjs: "npm:^7.2.0"
-  peerDependencies:
-    "@credo-ts/core": ^0.5.0
-    "@credo-ts/question-answer": ^0.5.0
-    react: ">=17.0.0 <19.0.0"
-  checksum: 10c0/8712cedb61f73825438b82a97b5b4996cee9a9da250c90782f2dde3bb7678bb1180ba7d7dadf42c49840ca30a48f015123ad2826a977be7cb3effb0f3dac48b4
-  languageName: node
-  linkType: hard
-
 "@credo-ts/react-native@npm:0.5.19":
   version: 0.5.19
   resolution: "@credo-ts/react-native@npm:0.5.19"
@@ -9339,7 +9326,6 @@ __metadata:
     "@credo-ts/openid4vc": "npm:0.5.19"
     "@credo-ts/push-notifications": "npm:0.7.1"
     "@credo-ts/question-answer": "npm:0.5.19"
-    "@credo-ts/react-hooks": "npm:0.6.1"
     "@credo-ts/react-native": "npm:0.5.19"
     "@credo-ts/webvh": "npm:0.5.19"
     "@eslint/js": "npm:~8.57.1"
