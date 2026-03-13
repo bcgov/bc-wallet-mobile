@@ -72,6 +72,11 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     return currentIndex >= prompts.length - 1
   }, [prompts, prompt])
 
+  if (!prompts.length) {
+    // Developer error - prompts must be persisted before reaching this screen.
+    throw new Error('[TakeVideoScreen] No prompts found in store')
+  }
+
   const styles = useMemo(
     () =>
       StyleSheet.create({

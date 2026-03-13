@@ -15,6 +15,15 @@ jest.mock('react-native-vision-camera', () => ({
   CameraRuntimeError: class extends Error {},
 }))
 
+const storeWithPrompts = {
+  bcsc: {
+    prompts: [
+      { id: 1, prompt: 'Say your name' },
+      { id: 2, prompt: 'Show your face' },
+    ],
+  },
+} as any
+
 describe('TakeVideoScreen', () => {
   beforeEach(() => {
     jest.useFakeTimers()
@@ -28,7 +37,7 @@ describe('TakeVideoScreen', () => {
   test('renders correctly', () => {
     const navigation = useNavigation()
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
         <TakeVideoScreen navigation={navigation as never} />
       </BasicAppContext>
     )
@@ -42,7 +51,7 @@ describe('TakeVideoScreen', () => {
 
     const navigation = useNavigation()
     const { getByText } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
         <TakeVideoScreen navigation={navigation as never} />
       </BasicAppContext>
     )
@@ -61,7 +70,7 @@ describe('TakeVideoScreen', () => {
 
     const navigation = useNavigation()
     const { getByText } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
         <BCSCLoadingProvider>
           <TakeVideoScreen navigation={navigation as never} />
         </BCSCLoadingProvider>
