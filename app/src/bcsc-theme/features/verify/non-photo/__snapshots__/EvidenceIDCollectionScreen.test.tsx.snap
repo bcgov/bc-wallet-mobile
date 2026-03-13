@@ -139,28 +139,55 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               >
                 Passport Number
               </Text>
-              <TextInput
-                accessibilityLabel="Passport Number"
-                autoCorrect={false}
-                onChange={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderColor": "#D3D3D3",
-                      "borderRadius": 4,
-                      "borderWidth": 1,
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 16,
-                      "padding": 10,
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#FFFFFF",
+                    "borderRadius": 4,
+                    "borderWidth": 2,
+                    "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "minHeight": 48,
+                    "padding": 0,
+                    "paddingHorizontal": 0,
+                    "paddingVertical": 0,
+                    "shadowColor": "#FFFFFF",
+                    "shadowOffset": {
+                      "height": 0,
+                      "width": 0,
                     },
-                    undefined,
-                  ]
+                    "shadowOpacity": 0,
+                    "shadowRadius": 0,
+                  }
                 }
-                testID="com.ariesbifold:id/documentNumber-input"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="Passport Number"
+                  autoCorrect={false}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "color": "#313132",
+                        "flex": 1,
+                        "padding": 10,
+                        "paddingHorizontal": undefined,
+                        "paddingVertical": undefined,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/documentNumber-input"
+                  value=""
+                />
+              </View>
               <Text
                 maxFontSizeMultiplier={2}
                 style={
