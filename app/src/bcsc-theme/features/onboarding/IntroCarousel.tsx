@@ -141,6 +141,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
               navigation.navigate(BCSCScreens.OnboardingWebView, {
                 title: t('BCSC.Onboarding.CarouselServicesHeader'),
                 url: WHERE_TO_USE_URL,
+                disableInjectedStyles: true,
               })
             }
             endIcon="open-in-new"

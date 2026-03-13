@@ -78,6 +78,7 @@ describe('IntroCarouselScreen', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingWebView, {
         title: 'BCSC.Onboarding.CarouselServicesHeader',
         url: WHERE_TO_USE_URL,
+        disableInjectedStyles: true,
       })
     })
 

@@ -8,9 +8,9 @@ interface OnboardingWebViewScreenProps {
 }
 
 const OnboardingWebViewScreen: React.FC<OnboardingWebViewScreenProps> = ({ route }) => {
-  const { url } = route.params
+  const { url, disableInjectedStyles } = route.params
 
-  return <WebViewContent url={url} />
+  return <WebViewContent url={url} disableInjectedStyles={disableInjectedStyles} />
 }
 
 export { OnboardingWebViewScreen }
