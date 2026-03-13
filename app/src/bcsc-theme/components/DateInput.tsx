@@ -13,7 +13,7 @@ interface DateInputProps {
 }
 
 const DATE_TEMPLATE = 'YYYY/MM/DD'
-// Expecting 10 digits including / in the formatted date
+// Expecting 10 characters in the formatted date (8 digits + 2 '/')
 const DATE_DIGIT_POSITIONS = [0, 1, 2, 3, 5, 6, 8, 9]
 
 const getDigits = (text: string): string =>
