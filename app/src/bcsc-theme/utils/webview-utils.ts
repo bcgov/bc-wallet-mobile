@@ -26,14 +26,14 @@ const stripOuterDocumentTags = (html: string): string => {
 }
 
 /**
- * Creates a CSS fragment that applies font scaling to the document.
- * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
- * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
+ * Creates a CSS font-size value based on the device font scale.
+ * iOS uses the fontScale, Android uses a fixed value of 1.
+ * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns {number} The CSS font-size value in pixels
  */
 const createFontScalingCss = (fontScale: number): number => {
-  const baseFontSizePx = fontScale > 0 ? Math.round(16 * fontScale) : 16
-  const applyFontScaling = Platform.OS === 'ios' && baseFontSizePx > 0
-  return applyFontScaling ? baseFontSizePx : 0
+  const scale = Platform.OS === 'ios' ? fontScale : 1
+  return Math.round(16 * scale)
 }
 
 export interface TermsOfUseHtmlOptions {

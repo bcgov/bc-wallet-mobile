@@ -26,6 +26,11 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
    * @type {() => void}
    */
   onLoaded?: () => void
+  /**
+   * When true, skips injecting theme/styles (background, colors, link styling, removal of header/footer).
+   * Use for pages that should keep their own layout (e.g. "Where to use").
+   */
+  disableInjectedStyles?: boolean
 }
 
 /**
@@ -35,7 +40,7 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {React.ReactElement} The rendered WebView component.
  */
-const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded, disableInjectedStyles = false }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -115,7 +120,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
       injectedJavaScriptBeforeContentLoaded={
-        html ? undefined : createWebViewJavascriptInjection(ColorPalette, fontScale)
+        html || disableInjectedStyles ? undefined : createWebViewJavascriptInjection(ColorPalette, fontScale)
       }
       onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}

@@ -8,9 +8,9 @@ interface VerifyWebViewScreenProps {
 }
 
 const VerifyWebViewScreen: React.FC<VerifyWebViewScreenProps> = ({ route }) => {
-  const { url } = route.params
+  const { url, disableInjectedStyles } = route.params
 
-  return <WebViewContent url={url} />
+  return <WebViewContent url={url} disableInjectedStyles={disableInjectedStyles} />
 }
 
 export { VerifyWebViewScreen }
