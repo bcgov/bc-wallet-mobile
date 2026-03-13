@@ -215,7 +215,6 @@ exports[`LiveCall renders correctly 1`] = `
                   },
                   false,
                   false,
-                  false,
                 ],
               ]
             }

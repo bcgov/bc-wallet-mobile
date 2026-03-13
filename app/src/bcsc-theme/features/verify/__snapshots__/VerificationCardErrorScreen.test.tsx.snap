@@ -153,7 +153,6 @@ exports[`VerificationCardErrorScreen renders CardExpired variant correctly 1`] =
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }

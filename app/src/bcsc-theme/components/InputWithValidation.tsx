@@ -1,6 +1,6 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
-import { StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native'
+import { LayoutChangeEvent, StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type InputWithValidationProps = {
@@ -8,6 +8,7 @@ type InputWithValidationProps = {
   value: string
   onChange?: (value: string) => void
   onChangeText?: (value: string) => void
+  onLayout?: (e: LayoutChangeEvent) => void
   label: string
   onFocus?: () => void
   onPressIn?: () => void
@@ -85,7 +86,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
   })
 
   return (
-    <View>
+    <View onLayout={props.onLayout}>
       <ThemedText
         variant={'labelTitle'}
         style={[styles.label, props.labelProps]}
