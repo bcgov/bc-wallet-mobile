@@ -67,15 +67,23 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       TextTheme: {
         headingOne: {
           color: theme.ColorPalette.grayscale.white,
+          fontFamily: 'BCSans-Bold',
+          fontWeight: 'normal',
         },
         headingTwo: {
           color: theme.ColorPalette.grayscale.white,
+          fontFamily: 'BCSans-Bold',
+          fontWeight: 'normal',
         },
         headingThree: {
           color: theme.ColorPalette.grayscale.white,
+          fontFamily: 'BCSans-Bold',
+          fontWeight: 'normal',
         },
         headingFour: {
           color: theme.ColorPalette.grayscale.white,
+          fontFamily: 'BCSans-Bold',
+          fontWeight: 'normal',
         },
         normal: {
           color: theme.ColorPalette.grayscale.white,
