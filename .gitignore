@@ -79,3 +79,6 @@ app/vendor/
 coverage/
 .settings/
 tmp/
+
+# Appium drivers (installed via e2e/yarn setup)
+e2e/.appium/

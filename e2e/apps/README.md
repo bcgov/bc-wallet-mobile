@@ -7,9 +7,9 @@ Place local builds here for running E2E tests against simulators and emulators. 
 ```bash
 cd app/ios
 xcodebuild -workspace BCWallet.xcworkspace \
-  -scheme BCSC -configuration Debug \
+  -scheme BCWallet -configuration Debug \
   -sdk iphonesimulator -derivedDataPath build
-cp -r build/Build/Products/Debug-iphonesimulator/BCSC.app ../../e2e/apps/
+cp -r build/Build/Products/Debug-iphonesimulator/BCWallet.app ../../e2e/apps/
 ```
 
 ## Android Emulator Build
@@ -17,7 +17,7 @@ cp -r build/Build/Products/Debug-iphonesimulator/BCSC.app ../../e2e/apps/
 ```bash
 cd app/android
 ./gradlew assembleDebug
-cp app/build/outputs/apk/debug/app-debug.apk ../../e2e/apps/BCSC.apk
+cp app/build/outputs/apk/debug/app-debug.apk ../../e2e/apps/BCWallet.apk
 ```
 
 ## Expected Filenames
@@ -26,5 +26,5 @@ The WDIO configs look for these filenames by default (override via env vars):
 
 | Platform | Default filename | Env var override |
 |---|---|---|
-| iOS | `BCSC.app` | `IOS_APP` |
-| Android | `BCSC.apk` | `ANDROID_APP` |
+| iOS | `BCWallet.app` | `IOS_APP` |
+| Android | `BCWallet.apk` | `ANDROID_APP` |

@@ -15,7 +15,7 @@ End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (WD
 e2e/
 ├── package.json                             # workspace package with WDIO + Appium deps
 ├── tsconfig.json                            # TypeScript config (strict, ESNext modules)
-├── .env.saucelabs.example                   # template for local SauceLabs credentials
+├── .env.saucelabs.example                   # template (copy via yarn setup:saucelabs)
 │
 ├── configs/
 │   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, hooks)
@@ -58,7 +58,7 @@ e2e/
 ## Prerequisites
 
 - **Node.js 20+** and **Yarn**
-- For local runs: [Appium](https://appium.io/) and platform drivers are installed automatically via devDependencies
+- For local runs: [Appium 3](https://appium.io/) is installed as a devDependency; platform drivers are installed via the setup script
 - For SauceLabs runs: a SauceLabs account with `SAUCE_USERNAME` and `SAUCE_ACCESS_KEY`
 
 ## Setup
@@ -66,7 +66,21 @@ e2e/
 ```bash
 cd e2e
 yarn install
+yarn setup    # installs Appium drivers (uiautomator2 + xcuitest)
 ```
+
+The `yarn setup` step registers the Appium drivers into Appium's driver registry. This is a one-time step (re-run if you upgrade Appium or want to update drivers).
+
+### SauceLabs credentials
+
+For SauceLabs runs, copy the example env file and add your credentials:
+
+```bash
+yarn setup:saucelabs   # creates .env.saucelabs from .env.saucelabs.example
+# Edit e2e/.env.saucelabs with your SAUCE_USERNAME and SAUCE_ACCESS_KEY
+```
+
+Then source it before running sauce tests: `source e2e/.env.saucelabs`
 
 ## Running Tests
 
@@ -93,10 +107,12 @@ yarn wdio configs/local/wdio.android.local.emu.conf.ts --spec test/smoke.spec.ts
 ### SauceLabs — Real Devices
 
 ```bash
-# Set credentials (or copy .env.saucelabs.example → .env.saucelabs and source it)
-export SAUCE_USERNAME=your-username
-export SAUCE_ACCESS_KEY=your-access-key
-export APP_FILENAME=BCSC-Dev-123.aab   # filename as uploaded to SauceLabs storage
+# One-time: create .env.saucelabs and add your credentials
+yarn setup:saucelabs
+# Edit e2e/.env.saucelabs with SAUCE_USERNAME, SAUCE_ACCESS_KEY, APP_FILENAME
+
+# Before each sauce run, source the env file
+source e2e/.env.saucelabs
 
 # Run on both platforms
 yarn test:sauce
@@ -119,21 +135,21 @@ Available variants: `bcsc-dev`, `bcsc-test`, `bcsc-qa`, `bcsc-prod`, `bcwallet-p
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `VARIANT` | `bcsc-dev` | App variant to test |
-| `SAUCE_USERNAME` | — | SauceLabs username (sauce runs only) |
-| `SAUCE_ACCESS_KEY` | — | SauceLabs access key (sauce runs only) |
-| `SAUCE_REGION` | `us` | SauceLabs data center region (`us` or `eu`) |
-| `APP_FILENAME` | varies | App filename in SauceLabs storage |
-| `BUILD_NAME` | `local-<timestamp>` | SauceLabs build name |
-| `TEST_NAME` | `E2E Tests` | SauceLabs test name |
-| `IOS_DEVICE` | `iPhone 16` | iOS simulator device name (local) |
-| `IOS_VERSION` | `18.3` | iOS simulator version (local) |
-| `IOS_APP` | `BCSC.app` | iOS app filename in `apps/` (local) |
-| `ANDROID_DEVICE` | `Pixel_7_API_34` | Android emulator name (local) |
-| `ANDROID_VERSION` | `14.0` | Android emulator version (local) |
-| `ANDROID_APP` | `BCSC.apk` | Android app filename in `apps/` (local) |
+| Variable           | Default             | Description                                 |
+| ------------------ | ------------------- | ------------------------------------------- |
+| `VARIANT`          | `bcsc-dev`          | App variant to test                         |
+| `SAUCE_USERNAME`   | —                   | SauceLabs username (sauce runs only)        |
+| `SAUCE_ACCESS_KEY` | —                   | SauceLabs access key (sauce runs only)      |
+| `SAUCE_REGION`     | `us`                | SauceLabs data center region (`us` or `eu`) |
+| `APP_FILENAME`     | varies              | App filename in SauceLabs storage           |
+| `BUILD_NAME`       | `local-<timestamp>` | SauceLabs build name                        |
+| `TEST_NAME`        | `E2E Tests`         | SauceLabs test name                         |
+| `IOS_DEVICE`       | `iPhone 16`         | iOS simulator device name (local)           |
+| `IOS_VERSION`      | `18.3`              | iOS simulator version (local)               |
+| `IOS_APP`          | `BCSC.app`          | iOS app filename in `apps/` (local)         |
+| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | Android emulator name (local)               |
+| `ANDROID_VERSION`  | `14.0`              | Android emulator version (local)            |
+| `ANDROID_APP`      | `BCSC.apk`          | Android app filename in `apps/` (local)     |
 
 ## Config Hierarchy
 
@@ -160,10 +176,10 @@ Screen interactions are encapsulated in page objects under `src/screens/`. Each 
 await this.tapByTestId('com.ariesbifold:id/Continue')
 ```
 
-| Platform | Strategy | WDIO Selector |
-|---|---|---|
-| iOS | Accessibility ID | `~com.ariesbifold:id/Continue` |
-| Android | Resource ID | `android=new UiSelector().resourceId(...)` |
+| Platform | Strategy         | WDIO Selector                              |
+| -------- | ---------------- | ------------------------------------------ |
+| iOS      | Accessibility ID | `~com.ariesbifold:id/Continue`             |
+| Android  | Resource ID      | `android=new UiSelector().resourceId(...)` |
 
 ### Flows
 
@@ -194,10 +210,10 @@ if (variant.family === 'bcsc') {
 
 Tests run automatically in GitHub Actions:
 
-| Trigger | Scope | Devices |
-|---|---|---|
-| PR | `smoke.spec.ts` only | 1 Android RDC + 1 iOS RDC |
-| `main` merge | All specs | Multiple device/OS combos |
+| Trigger      | Scope                | Devices                   |
+| ------------ | -------------------- | ------------------------- |
+| PR           | `smoke.spec.ts` only | 1 Android RDC + 1 iOS RDC |
+| `main` merge | All specs            | Multiple device/OS combos |
 
 ## Local App Binaries
 

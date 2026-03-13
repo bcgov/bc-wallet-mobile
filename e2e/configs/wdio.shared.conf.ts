@@ -1,7 +1,8 @@
 // wdio.shared.conf.ts
-import { resolve } from 'path'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 
-const variant = process.env.VARIANT || 'bcsc-dev'
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export const config: WebdriverIO.Config = {
   specs: [resolve(__dirname, '../test/**/*.spec.ts')],
@@ -19,7 +20,7 @@ export const config: WebdriverIO.Config = {
   reporters: ['spec'],
   mochaOpts: {
     ui: 'bdd',
-    timeout: 300_000, // 5 min per test — generous for real devices
+    timeout: 600_000, // 10 min per test — generous for real devices
   },
 
   // Hooks for SauceLabs test status reporting
