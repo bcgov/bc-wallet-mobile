@@ -289,7 +289,6 @@ exports[`PendingReview renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }
