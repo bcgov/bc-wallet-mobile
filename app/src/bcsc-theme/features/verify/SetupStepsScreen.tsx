@@ -32,7 +32,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
-
   const { steps, stepActions, isCheckingStatus, handleCheckStatus, handleCancelVerification } =
     useSetupStepsModel(navigation)
 
@@ -210,7 +209,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
       {accountType === AccountSetupType.AddAccount ? renderAddAccountSteps() : renderTransferAccountSteps()}
 
-      {store.bcscSecure.userSubmittedVerificationVideo || store.bcscSecure.verificationRequestId ? (
+      {store.bcscSecure.userSubmittedVerificationVideo ? (
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity
@@ -230,7 +229,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               {t('BCSC.Steps.CheckStatus')}
             </ThemedText>
             {isCheckingStatus ? (
-              <ActivityIndicator color={ColorPalette.brand.text} />
+              <ActivityIndicator color={ColorPalette.brand.text} size={32} />
             ) : (
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             )}
