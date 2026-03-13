@@ -19,13 +19,13 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
   const showIOSAppSwitchGuide = Platform.OS === 'ios' && fromAppSwitch
 
   useEffect(() => {
-    if (Platform.OS !== 'ios') {
+    if (!showIOSAppSwitchGuide) {
       return
     }
 
     // On iOS, if the user backgrounds the app while on this screen -> navigate back to home screen
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'background') {
+      if (nextAppState === 'background' && showIOSAppSwitchGuide) {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
@@ -36,7 +36,7 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
     })
 
     return subscription.remove
-  }, [navigation])
+  }, [navigation, showIOSAppSwitchGuide])
 
   const onClose = () => {
     if (fromAppSwitch && Platform.OS === 'android') {
