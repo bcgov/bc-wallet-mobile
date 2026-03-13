@@ -583,6 +583,26 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.subtext[0]).toContain('123456789')
     })
 
+    it('should return serial number in subtext for NPC when serial is present but step 2 is not complete', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
+      store.bcscSecure.serial = 'G00001234'
+      // No additional evidence yet — step 2 is NOT complete for NPC
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.completed).toBe(false)
+      expect(hook.result.current.id.subtext[0]).toContain('G00001234')
+    })
+
+    it('should return default subtext when no serial and no evidence is present', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
+      // No serial, no evidence
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.subtext).toEqual(['BCSC.Steps.ScanOrTakePhotos'])
+    })
+
     it('should have empty subtext for email step (custom children rendering)', () => {
       const store = structuredClone(initialState)
       const hook = renderHook(() => useSetupSteps(store))
