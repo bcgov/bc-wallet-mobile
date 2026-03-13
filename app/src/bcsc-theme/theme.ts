@@ -59,8 +59,8 @@ export const BCSCColorPalette: IColorPalette = {
 const BCSCTextStyles = {
   bold: {
     fontFamily: 'BCSans-Bold',
-    fontWeight: 'normal' // Font won't render without this property
-  }
+    fontWeight: 'normal', // Font won't render without this property
+  },
 } as const
 
 export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
@@ -94,7 +94,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         bold: {
           color: theme.ColorPalette.grayscale.white,
-           ...BCSCTextStyles.bold,
+          ...BCSCTextStyles.bold,
           lineHeight: 30,
         },
         label: {
