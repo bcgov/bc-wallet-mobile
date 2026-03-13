@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useAccount, useRefreshAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
@@ -34,6 +34,7 @@ const Account: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
   const account = useAccount()
+  const refreshAccount = useRefreshAccount()
   const { idToken, refreshIdToken } = useIdToken()
 
   const openedWebview = useRef(false)
@@ -49,7 +50,8 @@ const Account: React.FC = () => {
 
   useFocusEffect(
     useCallback(() => {
-      logger.info('Account screen focused, refreshing ID token metadata...')
+      logger.info('Account screen focused, refreshing account and ID token metadata...')
+      refreshAccount()
       refreshIdToken()
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [logger])
