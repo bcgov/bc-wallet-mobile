@@ -234,7 +234,7 @@ class NativeCompatibleStorage(
         return bytes[i] == '{'.code.toByte() || bytes[i] == '['.code.toByte()
     }
 
-    private fun writeEncryptedFile(
+    internal fun writeEncryptedFile(
         file: File,
         content: String,
     ): Boolean =

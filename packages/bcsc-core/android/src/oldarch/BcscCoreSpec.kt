@@ -180,15 +180,21 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun deleteAccountFlags(promise: Promise)
 
-    // Evidence Metadata Storage Methods
-    abstract fun getEvidenceMetadata(promise: Promise)
+    // Evidence Storage Methods
+    abstract fun getEvidence(promise: Promise)
 
-    abstract fun setEvidenceMetadata(
+    abstract fun setEvidence(
         evidence: com.facebook.react.bridge.ReadableArray,
         promise: Promise,
     )
 
-    abstract fun deleteEvidenceMetadata(promise: Promise)
+    abstract fun deleteEvidence(promise: Promise)
+
+    abstract fun saveEvidencePhoto(
+        base64Data: String,
+        filename: String,
+        promise: Promise,
+    )
 
     // Credential Storage Methods
     abstract fun getCredential(promise: Promise)

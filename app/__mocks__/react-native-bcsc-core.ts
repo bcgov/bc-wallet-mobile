@@ -145,10 +145,11 @@ export const getAccountFlags = jest.fn().mockResolvedValue({})
 export const setAccountFlags = jest.fn().mockResolvedValue(true)
 export const deleteAccountFlags = jest.fn().mockResolvedValue(true)
 
-// Evidence Metadata Storage
-export const getEvidenceMetadata = jest.fn().mockResolvedValue([])
-export const setEvidenceMetadata = jest.fn().mockResolvedValue(true)
-export const deleteEvidenceMetadata = jest.fn().mockResolvedValue(true)
+// Evidence Storage (consolidated v4 + v3)
+export const getEvidence = jest.fn().mockResolvedValue([])
+export const setEvidence = jest.fn().mockResolvedValue(true)
+export const deleteEvidence = jest.fn().mockResolvedValue(true)
+export const saveEvidencePhoto = jest.fn().mockResolvedValue('/mock/path/to/photo.jpg')
 
 // Credential Management
 export const setCredential = jest.fn().mockResolvedValue(undefined)

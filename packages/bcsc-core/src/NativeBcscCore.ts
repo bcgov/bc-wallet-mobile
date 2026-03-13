@@ -343,31 +343,35 @@ export interface Spec extends TurboModule {
    */
   deleteAccountFlags(): Promise<boolean>;
 
-  // Evidence Metadata Storage Methods
+  // Evidence Storage Methods
   /**
    * Gets evidence metadata from native storage.
-   * iOS: Reads from evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
-   * Android: Reads from EvidenceRepository SharedPreferences storage
-   * Compatible with v3 native app storage for rollback support.
    * @returns Array of evidence metadata objects
    */
-  getEvidenceMetadata(): Promise<Object[]>;
+  getEvidence(): Promise<Object[]>;
 
   /**
-   * Sets evidence metadata in native storage.
-   * iOS: Writes to evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
-   * Android: Writes to EvidenceRepository SharedPreferences storage
-   * Compatible with v3 native app storage for rollback support.
+   * Writes evidence metadata to native storage.
    * @param evidence Array of evidence metadata objects to save
    * @returns true if saved successfully
    */
-  setEvidenceMetadata(evidence: Object[]): Promise<boolean>;
+  setEvidence(evidence: Object[]): Promise<boolean>;
 
   /**
-   * Deletes all evidence metadata from native storage.
-   * @returns true if deleted successfully (or if they didn't exist)
+   * Deletes all evidence data from native storage, including photo files.
+   * @returns true if deleted successfully
    */
-  deleteEvidenceMetadata(): Promise<boolean>;
+  deleteEvidence(): Promise<boolean>;
+
+  /**
+   * Saves a photo to permanent v3-compatible storage.
+   * Android: Writes JPEG to {filesDir}/documents/{filename}
+   * iOS: No-op (photos are embedded as base64 in the documents file)
+   * @param base64Data Base64-encoded photo data
+   * @param filename Target filename for the photo
+   * @returns The absolute path to the saved file
+   */
+  saveEvidencePhoto(base64Data: string, filename: string): Promise<string>;
 
   // Credential Storage Methods
   /**

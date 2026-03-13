@@ -122,13 +122,16 @@ RCT_EXTERN_METHOD(setAccountFlags : (NSDictionary *)flags resolve : (RCTPromiseR
 
 RCT_EXTERN_METHOD(deleteAccountFlags : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
-// Evidence Metadata Storage Methods
-RCT_EXTERN_METHOD(getEvidenceMetadata : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+// Evidence Storage Methods
+RCT_EXTERN_METHOD(getEvidence : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(setEvidenceMetadata : (NSArray *)evidence resolve : (RCTPromiseResolveBlock)
+RCT_EXTERN_METHOD(setEvidence : (NSArray *)evidence resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(deleteEvidenceMetadata : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(deleteEvidence : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(saveEvidencePhoto : (NSString *)base64Data filename : (NSString *)
+                      filename resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 // Credential Storage Methods
 RCT_EXTERN_METHOD(getCredential : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)

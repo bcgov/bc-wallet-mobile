@@ -25,7 +25,6 @@ enum AccountFiles: String {
   case clientRegistration = "client_registration"
   case deviceInfo = "device_info"
   case documents
-  case evidenceMetadata = "evidence_metadata"
 }
 
 class StorageService {

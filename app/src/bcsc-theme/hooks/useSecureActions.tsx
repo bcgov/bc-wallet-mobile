@@ -10,7 +10,7 @@ import {
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
-  deleteEvidenceMetadata,
+  deleteEvidence,
   deleteToken,
   EvidenceMetadata,
   EvidenceType,
@@ -18,14 +18,14 @@ import {
   getAccountFlags,
   getAuthorizationRequest,
   getCredential,
-  getEvidenceMetadata,
+  getEvidence,
   getToken,
   NativeAuthorizationRequest,
   PhotoMetadata,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
-  setEvidenceMetadata,
+  setEvidence,
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
@@ -161,8 +161,8 @@ export const useSecureActions = () => {
   const persistEvidenceData = useCallback(
     async (evidenceData: EvidenceMetadata[]) => {
       try {
-        await setEvidenceMetadata(evidenceData)
-        logger.info('Evidence metadata persisted to native storage')
+        await setEvidence(evidenceData)
+        logger.info('Evidence persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist evidence metadata:', error as Error)
         throw error
@@ -639,7 +639,6 @@ export const useSecureActions = () => {
       payload: [[]],
     })
 
-    // Persist empty evidence data
     await persistEvidenceData([])
   }, [dispatch, persistEvidenceData])
 
@@ -670,7 +669,7 @@ export const useSecureActions = () => {
         getToken(TokenType.Registration),
         getToken(TokenType.Access),
         getAccountFlags(),
-        getEvidenceMetadata(),
+        getEvidence(),
         getCredential(),
       ])
 
@@ -818,7 +817,7 @@ export const useSecureActions = () => {
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
         deleteAccountFlags(),
-        deleteEvidenceMetadata(),
+        deleteEvidence(),
         deleteCredential(),
       ])
       logger.info('Secure data deleted from native storage')
@@ -834,12 +833,7 @@ export const useSecureActions = () => {
    */
   const deleteVerificationData = useCallback(async () => {
     try {
-      await Promise.all([
-        deleteAuthorizationRequest(),
-        deleteAccountFlags(),
-        deleteEvidenceMetadata(),
-        deleteCredential(),
-      ])
+      await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
       logger.info('Verification data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete verification data:', error as Error)
