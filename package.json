@@ -13,7 +13,8 @@
   "workspaces": {
     "packages": [
       "app",
-      "packages/*"
+      "packages/*",
+      "e2e"
     ]
   },
   "repository": {
