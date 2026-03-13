@@ -1,8 +1,7 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StyleProp, TextInput, TextInputProps, TextStyle, View } from 'react-native'
-
-// NOTE (MD): This is a first pass at this component, I assume eventually we will need to modify this to
-// accept number inputs as well.
+import { useCallback, useRef, useState } from 'react'
+import { StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type InputWithValidationProps = {
   id: string // unique input identifier
@@ -32,61 +31,110 @@ type InputWithValidationProps = {
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette } = useTheme()
+  const inputRef = useRef<TextInput>(null)
+  const [isFocused, setIsFocused] = useState(false)
+
+  const getInputAccentColour = useCallback(
+    (error: string | undefined, isFocused: boolean) => {
+      if (error) {
+        return ColorPalette.semantic.error
+      }
+
+      if (isFocused) {
+        return '#7090E4'
+      }
+
+      return ColorPalette.grayscale.white
+    },
+    [ColorPalette]
+  )
+
+  const styles = StyleSheet.create({
+    label: {
+      marginBottom: 8,
+    },
+    inputContainer: {
+      ...Inputs.textInput,
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 48,
+      borderWidth: 2,
+      borderColor: getInputAccentColour(props.error, isFocused),
+      shadowColor: getInputAccentColour(props.error, isFocused),
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: isFocused ? 0.5 : 0,
+      shadowRadius: isFocused ? 4 : 0,
+      elevation: isFocused ? 4 : 0,
+      padding: 0,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
+    },
+    input: {
+      flex: 1,
+      padding: Inputs.textInput.padding,
+      paddingHorizontal: Inputs.textInput.paddingHorizontal,
+      paddingVertical: Inputs.textInput.paddingVertical,
+      color: props.error ? ColorPalette.semantic.error : Inputs.textInput.color,
+    },
+    inputErrorIcon: {
+      marginRight: 8,
+    },
+    subtext: {
+      marginTop: 8,
+    },
+  })
 
   return (
     <View>
       <ThemedText
         variant={'labelTitle'}
-        style={[{ marginBottom: 8 }, props.labelProps]}
+        style={[styles.label, props.labelProps]}
         testID={testIdWithKey(`${props.id}-label`)}
       >
         {props.label}
       </ThemedText>
 
-      <TextInput
-        style={[
-          {
-            ...Inputs.textInput,
-            borderColor: props.error ? ColorPalette.semantic.error : Inputs.textInput.borderColor,
-          },
-          props.inputProps,
-        ]}
-        value={props.value}
-        onChangeText={props.onChangeText}
-        onChange={(e) => props.onChange?.(e.nativeEvent.text)}
-        onFocus={props.onFocus}
-        onPressIn={props.onPressIn}
-        accessibilityLabel={props.label}
-        testID={testIdWithKey(`${props.id}-input`)}
-        keyboardType={props.keyboardType}
-        {...props.textInputProps}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          ref={inputRef}
+          style={[styles.input, props.inputProps]}
+          value={props.value}
+          onChangeText={props.onChangeText}
+          onChange={(e) => props.onChange?.(e.nativeEvent.text)}
+          onFocus={() => {
+            setIsFocused(true)
+            props.onFocus?.()
+          }}
+          onBlur={() => {
+            setIsFocused(false)
+          }}
+          onPressIn={props.onPressIn}
+          accessibilityLabel={props.label}
+          testID={testIdWithKey(`${props.id}-input`)}
+          keyboardType={props.keyboardType}
+          {...props.textInputProps}
+        />
 
-      {props.error ? (
-        <ThemedText
-          style={[
-            {
-              marginTop: 4,
-              color: ColorPalette.semantic.error,
-              fontSize: 12,
-            },
-            props.errorProps,
-          ]}
-          testID={testIdWithKey(`${props.id}-error`)}
-        >
-          {props.error}
-        </ThemedText>
-      ) : null}
+        {props.error ? (
+          <Icon
+            name={'alert-circle'}
+            style={styles.inputErrorIcon}
+            size={24}
+            color={ColorPalette.semantic.error}
+            onPress={() => {
+              inputRef.current?.focus()
+            }}
+          />
+        ) : null}
+      </View>
 
-      {props.subtext && !props.error ? (
-        <ThemedText
-          style={[{ marginTop: 8 }, props.subtextProps]}
-          variant={'labelSubtitle'}
-          testID={testIdWithKey(`${props.id}-subtext`)}
-        >
-          {props.subtext}
-        </ThemedText>
-      ) : null}
+      <ThemedText
+        style={[styles.subtext, props.subtextProps]}
+        variant={'labelSubtitle'}
+        testID={testIdWithKey(`${props.id}-subtext`)}
+      >
+        {props.error ? props.error : props.subtext}
+      </ThemedText>
     </View>
   )
 }
