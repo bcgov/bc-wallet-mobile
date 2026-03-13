@@ -235,7 +235,6 @@ exports[`TransferInstructions renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }

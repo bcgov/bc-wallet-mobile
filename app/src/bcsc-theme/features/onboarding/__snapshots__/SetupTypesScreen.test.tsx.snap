@@ -435,7 +435,6 @@ exports[`SetupTypesScreen Rendering should render correctly 1`] = `
                     },
                     false,
                     false,
-                    false,
                   ],
                 ]
               }
@@ -512,7 +511,6 @@ exports[`SetupTypesScreen Rendering should render correctly 1`] = `
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
-                    false,
                     false,
                     false,
                   ],

@@ -161,7 +161,6 @@ exports[`VerifyNotComplete renders correctly 1`] = `
                   },
                   false,
                   false,
-                  false,
                 ],
               ]
             }
@@ -273,7 +272,6 @@ exports[`VerifyNotComplete renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }
@@ -350,7 +348,6 @@ exports[`VerifyNotComplete renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

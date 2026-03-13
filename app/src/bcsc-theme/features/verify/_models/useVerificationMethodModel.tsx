@@ -25,7 +25,21 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     try {
       setSendVideoLoading(true)
 
-      const { sha256, id, prompts } = await evidence.createVerificationRequest()
+      let verificationRequest
+      if (!store.bcscSecure.verificationRequestId) {
+        // NOTE: Making this request too many times will be rate limited by the server.
+        verificationRequest = await evidence.createVerificationRequest()
+      }
+
+      if (store.bcscSecure.verificationRequestId && !store.bcsc.prompts) {
+        // NOTE: Making this request too many times will be rate limited by the server.
+        verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
+      }
+
+      if (verificationRequest) {
+        updateVerificationRequest(verificationRequest.id, verificationRequest.sha256)
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
+      }
 
       await Promise.allSettled([
         removeFileSafely(store.bcsc.videoPath, logger),
@@ -36,8 +50,6 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       VerificationVideoCache.clearCache()
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      updateVerificationRequest(id, sha256)
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
 
       navigation.navigate(BCSCScreens.InformationRequired)
     } catch (error) {
@@ -47,14 +59,16 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       setSendVideoLoading(false)
     }
   }, [
-    updateVerificationRequest,
-    dispatch,
-    evidence,
-    logger,
-    navigation,
-    store.bcsc.photoPath,
+    store.bcscSecure.verificationRequestId,
+    store.bcsc.prompts,
     store.bcsc.videoPath,
+    store.bcsc.photoPath,
     store.bcsc.videoThumbnailPath,
+    logger,
+    dispatch,
+    navigation,
+    evidence,
+    updateVerificationRequest,
   ])
 
   const handlePressLiveCall = useCallback(async () => {

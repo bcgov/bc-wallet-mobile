@@ -240,7 +240,6 @@ exports[`LockoutScreen snapshots renders correctly when locked 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }

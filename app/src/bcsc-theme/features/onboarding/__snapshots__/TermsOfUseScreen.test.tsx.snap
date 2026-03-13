@@ -266,7 +266,6 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
                     "textAlign": "center",
                   },
                   false,
-                  false,
                 ],
               ]
             }
@@ -509,7 +508,6 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
                     "fontWeight": "bold",
                     "textAlign": "center",
                   },
-                  false,
                   false,
                 ],
               ]

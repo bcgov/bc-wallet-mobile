@@ -5,7 +5,7 @@ import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrat
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -22,7 +22,7 @@ import { BCSCCardProcess } from 'react-native-bcsc-core'
  */
 const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { updateVerificationRequest, updateAccountFlags, deleteVerificationData, clearSecureState } = useSecureActions()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -141,6 +141,8 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       } finally {
         // Clear verification request from secure state
         updateVerificationRequest(null, null)
+        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         })
@@ -153,6 +155,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
     evidence,
     logger,
     updateVerificationRequest,
+    dispatch,
     updateAccountFlags,
     navigation,
   ])

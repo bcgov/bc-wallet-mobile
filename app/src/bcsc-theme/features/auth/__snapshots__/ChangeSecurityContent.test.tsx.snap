@@ -1541,7 +1541,6 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                     },
                     false,
                     false,
-                    false,
                   ],
                 ]
               }
@@ -1618,7 +1617,6 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
-                    false,
                     false,
                     false,
                   ],

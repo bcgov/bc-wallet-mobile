@@ -1,5 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StyleProp, TextInput, TextInputProps, TextStyle, View } from 'react-native'
+import { LayoutChangeEvent, StyleProp, TextInput, TextInputProps, TextStyle, View } from 'react-native'
 
 // NOTE (MD): This is a first pass at this component, I assume eventually we will need to modify this to
 // accept number inputs as well.
@@ -9,6 +9,7 @@ type InputWithValidationProps = {
   value: string
   onChange?: (value: string) => void
   onChangeText?: (value: string) => void
+  onLayout?: (e: LayoutChangeEvent) => void
   label: string
   onFocus?: () => void
   onPressIn?: () => void
@@ -34,7 +35,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
   const { Inputs, ColorPalette } = useTheme()
 
   return (
-    <View>
+    <View onLayout={props.onLayout}>
       <ThemedText
         variant={'labelTitle'}
         style={[{ marginBottom: 8 }, props.labelProps]}

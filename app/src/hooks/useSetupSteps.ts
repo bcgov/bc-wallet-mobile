@@ -119,19 +119,12 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     }
 
     const getStep2Subtext = (): string[] => {
-      // Only show document info if step 2 is explicitly completed
-      if (!step2Completed) {
-        return [t('BCSC.Steps.ScanOrTakePhotos')]
-      }
-
       const cards: string[] = []
 
-      // If the BCSC card is registered, show the BCSC serial number
       if (store.bcscSecure.serial) {
         cards.push(t('BCSC.Steps.GetVerificationStep2Subtext1', { serial: store.bcscSecure.serial }))
       }
 
-      // If the user has added additional evidence, add each to the list
       for (const evidence of store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {

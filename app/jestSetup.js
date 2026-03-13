@@ -106,8 +106,6 @@ jest.mock('react-native-keyboard-controller', () => {
   }
 })
 
-jest.mock('react-native-date-picker', () => 'DatePicker')
-
 // Mock Image.resolveAssetSource at the module level
 jest.mock('react-native/Libraries/Image/resolveAssetSource', () => {
   return jest.fn(() => ({

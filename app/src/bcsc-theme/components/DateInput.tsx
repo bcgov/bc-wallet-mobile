@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { LayoutChangeEvent } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -6,12 +7,13 @@ interface DateInputProps {
   label: string
   value: string
   onChange: (value: string) => void
+  onLayout?: (e: LayoutChangeEvent) => void
   error?: string
   subtext?: string
 }
 
 const DATE_TEMPLATE = 'YYYY/MM/DD'
-// This expects 8 digits with 2 / characters
+// Expecting 10 characters in the formatted date (8 digits + 2 '/')
 const DATE_DIGIT_POSITIONS = [0, 1, 2, 3, 5, 6, 8, 9]
 
 const getDigits = (text: string): string =>
@@ -67,7 +69,7 @@ const getSelectionRange = (displayValue: string, cursorPosition: number) => {
   return { start: cursorPosition, end: cursorPosition + 1 }
 }
 
-const DateInput = ({ id, label, value, onChange, error, subtext }: DateInputProps) => {
+const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
   // Display date and actual value are held separately to allow date formatting: 199Y/MM/DD
   // while also allowing the user to delete digits without having to remove the extra format characters
   const [displayValue, setDisplayValue] = useState(dateToDisplay(value))
@@ -128,6 +130,7 @@ const DateInput = ({ id, label, value, onChange, error, subtext }: DateInputProp
       onChangeText={handleChangeText}
       error={error}
       subtext={subtext}
+      onLayout={onLayout}
       textInputProps={{
         placeholder: DATE_TEMPLATE,
         placeholderTextColor: '#000000', // can be moved to theme if needed

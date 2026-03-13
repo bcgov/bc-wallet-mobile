@@ -3,6 +3,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { ScrollView, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EvidenceIDCollectionScreen from './EvidenceIDCollectionScreen'
 
@@ -133,5 +134,37 @@ describe('EvidenceIDCollection', () => {
 
     expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(mockEvidenceType)
     expect(mockNavigation.dispatch).toHaveBeenCalled()
+  })
+
+  it('scrolls to first invalid field after validation', async () => {
+    const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
+
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    const formContainer = tree
+      .UNSAFE_getAllByType(View)
+      .find((node) => node.props.onLayout && node.props.style?.gap === 18)
+    expect(formContainer).toBeTruthy()
+
+    fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
+    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
+      nativeEvent: { layout: { y: 25 } },
+    })
+
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: true })
+    scrollToSpy.mockRestore()
   })
 })
