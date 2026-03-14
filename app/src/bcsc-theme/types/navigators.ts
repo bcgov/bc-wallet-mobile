@@ -117,7 +117,7 @@ export enum BCSCScreens {
 }
 
 export type BCSCOnboardingStackParams = {
-  [BCSCScreens.OnboardingWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.OnboardingWebView]: { url: string; title: string; disableInjectedStyles?: boolean }
   [BCSCScreens.OnboardingAccountSetup]: undefined
   [BCSCScreens.OnboardingSetupTypes]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
@@ -136,7 +136,7 @@ export type BCSCOnboardingStackParams = {
 }
 
 export type BCSCVerifyStackParams = {
-  [BCSCScreens.VerifyWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.VerifyWebView]: { url: string; title: string; disableInjectedStyles?: boolean }
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
@@ -201,7 +201,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.MainWebView]: { url: string; title: string; disableInjectedStyles?: boolean }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
@@ -241,7 +241,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.Lockout]: undefined
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
-  [BCSCScreens.AuthWebView]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.AuthWebView]: { url: string; title: string; disableInjectedStyles?: boolean }
   [BCSCScreens.AuthContactUs]: undefined
   [BCSCScreens.AuthPrivacyPolicy]: undefined
   [BCSCScreens.AuthDeveloper]: undefined
