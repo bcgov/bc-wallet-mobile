@@ -8,13 +8,12 @@ on:
     types: [opened, synchronize, reopened, labeled]
   merge_group:
 
-permissions:
-  contents: read
-
 jobs:
   setup:
     runs-on: macos-26
     name: Install & Build
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -50,6 +49,8 @@ jobs:
     runs-on: macos-26
     name: Lint & Format
     needs: setup
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -82,6 +83,8 @@ jobs:
     runs-on: macos-26
     name: Typecheck, Test & Coverage
     needs: setup
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -127,6 +130,8 @@ jobs:
     runs-on: macos-26
     name: Native Tests (iOS)
     needs: setup
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -135,13 +140,15 @@ jobs:
         run: |
           xcodebuild test \
             -scheme BcscCoreTests-Package \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
             -skipPackagePluginValidation
 
   test-android:
     runs-on: macos-26
     name: Native Tests (Android)
     needs: setup
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
