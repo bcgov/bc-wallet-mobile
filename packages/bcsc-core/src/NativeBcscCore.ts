@@ -395,7 +395,7 @@ export interface Spec extends TurboModule {
   /**
    * Saves a photo to permanent v3-compatible storage.
    * Android: Writes JPEG to {filesDir}/documents/{filename}
-   * iOS: No-op (photos are embedded as base64 in the documents file)
+   * iOS: Writes JPEG to Application Support (v3-compatible evidence storage)
    * @param base64Data Base64-encoded photo data
    * @param filename Target filename for the photo
    * @returns The absolute path to the saved file
