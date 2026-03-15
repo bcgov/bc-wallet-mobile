@@ -10,6 +10,8 @@ export interface EvidenceUploadItem {
   imageBytes: Buffer
 }
 
+const LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE', back: 'BACK_SIDE' }
+
 const useEvidenceUpload = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
@@ -59,7 +61,7 @@ const useEvidenceUpload = () => {
         images: evidenceItem.metadata.map((data) => {
           // Normalize labels: the /v1/documents API expects "FRONT_SIDE"/"BACK_SIDE",
           // not the lowercase "front"/"back" used by /v1/photos (selfie endpoint).
-          const label = data.label === 'front' ? 'FRONT_SIDE' : data.label === 'back' ? 'BACK_SIDE' : data.label
+          const label = LABEL_MAP[data.label] ?? data.label
           return { ...data, label, file_path: undefined }
         }),
       }
@@ -73,13 +75,7 @@ const useEvidenceUpload = () => {
       logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
 
       for (const metadataItem of evidenceItem.metadata) {
-        // v3 sometimes stores "front"/"back" and sometimes "FRONT_SIDE"/"BACK_SIDE", but the /v1/documents API always expects "FRONT_SIDE"/"BACK_SIDE"
-        const normalizedLabel =
-          metadataItem.label === 'front'
-            ? 'FRONT_SIDE'
-            : metadataItem.label === 'back'
-              ? 'BACK_SIDE'
-              : metadataItem.label
+        const normalizedLabel = LABEL_MAP[metadataItem.label] ?? metadataItem.label
         const matchingResponse = evidenceMetadataResponse.find(
           (response: UploadEvidenceResponseData) => response.label === normalizedLabel
         )
