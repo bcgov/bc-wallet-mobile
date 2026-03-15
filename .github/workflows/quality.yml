@@ -8,6 +8,9 @@ on:
     types: [opened, synchronize, reopened, labeled]
   merge_group:
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     runs-on: macos-26
