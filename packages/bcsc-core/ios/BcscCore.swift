@@ -2284,14 +2284,6 @@ class BcscCore: NSObject {
     let storage = StorageService()
 
     if let evidence = readDocumentsAsMetadataArray(storage: storage) {
-      logger.log("getEvidence: Read evidence from documents file (\(evidence.count) items)")
-      for (i, item) in evidence.enumerated() {
-        if let metadata = item["metadata"] as? [[String: Any]] {
-          for (j, photo) in metadata.enumerated() {
-            logger.log("getEvidence: item[\(i)].metadata[\(j)].label = \(photo["label"] ?? "nil")")
-          }
-        }
-      }
       resolve(evidence)
       return
     }
@@ -2387,6 +2379,15 @@ class BcscCore: NSObject {
       if FileManager.default.fileExists(atPath: documentsUrl.path) {
         try FileManager.default.removeItem(at: documentsUrl)
         logger.log("deleteEvidence: Deleted documents file")
+      }
+
+      // Also remove extracted JPEG photos from the documents directory
+      let photosDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+      if FileManager.default.fileExists(atPath: photosDir.path) {
+        try FileManager.default.removeItem(at: photosDir)
+        logger.log("deleteEvidence: Deleted documents photo directory")
       }
 
       resolve(true)
@@ -2492,17 +2493,17 @@ class BcscCore: NSObject {
     var result = [[String: Any]]()
 
     if let firstId = model.firstId {
-      result.append(convertEvidenceModelToMetadata(firstId))
+      result.append(convertEvidenceModelToMetadata(firstId, prefix: "first"))
     }
     if let secondId = model.secondId {
-      result.append(convertEvidenceModelToMetadata(secondId))
+      result.append(convertEvidenceModelToMetadata(secondId, prefix: "second"))
     }
 
     return result
   }
 
   /// Converts an EvidenceModel to an evidence metadata dictionary.
-  private func convertEvidenceModelToMetadata(_ evidence: EvidenceModel) -> [String: Any] {
+  private func convertEvidenceModelToMetadata(_ evidence: EvidenceModel, prefix: String = "evidence") -> [String: Any] {
     var dict = [String: Any]()
 
     // Evidence type
@@ -2539,7 +2540,7 @@ class BcscCore: NSObject {
           photoDict["sha256"] = DocumentsArchiver.sha256Hex(photoData)
           photoDict["content_length"] = photoData.count
 
-          let filename = "evidence_\(index).jpg"
+          let filename = "\(prefix)_\(index).jpg"
           if let filePath = savePhotoDataToDisk(photoData, filename: filename) {
             photoDict["file_path"] = filePath
           } else {
