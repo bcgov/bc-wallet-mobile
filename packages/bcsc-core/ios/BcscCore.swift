@@ -2285,6 +2285,13 @@ class BcscCore: NSObject {
 
     if let evidence = readDocumentsAsMetadataArray(storage: storage) {
       logger.log("getEvidence: Read evidence from documents file (\(evidence.count) items)")
+      for (i, item) in evidence.enumerated() {
+        if let metadata = item["metadata"] as? [[String: Any]] {
+          for (j, photo) in metadata.enumerated() {
+            logger.log("getEvidence: item[\(i)].metadata[\(j)].label = \(photo["label"] ?? "nil")")
+          }
+        }
+      }
       resolve(evidence)
       return
     }
@@ -2524,13 +2531,20 @@ class BcscCore: NSObject {
           photoDict["label"] = index == 0 ? "FRONT_SIDE" : "BACK_SIDE"
         }
 
-        // Compute sha256 and content_length from base64 photo data
+        // Compute sha256 and content_length from base64 photo data,
+        // and save the photo to disk so the JS side can read it for upload.
         if let base64 = photo.photoBase64String,
            let photoData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) {
           photoDict["sha256"] = DocumentsArchiver.sha256Hex(photoData)
           photoDict["content_length"] = photoData.count
-          photoDict["file_path"] = ""
-          photoDict["filename"] = "photo_\(index).jpg"
+
+          let filename = "evidence_\(index).jpg"
+          if let filePath = savePhotoDataToDisk(photoData, filename: filename) {
+            photoDict["file_path"] = filePath
+          } else {
+            photoDict["file_path"] = ""
+          }
+          photoDict["filename"] = filename
         } else {
           photoDict["sha256"] = ""
           photoDict["content_length"] = 0
@@ -2549,6 +2563,38 @@ class BcscCore: NSObject {
     }
 
     return dict
+  }
+
+  /// Saves photo data to the evidence documents directory, returning the absolute path on success.
+  private func savePhotoDataToDisk(_ photoData: Data, filename: String) -> String? {
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let storage = StorageService()
+      let documentsDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+
+      if !FileManager.default.fileExists(atPath: documentsDir.path) {
+        try FileManager.default.createDirectory(
+          at: documentsDir,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      let fileUrl = documentsDir.appendingPathComponent(filename)
+      try photoData.write(to: fileUrl, options: [.atomic])
+      logger.log("savePhotoDataToDisk: Saved evidence photo to \(fileUrl.path)")
+      return fileUrl.path
+    } catch {
+      logger.error("savePhotoDataToDisk: Failed to save evidence photo: \(error.localizedDescription)")
+      return nil
+    }
   }
 
   /// Converts evidence NSArray to a DocumentsDataModel.
@@ -3068,6 +3114,145 @@ class BcscCore: NSObject {
       resolve(result)
     } catch {
       reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
+    }
+  }
+
+  // MARK: - Saved Services (Client Metadata) Storage
+
+  /// Gets saved services (client metadata) from native storage.
+  /// Reads the client_metadata file using ClientMetadataArchiver for v3-compatible decoding.
+  func getSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      logger.log("getSavedServices: No account ID, returning empty array")
+      resolve([])
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        logger.log("getSavedServices: client_metadata file not found, returning empty array")
+        resolve([])
+        return
+      }
+
+      let data = try Data(contentsOf: fileUrl)
+      let archiver = ClientMetadataArchiver()
+
+      guard let model = archiver.decode(from: data) else {
+        logger.log("getSavedServices: Failed to decode client_metadata, returning empty array")
+        resolve([])
+        return
+      }
+
+      let services = (model.clients ?? []).map { $0.toDictionary() }
+      logger.log("getSavedServices: Read \(services.count) services from client_metadata")
+      resolve(services)
+    } catch {
+      logger.error("getSavedServices: Error reading client_metadata: \(error)")
+      resolve([])
+    }
+  }
+
+  /// Saves services (client metadata) to native storage using v3-compatible NSKeyedArchiver format.
+  func setSavedServices(
+    _ services: NSArray,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      reject("E_NO_ACCOUNT", "No account ID available", nil)
+      return
+    }
+
+    do {
+      let clients: [MetadataClients] = (services as? [[String: Any]] ?? []).map {
+        MetadataClients.fromDictionary($0)
+      }
+      let model = ClientMetadataResponseModel(clients: clients)
+      let archiver = ClientMetadataArchiver()
+
+      guard let encodedData = archiver.encode(model) else {
+        reject("E_ENCODE_FAILED", "Failed to encode client metadata", nil)
+        return
+      }
+
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      try encodedData.write(to: fileUrl, options: [.atomic])
+      logger.log("setSavedServices: Successfully saved \(clients.count) services to client_metadata")
+      resolve(true)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save client metadata: \(error.localizedDescription)", error)
+    }
+  }
+
+  /// Deletes the client_metadata file from native storage.
+  func deleteSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      resolve(true)
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if FileManager.default.fileExists(atPath: fileUrl.path) {
+        try FileManager.default.removeItem(at: fileUrl)
+        logger.log("deleteSavedServices: Deleted client_metadata file")
+      }
+
+      resolve(true)
+    } catch {
+      reject("E_DELETE_FAILED", "Failed to delete client metadata: \(error.localizedDescription)", error)
     }
   }
 

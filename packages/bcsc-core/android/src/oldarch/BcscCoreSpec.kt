@@ -223,4 +223,14 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun isThirdPartyKeyboardActive(promise: Promise)
 
     abstract fun openKeyboardSelector()
+
+    // Saved Services (Client Metadata) Storage Methods
+    abstract fun getSavedServices(promise: Promise)
+
+    abstract fun setSavedServices(
+        services: com.facebook.react.bridge.ReadableArray,
+        promise: Promise,
+    )
+
+    abstract fun deleteSavedServices(promise: Promise)
 }

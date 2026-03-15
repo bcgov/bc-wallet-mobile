@@ -57,7 +57,10 @@ const useEvidenceUpload = () => {
         type: evidenceItem?.evidenceType?.evidence_type,
         number: evidenceItem.documentNumber,
         images: evidenceItem.metadata.map((data) => {
-          return { ...data, file_path: undefined }
+          // Normalize labels: the /v1/documents API expects "FRONT_SIDE"/"BACK_SIDE",
+          // not the lowercase "front"/"back" used by /v1/photos (selfie endpoint).
+          const label = data.label === 'front' ? 'FRONT_SIDE' : data.label === 'back' ? 'BACK_SIDE' : data.label
+          return { ...data, label, file_path: undefined }
         }),
       }
 
@@ -65,12 +68,20 @@ const useEvidenceUpload = () => {
         metadataPayload.barcodes = evidenceItem.barcodes
       }
 
+      logger.info(`Evidence payload labels: ${JSON.stringify(metadataPayload.images.map((i) => i.label))}`)
       const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
       logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
 
       for (const metadataItem of evidenceItem.metadata) {
+        // v3 sometimes stores "front"/"back" and sometimes "FRONT_SIDE"/"BACK_SIDE", but the /v1/documents API always expects "FRONT_SIDE"/"BACK_SIDE"
+        const normalizedLabel =
+          metadataItem.label === 'front'
+            ? 'FRONT_SIDE'
+            : metadataItem.label === 'back'
+              ? 'BACK_SIDE'
+              : metadataItem.label
         const matchingResponse = evidenceMetadataResponse.find(
-          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
+          (response: UploadEvidenceResponseData) => response.label === normalizedLabel
         )
 
         if (matchingResponse) {

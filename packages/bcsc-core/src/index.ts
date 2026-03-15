@@ -6,6 +6,7 @@ import NativeBcscCoreSpec, {
   type NativeAccount,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
+  type NativeSavedService,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -16,6 +17,7 @@ export type {
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
+  NativeSavedService,
 } from './NativeBcscCore';
 
 /**
@@ -992,4 +994,46 @@ export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
  */
 export const openAndroidKeyboardSelector = async (): Promise<void> => {
   return BcscCore.openKeyboardSelector();
+};
+
+// ============================================================================
+// Saved Services (Client Metadata) Storage Methods
+// ============================================================================
+
+/**
+ * Gets saved services from native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * On v3→v4 migration, this reads the bookmarked services the user had saved in v3.
+ *
+ * @returns A promise that resolves to the array of saved service metadata
+ */
+export const getSavedServices = async (): Promise<NativeSavedService[]> => {
+  return BcscCore.getSavedServices();
+};
+
+/**
+ * Saves services to native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * @param services The saved service metadata array to write
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setSavedServices = async (services: NativeSavedService[]): Promise<boolean> => {
+  return BcscCore.setSavedServices(services);
+};
+
+/**
+ * Deletes all saved services from native storage.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteSavedServices = async (): Promise<boolean> => {
+  return BcscCore.deleteSavedServices();
 };

@@ -209,6 +209,35 @@ export type NativeAccountWithoutId = {
   failedAttemptCount?: number;
 };
 
+export type NativeSavedService = {
+  /** Service client reference ID (== client_ref_id in API, clientId in v3) */
+  clientRefId: string;
+  /** Display name of the service */
+  clientName?: string;
+  /** Whether this service is bookmarked / saved */
+  bookmarked: boolean;
+  /** Unix timestamp when the service was first added */
+  dateAdded?: number;
+  /** Unix timestamp when the service was last used */
+  lastUsed?: number;
+  /** Service website URL */
+  clientUri?: string;
+  /** Login initiation URL */
+  initiateLoginUri?: string;
+  /** Service description */
+  clientDescription?: string;
+  /** Privacy policy URL */
+  policyUri?: string;
+  /** Sort order in service listing */
+  serviceListingSortOrder?: number;
+  /** Description of claims requested */
+  claimsDescription?: string;
+  /** Whether to suppress confirmation info after pairing */
+  suppressConfirmationInfo?: boolean;
+  /** Whether to suppress post-pair bookmark prompt */
+  suppressBookmarkPrompt?: boolean;
+};
+
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
   getKeyPair(label: string): Promise<KeyPair>;
@@ -407,6 +436,32 @@ export interface Spec extends TurboModule {
    */
   hasCredential(): Promise<boolean>;
   showLocalNotification(title: string, message: string): Promise<void>;
+
+  // Saved Services / Client Metadata Storage Methods
+  /**
+   * Gets saved services (client metadata) from native storage.
+   * iOS: Reads from client_metadata file in Application Support (NSKeyedArchiver)
+   * Android: Reads from encrypted clientmetadata file
+   * Compatible with v3 native app storage for migration and rollback.
+   * @returns Array of saved service objects, or empty array if none found
+   */
+  getSavedServices(): Promise<NativeSavedService[]>;
+
+  /**
+   * Saves services (client metadata) to native storage.
+   * iOS: Writes to client_metadata file in Application Support (NSKeyedArchiver)
+   * Android: Writes to encrypted clientmetadata file
+   * Compatible with v3 native app storage for rollback support.
+   * @param services Array of saved service objects to write
+   * @returns true if saved successfully
+   */
+  setSavedServices(services: NativeSavedService[]): Promise<boolean>;
+
+  /**
+   * Deletes all saved services (client metadata) from native storage.
+   * @returns true if deleted successfully (or if they didn't exist)
+   */
+  deleteSavedServices(): Promise<boolean>;
 
   /**
    * Checks if a third party keyboard is currently active on android.

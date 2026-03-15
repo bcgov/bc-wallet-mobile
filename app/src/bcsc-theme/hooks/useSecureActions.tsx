@@ -11,6 +11,7 @@ import {
   deleteAuthorizationRequest,
   deleteCredential,
   deleteEvidence,
+  deleteSavedServices,
   deleteToken,
   EvidenceMetadata,
   EvidenceType,
@@ -19,13 +20,16 @@ import {
   getAuthorizationRequest,
   getCredential,
   getEvidence,
+  getSavedServices,
   getToken,
   NativeAuthorizationRequest,
+  NativeSavedService,
   PhotoMetadata,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
   setEvidence,
+  setSavedServices,
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
@@ -642,6 +646,61 @@ export const useSecureActions = () => {
     await persistEvidenceData([])
   }, [dispatch, persistEvidenceData])
 
+  /**
+   * Update a saved service bookmark status and persist to native storage.
+   * Updates the in-memory store immediately, then writes through to native storage
+   * to maintain v3 compatibility.
+   *
+   * @param clientRefId The service client_ref_id
+   * @param bookmarked Whether to bookmark (true) or unbookmark (false)
+   * @param metadata Optional additional metadata about the service (clientName, etc.)
+   */
+  const updateSavedService = useCallback(
+    async (clientRefId: string, bookmarked: boolean, metadata?: Partial<NativeSavedService>) => {
+      // Update in-memory store immediately
+      if (bookmarked) {
+        dispatch({ type: BCDispatchAction.ADD_SAVED_SERVICE, payload: [clientRefId] })
+      } else {
+        dispatch({ type: BCDispatchAction.REMOVE_SAVED_SERVICE, payload: [clientRefId] })
+      }
+
+      // Write through to native storage for v3 compatibility
+      try {
+        const existingServices = await getSavedServices()
+        const existingIndex = existingServices.findIndex((s: NativeSavedService) => s.clientRefId === clientRefId)
+
+        let updatedServices: NativeSavedService[]
+        if (existingIndex >= 0) {
+          // Update existing entry
+          updatedServices = existingServices.map((s: NativeSavedService) =>
+            s.clientRefId === clientRefId ? { ...s, ...metadata, bookmarked, lastUsed: Date.now() / 1000 } : s
+          )
+        } else if (bookmarked) {
+          // Add new entry
+          updatedServices = [
+            ...existingServices,
+            {
+              clientRefId,
+              bookmarked: true,
+              dateAdded: Date.now() / 1000,
+              lastUsed: Date.now() / 1000,
+              ...metadata,
+            },
+          ]
+        } else {
+          // Removing a service that doesn't exist in native storage — no-op
+          updatedServices = existingServices
+        }
+
+        await setSavedServices(updatedServices)
+        logger.info(`Saved service ${clientRefId} ${bookmarked ? 'bookmarked' : 'unbookmarked'}`)
+      } catch (error) {
+        logger.error('Failed to persist saved service update:', error as Error)
+      }
+    },
+    [dispatch, logger]
+  )
+
   // ============================================================================
   // HYDRATION & CLEARING - Loading and clearing secure state
   // ============================================================================
@@ -663,6 +722,7 @@ export const useSecureActions = () => {
         accountFlags,
         evidenceData,
         credential,
+        nativeSavedServices,
       ] = await Promise.all([
         getAuthorizationRequest(),
         getToken(TokenType.Refresh),
@@ -671,6 +731,7 @@ export const useSecureActions = () => {
         getAccountFlags(),
         getEvidence(),
         getCredential(),
+        getSavedServices(),
       ])
 
       const refreshToken = refreshTokenObj?.token
@@ -728,12 +789,17 @@ export const useSecureActions = () => {
 
       const verificationStatus = getCredentialVerificationStatus(credential)
 
+      // Extract bookmarked service IDs from native client metadata
+      const savedServices = (nativeSavedServices ?? [])
+        .filter((s: NativeSavedService) => s.bookmarked)
+        .map((s: NativeSavedService) => s.clientRefId)
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
         birthdate: authRequest?.birthdate ? new Date(authRequest.birthdate * 1000) : undefined,
         serial: authRequest?.csn,
-        isEmailVerified: accountFlags.isEmailVerified ?? !!authRequest?.verifiedEmail,
+        isEmailVerified: accountFlags.isEmailVerified || !!authRequest?.verifiedEmail,
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
@@ -759,6 +825,7 @@ export const useSecureActions = () => {
         verificationRequestId: authRequest?.backCheckVerificationId,
         additionalEvidenceData: evidenceData,
         userMetadata,
+        savedServices,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
@@ -819,6 +886,7 @@ export const useSecureActions = () => {
         deleteAccountFlags(),
         deleteEvidence(),
         deleteCredential(),
+        deleteSavedServices(),
       ])
       logger.info('Secure data deleted from native storage')
     } catch (error) {
@@ -874,6 +942,7 @@ export const useSecureActions = () => {
     removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,
+    updateSavedService,
     handleSuccessfulAuth,
     // Hydration & clearing
     hydrateSecureState,

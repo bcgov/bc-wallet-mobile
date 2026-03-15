@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -14,12 +15,13 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
 
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<ServicesNavigationProp>()
   const { t } = useTranslation()
+  const { updateSavedService } = useSecureActions()
 
   const { serviceClients } = useFilterServiceClients({
-    serviceClientIdsFilter: store.bcsc.bookmarks,
+    serviceClientIdsFilter: store.bcscSecure.savedServices,
   })
 
   const styles = StyleSheet.create({
@@ -65,7 +67,7 @@ const SavedServices: React.FC = () => {
               })
             }}
             onRemove={() => {
-              dispatch({ type: BCDispatchAction.REMOVE_BOOKMARK, payload: [serviceClient.client_ref_id] })
+              updateSavedService(serviceClient.client_ref_id, false)
             }}
           />
         ))

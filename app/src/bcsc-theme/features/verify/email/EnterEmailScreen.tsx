@@ -58,6 +58,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
+      await updateAccountFlags({ userSkippedEmailVerification: false })
       await updateUserInfo({ email, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {

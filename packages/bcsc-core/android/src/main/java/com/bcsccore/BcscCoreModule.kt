@@ -104,6 +104,7 @@ import com.bcsccore.storage.NativeAuthorizationRequest
 import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
+import com.bcsccore.storage.NativeClientMetadata
 
 // TODO: (al) - refactor to use readFirstAccountEncryptedFile function
 // TODO: (al) - refactor to remove file names and use AccountFileName enum
@@ -3101,7 +3102,10 @@ class BcscCoreModule(
                 )
             }
             if (prefs.contains("email_address")) {
-                result.putString("emailAddress", prefs.getString("email_address", null))
+                val emailAddress = prefs.getString("email_address", null)
+                if (!emailAddress.isNullOrEmpty()) {
+                    result.putString("emailAddress", emailAddress)
+                }
             }
             if (prefs.contains("user_submitted_verification_video")) {
                 result.putBoolean(
@@ -3264,6 +3268,101 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "getEvidence error: ${e.message}", e)
             promise.reject("E_GET_EVIDENCE_ERROR", "Error getting evidence: ${e.message}", e)
+        }
+    }
+
+    private fun addEvidenceMetadataFromArrayJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val jsonArray = JSONArray(trimmedEvidenceJson)
+        for (i in 0 until jsonArray.length()) {
+            val item = jsonArray.getJSONObject(i)
+            val map = Arguments.createMap()
+
+            item.keys().forEach { key ->
+                when (val value = item.get(key)) {
+                    is String -> map.putString(key, value)
+                    is Int -> map.putInt(key, value)
+                    is Double -> map.putDouble(key, value)
+                    is Boolean -> map.putBoolean(key, value)
+                    is JSONObject -> map.putMap(key, convertJsonToMap(value))
+                    is JSONArray -> map.putArray(key, convertJsonToArray(value))
+                    is Long -> map.putDouble(key, value.toDouble())
+                    JSONObject.NULL -> map.putNull(key)
+                }
+            }
+
+            result.pushMap(map)
+        }
+    }
+
+    private fun addEvidenceMetadataFromObjectJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val evidenceUploadObject = JSONObject(trimmedEvidenceJson)
+        evidenceUploadObject.keys().forEach { key ->
+            val evidenceEntry = evidenceUploadObject.optJSONObject(key) ?: return@forEach
+            val metadataEntry = Arguments.createMap()
+
+            evidenceEntry.optJSONObject("evidencetype")?.let { evidenceType ->
+                metadataEntry.putMap("evidenceType", convertJsonToMap(evidenceType))
+            }
+
+            evidenceEntry
+                .optJSONObject("evidencedetails")
+                ?.optString("document_number")
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { metadataEntry.putString("documentNumber", it) }
+
+            val metadataArray = Arguments.createArray()
+            val evidencePhotos = evidenceEntry.optJSONObject("images")?.optJSONArray("evidencePhotos")
+            if (evidencePhotos != null) {
+                for (i in 0 until evidencePhotos.length()) {
+                    val photo = evidencePhotos.optJSONObject(i) ?: continue
+                    val photoMetadata = Arguments.createMap()
+                    val filePath = photo.optString("filepath", "")
+                    val filePathLower = filePath.lowercase(Locale.US)
+                    val contentType =
+                        when {
+                            filePathLower.endsWith(".jpeg") || filePathLower.endsWith(".jpg") -> "image/jpeg"
+                            filePathLower.endsWith(".png") -> "image/png"
+                            else -> ""
+                        }
+
+                    photoMetadata.putString("label", photo.optString("label", ""))
+                    photoMetadata.putString("content_type", contentType)
+                    // v3 Android stores timestamp in milliseconds; convert to seconds for the API
+                    photoMetadata.putDouble("date", (photo.optLong("timestamp", 0L) / 1000L).toDouble())
+                    photoMetadata.putString("file_path", filePath)
+
+                    // Compute sha256 and content_length from file on disk
+                    if (filePath.isNotEmpty()) {
+                        photoMetadata.putString("filename", File(filePath).name)
+                        val file = File(filePath)
+                        if (file.exists()) {
+                            val fileBytes = file.readBytes()
+                            photoMetadata.putInt("content_length", fileBytes.size)
+                            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                            val hashBytes = digest.digest(fileBytes)
+                            val hexString = hashBytes.joinToString("") { "%02x".format(it) }
+                            photoMetadata.putString("sha256", hexString)
+                        } else {
+                            photoMetadata.putInt("content_length", 0)
+                            photoMetadata.putString("sha256", "")
+                        }
+                    } else {
+                        photoMetadata.putInt("content_length", 0)
+                        photoMetadata.putString("sha256", "")
+                    }
+
+                    metadataArray.pushMap(photoMetadata)
+                }
+            }
+
+            metadataEntry.putArray("metadata", metadataArray)
+            result.pushMap(metadataEntry)
         }
     }
 
@@ -3848,6 +3947,153 @@ class BcscCoreModule(
             }
         }
         return jsonArray
+    }
+
+    // MARK: - Saved Services (Client Metadata) Storage
+
+    /**
+     * Gets saved services (client metadata) from native encrypted storage.
+     * Returns a WritableArray of service objects matching the NativeSavedService TS type.
+     */
+    @ReactMethod
+    override fun getSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                Log.d(NAME, "getSavedServices: No account found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                Log.d(NAME, "getSavedServices: No account ID or issuer")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadata = nativeStorage.readClientMetadata(issuerName, accountId)
+
+            if (clientMetadata == null) {
+                Log.d(NAME, "getSavedServices: No client metadata found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val result = Arguments.createArray()
+            for (metadata in clientMetadata) {
+                val serviceMap = Arguments.createMap().apply {
+                    putString("clientRefId", metadata.clientRefId ?: "")
+                    putBoolean("bookmarked", metadata.isBookmarked)
+                    metadata.clientName?.let { putString("clientName", it) }
+                    if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
+                    if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
+                    metadata.clientUri?.let { putString("clientUri", it) }
+                    metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
+                    metadata.clientDescription?.let { putString("clientDescription", it) }
+                    metadata.policyUri?.let { putString("policyUri", it) }
+                    metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
+                    metadata.claimsDescription?.let { putString("claimsDescription", it) }
+                    putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
+                    putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
+                }
+                result.pushMap(serviceMap)
+            }
+
+            Log.d(NAME, "getSavedServices: Read ${clientMetadata.size} services")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getSavedServices: Error", e)
+            promise.resolve(Arguments.createArray())
+        }
+    }
+
+    /**
+     * Saves services (client metadata) to native encrypted storage.
+     */
+    @ReactMethod
+    override fun setSavedServices(
+        services: ReadableArray,
+        promise: Promise,
+    ) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.reject("E_NO_ACCOUNT", "No account found")
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.reject("E_NO_ACCOUNT", "No account ID or issuer")
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadataList = mutableListOf<NativeClientMetadata>()
+
+            for (i in 0 until services.size()) {
+                val serviceMap = services.getMap(i) ?: continue
+                clientMetadataList.add(
+                    NativeClientMetadata(
+                        clientRefId = if (serviceMap.hasKey("clientRefId")) serviceMap.getString("clientRefId") else null,
+                        clientName = if (serviceMap.hasKey("clientName")) serviceMap.getString("clientName") else null,
+                        clientUri = if (serviceMap.hasKey("clientUri")) serviceMap.getString("clientUri") else null,
+                        initiateLoginUri = if (serviceMap.hasKey("initiateLoginUri")) serviceMap.getString("initiateLoginUri") else null,
+                        clientDescription = if (serviceMap.hasKey("clientDescription")) serviceMap.getString("clientDescription") else null,
+                        policyUri = if (serviceMap.hasKey("policyUri")) serviceMap.getString("policyUri") else null,
+                        claimsDescription = if (serviceMap.hasKey("claimsDescription")) serviceMap.getString("claimsDescription") else null,
+                        serviceListingSortOrder = if (serviceMap.hasKey("serviceListingSortOrder")) serviceMap.getInt("serviceListingSortOrder") else null,
+                        suppressConfirmationInfo = if (serviceMap.hasKey("suppressConfirmationInfo")) serviceMap.getBoolean("suppressConfirmationInfo") else false,
+                        suppressBookmarkPrompt = if (serviceMap.hasKey("suppressBookmarkPrompt")) serviceMap.getBoolean("suppressBookmarkPrompt") else false,
+                        isBookmarked = if (serviceMap.hasKey("bookmarked")) serviceMap.getBoolean("bookmarked") else false,
+                        dateAdded = if (serviceMap.hasKey("dateAdded")) (serviceMap.getDouble("dateAdded") * 1000).toLong() else 0,
+                        lastUsed = if (serviceMap.hasKey("lastUsed")) (serviceMap.getDouble("lastUsed") * 1000).toLong() else 0,
+                    ),
+                )
+            }
+
+            val success = nativeStorage.saveClientMetadata(clientMetadataList.toTypedArray(), issuerName, accountId)
+            if (success) {
+                Log.d(NAME, "setSavedServices: Saved ${clientMetadataList.size} services")
+                promise.resolve(true)
+            } else {
+                promise.reject("E_SAVE_FAILED", "Failed to save client metadata")
+            }
+        } catch (e: Exception) {
+            promise.reject("E_SET_SAVED_SERVICES_ERROR", "Error saving services: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Deletes all saved services (client metadata) from native storage.
+     */
+    @ReactMethod
+    override fun deleteSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.resolve(true)
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.resolve(true)
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val success = nativeStorage.deleteClientMetadata(issuerName, accountId)
+            Log.d(NAME, "deleteSavedServices: ${if (success) "success" else "failed"}")
+            promise.resolve(success)
+        } catch (e: Exception) {
+            promise.reject("E_DELETE_SAVED_SERVICES_ERROR", "Error deleting services: ${e.message}", e)
+        }
     }
 
     /**

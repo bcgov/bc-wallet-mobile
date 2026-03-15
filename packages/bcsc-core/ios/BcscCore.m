@@ -143,6 +143,12 @@ RCT_EXTERN_METHOD(deleteCredential : (RCTPromiseResolveBlock)resolve reject : (R
 
 RCT_EXTERN_METHOD(hasCredential : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getSavedServices : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(setSavedServices : (NSArray *)services resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(deleteSavedServices : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(showLocalNotification : (NSString *)title message : (NSString *)
                       message resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
