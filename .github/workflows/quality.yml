@@ -9,9 +9,9 @@ on:
   merge_group:
 
 jobs:
-  setup:
+  typecheck-test:
     runs-on: macos-26
-    name: Install & Build
+    name: Build, Typecheck, Test & Coverage
     permissions:
       contents: read
     steps:
@@ -45,10 +45,20 @@ jobs:
       - name: Build packages
         run: yarn build
 
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Run tests and generate coverage report
+        run: yarn coverage
+
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: always()
+
   lint-format:
     runs-on: macos-26
     name: Lint & Format
-    needs: setup
     permissions:
       contents: read
     steps:
@@ -79,57 +89,9 @@ jobs:
       - name: Format check
         run: yarn format:check
 
-  typecheck-test:
-    runs-on: macos-26
-    name: Typecheck, Test & Coverage
-    needs: setup
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - uses: ./.github/workflows/actions/setup-node
-
-      - name: Restore node_modules cache
-        uses: actions/cache@v3
-        with:
-          path: .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
-
-      - name: Install dependencies
-        run: yarn install --immutable
-
-      - name: Restore bcsc-core build cache
-        uses: actions/cache@v3
-        with:
-          path: packages/bcsc-core/lib
-          key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
-          restore-keys: |
-            ${{ runner.os }}-bcsc-core-build-
-
-      - name: Typecheck
-        run: yarn typecheck
-
-      - name: Test
-        run: yarn test
-
-      - name: Generate coverage report
-        run: yarn coverage
-
-      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-        if: always()
-
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)
-    needs: setup
     permissions:
       contents: read
     steps:
@@ -146,7 +108,6 @@ jobs:
   test-android:
     runs-on: macos-26
     name: Native Tests (Android)
-    needs: setup
     permissions:
       contents: read
     steps:
@@ -154,7 +115,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          distribution: adopt
+          distribution: zulu
           java-version: 17
 
       - name: Cache Gradle dependencies
