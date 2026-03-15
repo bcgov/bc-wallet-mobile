@@ -2534,7 +2534,8 @@ class BcscCore: NSObject {
         // Compute sha256 and content_length from base64 photo data,
         // and save the photo to disk so the JS side can read it for upload.
         if let base64 = photo.photoBase64String,
-           let photoData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters) {
+           let photoData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
+        {
           photoDict["sha256"] = DocumentsArchiver.sha256Hex(photoData)
           photoDict["content_length"] = photoData.count
 

@@ -3984,21 +3984,22 @@ class BcscCoreModule(
 
             val result = Arguments.createArray()
             for (metadata in clientMetadata) {
-                val serviceMap = Arguments.createMap().apply {
-                    putString("clientRefId", metadata.clientRefId ?: "")
-                    putBoolean("bookmarked", metadata.isBookmarked)
-                    metadata.clientName?.let { putString("clientName", it) }
-                    if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
-                    if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
-                    metadata.clientUri?.let { putString("clientUri", it) }
-                    metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
-                    metadata.clientDescription?.let { putString("clientDescription", it) }
-                    metadata.policyUri?.let { putString("policyUri", it) }
-                    metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
-                    metadata.claimsDescription?.let { putString("claimsDescription", it) }
-                    putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
-                    putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
-                }
+                val serviceMap =
+                    Arguments.createMap().apply {
+                        putString("clientRefId", metadata.clientRefId ?: "")
+                        putBoolean("bookmarked", metadata.isBookmarked)
+                        metadata.clientName?.let { putString("clientName", it) }
+                        if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
+                        if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
+                        metadata.clientUri?.let { putString("clientUri", it) }
+                        metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
+                        metadata.clientDescription?.let { putString("clientDescription", it) }
+                        metadata.policyUri?.let { putString("policyUri", it) }
+                        metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
+                        metadata.claimsDescription?.let { putString("claimsDescription", it) }
+                        putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
+                        putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
+                    }
                 result.pushMap(serviceMap)
             }
 
@@ -4039,19 +4040,115 @@ class BcscCoreModule(
                 val serviceMap = services.getMap(i) ?: continue
                 clientMetadataList.add(
                     NativeClientMetadata(
-                        clientRefId = if (serviceMap.hasKey("clientRefId")) serviceMap.getString("clientRefId") else null,
-                        clientName = if (serviceMap.hasKey("clientName")) serviceMap.getString("clientName") else null,
+                        clientRefId =
+                            if (serviceMap.hasKey(
+                                    "clientRefId",
+                                )
+                            ) {
+                                serviceMap.getString("clientRefId")
+                            } else {
+                                null
+                            },
+                        clientName =
+                            if (serviceMap.hasKey(
+                                    "clientName",
+                                )
+                            ) {
+                                serviceMap.getString("clientName")
+                            } else {
+                                null
+                            },
                         clientUri = if (serviceMap.hasKey("clientUri")) serviceMap.getString("clientUri") else null,
-                        initiateLoginUri = if (serviceMap.hasKey("initiateLoginUri")) serviceMap.getString("initiateLoginUri") else null,
-                        clientDescription = if (serviceMap.hasKey("clientDescription")) serviceMap.getString("clientDescription") else null,
-                        policyUri = if (serviceMap.hasKey("policyUri")) serviceMap.getString("policyUri") else null,
-                        claimsDescription = if (serviceMap.hasKey("claimsDescription")) serviceMap.getString("claimsDescription") else null,
-                        serviceListingSortOrder = if (serviceMap.hasKey("serviceListingSortOrder")) serviceMap.getInt("serviceListingSortOrder") else null,
-                        suppressConfirmationInfo = if (serviceMap.hasKey("suppressConfirmationInfo")) serviceMap.getBoolean("suppressConfirmationInfo") else false,
-                        suppressBookmarkPrompt = if (serviceMap.hasKey("suppressBookmarkPrompt")) serviceMap.getBoolean("suppressBookmarkPrompt") else false,
-                        isBookmarked = if (serviceMap.hasKey("bookmarked")) serviceMap.getBoolean("bookmarked") else false,
-                        dateAdded = if (serviceMap.hasKey("dateAdded")) (serviceMap.getDouble("dateAdded") * 1000).toLong() else 0,
-                        lastUsed = if (serviceMap.hasKey("lastUsed")) (serviceMap.getDouble("lastUsed") * 1000).toLong() else 0,
+                        initiateLoginUri =
+                            if (serviceMap.hasKey(
+                                    "initiateLoginUri",
+                                )
+                            ) {
+                                serviceMap.getString("initiateLoginUri")
+                            } else {
+                                null
+                            },
+                        clientDescription =
+                            if (serviceMap.hasKey(
+                                    "clientDescription",
+                                )
+                            ) {
+                                serviceMap.getString("clientDescription")
+                            } else {
+                                null
+                            },
+                        policyUri =
+                            if (serviceMap.hasKey(
+                                    "policyUri",
+                                )
+                            ) {
+                                serviceMap.getString("policyUri")
+                            } else {
+                                null
+                            },
+                        claimsDescription =
+                            if (serviceMap.hasKey(
+                                    "claimsDescription",
+                                )
+                            ) {
+                                serviceMap.getString("claimsDescription")
+                            } else {
+                                null
+                            },
+                        serviceListingSortOrder =
+                            if (serviceMap.hasKey(
+                                    "serviceListingSortOrder",
+                                )
+                            ) {
+                                serviceMap.getInt("serviceListingSortOrder")
+                            } else {
+                                null
+                            },
+                        suppressConfirmationInfo =
+                            if (serviceMap.hasKey(
+                                    "suppressConfirmationInfo",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressConfirmationInfo")
+                            } else {
+                                false
+                            },
+                        suppressBookmarkPrompt =
+                            if (serviceMap.hasKey(
+                                    "suppressBookmarkPrompt",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressBookmarkPrompt")
+                            } else {
+                                false
+                            },
+                        isBookmarked =
+                            if (serviceMap.hasKey(
+                                    "bookmarked",
+                                )
+                            ) {
+                                serviceMap.getBoolean("bookmarked")
+                            } else {
+                                false
+                            },
+                        dateAdded =
+                            if (serviceMap.hasKey(
+                                    "dateAdded",
+                                )
+                            ) {
+                                (serviceMap.getDouble("dateAdded") * 1000).toLong()
+                            } else {
+                                0
+                            },
+                        lastUsed =
+                            if (serviceMap.hasKey(
+                                    "lastUsed",
+                                )
+                            ) {
+                                (serviceMap.getDouble("lastUsed") * 1000).toLong()
+                            } else {
+                                0
+                            },
                     ),
                 )
             }

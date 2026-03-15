@@ -17,7 +17,9 @@ import Foundation
 // MARK: - MetadataClients
 
 class MetadataClients: NSObject, NSSecureCoding {
-  static var supportsSecureCoding: Bool { true }
+  static var supportsSecureCoding: Bool {
+    true
+  }
 
   let clientId: String?
   var clientName: String?
@@ -119,7 +121,8 @@ class MetadataClients: NSObject, NSSecureCoding {
     serviceListingSortOrder = decoder.decodeObject(forKey: CodingKeys.serviceListingSortOrder.rawValue) as? Int
     claimsDescription = decoder.decodeObject(forKey: CodingKeys.claimsDescription.rawValue) as? String
     suppressConfirmationInfo = decoder.decodeObject(forKey: CodingKeys.suppressConfirmationInfo.rawValue) as? Bool
-    allowedIdentificationProcesses = decoder.decodeObject(forKey: CodingKeys.allowedIdentificationProcesses.rawValue) as? [String?]
+    allowedIdentificationProcesses = decoder
+      .decodeObject(forKey: CodingKeys.allowedIdentificationProcesses.rawValue) as? [String?]
     suppressBookmarkPrompt = decoder.decodeObject(forKey: CodingKeys.suppressBookmarkPrompt.rawValue) as? Bool
   }
 
@@ -136,9 +139,13 @@ class MetadataClients: NSObject, NSSecureCoding {
     if let initiateLoginUri = initiateLoginUri { dict["initiateLoginUri"] = initiateLoginUri }
     if let clientDescription = clientDescription { dict["clientDescription"] = clientDescription }
     if let policyUri = policyUri { dict["policyUri"] = policyUri }
-    if let serviceListingSortOrder = serviceListingSortOrder { dict["serviceListingSortOrder"] = serviceListingSortOrder }
+    if let serviceListingSortOrder = serviceListingSortOrder {
+      dict["serviceListingSortOrder"] = serviceListingSortOrder
+    }
     if let claimsDescription = claimsDescription { dict["claimsDescription"] = claimsDescription }
-    if let suppressConfirmationInfo = suppressConfirmationInfo { dict["suppressConfirmationInfo"] = suppressConfirmationInfo }
+    if let suppressConfirmationInfo = suppressConfirmationInfo {
+      dict["suppressConfirmationInfo"] = suppressConfirmationInfo
+    }
     if let suppressBookmarkPrompt = suppressBookmarkPrompt { dict["suppressBookmarkPrompt"] = suppressBookmarkPrompt }
     return dict
   }
@@ -166,7 +173,9 @@ class MetadataClients: NSObject, NSSecureCoding {
 // MARK: - ClientMetadataResponseModel
 
 class ClientMetadataResponseModel: NSObject, NSSecureCoding {
-  static var supportsSecureCoding: Bool { true }
+  static var supportsSecureCoding: Bool {
+    true
+  }
 
   var clients: [MetadataClients]?
 

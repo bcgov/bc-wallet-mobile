@@ -83,7 +83,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             email: BCSC_EMAIL_NOT_PROVIDED,
             isEmailVerified: true,
           })
-          await updateAccountFlags({ userSkippedEmailVerification: true, isEmailVerified: true })
+          await updateAccountFlags({ userSkippedEmailVerification: true })
           navigation.goBack()
         },
       },
