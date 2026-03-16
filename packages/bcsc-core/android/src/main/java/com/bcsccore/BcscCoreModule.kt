@@ -4442,16 +4442,27 @@ class BcscCoreModule(
     @ReactMethod
     override fun isThirdPartyKeyboardActive(promise: Promise) {
         try {
-            val currentInputMethod =
-                android.provider.Settings.Secure.getString(
-                    reactApplicationContext.contentResolver,
-                    android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
-                )
-            val isSystemKeyboard =
-                currentInputMethod?.contains("com.android") == true ||
-                    currentInputMethod?.contains("com.google") == true
+            val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            if (imm == null) {
+                promise.resolve(false)
+                return
+            }
 
-            promise.resolve(!isSystemKeyboard)
+            val defaultInputMethod = android.provider.Settings.Secure.getString(
+                reactApplicationContext.contentResolver,
+                android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
+            )
+
+            for (imi in imm.enabledInputMethodList) {
+                if (imi.id == defaultInputMethod) {
+                    val appFlags = imi.serviceInfo.applicationInfo.flags
+                    val isThirdParty = (appFlags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) == 0
+                    promise.resolve(isThirdParty)
+                    return
+                }
+            }
+
+            promise.resolve(false)
         } catch (e: Exception) {
             Log.e(NAME, "3rdPartyKeyboardCheck: ${e.message}", e)
             promise.resolve(false) // Default to false if any error occurs, to avoid blocking user input
