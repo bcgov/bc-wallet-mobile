@@ -1,9 +1,13 @@
+import { isSauceLabs } from './sauce.js'
+
 /**
  * Handles the native iOS "Allow BC Wallet to find devices on local networks?" permission dialog
  * that appears on first install. Safe to call even when no dialog is present (e.g. already granted).
+ * Skipped on Sauce Labs — the modal does not appear on their real-device cloud.
  */
 export async function acceptLocalNetworkPermissionIfPresent(): Promise<void> {
   if (!driver.isIOS) return
+  if (isSauceLabs()) return
 
   // Give the permission dialog time to appear (often shows 1–2s after launch)
   await new Promise((r) => setTimeout(r, 2_000))
