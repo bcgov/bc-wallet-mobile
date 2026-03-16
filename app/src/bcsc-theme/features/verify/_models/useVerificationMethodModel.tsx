@@ -2,12 +2,15 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCDispatchAction, BCState, IASEnvironment } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
+
+const TEST_HARNESS_QUEUE_DESTINATION_NAME = 'Test Harness Queue Destination'
+const PROD_HARNESS_QUEUE_DESTINATION_NAME = 'TODO: MD'
 
 type useVerificationMethodModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -82,9 +85,12 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       const formattedHours = formatServiceAndUnavailableHours(serviceHours)
       // TODO (bm): Look for prod queue(s) depending on environment
-      const availableDestination = destinations.find(
-        (dest) => dest.destination_name === 'Test Harness Queue Destination'
+      const availableDestination = destinations.find((dest) =>
+        store.developer.environment.name === IASEnvironment.PROD.name
+          ? dest.destination_name === PROD_HARNESS_QUEUE_DESTINATION_NAME
+          : dest.destination_name === TEST_HARNESS_QUEUE_DESTINATION_NAME
       )
+
       if (!availableDestination) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
@@ -113,7 +119,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [videoCallApi, logger, navigation])
+  }, [videoCallApi, navigation, store.developer.environment.name, logger])
 
   return {
     handlePressSendVideo,
@@ -123,4 +129,5 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
   }
 }
+
 export default useVerificationMethodModel
