@@ -17,6 +17,7 @@ describe('PairingConfirmation', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({ remove: jest.fn() }) as any)
   })
 
   describe('when on iOS with fromAppSwitch', () => {
