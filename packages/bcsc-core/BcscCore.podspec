@@ -15,6 +15,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/bcgov/bc-wallet-mobile.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,cpp,swift}"
+  s.exclude_files = "ios/BcscCoreTests/**"
   s.public_header_files = "ios/**/*.h"
 
   s.swift_version = '5.0'

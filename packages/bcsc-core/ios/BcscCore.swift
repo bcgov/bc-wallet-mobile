@@ -4,12 +4,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum AccountSecurityMethod: String {
-  case pinNoDeviceAuth = "app_pin_no_device_authn"
-  case pinWithDeviceAuth = "app_pin_has_device_authn"
-  case deviceAuth = "device_authentication"
-}
-
 enum ChallengeSource: String {
   case local_app_switch
   case push_notification
