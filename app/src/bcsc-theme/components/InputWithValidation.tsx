@@ -58,7 +58,6 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
       elevation: 0,
       flexDirection: 'row',
       alignItems: 'center',
-      // padding: 1, // Offset border width to prevent layout shift
     },
     input: {
       flex: 1,

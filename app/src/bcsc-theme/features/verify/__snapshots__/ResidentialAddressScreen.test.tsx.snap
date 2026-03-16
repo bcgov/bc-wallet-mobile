@@ -114,6 +114,43 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddressLabel
             </Text>
             <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
@@ -127,7 +164,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
-                    "padding": 1,
+                    "padding": 10,
                     "shadowColor": undefined,
                     "shadowOffset": undefined,
                     "shadowOpacity": 0,
@@ -151,8 +188,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                       "color": "#313132",
                       "flex": 1,
                       "fontSize": 16,
-                      "padding": 10,
-                      "paddingHorizontal": undefined,
                     },
                     undefined,
                   ]
@@ -209,6 +244,43 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddress2Label
             </Text>
             <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
@@ -222,7 +294,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
-                    "padding": 1,
+                    "padding": 10,
                     "shadowColor": undefined,
                     "shadowOffset": undefined,
                     "shadowOpacity": 0,
@@ -246,8 +318,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                       "color": "#313132",
                       "flex": 1,
                       "fontSize": 16,
-                      "padding": 10,
-                      "paddingHorizontal": undefined,
                     },
                     undefined,
                   ]
@@ -304,6 +374,43 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.CityLabel
             </Text>
             <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
@@ -317,7 +424,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
-                    "padding": 1,
+                    "padding": 10,
                     "shadowColor": undefined,
                     "shadowOffset": undefined,
                     "shadowOpacity": 0,
@@ -341,8 +448,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                       "color": "#313132",
                       "flex": 1,
                       "fontSize": 16,
-                      "padding": 10,
-                      "paddingHorizontal": undefined,
                     },
                     undefined,
                   ]
@@ -541,6 +646,43 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeLabel
             </Text>
             <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
@@ -554,7 +696,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
-                    "padding": 1,
+                    "padding": 10,
                     "shadowColor": undefined,
                     "shadowOffset": undefined,
                     "shadowOpacity": 0,
@@ -579,8 +721,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                       "color": "#313132",
                       "flex": 1,
                       "fontSize": 16,
-                      "padding": 10,
-                      "paddingHorizontal": undefined,
                     },
                     undefined,
                   ]
