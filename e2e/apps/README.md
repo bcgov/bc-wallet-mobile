@@ -49,7 +49,7 @@ xcodebuild -exportArchive \
 cp build/export/BCWallet.ipa ../../e2e/apps/
 ```
 
-Real-device runs also need `UDID`, `XCODE_ORG_ID`, and optionally `XCODE_SIGNING_ID` (see e2e/README.md).
+Real-device runs also need `IOS_UDID`, `XCODE_ORG_ID`, and optionally `XCODE_SIGNING_ID` (see e2e/README.md).
 
 ## Android Emulator or Real Device Build
 
@@ -65,8 +65,8 @@ cp app/build/outputs/apk/debug/app-debug.apk ../../e2e/apps/BCWallet.apk
 
 The WDIO configs look for these filenames by default (override via env vars):
 
-| Target | Default filename | Env var override |
-|---|---|---|
-| iOS Simulator | `BCWallet.app` | `IOS_APP` |
-| iOS Real Device | `BCWallet.ipa` | `IOS_APP` |
-| Android (emu or device) | `BCWallet.apk` | `ANDROID_APP` |
+| Target                  | Default filename | Env var override |
+| ----------------------- | ---------------- | ---------------- |
+| iOS Simulator           | `BCWallet.app`   | `IOS_APP`        |
+| iOS Real Device         | `BCWallet.ipa`   | `IOS_APP`        |
+| Android (emu or device) | `BCWallet.apk`   | `ANDROID_APP`    |

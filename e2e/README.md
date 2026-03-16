@@ -122,13 +122,17 @@ yarn wdio configs/local/wdio.android.local.emu.conf.ts --spec test/smoke.spec.ts
 
 ### _Local — iOS Real Device_
 
+Real-device runs use a **signed `.ipa`** (device build), not the simulator `.app`. The device config uses `IOS_APP_DEVICE` (default `BCWallet.ipa`) so that `IOS_APP=BCWallet.app` in `.env.saucelabs` does not load the wrong binary.
+
+1. **Build and place the .ipa** in `e2e/apps/` (see [apps/README.md](apps/README.md) — “iOS Real Device Build”).
+2. In `.env.saucelabs` set `IOS_APP_DEVICE=BCWallet.ipa` (or leave unset to use the default), and set `IOS_UDID` and `XCODE_ORG_ID` for your device and team.
+
 ```bash
-# Place your .ipa build in e2e/apps/ (see apps/README.md)
-# Requires: device UDID, Apple Team ID, signing identity
-UDID=<device-udid> XCODE_ORG_ID=<team-id> yarn test:ios:device
+# Place your .ipa in e2e/apps/; set IOS_UDID and XCODE_ORG_ID (e.g. in .env.saucelabs or inline)
+IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> yarn test:ios:device
 
 # Run a single spec
-UDID=<device-udid> XCODE_ORG_ID=<team-id> \
+IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> \
   yarn wdio configs/local/wdio.ios.local.device.conf.ts --spec test/smoke.spec.ts
 ```
 
@@ -137,6 +141,13 @@ _Find your device UDID via Finder (click the device name in the sidebar) or:_
 ```bash
 xcrun xctrace list devices
 ```
+
+**WebDriverAgent (WDA) on real device**  
+Appium installs **WebDriverAgentRunner** on the device to drive automation. It must be built and signed with your Apple team. If you see `xcodebuild failed with code 65` or "Unable to launch WebDriverAgent", WDA code signing is not set up:
+
+1. **Device:** Trust the computer (USB prompt), enable **Developer Mode** (iOS 16+: Settings → Privacy & Security), and **trust your developer certificate** (Settings → General → VPN & Device Management → your team → Trust).
+2. **WDA signing:** Follow [Appium’s real device preparation](https://appium.github.io/appium-xcuitest-driver/latest/preparation/real-device-config/). Easiest is [Basic Automatic Configuration](https://appium.github.io/appium-xcuitest-driver/latest/preparation/prov-profile-basic-auto/) (paid Apple Developer account). If that fails, use one of the manual approaches (e.g. open WDA in Xcode: `appium driver run xcuitest open-wda` from the e2e folder, then sign the WebDriverAgent target with your team).
+3. **Logs:** The device config sets `showXcodeLog: true` so Appium logs show the actual xcodebuild error; check `e2e/logs/` after a run.
 
 ### _Local — Android Real Device_
 
@@ -148,10 +159,10 @@ The debug APK loads the JS bundle from Metro. To avoid Metro connection errors o
 
 ```bash
 # Place your .apk build in e2e/apps/ (see apps/README.md)
-UDID=<device-serial> yarn test:android:device
+ANDROID_UDID=<device-serial> yarn test:android:device
 
 # Run a single spec
-UDID=<device-serial> \
+ANDROID_UDID=<device-serial> \
   yarn wdio configs/local/wdio.android.local.device.conf.ts --spec test/smoke.spec.ts
 ```
 
@@ -189,24 +200,26 @@ _Available variants:_ `bcsc-dev`_,_ `bcsc-test`_,_ `bcsc-qa`_,_ `bcsc-prod`_,_ `
 
 ## _Environment Variables_
 
-| _Variable_         | _Default_           | _Description_                                     |
-| ------------------ | ------------------- | ------------------------------------------------- |
-| `VARIANT`          | `bcsc-dev`          | _App variant to test_                             |
-| `SAUCE_USERNAME`   | _—_                 | _SauceLabs username (sauce runs only)_            |
-| `SAUCE_ACCESS_KEY` | _—_                 | _SauceLabs access key (sauce runs only)_          |
-| `SAUCE_REGION`     | `us`                | _SauceLabs data center region (_`us` _or_ `eu`_)_ |
-| `APP_FILENAME`     | _varies_            | _App filename in SauceLabs storage_               |
-| `BUILD_NAME`       | `local-<timestamp>` | _SauceLabs build name_                            |
-| `TEST_NAME`        | `E2E Tests`         | _SauceLabs test name_                             |
-| `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_               |
-| `IOS_VERSION`      | `18.3`              | _iOS simulator/device version (local)_            |
-| `IOS_APP`          | `BCSC.app`          | _iOS app filename in_ `apps/` _(local sim)_       |
-| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | _Android emulator/device name (local)_            |
-| `ANDROID_VERSION`  | `14.0`              | _Android emulator/device version (local)_         |
-| `ANDROID_APP`      | `BCSC.apk`          | _Android app filename in_ `apps/` _(local)_       |
-| `UDID`             | _—_                 | _Device UDID/serial (real device runs only)_      |
-| `XCODE_ORG_ID`     | _—_                 | _Apple Team ID (iOS real device only)_            |
-| `XCODE_SIGNING_ID` | `iPhone Developer`  | _Xcode signing identity (iOS real device only)_   |
+| _Variable_         | _Default_           | _Description_                                       |
+| ------------------ | ------------------- | --------------------------------------------------- |
+| `VARIANT`          | `bcsc-dev`          | _App variant to test_                               |
+| `SAUCE_USERNAME`   | _—_                 | _SauceLabs username (sauce runs only)_              |
+| `SAUCE_ACCESS_KEY` | _—_                 | _SauceLabs access key (sauce runs only)_            |
+| `SAUCE_REGION`     | `us`                | _SauceLabs data center region (_`us` _or_ `eu`_)_   |
+| `APP_FILENAME`     | _varies_            | _App filename in SauceLabs storage_                 |
+| `BUILD_NAME`       | `local-<timestamp>` | _SauceLabs build name_                              |
+| `TEST_NAME`        | `E2E Tests`         | _SauceLabs test name_                               |
+| `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_                 |
+| `IOS_VERSION`      | `18.3`              | _iOS simulator/device version (local)_              |
+| `IOS_APP`          | `BCWallet.app`      | _iOS app filename in_ `apps/` _(local sim)_         |
+| `IOS_APP_DEVICE`   | `BCWallet.ipa`      | _iOS app filename in_ `apps/` _(local real device)_ |
+| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | _Android emulator/device name (local)_              |
+| `ANDROID_VERSION`  | `14.0`              | _Android emulator/device version (local)_           |
+| `ANDROID_APP`      | `BCSC.apk`          | _Android app filename in_ `apps/` _(local)_         |
+| `IOS_UDID`         | _—_                 | _iOS device UDID (iOS real device only)_            |
+| `ANDROID_UDID`     | _—_                 | _Android device serial (Android real device only)_  |
+| `XCODE_ORG_ID`     | _—_                 | _Apple Team ID (iOS real device only)_              |
+| `XCODE_SIGNING_ID` | `iPhone Developer`  | _Xcode signing identity (iOS real device only)_     |
 
 ## _Config Hierarchy_
 

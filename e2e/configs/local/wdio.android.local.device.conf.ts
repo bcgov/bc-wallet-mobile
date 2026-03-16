@@ -15,7 +15,7 @@ config.capabilities = [
     platformName: 'Android',
     'appium:deviceName': process.env.ANDROID_DEVICE || 'Android',
     'appium:platformVersion': process.env.ANDROID_VERSION || '',
-    'appium:udid': process.env.UDID || '',
+    'appium:udid': process.env.ANDROID_UDID || '',
     'appium:automationName': 'UiAutomator2',
     'appium:app': resolve(__dirname, '../../apps', process.env.ANDROID_APP || 'BCWallet.apk'),
     'appium:noReset': true,
@@ -25,7 +25,7 @@ config.capabilities = [
 
 // So the device can reach Metro on the host (debug APK loads JS from packager)
 config.onPrepare = async function (_config, _capabilities) {
-  const udid = process.env.UDID
+  const udid = process.env.ANDROID_UDID
   const adbTarget = udid ? `-s ${udid}` : ''
   try {
     execSync(`adb ${adbTarget} reverse tcp:${METRO_PORT} tcp:${METRO_PORT}`, {
