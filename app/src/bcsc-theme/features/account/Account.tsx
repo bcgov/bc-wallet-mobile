@@ -10,7 +10,7 @@ import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -51,13 +51,6 @@ const Account: React.FC = () => {
     refreshAccount()
     refreshIdToken()
   }, [refreshAccount, refreshIdToken])
-
-  useFocusEffect(
-    useCallback(() => {
-      logger.info('Account screen focused, refreshing account and ID token metadata...')
-      refreshData()
-    }, [logger, refreshData])
-  )
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
