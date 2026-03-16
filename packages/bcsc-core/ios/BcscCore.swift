@@ -2704,7 +2704,7 @@ class BcscCore: NSObject {
       // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
       guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
         logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
-        reject("E_STORAGE_ERROR", "Failed to decode credential data: unexpected format", nil)
+        reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
         return
       }
 
@@ -3032,7 +3032,7 @@ class BcscCore: NSObject {
       )
       else {
         logger.log("hasCredential: Could not decode ClientRegistration")
-        reject("E_STORAGE_ERROR", "Failed to decode ClientRegistration", nil)
+        reject("E_CHECK_FAILED", "Failed to decode ClientRegistration", nil)
         return
       }
 
