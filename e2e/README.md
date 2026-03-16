@@ -140,9 +140,14 @@ xcrun xctrace list devices
 
 ### _Local — Android Real Device_
 
+The debug APK loads the JS bundle from Metro. To avoid Metro connection errors on a real device:
+
+1. **Start Metro** in the app directory (in a separate terminal): `cd app && yarn start`
+2. **Connect the device via USB** with USB debugging enabled.
+3. Run the tests. The device config runs `adb reverse tcp:8081 tcp:8081` in `onPrepare` so the device can reach Metro on your machine.
+
 ```bash
 # Place your .apk build in e2e/apps/ (see apps/README.md)
-# Connect device via USB with USB debugging enabled
 UDID=<device-serial> yarn test:android:device
 
 # Run a single spec
