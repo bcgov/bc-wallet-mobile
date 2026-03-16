@@ -1,6 +1,16 @@
+import { hitSlop } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useRef, useState } from 'react'
-import { LayoutChangeEvent, StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native'
+import {
+  LayoutChangeEvent,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+} from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type InputWithValidationProps = {
@@ -48,24 +58,20 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
       elevation: 0,
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 1, // Offset border width to prevent layout shift
+      // padding: 1, // Offset border width to prevent layout shift
     },
     input: {
       flex: 1,
-      padding: Inputs.textInput.padding,
-      paddingHorizontal: Inputs.textInput.paddingHorizontal,
       color: props.error ? ColorPalette.semantic.error : Inputs.textInput.color,
       fontSize: Inputs.textInput.fontSize,
     },
     inputFocused: {
       ...Inputs.inputSelected,
-      padding: 0,
     },
     inputError: {
       ...Inputs.inputSelected,
       borderColor: ColorPalette.semantic.error,
       shadowColor: ColorPalette.semantic.error,
-      padding: 0,
     },
     inputErrorIcon: {
       marginRight: Spacing.sm,
@@ -85,25 +91,33 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         {props.label}
       </ThemedText>
 
-      <View style={[styles.inputContainer, isFocused && styles.inputFocused, props.error && styles.inputError]}>
+      <Pressable
+        style={[styles.inputContainer, isFocused && styles.inputFocused, props.error && styles.inputError]}
+        onPress={() => {
+          inputRef.current?.focus()
+        }}
+        hitSlop={hitSlop}
+      >
         <TextInput
           ref={inputRef}
           style={[styles.input, props.inputProps]}
           value={props.value}
           onChangeText={props.onChangeText}
           onChange={(e) => props.onChange?.(e.nativeEvent.text)}
-          onFocus={() => {
-            setIsFocused(true)
-            props.onFocus?.()
-          }}
-          onBlur={() => {
-            setIsFocused(false)
-          }}
           onPressIn={props.onPressIn}
           accessibilityLabel={props.label}
           testID={testIdWithKey(`${props.id}-input`)}
           keyboardType={props.keyboardType}
           {...props.textInputProps}
+          onFocus={(event) => {
+            setIsFocused(true)
+            props.onFocus?.()
+            props.textInputProps?.onFocus?.(event)
+          }}
+          onBlur={(event) => {
+            setIsFocused(false)
+            props.textInputProps?.onBlur?.(event)
+          }}
         />
 
         {props.error ? (
@@ -112,12 +126,9 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             style={styles.inputErrorIcon}
             size={Spacing.lg}
             color={ColorPalette.semantic.error}
-            onPress={() => {
-              inputRef.current?.focus()
-            }}
           />
         ) : null}
-      </View>
+      </Pressable>
 
       <ThemedText
         style={[styles.subtext, props.subtextProps]}

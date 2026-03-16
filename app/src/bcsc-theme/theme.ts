@@ -226,10 +226,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderColor: theme.ColorPalette.grayscale.lightGrey,
           color: theme.ColorPalette.brand.text,
           borderWidth: 1,
+          margin: 1, // borderWidth + margin should equal 2 to prevent layout shift on focus
         },
         inputSelected: {
           borderColor: '#7090E4',
           borderWidth: 2,
+          margin: 0, // borderWidth + margin should equal 2 to prevent layout shift on focus
           backgroundColor: theme.ColorPalette.grayscale.white,
           shadowColor: '#7090E4',
           shadowOffset: { width: 0, height: 0 },
