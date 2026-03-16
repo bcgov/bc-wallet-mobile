@@ -18,14 +18,22 @@ import {
 } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import useEvidenceIDCollectionModel, {
   EvidenceCollectionFormErrors,
   EvidenceCollectionFormState,
 } from './useEvidenceIDCollectionModel'
+
+const FIELD_ORDER: (keyof EvidenceCollectionFormState)[] = [
+  'documentNumber',
+  'lastName',
+  'firstName',
+  'middleNames',
+  'birthDate',
+]
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
@@ -52,6 +60,20 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const evidenceIndex = store.bcscSecure.additionalEvidenceData.findIndex(
     (e) => e.evidenceType?.evidence_type === cardType.evidence_type
   )
+  const scrollViewRef = useRef<ScrollView>(null)
+  const formContainerY = useRef(0)
+  const fieldYOffsets = useRef<Partial<Record<keyof EvidenceCollectionFormState, number>>>({})
+
+  const scrollToFirstError = (errors: EvidenceCollectionFormErrors) => {
+    const firstErrorField = FIELD_ORDER.find((field) => errors[field] !== undefined)
+    if (!firstErrorField || fieldYOffsets.current[firstErrorField] === undefined) {
+      return
+    }
+    scrollViewRef.current?.scrollTo({
+      y: formContainerY.current + (fieldYOffsets.current[firstErrorField] ?? 0),
+      animated: true,
+    })
+  }
 
   // If we have a document number from the route params (ie: from scanning), use that.
   // Otherwise, if this cardType already has an entry in additionalEvidenceData, use the
@@ -111,6 +133,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       // if there are validation errors, display them and do not proceed
       if (Object.keys(evidenceFormErrors).length > 0) {
         setFormErrors(evidenceFormErrors)
+        scrollToFirstError(evidenceFormErrors)
         return
       }
 
@@ -233,14 +256,19 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   )
 
   return (
-    <ScreenWrapper keyboardActive={true} controls={controls}>
+    <ScreenWrapper keyboardActive={true} controls={controls} scrollViewRef={scrollViewRef}>
       <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
       <ThemedText style={{ paddingVertical: 16 }}>
         {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
         <Text style={{ fontWeight: 'bold' }}>{t('BCSC.EvidenceIDCollection.Heading2')}</Text>{' '}
         {t('BCSC.EvidenceIDCollection.Heading3')}
       </ThemedText>
-      <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
+      <View
+        style={{ marginVertical: 10, width: '100%', gap: 18 }}
+        onLayout={(e) => {
+          formContainerY.current = e.nativeEvent.layout.y
+        }}
+      >
         <InputWithValidation
           id={'documentNumber'}
           label={cardType.document_reference_label}
@@ -249,6 +277,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           error={formErrors.documentNumber}
           subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
           textInputProps={{ autoCorrect: false }}
+          onLayout={(e) => {
+            fieldYOffsets.current.documentNumber = e.nativeEvent.layout.y
+          }}
         />
 
         {personalInfoRequired ? (
@@ -261,6 +292,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               error={formErrors.lastName}
               subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
               textInputProps={{ autoCorrect: false, autoComplete: 'name-family', textContentType: 'familyName' }}
+              onLayout={(e) => {
+                fieldYOffsets.current.lastName = e.nativeEvent.layout.y
+              }}
             />
 
             <InputWithValidation
@@ -271,6 +305,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               error={formErrors.firstName}
               subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
               textInputProps={{ autoCorrect: false, autoComplete: 'name-given', textContentType: 'givenName' }}
+              onLayout={(e) => {
+                fieldYOffsets.current.firstName = e.nativeEvent.layout.y
+              }}
             />
 
             <InputWithValidation
@@ -281,6 +318,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               error={formErrors.middleNames}
               subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
               textInputProps={{ autoCorrect: false, autoComplete: 'name-middle', textContentType: 'middleName' }}
+              onLayout={(e) => {
+                fieldYOffsets.current.middleNames = e.nativeEvent.layout.y
+              }}
             />
 
             <DateInput
@@ -290,6 +330,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(date) => handleChange('birthDate', date)}
               error={formErrors.birthDate}
               subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
+              onLayout={(e) => {
+                fieldYOffsets.current.birthDate = e.nativeEvent.layout.y
+              }}
             />
           </>
         ) : null}

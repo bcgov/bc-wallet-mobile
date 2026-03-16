@@ -9,6 +9,7 @@ import {
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
+import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
@@ -18,9 +19,8 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@credo-ts/core'
-import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
 import { isProofRequestingAttestation } from '@services/attestation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
   const { agent } = useAgent()
@@ -30,10 +30,10 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
   const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
   const [notifications, setNotifications] = useState([])
   const { records: basicMessages } = useBasicMessages()
-
   const credsReceived = useCredentialByState(CredentialState.CredentialReceived)
   const credsDone = useCredentialByState(CredentialState.Done)
-  const proofsDone = useProofByState([ProofState.Done, ProofState.PresentationReceived])
+  const doneStates = useMemo(() => [ProofState.Done, ProofState.PresentationReceived] as ProofState[], [])
+  const proofsDone = useProofByState(doneStates)
 
   useEffect(() => {
     // get all unseen messages

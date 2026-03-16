@@ -516,7 +516,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
-      const prompts: VerificationPrompt[] = (action?.payload || []).pop()
+      const prompts: VerificationPrompt[] = (action?.payload || []).pop() ?? []
       const bcsc = { ...state.bcsc, prompts }
       const newState = { ...state, bcsc }
       return newState
@@ -547,7 +547,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         videoPath: undefined,
         videoDuration: undefined,
         videoThumbnailPath: undefined,
-        prompts: undefined,
       }
       const newState = { ...state, bcsc }
       return newState

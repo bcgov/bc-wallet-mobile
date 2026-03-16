@@ -11,7 +11,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { useAgent } from '@credo-ts/react-hooks'
+import { useAgent } from '@bifold/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
 import { getBCSCAppStoreUrl, openLink } from '@utils/links'
 import React, { useCallback, useEffect, useState } from 'react'

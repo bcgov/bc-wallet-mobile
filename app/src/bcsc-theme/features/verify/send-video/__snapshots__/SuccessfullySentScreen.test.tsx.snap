@@ -284,7 +284,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }
