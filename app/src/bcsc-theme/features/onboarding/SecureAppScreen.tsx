@@ -1,5 +1,7 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
@@ -40,8 +42,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error completing device security setup: ${errMessage}`)
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`Error completing device security setup: ${appError.technicalMessage ?? appError.message}`)
     }
   }, [register, handleSuccessfulAuth, logger])
 

@@ -1,5 +1,7 @@
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { signPairingCode } from 'react-native-bcsc-core'
@@ -31,7 +33,12 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
       return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
         const { issuer, clientID } = account
         const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
-        const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
+        let signedCode: string | null
+        try {
+          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
+        } catch (error) {
+          return throwAppError(error, ErrorRegistry.SIGN_CLAIMS_ERROR)
+        }
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
           `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
           { assertion: signedCode },

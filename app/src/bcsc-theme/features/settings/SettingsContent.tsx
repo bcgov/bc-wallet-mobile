@@ -1,6 +1,8 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
@@ -92,7 +94,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           const method = await getAccountSecurityMethod()
           setAccountSecurityMethod(method)
         } catch (error) {
-          logger.error('Error fetching app security method', error instanceof Error ? error : new Error(String(error)))
+          const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+          logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
         }
       }
       fetchAccountSecurityMethod()
