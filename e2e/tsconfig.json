@@ -1,19 +1,21 @@
 {
-  "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "dist",
-    "rootDir": ".",
-    "strict": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      "@screens/*": ["src/screens/*"],
-      "@helpers/*": ["src/helpers/*"],
-      "@flows/*": ["src/flows/*"]
-    }
+    "sourceMap": false,
+    "target": "es2020",
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
+    "removeComments": true,
+    "noImplicitAny": true,
+    "strictPropertyInitialization": true,
+    "strictNullChecks": true,
+    "types": [
+      "node",
+      "@wdio/types",
+      "@wdio/globals/types",
+      "@wdio/mocha-framework",
+      "expect-webdriverio",
+      "@wdio/sauce-service"
+    ]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "configs/**/*.ts"]
+  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts"]
 }

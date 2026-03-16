@@ -1,4 +1,4 @@
-import { isSauceLabs } from './sauce'
+import { isSauceLabs } from './sauce.js'
 
 /**
  * Inject a static image into the device camera.

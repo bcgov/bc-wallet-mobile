@@ -1,6 +1,6 @@
 // src/flows/onboarding.flow.ts
-import OnboardingScreen from '../screens/OnboardingScreen'
-import PinScreen from '../screens/PinScreen'
+import OnboardingScreen from '../screens/OnboardingScreen.js'
+import PinScreen from '../screens/PinScreen.js'
 
 export async function completeFullOnboarding(pin = '000000') {
   await OnboardingScreen.waitForDisplayed()

@@ -1,5 +1,5 @@
-import { getVariantConfig } from '../variant'
-import { BaseScreen } from './BaseScreen'
+import { getVariantConfig } from '../variant.js'
+import { BaseScreen } from './BaseScreen.js'
 
 class OnboardingScreen extends BaseScreen {
   private variant = getVariantConfig()

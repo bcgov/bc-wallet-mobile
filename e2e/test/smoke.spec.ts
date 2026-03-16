@@ -1,6 +1,6 @@
-import { annotate } from '../src/helpers/sauce'
-import OnboardingScreen from '../src/screens/OnboardingScreen'
-import { getVariantConfig } from '../src/variant'
+import { annotate } from '../src/helpers/sauce.js'
+import OnboardingScreen from '../src/screens/OnboardingScreen.js'
+import { getVariantConfig } from '../src/variant.js'
 
 describe('App Launch', () => {
   const variant = getVariantConfig()

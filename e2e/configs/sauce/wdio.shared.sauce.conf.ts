@@ -1,7 +1,7 @@
 // sauce/wdio.shared.sauce.conf.ts
 /// <reference types="@wdio/globals/types" />
 
-import { config as baseConfig } from '../wdio.shared.conf'
+import { config as baseConfig } from '../wdio.shared.conf.js'
 
 const config = { ...baseConfig }
 

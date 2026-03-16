@@ -1,4 +1,4 @@
-import { isSauceLabs } from './sauce'
+import { isSauceLabs } from './sauce.js'
 
 export async function enrollBiometrics() {
   if (isSauceLabs()) {

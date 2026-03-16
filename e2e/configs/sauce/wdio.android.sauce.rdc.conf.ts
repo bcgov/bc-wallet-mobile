@@ -1,5 +1,5 @@
 // sauce/wdio.android.sauce.rdc.conf.ts
-import { config as sauceConfig } from './wdio.shared.sauce.conf'
+import { config as sauceConfig } from './wdio.shared.sauce.conf.js'
 
 const appFilename = process.env.APP_FILENAME || 'BCSC-Dev-latest.aab'
 

@@ -11,11 +11,14 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const projectRoot = dirname(__dirname)
-const appiumBin = join(projectRoot, 'node_modules', '.bin', 'appium')
+const appiumBin = join(__dirname, 'node_modules', '.bin', 'appium')
 const appiumHome = process.env.APPIUM_HOME || join(__dirname, '.appium')
 
-const drivers = ['uiautomator2', 'xcuitest']
+// Pin to Appium 2–compatible versions (latest driver registry defaults to Appium 3)
+const drivers = [
+  'uiautomator2@2.45.1',
+  'xcuitest@6.0.1',
+]
 const home = process.env.HOME || process.env.USERPROFILE || '/tmp'
 
 let failed = false
