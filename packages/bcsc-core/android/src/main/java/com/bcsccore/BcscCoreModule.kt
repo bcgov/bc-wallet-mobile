@@ -4448,10 +4448,11 @@ class BcscCoreModule(
                 return
             }
 
-            val defaultInputMethod = android.provider.Settings.Secure.getString(
-                reactApplicationContext.contentResolver,
-                android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
-            )
+            val defaultInputMethod =
+                android.provider.Settings.Secure.getString(
+                    reactApplicationContext.contentResolver,
+                    android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
+                )
 
             for (imi in imm.enabledInputMethodList) {
                 if (imi.id == defaultInputMethod) {

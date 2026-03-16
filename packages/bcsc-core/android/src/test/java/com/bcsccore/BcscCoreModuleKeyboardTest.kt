@@ -20,7 +20,6 @@ import org.junit.Before
 import org.junit.Test
 
 class BcscCoreModuleKeyboardTest {
-
     private lateinit var mockReactContext: ReactApplicationContext
     private lateinit var mockContentResolver: ContentResolver
     private lateinit var mockImm: InputMethodManager
@@ -54,12 +53,14 @@ class BcscCoreModuleKeyboardTest {
         id: String,
         isSystemApp: Boolean,
     ): InputMethodInfo {
-        val appInfo = ApplicationInfo().apply {
-            flags = if (isSystemApp) ApplicationInfo.FLAG_SYSTEM else 0
-        }
-        val serviceInfo = ServiceInfo().apply {
-            applicationInfo = appInfo
-        }
+        val appInfo =
+            ApplicationInfo().apply {
+                flags = if (isSystemApp) ApplicationInfo.FLAG_SYSTEM else 0
+            }
+        val serviceInfo =
+            ServiceInfo().apply {
+                applicationInfo = appInfo
+            }
         val imi = mockk<InputMethodInfo>()
         every { imi.id } returns id
         every { imi.serviceInfo } returns serviceInfo
