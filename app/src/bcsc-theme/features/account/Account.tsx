@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useAccount, useRefreshAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
@@ -33,8 +33,7 @@ const Account: React.FC = () => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
-  const account = useAccount()
-  const refreshAccount = useRefreshAccount()
+  const { account, refreshAccount } = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
 
   const openedWebview = useRef(false)

@@ -88,6 +88,7 @@ export default function useDataLoader<ResponseType>(
 
   // Keep fetchData, onError and retryConfig refs, this allows loadData to be a stable useCallback with these depdenancies
   // meaning loadData won't change on every render and cause an infinite render loop
+  // consider updating to useEffectEvent when it becomes available in a stable build: https://react.dev/learn/separating-events-from-effects
   const fetchDataRef = useRef(fetchData)
   fetchDataRef.current = fetchData
 

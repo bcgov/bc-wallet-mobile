@@ -97,18 +97,5 @@ export const useAccount = () => {
     throw new Error('useAccount must be used within a BCSCAccountProvider')
   }
 
-  return context.account
-}
-
-/**
- * Hook to trigger a refresh of the BCSC account data.
- */
-export const useRefreshAccount = () => {
-  const context = useContext(BCSCAccountContext)
-
-  if (!context) {
-    throw new Error('useRefreshAccount must be used within a BCSCAccountProvider')
-  }
-
-  return context.refreshAccount
+  return context
 }
