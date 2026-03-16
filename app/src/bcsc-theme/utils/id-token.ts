@@ -92,8 +92,7 @@ export interface IdToken {
 /**
  * Decode and parse the BCSC ID token to extract metadata.
  *
- * @throws AppError with code `ERR_117_FAILED_TO_PARSE_JWS` when the JWS token format is invalid
- * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails
+ * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails.
  * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if JSON parsing of the payload fails.
  *
  * @param idToken - The BCSC ID token (JWE).
