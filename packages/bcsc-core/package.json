@@ -35,7 +35,9 @@
     "!**/.*"
   ],
   "scripts": {
-    "test": "jest",
+    "test": "yarn test:ios && yarn test:android",
+    "test:android": "cd android && ./gradlew test && echo '\n✅ Android tests passed'",
+    "test:ios": "xcodebuild test -scheme BcscCoreTests-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -skipPackagePluginValidation && echo '\n✅ iOS tests passed'",
     "typecheck": "tsc",
     "lint": "yarn lint:ts && yarn lint:swift && yarn lint:kotlin",
     "lint:ts": "eslint \"**/*.{js,ts,tsx}\"",
