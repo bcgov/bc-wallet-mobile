@@ -1,5 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { LayoutChangeEvent, StyleProp, StyleSheet, TextInput, TextInputProps, TextStyle, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -31,57 +31,47 @@ type InputWithValidationProps = {
  * @returns {*} {React.ReactElement}
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
-  const { Inputs, ColorPalette } = useTheme()
+  const { Inputs, ColorPalette, Spacing } = useTheme()
   const inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
 
-  const getInputAccentColour = useCallback(
-    (error: string | undefined, isFocused: boolean) => {
-      if (error) {
-        return ColorPalette.semantic.error
-      }
-
-      if (isFocused) {
-        return '#7090E4'
-      }
-
-      return ColorPalette.grayscale.white
-    },
-    [ColorPalette]
-  )
-
   const styles = StyleSheet.create({
     label: {
-      marginBottom: 8,
+      marginBottom: Spacing.sm,
     },
     inputContainer: {
       ...Inputs.textInput,
+      shadowColor: Inputs.inputSelected.shadowColor,
+      shadowOffset: Inputs.inputSelected.shadowOffset,
+      shadowRadius: Inputs.inputSelected.shadowRadius,
+      shadowOpacity: 0,
+      elevation: 0,
       flexDirection: 'row',
       alignItems: 'center',
-      minHeight: 48,
-      borderWidth: 2,
-      borderColor: getInputAccentColour(props.error, isFocused),
-      shadowColor: getInputAccentColour(props.error, isFocused),
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: isFocused ? 0.5 : 0,
-      shadowRadius: isFocused ? 4 : 0,
-      elevation: isFocused ? 4 : 0,
-      padding: 0,
-      paddingHorizontal: 0,
-      paddingVertical: 0,
+      padding: 1, // Offset border width to prevent layout shift
     },
     input: {
       flex: 1,
       padding: Inputs.textInput.padding,
       paddingHorizontal: Inputs.textInput.paddingHorizontal,
-      paddingVertical: Inputs.textInput.paddingVertical,
       color: props.error ? ColorPalette.semantic.error : Inputs.textInput.color,
+      fontSize: Inputs.textInput.fontSize,
+    },
+    inputFocused: {
+      ...Inputs.inputSelected,
+      padding: 0,
+    },
+    inputError: {
+      ...Inputs.inputSelected,
+      borderColor: ColorPalette.semantic.error,
+      shadowColor: ColorPalette.semantic.error,
+      padding: 0,
     },
     inputErrorIcon: {
-      marginRight: 8,
+      marginRight: Spacing.sm,
     },
     subtext: {
-      marginTop: 8,
+      marginTop: Spacing.sm,
     },
   })
 
@@ -95,7 +85,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         {props.label}
       </ThemedText>
 
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, isFocused && styles.inputFocused, props.error && styles.inputError]}>
         <TextInput
           ref={inputRef}
           style={[styles.input, props.inputProps]}
@@ -120,7 +110,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           <Icon
             name={'alert-circle'}
             style={styles.inputErrorIcon}
-            size={24}
+            size={Spacing.lg}
             color={ColorPalette.semantic.error}
             onPress={() => {
               inputRef.current?.focus()
