@@ -15,7 +15,7 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 e2e/
 ├── package.json                             # workspace package with WDIO + Appium deps
 ├── tsconfig.json                            # TypeScript config (strict, ESNext modules)
-├── .env.saucelabs.example                   # template (copy via yarn setup:saucelabs)
+├── .env.saucelabs.example                   # template (copy to .env.saucelabs)
 │
 ├── configs/
 │   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, hooks)
@@ -87,6 +87,31 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/smoke.spec.ts
 
 ### _Local — Android Emulator_
 
+_For reliable internet in the emulator (e.g. API calls during tests), start the emulator with explicit DNS before running tests. Use the same AVD name as_ `ANDROID_DEVICE` _(default_ `Pixel_7_API_35`_)._
+
+**Option A — start emulator via script (recommended):**
+
+```bash
+# Terminal 1: start emulator with DNS, then leave it running
+cd e2e
+yarn emulator:android
+
+# Terminal 2: run tests (after emulator has booted)
+yarn test:android:local
+```
+
+**Option B — start emulator manually:**
+
+```bash
+# List AVDs; use one that matches ANDROID_DEVICE (see Environment variables)
+emulator -list-avds
+emulator -avd Pixel_7_API_35 -dns-server 8.8.8.8,8.8.4.4
+# Then in another terminal:
+cd e2e && yarn test:android:local
+```
+
+**Run tests (with emulator already running):**
+
 ```bash
 # Place your .apk build in e2e/apps/ (see apps/README.md)
 yarn test:android:local
@@ -135,13 +160,10 @@ adb devices
 
 ```bash
 # One-time: create .env.saucelabs and add your credentials
-yarn setup:saucelabs
+cp e2e/.env.saucelabs.example e2e/.env.saucelabs
 # Edit e2e/.env.saucelabs with SAUCE_USERNAME, SAUCE_ACCESS_KEY, APP_FILENAME
 
-# Before each sauce run, source the env file
-source e2e/.env.saucelabs
-
-# Run on both platforms
+# Run on both platforms (env is loaded automatically from .env.saucelabs)
 yarn test:sauce
 
 # Or individually

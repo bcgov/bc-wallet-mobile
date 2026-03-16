@@ -5,7 +5,8 @@
   "packageManager": "yarn@4.9.2",
   "type": "module",
   "scripts": {
-    "setup": "node setup-drivers.mjs",
+    "setup": "node scripts/setup-drivers.mjs",
+    "emulator:android": "node scripts/start-android-emulator.mjs",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",
     "test:ios:local": "wdio configs/local/wdio.ios.local.sim.conf.ts",
@@ -29,6 +30,7 @@
     "appium": "^2.4.1",
     "appium-uiautomator2-driver": "^2.44.0",
     "appium-xcuitest-driver": "6.0.1",
+    "dotenv": "^16.3.1",
     "eslint-plugin-wdio": "^8.24.12",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.2"

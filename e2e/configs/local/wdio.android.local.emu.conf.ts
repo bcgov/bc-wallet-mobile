@@ -10,8 +10,8 @@ const config = { ...localConfig }
 config.capabilities = [
   {
     platformName: 'Android',
-    'appium:deviceName': process.env.ANDROID_DEVICE || 'Pixel_7_API_34',
-    'appium:platformVersion': process.env.ANDROID_VERSION || '14.0',
+    'appium:deviceName': process.env.ANDROID_DEVICE || 'Pixel_7_API_35',
+    'appium:platformVersion': process.env.ANDROID_VERSION || '15.0',
     'appium:automationName': 'UiAutomator2',
     'appium:app': resolve(__dirname, '../../apps', process.env.ANDROID_APP || 'BCWallet.apk'),
     'appium:noReset': true,
