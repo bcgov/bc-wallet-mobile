@@ -14,7 +14,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, Linking, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
 
@@ -48,29 +48,33 @@ const Account: React.FC = () => {
     loadBcscServiceClient()
   }, [loadBcscServiceClient])
 
+  const refreshData = useCallback(() => {
+    refreshAccount()
+    refreshIdToken()
+  }, [refreshAccount, refreshIdToken])
+
   useFocusEffect(
     useCallback(() => {
       logger.info('Account screen focused, refreshing account and ID token metadata...')
-      refreshAccount()
-      refreshIdToken()
+      refreshData()
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [logger])
   )
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
-    // This AppState listener handles state transitions for enterting/ exiting the background
-    const appListener = AppState.addEventListener('change', async (nextAppState) => {
+    // This AppState listener handles state transitions for entering/ exiting the background
+    const appListener = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active' && openedWebview.current) {
         logger.info('Returning from background, refreshing user and device metadata...')
         openedWebview.current = false
-        refreshIdToken()
+        refreshData()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshIdToken])
+  }, [logger, refreshData])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
