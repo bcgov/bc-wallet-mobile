@@ -44,7 +44,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
       try {
         userInfoString = await decodePayload(data)
       } catch (error) {
-        throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
+        return throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
       }
 
       let parsed: UserInfoResponseData

@@ -105,7 +105,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     payloadString = await decodePayload(idToken)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to decode ID token payload', error as Error)
-    throwAppError(error, ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR)
+    return throwAppError(error, ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR)
   }
 
   let payload: IdToken
