@@ -1,7 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 
-import { toAppError, throwAppError } from './native-error-map'
+import { throwAppError, toAppError } from './native-error-map'
 
 jest.mock('react-native', () => ({
   DeviceEventEmitter: { emit: jest.fn() },
