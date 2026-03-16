@@ -1945,9 +1945,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-config (1.5.5):
-    - react-native-config/App (= 1.5.5)
-  - react-native-config/App (1.5.5):
+  - react-native-config (1.5.10):
+    - react-native-config/App (= 1.5.10)
+  - react-native-config/App (1.5.10):
     - React-Core
   - react-native-date-picker (5.0.13):
     - boost
@@ -2127,7 +2127,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-screenguard (1.1.0):
+  - react-native-screenguard (1.1.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2250,10 +2250,10 @@ PODS:
   - react-native-volume-manager (1.10.0):
     - Mute
     - React-Core
-  - react-native-webrtc (124.0.6):
+  - react-native-webrtc (124.0.7):
     - JitsiWebRTC (~> 124.0.0)
     - React-Core
-  - react-native-webview (13.16.0):
+  - react-native-webview (13.16.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2936,7 +2936,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNInAppBrowser (3.7.0):
+  - RNInAppBrowser (3.7.1):
     - React-Core
   - RNKeychain (10.0.0):
     - boost
@@ -2968,7 +2968,7 @@ PODS:
     - Yoga
   - RNLocalize (2.2.6):
     - React-Core
-  - RNPermissions (5.4.2):
+  - RNPermissions (5.4.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -3716,20 +3716,20 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
   react-native-attestation: 47d43624a4852e0dfb6eec6732b29e0a057c9e53
-  react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
+  react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-date-picker: 4f4f40f6e65798038bb4b1bff47890c2be69c2e6
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-orientation-locker: ee8bb2177365ca74f51dc1e11218fe544634d523
   react-native-safe-area-context: c00143b4823773bba23f2f19f85663ae89ceb460
-  react-native-screenguard: 4cdef4ef526bba6728917e4d188b1e8083081953
+  react-native-screenguard: a2528290cd6592ee0bd8971a13eb75f3c5b35d30
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
   react-native-video: 7b821291837d8ba7b9d7574bfeb0cd651e910141
   react-native-volume-manager: d9d2863a2374420af89c89662333ea6adf506988
-  react-native-webrtc: 96fdff9e3a942ed88cafe01898da1c93fd628957
-  react-native-webview: 654f794a7686b47491cf43aa67f7f428bea00eed
+  react-native-webrtc: e8f0ce746353adc2744a2b933645e1aeb41eaa74
+  react-native-webview: 8407aaaf6b539b1e38b72fabb55d6885de03beaf
   React-NativeModulesApple: ebf2ce72b35870036900d6498b33724386540a71
   React-oscompat: eb0626e8ba1a2c61673c991bf9dc21834898475d
   React-perflogger: 509e1f9a3ee28df71b0a66de806ac515ce951246
@@ -3768,10 +3768,10 @@ SPEC CHECKSUMS:
   RNFBMessaging: 853b4e8f0a07240e25fea4acc53b600967925b8a
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
-  RNInAppBrowser: 6d3eb68d471b9834335c664704719b8be1bfdb20
+  RNInAppBrowser: 904d24dc75e8e6c6c98a3160329192608946f9df
   RNKeychain: a2c134ab796272c3d605e035ab727591000b30f3
   RNLocalize: 8bf466de4c92d4721b254aabe1ff0a1456e7b9f4
-  RNPermissions: a68965160e800e02426ae116e975e1ee7d2ea1af
+  RNPermissions: 67cd7a38d4c1bbe8f87f8a1bbcaa26cf4eac529c
   RNReanimated: 9af1b9f7d221d1cc2f99d935bab08419cae7c1ce
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNSVG: 6f39605a4c4d200b11435c35bd077553c6b5963a
