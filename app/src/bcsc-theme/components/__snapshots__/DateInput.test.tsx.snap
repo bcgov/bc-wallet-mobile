@@ -26,29 +26,27 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
   </Text>
   <View
     style={
-      {
-        "alignItems": "center",
-        "backgroundColor": "#D3D3D3",
-        "borderColor": "#FFFFFF",
-        "borderRadius": 4,
-        "borderWidth": 2,
-        "color": "#313132",
-        "elevation": 0,
-        "flexDirection": "row",
-        "fontFamily": "BCSans-Regular",
-        "fontSize": 16,
-        "minHeight": 48,
-        "padding": 0,
-        "paddingHorizontal": 0,
-        "paddingVertical": 0,
-        "shadowColor": "#FFFFFF",
-        "shadowOffset": {
-          "height": 0,
-          "width": 0,
+      [
+        {
+          "alignItems": "center",
+          "backgroundColor": "#D3D3D3",
+          "borderColor": "#D3D3D3",
+          "borderRadius": 4,
+          "borderWidth": 1,
+          "color": "#313132",
+          "elevation": 0,
+          "flexDirection": "row",
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 16,
+          "padding": 1,
+          "shadowColor": undefined,
+          "shadowOffset": undefined,
+          "shadowOpacity": 0,
+          "shadowRadius": undefined,
         },
-        "shadowOpacity": 0,
-        "shadowRadius": 0,
-      }
+        false,
+        undefined,
+      ]
     }
   >
     <TextInput
@@ -71,9 +69,9 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
           {
             "color": "#313132",
             "flex": 1,
+            "fontSize": 16,
             "padding": 10,
             "paddingHorizontal": undefined,
-            "paddingVertical": undefined,
           },
           undefined,
         ]
