@@ -57,9 +57,9 @@ const Account: React.FC = () => {
     useCallback(() => {
       logger.info('Account screen focused, refreshing account and ID token metadata...')
       refreshData()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [logger])
+    }, [logger, refreshData])
   )
+
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
