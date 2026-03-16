@@ -67,7 +67,18 @@ export class AppError extends Error {
    * @returns void
    */
   track() {
-    Analytics.trackErrorEvent(this)
+    Analytics.trackErrorEvent({
+      /**
+       * NOTE: We use AppEventCode as the error code for backwards compatibility with V3 and the
+       * existing analytics dashboard. The AppError `code` property (which includes category and
+       * status code) would provide better insights — worth considering for a future update.
+       */
+      code: this.appEvent,
+      /**
+       * TEMP: Inject the error code into the message to provide additional context.
+       */
+      message: `[${this.code}] ${this.message}`,
+    })
   }
 
   /**
