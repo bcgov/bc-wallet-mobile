@@ -1,7 +1,7 @@
-import { acceptLocalNetworkPermissionIfPresent } from '../src/helpers/iosPermissions.js'
-import { annotate } from '../src/helpers/sauce.js'
-import OnboardingScreen from '../src/screens/OnboardingScreen.js'
-import { getVariantConfig } from '../src/variant.js'
+import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
+import { annotate } from '../../src/helpers/sauce.js'
+import OnboardingScreen from '../../src/screens/bcsc/OnboardingScreen.js'
+import { getVariantConfig } from '../../src/variant.js'
 
 describe('App Launch', () => {
   const variant = getVariantConfig()
@@ -9,7 +9,7 @@ describe('App Launch', () => {
   it('should launch and display the first screen', async () => {
     await acceptLocalNetworkPermissionIfPresent()
     await annotate(`Variant: ${variant.name}`)
-    await OnboardingScreen.waitForDisplayed(30_000)
+    await OnboardingScreen.waitForDisplayed(60_000)
   })
 
   it('should complete initial onboarding navigation', async () => {

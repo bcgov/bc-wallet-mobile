@@ -1,8 +1,6 @@
-export type VariantFamily = 'bcsc' | 'bcwallet'
-export type VariantName = 'bcsc-dev' | 'bcsc-test' | 'bcsc-qa' | 'bcsc-prod' | 'bcwallet-prod'
+export type VariantName = 'bcsc' | 'bcwallet'
 
 export interface VariantConfig {
-  family: VariantFamily
   name: VariantName
   onboarding: {
     hasCarousel: boolean
@@ -18,9 +16,8 @@ export interface VariantConfig {
 }
 
 export const VARIANTS: Record<VariantName, VariantConfig> = {
-  'bcsc-dev': {
-    family: 'bcsc',
-    name: 'bcsc-dev',
+  bcsc: {
+    name: 'bcsc',
     onboarding: { hasCarousel: true, hasAgreementCheckbox: false, carouselSteps: 3 },
     selectors: {
       addAccount: 'com.ariesbifold:id/AddAccount',
@@ -28,39 +25,8 @@ export const VARIANTS: Record<VariantName, VariantConfig> = {
       carouselNext: 'com.ariesbifold:id/CarouselNext',
     },
   },
-  'bcsc-test': {
-    family: 'bcsc',
-    name: 'bcsc-test',
-    onboarding: { hasCarousel: true, hasAgreementCheckbox: false, carouselSteps: 3 },
-    selectors: {
-      addAccount: 'com.ariesbifold:id/AddAccount',
-      continueButton: 'com.ariesbifold:id/Continue',
-      carouselNext: 'com.ariesbifold:id/CarouselNext',
-    },
-  },
-  'bcsc-qa': {
-    family: 'bcsc',
-    name: 'bcsc-qa',
-    onboarding: { hasCarousel: true, hasAgreementCheckbox: false, carouselSteps: 3 },
-    selectors: {
-      addAccount: 'com.ariesbifold:id/AddAccount',
-      continueButton: 'com.ariesbifold:id/Continue',
-      carouselNext: 'com.ariesbifold:id/CarouselNext',
-    },
-  },
-  'bcsc-prod': {
-    family: 'bcsc',
-    name: 'bcsc-prod',
-    onboarding: { hasCarousel: true, hasAgreementCheckbox: false, carouselSteps: 3 },
-    selectors: {
-      addAccount: 'com.ariesbifold:id/AddAccount',
-      continueButton: 'com.ariesbifold:id/Continue',
-      carouselNext: 'com.ariesbifold:id/CarouselNext',
-    },
-  },
-  'bcwallet-prod': {
-    family: 'bcwallet',
-    name: 'bcwallet-prod',
+  bcwallet: {
+    name: 'bcwallet',
     onboarding: { hasCarousel: true, hasAgreementCheckbox: false, carouselSteps: 3 },
     selectors: {
       agreeCheckbox: 'com.ariesbifold:id/AgreeCheckbox',
@@ -69,9 +35,17 @@ export const VARIANTS: Record<VariantName, VariantConfig> = {
   },
 }
 
+/** Maps legacy variant names (bcsc-dev, bcwallet-prod, etc.) to bcsc or bcwallet */
+function normalizeVariantName(raw: string): VariantName {
+  if (raw.startsWith('bcsc')) return 'bcsc'
+  if (raw.startsWith('bcwallet')) return 'bcwallet'
+  return raw as VariantName
+}
+
 export function getVariantConfig(): VariantConfig {
-  const name = (process.env.VARIANT || 'bcsc-dev') as VariantName
+  const raw = process.env.VARIANT || 'bcsc'
+  const name = normalizeVariantName(raw)
   const config = VARIANTS[name]
-  if (!config) throw new Error(`Unknown variant: ${name}`)
+  if (!config) throw new Error(`Unknown variant: ${raw} (resolved to ${name})`)
   return config
 }

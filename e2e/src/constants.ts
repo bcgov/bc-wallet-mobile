@@ -3,7 +3,6 @@ export const TestIds = {
   Continue: 'com.ariesbifold:id/Continue',
   CarouselNext: 'com.ariesbifold:id/CarouselNext',
   AgreeCheckbox: 'com.ariesbifold:id/AgreeCheckbox',
-  ScreenMarker: 'ScreenMarker',
 } as const
 
 export const Timeouts = {
