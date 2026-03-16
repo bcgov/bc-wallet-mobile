@@ -1,5 +1,5 @@
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
+import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
