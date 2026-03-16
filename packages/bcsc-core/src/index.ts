@@ -6,6 +6,7 @@ import NativeBcscCoreSpec, {
   type NativeAccount,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
+  type NativeSavedService,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -16,6 +17,7 @@ export type {
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
+  NativeSavedService,
 } from './NativeBcscCore';
 
 /**
@@ -832,7 +834,7 @@ export interface EvidenceType {
 }
 
 /**
- * Matches v3 storage structure as well as additionalEvidenceData field in React Native store
+ * Matches additionalEvidenceData field in React Native store
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
@@ -854,7 +856,7 @@ export interface BarcodeAddressPayload {
   country: string;
 }
 
-/** A single barcode entry in the evidence upload payload (matches v3 iOS structure). */
+/** A single barcode entry in the evidence upload payload (matches iOS structure). */
 export type BarcodePayload =
   | {
       type: 'PDF_417';
@@ -878,41 +880,42 @@ export type BarcodePayload =
 /**
  * Gets evidence metadata from native storage.
  *
- * These are stored in v3-compatible locations:
- * - iOS: evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
- * - Android: EvidenceRepository SharedPreferences storage
- *
- * This enables rollback to v3 while preserving user's evidence collection progress.
- *
  * @returns A promise that resolves to the evidence metadata array
  */
-export const getEvidenceMetadata = async (): Promise<EvidenceMetadata[]> => {
-  return BcscCore.getEvidenceMetadata() as Promise<EvidenceMetadata[]>;
+export const getEvidence = async (): Promise<EvidenceMetadata[]> => {
+  return BcscCore.getEvidence() as Promise<EvidenceMetadata[]>;
 };
 
 /**
  * Sets evidence metadata in native storage.
  *
- * These are stored in v3-compatible locations:
- * - iOS: evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
- * - Android: EvidenceRepository SharedPreferences storage
- *
- * This enables rollback to v3 while preserving user's evidence collection progress.
- *
  * @param evidence The evidence metadata array to save
  * @returns A promise that resolves to true if saved successfully
  */
-export const setEvidenceMetadata = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
-  return BcscCore.setEvidenceMetadata(evidence);
+export const setEvidence = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
+  return BcscCore.setEvidence(evidence);
 };
 
 /**
- * Deletes all evidence metadata from native storage.
+ * Deletes all evidence data from native storage, including photo files.
  *
  * @returns A promise that resolves to true if deleted successfully
  */
-export const deleteEvidenceMetadata = async (): Promise<boolean> => {
-  return BcscCore.deleteEvidenceMetadata();
+export const deleteEvidence = async (): Promise<boolean> => {
+  return BcscCore.deleteEvidence();
+};
+
+/**
+ * Saves a photo to permanent storage.
+ * Android: Writes JPEG to {filesDir}/documents/{filename}
+ * iOS: Writes JPEG to Application Support/documents/{filename}
+ *
+ * @param base64Data Base64-encoded photo data
+ * @param filename Target filename
+ * @returns The absolute path to the saved file
+ */
+export const saveEvidencePhoto = async (base64Data: string, filename: string): Promise<string> => {
+  return BcscCore.saveEvidencePhoto(base64Data, filename);
 };
 
 /**
@@ -991,4 +994,46 @@ export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
  */
 export const openAndroidKeyboardSelector = async (): Promise<void> => {
   return BcscCore.openKeyboardSelector();
+};
+
+// ============================================================================
+// Saved Services (Client Metadata) Storage Methods
+// ============================================================================
+
+/**
+ * Gets saved services from native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * On v3→v4 migration, this reads the bookmarked services the user had saved in v3.
+ *
+ * @returns A promise that resolves to the array of saved service metadata
+ */
+export const getSavedServices = async (): Promise<NativeSavedService[]> => {
+  return BcscCore.getSavedServices();
+};
+
+/**
+ * Saves services to native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * @param services The saved service metadata array to write
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setSavedServices = async (services: NativeSavedService[]): Promise<boolean> => {
+  return BcscCore.setSavedServices(services);
+};
+
+/**
+ * Deletes all saved services from native storage.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteSavedServices = async (): Promise<boolean> => {
+  return BcscCore.deleteSavedServices();
 };

@@ -30,6 +30,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
 import java.security.KeyPair
@@ -103,6 +104,7 @@ import com.bcsccore.storage.NativeAuthorizationRequest
 import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
+import com.bcsccore.storage.NativeClientMetadata
 
 // TODO: (al) - refactor to use readFirstAccountEncryptedFile function
 // TODO: (al) - refactor to remove file names and use AccountFileName enum
@@ -3100,7 +3102,10 @@ class BcscCoreModule(
                 )
             }
             if (prefs.contains("email_address")) {
-                result.putString("emailAddress", prefs.getString("email_address", null))
+                val emailAddress = prefs.getString("email_address", null)
+                if (!emailAddress.isNullOrEmpty()) {
+                    result.putString("emailAddress", emailAddress)
+                }
             }
             if (prefs.contains("user_submitted_verification_video")) {
                 result.putBoolean(
@@ -3218,21 +3223,18 @@ class BcscCoreModule(
     }
 
     // ============================================================================
-    // MARK: - Evidence Metadata Storage Methods
+    // MARK: - Evidence Storage Methods
     // ============================================================================
 
     /**
      * Gets evidence metadata from storage.
-     * Evidence metadata contains user's collected evidence during verification flow.
-     * Stored as JSON array in SharedPreferences, per-account.
-     * Matches TypeScript: getEvidenceMetadata(): Promise<EvidenceMetadata[]>
+     * Reads from the encrypted evidence_upload file first, falls back to legacy SharedPreferences.
      */
     @ReactMethod
-    override fun getEvidenceMetadata(promise: Promise) {
+    override fun getEvidence(promise: Promise) {
         try {
             val account = getAccountSync()
             if (account == null) {
-                // No account, return empty array
                 promise.resolve(Arguments.createArray())
                 return
             }
@@ -3243,34 +3245,11 @@ class BcscCoreModule(
                 return
             }
 
-            // Read from account-specific SharedPreferences.
-            // Fall back to v3 hardcoded name if v4 location is empty (see getAccountFlags for details).
-            val v4EvidencePrefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val v4EvidencePrefs =
-                reactApplicationContext.getSharedPreferences(
-                    v4EvidencePrefsName,
-                    Context.MODE_PRIVATE,
-                )
-            val prefs =
-                if (v4EvidencePrefs.all.isNotEmpty()) {
-                    v4EvidencePrefs
-                } else {
-                    val v3EvidencePrefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
-                    Log.d(NAME, "getEvidenceMetadata: v4 prefs empty, trying v3 location: $v3EvidencePrefsName")
-                    reactApplicationContext.getSharedPreferences(v3EvidencePrefsName, Context.MODE_PRIVATE)
-                }
-            var evidenceJson = prefs.getString("evidence_metadata", null)
-
-            if (evidenceJson == null) {
-                Log.d(
-                    NAME,
-                    "getEvidenceMetadata: No evidence metadata found in SharedPreferences, trying account file fallback",
-                )
-                evidenceJson = readFirstAccountEncryptedFile(AccountFileName.EVIDENCE_UPLOAD)
-            }
+            // Read from encrypted evidence_upload file
+            val evidenceJson = readFirstAccountEncryptedFile(AccountFileName.EVIDENCE_UPLOAD)
 
             if (evidenceJson.isNullOrBlank()) {
-                Log.d(NAME, "getEvidenceMetadata: No evidence metadata found")
+                Log.d(NAME, "getEvidence: No evidence found")
                 promise.resolve(Arguments.createArray())
                 return
             }
@@ -3278,20 +3257,17 @@ class BcscCoreModule(
             val result = Arguments.createArray()
 
             val trimmedEvidenceJson = evidenceJson.trim()
-            // v4 stores a JSON array [{...}]
-            // v3 stored a JSON object {"evidence1":{...}, "evidence2":{...}}
-            // Check for an array and handle accordingly
             if (trimmedEvidenceJson.startsWith("[")) {
                 addEvidenceMetadataFromArrayJson(trimmedEvidenceJson, result)
             } else {
                 addEvidenceMetadataFromObjectJson(trimmedEvidenceJson, result)
             }
 
-            Log.d(NAME, "getEvidenceMetadata: Successfully read evidence metadata")
+            Log.d(NAME, "getEvidence: Successfully read evidence metadata")
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(NAME, "getEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_GET_EVIDENCE_METADATA_ERROR", "Error getting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "getEvidence error: ${e.message}", e)
+            promise.reject("E_GET_EVIDENCE_ERROR", "Error getting evidence: ${e.message}", e)
         }
     }
 
@@ -3357,12 +3333,28 @@ class BcscCoreModule(
 
                     photoMetadata.putString("label", photo.optString("label", ""))
                     photoMetadata.putString("content_type", contentType)
-                    photoMetadata.putInt("content_length", 0)
-                    photoMetadata.putDouble("date", photo.optLong("timestamp", 0L).toDouble())
-                    photoMetadata.putString("sha256", "")
+                    // v3 Android stores timestamp in milliseconds; convert to seconds for the API
+                    photoMetadata.putDouble("date", (photo.optLong("timestamp", 0L) / 1000L).toDouble())
                     photoMetadata.putString("file_path", filePath)
+
+                    // Compute sha256 and content_length from file on disk
                     if (filePath.isNotEmpty()) {
                         photoMetadata.putString("filename", File(filePath).name)
+                        val file = File(filePath)
+                        if (file.exists()) {
+                            val fileBytes = file.readBytes()
+                            photoMetadata.putInt("content_length", fileBytes.size)
+                            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                            val hashBytes = digest.digest(fileBytes)
+                            val hexString = hashBytes.joinToString("") { "%02x".format(it) }
+                            photoMetadata.putString("sha256", hexString)
+                        } else {
+                            photoMetadata.putInt("content_length", 0)
+                            photoMetadata.putString("sha256", "")
+                        }
+                    } else {
+                        photoMetadata.putInt("content_length", 0)
+                        photoMetadata.putString("sha256", "")
                     }
 
                     metadataArray.pushMap(photoMetadata)
@@ -3375,13 +3367,10 @@ class BcscCoreModule(
     }
 
     /**
-     * Sets evidence metadata in storage.
-     * Stores user's collected evidence during verification flow.
-     * Stored as JSON array in SharedPreferences, per-account.
-     * Matches TypeScript: setEvidenceMetadata(evidence: EvidenceMetadata[]): Promise<boolean>
+     * Saves evidence metadata to the encrypted evidence_upload file.
      */
     @ReactMethod
-    override fun setEvidenceMetadata(
+    override fun setEvidence(
         evidence: ReadableArray,
         promise: Promise,
     ) {
@@ -3393,65 +3382,166 @@ class BcscCoreModule(
             }
 
             val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.reject("E_ACCOUNT_INVALID", "Account ID is null or empty")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.reject("E_ACCOUNT_INVALID", "Account ID or issuer is null or empty")
                 return
             }
 
-            // Convert ReadableArray to JSON string
-            val jsonArray = JSONArray()
+            // Convert evidence array to evidence_upload JSON object format
+            val evidenceUpload = JSONObject()
             for (i in 0 until evidence.size()) {
-                val item = evidence.getMap(i)
-                if (item != null) {
-                    jsonArray.put(convertMapToJson(item))
-                }
+                val item = evidence.getMap(i) ?: continue
+                val key = if (i == 0) "evidence1" else "evidence2"
+                evidenceUpload.put(key, convertToEvidenceUploadEntry(item))
             }
 
-            // Write to account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            prefs.edit().putString("evidence_metadata", jsonArray.toString()).apply()
+            // Write to encrypted file
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val targetFile =
+                File(
+                    reactApplicationContext.filesDir,
+                    "$issuerName${File.separator}$accountId${File.separator}${AccountFileName.EVIDENCE_UPLOAD.value}",
+                )
 
-            Log.d(NAME, "setEvidenceMetadata: Successfully saved evidence metadata")
-            promise.resolve(true)
+            val success = nativeStorage.writeEncryptedFile(targetFile, evidenceUpload.toString())
+            if (success) {
+                Log.d(NAME, "setEvidence: Successfully saved evidence")
+                promise.resolve(true)
+            } else {
+                promise.reject("E_SAVE_FAILED", "Failed to write evidence_upload file")
+            }
         } catch (e: Exception) {
-            Log.e(NAME, "setEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_SET_EVIDENCE_METADATA_ERROR", "Error setting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "setEvidence error: ${e.message}", e)
+            promise.reject("E_SET_EVIDENCE_ERROR", "Error setting evidence: ${e.message}", e)
         }
     }
 
     /**
-     * Deletes all evidence metadata from storage.
-     * Clears user's collected evidence (used on verification completion or reset).
-     * Matches TypeScript: deleteEvidenceMetadata(): Promise<boolean>
+     * Deletes all evidence data from storage.
+     * Removes the encrypted evidence_upload file and photo files.
      */
     @ReactMethod
-    override fun deleteEvidenceMetadata(promise: Promise) {
+    override fun deleteEvidence(promise: Promise) {
         try {
             val account = getAccountSync()
             if (account == null) {
-                // No account, so nothing to delete
                 promise.resolve(true)
                 return
             }
 
             val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.resolve(true)
-                return
+            val issuer = account.getString("issuer")
+
+            // Delete encrypted evidence_upload file
+            if (!accountId.isNullOrEmpty() && !issuer.isNullOrEmpty()) {
+                val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+                val evidenceFile =
+                    File(
+                        reactApplicationContext.filesDir,
+                        "$issuerName${File.separator}$accountId${File.separator}${AccountFileName.EVIDENCE_UPLOAD.value}",
+                    )
+                if (evidenceFile.exists()) {
+                    evidenceFile.delete()
+                    Log.d(NAME, "deleteEvidence: Deleted evidence_upload file")
+                }
             }
 
-            // Remove from account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            prefs.edit().remove("evidence_metadata").apply()
+            // Delete documents photo directory
+            val documentsDir = File(reactApplicationContext.filesDir, "documents")
+            if (documentsDir.exists() && documentsDir.isDirectory) {
+                documentsDir.deleteRecursively()
+                Log.d(NAME, "deleteEvidence: Deleted documents photo directory")
+            }
 
-            Log.d(NAME, "deleteEvidenceMetadata: Successfully deleted evidence metadata")
             promise.resolve(true)
         } catch (e: Exception) {
-            Log.e(NAME, "deleteEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_DELETE_EVIDENCE_METADATA_ERROR", "Error deleting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "deleteEvidence error: ${e.message}", e)
+            promise.reject("E_DELETE_EVIDENCE_ERROR", "Error deleting evidence: ${e.message}", e)
         }
+    }
+
+    /**
+     * Saves a photo to the documents directory.
+     * Photos are stored as JPEG files in {filesDir}/documents/{filename}.
+     *
+     * @param base64Data Base64-encoded photo data
+     * @param filename Target filename for the photo
+     * @return The absolute path to the saved file
+     */
+    @ReactMethod
+    override fun saveEvidencePhoto(
+        base64Data: String,
+        filename: String,
+        promise: Promise,
+    ) {
+        try {
+            val photoBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+            val documentsDir = File(reactApplicationContext.filesDir, "documents")
+            if (!documentsDir.exists()) {
+                documentsDir.mkdirs()
+            }
+
+            val photoFile = File(documentsDir, filename)
+            FileOutputStream(photoFile).use { fos ->
+                fos.write(photoBytes)
+            }
+
+            Log.d(NAME, "saveEvidencePhoto: Saved photo to ${photoFile.absolutePath}")
+            promise.resolve(photoFile.absolutePath)
+        } catch (e: Exception) {
+            Log.e(NAME, "saveEvidencePhoto error: ${e.message}", e)
+            promise.reject("E_SAVE_PHOTO_ERROR", "Error saving evidence photo: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Converts an evidence metadata entry to evidence_upload JSON format.
+     */
+    private fun convertToEvidenceUploadEntry(item: ReadableMap): JSONObject {
+        val entry = JSONObject()
+
+        // Evidence type
+        if (item.hasKey("evidenceType")) {
+            item.getMap("evidenceType")?.let { et ->
+                entry.put("evidencetype", convertMapToJson(et))
+            }
+        }
+
+        // Evidence details
+        val details = JSONObject()
+        if (item.hasKey("documentNumber")) {
+            details.put("document_number", item.getString("documentNumber"))
+        }
+        entry.put("evidencedetails", details)
+
+        // Photos/images
+        val images = JSONObject()
+        val photosArray = JSONArray()
+        if (item.hasKey("metadata")) {
+            val metadataArray = item.getArray("metadata")
+            if (metadataArray != null) {
+                for (i in 0 until metadataArray.size()) {
+                    val photoMeta = metadataArray.getMap(i) ?: continue
+                    val photo = JSONObject()
+                    photo.put("filepath", photoMeta.getString("file_path") ?: "")
+                    photo.put("label", photoMeta.getString("label") ?: "")
+                    photo.put("timestamp", photoMeta.getDouble("date").toLong())
+                    photosArray.put(photo)
+                }
+            }
+        }
+        images.put("evidencePhotos", photosArray)
+        entry.put("images", images)
+
+        // Barcodes
+        if (item.hasKey("barcodes")) {
+            item.getArray("barcodes")?.let { barcodesArray ->
+                entry.put("barcodes", convertArrayToJson(barcodesArray))
+            }
+        }
+
+        return entry
     }
 
     // ============================================================================
@@ -3857,6 +3947,250 @@ class BcscCoreModule(
             }
         }
         return jsonArray
+    }
+
+    // MARK: - Saved Services (Client Metadata) Storage
+
+    /**
+     * Gets saved services (client metadata) from native encrypted storage.
+     * Returns a WritableArray of service objects matching the NativeSavedService TS type.
+     */
+    @ReactMethod
+    override fun getSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                Log.d(NAME, "getSavedServices: No account found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                Log.d(NAME, "getSavedServices: No account ID or issuer")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadata = nativeStorage.readClientMetadata(issuerName, accountId)
+
+            if (clientMetadata == null) {
+                Log.d(NAME, "getSavedServices: No client metadata found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val result = Arguments.createArray()
+            for (metadata in clientMetadata) {
+                val serviceMap =
+                    Arguments.createMap().apply {
+                        putString("clientRefId", metadata.clientRefId ?: "")
+                        putBoolean("bookmarked", metadata.isBookmarked)
+                        metadata.clientName?.let { putString("clientName", it) }
+                        if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
+                        if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
+                        metadata.clientUri?.let { putString("clientUri", it) }
+                        metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
+                        metadata.clientDescription?.let { putString("clientDescription", it) }
+                        metadata.policyUri?.let { putString("policyUri", it) }
+                        metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
+                        metadata.claimsDescription?.let { putString("claimsDescription", it) }
+                        putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
+                        putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
+                    }
+                result.pushMap(serviceMap)
+            }
+
+            Log.d(NAME, "getSavedServices: Read ${clientMetadata.size} services")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getSavedServices: Error", e)
+            promise.resolve(Arguments.createArray())
+        }
+    }
+
+    /**
+     * Saves services (client metadata) to native encrypted storage.
+     */
+    @ReactMethod
+    override fun setSavedServices(
+        services: ReadableArray,
+        promise: Promise,
+    ) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.reject("E_NO_ACCOUNT", "No account found")
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.reject("E_NO_ACCOUNT", "No account ID or issuer")
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadataList = mutableListOf<NativeClientMetadata>()
+
+            for (i in 0 until services.size()) {
+                val serviceMap = services.getMap(i) ?: continue
+                clientMetadataList.add(
+                    NativeClientMetadata(
+                        clientRefId =
+                            if (serviceMap.hasKey(
+                                    "clientRefId",
+                                )
+                            ) {
+                                serviceMap.getString("clientRefId")
+                            } else {
+                                null
+                            },
+                        clientName =
+                            if (serviceMap.hasKey(
+                                    "clientName",
+                                )
+                            ) {
+                                serviceMap.getString("clientName")
+                            } else {
+                                null
+                            },
+                        clientUri = if (serviceMap.hasKey("clientUri")) serviceMap.getString("clientUri") else null,
+                        initiateLoginUri =
+                            if (serviceMap.hasKey(
+                                    "initiateLoginUri",
+                                )
+                            ) {
+                                serviceMap.getString("initiateLoginUri")
+                            } else {
+                                null
+                            },
+                        clientDescription =
+                            if (serviceMap.hasKey(
+                                    "clientDescription",
+                                )
+                            ) {
+                                serviceMap.getString("clientDescription")
+                            } else {
+                                null
+                            },
+                        policyUri =
+                            if (serviceMap.hasKey(
+                                    "policyUri",
+                                )
+                            ) {
+                                serviceMap.getString("policyUri")
+                            } else {
+                                null
+                            },
+                        claimsDescription =
+                            if (serviceMap.hasKey(
+                                    "claimsDescription",
+                                )
+                            ) {
+                                serviceMap.getString("claimsDescription")
+                            } else {
+                                null
+                            },
+                        serviceListingSortOrder =
+                            if (serviceMap.hasKey(
+                                    "serviceListingSortOrder",
+                                )
+                            ) {
+                                serviceMap.getInt("serviceListingSortOrder")
+                            } else {
+                                null
+                            },
+                        suppressConfirmationInfo =
+                            if (serviceMap.hasKey(
+                                    "suppressConfirmationInfo",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressConfirmationInfo")
+                            } else {
+                                false
+                            },
+                        suppressBookmarkPrompt =
+                            if (serviceMap.hasKey(
+                                    "suppressBookmarkPrompt",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressBookmarkPrompt")
+                            } else {
+                                false
+                            },
+                        isBookmarked =
+                            if (serviceMap.hasKey(
+                                    "bookmarked",
+                                )
+                            ) {
+                                serviceMap.getBoolean("bookmarked")
+                            } else {
+                                false
+                            },
+                        dateAdded =
+                            if (serviceMap.hasKey(
+                                    "dateAdded",
+                                )
+                            ) {
+                                (serviceMap.getDouble("dateAdded") * 1000).toLong()
+                            } else {
+                                0
+                            },
+                        lastUsed =
+                            if (serviceMap.hasKey(
+                                    "lastUsed",
+                                )
+                            ) {
+                                (serviceMap.getDouble("lastUsed") * 1000).toLong()
+                            } else {
+                                0
+                            },
+                    ),
+                )
+            }
+
+            val success = nativeStorage.saveClientMetadata(clientMetadataList.toTypedArray(), issuerName, accountId)
+            if (success) {
+                Log.d(NAME, "setSavedServices: Saved ${clientMetadataList.size} services")
+                promise.resolve(true)
+            } else {
+                promise.reject("E_SAVE_FAILED", "Failed to save client metadata")
+            }
+        } catch (e: Exception) {
+            promise.reject("E_SET_SAVED_SERVICES_ERROR", "Error saving services: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Deletes all saved services (client metadata) from native storage.
+     */
+    @ReactMethod
+    override fun deleteSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.resolve(true)
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.resolve(true)
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val success = nativeStorage.deleteClientMetadata(issuerName, accountId)
+            Log.d(NAME, "deleteSavedServices: ${if (success) "success" else "failed"}")
+            promise.resolve(success)
+        } catch (e: Exception) {
+            promise.reject("E_DELETE_SAVED_SERVICES_ERROR", "Error deleting services: ${e.message}", e)
+        }
     }
 
     /**

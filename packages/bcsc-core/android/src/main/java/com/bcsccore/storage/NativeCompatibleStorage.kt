@@ -32,6 +32,7 @@ class NativeCompatibleStorage(
         private const val TOKENS_FILENAME = "tokens"
         private const val ISSUER_FILENAME = "issuer"
         private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
+        private const val CLIENT_METADATA_FILENAME = "clientmetadata"
         private val UUID_REGEX =
             Regex(
                 "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
@@ -234,7 +235,7 @@ class NativeCompatibleStorage(
         return bytes[i] == '{'.code.toByte() || bytes[i] == '['.code.toByte()
     }
 
-    private fun writeEncryptedFile(
+    internal fun writeEncryptedFile(
         file: File,
         content: String,
     ): Boolean =
@@ -619,5 +620,63 @@ class NativeCompatibleStorage(
             Log.e(TAG, "Failed to extract authorization request from v3 provider", e)
             null
         }
+    }
+
+    // MARK: - Client Metadata (Saved Services) Storage
+
+    private fun getClientMetadataFile(
+        issuerName: String,
+        accountUuid: String,
+    ): File {
+        val path = issuerName + File.separator + accountUuid + File.separator + CLIENT_METADATA_FILENAME
+        return File(context.filesDir, path)
+    }
+
+    /**
+     * Reads client metadata (saved services) from native-compatible encrypted storage.
+     * V3 stores this as a JSON array of ClientMetadata objects.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/clientmetadata
+     */
+    fun readClientMetadata(
+        issuerName: String,
+        accountUuid: String,
+    ): Array<NativeClientMetadata>? {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        Log.d(TAG, "Reading client metadata from: ${file.absolutePath}")
+
+        val jsonContent = readEncryptedFile(file) ?: return null
+
+        return try {
+            gson.fromJson(jsonContent, Array<NativeClientMetadata>::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse client metadata JSON", e)
+            null
+        }
+    }
+
+    /**
+     * Saves client metadata (saved services) to native-compatible encrypted storage.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/clientmetadata
+     */
+    fun saveClientMetadata(
+        clientMetadata: Array<NativeClientMetadata>,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        val jsonContent = gson.toJson(clientMetadata)
+        Log.d(TAG, "Saving client metadata to: ${file.absolutePath}")
+        return writeEncryptedFile(file, jsonContent)
+    }
+
+    /**
+     * Deletes the client metadata file for the given account.
+     */
+    fun deleteClientMetadata(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        return if (file.exists()) file.delete() else true
     }
 }
