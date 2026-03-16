@@ -26,6 +26,7 @@ export type {
  * Access via `error.code` on caught native module errors.
  */
 export const BcscNativeErrorCodes = {
+  // --- DCR error codes (E_120_* series) ---
   /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
   TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
   /** toJSONString method failed while serializing device info JWT (error 120-2) */
@@ -38,6 +39,48 @@ export const BcscNativeErrorCodes = {
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+
+  // --- Native error codes (see per-entry docs for platform availability) ---
+
+  // Account / Token
+  /** Account not found in native storage */
+  ACCOUNT_NOT_FOUND: 'E_ACCOUNT_NOT_FOUND',
+  /** Invalid token type passed to native module */
+  INVALID_TOKEN_TYPE: 'E_INVALID_TOKEN_TYPE',
+  /** Error deleting a token from native storage */
+  TOKEN_DELETE_ERROR: 'E_TOKEN_DELETE_ERROR',
+
+  // Key operations
+  /** Key pair not found for the given label */
+  KEY_NOT_FOUND: 'E_KEY_NOT_FOUND',
+  /** Failed to export or retrieve key material */
+  KEY_EXPORT_FAILED: 'E_KEY_EXPORT_FAILED',
+  /** Unexpected error during key operations */
+  KEY_ERROR: 'E_KEY_ERROR',
+  /** Android KeyStore is not available on this device (Android-only) */
+  KEYSTORE_UNAVAILABLE: 'E_KEYSTORE_UNAVAILABLE',
+  /** Error accessing the platform keystore */
+  KEYSTORE_ERROR: 'E_KEYSTORE_ERROR',
+
+  // JWT / Signing
+  /** Device UUID not available (iOS-only) */
+  UUID_NOT_FOUND: 'E_UUID_NOT_FOUND',
+  /** No signing keys available */
+  NO_KEYS_FOUND: 'E_NO_KEYS_FOUND',
+  /** Key pair exists but could not be loaded */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JWT signing or serialization failed */
+  JWT_SIGN_FAILED: 'E_JWT_SIGN_FAILED',
+
+  // PIN
+  /** Invalid parameters passed to a PIN operation */
+  INVALID_PARAMETERS: 'E_INVALID_PARAMETERS',
+  /** Failed to set PIN */
+  SET_PIN_FAILED: 'E_SET_PIN_FAILED',
+  /** Failed to delete PIN */
+  DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
+
+  // Parsing
   /** JSON serialization failed in the native module */
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
   /** JWS token could not be parsed (malformed or invalid format) */

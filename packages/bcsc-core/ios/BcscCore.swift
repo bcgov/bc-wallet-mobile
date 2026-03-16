@@ -169,7 +169,7 @@ class BcscCore: NSObject {
       return try jwt.serialize()
     } catch {
       reject(
-        "E_JWT_SIGN_SERIALIZE_FAILED",
+        "E_JWT_SIGN_FAILED",
         "Failed to sign or serialize JWT: \(error.localizedDescription)", error
       )
       return nil
@@ -209,7 +209,7 @@ class BcscCore: NSObject {
         "keyType": keyInfo.keyType.name,
         "keySize": keyInfo.keySize,
         "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970, // Convert Date to timestamp
+        "created": keyInfo.created.timeIntervalSince1970,
       ]
     }
 
@@ -230,7 +230,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export public key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export public key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -241,7 +241,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export private key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export private key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -257,7 +257,7 @@ class BcscCore: NSObject {
     } catch KeychainError.keyNotExists {
       reject("E_KEY_NOT_FOUND", "Key pair with label '\(label)' not found.", nil)
     } catch {
-      reject("E_UNKNOWN", "An unexpected error occurred: \(error.localizedDescription)", error)
+      reject("E_KEY_ERROR", "An unexpected error occurred: \(error.localizedDescription)", error)
     }
   }
 
@@ -441,7 +441,8 @@ class BcscCore: NSObject {
     )
 
     guard let currentAccount = account else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
+      // No account means no tokens to delete — treat as success (idempotent)
+      resolve(true)
       return
     }
 
