@@ -39,6 +39,9 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         } catch (error) {
           return throwAppError(error, ErrorRegistry.SIGN_CLAIMS_ERROR)
         }
+        if (!signedCode) {
+          return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
+        }
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
           `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
           { assertion: signedCode },

@@ -83,7 +83,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.info('[Authentication:UnlockApp] Device authentication successful')
     } catch (error) {
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
-      logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, error as Error)
+      logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
     } finally {
       stopLoading?.()
     }
