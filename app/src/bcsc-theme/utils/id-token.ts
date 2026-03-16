@@ -2,8 +2,8 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { BifoldLogger } from '@bifold/core'
 import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
 
-import { throwAppError } from './native-error-map'
 import { StatusNotification } from '../features/fcm/services/fcm-service'
+import { throwAppError } from './native-error-map'
 
 /**
  * BCSC event types
