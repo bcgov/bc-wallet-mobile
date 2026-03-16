@@ -1,7 +1,7 @@
 import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import readFileInChunks from '@/utils/read-file'
 import { BifoldLogger } from '@bifold/core'
-import { hashBase64, PhotoMetadata } from 'react-native-bcsc-core'
+import { hashBase64, PhotoMetadata, saveEvidencePhoto } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { VerificationPrompt, VerificationVideoUploadPayload } from '../api/hooks/useEvidenceApi'
 
@@ -20,6 +20,17 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
   const jpegBase64 = jpegBytes.toString('base64')
   const photoSHA = await hashBase64(jpegBase64)
 
+  const permanentFilename = `evidence_${Date.now()}_${fileInfo.filename}`
+  let permanentPath: string
+  try {
+    permanentPath = await saveEvidencePhoto(jpegBase64, permanentFilename)
+    logger.info(`Evidence photo saved to permanent storage: ${permanentPath}`)
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error'
+    logger.warn(`Failed to save evidence photo to permanent storage, using temp path: ${errMsg}`)
+    permanentPath = filePath
+  }
+
   const photoMetadata: PhotoMetadata = {
     content_length: jpegBytes.byteLength,
     content_type: 'image/jpeg',
@@ -27,7 +38,7 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
     label: 'front',
     filename: fileInfo.filename,
     sha256: photoSHA,
-    file_path: filePath, // Include the file path for reference
+    file_path: permanentPath,
   }
   return photoMetadata
 }
