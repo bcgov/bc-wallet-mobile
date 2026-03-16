@@ -60,13 +60,12 @@ const Account: React.FC = () => {
     }, [logger, refreshData])
   )
 
-
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
     // This AppState listener handles state transitions for entering/ exiting the background
     const appListener = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active' && openedWebview.current) {
-        logger.info('Returning from background, refreshing user and device metadata...')
+        logger.info('Returning from background, refreshing token and account metadata...')
         openedWebview.current = false
         refreshData()
       }
