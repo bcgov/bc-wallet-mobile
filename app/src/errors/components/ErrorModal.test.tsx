@@ -167,44 +167,12 @@ describe('BCSCErrorModal', () => {
       expect(queryByTestId('com.aries.bifold:id/ReportThisProblem')).toBeNull()
     })
 
-    it('should track analytics via trackErrorInAnalytics when appEvent has a definition', () => {
-      const mockDefinition = { statusCode: 2800, appEvent: 'general' }
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(mockDefinition)
-
+    it('should track analytics via trackAlertActionEvent when report is pressed', () => {
       const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(mockGetErrorDefinitionFromAppEventCode).toHaveBeenCalledWith('general')
-      expect(mockTrackErrorInAnalytics).toHaveBeenCalledWith(mockDefinition, 'alert_action', 'Error.ReportThisProblem')
-    })
-
-    it('should fall back to Analytics.trackErrorEvent when appEvent has no definition', () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
-
-      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(validPayload.code),
-        message: validPayload.message,
-      })
-    })
-
-    it('should fall back to Analytics.trackErrorEvent when appEvent is absent', () => {
-      const { getByTestId } = renderModal({
-        visible: true,
-        error: { ...validPayload, appEvent: undefined },
-        enableReport: true,
-      })
-
-      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(validPayload.code),
-        message: validPayload.message,
-      })
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith('general', 'Report this problem')
     })
 
     it('should disable the Report button after being pressed', async () => {

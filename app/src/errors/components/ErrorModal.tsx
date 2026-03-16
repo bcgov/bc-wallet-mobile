@@ -1,9 +1,7 @@
-import { getErrorDefinitionFromAppEventCode, trackErrorInAnalytics } from '@/errors/errorHandler'
-import { AlertInteractionEvent } from '@/events/appEventCode'
+import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
@@ -13,7 +11,7 @@ export interface ErrorModalPayload {
   description: string
   message: string
   code: number
-  appEvent?: string
+  appEvent: string
 }
 
 const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette']): ErrorInfoCardColors => ({
@@ -56,7 +54,6 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
   onDismiss,
   enableReport = true,
 }) => {
-  const { t } = useTranslation()
   const { ColorPalette } = useTheme()
 
   const handleReport = useCallback(() => {
@@ -64,17 +61,8 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       return
     }
 
-    if (error.appEvent) {
-      const definition = getErrorDefinitionFromAppEventCode(error.appEvent)
-      if (definition) {
-        trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, t('Error.ReportThisProblem'))
-      } else {
-        Analytics.trackErrorEvent({ code: String(error.code), message: error.message })
-      }
-    } else {
-      Analytics.trackErrorEvent({ code: String(error.code), message: error.message })
-    }
-  }, [error, t])
+    Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, 'Report this problem')
+  }, [error])
 
   const cardColors = useMemo(() => mapThemeToCardColors(ColorPalette), [ColorPalette])
 

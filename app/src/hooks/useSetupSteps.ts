@@ -67,6 +67,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const bcscSerialNumber = store.bcscSecure.serial || null
     const emailAddress = store.bcscSecure.emailAddress || null
     const isEmailVerified = Boolean(store.bcscSecure.isEmailVerified)
+    const userSkippedEmailVerification = Boolean(store.bcscSecure.userSkippedEmailVerification)
     const hasSerial = Boolean(bcscSerialNumber)
 
     // Card types
@@ -100,7 +101,8 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const step1Completed = step5Completed || Boolean(nickname)
     const step2Completed = step5Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
     const step3Completed = step5Completed || (step2Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
-    const step4Completed = step5Completed || (step2Completed && Boolean(emailAddress && isEmailVerified)) // Step 2 must be completed before step 4 can be completed
+    const step4Completed =
+      step5Completed || (step2Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification)) // Step 2 must be completed before step 4 can be completed
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
@@ -245,6 +247,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     store.bcscSecure.deviceCodeExpiresAt,
     store.bcscSecure.emailAddress,
     store.bcscSecure.isEmailVerified,
+    store.bcscSecure.userSkippedEmailVerification,
     store.bcscSecure.serial,
     store.bcscSecure.userMetadata?.address,
     store.bcscSecure.userSubmittedVerificationVideo,

@@ -1,9 +1,10 @@
 import { extractErrorMessage } from '@/errors'
 import { BCSCErrorModal, ErrorModalPayload } from '@/errors/components/ErrorModal'
-import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
+import { logError } from '@/errors/errorHandler'
 import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
-import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
+import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
 import i18next from 'i18next'
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
@@ -84,7 +85,9 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
-    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
+    // Track alert display and error events in analytics
+    Analytics.trackAlertDisplayEvent(definition.appEvent)
+    Analytics.trackErrorEvent({ code: definition.appEvent, message: technicalMessage })
 
     setError({
       title,

@@ -517,7 +517,9 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
-      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([{ label: 'front', upload_uri: 'evidence-uri-front' }])
+      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
+        { label: 'FRONT_SIDE', upload_uri: 'evidence-uri-front' },
+      ])
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
       mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
@@ -533,7 +535,7 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.sendEvidenceMetadata).toHaveBeenCalledWith({
         type: 'drivers_licence',
         number: 'DL123',
-        images: [{ label: 'front', side: 'front', file_path: undefined }],
+        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined }],
       })
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
