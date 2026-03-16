@@ -1194,6 +1194,10 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
       "Action1": "Reset App (FR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (FR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
   "BCWalletError": {

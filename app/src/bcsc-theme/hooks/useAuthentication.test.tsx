@@ -1,4 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
@@ -27,6 +28,7 @@ jest.mock('react-native-bcsc-core', () => ({
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext')
 jest.mock('@bifold/core')
+jest.mock('@/hooks/useAlerts')
 
 describe('useAuthentication', () => {
   beforeEach(() => {
@@ -42,6 +44,10 @@ describe('useAuthentication', () => {
     } as any)
 
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+
+    jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+      deviceAuthenticationErrorAlert: jest.fn(),
+    } as any)
   })
 
   describe('PIN mode', () => {

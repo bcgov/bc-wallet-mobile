@@ -1,3 +1,4 @@
+import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -24,6 +25,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
+  const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
 
   /**
    * Handles unlocking the app using the configured authentication method.
@@ -73,7 +75,6 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       if (!success) {
         logger.info('[Authentication:UnlockApp] Device authentication failed - user cancelled or auth failed')
-        // TODO (MD): What should we do if the device authentication fails?
         return
       }
 
@@ -81,11 +82,11 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       logger.info('[Authentication:UnlockApp] Device authentication successful')
     } catch (error) {
       logger.error('[Authentication:UnlockApp] Device authentication error', error as Error)
-      // TODO (MD): What should be do if there is an error during the device authentication process?
+      deviceAuthenticationErrorAlert()
     } finally {
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation])
+  }, [deviceAuthenticationErrorAlert, handleSuccessfulAuth, loadingScreen, logger, navigation])
 
   return useMemo(() => ({ unlockApp }), [unlockApp])
 }
