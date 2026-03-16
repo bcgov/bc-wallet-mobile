@@ -1,8 +1,13 @@
-import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useAccount, useRefreshAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import Account from './Account'
+
+jest.mock('@/bcsc-theme/contexts/BCSCAccountContext', () => ({
+  useAccount: jest.fn(),
+  useRefreshAccount: jest.fn(),
+}))
 
 jest.mock('@/bcsc-theme/contexts/BCSCIdTokenContext', () => ({
   useIdToken: jest.fn(() => ({
@@ -35,11 +40,13 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
 }))
 
 const mockedUseAccount = useAccount as jest.MockedFunction<typeof useAccount>
+const mockedUseRefreshAccount = useRefreshAccount as jest.MockedFunction<typeof useRefreshAccount>
 
 describe('Account', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
+    mockedUseRefreshAccount.mockReturnValue(jest.fn())
   })
 
   afterEach(() => {
@@ -56,7 +63,6 @@ describe('Account', () => {
       fullname_formatted: 'Brule, Steve',
       account_expiration_date: new Date('2025-12-31'),
     } as any)
-
     const tree = render(
       <BasicAppContext>
         <Account />
