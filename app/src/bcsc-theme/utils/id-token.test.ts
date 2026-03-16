@@ -24,7 +24,7 @@ describe('ID Token Utils', () => {
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
-    it('should throw ERR_117 when native error is E_FAILED_TO_PARSE_JWS', async () => {
+    it('should wrap native E_FAILED_TO_PARSE_JWS as DECRYPT_VERIFY_ID_TOKEN_ERROR', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockLogger = new MockLogger()
@@ -33,7 +33,7 @@ describe('ID Token Utils', () => {
       bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(nativeError)
 
       await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
-        AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: nativeError })
+        AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: nativeError })
       )
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')

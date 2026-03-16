@@ -6,7 +6,7 @@ import * as BcscCore from 'react-native-bcsc-core'
 
 describe('useUserApi', () => {
   describe('getUserInfo', () => {
-    it('should throw ERR_117 when decodePayload fails with E_FAILED_TO_PARSE_JWS', async () => {
+    it('should wrap native E_FAILED_TO_PARSE_JWS as DECRYPT_JWE_ERROR', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
       const getAccountMock = jest.mocked(BcscCore).getAccount
 
@@ -26,7 +26,7 @@ describe('useUserApi', () => {
 
       await act(async () => {
         await expect(hook.result.current.getUserInfo()).rejects.toThrow(
-          AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: nativeError })
+          AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: nativeError })
         )
       })
     })
