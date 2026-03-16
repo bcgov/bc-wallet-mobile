@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 export type RetryConfig = {
   /**
@@ -84,24 +84,39 @@ export default function useDataLoader<ResponseType>(
   const [data, setData] = useState<ResponseType>()
   const [error, setError] = useState<unknown>()
   const [isLoading, setIsLoading] = useState(false)
-  const [isOneTimeLoad, setIsOneTimeLoad] = useState(false)
   const [isReady, setIsReady] = useState(false)
-  const { onError, retryConfig } = options
-  const { interval, timeout } = retryConfig ?? {}
 
-  // Custom setData function that also updates isReady state
-  const setDataWithReady = (newData: ResponseType) => {
+  // Keep fetchData, onError and retryConfig refs, this allows loadData to be a stable useCallback with these depdenancies
+  // meaning loadData won't change on every render and cause an infinite render loop
+  // consider updating to useEffectEvent when it becomes available in a stable build: https://react.dev/learn/separating-events-from-effects
+  const fetchDataRef = useRef(fetchData)
+  fetchDataRef.current = fetchData
+
+  const onErrorRef = useRef(options.onError)
+  onErrorRef.current = options.onError
+
+  const retryConfigRef = useRef(options.retryConfig)
+  retryConfigRef.current = options.retryConfig
+
+  // Keep these flags as refs to avoid re renders
+  const isOneTimeLoadRef = useRef(false)
+  const isLoadingRef = useRef(false)
+
+  const setDataWithReady = useCallback((newData: ResponseType) => {
     setData(newData)
     setIsReady(true)
-  }
+  }, [])
 
-  const loadData = async () => {
-    if (isOneTimeLoad) {
+  const loadData = useCallback(async () => {
+    if (isOneTimeLoadRef.current) {
       return
     }
 
+    const { interval, timeout } = retryConfigRef.current ?? {}
+
     try {
-      setIsOneTimeLoad(true)
+      isOneTimeLoadRef.current = true
+      isLoadingRef.current = true
       setIsLoading(true)
 
       if (timeout && interval) {
@@ -112,7 +127,7 @@ export default function useDataLoader<ResponseType>(
         // Keep retrying until timeout is reached
         while (Date.now() - startTime < timeout) {
           try {
-            const response = await fetchData()
+            const response = await fetchDataRef.current()
             setDataWithReady(response)
             return
           } catch (err) {
@@ -139,34 +154,38 @@ export default function useDataLoader<ResponseType>(
       }
 
       // If retry config not provided, just fetch the data once
-      const response = await fetchData()
+      const response = await fetchDataRef.current()
       setDataWithReady(response)
     } catch (error) {
       setError(error)
-      onError(error)
+      onErrorRef.current(error)
     } finally {
+      isLoadingRef.current = false
       setIsLoading(false)
     }
-  }
+  }, [setDataWithReady])
 
-  // Function to trigger load once
-  const load = () => {
-    if (!isLoading && !isOneTimeLoad) {
+  // Executes fetchData once; no-ops on subsequent calls
+  const load = useCallback(() => {
+    if (!isLoadingRef.current && !isOneTimeLoadRef.current) {
       loadData()
     }
-  }
+  }, [loadData])
 
-  // Function to refresh data
-  const refresh = () => {
+  // Resets the one-time guard and re-fetches
+  const refresh = useCallback(() => {
+    // Data loader is already loading, no need to call again
+    if (isLoadingRef.current) {
+      return
+    }
     setError(undefined)
-    setIsOneTimeLoad(false) // Reset one-time load so we can fetch again
+    isOneTimeLoadRef.current = false
     loadData()
-  }
+  }, [loadData])
 
-  // Function to clear errors
-  const clear = () => {
+  const clear = useCallback(() => {
     setError(undefined)
-  }
+  }, [])
 
   return {
     data,
