@@ -1,6 +1,0 @@
-# Ignore all local app binaries
-*
-# Except these files
-!.gitignore
-!.gitkeep
-!README.md
