@@ -29,7 +29,6 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     onError={[Function]}
     onHttpError={[Function]}
     onLoad={[Function]}
-    onMessage={[Function]}
     originWhitelist={
       [
         "*",
@@ -83,6 +82,7 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
       }
     }
     testID="mocked-webview"
+    textZoom={200}
     thirdPartyCookiesEnabled={true}
     userAgent="Single App"
   />

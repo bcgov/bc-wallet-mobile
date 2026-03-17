@@ -3,6 +3,11 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import TransferQRScannerScreen from './TransferQRScannerScreen'
 
+const mockNavigation = {
+  navigate: jest.fn(),
+  dispatch: jest.fn(),
+} as any
+
 jest.mock('../../../api/hooks/useApi', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -33,7 +38,7 @@ describe('TransferQRScanner', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <TransferQRScannerScreen />
+        <TransferQRScannerScreen navigation={mockNavigation} />
       </BasicAppContext>
     )
 

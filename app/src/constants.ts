@@ -49,7 +49,7 @@ export const ACCESSIBILITY_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
 // appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
 export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
-export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html'
+export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
 export const WHERE_TO_USE_URL = ACCOUNT_SERVICES_URL
 export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
@@ -67,11 +67,11 @@ export enum HelpCentreUrl {
   ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
-  VERIFY_CALL = 'https://id.gov.bc.ca/static/help/verify_why.html#section-call',
+  VERIFY_CALL = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-call',
   QUICK_SETUP_OF_ADDITIONAL_DEVICES = 'https://id.gov.bc.ca/static/help/setup_qrcode.html?fromapp=1',
   HELP_CHECK_BCSC = 'https://id.gov.bc.ca/static/help/cardhelp.html?fromapp=1',
-  AUDIO_VIDEO_TROUBLESHOOTING = 'https://id.gov.bc.ca/static/help/audio_video_tips.html',
-  FORGOT_PIN = 'https://id.gov.bc.ca/static/help/secure_app.html#section-forgotpin',
+  AUDIO_VIDEO_TROUBLESHOOTING = 'https://id.gov.bc.ca/static/help/audio_video_tips.html?fromapp=1',
+  FORGOT_PIN = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1#section-forgotpin',
   INFO_SHARED = 'https://id.gov.bc.ca/static/help/info_shared.html?fromapp=1',
 }
 
