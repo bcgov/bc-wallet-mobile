@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
-import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
@@ -21,7 +20,7 @@ import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/Onboarding
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import SetupTypesScreen from '../features/onboarding/SetupTypesScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { OnboardingWebViewScreen } from '../features/webview/OnboardingWebViewScreen'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCOnboardingStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
@@ -45,6 +44,7 @@ const OnboardingStack = (): React.ReactElement => {
         headerShown: false,
         title: '',
         headerShadowVisible: false,
+        headerBackTitleVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
@@ -98,8 +98,6 @@ const OnboardingStack = (): React.ReactElement => {
         options={{
           title: t('BCSC.Onboarding.NotificationsHeader'),
           headerShown: true,
-          headerBackTestID: testIdWithKey('Back'),
-          headerBackAccessibilityLabel: t('Global.Back'),
           headerRight: createOnboardingHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
@@ -120,12 +118,10 @@ const OnboardingStack = (): React.ReactElement => {
       />
       <Stack.Screen
         name={BCSCScreens.OnboardingWebView}
-        component={OnboardingWebViewScreen}
+        component={WebViewScreen}
         options={({ route }) => ({
           headerShown: true,
           title: route.params.title,
-          headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createMainWebviewHeaderBackButton(),
         })}
       />
       <Stack.Screen
@@ -141,7 +137,6 @@ const OnboardingStack = (): React.ReactElement => {
         component={OnboardingRemoveAccountConfirmationScreen}
         options={() => ({
           headerShown: true,
-          headerBackTitleVisible: false,
         })}
       />
 

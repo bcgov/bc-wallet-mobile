@@ -1,9 +1,9 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import { MainWebViewScreen } from './MainWebViewScreen'
+import { WebViewScreen } from './WebViewScreen'
 
-describe('MainWebView', () => {
+describe('WebViewScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -17,7 +17,7 @@ describe('MainWebView', () => {
     const route = { params: { url: 'https://example.com', title: 'Test' } }
     const tree = render(
       <BasicAppContext>
-        <MainWebViewScreen route={route as never} />
+        <WebViewScreen route={route as never} />
       </BasicAppContext>
     )
 
