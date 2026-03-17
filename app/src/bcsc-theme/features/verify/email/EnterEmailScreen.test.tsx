@@ -10,6 +10,7 @@ import EnterEmailScreen from './EnterEmailScreen'
 
 const mockCreateEmailVerification = jest.fn()
 const mockUpdateUserInfo = jest.fn().mockResolvedValue(undefined)
+const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
   return {
@@ -26,6 +27,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateUserInfo: mockUpdateUserInfo,
+    updateAccountFlags: mockUpdateAccountFlags,
   })),
 }))
 

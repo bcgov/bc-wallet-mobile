@@ -10,6 +10,8 @@ export interface EvidenceUploadItem {
   imageBytes: Buffer
 }
 
+const LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE', back: 'BACK_SIDE' }
+
 const useEvidenceUpload = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
@@ -57,7 +59,10 @@ const useEvidenceUpload = () => {
         type: evidenceItem?.evidenceType?.evidence_type,
         number: evidenceItem.documentNumber,
         images: evidenceItem.metadata.map((data) => {
-          return { ...data, file_path: undefined }
+          // Normalize labels: the /v1/documents API expects "FRONT_SIDE"/"BACK_SIDE",
+          // not the lowercase "front"/"back" used by /v1/photos (selfie endpoint).
+          const label = LABEL_MAP[data.label] ?? data.label
+          return { ...data, label, file_path: undefined }
         }),
       }
 
@@ -65,12 +70,14 @@ const useEvidenceUpload = () => {
         metadataPayload.barcodes = evidenceItem.barcodes
       }
 
+      logger.info(`Evidence payload labels: ${JSON.stringify(metadataPayload.images.map((i) => i.label))}`)
       const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
       logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
 
       for (const metadataItem of evidenceItem.metadata) {
+        const normalizedLabel = LABEL_MAP[metadataItem.label] ?? metadataItem.label
         const matchingResponse = evidenceMetadataResponse.find(
-          (response: UploadEvidenceResponseData) => response.label === metadataItem.label
+          (response: UploadEvidenceResponseData) => response.label === normalizedLabel
         )
 
         if (matchingResponse) {

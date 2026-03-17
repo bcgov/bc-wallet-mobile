@@ -226,11 +226,18 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderColor: theme.ColorPalette.grayscale.lightGrey,
           color: theme.ColorPalette.brand.text,
           borderWidth: 1,
+          margin: 1, // borderWidth + margin should equal 2 to prevent layout shift on focus
         },
         inputSelected: {
-          borderColor: theme.ColorPalette.brand.highlight,
-          borderWidth: 1,
+          borderColor: '#7090E4',
+          borderWidth: 2,
+          margin: 0, // borderWidth + margin should equal 2 to prevent layout shift on focus
           backgroundColor: theme.ColorPalette.grayscale.white,
+          shadowColor: '#7090E4',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 4,
+          elevation: 4,
         },
         singleSelect: {
           backgroundColor: theme.ColorPalette.brand.secondaryBackground,

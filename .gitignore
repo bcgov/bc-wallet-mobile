@@ -30,6 +30,10 @@ local.properties
 .jest
 .npmrc
 
+# Swift Package Manager
+.build/
+.swiftpm/
+
 # yarn
 .yarn/*
 .yarn/cache

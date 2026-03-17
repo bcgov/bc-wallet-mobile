@@ -409,7 +409,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -458,7 +458,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -507,7 +507,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -714,7 +714,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCTakePhoto', {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TakePhoto, {
         forLiveCall: true,
         deviceSide: 'front',
         cameraInstructions: '',
@@ -1153,7 +1153,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -1202,7 +1202,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 

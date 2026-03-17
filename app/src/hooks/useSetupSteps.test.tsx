@@ -348,6 +348,40 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.email.focused).toBe(false)
       expect(hook.result.current.email.completed).toBe(true)
     })
+
+    it('should be completed when user skipped email (userSkippedEmailVerification=true, no emailAddress — v3 migration case)', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.bcscSecure.serial = '123456789'
+      store.bcscSecure.emailAddress = undefined
+      store.bcscSecure.deviceCode = 'ABCDEFGH'
+      store.bcscSecure.isEmailVerified = false
+      store.bcscSecure.userSkippedEmailVerification = true
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(false)
+      expect(hook.result.current.email.completed).toBe(true)
+    })
+
+    it('should not be completed when email entered but not verified, even if userSkippedEmailVerification was previously set', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.bcscSecure.serial = '123456789'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
+      store.bcscSecure.deviceCode = 'ABCDEFGH'
+      store.bcscSecure.isEmailVerified = false
+      store.bcscSecure.userSkippedEmailVerification = false
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+    })
   })
 
   describe('Verify Step', () => {

@@ -11,6 +11,10 @@ jest.mock('@react-navigation/native', () => ({
   })),
 }))
 
+jest.mock('@/bcsc-theme/navigators/stack-utils', () => ({
+  getBaseScreenName: jest.fn((name: string) => name),
+}))
+
 jest.mock('@bifold/core', () => ({
   useTheme: jest.fn(() => ({
     NavigationTheme: {},

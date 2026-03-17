@@ -33,7 +33,7 @@ type EnterEmailScreenProps = {
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { Spacing } = useTheme()
   const { evidence } = useApi()
-  const { updateUserInfo } = useSecureActions()
+  const { updateUserInfo, updateAccountFlags } = useSecureActions()
   const [store] = useStore<BCState>()
   const [email, setEmail] = useState(store.bcscSecure.emailAddress || '')
   const [loading, setLoading] = useState(false)
@@ -58,6 +58,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
+      await updateAccountFlags({ userSkippedEmailVerification: false })
       await updateUserInfo({ email, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
@@ -82,6 +83,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             email: BCSC_EMAIL_NOT_PROVIDED,
             isEmailVerified: true,
           })
+          await updateAccountFlags({ userSkippedEmailVerification: true })
           navigation.goBack()
         },
       },
