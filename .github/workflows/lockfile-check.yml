@@ -139,6 +139,6 @@ jobs:
       - name: Check Podfile.lock is up to date
         run: |
           if ! git diff --exit-code app/ios/Podfile.lock; then
-            echo "::error::Podfile.lock is out of sync. Run 'pod install' from app/ios and commit the result."
+            echo "::error::Podfile.lock is out of sync. Run 'yarn ios:setup' from /app and commit the result."
             exit 1
           fi
