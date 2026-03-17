@@ -67,7 +67,7 @@ export const useVerificationResponseListener = () => {
 
       // Check the verification request status (same as Check Status button)
       logger.info('[useVerificationResponseListener] Checking verification request status')
-      const { status } = await evidence.getVerificationRequestStatus(verificationRequestId)
+      const { status, status_message } = await evidence.getVerificationRequestStatus(verificationRequestId)
       logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
 
       if (status === 'verified') {
@@ -79,8 +79,8 @@ export const useVerificationResponseListener = () => {
       }
 
       if (status === 'cancelled') {
-        // TODO: (ke) handle verification request cancelled
-        logger.info(`[useVerificationResponseListener] Verification request cancelled, not navigating`)
+        logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
+        navigation.dispatch(CommonActions.navigate({ name: BCSCScreens.CancelledReview, params: { agentReason: status_message } }))
         return
       }
 
@@ -93,7 +93,7 @@ export const useVerificationResponseListener = () => {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
-  }, [logger, store.bcscSecure, evidence, navigateToSuccess, token])
+  }, [logger, store.bcscSecure, evidence, navigation, navigateToSuccess, token])
 
   /**
    * Route the event to the appropriate handler based on event type.
