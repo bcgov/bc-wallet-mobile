@@ -11,7 +11,6 @@ on:
       - '**/build.gradle'
       - '**/settings.gradle'
       - '**/gradle.lockfile'
-      - '**/settings-gradle.lockfile'
       - '**/Podfile'
       - '**/Podfile.lock'
   merge_group:
@@ -79,14 +78,14 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('packages/bcsc-core/android/**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Regenerate gradle lockfiles
+      - name: Regenerate gradle lockfile
         working-directory: app/android
-        run: ./gradlew app:dependencies dependencies --write-locks
+        run: ./gradlew app:dependencies --write-locks
 
-      - name: Check gradle lockfiles are up to date
+      - name: Check gradle.lockfile is up to date
         run: |
-          if ! git diff --exit-code app/android/settings-gradle.lockfile app/android/app/gradle.lockfile; then
-            echo "::error::Gradle lockfiles are out of sync. Run './gradlew dependencies --write-locks && ./gradlew app:dependencies --write-locks' from app/android and commit the result."
+          if ! git diff --exit-code app/android/app/gradle.lockfile; then
+            echo "::error::gradle.lockfile is out of sync. Run './gradlew app:dependencies --write-locks' from app/android and commit the result."
             exit 1
           fi
 
