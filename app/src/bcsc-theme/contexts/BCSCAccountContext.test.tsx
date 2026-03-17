@@ -80,7 +80,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Brule, Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Brule, Steve')
     })
 
     it('formats as "FamilyName" when given_name is undefined (mononym)', () => {
@@ -94,7 +94,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Brule')
+      expect(result.current?.account?.fullname_formatted).toBe('Brule')
     })
 
     it('formats as "FamilyName" when given_name is an empty string', () => {
@@ -108,7 +108,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Brule')
+      expect(result.current?.account?.fullname_formatted).toBe('Brule')
     })
 
     it('formats as "FamilyName" when given_name is whitespace only', () => {
@@ -122,7 +122,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Brule')
+      expect(result.current?.account?.fullname_formatted).toBe('Brule')
     })
 
     it('formats as "GivenName" when family_name is undefined', () => {
@@ -136,7 +136,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Steve')
     })
 
     it('formats as "GivenName" when family_name is an empty string', () => {
@@ -150,7 +150,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.fullname_formatted).toBe('Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Steve')
     })
   })
 })
