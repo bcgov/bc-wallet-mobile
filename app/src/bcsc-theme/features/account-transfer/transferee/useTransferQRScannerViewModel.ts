@@ -7,7 +7,6 @@ import { isHandledAppError } from '@/errors/appError'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,11 +14,12 @@ import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import { useCameraPermission } from 'react-native-vision-camera'
 
-const useTransferQRScannerViewModel = () => {
+const useTransferQRScannerViewModel = (
+  navigation: StackNavigationProp<BCSCVerifyStackParams>
+) => {
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
-  const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const [store] = useStore<BCState>()
   const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
@@ -131,14 +131,19 @@ const useTransferQRScannerViewModel = () => {
         apiClient.tokens = deviceToken
         await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
 
-        navigator.navigate(BCSCScreens.VerificationSuccess)
+        navigation.navigate(BCSCScreens.VerificationSuccess)
       } catch (error) {
-        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, (error as Error)?.message))
+        if (error instanceof QrCodeScanError) {
+          setScanError(error)
+        } else {
+          const message = error instanceof Error ? error.message : String(error)
+          setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, message))
+        }
       } finally {
         setIsLoading(false)
       }
     },
-    [deviceAttestation, t, token, isLoading, scanError, navigator, updateTokens, apiClient]
+    [deviceAttestation, t, token, isLoading, scanError, navigation, updateTokens, apiClient]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

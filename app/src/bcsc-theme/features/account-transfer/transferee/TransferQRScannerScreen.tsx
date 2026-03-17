@@ -1,17 +1,23 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
-const TransferQRScannerScreen: React.FC = () => {
+type TransferQRScannerScreenProps = {
+  navigation: StackNavigationProp<BCSCVerifyStackParams>
+}
+
+const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navigation }) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
-    useTransferQRScannerViewModel()
+    useTransferQRScannerViewModel(navigation)
 
   const styles = StyleSheet.create({
     container: {
