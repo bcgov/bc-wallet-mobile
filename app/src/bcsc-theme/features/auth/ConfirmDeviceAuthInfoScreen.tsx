@@ -26,14 +26,14 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
   const { t } = useTranslation()
   const [checked, setChecked] = useState(false)
   const [, dispatch] = useStore<BCState>()
-  const authentication = useAuthentication(navigation)
+  const { performDeviceAuth } = useAuthentication(navigation)
 
   const onPressContinue = useCallback(() => {
     if (checked) {
       dispatch({ type: BCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION, payload: [true] })
     }
-    authentication.performDeviceAuth()
-  }, [checked, dispatch, authentication])
+    performDeviceAuth()
+  }, [checked, dispatch, performDeviceAuth])
 
   const controls = (
     <>
