@@ -4,8 +4,8 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as Bifold from '@bifold/core'
 import { QrCodeScanError } from '@bifold/core'
-import { renderHook, act, waitFor } from '@testing-library/react-native'
-import { getAccount, createDeviceSignedJWT } from 'react-native-bcsc-core'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
@@ -111,10 +111,7 @@ describe('useTransferQRScannerViewModel', () => {
 
     it('should skip registration when device code already exists', async () => {
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([
-        { bcscSecure: { deviceCode: 'existing-code' } } as any,
-        jest.fn(),
-      ])
+      bifoldMock.useStore.mockReturnValue([{ bcscSecure: { deviceCode: 'existing-code' } } as any, jest.fn()])
 
       renderHook(() => useTransferQRScannerViewModel(mockNavigation))
 

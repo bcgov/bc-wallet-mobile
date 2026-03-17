@@ -14,9 +14,7 @@ import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 import { useCameraPermission } from 'react-native-vision-camera'
 
-const useTransferQRScannerViewModel = (
-  navigation: StackNavigationProp<BCSCVerifyStackParams>
-) => {
+const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
   const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
