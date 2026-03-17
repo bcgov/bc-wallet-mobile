@@ -1,7 +1,7 @@
-import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import Services from './Services'
 
 jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
