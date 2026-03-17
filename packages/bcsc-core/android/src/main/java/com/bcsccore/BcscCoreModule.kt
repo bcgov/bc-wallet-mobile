@@ -392,11 +392,11 @@ class BcscCoreModule(
                             promise.resolve(null)
                         } catch (e: Exception) {
                             Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
-                            promise.resolve(null)
+                            promise.reject("E_STORAGE_ERROR", "Failed to parse decrypted token data: ${e.message}", e)
                         }
                     } else {
-                        Log.d(NAME, "Decrypted content is not valid JSON")
-                        promise.resolve(null)
+                        Log.e(NAME, "Decrypted content is not valid JSON")
+                        promise.reject("E_STORAGE_ERROR", "Decrypted token content is not valid JSON")
                     }
                 } else {
                     Log.w(
@@ -407,11 +407,11 @@ class BcscCoreModule(
                 }
             } catch (e: DecryptionException) {
                 Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
-                promise.resolve(null)
+                promise.reject("E_STORAGE_ERROR", "Failed to decrypt token file: ${e.message}", e)
             }
         } catch (e: Exception) {
             Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Failed to read token file: ${e.message}", e)
         }
     }
 
@@ -722,7 +722,7 @@ class BcscCoreModule(
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "setIssuer: Error saving issuer to file: ${e.message}", e)
-            promise.resolve(false)
+            promise.reject("E_STORAGE_ERROR", "Error saving issuer to file: ${e.message}", e)
         }
     }
 
@@ -749,7 +749,7 @@ class BcscCoreModule(
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Error reading issuer from file: ${e.message}", e)
         }
     }
 

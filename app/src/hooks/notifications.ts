@@ -37,7 +37,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
   useEffect(() => {
     // get all unseen messages
-    const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
+    const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg: BasicMessageRecord) => {
       const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
       return !meta?.seen
     })
@@ -45,7 +45,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
     // add one unseen message per contact to notifications
     const contactsWithUnseenMessages: string[] = []
     const messagesToShow: BasicMessageRecord[] = []
-    unseenMessages.forEach((msg) => {
+    unseenMessages.forEach((msg: BasicMessageRecord) => {
       if (!contactsWithUnseenMessages.includes(msg.connectionId)) {
         contactsWithUnseenMessages.push(msg.connectionId)
         messagesToShow.push(msg)

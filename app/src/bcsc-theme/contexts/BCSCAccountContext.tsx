@@ -17,6 +17,7 @@ export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
 export interface BCSCAccountContextType {
   account: BCSCAccount | null
   isLoadingAccount: boolean
+  refreshAccount: () => void
 }
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
@@ -56,6 +57,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       return {
         account: null,
         isLoadingAccount: isLoading,
+        refreshAccount: refresh,
       }
     }
 
@@ -76,8 +78,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,
+      refreshAccount: refresh,
     }
-  }, [data, isLoading])
+  }, [data, isLoading, refresh])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }
@@ -94,5 +97,5 @@ export const useAccount = () => {
     throw new Error('useAccount must be used within a BCSCAccountProvider')
   }
 
-  return context.account
+  return context
 }

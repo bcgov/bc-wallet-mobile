@@ -1,3 +1,5 @@
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -81,7 +83,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:UnlockApp] Device authentication successful')
     } catch (error) {
-      logger.error('[Authentication:UnlockApp] Device authentication error', error as Error)
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert()
     } finally {
       stopLoading?.()

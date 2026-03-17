@@ -1,6 +1,8 @@
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
   Button,
   ButtonType,
@@ -124,8 +126,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
+        const appError = toAppError(error, ErrorRegistry.PIN_STORE_ERROR)
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
-        logger.error(`PIN setup error: ${error}`)
+        logger.error(`PIN setup error [${appError.appEvent}]: ${appError.technicalMessage ?? appError.message}`)
       } finally {
         setLoading(false)
         stopLoading?.()
