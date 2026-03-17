@@ -250,7 +250,7 @@ class BcscCore: NSObject {
       let result: [String: Any] = [
         "public": publicKeyData.base64EncodedString(),
         "private": privateKeyData.base64EncodedString(),
-        "id:": label,
+        "id": label,
       ]
 
       resolve(result)
@@ -543,7 +543,7 @@ class BcscCore: NSObject {
   ///   - reject: Called with an error if reading fails.
   func getIssuer(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
     let issuer = storage.issuer
@@ -571,8 +571,7 @@ class BcscCore: NSObject {
           return
         }
       } catch {
-        // If we can't check, return nil
-        resolve(nil)
+        reject("E_STORAGE_ERROR", "Failed to check issuer file: \(error.localizedDescription)", error as NSError)
         return
       }
     }
@@ -1909,7 +1908,7 @@ class BcscCore: NSObject {
   ///   - reject: Returns error on failure
   func getAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
       let storage = StorageService()
@@ -1973,10 +1972,10 @@ class BcscCore: NSObject {
       }
 
       logger.log("getAuthorizationRequest: Failed to decode")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to decode authorization request", nil)
     } catch {
       logger.log("getAuthorizationRequest: Exception - \(error.localizedDescription)")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to read authorization request: \(error.localizedDescription)", error as NSError)
     }
   }
 
@@ -2705,7 +2704,7 @@ class BcscCore: NSObject {
       // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
       guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
         logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
-        resolve(nil)
+        reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
         return
       }
 
@@ -3033,7 +3032,7 @@ class BcscCore: NSObject {
       )
       else {
         logger.log("hasCredential: Could not decode ClientRegistration")
-        resolve(false)
+        reject("E_CHECK_FAILED", "Failed to decode ClientRegistration", nil)
         return
       }
 

@@ -127,37 +127,97 @@ exports[`EnterBirthdate renders correctly 1`] = `
           >
             BCSC.Birthdate.Label
           </Text>
-          <TextInput
-            accessibilityLabel="BCSC.Birthdate.Label"
-            keyboardType="number-pad"
-            onChange={[Function]}
-            onChangeText={[Function]}
-            placeholder="YYYY/MM/DD"
-            placeholderTextColor="#000000"
-            selection={
+          <View
+            accessibilityState={
               {
-                "end": 1,
-                "start": 0,
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
               }
             }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 44,
+                "left": 44,
+                "right": 44,
+                "top": 44,
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
             style={
               [
                 {
+                  "alignItems": "center",
                   "backgroundColor": "#D3D3D3",
                   "borderColor": "#D3D3D3",
                   "borderRadius": 4,
                   "borderWidth": 1,
                   "color": "#313132",
+                  "elevation": 0,
+                  "flexDirection": "row",
                   "fontFamily": "BCSans-Regular",
                   "fontSize": 16,
                   "padding": 10,
+                  "shadowColor": undefined,
+                  "shadowOffset": undefined,
+                  "shadowOpacity": 0,
+                  "shadowRadius": undefined,
                 },
+                false,
                 undefined,
               ]
             }
-            testID="com.ariesbifold:id/birthDate-input"
-            value="YYYY/MM/DD"
-          />
+          >
+            <TextInput
+              accessibilityLabel="BCSC.Birthdate.Label"
+              keyboardType="number-pad"
+              onBlur={[Function]}
+              onChange={[Function]}
+              onChangeText={[Function]}
+              onFocus={[Function]}
+              placeholder="YYYY/MM/DD"
+              placeholderTextColor="#000000"
+              selection={
+                {
+                  "end": 1,
+                  "start": 0,
+                }
+              }
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "flex": 1,
+                    "fontSize": 16,
+                  },
+                  undefined,
+                ]
+              }
+              testID="com.ariesbifold:id/birthDate-input"
+              value="YYYY/MM/DD"
+            />
+          </View>
           <Text
             maxFontSizeMultiplier={2}
             style={

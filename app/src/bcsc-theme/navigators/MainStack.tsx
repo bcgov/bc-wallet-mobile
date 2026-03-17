@@ -51,7 +51,7 @@ const MainStack: React.FC = () => {
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const account = useAccount()
+  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {

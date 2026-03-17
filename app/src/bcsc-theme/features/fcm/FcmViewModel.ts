@@ -1,16 +1,11 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { toAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
-import {
-  BcscNativeErrorCodes,
-  decodeLoginChallenge,
-  isBcscNativeError,
-  JWK,
-  showLocalNotification,
-} from 'react-native-bcsc-core'
+import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
@@ -166,13 +161,7 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.FAILED_TO_PARSE_JWS) {
-        const appError = AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: error })
-        this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to parse JWS in challenge request`)
-        return
-      }
-
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR, { cause: error })
+      const appError = toAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
       appError.handled = true
       const causeMessage = error instanceof Error ? error.message : String(error)
       this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
