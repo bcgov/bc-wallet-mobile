@@ -111,8 +111,6 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       sharedCookiesEnabled={true}
       thirdPartyCookiesEnabled={true}
       userAgent="Single App"
-      // Accessibility: Apply font scaling for dynamic text sizing, currently only impacts Android
-      // For iOS we apply font scaling to the HTML content itself, so it scales appropriately
       textZoom={Math.round(fontScale * 100)}
       onLoad={onLoaded}
     />
