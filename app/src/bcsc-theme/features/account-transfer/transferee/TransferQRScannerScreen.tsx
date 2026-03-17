@@ -1,13 +1,6 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import {
-  DismissiblePopupModal,
-  MaskType,
-  ScanCamera,
-  SVGOverlay,
-  ThemedText,
-  useTheme,
-} from '@bifold/core'
+import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
