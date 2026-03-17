@@ -85,7 +85,7 @@ jobs:
       - name: Check gradle.lockfile is up to date
         run: |
           if ! git diff --exit-code app/android/app/gradle.lockfile; then
-            echo "::error::gradle.lockfile is out of sync. Run './gradlew app:dependencies --write-locks' from app/android and commit the result."
+            echo "::error::gradle.lockfile is out of sync. Run 'yarn android:setup' from /app and commit the result."
             exit 1
           fi
 
