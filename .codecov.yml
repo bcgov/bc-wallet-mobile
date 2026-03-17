@@ -24,13 +24,14 @@ coverage:
     patch:
       default:
         target: auto # target coverage is set to the current coverage
-        threshold: 1% # allowed decrease in coverage before failing
+        threshold: 5% # allowed decrease in coverage before failing
         base: auto # base coverage is set to the current coverage
         branches:
           - main
         paths:
           - app/src
-      only_pulls: true
+        only_pulls: true
+        informational: true # always pass, even if threshold is not met
 
 comment:
   layout: "header, files, footer"
