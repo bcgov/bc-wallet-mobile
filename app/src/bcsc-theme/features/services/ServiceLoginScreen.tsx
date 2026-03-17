@@ -43,7 +43,6 @@ type ServiceLoginUnavailableViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string, options?: Record<string, unknown>) => string
   logger: any
-  navigation: ServiceLoginScreenProps['navigation']
 }
 
 const RenderState = {
@@ -58,14 +57,7 @@ const ServiceLoginLoadingView = () => (
   </SafeAreaView>
 )
 
-const ServiceLoginUnavailableView = ({
-  state,
-  styles,
-  ColorPalette,
-  t,
-  logger,
-  navigation,
-}: ServiceLoginUnavailableViewProps) => (
+const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
       <View style={styles.contentContainer}>
@@ -102,12 +94,7 @@ const ServiceLoginUnavailableView = ({
           <Link
             linkText={t('BCSC.Services.ReportSuspicious')}
             testID={testIdWithKey('ReportSuspiciousLink')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.MainWebView, {
-                title: t('BCSC.Screens.HelpCentre'),
-                url: REPORT_SUSPICIOUS_URL,
-              })
-            }}
+            onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
           />
         </ThemedText>
       </View>
@@ -405,14 +392,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return <ServiceLoginLoadingView />
     case RenderState.Unavailable:
       return (
-        <ServiceLoginUnavailableView
-          state={state}
-          styles={styles}
-          ColorPalette={ColorPalette}
-          t={t}
-          logger={logger}
-          navigation={navigation}
-        />
+        <ServiceLoginUnavailableView state={state} styles={styles} ColorPalette={ColorPalette} t={t} logger={logger} />
       )
     default:
       return (

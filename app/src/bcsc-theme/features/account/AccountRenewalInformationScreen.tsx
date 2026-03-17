@@ -4,7 +4,7 @@ import { GET_BCSC_CARD_URL, HelpCentreUrl } from '@/constants'
 import { Link, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Linking, StyleSheet, View } from 'react-native'
 
 interface AccountRenewalInformationScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.AccountRenewalInformation>
@@ -46,12 +46,7 @@ export const AccountRenewalInformationScreen = ({
         <Link
           testID={t('BCSC.AccountRenewal.InformationGetNewCardA')}
           linkText={t('BCSC.AccountRenewal.InformationGetNewCardA')}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.MainWebView, {
-              title: t('BCSC.Screens.HelpCentre'),
-              url: GET_BCSC_CARD_URL,
-            })
-          }}
+          onPress={() => Linking.openURL(GET_BCSC_CARD_URL)}
         />
         <ThemedText> {t('BCSC.AccountRenewal.InformationGetNewCardB')}</ThemedText>
       </View>
