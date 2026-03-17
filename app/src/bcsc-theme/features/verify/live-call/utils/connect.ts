@@ -9,30 +9,13 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
+import type { Result as PexipTokenResult, Stun, Turn } from '@pexip/infinity-api/dist/token/types'
 import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
-interface PexipIceServerEntry {
-  url?: string
-  username?: string
-  credential?: string
-}
-
-interface PexipTokenResult {
-  token: string
-  participant_uuid: string
-  stun?: PexipIceServerEntry[]
-  turn?: PexipIceServerEntry[]
-  [key: string]: unknown
-}
-
-interface IceServer {
-  urls: string | string[]
-  username?: string
-  credential?: string
-}
+type IceServer = Stun | Turn
 
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
@@ -335,45 +318,31 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
+export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
   const iceServers: IceServer[] = []
 
   // Use STUN servers from Pexip token response
-  if (Array.isArray(tokenResult.stun) && tokenResult.stun.length > 0) {
+  if (tokenResult.stun?.length) {
     for (const entry of tokenResult.stun) {
-      if (entry && typeof entry.url === 'string') {
-        iceServers.push({ urls: entry.url })
-      }
+      iceServers.push({ url: entry.url })
     }
   }
 
   // Use TURN servers from Pexip token response
-  if (Array.isArray(tokenResult.turn) && tokenResult.turn.length > 0) {
+  if (tokenResult.turn?.length) {
     for (const entry of tokenResult.turn) {
-      if (
-        entry &&
-        typeof entry.url === 'string' &&
-        typeof entry.username === 'string' &&
-        typeof entry.credential === 'string'
-      ) {
-        iceServers.push({
-          urls: entry.url,
-          username: entry.username,
-          credential: entry.credential,
-        })
-      } else if (entry && typeof entry.url === 'string') {
-        logger.warn('Skipping TURN server with missing username or credential', {
-          hasUsername: typeof entry.username === 'string',
-          hasCredential: typeof entry.credential === 'string',
-        })
-      }
+      iceServers.push({
+        urls: entry.urls,
+        username: entry.username,
+        credential: entry.credential,
+      })
     }
   }
 
   // Fallback to Google public STUN if Pexip provided nothing
   if (iceServers.length === 0) {
     logger.warn('No ICE servers from Pexip, falling back to Google public STUN')
-    iceServers.push({ urls: 'stun:stun.l.google.com:19302' })
+    iceServers.push({ url: 'stun:stun.l.google.com:19302' })
   }
 
   logger.info('ICE servers configured:', { count: iceServers.length })
