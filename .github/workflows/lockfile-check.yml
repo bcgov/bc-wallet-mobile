@@ -1,0 +1,93 @@
+name: Lockfile Sync Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  merge_group:
+
+jobs:
+  yarn-lock:
+    runs-on: macos-26
+    name: yarn.lock
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Check yarn.lock is up to date
+        run: yarn install --immutable
+
+  gradle-lock:
+    runs-on: macos-26
+    name: gradle.lockfile
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Install JS dependencies
+        run: yarn install --immutable
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Regenerate gradle lockfile
+        working-directory: app/android
+        run: ./gradlew app:dependencies --write-locks
+
+      - name: Check gradle.lockfile is up to date
+        run: |
+          if ! git diff --exit-code app/android/app/gradle.lockfile; then
+            echo "::error::gradle.lockfile is out of sync. Run './gradlew app:dependencies --write-locks' from app/android and commit the result."
+            exit 1
+          fi
+
+  podfile-lock:
+    runs-on: macos-26
+    name: Podfile.lock
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Install JS dependencies
+        run: yarn install --immutable
+
+      - name: Regenerate Podfile.lock
+        working-directory: app/ios
+        run: pod install
+
+      # Note: CocoaPods is installed per Ruby version via rbenv.
+      # If `pod install` uses the wrong version, reinstall for the active Ruby:
+      #
+      #   rbenv shell 3.3.6
+      #   gem uninstall cocoapods -v 1.16.2
+      #   gem install cocoapods -v 1.14.3
+
+      - name: Check Podfile.lock is up to date
+        run: |
+          if ! git diff --exit-code app/ios/Podfile.lock; then
+            echo "::error::Podfile.lock is out of sync. Run 'pod install' from app/ios and commit the result."
+            exit 1
+          fi
