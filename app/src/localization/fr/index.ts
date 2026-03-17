@@ -191,6 +191,14 @@ const translation = {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
       "AuthenticateToSecure": "Authenticate to secure your app (FR)"
     },
+    "AppReset": {
+      "Title": "App reset for security (FR)",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone. (FR)",
+      "Body2": "It looks like you may have turned off the passcode on this device. (FR)",
+      "Body3": "When you do this, your app is reset and you need to set it up again. (FR)",
+      "SetUpApp": "Set Up App (FR)",
+      "LearnMore": "Learn More (FR)"
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
