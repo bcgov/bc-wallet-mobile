@@ -9,7 +9,9 @@ on:
       - '**/package.json'
       - 'yarn.lock'
       - '**/build.gradle'
+      - '**/settings.gradle'
       - '**/gradle.lockfile'
+      - '**/settings-gradle.lockfile'
       - '**/Podfile'
       - '**/Podfile.lock'
   merge_group:
@@ -77,14 +79,16 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('packages/bcsc-core/android/**/*.gradle*') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Regenerate gradle lockfile
+      - name: Regenerate gradle lockfiles
         working-directory: app/android
-        run: ./gradlew app:dependencies --write-locks
-
-      - name: Check gradle.lockfile is up to date
         run: |
-          if ! git diff --exit-code app/android/app/gradle.lockfile; then
-            echo "::error::gradle.lockfile is out of sync. Run './gradlew app:dependencies --write-locks' from app/android and commit the result."
+          ./gradlew dependencies --write-locks
+          ./gradlew app:dependencies --write-locks
+
+      - name: Check gradle lockfiles are up to date
+        run: |
+          if ! git diff --exit-code app/android/settings-gradle.lockfile app/android/app/gradle.lockfile; then
+            echo "::error::Gradle lockfiles are out of sync. Run './gradlew dependencies --write-locks && ./gradlew app:dependencies --write-locks' from app/android and commit the result."
             exit 1
           fi
 
@@ -120,8 +124,9 @@ jobs:
       - name: Install JS dependencies
         run: yarn install --immutable
 
-      - name: Install CocoaPods 1.14.3
-        run: gem install cocoapods -v 1.14.3
+      - name: Bundle install
+        working-directory: app
+        run: bundle install
 
       - name: Cache CocoaPods
         uses: actions/cache@v3
@@ -132,7 +137,7 @@ jobs:
 
       - name: Regenerate Podfile.lock
         working-directory: app/ios
-        run: pod _1.14.3_ install
+        run: bundle exec pod install
 
       - name: Check Podfile.lock is up to date
         run: |
