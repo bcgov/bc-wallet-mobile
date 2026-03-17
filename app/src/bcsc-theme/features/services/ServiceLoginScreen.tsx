@@ -43,7 +43,6 @@ type ServiceLoginUnavailableViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string, options?: Record<string, unknown>) => string
   logger: any
-  navigation: ServiceLoginScreenProps['navigation']
 }
 
 const RenderState = {
@@ -393,14 +392,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return <ServiceLoginLoadingView />
     case RenderState.Unavailable:
       return (
-        <ServiceLoginUnavailableView
-          state={state}
-          styles={styles}
-          ColorPalette={ColorPalette}
-          t={t}
-          logger={logger}
-          navigation={navigation}
-        />
+        <ServiceLoginUnavailableView state={state} styles={styles} ColorPalette={ColorPalette} t={t} logger={logger} />
       )
     default:
       return (
