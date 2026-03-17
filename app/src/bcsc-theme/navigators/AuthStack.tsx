@@ -15,7 +15,7 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { AuthWebViewScreen } from '../features/webview/AuthWebViewScreen'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
@@ -87,7 +87,7 @@ const AuthStack = (): React.ReactElement => {
       />
       <Stack.Screen
         name={BCSCScreens.AuthWebView}
-        component={AuthWebViewScreen}
+        component={WebViewScreen}
         options={({ route }) => ({
           title: route.params.title,
         })}

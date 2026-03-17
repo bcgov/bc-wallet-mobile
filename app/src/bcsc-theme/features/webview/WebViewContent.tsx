@@ -1,5 +1,4 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { createWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -26,21 +25,16 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
    * @type {() => void}
    */
   onLoaded?: () => void
-  /**
-   * When true, skips injecting theme/styles (background, colors, link styling, removal of header/footer).
-   * Use for pages that should keep their own layout (e.g. "Where to use").
-   */
-  disableInjectedStyles?: boolean
 }
 
 /**
- * A WebView component that loads a given URL with injected JavaScript
+ * A WebView component that loads a given URL or renders HTML content.
  * Automatically applies accessibility font scaling based on device settings.
  *
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {React.ReactElement} The rendered WebView component.
  */
-const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded, disableInjectedStyles = false }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -119,10 +113,6 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded, di
       userAgent="Single App"
       // Accessibility: Apply font scaling for dynamic text sizing
       textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={
-        html || disableInjectedStyles ? undefined : createWebViewJavascriptInjection(ColorPalette, fontScale)
-      }
-      onMessage={() => {}} // Required for injectedJavaScript to work
       onLoad={onLoaded}
     />
   )

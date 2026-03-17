@@ -102,12 +102,7 @@ const ServiceLoginUnavailableView = ({
           <Link
             linkText={t('BCSC.Services.ReportSuspicious')}
             testID={testIdWithKey('ReportSuspiciousLink')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.MainWebView, {
-                title: t('BCSC.Screens.HelpCentre'),
-                url: REPORT_SUSPICIOUS_URL,
-              })
-            }}
+            onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
           />
         </ThemedText>
       </View>
