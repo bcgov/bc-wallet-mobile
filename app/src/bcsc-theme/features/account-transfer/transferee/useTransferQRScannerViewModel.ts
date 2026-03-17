@@ -18,7 +18,7 @@ import { useCameraPermission } from 'react-native-vision-camera'
 const useTransferQRScannerViewModel = () => {
   const { deviceAttestation, authorization, token } = useApi()
   const apiClient = useBCSCApiClient()
-  const { updateTokens } = useSecureActions()
+  const { updateTokens, updateUserInfo, updateDeviceCodes } = useSecureActions()
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const [store] = useStore<BCState>()
   const [isLoading, setIsLoading] = useState(false)
@@ -26,7 +26,6 @@ const useTransferQRScannerViewModel = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
-  const { updateUserInfo, updateDeviceCodes } = useSecureActions()
   const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
   const registrationPromiseRef = useRef<Promise<void>>(Promise.resolve())
 
@@ -119,7 +118,7 @@ const useTransferQRScannerViewModel = () => {
         })
 
         if (!response) {
-          throw t('BCSC.Scan.NoAttestationResponse')
+          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAttestationResponse'))
         }
 
         // fetch tokens for the new device
