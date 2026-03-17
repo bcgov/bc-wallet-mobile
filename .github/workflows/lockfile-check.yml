@@ -81,9 +81,7 @@ jobs:
 
       - name: Regenerate gradle lockfiles
         working-directory: app/android
-        run: |
-          ./gradlew dependencies --write-locks
-          ./gradlew app:dependencies --write-locks
+        run: ./gradlew app:dependencies dependencies --write-locks
 
       - name: Check gradle lockfiles are up to date
         run: |
