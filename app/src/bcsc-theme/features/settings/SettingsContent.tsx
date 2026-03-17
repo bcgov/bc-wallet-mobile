@@ -2,7 +2,13 @@ import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import {
+  ACCESSIBILITY_URL,
+  ANALYTICS_URL,
+  DEFAULT_AUTO_LOCK_TIME_MIN,
+  FEEDBACK_URL,
+  TERMS_OF_USE_URL,
+} from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -192,7 +198,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
   const showEditNickname = store.bcscSecure.verified && onEditNickname
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
-  const autoLockTimeText = `${store.preferences.autoLockTime} min`
+  const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
 
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>

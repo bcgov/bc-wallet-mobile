@@ -48,7 +48,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
           ]
         }
       >
-        App reset for security
+        BCSC.AppReset.Title
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -64,7 +64,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
           ]
         }
       >
-        For security reasons, you must set and keep a passcode on your phone.
+        BCSC.AppReset.Body1
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -80,7 +80,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
           ]
         }
       >
-        It looks like you may have turned off the passcode on this device.
+        BCSC.AppReset.Body2
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -96,7 +96,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
           ]
         }
       >
-        When you do this, your app is reset and you need to set it up again.
+        BCSC.AppReset.Body3
       </Text>
     </View>
   </RCTScrollView>
@@ -115,7 +115,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
     }
   >
     <View
-      accessibilityLabel="Set Up App"
+      accessibilityLabel="BCSC.AppReset.SetUpApp"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -187,12 +187,12 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
             ]
           }
         >
-          Set Up App
+          BCSC.AppReset.SetUpApp
         </Text>
       </View>
     </View>
     <View
-      accessibilityLabel="Learn More"
+      accessibilityLabel="BCSC.AppReset.LearnMore"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -265,7 +265,7 @@ exports[`DeviceAuthAppResetScreen renders correctly 1`] = `
             ]
           }
         >
-          Learn More
+          BCSC.AppReset.LearnMore
         </Text>
       </View>
     </View>
