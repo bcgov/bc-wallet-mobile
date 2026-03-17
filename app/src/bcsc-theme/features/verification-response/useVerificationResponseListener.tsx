@@ -10,17 +10,18 @@ import { useCallback, useEffect } from 'react'
 import { BCSCScreens } from '../../types/navigators'
 
 /**
- * Hook that listens for verification response push notifications and navigates to the success screen.
+ * Hook that listens for verification response push notifications and navigates accordingly.
  *
  * This hook should be used in the VerifyStack navigator to handle the case where a user
- * receives a push notification indicating their verification has been approved.
+ * receives a push notification indicating their verification has been reviewed.
  *
  * Handles verification response events:
  *
  * Request reviewed (send-video): The notification indicates the video was reviewed.
  *    - First checks verification status via API
  *    - If status is 'verified', fetches tokens via checkDeviceCodeStatus, then navigates to success
- *    - If not verified, does not navigate (user should check manually)
+ *    - If status is 'cancelled', navigates to CancelledReview with the agent reason
+ *    - If status is 'pending', does not navigate (user should check manually)
  *
  * Token fetching happens in this hook before navigation. VerificationSuccessScreen handles
  * final account setup (marking verified, metadata cleanup, registration update).
@@ -80,7 +81,12 @@ export const useVerificationResponseListener = () => {
 
       if (status === 'cancelled') {
         logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
-        navigation.dispatch(CommonActions.navigate({ name: BCSCScreens.CancelledReview, params: { agentReason: status_message } }))
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: BCSCScreens.CancelledReview,
+            params: { agentReason: status_message },
+          })
+        )
         return
       }
 

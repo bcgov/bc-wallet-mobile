@@ -190,6 +190,7 @@ describe('useVerificationResponseListener', () => {
           params: { agentReason: undefined },
         })
       })
+      expect(mockDispatch).toHaveBeenCalled()
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
