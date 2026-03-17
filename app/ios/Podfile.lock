@@ -1,6 +1,5 @@
 PODS:
   - anoncreds (0.3.4):
-
     - React
     - React-callinvoker
     - React-Core
