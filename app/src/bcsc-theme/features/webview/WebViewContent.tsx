@@ -1,7 +1,7 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
-import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
@@ -111,8 +111,9 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       sharedCookiesEnabled={true}
       thirdPartyCookiesEnabled={true}
       userAgent="Single App"
-      // Accessibility: Apply font scaling for dynamic text sizing
-      textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
+      // Accessibility: Apply font scaling for dynamic text sizing, currently only impacts Android
+      // For iOS we apply font scaling to the HTML content itself, so it scales appropriately
+      textZoom={Math.round(fontScale * 100)}
       onLoad={onLoaded}
     />
   )

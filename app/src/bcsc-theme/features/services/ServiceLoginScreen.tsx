@@ -58,14 +58,7 @@ const ServiceLoginLoadingView = () => (
   </SafeAreaView>
 )
 
-const ServiceLoginUnavailableView = ({
-  state,
-  styles,
-  ColorPalette,
-  t,
-  logger,
-  navigation,
-}: ServiceLoginUnavailableViewProps) => (
+const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
       <View style={styles.contentContainer}>

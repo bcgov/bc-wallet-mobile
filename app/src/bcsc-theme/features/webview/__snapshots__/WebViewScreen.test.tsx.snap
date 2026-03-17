@@ -31,6 +31,7 @@ exports[`WebViewScreen renders correctly 1`] = `
     }
   }
   testID="mocked-webview"
+  textZoom={200}
   thirdPartyCookiesEnabled={true}
   userAgent="Single App"
 />
