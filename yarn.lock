@@ -13000,7 +13000,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:^4.5.4":
+"fast-xml-parser@npm:4.5.4":
   version: 4.5.4
   resolution: "fast-xml-parser@npm:4.5.4"
   dependencies:
