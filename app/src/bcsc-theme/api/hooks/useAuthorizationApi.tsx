@@ -4,7 +4,7 @@ import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
-const IAS_SCOPE = 'openid profile address offline_access'
+const IAS_SCOPE = 'openid profile email address offline_access'
 
 export enum DeviceVerificationOption {
   LIVE_VIDEO_CALL = 'video_call',
