@@ -9,10 +9,19 @@ interface PINInputProps {
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
+  /** Test ID for e2e. Pass e.g. testIdWithKey('PINInput1') to distinguish multiple inputs. */
+  testID?: string
   ref?: React.Ref<TextInput>
 }
 
-export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus = false, ref }: PINInputProps) => {
+export const PINInput = ({
+  onPINChange,
+  onPINComplete,
+  errorMessage,
+  autoFocus = false,
+  testID,
+  ref,
+}: PINInputProps) => {
   const [pin, setPin] = useState('')
   const { ColorPalette, Spacing, TextTheme, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
@@ -67,6 +76,7 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
+          testID={testID}
           style={styles.input}
           value={pin}
           onChangeText={handlePINChange}

@@ -195,10 +195,16 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   return (
     <ScreenWrapper padded keyboardActive controls={controls}>
       <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
-      <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
+      <PINInput
+        testID={testIdWithKey('PINInput1')}
+        onPINChange={handlePIN1Change}
+        onPINComplete={handlePIN1Complete}
+        errorMessage={errorMessage1}
+      />
       <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
       <PINInput
         ref={pin2Ref}
+        testID={testIdWithKey('PINInput2')}
         onPINChange={handlePIN2Change}
         onPINComplete={handlePIN2Complete}
         errorMessage={errorMessage2}
