@@ -9,8 +9,8 @@ interface PINInputProps {
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
-  /** Test ID for e2e. Pass e.g. testIdWithKey('PINInput1') to distinguish multiple inputs. */
-  testID?: string
+  /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
+  testIDKey?: string
   ref?: React.Ref<TextInput>
 }
 
@@ -19,7 +19,7 @@ export const PINInput = ({
   onPINComplete,
   errorMessage,
   autoFocus = false,
-  testID,
+  testIDKey,
   ref,
 }: PINInputProps) => {
   const [pin, setPin] = useState('')
@@ -76,7 +76,7 @@ export const PINInput = ({
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
-          testID={testID}
+          testID={testIDKey ? testIdWithKey(testIDKey) : undefined}
           style={styles.input}
           value={pin}
           onChangeText={handlePINChange}
@@ -95,7 +95,7 @@ export const PINInput = ({
         <TouchableOpacity
           style={styles.eyeIcon}
           onPress={toggleVisibility}
-          testID={testIdWithKey('VisibilityButton')}
+          testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
           accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
         >
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
