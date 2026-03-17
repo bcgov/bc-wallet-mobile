@@ -1662,5 +1662,25 @@ describe('useAlerts', () => {
         })
       })
     })
+
+    describe('deviceAuthenticationErrorAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+        result.current.deviceAuthenticationErrorAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.DeviceAuthenticationError.Title',
+          'Alerts.DeviceAuthenticationError.Description',
+          {
+            event: AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+            actions: [{ text: 'Global.OK' }],
+          }
+        )
+      })
+    })
   })
 })

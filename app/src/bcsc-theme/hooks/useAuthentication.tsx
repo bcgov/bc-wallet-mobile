@@ -1,5 +1,6 @@
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -28,6 +29,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
+  const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
 
   /**
    * Performs device authentication (biometric or passcode)
@@ -62,10 +64,11 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     } catch (error) {
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
+      deviceAuthenticationErrorAlert()
     } finally {
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation])
+  }, [handleSuccessfulAuth, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert])
 
   /**
    * Handles unlocking the app using the user selected authentication method.
