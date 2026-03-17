@@ -98,7 +98,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         return
       }
 
-      // Show auth disclaimer screen until the user has dismisses it
+      // Show auth disclaimer screen until the user has dismissed it
       if (!store.bcsc.hasDismissedDeviceAuthInfo) {
         navigation.navigate(BCSCScreens.DeviceAuthInfo)
         return
