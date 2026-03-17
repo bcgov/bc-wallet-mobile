@@ -1,6 +1,7 @@
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
@@ -23,20 +24,57 @@ import useSecureActions from './useSecureActions'
  * @returns An object containing authentication actions (currently only `unlockApp`)
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
+  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
 
   /**
-   * Handles unlocking the app using the configured authentication method.
-   * If device authentication is configured and available, it will attempt to unlock using biometrics or passcode.
-   * Otherwise, it will check if the account is locked and navigate to the appropriate screen (PIN entry or lockout).
+   * Performs device authentication (biometric or passcode)
+   *
+   * @returns Promise that resolves when the device auth process is complete
+   */
+  const performDeviceAuth = useCallback(async () => {
+    let stopLoading
+
+    try {
+      stopLoading = loadingScreen.startLoading()
+
+      // Check if they have changed their device auth settings
+      const deviceAuthAvailable = await canPerformDeviceAuthentication()
+
+      if (!deviceAuthAvailable) {
+        navigation.navigate(BCSCScreens.DeviceAuthAppReset)
+        return
+      }
+
+      // Unlocks the app using device authentication (biometric or passcode)
+      const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
+
+      if (!success) {
+        logger.info('[Authentication:performDeviceAuth] Device authentication failed - user cancelled or auth failed')
+        // TODO: (MD) What should we do if the device authentication fails?
+        return
+      }
+
+      await handleSuccessfulAuth(walletKey)
+      logger.info('[Authentication:performDeviceAuth] Device authentication successful')
+    } catch (error) {
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
+    } finally {
+      stopLoading?.()
+    }
+  }, [handleSuccessfulAuth, loadingScreen, logger, navigation])
+
+  /**
+   * Handles unlocking the app using the user selected authentication method.
+   * If device auth is setup and available, biometrics will be used.
+   * Otherwise, it will navigate to the PIN screen.
    *
    * @returns Promise that resolves when the unlock process is complete
    */
   const unlockApp = useCallback(async () => {
-    let stopLoading
-
     try {
       const accountSecurityMethod = await getAccountSecurityMethod()
 
@@ -60,34 +98,18 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
         return
       }
 
-      stopLoading = loadingScreen.startLoading()
-
-      // Check if they have changed their device auth settings
-      const deviceAuthAvailable = await canPerformDeviceAuthentication()
-
-      if (!deviceAuthAvailable) {
-        navigation.navigate(BCSCScreens.DeviceAuthAppReset)
+      // Show auth disclaimer screen until the user has dismisses it
+      if (!store.bcsc.hasDismissedDeviceAuthInfo) {
+        navigation.navigate(BCSCScreens.DeviceAuthInfo)
         return
       }
 
-      // Unlocks the app using device authentication (biometric or passcode)
-      const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
-
-      if (!success) {
-        logger.info('[Authentication:UnlockApp] Device authentication failed - user cancelled or auth failed')
-        // TODO (MD): What should we do if the device authentication fails?
-        return
-      }
-
-      await handleSuccessfulAuth(walletKey)
-      logger.info('[Authentication:UnlockApp] Device authentication successful')
+      await performDeviceAuth()
     } catch (error) {
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
-    } finally {
-      stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation])
+  }, [logger, navigation, performDeviceAuth, store.bcsc.hasDismissedDeviceAuthInfo])
 
-  return useMemo(() => ({ unlockApp }), [unlockApp])
+  return useMemo(() => ({ unlockApp, performDeviceAuth }), [unlockApp, performDeviceAuth])
 }
