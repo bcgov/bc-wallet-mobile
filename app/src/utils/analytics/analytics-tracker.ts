@@ -1,0 +1,206 @@
+import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
+import { newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
+import { getBuildNumber, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
+import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
+
+const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
+const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
+
+type AnalyticsClient = typeof AnalyticsClient
+
+interface AnalyticsError {
+  code: string
+  message: string
+}
+
+const AnalyticsClient = {
+  newTracker,
+}
+
+/**
+ * AnalyticsTracker class to track analytics events.
+ *
+ * TODO (MD): Implement the `trackTimingEvent` method to track timing events.
+ *
+ * @see self hosted snowplow micro: https://docs.snowplow.io/docs/testing/snowplow-micro/basic-usage/
+ *
+ * @class
+ * @example
+ * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
+ *
+ * await analyticsTracker.initializeTracker()
+ *
+ * analyticsTracker.trackErrorEvent({code: 'NETWORK_ERROR', message: 'Failed to fetch data'})
+ * analyticsTracker.trackScreenEvent('HomeScreen', 'LoginScreen')
+ * analyticsTracker.trackAlertDisplayEvent(AlertEvent.SAMPLE_EVENT)
+ * analyticsTracker.trackAlertActionEvent(AlertEvent.SAMPLE_EVENT, 'OK')
+ */
+export class AnalyticsTracker {
+  private readonly namespace: string
+  private readonly endpoint: string
+  private readonly client: AnalyticsClient
+  private tracker?: ReactNativeTracker
+
+  constructor(namespace: string, endpoint: string, client = AnalyticsClient) {
+    this.namespace = namespace
+    this.endpoint = endpoint
+    this.client = client
+  }
+
+  /**
+   * Checks if Analytics has an initialized tracker.
+   *
+   * @returns {*} {boolean}
+   */
+  hasTracker(): boolean {
+    return Boolean(this.tracker)
+  }
+
+  /**
+   * Stops tracking and removes the tracker instance.
+   *
+   * @returns {*} {void}
+   */
+  stopTracking(): void {
+    removeTracker(this.namespace)
+    this.tracker = undefined
+  }
+
+  /**
+   * Sets the application ID for the tracker if the tracker is initialized.
+   *
+   * @param appId - The application ID to set for the tracker.
+   * @returns void
+   */
+  setAppId(appId: string): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.setAppId(appId)
+  }
+
+  /**
+   * Initializes the analytics tracker with the provided options.
+   *
+   * @param {string} appId - The application ID to use for tracking.
+   * @returns {*} {Promise<void>}
+   */
+  async initializeTracker(appId: string): Promise<void> {
+    this.tracker = await this.client.newTracker({
+      namespace: this.namespace,
+      endpoint: this.endpoint,
+      appId: appId,
+      protocol: __DEV__ ? 'http' : 'https',
+      eventMethod: 'post',
+      appVersion: getVersion(),
+      appBuild: getBuildNumber(),
+      userId: getUniqueId(),
+      ipAddress: await getIpAddress().catch(() => ''),
+      devicePlatform: 'mob',
+      deepLinkContext: false,
+      screenContext: false, // Tracked manually via trackScreenEvent
+      lifecycleAutotracking: true,
+      screenEngagementAutotracking: false,
+      // TODO (bm): Re-enable once we figure out the bug with the AsyncStorage keys
+      installAutotracking: false, // Disabled: Causes JSON parse errors with malformed AsyncStorage keys
+      useAsyncStorageForEventStore: true,
+      timezone: 'America/Vancouver',
+      language: 'en',
+      platformContext: true,
+      platformContextProperties: getPlatformContextProperties(true),
+      platformContextRetriever: getPlatformContextRetriever(true),
+    })
+  }
+
+  /**
+   * Tracks a screen view event.
+   *
+   * @param {string} screenName - The name of the current screen.
+   * @param {string} [previousScreenName] - The name of the previous screen.
+   * @returns {*} {void}
+   */
+  trackScreenEvent(screenName: string, previousScreenName?: string): void {
+    if (!this.tracker) {
+      return
+    }
+
+    // Avoid tracking if the screen name hasn't changed
+    if (screenName === previousScreenName) {
+      return
+    }
+
+    this.tracker.trackScreenViewEvent({
+      name: screenName,
+      previousName: previousScreenName,
+    })
+  }
+
+  /**
+   * Tracks an error event.
+   *
+   * Note: This uses the `idim` snowplow `mobile_error` schema.
+   *
+   * @param {AnalyticsError} error - The error to track.
+   * @returns {*} {void}
+   */
+  trackErrorEvent(error: AnalyticsError): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.trackSelfDescribingEvent({
+      schema: ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA,
+      data: {
+        errorCode: error.code,
+        body: error.message,
+      },
+    })
+  }
+
+  /**
+   * Tracks an alert display event.
+   *
+   * Note: This uses the `idim` snowplow `action` schema.
+   *
+   * @param {AppEventCode} appEvent - The app event (alert) to track.
+   * @returns {*} {void}
+   */
+  trackAlertDisplayEvent(appEvent: AppEventCode): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.trackSelfDescribingEvent({
+      schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
+      data: {
+        action: AlertInteractionEvent.ALERT_DISPLAY,
+        text: appEvent,
+      },
+    })
+  }
+
+  /**
+   * Tracks an alert action event.
+   *
+   * Note: This uses the `idim` snowplow `action` schema.
+   *
+   * @param {AppEventCode} appEvent - The app event (alert) to track.
+   * @param {string} actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
+   * @returns {*} {void}
+   */
+  trackAlertActionEvent(appEvent: AppEventCode, actionLabel: string): void {
+    if (!this.tracker) {
+      return
+    }
+
+    this.tracker.trackSelfDescribingEvent({
+      schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
+      data: {
+        action: AlertInteractionEvent.ALERT_ACTION,
+        text: appEvent,
+        message: actionLabel,
+      },
+    })
+  }
+}

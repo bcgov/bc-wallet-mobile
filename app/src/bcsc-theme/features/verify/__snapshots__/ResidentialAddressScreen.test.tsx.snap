@@ -1,0 +1,855 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ResidentialAddress renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "flexGrow": 1,
+          },
+          undefined,
+        ]
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "padding": 16,
+              },
+              {
+                "gap": 24,
+              },
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.Address.Heading
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.Address.Paragraph
+          </Text>
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/streetAddress1-label"
+            >
+              BCSC.Address.StreetAddressLabel
+            </Text>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
+                  },
+                  false,
+                  undefined,
+                ]
+              }
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.StreetAddressLabel"
+                autoComplete="address-line1"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/streetAddress1-input"
+                textContentType="streetAddressLine1"
+                value=""
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/streetAddress1-subtext"
+            >
+              BCSC.Address.StreetAddressSubtext
+            </Text>
+          </View>
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/streetAddress2-label"
+            >
+              BCSC.Address.StreetAddress2Label
+            </Text>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
+                  },
+                  false,
+                  undefined,
+                ]
+              }
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.StreetAddress2Label"
+                autoComplete="address-line2"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/streetAddress2-input"
+                textContentType="streetAddressLine2"
+                value=""
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/streetAddress2-subtext"
+            >
+              BCSC.Address.StreetAddress2Subtext
+            </Text>
+          </View>
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/city-label"
+            >
+              BCSC.Address.CityLabel
+            </Text>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
+                  },
+                  false,
+                  undefined,
+                ]
+              }
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.CityLabel"
+                autoComplete="postal-address-locality"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/city-input"
+                textContentType="addressCity"
+                value=""
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/city-subtext"
+            >
+              BCSC.Address.CitySubtext
+            </Text>
+          </View>
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/province-label"
+            >
+              BCSC.Address.ProvinceLabel
+            </Text>
+            <View
+              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
+              accessibilityRole="combobox"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": false,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#D3D3D3",
+                  "borderColor": "#D3D3D3",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "color": "#313132",
+                  "flexDirection": "row",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 16,
+                  "justifyContent": "space-between",
+                  "padding": 10,
+                  "paddingHorizontal": 16,
+                }
+              }
+              testID="com.ariesbifold:id/province-input"
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "flex": 1,
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#606060",
+                      },
+                    ],
+                  ]
+                }
+              >
+                BCSC.Address.ProvinceSubtext
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#606060",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/province-subtext"
+            >
+              BCSC.Address.ProvinceSubtext
+            </Text>
+          </View>
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
+                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/postalCode-label"
+            >
+              BCSC.Address.PostalCodeLabel
+            </Text>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
+                  },
+                  false,
+                  undefined,
+                ]
+              }
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.PostalCodeLabel"
+                autoCapitalize="characters"
+                autoComplete="postal-code"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/postalCode-input"
+                textContentType="postalCode"
+                value=""
+              />
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/postalCode-subtext"
+            >
+              BCSC.Address.PostalCodeSubtext
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "marginTop": 48,
+                "width": "100%",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "marginBottom": 20,
+                }
+              }
+            >
+              <View
+                accessibilityLabel="Global.Continue"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "backgroundColor": "#003366",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/ResidentialAddressContinue"
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
+                      ]
+                    }
+                  >
+                    Global.Continue
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</RNCSafeAreaView>
+`;

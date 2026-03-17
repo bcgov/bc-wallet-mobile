@@ -1,16 +1,23 @@
+import { isAppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
+import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
+import { useCallback } from 'react'
+import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import useApi from '../api/hooks/useApi'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
-import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
-import { useCallback } from 'react'
 
 // Only a subset of the ClientMetadata is needed for this hook
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
 
-// The result type is a tuple of [quickLoginUrl, quickLoginError]
-type QuickLoginURLResult = { success: true; url: string } | { success: false; error: string }
+// Discriminated union for clearer guarantees
+type QuickLoginURLResult =
+  | { success: true; url: string }
+  | { success: false; error: string }
+  | { success: false; handled: true }
 
 // Represents a stub service client with an empty client_ref_id
 export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
@@ -29,6 +36,8 @@ export const useQuickLoginURL = () => {
   const { jwks } = useApi()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const alerts = useAlerts(navigation)
 
   /**
    * Generates a quick login URL for the given service client.
@@ -47,7 +56,11 @@ export const useQuickLoginURL = () => {
           return { success: false, error: 'No access token available' }
         }
 
-        const [tokens, account, jwk] = await Promise.all([getNotificationTokens(), getAccount(), jwks.getFirstJwk()])
+        const [tokens, account, jwk] = await Promise.all([
+          getNotificationTokens(logger),
+          getAccount(),
+          jwks.getFirstJwk(),
+        ])
 
         if (!tokens) {
           return { success: false, error: 'No notification tokens received' }
@@ -57,10 +70,6 @@ export const useQuickLoginURL = () => {
           return { success: false, error: 'No account data received' }
         }
 
-        if (!jwk) {
-          return { success: false, error: 'No JWK received from server' }
-        }
-
         const loginHint = await createQuickLoginJWT(
           client.tokens.access_token,
           account.clientID,
@@ -68,17 +77,22 @@ export const useQuickLoginURL = () => {
           serviceClient.client_ref_id,
           jwk,
           tokens.fcmDeviceToken,
-          tokens.apnsToken
+          tokens.deviceToken
         )
 
         const encodedTokenHint = encodeURIComponent(loginHint)
         return { success: true, url: `${serviceClient.initiate_login_uri}?login_hint=${encodedTokenHint}` }
       } catch (error) {
+        if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
+          alerts.missingJwkAlert()
+          return { success: false, handled: true }
+        }
+
         logger.error('Error creating quick login URL', error as Error)
         return { success: false, error: `Error creating quick login URL: ${(error as Error).message}` }
       }
     },
-    [client, jwks, logger]
+    [alerts, client, jwks, logger]
   )
 
   return getQuickLoginURL

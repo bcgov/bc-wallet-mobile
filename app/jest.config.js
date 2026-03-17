@@ -2,7 +2,7 @@ module.exports = {
   preset: 'react-native',
   testTimeout: 10000,
   setupFiles: ['<rootDir>/jestSetup.js'],
-  setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect', '<rootDir>/jestSetupAfterEnv.js'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleNameMapper: {
     '\\.(jpg|ico|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
@@ -14,15 +14,20 @@ module.exports = {
     '@credo-ts/core': require.resolve('@credo-ts/core'),
     '@credo-ts/anoncreds': require.resolve('@credo-ts/anoncreds'),
     '@bifold/core': require.resolve('@bifold/core'),
-    '@hyperledger/aries-askar-react-native': require.resolve('@hyperledger/aries-askar-react-native'),
+    '@openwallet-foundation/askar-react-native': require.resolve('@openwallet-foundation/askar-react-native'),
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules\\/(?!(.*react-native.*)|(uuid)|(@aries-framework\\/core)|(@aries-framework\\/anoncreds)|(@hyperledger\\/aries-bifold-core))',
+    'node_modules\\/(?!(.*react-native.*)|(uuid)|(@aries-framework\\/core)|(@aries-framework\\/anoncreds)|(@hyperledger\\/aries-bifold-core)|(@pexip))',
   ],
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
   testPathIgnorePatterns: ['\\.snap$', '<rootDir>/node_modules/', '<rootDir>/lib', '<rootDir>/__tests__/contexts/'],
   cacheDirectory: '.jest/cache',
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx,js,jsx}',
+    '!src/**/*.d.ts',
+    '!src/screens/ErrorAlertTest.tsx', // Dev QA screen — manual verification only
+  ],
 }

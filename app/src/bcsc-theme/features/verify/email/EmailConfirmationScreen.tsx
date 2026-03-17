@@ -1,25 +1,29 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
+  ScreenWrapper,
   ThemedText,
   ToastType,
+  TOKENS,
   useAnimatedComponents,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import { Alert, Linking, Platform, StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { Alert, Linking, Platform, StyleSheet } from 'react-native'
 import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmation-code-field'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EmailConfirmationScreen>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EmailConfirmation>
   route: {
     params: {
       emailAddressId: string
@@ -29,8 +33,9 @@ type EmailConfirmationScreenProps = {
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { evidence } = useApi()
+  const { updateUserInfo } = useSecureActions()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
@@ -42,23 +47,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     value: code,
     setValue: setCode,
   })
+  const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
-    },
     codeFieldRoot: {
       marginTop: Spacing.lg,
       marginBottom: Spacing.md,
@@ -82,7 +74,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
-      setError('Please enter a six digit verification code')
+      setError(t('BCSC.EmailConfirmation.CodeError'))
       return
     }
 
@@ -91,7 +83,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     try {
       setLoading(true)
       await evidence.sendEmailVerificationCode(code, id)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email: store.bcsc.email, emailConfirmed: true }] })
+      await updateUserInfo({
+        email: store.bcscSecure.emailAddress,
+        isEmailVerified: true,
+      })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -99,7 +94,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         })
       )
     } catch (error) {
-      setError('Error verifying confirmation code')
+      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
     } finally {
       setLoading(false)
     }
@@ -110,17 +105,23 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
     try {
       setResendLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(store.bcsc.email!)
+
+      if (!store.bcscSecure.emailAddress) {
+        logger.error('No email address found in store')
+        throw new Error('No email address found in store, cannot resend verification code')
+      }
+
+      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.emailAddress)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
-        text1: 'Code resent',
+        text1: t('BCSC.EmailConfirmation.CodeResent'),
         bottomOffset: Spacing.lg,
         autoHide: true,
         visibilityTime: 1500,
       })
     } catch (error) {
-      setError('Error resending code')
+      setError(t('BCSC.EmailConfirmation.ErrorResendingCode'))
     } finally {
       setResendLoading(false)
     }
@@ -135,76 +136,72 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     }
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('Unable to open email', 'Please check your email manually using your preferred email app.', [
-        { text: 'OK' },
+      Alert.alert(t('BCSC.EmailConfirmation.UnableToOpenEmail'), t('BCSC.EmailConfirmation.UnableToOpenEmailMessage'), [
+        { text: t('BCSC.EmailConfirmation.OKButton') },
       ])
     })
   }
 
+  const controls = (
+    <>
+      <Button
+        buttonType={ButtonType.Primary}
+        onPress={handleSubmit}
+        title={t('Global.Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        testID={'ContinueButton'}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+      <Button
+        buttonType={ButtonType.Secondary}
+        onPress={handleResendCode}
+        title={t('BCSC.EmailConfirmation.ResendCode')}
+        accessibilityLabel={t('BCSC.EmailConfirmation.ResendCode')}
+        testID={'ResendCodeButton'}
+      >
+        {resendLoading && <ButtonLoading />}
+      </Button>
+      <Button
+        buttonType={ButtonType.Secondary}
+        onPress={handleGoToEmail}
+        title={t('BCSC.EmailConfirmation.GoToEmail')}
+        accessibilityLabel={t('BCSC.EmailConfirmation.GoToEmail')}
+        testID={'GoToEmailButton'}
+      />
+    </>
+  )
+
   return (
-    <KeyboardView>
-      <View style={styles.pageContainer}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Verify your email
-          </ThemedText>
-          <ThemedText>
-            Enter the six digit code sent to your email <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
-          </ThemedText>
-          <CodeField
-            {...props}
-            value={code}
-            onChangeText={setCode}
-            cellCount={6}
-            rootStyle={styles.codeFieldRoot}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="sms-otp"
-            renderCell={({ index, symbol, isFocused }) => (
-              <ThemedText
-                key={index}
-                style={[styles.cell, isFocused && styles.focusCell]}
-                onLayout={getCellOnLayoutHandler(index)}
-              >
-                {symbol || (isFocused ? <Cursor /> : null)}
-              </ThemedText>
-            )}
-          />
-          {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            buttonType={ButtonType.Primary}
-            onPress={handleSubmit}
-            title={'Continue'}
-            accessibilityLabel={'Continue'}
-            testID={'ContinueButton'}
+    <ScreenWrapper keyboardActive={true} controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.EmailConfirmation.VerifyYourEmail')}
+      </ThemedText>
+      <ThemedText>
+        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
+        <ThemedText variant={'bold'}>{store.bcscSecure.emailAddress}</ThemedText>
+      </ThemedText>
+      <CodeField
+        {...props}
+        value={code}
+        onChangeText={setCode}
+        cellCount={6}
+        rootStyle={styles.codeFieldRoot}
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        renderCell={({ index, symbol, isFocused }) => (
+          <ThemedText
+            key={index}
+            style={[styles.cell, isFocused && styles.focusCell]}
+            onLayout={getCellOnLayoutHandler(index)}
           >
-            {loading && <ButtonLoading />}
-          </Button>
-          <View style={styles.secondButton}>
-            <Button
-              buttonType={ButtonType.Secondary}
-              onPress={handleResendCode}
-              title={'Resend code'}
-              accessibilityLabel={'Resend code'}
-              testID={'ResendCodeButton'}
-            >
-              {resendLoading && <ButtonLoading />}
-            </Button>
-          </View>
-          <View style={styles.secondButton}>
-            <Button
-              buttonType={ButtonType.Secondary}
-              onPress={handleGoToEmail}
-              title={'Go to my email'}
-              accessibilityLabel={'Go to my email'}
-              testID={'GoToEmailButton'}
-            />
-          </View>
-        </View>
-      </View>
-    </KeyboardView>
+            {symbol || (isFocused ? <Cursor /> : null)}
+          </ThemedText>
+        )}
+      />
+      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+    </ScreenWrapper>
   )
 }
 

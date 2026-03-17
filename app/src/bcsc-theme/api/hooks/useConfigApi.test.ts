@@ -1,0 +1,86 @@
+import useConfigApi from '@bcsc-theme/api/hooks/useConfigApi'
+import { renderHook } from '@testing-library/react-native'
+import { Platform } from 'react-native'
+
+const mockApiClient = {
+  baseURL: 'https://mock-api-base-url.com',
+  endpoints: {
+    cardTap: 'https://mock-api-base-url.com/cardtap',
+  },
+  get: jest.fn().mockImplementation(() => Promise.resolve({ data: {} })),
+}
+
+describe('useConfigApi', () => {
+  beforeEach(() => {
+    Platform.OS = 'ios'
+    jest.clearAllMocks()
+  })
+
+  const config = renderHook(() => useConfigApi(mockApiClient as any)).result.current
+
+  describe('getServerStatus', () => {
+    it('calls the correct endpoint for android', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: {
+          date: 'Wed, 01 Jan 2025 00:00:00 GMT',
+        },
+      })
+      Platform.OS = 'android'
+
+      // Call the method we're testing
+      const response = await config.getServerStatus()
+
+      // Verify correct endpoint called with the mocked endpoints
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        `${mockApiClient.endpoints.cardTap}/v3/status/android/mobile_card`,
+        {
+          skipBearerAuth: true,
+        }
+      )
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
+    })
+
+    it('calls the correct endpoint for ios', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: { date: 'Wed, 01 Jan 2025 00:00:00 GMT' },
+      })
+      const response = await config.getServerStatus()
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/status/ios/mobile_card`, {
+        skipBearerAuth: true,
+      })
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
+    })
+
+    it('handles API errors gracefully', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+      await expect(config.getServerStatus()).rejects.toThrow('Network error')
+    })
+  })
+
+  describe('getTermsOfUse', () => {
+    it('calls the correct endpoint', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { version: '8', date: '2025-06-06', html: '<p>Terms content</p>' },
+      })
+      const response = await config.getTermsOfUse()
+
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`, {
+        skipBearerAuth: true,
+      })
+      expect(response).toEqual({ version: '8', date: '2025-06-06', html: '<p>Terms content</p>' })
+    })
+
+    it('handles API errors gracefully', async () => {
+      // eslint-disable-next-line no-extra-semi
+      ;(mockApiClient.get as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+      await expect(config.getTermsOfUse()).rejects.toThrow('Network error')
+    })
+  })
+})

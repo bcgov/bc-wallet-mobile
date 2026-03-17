@@ -1,3 +1,5 @@
+import { AttestationRestrictions } from '@/constants'
+import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
   AttestationEventTypes,
@@ -24,12 +26,10 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@credo-ts/core'
-import { DeviceEventEmitter, Platform } from 'react-native'
-import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
-
-import { AttestationRestrictions } from '@/constants'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
+import { DeviceEventEmitter, Platform } from 'react-native'
+import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -76,16 +76,18 @@ interface AttestationProofRequestFormat {
   request: IndyRequest & AnonCredsRequest
 }
 
+// Error codes from the central error registry for consistent tracking
 const AttestationErrorCodes = {
-  BadInvitation: 2027,
-  ReceiveInvitationError: 2028,
-  GeneralProofError: 2029,
-  FailedToConnectToAttestationAgent: 2030,
-  FailedToFetchNonceForAttestation: 2031,
-  FailedToGenerateAttestation: 2032,
-  FailedToRequestAttestation: 2033,
-  FailedToValidateAttestation: 2034,
-  IntegrityUnavailable: 2035,
+  BadInvitation: getErrorDefinition('ATTESTATION_BAD_INVITATION').statusCode,
+  ReceiveInvitationError: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').statusCode,
+  GeneralProofError: getErrorDefinition('ATTESTATION_GENERAL_PROOF_ERROR').statusCode,
+  FailedToConnectToAttestationAgent: getErrorDefinition('ATTESTATION_CONNECTION_ERROR').statusCode,
+  FailedToFetchNonceForAttestation: getErrorDefinition('ATTESTATION_NONCE_ERROR').statusCode,
+  FailedToGenerateAttestation: getErrorDefinition('ATTESTATION_GENERATION_ERROR').statusCode,
+  FailedToRequestAttestation: getErrorDefinition('ATTESTATION_REQUEST_ERROR').statusCode,
+  FailedToValidateAttestation: getErrorDefinition('ATTESTATION_VALIDATION_ERROR').statusCode,
+  IntegrityUnavailable: getErrorDefinition('ATTESTATION_INTEGRITY_UNAVAILABLE').statusCode,
+  UnsupportedPlatform: getErrorDefinition('ATTESTATION_UNSUPPORTED_PLATFORM').statusCode,
 } as const
 
 type Restriction = {
@@ -571,8 +573,12 @@ export class AttestationMonitor implements AttestationMonitorI {
         return this.generateGoogleAttestation(nonce)
 
       default:
-        // TODO(jl): throw unsupported platform error
-        break
+        throw new BifoldError(
+          'Unsupported Platform',
+          'Device attestation is not supported on this platform.',
+          `Platform "${Platform.OS}" is not supported for attestation.`,
+          AttestationErrorCodes.UnsupportedPlatform
+        )
     }
   }
 

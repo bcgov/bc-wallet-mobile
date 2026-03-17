@@ -1,7 +1,107 @@
 import { NativeModules, Platform } from 'react-native';
-import NativeBcscCoreSpec, { type NativeAccount, type JWK, type JWTClaims } from './NativeBcscCore';
-export type { NativeAccount, JWK } from './NativeBcscCore';
-export { AccountSecurityMethod } from './NativeBcscCore';
+import NativeBcscCoreSpec, {
+  type JWK,
+  type JWTClaims,
+  type LoginChallengeResult,
+  type NativeAccount,
+  type NativeAuthorizationRequest,
+  type NativeFilesScan,
+  type NativeSavedService,
+} from './NativeBcscCore';
+export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
+export type {
+  JWK,
+  LoginChallenge,
+  LoginChallengeResult,
+  NativeAccount,
+  NativeAddress,
+  NativeAuthorizationRequest,
+  NativeFilesScan,
+  NativeSavedService,
+} from './NativeBcscCore';
+
+/**
+ * Standard error codes used by native modules when rejecting promises.
+ * These codes are consistent across iOS and Android platforms.
+ * Access via `error.code` on caught native module errors.
+ */
+export const BcscNativeErrorCodes = {
+  // --- DCR error codes (E_120_* series) ---
+  /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
+  TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
+  /** toJSONString method failed while serializing device info JWT (error 120-2) */
+  TOJSONSTRING_METHOD_FAILURE: 'E_120_TOJSONSTRING_METHOD_FAILURE',
+  /** Keychain key already exists during key pair generation (error 120-3) */
+  KEYCHAIN_KEY_EXISTS: 'E_120_KEYCHAIN_KEY_EXISTS_ERROR',
+  /** Keychain key does not exist when retrieving key pair (error 120-4) */
+  KEYCHAIN_KEY_DOESNT_EXIST: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+  /** Keychain key generation error during key pair generation (error 120-5) */
+  KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
+  /** Error creating device info JWT during client registration (error 120-6) */
+  JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+
+  // --- Native error codes (see per-entry docs for platform availability) ---
+
+  // Account / Token
+  /** Account not found in native storage */
+  ACCOUNT_NOT_FOUND: 'E_ACCOUNT_NOT_FOUND',
+  /** Invalid token type passed to native module */
+  INVALID_TOKEN_TYPE: 'E_INVALID_TOKEN_TYPE',
+  /** Error deleting a token from native storage */
+  TOKEN_DELETE_ERROR: 'E_TOKEN_DELETE_ERROR',
+
+  // Key operations
+  /** Key pair not found for the given label */
+  KEY_NOT_FOUND: 'E_KEY_NOT_FOUND',
+  /** Failed to export or retrieve key material */
+  KEY_EXPORT_FAILED: 'E_KEY_EXPORT_FAILED',
+  /** Unexpected error during key operations */
+  KEY_ERROR: 'E_KEY_ERROR',
+  /** Android KeyStore is not available on this device (Android-only) */
+  KEYSTORE_UNAVAILABLE: 'E_KEYSTORE_UNAVAILABLE',
+  /** Error accessing the platform keystore */
+  KEYSTORE_ERROR: 'E_KEYSTORE_ERROR',
+
+  // JWT / Signing
+  /** Device UUID not available (iOS-only) */
+  UUID_NOT_FOUND: 'E_UUID_NOT_FOUND',
+  /** No signing keys available */
+  NO_KEYS_FOUND: 'E_NO_KEYS_FOUND',
+  /** Key pair exists but could not be loaded */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JWT signing or serialization failed */
+  JWT_SIGN_FAILED: 'E_JWT_SIGN_FAILED',
+
+  // PIN
+  /** Invalid parameters passed to a PIN operation */
+  INVALID_PARAMETERS: 'E_INVALID_PARAMETERS',
+  /** Failed to set PIN */
+  SET_PIN_FAILED: 'E_SET_PIN_FAILED',
+  /** Failed to delete PIN */
+  DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
+
+  // Parsing
+  /** JSON serialization failed in the native module */
+  JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
+  /** JWS token could not be parsed (malformed or invalid format) */
+  FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
+} as const;
+
+/**
+ * Shape of errors thrown by React Native native module promise rejections.
+ * The `code` property corresponds to the first argument passed to `reject()` / `promise.reject()`.
+ */
+export interface BcscNativeError extends Error {
+  code: string;
+}
+
+/**
+ * Type guard to check if an unknown error is a native module error with a `code` property.
+ */
+export const isBcscNativeError = (error: unknown): error is BcscNativeError => {
+  return error instanceof Error && 'code' in error;
+};
+
 export interface TokenInfo {
   id: string;
   type: TokenType;
@@ -23,6 +123,36 @@ export enum TokenType {
   Access = 0,
   Refresh = 1,
   Registration = 2,
+}
+
+/**
+ * BCSC Card Type enum matching native app enums.
+ * iOS: CredentialType in GlobalEnums.swift
+ * Android: BcscCardType in BcscCardType.java
+ */
+export enum BCSCCardType {
+  /** Photo BC Services Card */
+  PhotoCard = 'BC Services Card Photo',
+  /** Non-Photo BC Services Card */
+  NonPhotoCard = 'BC Services Card Non-Photo',
+  /** Combined BC Driver's Licence and Services Card */
+  ComboCard = 'BC Services Card Combo',
+  /** Non-BCSC verification */
+  NonBcsc = 'N/A',
+}
+
+/**
+ * BCSC Account Type enum matching native app enums.
+ * iOS: accountType string values in Credential.swift
+ * Android: BcscAccountType in BcscAccountType.kt
+ */
+export enum BCSCAccountType {
+  /** BC Services Card with photo */
+  PhotoCard = 'BC Services Card with photo',
+  /** BC Services Card without photo */
+  NonPhotoCard = 'BC Services Card without photo',
+  /** Other - no BC Services Card (non-BCSC verification) */
+  NoBcscCard = 'Other - no BC Services Card',
 }
 
 export interface KeyPair {
@@ -48,6 +178,60 @@ export interface ClientRegistrationInfo {
   keyIDs: string[];
   accessTokenIDs: string[];
   // Add other fields from ClientRegistration as needed, e.g., for authorizationRequest, credential
+}
+
+// Credential interfaces matching v3 structure
+export interface CredentialInfo {
+  // Core identification
+  issuer: string;
+  subject: string;
+  label: string;
+
+  // Timestamps
+  created: number; // Unix timestamp in seconds
+  lastUsed?: number | null; // Unix timestamp in seconds
+  updatedDate?: number | null; // Unix timestamp in seconds
+
+  // BCSC specific fields
+  bcscEvent: 'Authorization' | 'Renewal' | 'Replace' | 'Cancel' | 'Expire'; // Maps to BcscEvent enum
+  bcscReason: string; // Maps to BcscReason enum
+  bcscStatusDate?: number | null; // Unix timestamp in seconds
+  bcscEventDate?: number | null; // Unix timestamp in seconds
+
+  // Device and account info
+  devicesCount?: number | null;
+  maxDevices?: number | null;
+  cardType?: BCSCCardType;
+  accountType?: BCSCAccountType;
+
+  // Security and authentication
+  acr?: number | null; // Authentication Context Reference / LOA level
+
+  // Card expiry
+  cardExpiry?: string | null; // Card expiry date string
+  cardExpiryDateString?: string | null; // iOS format
+  cardExpiryWarningText?: string | null;
+
+  // UI state flags
+  hasShownExpiryAlert?: boolean;
+  hasShownFeedbackAlert?: boolean;
+
+  // Token references (iOS specific)
+  accessTokenIDs?: string[];
+  refreshTokenIDs?: string[];
+
+  // Client registration reference
+  clientID?: string | null;
+}
+
+// Simplified credential for basic operations
+export interface BasicCredentialInfo {
+  issuer: string;
+  subject: string;
+  label: string;
+  created: number;
+  cardType?: BCSCCardType;
+  accountType?: BCSCAccountType;
 }
 
 const LINKING_ERROR =
@@ -93,14 +277,8 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
  * Retrieves a token of a specified type.
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
- *          For Registration tokens, returns null for now.
  */
 export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
-  // For Registration token type, return null for now as requested
-  if (tokenType === TokenType.Registration) {
-    return null;
-  }
-
   // Pass the raw numeric value of the enum to the native side
   const nativeToken = await BcscCore.getToken(tokenType as number);
   if (!nativeToken) {
@@ -116,6 +294,69 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
 };
 
 /**
+ * Saves a token to secure native storage.
+ * @param tokenType The type of token (Access, Refresh, Registration)
+ * @param token The token string to store
+ * @param expiry Optional Unix timestamp in seconds when token expires
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setToken = async (tokenType: TokenType, token: string, expiry?: number): Promise<boolean> => {
+  return BcscCore.setToken(tokenType as number, token, expiry ?? -1);
+};
+
+/**
+ * Deletes a token from secure native storage.
+ * @param tokenType The type of token to delete (Access, Refresh, Registration)
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteToken = async (tokenType: TokenType): Promise<boolean> => {
+  return BcscCore.deleteToken(tokenType as number);
+};
+
+/**
+ * Sets the issuer in the file system for later reference.
+ * @param issuer The issuer string to set.
+ * @returns A promise that resolves to true if the issuer was set successfully.
+ */
+export const setIssuer = (issuer: string): Promise<boolean> => {
+  return BcscCore.setIssuer(issuer);
+};
+
+/**
+ * Gets the issuer from the file system.
+ * @returns A promise that resolves to the issuer string if found, otherwise null.
+ */
+export const getIssuer = (): Promise<string | null> => {
+  return BcscCore.getIssuer();
+};
+
+/**
+ * Scans the native Application Support directory and returns all file paths.
+ * Useful for diagnosing v3 vs v4 storage layouts.
+ * Example code to place in App.tsx:
+ *
+ * useEffect(() => {
+ *   getNativeFilesScan()
+ *     .then((scan) => {
+ *       logger.info(`[Native File Scan] bundleID: ${scan.bundleID}`)
+ *       logger.info(`[Native File Scan] bundleDirectory: ${scan.bundleDirectory}`)
+ *       logger.info(`[Native File Scan] bundleDirectoryExists: ${scan.bundleDirectoryExists}`)
+ *       logger.info(`[Native File Scan] fileCount: ${scan.fileCount}`)
+ *       scan.files.forEach((file) => {
+ *         logger.info(`[Native File Scan] ${file}`)
+ *       })
+ *     })
+ *     .catch((error) => {
+ *       const errorMsg = error instanceof Error ? error.message : String(error)
+ *       logger.error(`[Native File Scan] Error: ${errorMsg}`)
+ *     })
+ * }, [logger])
+ */
+export const getNativeFilesScan = (): Promise<NativeFilesScan> => {
+  return BcscCore.getNativeFilesScan();
+};
+
+/**
  * Sets the current account information.
  * @param account The Account object to set as the current account (without id, which will be generated).
  * @returns A promise that resolves when the account has been successfully set.
@@ -128,8 +369,19 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  * Retrieves the current account information.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
-export const getAccount = async (): Promise<NativeAccount | null> => {
+export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'> | null> => {
   return BcscCore.getAccount();
+};
+
+/**
+ * Gets the device ID using the platform-specific stable identifier.
+ * On Android: Uses Settings.Secure.ANDROID_ID
+ * On iOS: Uses UIDevice.current.identifierForVendor
+ * Falls back to a generated UUID if platform-specific ID is not available.
+ * @returns A promise that resolves to the device ID string.
+ */
+export const getDeviceId = async (): Promise<string> => {
+  return BcscCore.getDeviceId();
 };
 
 /**
@@ -171,25 +423,26 @@ export const signPairingCode = async (
   issuer: string,
   clientID: string,
   fcmDeviceToken: string,
-  deviceToken?: string
+  deviceToken: string | null
 ): Promise<string | null> => {
   return BcscCore.signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken);
 };
 
 /**
- * Retrieves the body for a dynamic client registration request.
- * This method generates a JSON structure containing client information,
- * device info JWT, public key JWKS, and OAuth2 configuration for
- * dynamic client registration with the BC Services Card authentication server.
- * @param fcmDeviceToken The FCM device token to include in the device info.
- * @param deviceToken The APNS device token (iOS only - not used by Android implementation).
- * @returns A promise that resolves to a JSON string containing the DCR body, or null if an error occurs.
+ * Creates the dynamic client registration body for OAuth client registration.
+ * @param fcmDeviceToken The FCM device token for push notifications.
+ * @param deviceToken Optional device token (APNS token for iOS).
+ * @param attestation Optional attestation data (Play Integrity token for Android, App Store receipt for iOS).
+ * @param nickname Optional nickname to use for client_name. If not provided, falls back to device name.
+ * @returns A promise that resolves to the registration body string or null if an error occurs.
  */
 export const getDynamicClientRegistrationBody = async (
   fcmDeviceToken: string,
-  deviceToken?: string
+  deviceToken: string | null,
+  attestation: string | null,
+  nickname?: string | null
 ): Promise<string | null> => {
-  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken);
+  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, nickname);
 };
 
 /**
@@ -219,6 +472,10 @@ export const getDeviceCodeRequestBody = async (
 
 export const decodePayload = async (jweString: string): Promise<any> => {
   return BcscCore.decodePayload(jweString);
+};
+
+export const decodeLoginChallenge = async (jwt: string, key?: JWK): Promise<LoginChallengeResult> => {
+  return BcscCore.decodeLoginChallenge(jwt, key ?? null);
 };
 
 /**
@@ -258,7 +515,7 @@ export const createQuickLoginJWT = async (
   clientRefId: string,
   key: JWK,
   fcmDeviceToken: string,
-  deviceToken?: string
+  deviceToken: string | null
 ): Promise<string> => {
   return BcscCore.createQuickLoginJWT(accessToken, clientId, issuer, clientRefId, key, fcmDeviceToken, deviceToken);
 };
@@ -288,4 +545,538 @@ export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
  */
 export const removeAccount = async (): Promise<void> => {
   return BcscCore.removeAccount();
+};
+
+// MARK: - Authentication Methods
+
+// Export authentication types
+export { BiometricType } from './NativeBcscCore';
+export type {
+  AccountLockStatus,
+  DeviceSecurityUnlockResult,
+  PINSetupResult,
+  PINVerificationResult,
+} from './NativeBcscCore';
+
+/**
+ * Sets a user-created PIN for the current account.
+ * @param pin The PIN to set (should be validated before calling)
+ * @returns A promise that resolves to setup result with success status and wallet key hash
+ */
+export const setPIN = async (pin: string): Promise<import('./NativeBcscCore').PINSetupResult> => {
+  return BcscCore.setPIN(pin);
+};
+
+/**
+ * Verifies a PIN for the current account.
+ * @param pin The PIN to verify
+ * @returns A promise that resolves to verification result with success status, lock status, remaining penalty time, and wallet key hash on success
+ */
+export const verifyPIN = async (pin: string): Promise<import('./NativeBcscCore').PINVerificationResult> => {
+  return BcscCore.verifyPIN(pin);
+};
+
+/**
+ * Deletes the PIN for the current account.
+ * @returns A promise that resolves to true on success
+ */
+export const deletePIN = async (): Promise<boolean> => {
+  return BcscCore.deletePIN();
+};
+
+/**
+ * Checks if a PIN is set for the current account.
+ * @returns A promise that resolves to true if PIN is set, false otherwise
+ */
+export const hasPINSet = async (): Promise<boolean> => {
+  return BcscCore.hasPINSet();
+};
+
+/**
+ * Performs device authentication (biometric or passcode).
+ * @param reason Optional reason string for the authentication prompt
+ * @returns A promise that resolves to true on successful authentication
+ */
+export const performDeviceAuthentication = async (reason?: string): Promise<boolean> => {
+  return BcscCore.performDeviceAuthentication(reason);
+};
+
+/**
+ * Checks if device authentication is available.
+ * @returns A promise that resolves to true if device authentication is available
+ */
+export const canPerformDeviceAuthentication = async (): Promise<boolean> => {
+  return BcscCore.canPerformDeviceAuthentication();
+};
+
+/**
+ * Gets the available biometric type.
+ * @returns A promise that resolves to the biometric type: 'none', 'touchID', 'faceID', or 'opticID'
+ */
+export const getAvailableBiometricType = async (): Promise<import('./NativeBcscCore').BiometricType> => {
+  return BcscCore.getAvailableBiometricType();
+};
+
+/**
+ * Checks if biometric authentication (not including passcode) is available.
+ * @returns A promise that resolves to true if biometric authentication is available
+ */
+export const canPerformBiometricAuthentication = async (): Promise<boolean> => {
+  return BcscCore.canPerformBiometricAuthentication();
+};
+
+/**
+ * Sets the security method for the current account.
+ * @param securityMethod The security method to set
+ * @returns A promise that resolves to true on success
+ */
+export const setAccountSecurityMethod = async (
+  securityMethod: import('./NativeBcscCore').AccountSecurityMethod
+): Promise<boolean> => {
+  return BcscCore.setAccountSecurityMethod(securityMethod);
+};
+
+/**
+ * Gets the security method for the current account.
+ * @returns A promise that resolves to the security method string
+ */
+export const getAccountSecurityMethod = async (): Promise<import('./NativeBcscCore').AccountSecurityMethod> => {
+  return BcscCore.getAccountSecurityMethod();
+};
+
+/**
+ * Checks if the current account is currently locked due to failed PIN attempts.
+ * @returns A promise that resolves to lock status with locked boolean and remaining time
+ */
+export const isAccountLocked = async (): Promise<import('./NativeBcscCore').AccountLockStatus> => {
+  return BcscCore.isAccountLocked();
+};
+
+/**
+ * Gets the best available account security method based on device capabilities.
+ * @returns A promise that resolves to the recommended security method
+ */
+
+// MARK: - Device Security Methods (for biometric/device authentication)
+
+/**
+ * Sets up device security by generating a random PIN internally,
+ * storing its hash behind biometric auth, and returning the wallet key.
+ * Call this during onboarding when user chooses device security.
+ *
+ * This replaces the old flow of:
+ * 1. Generate random PIN with generateRandomPIN()
+ * 2. Store it with setDeviceSecurityPIN()
+ *
+ * @returns A promise that resolves to setup result containing:
+ *   - success: Whether setup succeeded
+ *   - walletKey: The PBKDF2-derived key (base64 encoded) for Askar wallet
+ *   - isAutoGenerated: Always true for this method
+ */
+export const setupDeviceSecurity = async (): Promise<import('./NativeBcscCore').PINSetupResult> => {
+  return BcscCore.setupDeviceSecurity();
+};
+
+/**
+ * Unlocks using device security (biometric/passcode) and returns the wallet key.
+ * Call this on app unlock when account uses device security method.
+ *
+ * This combines the old flow of:
+ * 1. performDeviceAuthentication()
+ * 2. getPINHash()
+ *
+ * @param reason Optional reason string for the biometric prompt
+ * @returns A promise that resolves to unlock result containing:
+ *   - success: Whether unlock succeeded
+ *   - walletKey: The PBKDF2-derived key (base64 encoded), only present on success
+ */
+export const unlockWithDeviceSecurity = async (
+  reason?: string
+): Promise<import('./NativeBcscCore').DeviceSecurityUnlockResult> => {
+  return BcscCore.unlockWithDeviceSecurity(reason);
+};
+
+/**
+ * Checks if the stored PIN was auto-generated (for device security) or user-created.
+ * This flag is useful for prompting users to create their own memorable PIN
+ * in future app versions (Phase 2).
+ *
+ * @returns A promise that resolves to true if PIN was auto-generated, false if user-created
+ */
+export const isPINAutoGenerated = async (): Promise<boolean> => {
+  return BcscCore.isPINAutoGenerated();
+};
+
+// MARK: - Authorization Request Storage Methods
+
+/**
+ * Gets the stored authorization request data.
+ *
+ * This reads from the authorization_request file in Application Support (iOS)
+ * or encrypted storage (Android). The storage location and format is compatible
+ * with the v3 native app for migration purposes.
+ *
+ * The authorization request contains:
+ * - Device flow codes (deviceCode, userCode)
+ * - User identity info (birthdate, csn, verifiedEmail)
+ * - User profile (firstName, lastName, middleNames, address)
+ * - Request metadata (status, expiry, etc.)
+ *
+ * @returns A promise that resolves to the authorization request data, or null if not stored
+ */
+export const getAuthorizationRequest = async (): Promise<NativeAuthorizationRequest | null> => {
+  return BcscCore.getAuthorizationRequest();
+};
+
+/**
+ * Saves authorization request data to storage.
+ *
+ * This writes to the authorization_request file in Application Support (iOS)
+ * or encrypted storage (Android). The storage location and format is compatible
+ * with the v3 native app for migration purposes.
+ *
+ * @param data The authorization request data to save
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setAuthorizationRequest = async (data: NativeAuthorizationRequest): Promise<boolean> => {
+  return BcscCore.setAuthorizationRequest(data);
+};
+
+/**
+ * Deletes the stored authorization request data.
+ *
+ * @returns A promise that resolves to true if deleted successfully (or if it didn't exist)
+ */
+export const deleteAuthorizationRequest = async (): Promise<boolean> => {
+  return BcscCore.deleteAuthorizationRequest();
+};
+
+// MARK: - Secure State Types and Hydration
+
+/**
+ * Address information for user metadata.
+ */
+export interface SecureStateAddress {
+  streetAddress?: string;
+  locality?: string;
+  postalCode?: string;
+  country?: string;
+  region?: string;
+}
+
+/**
+ * User metadata for non-BCSC verification flows.
+ */
+export interface SecureStateUserMetadata {
+  firstName?: string;
+  lastName?: string;
+  middleNames?: string;
+  address?: SecureStateAddress;
+}
+
+// MARK: - Account Flags Storage
+
+/**
+ * Known account flag keys for type safety.
+ * These correspond to v3 UserDefaultKeys (iOS) / SharedPreferences keys (Android).
+ */
+export interface AccountFlags {
+  /** Whether user's email has been verified */
+  isEmailVerified?: boolean;
+  /** Whether user chose to skip email verification */
+  userSkippedEmailVerification?: boolean;
+  /** User's email address (if entered but not yet verified) */
+  emailAddress?: string;
+  /** Temporary email ID for pending verification */
+  temporaryEmailId?: string;
+  /** Whether user has submitted a verification video */
+  userSubmittedVerificationVideo?: boolean;
+}
+
+/**
+ * Gets account flags from native storage.
+ *
+ * These flags are stored in v3-compatible locations:
+ * - iOS: account_flag file in Application Support
+ * - Android: Account-specific SharedPreferences
+ *
+ * This enables rollback to v3 while preserving user's email verification state.
+ *
+ * @returns A promise that resolves to the account flags
+ */
+export const getAccountFlags = async (): Promise<AccountFlags> => {
+  return BcscCore.getAccountFlags() as Promise<AccountFlags>;
+};
+
+/**
+ * Sets account flags in native storage.
+ *
+ * These flags are stored in v3-compatible locations:
+ * - iOS: account_flag file in Application Support
+ * - Android: Account-specific SharedPreferences
+ *
+ * This enables rollback to v3 while preserving user's email verification state.
+ *
+ * @param flags The flags to set (will be merged with existing flags)
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setAccountFlags = async (flags: AccountFlags): Promise<boolean> => {
+  return BcscCore.setAccountFlags(flags);
+};
+
+/**
+ * Deletes all account flags from native storage.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteAccountFlags = async (): Promise<boolean> => {
+  return BcscCore.deleteAccountFlags();
+};
+
+// ============================================================================
+// Evidence Metadata Storage Methods
+// ============================================================================
+
+/**
+ * Evidence image side information.
+ */
+export interface EvidenceImageSide {
+  image_side_name: 'FRONT_SIDE' | 'BACK_SIDE';
+  image_side_label: string;
+  image_side_tip: string;
+}
+
+/**
+ * Photo metadata for evidence documents.
+ */
+export interface PhotoMetadata {
+  label: string;
+  content_type: string;
+  content_length: number;
+  date: number;
+  sha256: string;
+  filename?: string;
+  file_path: string;
+}
+
+/**
+ * Evidence type definition - matches the API response structure.
+ */
+export interface EvidenceType {
+  evidence_type: string;
+  has_photo: boolean;
+  group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES';
+  group_sort_order: number;
+  sort_order: number;
+  collection_order: 'FIRST' | 'SECOND' | 'BOTH';
+  document_reference_input_mask: string;
+  document_reference_label: string;
+  document_reference_sample: string;
+  image_sides: EvidenceImageSide[];
+  evidence_type_label: string;
+}
+
+/**
+ * Matches additionalEvidenceData field in React Native store
+ */
+export interface EvidenceMetadata {
+  /** Evidence type information - full EvidenceType object */
+  evidenceType?: EvidenceType;
+  /** Photo metadata array */
+  metadata: PhotoMetadata[];
+  /** Document number/reference */
+  documentNumber?: string;
+  /** Raw barcode data captured during evidence photo capture, sent to backend with document upload */
+  barcodes?: BarcodePayload[];
+}
+
+/** Address block sent inside a PDF-417 barcode entry (matches v3 iOS structure). */
+export interface BarcodeAddressPayload {
+  street_address: string;
+  locality: string;
+  province: string;
+  postal_code: string;
+  country: string;
+}
+
+/** A single barcode entry in the evidence upload payload (matches iOS structure). */
+export type BarcodePayload =
+  | {
+      type: 'PDF_417';
+      content_type: 'AAMVA_3TRACK_PDF417';
+      version?: string;
+      jurisdiction_version?: string;
+      iso_iin?: string;
+      customer_id?: string;
+      document_number?: string;
+      expires?: string;
+      family_name?: string;
+      given_names?: string;
+      birthdate?: string;
+      address?: BarcodeAddressPayload;
+    }
+  | {
+      type: 'CODE_128';
+      value: string;
+    };
+
+/**
+ * Gets evidence metadata from native storage.
+ *
+ * @returns A promise that resolves to the evidence metadata array
+ */
+export const getEvidence = async (): Promise<EvidenceMetadata[]> => {
+  return BcscCore.getEvidence() as Promise<EvidenceMetadata[]>;
+};
+
+/**
+ * Sets evidence metadata in native storage.
+ *
+ * @param evidence The evidence metadata array to save
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setEvidence = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
+  return BcscCore.setEvidence(evidence);
+};
+
+/**
+ * Deletes all evidence data from native storage, including photo files.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteEvidence = async (): Promise<boolean> => {
+  return BcscCore.deleteEvidence();
+};
+
+/**
+ * Saves a photo to permanent storage.
+ * Android: Writes JPEG to {filesDir}/documents/{filename}
+ * iOS: Writes JPEG to Application Support/documents/{filename}
+ *
+ * @param base64Data Base64-encoded photo data
+ * @param filename Target filename
+ * @returns The absolute path to the saved file
+ */
+export const saveEvidencePhoto = async (base64Data: string, filename: string): Promise<string> => {
+  return BcscCore.saveEvidencePhoto(base64Data, filename);
+};
+
+/**
+ * Credential Management
+ *
+ * These methods manage the credential object that indicates verified account status.
+ * Migrating from v3, the presence of a credential object means the account
+ * is verified and can access the verified card screen.
+ *
+ * Storage locations:
+ * - iOS: Stored within ClientRegistration in secure keychain
+ * - Android: Stored within Provider → ClientRegistration in secure storage
+ */
+
+/**
+ * Store credential information in secure native storage.
+ * This is the primary indicator of account verification status.
+ *
+ * @param credential - The credential information to store
+ */
+export async function setCredential(credential: CredentialInfo): Promise<void> {
+  return BcscCore.setCredential(credential);
+}
+
+/**
+ * Retrieve stored credential information from secure native storage.
+ *
+ * @returns The stored credential or null if none exists
+ */
+export async function getCredential(): Promise<CredentialInfo | null> {
+  return BcscCore.getCredential();
+}
+
+/**
+ * Remove credential information from secure native storage.
+ * This effectively marks the account as not verified.
+ */
+export async function deleteCredential(): Promise<void> {
+  return BcscCore.deleteCredential();
+}
+
+/**
+ * Check if a credential exists without retrieving it.
+ * Useful for quick verification status checks.
+ *
+ * @returns True if credential exists, false otherwise
+ */
+export async function hasCredential(): Promise<boolean> {
+  return BcscCore.hasCredential();
+}
+/**
+ * Displays a local notification on the device.
+ * @param title The notification title
+ * @param message The notification body/message
+ * @returns A promise that resolves when the notification has been displayed.
+ */
+export const showLocalNotification = async (title: string, message: string): Promise<void> => {
+  return BcscCore.showLocalNotification(title, message);
+};
+
+/**
+ *  A native module function that checks if a 3rd party keyboard is currently active on an android device.
+ *  iOS does not support this check and will always return false.
+ *
+ * @returns True if a 3rd party keyboard is active, false otherwise
+ */
+export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
+  return BcscCore.isThirdPartyKeyboardActive();
+};
+
+/**
+ * Opens the keyboard selector on Android to allow the user to switch their keyboards.
+ * iOS does not support this and will always resolve immediately.
+ *
+ * @returns A promise that resolves when the selector is open
+ */
+export const openAndroidKeyboardSelector = async (): Promise<void> => {
+  return BcscCore.openKeyboardSelector();
+};
+
+// ============================================================================
+// Saved Services (Client Metadata) Storage Methods
+// ============================================================================
+
+/**
+ * Gets saved services from native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * On v3→v4 migration, this reads the bookmarked services the user had saved in v3.
+ *
+ * @returns A promise that resolves to the array of saved service metadata
+ */
+export const getSavedServices = async (): Promise<NativeSavedService[]> => {
+  return BcscCore.getSavedServices();
+};
+
+/**
+ * Saves services to native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * @param services The saved service metadata array to write
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setSavedServices = async (services: NativeSavedService[]): Promise<boolean> => {
+  return BcscCore.setSavedServices(services);
+};
+
+/**
+ * Deletes all saved services from native storage.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteSavedServices = async (): Promise<boolean> => {
+  return BcscCore.deleteSavedServices();
 };

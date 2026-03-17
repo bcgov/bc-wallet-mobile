@@ -7,7 +7,7 @@ inputs:
       The file containing the export options to use 
       for signing the archive.
     required: true
-  ouput_artifact_ref:
+  output_artifact_ref:
     description: |
       The reference ID / name of the uploaded GitHub artifact
       stored in GitHub by the upload action.
@@ -17,19 +17,21 @@ runs:
   using: composite
   steps:
     - name: Sign & Export
+      env:
+        EXPORT_OPTIONS: ${{ inputs.export_options }}
       shell: bash
       run: |
         xcodebuild \
         -exportArchive \
-        -archivePath AriesBifold.xcarchive \
+        -archivePath BCWallet.xcarchive \
         -exportPath export \
-        -exportOptionsPlist ./${{ inputs.export_options }} \
+        -exportOptionsPlist ./$EXPORT_OPTIONS \
         -verbose
 
     - name: Upload signed artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.ouput_artifact_ref }}
+        name: ${{ inputs.output_artifact_ref }}.ipa
         path: export/BCWallet.ipa
         if-no-files-found: error
         retention-days: 7

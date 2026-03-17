@@ -1,5 +1,5 @@
 //
-//  Common.swift
+//  JOSEException.swift
 //  jose
 //
 //  Created by marcosc on 2016-12-08.
@@ -9,8 +9,8 @@
 import Foundation
 
 struct JOSEException: Error {
-    let description: String
-    init(_ description: String) {
-        self.description = description
-    }
+  let description: String
+  init(_ description: String) {
+    self.description = description
+  }
 }

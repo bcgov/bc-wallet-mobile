@@ -1,25 +1,24 @@
+import { AppError, ErrorRegistry } from '@/errors'
+import { BCState } from '@/store'
 import {
-  useTheme,
   InfoBox,
   InfoBoxType,
+  SplashProps,
   testIdWithKey,
   TOKENS,
-  useServices,
-  BifoldError,
-  useStore,
   useAuth,
-  SplashProps,
+  useServices,
+  useStore,
+  useTheme,
 } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
 import ProgressBar from '@components/ProgressBar'
 import TipCarousel from '@components/TipCarousel'
-import { BCState } from '@/store'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 /*
   To customize this splash screen set the background color of the
@@ -35,7 +34,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const [store] = useStore<BCState>()
   const [progressPercent, setProgressPercent] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
-  const [initError, setInitError] = useState<BifoldError | null>(null)
+  const [initError, setInitError] = useState<AppError | null>(null)
   const [reported, setReported] = useState(false)
   const initializing = useRef(false)
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
@@ -76,47 +75,44 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(initError)
+      logger.report(initError.toBifoldError())
     }
 
     setReported(true)
   }, [logger, initError])
 
   const steps: string[] = useMemo(
-    () => [
-      t('Init.Starting'),
-      t('Init.FetchingPreferences'),
-      t('Init.CheckingOCA'),
-      t('Init.InitializingAgent'),
-      t('Init.Finishing'),
-    ],
+    () => [t('Init.Starting'), t('Init.CheckingOCA'), t('Init.InitializingAgent'), t('Init.Finishing')],
     [t]
   )
 
   const setStep = useCallback(
     (stepIdx: number) => {
-      setStepText(steps[stepIdx])
-      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setStepText(steps[stepIdx - 1])
+      const percent = Math.floor((stepIdx / steps.length) * 100)
       setProgressPercent(percent)
     },
     [steps]
   )
 
   useEffect(() => {
-    setStep(1)
     if (initializing.current || !store.authentication.didAuthenticate) {
       return
     }
 
+    initializing.current = true
+
+    setStep(1)
+
     if (!walletSecret) {
-      setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), 'Wallet secret is not found', 2031))
+      initializing.current = false
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.WALLET_SECRET_NOT_FOUND)
+      setInitError(appError)
       return
     }
 
     const initAgentAsyncEffect = async (): Promise<void> => {
       try {
-        initializing.current = true
-
         setStep(2)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
@@ -124,10 +120,10 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         await initializeAgent(walletSecret)
 
         setStep(4)
-      } catch (e: unknown) {
+      } catch (error: unknown) {
         initializing.current = false
-
-        setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: error })
+        setInitError(appError)
       }
     }
 

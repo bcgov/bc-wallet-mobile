@@ -1,0 +1,228 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { withAccount } from '@/bcsc-theme/api/hooks/withAccountGuard'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
+import { useAlerts } from '@/hooks/useAlerts'
+import { useSetupSteps } from '@/hooks/useSetupSteps'
+import { BCDispatchAction, BCState } from '@/store'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import * as BcscCore from 'react-native-bcsc-core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
+
+/**
+ * Model hook for the SetupStepsScreen that provides:
+ * - Step state (completed, focused, subtext) from useSetupSteps
+ * - Navigation actions for each step
+ * - Handlers for checking status and cancelling verification
+ */
+const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParams>) => {
+  const { t } = useTranslation()
+  const [store, dispatch] = useStore<BCState>()
+  const { updateVerificationRequest, updateAccountFlags, deleteVerificationData, clearSecureState } = useSecureActions()
+  const { evidence, token } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
+  const { cancelVerificationRequestAlert, factoryResetAlert } = useAlerts(navigation)
+  const registrationService = useRegistrationService()
+
+  // Get unified step state (completed, focused, subtext for each step)
+  const steps = useSetupSteps(store)
+
+  /**
+   * Handle resetting the card registration process.
+   *
+   * Note: This will reset the completion of all setup steps excluding step 1 (account nickname).
+   * Why? Account nickname is excluded as it is independent to the card registration process (setup step 2).
+   *
+   * @see `IdentitySelectionScreen.tsx` for where this is used
+   *
+   * @returns Promise that resolves when the reset process is complete
+   */
+  const handleResetCardRegistration = useCallback(async () => {
+    try {
+      await withAccount(async (account) => {
+        // 1. Clear the secure state and trigger a setup steps re-render
+        clearSecureState({
+          isHydrated: true,
+          walletKey: store.bcscSecure.walletKey, // used for authentication
+          registrationAccessToken: store.bcscSecure.registrationAccessToken, // used for authentication
+        })
+
+        const [securityMethod] = await Promise.all([
+          // 2. Get the previous device auth for re-registering the account
+          BcscCore.getAccountSecurityMethod(),
+          // 3. Clean up registration on the backend
+          registrationService.deleteRegistration(account.clientID),
+        ])
+
+        // 4. Delete any persisted verification data in device file system
+        await deleteVerificationData()
+        // 5. Re-register the device and generate a new account (prevents "client is in invalid state/statue" errors)
+        await registrationService.createRegistration(securityMethod)
+      })
+    } catch (error) {
+      logger.error('[handleResetCardRegistration] Error resetting card registration', error as Error)
+      // If reset fails, the app could be in an inconsistent state that may cause crashes or other issues, so we alert the user and make them factory reset
+      factoryResetAlert()
+    }
+  }, [
+    clearSecureState,
+    deleteVerificationData,
+    factoryResetAlert,
+    logger,
+    registrationService,
+    store.bcscSecure.registrationAccessToken,
+    store.bcscSecure.walletKey,
+  ])
+
+  /**
+   * Check the status of a pending verification request
+   */
+  const handleCheckStatus = useCallback(async () => {
+    setIsCheckingStatus(true)
+    try {
+      if (isUserVerified(store.bcscSecure)) {
+        // If we have a refresh token we can assume verification is complete
+        // Scenario: user checked their status but closed the app before completing VerificationSuccess
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+        return
+      }
+
+      if (!store.bcscSecure.verificationRequestId) {
+        throw new Error(t('BCSC.Steps.VerificationIDMissing'))
+      }
+
+      const { status, status_message } = await evidence.getVerificationRequestStatus(
+        store.bcscSecure.verificationRequestId
+      )
+      if (status === 'verified') {
+        if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+          throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
+        }
+
+        if (store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
+          // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+          await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
+        }
+
+        navigation.navigate(BCSCScreens.VerificationSuccess)
+      } else if (status === 'cancelled') {
+        navigation.navigate(BCSCScreens.CancelledReview, {
+          agentReason: status_message,
+        })
+      } else {
+        navigation.navigate(BCSCScreens.PendingReview)
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[useSetupStepsModel] Failed to check status: ${message}`)
+    } finally {
+      setIsCheckingStatus(false)
+    }
+  }, [store.bcscSecure, evidence, navigation, t, token, logger])
+
+  /**
+   * Cancel a pending verification request
+   */
+  const handleCancelVerification = useCallback(async () => {
+    cancelVerificationRequestAlert(async () => {
+      try {
+        if (!store.bcscSecure.verificationRequestId) {
+          return
+        }
+        await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
+      } catch (error) {
+        logger.error(`Error cancelling verification request: ${error}`)
+      } finally {
+        // Clear verification request from secure state
+        updateVerificationRequest(null, null)
+        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+        await updateAccountFlags({
+          userSubmittedVerificationVideo: false,
+        })
+        navigation.navigate(BCSCScreens.VerificationMethodSelection)
+      }
+    })
+  }, [
+    cancelVerificationRequestAlert,
+    store.bcscSecure.verificationRequestId,
+    evidence,
+    logger,
+    updateVerificationRequest,
+    dispatch,
+    updateAccountFlags,
+    navigation,
+  ])
+
+  /**
+   * Navigation actions for each step
+   */
+  const stepActions = useMemo(
+    () => ({
+      nickname: () => {
+        navigation.navigate(BCSCScreens.NicknameAccount)
+      },
+
+      id: () => {
+        if (steps.id.nonBcscNeedsAdditionalCard) {
+          navigation.navigate(BCSCScreens.EvidenceTypeList, {
+            cardProcess: BCSCCardProcess.NonBCSC,
+          })
+          return
+        }
+        if (steps.id.nonPhotoBcscNeedsAdditionalCard) {
+          navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+          return
+        }
+        if (!steps.id.completed) {
+          navigation.navigate(BCSCScreens.IdentitySelection)
+        }
+      },
+
+      address: () => {
+        navigation.navigate(BCSCScreens.ResidentialAddress)
+      },
+
+      email: () => {
+        navigation.navigate(BCSCScreens.EnterEmail, { cardProcess: store.bcscSecure.cardProcess! })
+      },
+
+      verify: () => {
+        // Note: This ensures that if the user somehow got to the steps screen with a refresh token (shouldn't be possible but just in case), we navigate them to the success screen
+        if (isUserVerified(store.bcscSecure)) {
+          navigation.navigate(BCSCScreens.VerificationSuccess)
+          return
+        }
+
+        navigation.navigate(BCSCScreens.VerificationMethodSelection)
+      },
+      transfer: () => {
+        navigation.navigate(BCSCScreens.TransferAccountInstructions)
+      },
+    }),
+    [
+      navigation,
+      steps.id.nonBcscNeedsAdditionalCard,
+      steps.id.nonPhotoBcscNeedsAdditionalCard,
+      steps.id.completed,
+      store.bcscSecure,
+    ]
+  )
+
+  return {
+    steps,
+    stepActions,
+    isCheckingStatus,
+    handleCheckStatus,
+    handleCancelVerification,
+    handleResetCardRegistration,
+  }
+}
+
+export default useSetupStepsModel

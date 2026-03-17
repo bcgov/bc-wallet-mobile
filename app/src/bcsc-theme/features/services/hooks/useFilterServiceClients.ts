@@ -1,11 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 interface FilterServiceClientsResult {
   serviceClients: ClientMetadata[]
@@ -24,13 +25,15 @@ export interface ServiceClientsFilter {
    */
   partialNameFilter?: string
   /**
-   * Filter service clients based on the user's card process
+   * Filter service clients based on the user's card process type.
+   *
+   * Note: Explicitly setting this to null will return no services.
    *
    * @see card-utils.ts->getCardProcessForCardType
    * @example BCSCCardProcess.NonPhoto would filter out services that do not support non-photo cards
-   * @type {BCSCCardProcess}
+   * @type {BCSCCardProcess | null}
    */
-  cardProcessFilter?: BCSCCardProcess
+  cardProcessFilter?: BCSCCardProcess | null
   /**
    * Filter service clients that require a BC Address on file
    *
@@ -59,6 +62,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   const { metadata } = useApi()
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
 
   const filteringDoneRef = useRef(false)
 
@@ -80,9 +84,9 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
   // Alert the user if services fail to load
   if (!serviceClients && isReady) {
-    Alert.alert('Failed to load services', 'Please try again later.', [
+    Alert.alert(t('Error.Title2033'), t('Error.Message2033'), [
       {
-        text: 'OK',
+        text: t('Error.OK'),
         onPress: () => {
           navigation.goBack()
         },
@@ -92,7 +96,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
   // Apply filters to the service clients (these filters are memoized to avoid unnecessary recalculations)
   const filteredServiceClients = useMemo(() => {
-    if (!serviceClients) {
+    if (!serviceClients || filter.cardProcessFilter === null) {
       return []
     }
 

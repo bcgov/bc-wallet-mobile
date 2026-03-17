@@ -1,25 +1,27 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useFilterServiceClients } from '../../services/hooks/useFilterServiceClients'
-import { BCDispatchAction, BCState } from '@/store'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useNavigation } from '@react-navigation/native'
-import { useTranslation } from 'react-i18next'
 import { SavedServiceCard } from './SavedServiceCard'
 
-type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
+type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScreens.ServiceLogin>
 
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<ServicesNavigationProp>()
   const { t } = useTranslation()
+  const { updateSavedService } = useSecureActions()
 
   const { serviceClients } = useFilterServiceClients({
-    serviceClientIdsFilter: store.bcsc.bookmarks,
+    serviceClientIdsFilter: store.bcscSecure.savedServices,
   })
 
   const styles = StyleSheet.create({
@@ -43,7 +45,7 @@ const SavedServices: React.FC = () => {
       <View style={styles.headerContainer}>
         <Icon name="bookmark" size={24} color={ColorPalette.brand.tertiary} style={styles.bookmarkIcon} />
         <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.tertiary }}>
-          {t('Services.SavedServices')}
+          {t('BCSC.Services.SavedServices')}
         </ThemedText>
       </View>
 
@@ -52,7 +54,7 @@ const SavedServices: React.FC = () => {
           variant={'headingFour'}
           style={{ color: ColorPalette.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
         >
-          {t('Services.NoSavedServices')}
+          {t('BCSC.Services.NoSavedServices')}
         </ThemedText>
       ) : (
         serviceClients.map((serviceClient) => (
@@ -60,12 +62,12 @@ const SavedServices: React.FC = () => {
             key={serviceClient.client_ref_id}
             title={serviceClient.client_name}
             onPress={() => {
-              navigation.navigate(BCSCScreens.ServiceLoginScreen, {
-                serviceClient: serviceClient,
+              navigation.navigate(BCSCScreens.ServiceLogin, {
+                serviceClientId: serviceClient.client_ref_id,
               })
             }}
             onRemove={() => {
-              dispatch({ type: BCDispatchAction.REMOVE_BOOKMARK, payload: [serviceClient.client_ref_id] })
+              updateSavedService(serviceClient.client_ref_id, false)
             }}
           />
         ))

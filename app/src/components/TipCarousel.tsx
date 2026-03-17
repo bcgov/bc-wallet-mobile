@@ -9,7 +9,7 @@ import React, {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
+import { AccessibilityInfo, FlatList, ListRenderItem, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
 
 // used for randomizng tip order
 const shuffleArray = (arr: number[]) => {

@@ -1,10 +1,23 @@
-import { getDeviceCountFromIdToken } from '@/bcsc-theme/utils/get-device-count'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
-import BCSCApiClient, { TokenStatusResponseDataWithDeviceCount } from '../client'
+import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
-export interface TokenStatusResponseData {
+export interface IdTokenMetadataConfig {
+  refreshCache: boolean
+}
+
+export interface DeviceTokenPayload {
+  client_id: string
+  device_code: string
+  client_assertion: string
+}
+export interface TokenResponse {
   access_token: string
   expires_in: number
   id_token: string
@@ -13,26 +26,79 @@ export interface TokenStatusResponseData {
   token_type: string
 }
 
-export interface BcscJwtPayload {
-  bcsc_devices_count?: number
-  // Add other BCSC-specific claims here as needed
-}
+export type TokenApi = ReturnType<typeof useTokenApi>
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
+  const { updateTokens } = useSecureActions()
+  const deviceToken = useCallback(
+    async (payload: DeviceTokenPayload) => {
+      const { data } = await apiClient.post<TokenResponse>(
+        apiClient.endpoints.token,
+        {
+          device_code: payload.device_code,
+          client_id: payload.client_id,
+          client_assertion: payload.client_assertion,
+          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        },
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        }
+      )
+
+      return data
+    },
+    [apiClient]
+  )
+
   const checkDeviceCodeStatus = useCallback(
     async (deviceCode: string, confirmationCode: string) => {
-      return withAccount<TokenStatusResponseDataWithDeviceCount>(async (account) => {
-        const { clientID, issuer } = account
-        const body = await getDeviceCodeRequestBody(deviceCode, clientID, issuer, confirmationCode)
-        const { data } = await apiClient.post<TokenStatusResponseData>(apiClient.endpoints.token, body, {
+      return withAccount<TokenResponse>(async (account) => {
+        const body = await getDeviceCodeRequestBody(deviceCode, account.clientID, account.issuer, confirmationCode)
+
+        const { data } = await apiClient.post<TokenResponse>(apiClient.endpoints.token, body, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           skipBearerAuth: true,
         })
-        apiClient.tokens = data
 
-        const bcsc_devices_count = await getDeviceCountFromIdToken(data.id_token, apiClient.logger)
-        return { ...data, bcsc_devices_count }
+        try {
+          apiClient.tokens = data
+          await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
+        } catch (error) {
+          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens`, error as Error)
+          throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        }
+
+        return apiClient.tokens!
       })
+    },
+    [apiClient, updateTokens]
+  )
+
+  /**
+   * Get cached ID token metadata.
+   * If refreshCache is true, it will fetch new tokens using the refresh token before extracting metadata.
+   *
+   * @param {IdTokenMetadataConfig} config - Configuration object.
+   * @param {boolean} config.refreshCache - Whether to refresh the token cache.
+   * @returns {*} {Promise<IdToken>} The ID token metadata.
+   *
+   */
+  const getCachedIdTokenMetadata = useCallback(
+    async (config: IdTokenMetadataConfig) => {
+      if (!apiClient.tokens) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+          cause: new Error('apiClient.tokens is null in getCachedIdTokenMetadata'),
+        })
+      }
+
+      if (config.refreshCache) {
+        // Fetch new tokens to ensure we have the latest ID token
+        await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      }
+
+      return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },
     [apiClient]
   )
@@ -40,8 +106,10 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   return useMemo(
     () => ({
       checkDeviceCodeStatus,
+      deviceToken,
+      getCachedIdTokenMetadata,
     }),
-    [checkDeviceCodeStatus]
+    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken]
   )
 }
 

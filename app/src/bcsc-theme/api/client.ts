@@ -1,22 +1,34 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { RemoteLogger } from '@bifold/remote-logs'
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-
-import { getDeviceCountFromIdToken } from '../utils/get-device-count'
-import { TokenStatusResponseData } from './hooks/useTokens'
+import {
+  formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
+  formatIasAxiosResponseError,
+  getAppErrorFromAxiosError,
+} from '../utils/error-utils'
+import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
+import { JWK, JWKResponseData } from './hooks/useJwksApi'
+import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
+
+// Refresh tokens 30 seconds before they actually expire to avoid
+// expiry-on-the-wire races when multiple requests fire near the boundary.
+const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
+    // Note: Useful for endpoints that return expected error codes
+    suppressStatusCodeLogs?: number[]
   }
 }
 
-export interface TokenStatusResponseDataWithDeviceCount extends TokenStatusResponseData {
-  bcsc_devices_count?: number
-}
+type BCSCClientOnErrorCallback = (appError: AxiosAppError, context: ErrorMatcherContext) => void
 
 interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
@@ -27,7 +39,7 @@ interface BCSCConfig {
   attestationTimeToLive: number
 }
 
-interface BCSCEndpoints {
+export interface BCSCEndpoints {
   attestation: string
   issuer: string
   authorization: string
@@ -41,6 +53,10 @@ interface BCSCEndpoints {
   credential: string
   evidence: string
   video: string
+  cardTap: string
+  barcodes: string
+  accountDevices: string
+  account: string
 }
 
 class BCSCApiClient {
@@ -49,7 +65,9 @@ class BCSCApiClient {
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
-  tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
+  tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
+  tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
+  onError?: BCSCClientOnErrorCallback
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -61,10 +79,12 @@ class BCSCApiClient {
     })
 
     if (this.baseURL) {
-      this.logger.info(`BCSCApiClient initialized with URL: ${this.baseURL}`)
+      this.logger.info(`[BCSCApiClient] initialized with URL: ${this.baseURL}`)
     } else {
-      this.logger.error('BCSCApiClient initialized with empty URL.')
+      this.logger.error('[BCSCApiClient] initialized with empty URL.')
     }
+
+    this.tokensPromise = null
 
     // fallback config
     this.config = {
@@ -95,60 +115,84 @@ class BCSCApiClient {
       credential: `${this.baseURL}/credentials/v1/person`,
       evidence: `${this.baseURL}/evidence`,
       video: `${this.baseURL}/video`,
+      cardTap: `${this.baseURL}/cardtap`,
+      barcodes: `${this.baseURL}/device/barcodes`,
+      accountDevices: `${this.baseURL}/account/embedded/devices`,
+      account: `${this.baseURL}/account`,
     }
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      const errorDetails = {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-
-        request: {
-          method: error.config?.method?.toUpperCase(),
-          url: error.config?.url,
-          baseURL: error.config?.baseURL,
-          headers: error.config?.headers,
-          data: error.config?.data,
-          params: error.config?.params,
-        },
-
-        response: error.response
-          ? {
-              status: error.response.status,
-              statusText: error.response.statusText,
-              headers: error.response.headers,
-              data: error.response.data,
-            }
-          : null,
-
-        isTimeout: error.code === 'ECONNABORTED',
-        isNetworkError: !error.response && !error.code,
-
-        stack: error.stack,
+    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
+      // Pass through errors that are already AppErrors (e.g. from request interceptor)
+      if (_error instanceof AppError) {
+        throw _error
       }
 
-      this.logger.error(`API Error:\n${JSON.stringify(errorDetails, null, 2)}`)
+      // Only handle AxiosErrors here; pass through all other error types unchanged
+      if (!axios.isAxiosError(_error)) {
+        throw _error
+      }
 
-      return Promise.reject(error)
+      // 1. Format the error - update error code and message properties from IAS response
+      const error = formatIasAxiosResponseError(_error)
+
+      // 2. Convert the axios error into an AppError
+      const appError = getAppErrorFromAxiosError(error)
+
+      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+      const statusCode = error.response?.status ?? 0
+
+      // 3. Log if the status code is not in the suppress list
+      if (!suppressStatusCodeLogs.includes(statusCode)) {
+        const simpleAppError = appError.toJSON()
+        const { message, ...details } = simpleAppError
+        this.logger.error(`[BCSCApiClient] ${message}`, {
+          ...details,
+          cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
+        })
+      }
+
+      // 4. Invoke onError callback if provided which marks as handled
+      try {
+        this.onError?.(appError as AxiosAppError, {
+          endpoint: String(error.config?.url),
+          statusCode: error.response?.status ?? 0,
+          apiEndpoints: this.endpoints,
+        })
+      } catch (handlerError) {
+        this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+      }
+
+      throw appError
     })
+  }
+
+  setErrorHandler(callback: BCSCClientOnErrorCallback) {
+    this.onError = callback
+  }
+
+  clearTokens() {
+    this.tokens = undefined
+    this.tokensPromise = null
   }
 
   async fetchEndpointsAndConfig() {
     const response = await this.get<any>(`${this.baseURL}/device/.well-known/openid-configuration`, {
       skipBearerAuth: true,
     })
-    this.config = {
+
+    this.config = merge(this.config, {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
       allowedIdentificationProcesses: response.data['allowed_identification_processes'],
       credentialFlowsSupported: response.data['credential_flows_supported'],
       multipleAccountsSupported: response.data['multiple_accounts_supported'],
       attestationTimeToLive: response.data['attestation_time_to_live'],
-    }
+    })
 
-    this.endpoints = {
+    // Use values from response, otherwise fallback to existing endpoints
+    this.endpoints = merge(this.endpoints, {
       attestation: response.data['attestation_endpoint'],
       issuer: response.data['issuer'],
       authorization: response.data['authorization_endpoint'],
@@ -160,69 +204,104 @@ class BCSCApiClient {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
-      // TODO(bm): request backend team to add evidence and video endpoints to the response
-      evidence: `${this.baseURL}/evidence`,
-      video: `${this.baseURL}/video`,
-    }
+      evidence: response.data['evidence_endpoint'],
+      video: response.data['video_call_endpoint'],
+      cardTap: response.data['cardtap_endpoint'],
+      barcodes: response.data['barcodes_endpoint'],
+      accountDevices: response.data['account_devices_endpoint'],
+      account: response.data['account_endpoint'],
+    })
   }
 
-  async fetchAccessToken(): Promise<TokenStatusResponseDataWithDeviceCount> {
+  private async ensureValidTokens(): Promise<TokenResponse> {
     return withAccount(async () => {
-      if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
-        // refresh token should be saved when a device is authorized with IAS
-        throw new Error('TODO: Register if refresh token is expired or not present')
+      if (this.tokensPromise) {
+        // return the existing promise if currently refreshing
+        return this.tokensPromise
       }
 
-      const tokenData = await this.getTokensForRefreshToken(this.tokens.refresh_token)
-      return tokenData
+      if (!this.tokens) {
+        // initialize tokens using `getTokensForRefreshToken`
+        this.logger.error('[BCSCApiClient] Missing tokens - call getTokensForRefreshToken to initialize tokens')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+      }
+
+      if (this.isTokenExpired(this.tokens.refresh_token)) {
+        // refresh tokens should not expire
+        this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
+        throw new Error('Refresh token expired')
+      }
+
+      if (!this.isTokenExpired(this.tokens.access_token)) {
+        // access token is still valid, don't refresh
+        return this.tokens
+      }
+
+      // access token is expired or about to expire, fetch new tokens using refresh token
+      // Set tokensPromise immediately to prevent concurrent callers from starting duplicate refreshes
+      this.tokensPromise = this.fetchTokens(this.tokens.refresh_token)
+      try {
+        this.tokens = await this.tokensPromise
+      } finally {
+        this.tokensPromise = null
+      }
+      return this.tokens
     })
   }
 
   private isTokenExpired(token?: string): boolean {
     let isExpired = true
-    // if no token is present, return that token is "expired" and fetch a new one
+    // if no token is present, or within the buffer limit of expiring, return that token is "expired" and fetch a new one
     if (token) {
       const decodedToken = jwtDecode(token)
       const exp = decodedToken.exp ?? 0
-      isExpired = Date.now() >= exp * 1000
+      isExpired = Date.now() >= exp * 1000 - TOKEN_EXPIRY_BUFFER_MS
     }
     return isExpired
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    this.logger.info(`Handling request for URL: ${String(config.url)}`)
+    this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
+
     // skip processing if skipBearerAuth is set in the config
     if (config.skipBearerAuth) {
       return config
     }
 
-    if (!this.tokens || this.isTokenExpired(this.tokens.access_token)) {
-      this.tokens = await this.fetchAccessToken()
-    }
-
-    if (this.tokens) {
-      config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
-    }
-
-    this.logger.debug(`Sending request to ${String(config.url)} with method ${String(config.method)}`, config as any)
+    const tokens = await this.ensureValidTokens()
+    config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
 
     return config
   }
 
-  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseDataWithDeviceCount> {
+  private fetchTokens(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
-      const { issuer, clientID } = account
-      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
-      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
+      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+
+      const tokensResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
-      this.tokens = tokenResponse.data
 
-      const bcsc_devices_count = await getDeviceCountFromIdToken(tokenResponse.data.id_token, this.logger)
-
-      return { ...tokenResponse.data, bcsc_devices_count }
+      return tokensResponse.data
     })
+  }
+
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
+    if (this.tokensPromise) {
+      // Return the existing promise if currently refreshing
+      return this.tokensPromise
+    }
+
+    try {
+      this.tokensPromise = this.fetchTokens(refreshToken)
+      this.tokens = await this.tokensPromise
+    } finally {
+      // Clear the promise cache regardless of success or failure
+      this.tokensPromise = null
+    }
+
+    return this.tokens
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
@@ -239,6 +318,29 @@ class BCSCApiClient {
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(url, config)
+  }
+
+  /**
+   * Fetches the first JWK from the server's JWKS endpoint.
+   * Used for JWT signature verification.
+   *
+   * TODO: This should probably not be in the client, move logic elsewhere.
+   */
+  async fetchJwk(): Promise<JWK | null> {
+    try {
+      const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
+        skipBearerAuth: true,
+      })
+
+      if (response.data.keys && response.data.keys.length > 0) {
+        return response.data.keys[0]
+      }
+
+      return null
+    } catch (error) {
+      this.logger.error(`Failed to fetch JWK: ${error}`)
+      return null
+    }
   }
 }
 

@@ -1,61 +1,55 @@
-import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import StatusDetails from '@/bcsc-theme/components/StatusDetails'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
+import { ActivityIndicator, BackHandler, StyleSheet } from 'react-native'
+import useVerificationResponseViewModel from './_models/useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
-  const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+  const { isSettingUpAccount, handleAccountSetup } = useVerificationResponseViewModel()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     contentContainer: {
-      flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
     },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
   })
 
+  // Disable hardware back button on Android
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return subscription.remove
+  })
+
+  const controls = (
+    <Button
+      testID={testIdWithKey(t('BCSC.Verification.ButtonText'))}
+      accessibilityLabel={t('BCSC.Verification.ButtonText')}
+      title={t('BCSC.Verification.ButtonText')}
+      buttonType={ButtonType.Primary}
+      onPress={async () => {
+        await handleAccountSetup()
+      }}
+      disabled={isSettingUpAccount}
+    >
+      {isSettingUpAccount && <ActivityIndicator color={ColorPalette.brand.text} />}
+    </Button>
+  )
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
-        <Icon name={'check'} size={108} color={ColorPalette.brand.primary} />
-        <ThemedText
-          variant={'headingThree'}
-          style={{ marginTop: Spacing.md, textAlign: 'center' }}
-        >{`You're all set`}</ThemedText>
-        <ThemedText
-          variant={'headingFour'}
-          style={{ marginVertical: Spacing.lg, textAlign: 'center' }}
-        >{`Use this app to securely log in to many different websites.`}</ThemedText>
-        <ThemedText
-          variant={'headingFour'}
-          style={{ fontWeight: 'normal', textAlign: 'center' }}
-        >{`Remember, it is not a health card, vaccine card, driver's license, or photo ID.`}</ThemedText>
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          testID={testIdWithKey('Ok')}
-          accessibilityLabel={'Ok'}
-          title={'Ok'}
-          buttonType={ButtonType.Primary}
-          onPress={() => {
-            dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
-            // Clear temp user metadata on successful verification
-            dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })
-          }}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      padded
+      controls={controls}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollViewContainerStyle={styles.contentContainer}
+    >
+      <StatusDetails
+        title={t('BCSC.Verification.Title')}
+        description={t('BCSC.Verification.Description')}
+        extraText={t('BCSC.Verification.ExtraText')}
+      />
+    </ScreenWrapper>
   )
 }
 export default VerificationSuccessScreen

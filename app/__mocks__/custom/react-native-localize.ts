@@ -21,15 +21,15 @@ const addEventListener = jest.fn()
 const removeEventListener = jest.fn()
 
 export {
-  getLocales,
-  getNumberFormatSettings,
+  addEventListener,
   getCalendar,
   getCountry,
   getCurrencies,
+  getLocales,
+  getNumberFormatSettings,
   getTemperatureUnit,
   getTimeZone,
+  removeEventListener,
   uses24HourClock,
   usesMetricSystem,
-  addEventListener,
-  removeEventListener,
 }

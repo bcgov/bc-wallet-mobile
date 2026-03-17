@@ -1,3 +1,5 @@
+import { AppError, ErrorRegistry } from '@/errors'
+import { throwAppError } from '@bcsc-theme/utils/native-error-map'
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -16,20 +18,47 @@ export interface UserInfoResponseData {
   address: { formatted: string }
   picture: string
   card_type: any
+  email: string
+  /**
+   * Backend team clarification:
+   * This value is **NOT** the physical card expiration date.
+   * This value represent the "app expiry date" or "app instance expiration date".
+   * Workflows that deal with account expiration or renewal should use this value.
+   *
+   * Note: Backend team might add additional field: `app_expiry`, which would represent the same value.
+   */
   card_expiry: string
 }
 
 const useUserApi = (apiClient: BCSCApiClient) => {
   /**
-   * Get user information and decode.
+   * Get user information in a JWE string and decode.
    *
    * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
-      const response = await apiClient.get<any>(apiClient.endpoints.userInfo)
-      const userInfoString = await decodePayload(String(response.data))
-      return JSON.parse(userInfoString)
+      const { data } = await apiClient.get<string>(apiClient.endpoints.userInfo)
+
+      let userInfoString: string
+      try {
+        userInfoString = await decodePayload(data)
+      } catch (error) {
+        return throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
+      }
+
+      let parsed: UserInfoResponseData
+      try {
+        parsed = JSON.parse(userInfoString)
+      } catch (error) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
+      }
+
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR)
+      }
+
+      return parsed
     })
   }, [apiClient])
 
@@ -58,30 +87,12 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     [apiClient]
   )
 
-  /**
-   * Fetches user metadata and picture URI.
-   *
-   * @returns {*} {Promise<{ user: UserInfoResponseData; picture?: string }>} An object containing user metadata and optional picture URI.
-   */
-  const getUserMetadata = useCallback(async () => {
-    let pictureUri: string | undefined
-    const userMetadata = await getUserInfo()
-
-    // if picture exists, fetch it
-    if (userMetadata.picture) {
-      pictureUri = await getPicture(userMetadata.picture)
-    }
-
-    return { user: userMetadata, picture: pictureUri }
-  }, [getPicture, getUserInfo])
-
   return useMemo(
     () => ({
       getUserInfo,
       getPicture,
-      getUserMetadata,
     }),
-    [getUserInfo, getPicture, getUserMetadata]
+    [getUserInfo, getPicture]
   )
 }
 

@@ -1,0 +1,642 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AutoLockScreen renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "off",
+      "right": "off",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    ItemSeparatorComponent={[Function]}
+    data={
+      [
+        {
+          "onPress": [Function],
+          "testID": "auto-lock-time-5",
+          "title": "AutoLockTimes.FiveMinutes",
+          "value": 5,
+        },
+        {
+          "onPress": [Function],
+          "testID": "auto-lock-time-3",
+          "title": "AutoLockTimes.ThreeMinutes",
+          "value": 3,
+        },
+        {
+          "onPress": [Function],
+          "testID": "auto-lock-time-1",
+          "title": "AutoLockTimes.OneMinute",
+          "value": 1,
+        },
+      ]
+    }
+    getItem={[Function]}
+    getItemCount={[Function]}
+    keyExtractor={[Function]}
+    onContentSizeChange={[Function]}
+    onLayout={[Function]}
+    onMomentumScrollBegin={[Function]}
+    onMomentumScrollEnd={[Function]}
+    onScroll={[Function]}
+    onScrollBeginDrag={[Function]}
+    onScrollEndDrag={[Function]}
+    removeClippedSubviews={false}
+    renderItem={[Function]}
+    scrollEventThrottle={0.0001}
+    stickyHeaderIndices={[]}
+    viewabilityConfigCallbackPairs={[]}
+  >
+    <View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 24,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+                undefined,
+              ]
+            }
+          >
+            AutoLockTimes.FiveMinutes
+          </Text>
+          <View
+            accessibilityLabel="AutoLockTimes.FiveMinutes"
+            accessibilityRole="checkbox"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "justifyContent": "center",
+              }
+            }
+            testID="com.ariesbifold:id/ToggleAutoLockSwitch"
+          >
+            <View
+              ImageComponent={[Function]}
+              accessibilityLabel="5"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              disableBuiltInState={true}
+              disableText={true}
+              fillColor="#FFFFFF"
+              focusable={true}
+              innerIconStyle={
+                {
+                  "borderColor": "#003366",
+                  "borderWidth": 2,
+                }
+              }
+              isChecked={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              size={36}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                  },
+                  undefined,
+                ]
+              }
+              testID="com.ariesbifold:id/auto-lock-time-5"
+              unfillColor="#FFFFFF"
+            >
+              <View
+                collapsable={false}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": 18,
+                    "height": 36,
+                    "justifyContent": "center",
+                    "transform": [
+                      {
+                        "scale": 1,
+                      },
+                    ],
+                    "width": 36,
+                  }
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "borderColor": "#FFFFFF",
+                        "borderRadius": 18,
+                        "borderWidth": 1,
+                        "height": 36,
+                        "justifyContent": "center",
+                        "width": 36,
+                      },
+                      {
+                        "borderColor": "#003366",
+                        "borderWidth": 2,
+                      },
+                    ]
+                  }
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#003366",
+                          "fontSize": 18,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 24,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 24,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+                undefined,
+              ]
+            }
+          >
+            AutoLockTimes.ThreeMinutes
+          </Text>
+          <View
+            accessibilityLabel="AutoLockTimes.ThreeMinutes"
+            accessibilityRole="checkbox"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "justifyContent": "center",
+              }
+            }
+            testID="com.ariesbifold:id/ToggleAutoLockSwitch"
+          >
+            <View
+              ImageComponent={[Function]}
+              accessibilityLabel="3"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              disableBuiltInState={true}
+              disableText={true}
+              fillColor="#FFFFFF"
+              focusable={true}
+              innerIconStyle={
+                {
+                  "borderColor": "#003366",
+                  "borderWidth": 2,
+                }
+              }
+              isChecked={false}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              size={36}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                  },
+                  undefined,
+                ]
+              }
+              testID="com.ariesbifold:id/auto-lock-time-3"
+              unfillColor="#FFFFFF"
+            >
+              <View
+                collapsable={false}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": 18,
+                    "height": 36,
+                    "justifyContent": "center",
+                    "transform": [
+                      {
+                        "scale": 1,
+                      },
+                    ],
+                    "width": 36,
+                  }
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "borderColor": "#FFFFFF",
+                        "borderRadius": 18,
+                        "borderWidth": 1,
+                        "height": 36,
+                        "justifyContent": "center",
+                        "width": 36,
+                      },
+                      {
+                        "borderColor": "#003366",
+                        "borderWidth": 2,
+                      },
+                    ]
+                  }
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "borderBottomColor": "#F2F2F2",
+                "borderBottomWidth": 1,
+                "marginHorizontal": 24,
+              }
+            }
+          />
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            [
+              {
+                "backgroundColor": "#FFFFFF",
+                "paddingHorizontal": 24,
+                "paddingVertical": 16,
+              },
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              },
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+                undefined,
+              ]
+            }
+          >
+            AutoLockTimes.OneMinute
+          </Text>
+          <View
+            accessibilityLabel="AutoLockTimes.OneMinute"
+            accessibilityRole="checkbox"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "justifyContent": "center",
+              }
+            }
+            testID="com.ariesbifold:id/ToggleAutoLockSwitch"
+          >
+            <View
+              ImageComponent={[Function]}
+              accessibilityLabel="1"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              disableBuiltInState={true}
+              disableText={true}
+              fillColor="#FFFFFF"
+              focusable={true}
+              innerIconStyle={
+                {
+                  "borderColor": "#003366",
+                  "borderWidth": 2,
+                }
+              }
+              isChecked={false}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              size={36}
+              style={
+                [
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                  },
+                  undefined,
+                ]
+              }
+              testID="com.ariesbifold:id/auto-lock-time-1"
+              unfillColor="#FFFFFF"
+            >
+              <View
+                collapsable={false}
+                style={
+                  {
+                    "alignItems": "center",
+                    "backgroundColor": "#FFFFFF",
+                    "borderRadius": 18,
+                    "height": 36,
+                    "justifyContent": "center",
+                    "transform": [
+                      {
+                        "scale": 1,
+                      },
+                    ],
+                    "width": 36,
+                  }
+                }
+              >
+                <View
+                  style={
+                    [
+                      {
+                        "alignItems": "center",
+                        "borderColor": "#FFFFFF",
+                        "borderRadius": 18,
+                        "borderWidth": 1,
+                        "height": 36,
+                        "justifyContent": "center",
+                        "width": 36,
+                      },
+                      {
+                        "borderColor": "#003366",
+                        "borderWidth": 2,
+                      },
+                    ]
+                  }
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;

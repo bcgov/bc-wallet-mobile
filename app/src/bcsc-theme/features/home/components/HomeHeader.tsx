@@ -1,14 +1,19 @@
+import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface HomeHeaderProps {
   name: string
+  fontSize?: number
+  cardSize?: {
+    height: number
+    width: number
+  }
 }
 
-const HomeHeader: React.FC<HomeHeaderProps> = ({ name }) => {
-  const { Spacing, TextTheme } = useTheme()
+const HomeHeader: React.FC<HomeHeaderProps> = ({ name, cardSize, fontSize }) => {
+  const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
@@ -23,8 +28,10 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ name }) => {
   return (
     <View style={styles.container}>
       <View style={styles.idContainer}>
-        <Icon name={'card-account-details'} size={40} color={TextTheme.normal.color} />
-        <ThemedText variant={'headingThree'}>{name}</ThemedText>
+        <GenericCardImage height={cardSize?.height} width={cardSize?.width} />
+        <ThemedText variant={'headingThree'} style={[fontSize ? { fontSize: fontSize } : {}]}>
+          {name}
+        </ThemedText>
       </View>
     </View>
   )

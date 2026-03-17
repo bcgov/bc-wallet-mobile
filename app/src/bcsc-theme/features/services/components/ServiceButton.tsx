@@ -1,21 +1,20 @@
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
-import { ThemedText, useTheme } from '@bifold/core'
 
 interface ServiceButtonProps {
   title: string
   description?: string
   onPress: () => void
+  testID?: string
 }
 
-const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPress }) => {
+const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPress, testID }) => {
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
       padding: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.primaryBackground,
       backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     title: {
@@ -25,7 +24,13 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
   })
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.container}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={styles.container}
+      accessibilityLabel={title}
+      accessibilityRole="button"
+      testID={testID ?? testIdWithKey(`ServiceButton-${title.replaceAll(/\s+/g, '')}`)}
+    >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
       </ThemedText>

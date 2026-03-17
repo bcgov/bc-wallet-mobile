@@ -1,88 +1,79 @@
-import {
-  BifoldError,
-  EventTypes,
-  OpenIDCredentialRecordProvider,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
-import AgentProvider from '@credo-ts/react-hooks'
-import React, { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { BCState } from '@/store'
-import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
-import useInitializeBCSC from '../hooks/useInitializeBCSC'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import React, { useEffect } from 'react'
+import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
+import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
+import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
+import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
+import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
-
-const TempLoadingView = () => {
-  const { ColorPalette } = useTheme()
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
-      <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-    </SafeAreaView>
-  )
-}
+import OnboardingStack from './OnboardingStack'
+import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
-  const { t } = useTranslation()
-  const [useAgentSetup, OnboardingStack, loadState] = useServices([
-    TOKENS.HOOK_USE_AGENT_SETUP,
-    TOKENS.STACK_ONBOARDING,
-    TOKENS.LOAD_STATE,
-  ])
-  const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const { loading } = useInitializeBCSC()
-
-  const shouldRenderMainStack = useMemo(
-    () => onboardingComplete && store.authentication.didAuthenticate,
-    [onboardingComplete, store.authentication.didAuthenticate]
-  )
-
-  useEffect(() => {
-    // if user gets locked out, erase agent
-    if (!store.authentication.didAuthenticate) {
-      shutdownAndClearAgentIfExists()
-    }
-  }, [store.authentication.didAuthenticate, shutdownAndClearAgentIfExists])
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener(EventTypes.DID_COMPLETE_ONBOARDING, () => {
-      setOnboardingComplete(true)
-    })
-
-    return sub.remove
-  }, [])
+  const [loadState] = useServices([TOKENS.LOAD_STATE])
+  const { isClientReady } = useBCSCApiClientState()
+  const { emitErrorModal } = useErrorAlert()
+  const { isNavigationReady } = useNavigationContainer()
+  const { initializingAccount } = useInitializeAccountStatus()
+  useSystemChecks(SystemCheckScope.STARTUP)
+  useThirdPartyKeyboardWarning()
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
-    if (store.stateLoaded) return
+    if (store.stateLoaded) {
+      return
+    }
 
-    loadState(dispatch).catch((err: unknown) => {
-      const error = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (err as Error).message, 1001)
+    try {
+      loadState(dispatch)
+    } catch (err) {
+      emitErrorModal('STATE_LOAD_ERROR', { error: err })
+    }
+  }, [dispatch, loadState, emitErrorModal, store.stateLoaded])
 
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
-    })
-  }, [dispatch, loadState, t, store.stateLoaded])
+  // Show loading screen if state, API client or navigation is not ready
+  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
+    return <LoadingScreen />
+  }
 
-  if (shouldRenderMainStack && agent) {
+  if (store.bcsc.hasAccount === false) {
+    return <OnboardingStack />
+  }
+
+  if (store.authentication.didAuthenticate === false) {
+    return <AuthStack />
+  }
+
+  if (store.bcscSecure.verified === false) {
     return (
-      <AgentProvider agent={agent}>
-        <OpenIDCredentialRecordProvider>
-          {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
-        </OpenIDCredentialRecordProvider>
-      </AgentProvider>
+      <BCSCActivityProvider>
+        <VerifyStack />
+      </BCSCActivityProvider>
     )
   }
 
-  // use same onboarding stack as bifold / bcwallet for now
-  return <OnboardingStack agent={agent} initializeAgent={initializeAgent} />
+  if (store.bcscSecure.verified === true) {
+    return (
+      <BCSCActivityProvider>
+        <BCSCAccountProvider>
+          <BCSCIdTokenProvider>
+            <BCSCMainStack />
+          </BCSCIdTokenProvider>
+        </BCSCAccountProvider>
+      </BCSCActivityProvider>
+    )
+  }
+
+  // Fallback to AuthStack if verification state is somehow lost
+  return <AuthStack />
 }
 
 export default BCSCRootStack

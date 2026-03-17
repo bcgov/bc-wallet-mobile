@@ -1,63 +1,107 @@
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { useTheme, ThemedText, Button, ButtonType, testIdWithKey } from '@bifold/core'
-import { StackScreenProps } from '@react-navigation/stack'
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import ServiceBookmarkButton from './components/ServiceBookmarkButton'
-import { useTranslation } from 'react-i18next'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import ArrowUp from '@assets/img/arrowup.svg'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
+import { StackScreenProps } from '@react-navigation/stack'
+import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { AppState, BackHandler, Platform } from 'react-native'
+import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
-type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.PairingConfirmation>
+const ARROW_SIZE = 80
 
-const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
-  const { Spacing } = useTheme()
+type PairingConfirmationProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
+
+const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, route }) => {
+  const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const { serviceName, serviceId } = route.params
+  const { serviceName, serviceId, fromAppSwitch } = route.params
+  const showIOSAppSwitchGuide = Platform.OS === 'ios' && fromAppSwitch
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
-  })
+  useEffect(() => {
+    if (!showIOSAppSwitchGuide) {
+      return
+    }
+
+    // On iOS, if the user backgrounds the app while on this screen -> navigate back to home screen
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background' && showIOSAppSwitchGuide) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCStacks.Tab }],
+          })
+        )
+      }
+    })
+
+    return subscription.remove
+  }, [navigation, showIOSAppSwitchGuide])
 
   const onClose = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: BCSCStacks.TabStack }],
-      })
-    )
+    if (fromAppSwitch && Platform.OS === 'android') {
+      BackHandler.exitApp() // Closes the app on Android, taking you back to browser
+    } else {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCStacks.Tab }],
+        })
+      )
+    }
   }
 
+  const controls = !showIOSAppSwitchGuide ? (
+    <Button
+      title={t('Global.Close')}
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('Close')}
+      accessibilityLabel={t('Global.Close')}
+      onPress={onClose}
+    />
+  ) : undefined
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{"You're done in this app"}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>
-          Go back to the device you started on to continue logging in to {serviceName}.
-        </ThemedText>
-        <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          title={t('Global.Close')}
-          buttonType={ButtonType.Primary}
-          testID={testIdWithKey('Close')}
-          accessibilityLabel={t('Global.Close')}
-          onPress={onClose}
+    <ScreenWrapper
+      controls={controls}
+      edges={['bottom', 'left', 'right', 'top']}
+      scrollViewContainerStyle={{ gap: Spacing.md }}
+    >
+      {showIOSAppSwitchGuide && (
+        <ArrowUp
+          height={ARROW_SIZE}
+          width={ARROW_SIZE}
+          color={ColorPalette.brand.primary}
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={t('BCSC.ManualPairing.AppSwitchArrowLabel')}
+          style={{ marginTop: -Spacing.md, marginBottom: Spacing.md }}
         />
-      </View>
-    </SafeAreaView>
+      )}
+      {fromAppSwitch ? (
+        <ThemedText style={{ marginTop: showIOSAppSwitchGuide ? undefined : Spacing.md }} variant={'headingThree'}>
+          {t('BCSC.ManualPairing.FromAppSwitchCompletionTitle', { serviceName })}
+        </ThemedText>
+      ) : (
+        <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
+      )}
+      {showIOSAppSwitchGuide && (
+        <ThemedText style={{ color: ColorPalette.brand.primary }}>
+          {t('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')}
+        </ThemedText>
+      )}
+      {fromAppSwitch ? (
+        Platform.OS === 'ios' ? (
+          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionIOS')}</ThemedText>
+        ) : (
+          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionAndroid')}</ThemedText>
+        )
+      ) : (
+        <ThemedText>{t('BCSC.ManualPairing.CompletionDescription', { serviceName })}</ThemedText>
+      )}
+      <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
+    </ScreenWrapper>
   )
 }
 
-export default ManualPairing
+export default PairingConfirmation

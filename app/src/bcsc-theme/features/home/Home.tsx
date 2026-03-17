@@ -1,47 +1,33 @@
+import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
+import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, useServices, TOKENS } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { useTheme } from '@bifold/core'
+import { StackScreenProps } from '@react-navigation/stack'
+import React, { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
+import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
-import SectionButton from '../../components/SectionButton'
-import { StackScreenProps } from '@react-navigation/stack'
-import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { NotificationBannerContainer } from './components/NotificationBannerContainer'
-
-// to be replaced with API response or translation entries, whichever ends up being the case
-const mockFindTitle = 'Where to use'
-const mockFindDescription = 'Find the websites you can log in to with this app.'
-const mockLogInTitle = 'Log in from a computer'
-const mockLogInDescription =
-  'Enter pairing code to log in from a different device – like a computer, laptop, or tablet.'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
 const Home: React.FC<HomeProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const { user } = useApi()
-  const [loading, setLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const apiClient = useBCSCApiClient()
+  const { account } = useAccount()
 
-  useEffect(() => {
-    const asyncEffect = async () => {
-      try {
-        setLoading(true)
-        const userInfo = await user.getUserInfo()
-        setUserInfo(userInfo)
-      } catch (error) {
-        logger.error(`Error while fetching user info`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    asyncEffect()
-  }, [user, logger])
+  const handleManageDevices = useCallback(() => {
+    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }, [apiClient.endpoints.accountDevices, navigation, t])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
@@ -57,27 +43,31 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
+  if (!account) {
+    return <LoadingScreen />
+  }
+
   return (
-    <TabScreenWrapper>
-      {loading ? (
-        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      ) : (
-        <>
-          <NotificationBannerContainer />
-          <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
-          <View style={styles.buttonsContainer}>
-            <SectionButton
-              title={mockFindTitle}
-              description={mockFindDescription}
-              style={{ marginBottom: Spacing.md }}
-              onPress={handleWhereToUsePress}
-            />
-            <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
-          </View>
-          <SavedServices />
-        </>
-      )}
-    </TabScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={handleManageDevices} />
+      <TabScreenWrapper>
+        <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
+        <View style={styles.buttonsContainer}>
+          <SectionButton
+            title={t('BCSC.Home.WhereToUseTitle')}
+            description={t('BCSC.Home.WhereToUseDescription')}
+            style={{ marginBottom: Spacing.md }}
+            onPress={handleWhereToUsePress}
+          />
+          <SectionButton
+            title={t('BCSC.Home.LogInFromComputerTitle')}
+            description={t('BCSC.Home.LogInFromComputerDescription')}
+            onPress={handlePairingCodePress}
+          />
+        </View>
+        <SavedServices />
+      </TabScreenWrapper>
+    </>
   )
 }
 

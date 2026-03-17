@@ -1,0 +1,366 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
+[
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#D3D3D3",
+        "borderColor": "#D3D3D3",
+        "borderRadius": 4,
+        "borderWidth": 1,
+        "flexDirection": "row",
+        "justifyContent": "center",
+        "marginBottom": 8,
+        "marginTop": 16,
+        "padding": 8,
+      }
+    }
+  >
+    <TextInput
+      accessibilityHint="Enter your 6-digit PIN"
+      accessibilityLabel=""
+      autoFocus={true}
+      cursorColor="#313132"
+      keyboardType="number-pad"
+      maxFontSizeMultiplier={1}
+      maxLength={6}
+      onBlur={[Function]}
+      onChangeText={[Function]}
+      onFocus={[Function]}
+      secureTextEntry={true}
+      style={
+        {
+          "color": "#313132",
+          "flex": 1,
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 26,
+          "fontWeight": "bold",
+          "height": 48,
+          "letterSpacing": 8,
+          "textAlignVertical": "center",
+        }
+      }
+      textContentType="password"
+      value=""
+    />
+    <View
+      accessibilityLabel="Show PIN"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "opacity": 1,
+          "padding": 5,
+        }
+      }
+      testID="com.ariesbifold:id/VisibilityButton"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontSize": 32,
+            },
+            undefined,
+            {
+              "fontFamily": "Material Design Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        󰈉
+      </Text>
+    </View>
+  </View>,
+  <View
+    style={
+      {
+        "justifyContent": "flex-start",
+        "minHeight": 20,
+      }
+    }
+  />,
+]
+`;
+
+exports[`PINInput Snapshot renders correctly with error message 1`] = `
+[
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#D3D3D3",
+        "borderColor": "#D3D3D3",
+        "borderRadius": 4,
+        "borderWidth": 1,
+        "flexDirection": "row",
+        "justifyContent": "center",
+        "marginBottom": 8,
+        "marginTop": 16,
+        "padding": 8,
+      }
+    }
+  >
+    <TextInput
+      accessibilityHint="Enter your 6-digit PIN"
+      accessibilityLabel=""
+      autoFocus={false}
+      cursorColor="#313132"
+      keyboardType="number-pad"
+      maxFontSizeMultiplier={1}
+      maxLength={6}
+      onBlur={[Function]}
+      onChangeText={[Function]}
+      onFocus={[Function]}
+      secureTextEntry={true}
+      style={
+        {
+          "color": "#313132",
+          "flex": 1,
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 26,
+          "fontWeight": "bold",
+          "height": 48,
+          "letterSpacing": 8,
+          "textAlignVertical": "center",
+        }
+      }
+      textContentType="password"
+      value=""
+    />
+    <View
+      accessibilityLabel="Show PIN"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "opacity": 1,
+          "padding": 5,
+        }
+      }
+      testID="com.ariesbifold:id/VisibilityButton"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontSize": 32,
+            },
+            undefined,
+            {
+              "fontFamily": "Material Design Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        󰈉
+      </Text>
+    </View>
+  </View>,
+  <View
+    style={
+      {
+        "justifyContent": "flex-start",
+        "minHeight": 20,
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#A12622",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 16,
+            "fontWeight": "normal",
+          },
+          undefined,
+        ]
+      }
+    >
+      Incorrect PIN
+    </Text>
+  </View>,
+]
+`;
+
+exports[`PINInput Snapshot renders correctly without error message 1`] = `
+[
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#D3D3D3",
+        "borderColor": "#D3D3D3",
+        "borderRadius": 4,
+        "borderWidth": 1,
+        "flexDirection": "row",
+        "justifyContent": "center",
+        "marginBottom": 8,
+        "marginTop": 16,
+        "padding": 8,
+      }
+    }
+  >
+    <TextInput
+      accessibilityHint="Enter your 6-digit PIN"
+      accessibilityLabel=""
+      autoFocus={false}
+      cursorColor="#313132"
+      keyboardType="number-pad"
+      maxFontSizeMultiplier={1}
+      maxLength={6}
+      onBlur={[Function]}
+      onChangeText={[Function]}
+      onFocus={[Function]}
+      secureTextEntry={true}
+      style={
+        {
+          "color": "#313132",
+          "flex": 1,
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 26,
+          "fontWeight": "bold",
+          "height": 48,
+          "letterSpacing": 8,
+          "textAlignVertical": "center",
+        }
+      }
+      textContentType="password"
+      value=""
+    />
+    <View
+      accessibilityLabel="Show PIN"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": undefined,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "opacity": 1,
+          "padding": 5,
+        }
+      }
+      testID="com.ariesbifold:id/VisibilityButton"
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontSize": 32,
+            },
+            undefined,
+            {
+              "fontFamily": "Material Design Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        󰈉
+      </Text>
+    </View>
+  </View>,
+  <View
+    style={
+      {
+        "justifyContent": "flex-start",
+        "minHeight": 20,
+      }
+    }
+  />,
+]
+`;

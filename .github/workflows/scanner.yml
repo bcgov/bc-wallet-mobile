@@ -1,0 +1,31 @@
+name: Virus Scanner
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  shai-hulud-scan:
+    runs-on: ubuntu-22.04
+    name: Scan code for Shai-hulud virus
+    steps:
+      - name: Checkout bc-wallet-mobile
+        uses: actions/checkout@v4
+        with:
+          path: bc-wallet-mobile
+
+      - name: Checkout Shai-hulud scanner
+        uses: actions/checkout@v4
+        with:
+          repository: CyberDracula/shai-hulud-2-scanner
+          path: shai-hulud-2-scanner
+
+      - name: Run Shai-hulud virus scanner
+        working-directory: shai-hulud-2-scanner
+        run: node scan.js --fail-on=critical ../bc-wallet-mobile
+
+
