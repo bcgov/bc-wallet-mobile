@@ -2,15 +2,13 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
-import { BCDispatchAction, BCState, IASEnvironment } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
+import { getLiveCallVideoQueue } from '../live-call/utils/videoDestinations'
 import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
-
-const TEST_HARNESS_QUEUE_DESTINATION_NAME = 'Test Harness Queue Destination'
-const PROD_HARNESS_QUEUE_DESTINATION_NAME = 'TODO: MD'
 
 type useVerificationMethodModelProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -84,14 +82,9 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       ])
 
       const formattedHours = formatServiceAndUnavailableHours(serviceHours)
-      // TODO (bm): Look for prod queue(s) depending on environment
-      const availableDestination = destinations.find((dest) =>
-        store.developer.environment.name === IASEnvironment.PROD.name
-          ? dest.destination_name === PROD_HARNESS_QUEUE_DESTINATION_NAME
-          : dest.destination_name === TEST_HARNESS_QUEUE_DESTINATION_NAME
-      )
+      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, destinations)
 
-      if (!availableDestination) {
+      if (!liveCallVideoQueue) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
           formattedHours,
@@ -119,7 +112,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [videoCallApi, navigation, store.developer.environment.name, logger])
+  }, [videoCallApi, store.developer.environment, navigation, logger])
 
   return {
     handlePressSendVideo,
