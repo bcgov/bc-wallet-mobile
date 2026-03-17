@@ -3,9 +3,41 @@ import { IASEnvironment } from '@/store'
 
 import { getLiveCallVideoQueue, VideoQueue } from './videoDestinations'
 
+const originalDev = __DEV__
+
 describe('videoDestinations', () => {
   describe('getLiveCallVideoQueue', () => {
+    afterEach(() => {
+      // @ts-ignore – restore original __DEV__
+      global.__DEV__ = originalDev
+    })
+
+    it('returns TEST queue when __DEV__ is true even in PROD environment', () => {
+      // @ts-ignore
+      global.__DEV__ = true
+      const destinations: VideoDestination[] = [
+        { destination_name: VideoQueue.DEFAULT, destination_priority: 1 },
+        { destination_name: VideoQueue.TEST, destination_priority: 2 },
+      ]
+
+      const result = getLiveCallVideoQueue(IASEnvironment.PROD, destinations)
+
+      expect(result).toBe(VideoQueue.TEST)
+    })
+
+    it('returns null when __DEV__ is true but TEST destination is not available', () => {
+      // @ts-ignore
+      global.__DEV__ = true
+      const destinations: VideoDestination[] = [{ destination_name: VideoQueue.DEFAULT, destination_priority: 1 }]
+
+      const result = getLiveCallVideoQueue(IASEnvironment.PROD, destinations)
+
+      expect(result).toBeNull()
+    })
+
     it('returns DEFAULT queue when environment is PROD and destination exists', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const destinations: VideoDestination[] = [
         { destination_name: VideoQueue.DEFAULT, destination_priority: 1 },
         { destination_name: VideoQueue.HIGH_PRIORITY, destination_priority: 2 },
@@ -17,6 +49,8 @@ describe('videoDestinations', () => {
     })
 
     it('returns TEST queue when environment is not PROD and destination exists', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const destinations: VideoDestination[] = [
         { destination_name: VideoQueue.TEST, destination_priority: 1 },
         { destination_name: VideoQueue.DEFAULT, destination_priority: 2 },
@@ -28,6 +62,8 @@ describe('videoDestinations', () => {
     })
 
     it('returns TEST queue for SIT environment when destination exists', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const destinations: VideoDestination[] = [{ destination_name: VideoQueue.TEST, destination_priority: 1 }]
 
       const result = getLiveCallVideoQueue(IASEnvironment.SIT, destinations)
@@ -36,6 +72,8 @@ describe('videoDestinations', () => {
     })
 
     it('returns null when PROD and DEFAULT queue is not in destinations', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const destinations: VideoDestination[] = [{ destination_name: VideoQueue.TEST, destination_priority: 1 }]
 
       const result = getLiveCallVideoQueue(IASEnvironment.PROD, destinations)
@@ -44,6 +82,8 @@ describe('videoDestinations', () => {
     })
 
     it('returns null when non-PROD and TEST queue is not in destinations', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const destinations: VideoDestination[] = [{ destination_name: VideoQueue.DEFAULT, destination_priority: 1 }]
 
       const result = getLiveCallVideoQueue(IASEnvironment.DEV, destinations)
@@ -52,6 +92,8 @@ describe('videoDestinations', () => {
     })
 
     it('returns null when destinations array is empty', () => {
+      // @ts-ignore
+      global.__DEV__ = false
       const result = getLiveCallVideoQueue(IASEnvironment.PROD, [])
 
       expect(result).toBeNull()
