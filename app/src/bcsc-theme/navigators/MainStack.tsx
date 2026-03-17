@@ -106,6 +106,7 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+          headerBackTitleVisible: false,
           headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createHeaderBackButton,
           header: createHeaderWithoutBanner,
@@ -123,7 +124,6 @@ const MainStack: React.FC = () => {
           component={EditNicknameScreen}
           options={{
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -132,7 +132,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Screens.Settings'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -141,7 +140,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AutoLockTime'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -150,7 +148,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -161,7 +158,6 @@ const MainStack: React.FC = () => {
             title: route.params?.isChangingExistingPIN
               ? t('BCSC.ChangePIN.ScreenTitle')
               : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -169,7 +165,6 @@ const MainStack: React.FC = () => {
           component={ManualPairingCode}
           options={() => ({
             headerShown: true,
-            headerBackTitleVisible: false,
             headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           })}
         />
@@ -179,7 +174,6 @@ const MainStack: React.FC = () => {
           options={({ route }) => ({
             headerShown: true,
             title: route.params.title,
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
@@ -188,7 +182,6 @@ const MainStack: React.FC = () => {
           component={MainRemoveAccountConfirmationScreen}
           options={() => ({
             headerShown: true,
-            headerBackTitleVisible: false,
           })}
         />
         <Stack.Screen
@@ -227,7 +220,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.ContactUs'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -236,7 +228,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.PrivacyInformation'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -244,7 +235,6 @@ const MainStack: React.FC = () => {
           component={ForgetAllPairingsScreen}
           options={() => ({
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen

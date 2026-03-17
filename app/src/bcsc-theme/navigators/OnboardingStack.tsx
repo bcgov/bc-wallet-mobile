@@ -44,6 +44,7 @@ const OnboardingStack = (): React.ReactElement => {
         headerShown: false,
         title: '',
         headerShadowVisible: false,
+        headerBackTitleVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
@@ -97,8 +98,6 @@ const OnboardingStack = (): React.ReactElement => {
         options={{
           title: t('BCSC.Onboarding.NotificationsHeader'),
           headerShown: true,
-          headerBackTestID: testIdWithKey('Back'),
-          headerBackAccessibilityLabel: t('Global.Back'),
           headerRight: createOnboardingHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
@@ -138,7 +137,6 @@ const OnboardingStack = (): React.ReactElement => {
         component={OnboardingRemoveAccountConfirmationScreen}
         options={() => ({
           headerShown: true,
-          headerBackTitleVisible: false,
         })}
       />
 

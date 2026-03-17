@@ -300,7 +300,6 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}
         component={VerifyRemoveAccountConfirmationScreen}
-        options={() => ({})}
       />
 
       {/* React navigation docs suggest modals at bottom of stack */}
