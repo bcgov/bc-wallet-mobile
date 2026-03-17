@@ -180,7 +180,7 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
       gap: Spacing.sm,
     },
     pinCheckboxRow: {
-      borderWidth: 1,
+      marginHorizontal: -Spacing.sm,
     },
     pinCheckboxError: {
       marginLeft: Spacing.md,
