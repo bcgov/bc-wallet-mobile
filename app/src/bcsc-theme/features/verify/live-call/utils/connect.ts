@@ -14,6 +14,26 @@ import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'r
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
+interface PexipIceServerEntry {
+  url?: string
+  username?: string
+  credential?: string
+}
+
+interface PexipTokenResult {
+  token: string
+  participant_uuid: string
+  stun?: PexipIceServerEntry[]
+  turn?: PexipIceServerEntry[]
+  [key: string]: unknown
+}
+
+interface IceServer {
+  urls: string | string[]
+  username?: string
+  credential?: string
+}
+
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
 
@@ -41,9 +61,9 @@ export const connect = async (
     throw new Error('Cannot establish the connection. Pexip unavailable (1):', response.status)
   }
 
-  const participantUuid = response.data.result.participant_uuid
-  let currentToken = response.data.result.token
-  const tokenResult = response.data.result
+  const tokenResult: PexipTokenResult = response.data.result
+  const participantUuid = tokenResult.participant_uuid
+  let currentToken = tokenResult.token
 
   logger.info('Creating WebRTC peer connection...')
   const peerConnection: RTCPeerConnection = await createPeerConnection(localStream, tokenResult, logger)
@@ -315,13 +335,13 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const buildIceServers = (tokenResult: Record<string, any>, logger: BifoldLogger) => {
-  const iceServers: Array<{ urls: string; username?: string; credential?: string }> = []
+const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
+  const iceServers: IceServer[] = []
 
   // Use STUN servers from Pexip token response
   if (Array.isArray(tokenResult.stun) && tokenResult.stun.length > 0) {
     for (const entry of tokenResult.stun) {
-      if (entry.url) {
+      if (entry && typeof entry.url === 'string') {
         iceServers.push({ urls: entry.url })
       }
     }
@@ -330,11 +350,21 @@ const buildIceServers = (tokenResult: Record<string, any>, logger: BifoldLogger)
   // Use TURN servers from Pexip token response
   if (Array.isArray(tokenResult.turn) && tokenResult.turn.length > 0) {
     for (const entry of tokenResult.turn) {
-      if (entry.url) {
+      if (
+        entry &&
+        typeof entry.url === 'string' &&
+        typeof entry.username === 'string' &&
+        typeof entry.credential === 'string'
+      ) {
         iceServers.push({
           urls: entry.url,
-          ...(entry.username && { username: entry.username }),
-          ...(entry.credential && { credential: entry.credential }),
+          username: entry.username,
+          credential: entry.credential,
+        })
+      } else if (entry && typeof entry.url === 'string') {
+        logger.warn('Skipping TURN server with missing username or credential', {
+          hasUsername: typeof entry.username === 'string',
+          hasCredential: typeof entry.credential === 'string',
         })
       }
     }
@@ -346,15 +376,11 @@ const buildIceServers = (tokenResult: Record<string, any>, logger: BifoldLogger)
     iceServers.push({ urls: 'stun:stun.l.google.com:19302' })
   }
 
-  logger.info('ICE servers configured:', { count: iceServers.length, urls: iceServers.map((s) => s.urls) })
+  logger.info('ICE servers configured:', { count: iceServers.length })
   return iceServers
 }
 
-const createPeerConnection = async (
-  localStream: MediaStream,
-  tokenResult: Record<string, any>,
-  logger: BifoldLogger
-) => {
+const createPeerConnection = async (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
   const peerConstraints = {
     iceServers: buildIceServers(tokenResult, logger),
   }
