@@ -4,6 +4,14 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/lockfile-check.yml'
+      - '**/package.json'
+      - 'yarn.lock'
+      - '**/build.gradle'
+      - '**/gradle.lockfile'
+      - '**/Podfile'
+      - '**/Podfile.lock'
   merge_group:
 
 jobs:
