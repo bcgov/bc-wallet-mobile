@@ -43,9 +43,10 @@ export const connect = async (
 
   const participantUuid = response.data.result.participant_uuid
   let currentToken = response.data.result.token
+  const tokenResult = response.data.result
 
   logger.info('Creating WebRTC peer connection...')
-  const peerConnection: RTCPeerConnection = await createPeerConnection(localStream)
+  const peerConnection: RTCPeerConnection = await createPeerConnection(localStream, tokenResult, logger)
 
   let connectionEstablished = false
   let remoteStreamReceived = false
@@ -314,14 +315,48 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const createPeerConnection = async (localStream: MediaStream) => {
+const buildIceServers = (tokenResult: Record<string, any>, logger: BifoldLogger) => {
+  const iceServers: Array<{ urls: string; username?: string; credential?: string }> = []
+
+  // Use STUN servers from Pexip token response
+  if (Array.isArray(tokenResult.stun) && tokenResult.stun.length > 0) {
+    for (const entry of tokenResult.stun) {
+      if (entry.url) {
+        iceServers.push({ urls: entry.url })
+      }
+    }
+  }
+
+  // Use TURN servers from Pexip token response
+  if (Array.isArray(tokenResult.turn) && tokenResult.turn.length > 0) {
+    for (const entry of tokenResult.turn) {
+      if (entry.url) {
+        iceServers.push({
+          urls: entry.url,
+          ...(entry.username && { username: entry.username }),
+          ...(entry.credential && { credential: entry.credential }),
+        })
+      }
+    }
+  }
+
+  // Fallback to Google public STUN if Pexip provided nothing
+  if (iceServers.length === 0) {
+    logger.warn('No ICE servers from Pexip, falling back to Google public STUN')
+    iceServers.push({ urls: 'stun:stun.l.google.com:19302' })
+  }
+
+  logger.info('ICE servers configured:', { count: iceServers.length, urls: iceServers.map((s) => s.urls) })
+  return iceServers
+}
+
+const createPeerConnection = async (
+  localStream: MediaStream,
+  tokenResult: Record<string, any>,
+  logger: BifoldLogger
+) => {
   const peerConstraints = {
-    iceServers: [
-      {
-        // TODO (bm): determine which STUN/TURN servers to use in which environments
-        urls: 'stun:stun.l.google.com:19302',
-      },
-    ],
+    iceServers: buildIceServers(tokenResult, logger),
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)
