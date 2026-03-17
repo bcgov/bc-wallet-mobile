@@ -14,8 +14,12 @@ xbuild/
 pc-api*.json
 api*.json
 *secret*
+!PINSecret.swift
 *secrets*
 .env
+.env.saucelabs
+google-services.json
+GoogleService-Info.plist
 .idea/
 
 # Other
@@ -25,6 +29,10 @@ lib
 local.properties
 .jest
 .npmrc
+
+# Swift Package Manager
+.build/
+.swiftpm/
 
 # yarn
 .yarn/*
@@ -71,3 +79,7 @@ credo-ts/
 app/vendor/
 
 .metro-cache/
+
+coverage/
+.settings/
+tmp/

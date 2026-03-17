@@ -1,7 +1,9 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
-  KeyboardView,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -12,13 +14,9 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
-
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCRootStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 
-type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ManualPairingCode>
+type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
 
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const { t } = useTranslation()
@@ -30,18 +28,6 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {},
-  })
-
   const handleChangeCode = (text: string) => {
     setCode(text)
     setMessage(undefined)
@@ -49,9 +35,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
 
   const onSubmit = async () => {
     if (code.length < 6) {
-      setMessage('Pairing code must be six characters long.')
+      setMessage(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
     } else if (!code.length) {
-      setMessage('Pairing code cannot be empty.')
+      setMessage(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
     } else {
       try {
         setLoading(true)
@@ -66,36 +52,35 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
-        setMessage('Failed to submit pairing code.')
+        setMessage(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
       } finally {
         setLoading(false)
       }
     }
   }
 
+  const controls = (
+    <Button
+      title={t('Global.Submit')}
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('Submit')}
+      accessibilityLabel={t('Global.Submit')}
+      onPress={onSubmit}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
+
   return (
-    <KeyboardView>
-      <View style={styles.container}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingOne'}>Enter pairing code</ThemedText>
-          <ThemedText>A pairing code will be provided when you log in to a website on another device.</ThemedText>
-          <PairingCodeTextInput handleChangeCode={handleChangeCode} />
-          <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            title={t('Global.Submit')}
-            buttonType={ButtonType.Primary}
-            testID={testIdWithKey('Submit')}
-            accessibilityLabel={t('Global.Submit')}
-            onPress={onSubmit}
-            disabled={loading}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-        </View>
-      </View>
-    </KeyboardView>
+    <ScreenWrapper keyboardActive controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
+      <PairingCodeTextInput handleChangeCode={handleChangeCode} />
+      <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
+    </ScreenWrapper>
   )
 }
 

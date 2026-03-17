@@ -1,31 +1,31 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet } from 'react-native'
+import { useMicrophonePermission } from 'react-native-vision-camera'
 
 type StartCallScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.StartCall>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
+  const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
+    useMicrophonePermission()
+  const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const hasRequestedPermission = useRef(false)
+  const { liveCallFileUploadAlert } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
-    },
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
     // (along with other metadata.) Image is rendered at a larger size to pick up the
     // exif data, then scaled down and given negative margin to fit in the button
@@ -37,9 +37,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       transform: [{ scale: 0.333 }], // scale to match thumbnailHeight
       margin: -100, // -height * scale
     },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
     bulletContainer: {
       flexDirection: 'row',
     },
@@ -48,31 +45,74 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
-  const onPressStart = () => {
-    navigation.navigate(BCSCScreens.LiveCall)
+  const requestBluetoothPermission = async () => {
+    // On Android 12+, BLUETOOTH_CONNECT must be requested at runtime.
+    // Without it, InCallManager's BluetoothManager silently fails to start
+    // and call audio always routes to the speaker instead of BT headsets.
+    try {
+      if (Platform.OS === 'android' && Platform.Version >= 31) {
+        await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
+      }
+    } catch (error) {
+      // Not a blocker — the call still works without Bluetooth
+      logger.warn('Failed to request Bluetooth permission', { error: error as Error })
+    }
   }
 
+  const onPressStart = async () => {
+    if (hasMicrophonePermission) {
+      await requestBluetoothPermission()
+      navigation.navigate(BCSCScreens.LiveCall)
+      return
+    }
+
+    if (!hasRequestedPermission.current) {
+      hasRequestedPermission.current = true
+      const granted = await requestMicrophonePermission()
+      if (granted) {
+        await requestBluetoothPermission()
+        navigation.navigate(BCSCScreens.LiveCall)
+        return
+      }
+    }
+    setShowPermissionDisabled(true)
+  }
+
+  const handleImageError = (error: ImageErrorEvent) => {
+    logger.error('[StartCallScreen] Error loading user photo for live call', { error })
+
+    liveCallFileUploadAlert()
+  }
+
+  if (showPermissionDisabled) {
+    return <PermissionDisabled permissionType="microphone" />
+  }
+
+  const controls = (
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.VideoCall.StartCall')}
+      accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
+      onPress={onPressStart}
+    />
+  )
+
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
-        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
-          {t('Unified.VideoCall.StartVideoCallDescription')}
-        </ThemedText>
-        <ThemedText style={{ marginTop: Spacing.lg }}>{t('Unified.VideoCall.YouShould')}</ThemedText>
-        <BulletPointWithText translationKey={'Unified.VideoTips.PrivatePlace'} />
-        <BulletPointWithText translationKey={'Unified.VideoTips.OnlyPerson'} />
-        <BulletPointWithText translationKey={'Unified.VideoTips.RemoveGlasses'} />
-      </ScrollView>
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          title={t('Unified.VideoCall.StartCall')}
-          accessibilityLabel={t('Unified.VideoCall.StartVideoCall')}
-          onPress={onPressStart}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper controls={controls}>
+      <Image
+        source={{ uri: `file://${store.bcsc.photoPath}` }}
+        resizeMode={'contain'}
+        style={styles.image}
+        onError={handleImageError}
+      />
+      <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
+        {t('BCSC.VideoCall.StartVideoCallDescription')}
+      </ThemedText>
+      <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.VideoCall.YouShould')}</ThemedText>
+      <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} />
+      <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} />
+      <BulletPointWithText translationKey={'BCSC.VideoTips.RemoveGlasses'} />
+    </ScreenWrapper>
   )
 }
 

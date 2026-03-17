@@ -1,16 +1,16 @@
+import { HelpCentreUrl } from '@/constants'
+import { testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { testIdWithKey, useTheme } from '@bifold/core'
+import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
+import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import Account from '../features/account/Account'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
-import createHelpHeaderButton from '../components/HelpHeaderButton'
-import { HelpCentreUrl } from '@/constants'
-import { createSettingsHeaderButton } from '../components/SettingsHeaderButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -18,8 +18,8 @@ type TabBarIconProps = {
   size: number
 }
 
-const createTabBarIcon = (label: string, iconName: string): React.FC<TabBarIconProps> => {
-  const TabBarIconComponent: React.FC<TabBarIconProps> = ({ focused }) => {
+const createTabBarIcon = (label: string, iconName: string) => {
+  const TabBarIconComponent = ({ focused }: TabBarIconProps): React.JSX.Element => {
     const { TabTheme, TextTheme, Spacing } = useTheme()
     const { fontScale } = useWindowDimensions()
     const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18
@@ -66,11 +66,11 @@ const BCSCTabStack: React.FC = () => {
         initialRouteName={BCSCScreens.Home}
         screenOptions={{
           unmountOnBlur: false,
-          lazy: false,
+          lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          headerShown: false,
+          title: '',
         }}
       >
         <Tab.Screen
@@ -82,10 +82,8 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Home',
             tabBarTestID: testIdWithKey('Home'),
-            title: '',
-            headerShown: true,
-            headerLeft: createSettingsHeaderButton(),
-            headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+            headerLeft: createMainSettingsHeaderButton(),
+            headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}
         />
         <Tab.Screen
@@ -97,9 +95,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Services',
             tabBarTestID: testIdWithKey('Services'),
-            title: '',
-            headerShown: true,
-            headerLeft: createSettingsHeaderButton(),
+            headerLeft: createMainSettingsHeaderButton(),
           }}
         />
         <Tab.Screen
@@ -111,9 +107,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Account',
             tabBarTestID: testIdWithKey('Account'),
-            title: '',
-            headerShown: true,
-            headerLeft: createSettingsHeaderButton(),
+            headerLeft: createMainSettingsHeaderButton(),
           }}
         />
       </Tab.Navigator>

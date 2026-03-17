@@ -1,4 +1,4 @@
-import { useTheme, ThemedText } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View, ViewStyle } from 'react-native'
 

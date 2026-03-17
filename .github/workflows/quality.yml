@@ -1,91 +1,132 @@
 name: Code Quality
 
 on:
+  push:
+    branches: [main] # needed so codecov gets BASE coverage for comparison
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
+  merge_group:
 
 jobs:
-  lint:
-    runs-on: ubuntu-22.04
-    name: Lint+Format+Types
+  typecheck-test:
+    runs-on: macos-26
+    name: Build, Typecheck, Test & Coverage
+    permissions:
+      contents: read
     steps:
-      - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
+      - uses: ./.github/workflows/actions/setup-node
 
-      - name: Cache app node_modules
+      - name: Cache node_modules
+        id: cache-node
         uses: actions/cache@v3
         with:
           path: .yarn/cache
-          # Cache will be invalidated if yarn.lock changes
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        working-directory: app
         run: yarn install --immutable
 
       - name: Cache bcsc-core build output
         uses: actions/cache@v3
         with:
           path: packages/bcsc-core/lib
-          # Cache will be invalidated if any source file changes
           key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
           restore-keys: |
             ${{ runner.os }}-bcsc-core-build-
 
-      # Note: The `bcsc-core` package must be built before type checking.
-      - name: Build bcsc-core
-        working-directory: packages/bcsc-core
+      - name: Build packages
         run: yarn build
 
-      - name: Check style
-        working-directory: app
-        run: |
-          yarn prettier
-          echo "Run 'yarn prettier:fix to automatically fix formatting issues."
-
-      - name: LINTing
-        working-directory: app
-        run: yarn lint
-
-      - name: Check types
-        working-directory: app
-        # Note: To pass the type check, the `bcsc-core` package must be built first.
+      - name: Typecheck
         run: yarn typecheck
 
-  test:
-    runs-on: ubuntu-22.04
-    name: Testing
-    steps:
-      - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+      - name: Run tests and generate coverage report
+        run: yarn coverage
 
-      - uses: actions/setup-python@v5
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
         with:
-          python-version: "3.11"
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: always()
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
+  lint-format:
+    runs-on: macos-26
+    name: Lint & Format
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Cache app node_modules
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Restore node_modules cache
         uses: actions/cache@v3
         with:
           path: .yarn/cache
-          # Cache will be invalidated if yarn.lock changes
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        working-directory: app
         run: yarn install --immutable
 
-      - name: Automated testing
-        run: yarn test
+      - name: Install formatting and linting tools
+        run: brew install swiftformat clang-format ktlint
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Format check
+        run: yarn format:check
+
+  test-ios:
+    runs-on: macos-26
+    name: Native Tests (iOS)
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run iOS tests
+        working-directory: packages/bcsc-core
+        run: |
+          xcodebuild test \
+            -scheme BcscCoreTests-Package \
+            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+            -skipPackagePluginValidation
+
+  test-android:
+    runs-on: macos-26
+    name: Native Tests (Android)
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('packages/bcsc-core/android/**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Run Android tests
+        working-directory: packages/bcsc-core/android
+        run: ./gradlew test

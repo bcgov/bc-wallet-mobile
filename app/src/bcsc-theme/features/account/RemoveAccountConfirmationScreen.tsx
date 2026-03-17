@@ -1,18 +1,20 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
+type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 
 /**
  * Screen that confirms the user's intent to remove their account.
  *
- * @returns {*} {JSX.Element} The RemoveAccountConfirmationScreen component.
+ * @returns {*} {React.ReactElement} The RemoveAccountConfirmationScreen component.
  */
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { Spacing } = useTheme()
@@ -20,11 +22,17 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const loadingScreen = useLoadingScreen()
 
   const styles = StyleSheet.create({
     container: {
       padding: Spacing.md,
       flex: 1,
+      justifyContent: 'space-between',
+    },
+    scrollView: {
+      flexGrow: 1,
+      gap: Spacing.md,
     },
     buttonsContainer: {
       gap: Spacing.md,
@@ -36,22 +44,30 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   })
 
   return (
-    <View style={styles.container}>
-      <View style={styles.textContainer}>
-        <ThemedText variant={'headingThree'}>{t('Unified.Account.RemoveAccountTitle')}</ThemedText>
-        <ThemedText>{t('Unified.Account.RemoveAccountParagraph')}</ThemedText>
-      </View>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.Account.RemoveAccountTitle')}</ThemedText>
+        <ThemedText>{t('BCSC.Account.RemoveAccountParagraph')}</ThemedText>
+      </ScrollView>
       <View style={styles.buttonsContainer}>
         <Button
-          accessibilityLabel={t('Unified.Account.RemoveAccount')}
+          accessibilityLabel={t('BCSC.Account.RemoveAccount')}
           buttonType={ButtonType.Critical}
-          title={t('Unified.Account.RemoveAccount')}
+          title={t('BCSC.Account.RemoveAccount')}
           onPress={async () => {
-            const result = await factoryReset()
+            const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
+            try {
+              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
-            if (!result.success) {
-              // TODO (MD): Show some user feedback that the factory reset failed
-              logger.error('Factory reset failed', result.error)
+              const result = await factoryReset()
+
+              if (!result.success) {
+                logger.error('[RemoveAccount] Failed to remove account', result.error)
+              }
+            } catch (error) {
+              logger.error('[RemoveAccount] Error during account removal', error as Error)
+            } finally {
+              stopLoading()
             }
           }}
         />
@@ -62,8 +78,20 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
         />
       </View>
-    </View>
+    </SafeAreaView>
   )
+}
+
+export const MainRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
+export const VerifyRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
+}
+
+export const OnboardingRemoveAccountConfirmationScreen = () => {
+  return <RemoveAccountConfirmationScreen />
 }
 
 export default RemoveAccountConfirmationScreen

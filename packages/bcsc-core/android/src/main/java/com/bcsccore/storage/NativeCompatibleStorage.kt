@@ -1,0 +1,682 @@
+package com.bcsccore.storage
+
+import android.content.Context
+import android.util.Log
+import com.bcsccore.fileport.encryption.AESEncryptor
+import com.bcsccore.fileport.encryption.AndroidKeyStoreSource
+import com.bcsccore.fileport.encryption.Encryption
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.lang.reflect.Type
+import java.util.TimeZone
+
+/**
+ * Native-compatible storage that matches the ias-android storage format.
+ * This enables rollback capability between bcsc-core and native ias-android.
+ *
+ * Storage paths match native format:
+ * - Accounts: {filesDir}/{issuerName}/accounts
+ * - Tokens: {filesDir}/{issuerName}/{accountUuid}/tokens
+ *
+ * Uses AES-GCM encryption with the same key alias ("enc1") as native.
+ */
+class NativeCompatibleStorage(
+    private val context: Context,
+) {
+    companion object {
+        private const val TAG = "NativeCompatibleStorage"
+        private const val ACCOUNTS_FILENAME = "accounts"
+        private const val TOKENS_FILENAME = "tokens"
+        private const val ISSUER_FILENAME = "issuer"
+        private const val AUTHORIZATION_REQUEST_FILENAME = "authorization_request"
+        private const val CLIENT_METADATA_FILENAME = "clientmetadata"
+        private val UUID_REGEX =
+            Regex(
+                "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            )
+    }
+
+    private val encryption: Encryption by lazy {
+        val keySource = AndroidKeyStoreSource()
+        AESEncryptor(keySource)
+    }
+
+    private val gson: Gson by lazy {
+        GsonBuilder()
+            .registerTypeAdapter(TimeZone::class.java, TimeZoneTypeAdapter())
+            .create()
+    }
+
+    // MARK: - Issuer Name Resolution
+
+    fun saveIssuerToFile(issuer: String): Boolean {
+        val file = File(context.filesDir, ISSUER_FILENAME)
+        return writeEncryptedFile(file, issuer)
+    }
+
+    /**
+     * Gets the issuer name from an issuer URL.
+     * Matches native logic in Utils.getIssuerNameFromIssuer()
+     *
+     * Examples:
+     * - "https://id.gov.bc.ca/device/" -> "prod"
+     * - "https://idsit.gov.bc.ca/device/" -> "sit"
+     * - "https://idqa.gov.bc.ca/device/" -> "qa"
+     * - "https://iddev.gov.bc.ca/device/" -> "dev"
+     */
+    fun getIssuerNameFromIssuer(issuer: String): String {
+        // Check direct mapping first
+        IssuerEnvironmentMap.getIssuerNameFromUrl(issuer)?.let { return it }
+
+        // Fallback: extract from URL (matches native Utils.getIssuerNameFromIssuer)
+        return try {
+            val startIndex = issuer.indexOf("d") + 1
+            val endIndex = issuer.indexOf(".")
+            if (startIndex > 0 && endIndex > startIndex) {
+                issuer.substring(startIndex, endIndex)
+            } else {
+                IssuerEnvironmentMap.DEFAULT_ISSUER // Default fallback
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not parse issuer name from: $issuer, defaulting to 'prod'")
+            IssuerEnvironmentMap.DEFAULT_ISSUER
+        }
+    }
+
+    /**
+     * Gets the current isser name by reading the issuer file.
+     */
+    fun getDefaultIssuerName(): String {
+        val issuerFile = File(context.filesDir, ISSUER_FILENAME)
+        val issuer = readEncryptedFile(issuerFile)
+
+        if (issuer != null) {
+            return getIssuerNameFromIssuer(issuer)
+        }
+
+        val inferredIssuerName = findIssuerFromAccountDirectories()
+        if (inferredIssuerName != null) {
+            Log.w(
+                TAG,
+                "Issuer file missing; inferred issuer name '$inferredIssuerName' from account directories",
+            )
+            return inferredIssuerName
+        }
+
+        Log.w(
+            TAG,
+            "Issuer file not found or unreadable, defaulting to '${IssuerEnvironmentMap.DEFAULT_ISSUER}'",
+        )
+        return IssuerEnvironmentMap.DEFAULT_ISSUER
+    }
+
+    /**
+     * Gets the issuer with a fallback.
+     * If the issuer file is missing or unreadable it will
+     * search through account directories to infer the issuer
+     *
+     */
+    fun getIssuerWithFallback(): String? {
+        val issuerFile = File(context.filesDir, ISSUER_FILENAME)
+        val issuer = readEncryptedFile(issuerFile)
+        if (!issuer.isNullOrEmpty()) {
+            return issuer
+        }
+
+        val inferredIssuerName = findIssuerFromAccountDirectories() ?: return null
+        return IssuerEnvironmentMap.getIssuerUrlFromName(inferredIssuerName)
+    }
+
+    /**
+     * Check file directories for user accounts. This will return the first issuer found.
+     * Account directories follow this pattern:
+     *  ~/files/sit/{account UUID}/
+     *  ~/files/prod/{account UUID}/
+     *
+     */
+    fun findIssuerFromAccountDirectories(): String? {
+        val filesDir = context.filesDir
+        if (!filesDir.exists() || !filesDir.isDirectory) {
+            return null
+        }
+
+        // loops through issuer directories and checks for any account UUID directories
+        for (issuerName in IssuerEnvironmentMap.issuerNamesInPriorityOrder) {
+            val issuerDirectory = File(filesDir, issuerName)
+            if (!issuerDirectory.exists() || !issuerDirectory.isDirectory) {
+                continue
+            }
+
+            val accountDirectories =
+                issuerDirectory
+                    .listFiles()
+                    ?.filter { it.isDirectory && UUID_REGEX.matches(it.name) }
+                    .orEmpty()
+
+            if (accountDirectories.isNotEmpty()) {
+                Log.d(
+                    TAG,
+                    "Found ${accountDirectories.size} account UUID directory entries under issuer '$issuerName'",
+                )
+                return issuerName
+            }
+        }
+
+        return null
+    }
+
+    // MARK: - File Path Helpers
+    private fun getAccountsFile(issuerName: String): File {
+        val path = issuerName + File.separator + ACCOUNTS_FILENAME
+        return File(context.filesDir, path)
+    }
+
+    private fun getTokensFile(
+        issuerName: String,
+        accountUuid: String,
+    ): File {
+        val path = issuerName + File.separator + accountUuid + File.separator + TOKENS_FILENAME
+        return File(context.filesDir, path)
+    }
+
+    // MARK: - Low-level I/O with Encryption
+
+    internal fun readEncryptedFile(file: File): String? {
+        if (!file.exists() || !file.isFile) {
+            return null
+        }
+
+        return try {
+            val encryptedBytes =
+                FileInputStream(file).use { fis ->
+                    val data = ByteArray(file.length().toInt())
+                    fis.read(data)
+                    data
+                }
+            if (isFilePlainText(encryptedBytes)) {
+                Log.d(TAG, "File appears to be plain text, skipping decryption: ${file.absolutePath}")
+                return String(encryptedBytes)
+            } else {
+                return encryption.decrypt(encryptedBytes)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to read/decrypt file: ${file.absolutePath}", e)
+            null
+        }
+    }
+
+    // A helper function that checks if a file's bytes are likely plain text by looking for common JSON structures and UTF-8 BOM
+    private fun isFilePlainText(bytes: ByteArray): Boolean {
+        if (bytes.isEmpty()) return false
+
+        var i = 0
+
+        // UTF-8 BOM
+        if (bytes.size >= 3 &&
+            bytes[0] == 0xEF.toByte() &&
+            bytes[1] == 0xBB.toByte() &&
+            bytes[2] == 0xBF.toByte()
+        ) {
+            i = 3
+        }
+
+        // Skip ASCII whitespace
+        while (i < bytes.size) {
+            when (bytes[i].toInt().toChar()) {
+                ' ', '\n', '\r', '\t' -> i++
+                else -> break
+            }
+        }
+
+        if (i >= bytes.size) return false
+        return bytes[i] == '{'.code.toByte() || bytes[i] == '['.code.toByte()
+    }
+
+    internal fun writeEncryptedFile(
+        file: File,
+        content: String,
+    ): Boolean =
+        try {
+            // Ensure parent directory exists
+            file.parentFile?.mkdirs()
+
+            // Encrypt and write
+            val encryptedBytes = encryption.encrypt(content)
+            FileOutputStream(file).use { fos ->
+                fos.write(encryptedBytes)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to encrypt/write file: ${file.absolutePath}", e)
+            false
+        }
+
+    // MARK: - Account Storage (Native Compatible)
+
+    /**
+     * Saves accounts to native-compatible encrypted storage.
+     * Path: {filesDir}/{issuerName}/accounts
+     */
+    fun saveAccounts(
+        accounts: List<NativeAccount>,
+        issuerName: String,
+    ): Boolean {
+        val file = getAccountsFile(issuerName)
+        val jsonContent = gson.toJson(accounts)
+        Log.d(TAG, "Saving ${accounts.size} accounts to: ${file.absolutePath}")
+        return writeEncryptedFile(file, jsonContent)
+    }
+
+    /**
+     * Reads accounts from native-compatible encrypted storage.
+     */
+    fun readAccounts(issuerName: String): List<NativeAccount>? {
+        val file = getAccountsFile(issuerName)
+        Log.d(TAG, "Reading accounts from: ${file.absolutePath}")
+
+        val jsonContent = readEncryptedFile(file) ?: return null
+
+        return try {
+            val type = object : com.google.gson.reflect.TypeToken<List<NativeAccount>>() {}.type
+            gson.fromJson<List<NativeAccount>>(jsonContent, type)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse accounts JSON", e)
+            null
+        }
+    }
+
+    /**
+     * Checks if accounts file exists for the given issuer.
+     */
+    fun accountsExist(issuerName: String): Boolean = getAccountsFile(issuerName).exists()
+
+    /**
+     * Deletes the accounts file for the given issuer.
+     */
+    fun deleteAccounts(issuerName: String): Boolean {
+        val file = getAccountsFile(issuerName)
+        return if (file.exists()) file.delete() else true
+    }
+
+    // MARK: - Token Storage (Native Compatible)
+
+    /**
+     * Saves tokens to native-compatible encrypted storage.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/tokens
+     */
+    fun saveTokens(
+        tokens: NativeTokens,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getTokensFile(issuerName, accountUuid)
+        val jsonContent = gson.toJson(tokens)
+        Log.d(TAG, "Saving tokens to: ${file.absolutePath}")
+        return writeEncryptedFile(file, jsonContent)
+    }
+
+    /**
+     * Reads tokens from native-compatible encrypted storage.
+     */
+    fun readTokens(
+        issuerName: String,
+        accountUuid: String,
+    ): NativeTokens? {
+        val file = getTokensFile(issuerName, accountUuid)
+        Log.d(TAG, "Reading tokens from: ${file.absolutePath}")
+
+        val jsonContent = readEncryptedFile(file) ?: return null
+
+        return try {
+            gson.fromJson(jsonContent, NativeTokens::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse tokens JSON", e)
+            null
+        }
+    }
+
+    /**
+     * Checks if tokens file exists for the given account.
+     */
+    fun tokensExist(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean = getTokensFile(issuerName, accountUuid).exists()
+
+    /**
+     * Deletes tokens and the account directory.
+     */
+    fun deleteTokens(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val tokensFile = getTokensFile(issuerName, accountUuid)
+        val accountDir = tokensFile.parentFile
+
+        // Delete tokens file
+        if (tokensFile.exists()) {
+            tokensFile.delete()
+        }
+
+        // Delete account directory if empty
+        accountDir?.let {
+            if (it.exists() && it.isDirectory && (it.listFiles()?.isEmpty() == true)) {
+                it.delete()
+            }
+        }
+
+        return true
+    }
+
+    // MARK: - Migration Helpers
+
+    /**
+     * Attempts to read accounts from the old flat file location and migrate them.
+     * Old location: {filesDir}/accounts (unencrypted JSON array)
+     * New location: {filesDir}/{issuerName}/accounts (encrypted)
+     */
+    fun migrateFromFlatFileIfNeeded(): Boolean {
+        val oldFile = File(context.filesDir, "accounts")
+        if (!oldFile.exists()) {
+            return false // No migration needed
+        }
+
+        Log.d(TAG, "Found old-format accounts file, attempting migration")
+
+        return try {
+            // Read old unencrypted file
+            val oldContent = oldFile.readText()
+            val jsonArray = org.json.JSONArray(oldContent)
+
+            if (jsonArray.length() == 0) {
+                oldFile.delete()
+                return false
+            }
+
+            // Parse the first account to get issuer
+            val firstAccount = jsonArray.getJSONObject(0)
+            val issuer = firstAccount.optString("issuer", "")
+            val issuerName =
+                if (issuer.isNotEmpty()) {
+                    getIssuerNameFromIssuer(issuer)
+                } else {
+                    getDefaultIssuerName()
+                }
+
+            // Convert to native format
+            val accounts = mutableListOf<NativeAccount>()
+            for (i in 0 until jsonArray.length()) {
+                val accountJson = jsonArray.getJSONObject(i)
+                val account =
+                    NativeAccount(
+                        uuid = accountJson.optString("uuid", accountJson.optString("id", "")),
+                        nickName = accountJson.optString("nickName", accountJson.optString("nickname", null)),
+                        issuer = accountJson.optString("issuer", ""),
+                        clientId = accountJson.optString("clientId", accountJson.optString("clientID", "")),
+                        createdAt = accountJson.optLong("createdAt", System.currentTimeMillis()),
+                        penalty =
+                            NativePenalty(
+                                penaltyAttempts =
+                                    accountJson.optJSONObject("penalty")?.optInt("penaltyAttempts", 0) ?: 0,
+                            ),
+                        accountSecurityType =
+                            parseSecurityType(
+                                accountJson.optString(
+                                    "accountSecurityType",
+                                    accountJson.optString("securityMethod", "DeviceSecurity"),
+                                ),
+                            ),
+                    )
+                accounts.add(account)
+            }
+
+            // Save in new encrypted format
+            if (saveAccounts(accounts, issuerName)) {
+                Log.d(TAG, "Successfully migrated ${accounts.size} accounts to native format")
+                oldFile.delete() // Remove old file
+                true
+            } else {
+                Log.e(TAG, "Failed to save migrated accounts")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Migration failed", e)
+            false
+        }
+    }
+
+    private fun parseSecurityType(value: String): NativeAccountSecurityType =
+        gson.fromJson("\"$value\"", NativeAccountSecurityType::class.java)
+            ?: NativeAccountSecurityType.DeviceSecurity
+
+    // MARK: - Authorization Request Storage
+
+    private fun getAuthorizationRequestFile(
+        issuerName: String,
+        accountUuid: String,
+    ): File {
+        val path = issuerName + File.separator + accountUuid + File.separator + AUTHORIZATION_REQUEST_FILENAME
+        return File(context.filesDir, path)
+    }
+
+    /**
+     * Saves authorization request to native-compatible encrypted storage.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/authorization_request
+     */
+    fun saveAuthorizationRequest(
+        authRequest: NativeAuthorizationRequest,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getAuthorizationRequestFile(issuerName, accountUuid)
+        val jsonContent = gson.toJson(authRequest)
+        Log.d(TAG, "Saving authorization request to: ${file.absolutePath}")
+        return writeEncryptedFile(file, jsonContent)
+    }
+
+    /**
+     * Reads authorization request from native-compatible encrypted storage.
+     */
+    fun readAuthorizationRequest(
+        issuerName: String,
+        accountUuid: String,
+    ): NativeAuthorizationRequest? {
+        val file = getAuthorizationRequestFile(issuerName, accountUuid)
+        Log.d(TAG, "Reading authorization request from: ${file.absolutePath}")
+
+        val jsonContent = readEncryptedFile(file) ?: return null
+
+        return try {
+            gson.fromJson(jsonContent, NativeAuthorizationRequest::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse authorization request JSON", e)
+            null
+        }
+    }
+
+    /**
+     * Checks if authorization request file exists for the given account.
+     */
+    fun authorizationRequestExists(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean = getAuthorizationRequestFile(issuerName, accountUuid).exists()
+
+    /**
+     * Deletes the authorization request file for the given account.
+     */
+    fun deleteAuthorizationRequest(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getAuthorizationRequestFile(issuerName, accountUuid)
+        return if (file.exists()) file.delete() else true
+    }
+
+    /**
+     * Reads the registration access token from the V3 providers file.
+     *
+     * @param issuerName The issuer name
+     * @param accountUuid The account UUID
+     * @return The registration access token string, or null if not found
+     */
+    fun readRegistrationTokenFromV3Provider(
+        issuerName: String,
+        accountUuid: String,
+    ): String? {
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
+        val providerFile = File(context.filesDir, providerPath)
+
+        Log.d(TAG, "readRegistrationTokenFromV3Provider: Attempting to read v3 provider file from: $providerPath")
+        if (!providerFile.exists()) {
+            Log.d(
+                TAG,
+                "readRegistrationTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
+            )
+            return null
+        }
+
+        Log.d(TAG, "readRegistrationTokenFromV3Provider: Reading v3 provider file: ${providerFile.absolutePath}")
+
+        val jsonContent = readEncryptedFile(providerFile) ?: return null
+
+        return try {
+            val jsonObject = org.json.JSONObject(jsonContent)
+            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
+            val token = clientReg.optString("registration_access_token", null)
+            if (!token.isNullOrEmpty()) {
+                Log.d(TAG, "readRegistrationTokenFromV3Provider: Found registration access token")
+                token
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "readRegistrationTokenFromV3Provider: Failed to parse v3 provider file", e)
+            null
+        }
+    }
+
+    /**
+     * Attempts to read authorization request from v3 Provider file and migrate it.
+     * V3 stored AuthorizationRequest nested in Provider->ClientRegistration.
+     *
+     * @param issuerName The issuer name
+     * @param accountUuid The account UUID
+     * @return The extracted NativeAuthorizationRequest or null if not found/failed
+     */
+    fun readAuthorizationRequestFromV3Provider(
+        issuerName: String,
+        accountUuid: String,
+    ): NativeAuthorizationRequest? {
+        // V3 stores provider at: {filesDir}/{issuerName}/{accountUuid}/providers
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
+        val providerFile = File(context.filesDir, providerPath)
+
+        if (!providerFile.exists()) {
+            Log.d(
+                TAG,
+                "readAuthorizationRequestFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
+            )
+            return null
+        }
+
+        Log.d(
+            TAG,
+            "readAuthorizationRequestFromV3Provider: Attempting to read v3 provider file: ${providerFile.absolutePath}",
+        )
+
+        val jsonContent = readEncryptedFile(providerFile) ?: return null
+
+        return try {
+            // Parse the nested structure: Provider -> ClientRegistration -> AuthorizationRequest
+            val jsonObject = org.json.JSONObject(jsonContent)
+            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
+            val authReqJson = clientReg.optJSONObject("authorizationRequest") ?: return null
+
+            // Convert to our model
+            NativeAuthorizationRequest(
+                deviceCode = authReqJson.optString("deviceCode", null),
+                userCode = authReqJson.optString("userCode", null),
+                birthDate = authReqJson.optString("birth_date", null),
+                csn = authReqJson.optString("csn", null),
+                verifiedEmail = authReqJson.optString("verified_email", null),
+                firstName = authReqJson.optString("firstName", null),
+                lastName = authReqJson.optString("lastName", null),
+                middleNames = authReqJson.optString("middleNames", null),
+                residentialAddress = authReqJson.optString("residentialAddress", null),
+                issuer = authReqJson.optString("issuer", null),
+                verificationOptions = authReqJson.optString("verification_options", null),
+                verificationUri = authReqJson.optString("verification_uri", null),
+                verificationUriVideo = authReqJson.optString("verification_uri_video", null),
+                backCheckVerificationId = authReqJson.optString("backCheckVerificationId", null),
+                evidenceUploadUri = authReqJson.optString("evidence_upload_uri", null),
+                cardProcess = authReqJson.optString("process", null),
+                // Note: Complex objects like Address and Date fields would need more parsing
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to extract authorization request from v3 provider", e)
+            null
+        }
+    }
+
+    // MARK: - Client Metadata (Saved Services) Storage
+
+    private fun getClientMetadataFile(
+        issuerName: String,
+        accountUuid: String,
+    ): File {
+        val path = issuerName + File.separator + accountUuid + File.separator + CLIENT_METADATA_FILENAME
+        return File(context.filesDir, path)
+    }
+
+    /**
+     * Reads client metadata (saved services) from native-compatible encrypted storage.
+     * V3 stores this as a JSON array of ClientMetadata objects.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/clientmetadata
+     */
+    fun readClientMetadata(
+        issuerName: String,
+        accountUuid: String,
+    ): Array<NativeClientMetadata>? {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        Log.d(TAG, "Reading client metadata from: ${file.absolutePath}")
+
+        val jsonContent = readEncryptedFile(file) ?: return null
+
+        return try {
+            gson.fromJson(jsonContent, Array<NativeClientMetadata>::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse client metadata JSON", e)
+            null
+        }
+    }
+
+    /**
+     * Saves client metadata (saved services) to native-compatible encrypted storage.
+     * Path: {filesDir}/{issuerName}/{accountUuid}/clientmetadata
+     */
+    fun saveClientMetadata(
+        clientMetadata: Array<NativeClientMetadata>,
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        val jsonContent = gson.toJson(clientMetadata)
+        Log.d(TAG, "Saving client metadata to: ${file.absolutePath}")
+        return writeEncryptedFile(file, jsonContent)
+    }
+
+    /**
+     * Deletes the client metadata file for the given account.
+     */
+    fun deleteClientMetadata(
+        issuerName: String,
+        accountUuid: String,
+    ): Boolean {
+        val file = getClientMetadataFile(issuerName, accountUuid)
+        return if (file.exists()) file.delete() else true
+    }
+}

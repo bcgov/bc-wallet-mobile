@@ -14,7 +14,16 @@ export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?
     case VideoCallErrorType.SESSION_FAILED:
       return {
         type,
-        message: 'Service is unavailable.',
+        title: 'Service Unavailable',
+        message: 'The video call service is temporarily unavailable. Please try again later.',
+        retryable: true,
+        technicalDetails,
+      }
+    // Evidence/photo upload failed
+    case VideoCallErrorType.DOCUMENT_UPLOAD_FAILED:
+      return {
+        type,
+        message: 'Failed to upload your documents. Please try again.',
         retryable: true,
         technicalDetails,
       }

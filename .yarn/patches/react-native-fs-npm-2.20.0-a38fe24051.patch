@@ -1,0 +1,15 @@
+diff --git a/RNFSManager.m b/RNFSManager.m
+index 5ddd9417de101a0b18a298434dbc57f46b130f21..7bca62aadd52e2aa1575887965541c6972bcebb1 100755
+--- a/RNFSManager.m
++++ b/RNFSManager.m
+@@ -294,8 +294,8 @@ RCT_EXPORT_METHOD(readFile:(NSString *)filepath
+ }
+ 
+ RCT_EXPORT_METHOD(read:(NSString *)filepath
+-                  length: (NSInteger *)length
+-                  position: (NSInteger *)position
++                  length: (NSInteger)length
++                  position: (NSInteger)position
+                   resolver:(RCTPromiseResolveBlock)resolve
+                   rejecter:(RCTPromiseRejectBlock)reject)
+ {

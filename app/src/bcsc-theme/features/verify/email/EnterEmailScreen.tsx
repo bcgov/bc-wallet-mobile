@@ -1,11 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
+  ScreenWrapper,
   ThemedText,
   TOKENS,
   useAnimatedComponents,
@@ -15,46 +16,32 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import { Alert, StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { Alert } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterEmailScreen>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
   route: {
     params: {
-      cardType: BCSCCardType
+      cardProcess: BCSCCardProcess
     }
   }
 }
 
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const { Spacing } = useTheme()
   const { evidence } = useApi()
-  const [email, setEmail] = useState('')
+  const { updateUserInfo, updateAccountFlags } = useSecureActions()
+  const [store] = useStore<BCState>()
+  const [email, setEmail] = useState(store.bcscSecure.emailAddress || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { cardType } = route.params
+  const { cardProcess } = route.params
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
-    },
-  })
+  const { t } = useTranslation()
 
   const handleChangeEmail = (em: string) => {
     setEmail(em)
@@ -62,7 +49,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
   const handleSubmit = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address')
+      setError(t('BCSC.EmailConfirmation.EmailError'))
       return
     }
 
@@ -71,83 +58,73 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
-      navigation.navigate(BCSCScreens.EmailConfirmationScreen, { emailAddressId: email_address_id })
+      await updateAccountFlags({ userSkippedEmailVerification: false })
+      await updateUserInfo({ email, isEmailVerified: false })
+      navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
-      setError('Error submitting email')
+      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
 
-      logger.error('Error submitting email', error)
+      logger.error(t('BCSC.EmailConfirmation.ErrorTitle'), error)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSkip = () => {
-    Alert.alert(
-      `Are you sure you don't want to provide it?`,
-      `It is less secure without it as we can't notify you of logins or changes to your account.`,
-      [
-        {
-          text: 'Provide email address',
-          style: 'cancel',
+    Alert.alert(t('BCSC.EnterEmail.EmailSkip'), t('BCSC.EnterEmail.EmailSkipMessage'), [
+      {
+        text: t('BCSC.EnterEmail.EmailSkipButton'),
+        style: 'cancel',
+      },
+      {
+        text: t('BCSC.EnterEmail.EmailSkipButton2'),
+        onPress: async () => {
+          await updateUserInfo({
+            email: BCSC_EMAIL_NOT_PROVIDED,
+            isEmailVerified: true,
+          })
+          await updateAccountFlags({ userSkippedEmailVerification: true })
+          navigation.goBack()
         },
-        {
-          text: 'Skip',
-          onPress: () => {
-            dispatch({
-              type: BCDispatchAction.UPDATE_EMAIL,
-              payload: [{ email: 'Not provided', emailConfirmed: true }],
-            })
-            navigation.goBack()
-          },
-        },
-      ]
-    )
+      },
+    ])
   }
 
+  const controls = (
+    <>
+      <Button
+        buttonType={ButtonType.Primary}
+        onPress={handleSubmit}
+        title={t('Global.Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        testID={'ContinueButton'}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+      {cardProcess !== BCSCCardProcess.NonBCSC ? (
+        <Button
+          buttonType={ButtonType.Secondary}
+          onPress={handleSkip}
+          title={t('BCSC.EnterEmail.EmailSkipButton2')}
+          accessibilityLabel={t('BCSC.EnterEmail.EmailSkipButton2')}
+          testID={'SkipButton'}
+        />
+      ) : null}
+    </>
+  )
+
   return (
-    <KeyboardView>
-      <View style={styles.pageContainer}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Enter your email address
-          </ThemedText>
-          {cardType !== BCSCCardType.Other ? (
-            <ThemedText style={{ marginBottom: Spacing.md }}>
-              It is recommended that you provide one for security purposes.
-            </ThemedText>
-          ) : null}
-          <ThemedText style={{ marginBottom: Spacing.md }}>
-            You will only get emails about logins and changes to your account. It also makes it quicker to set up
-            another mobile card.
-          </ThemedText>
-          <EmailTextInput handleChangeEmail={handleChangeEmail} />
-          {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            buttonType={ButtonType.Primary}
-            onPress={handleSubmit}
-            title={'Continue'}
-            accessibilityLabel={'Continue'}
-            testID={'ContinueButton'}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-          {cardType !== BCSCCardType.Other ? (
-            <View style={styles.secondButton}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                onPress={handleSkip}
-                title={'Skip'}
-                accessibilityLabel={'Skip'}
-                testID={'SkipButton'}
-              />
-            </View>
-          ) : null}
-        </View>
-      </View>
-    </KeyboardView>
+    <ScreenWrapper keyboardActive={true} controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.EnterEmail.EnterEmailAddress')}
+      </ThemedText>
+      {cardProcess !== BCSCCardProcess.NonBCSC ? (
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
+      ) : null}
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
+      <EmailTextInput handleChangeEmail={handleChangeEmail} testID={'EmailInput'} />
+      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+    </ScreenWrapper>
   )
 }
 

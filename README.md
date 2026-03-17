@@ -1,4 +1,3 @@
-
 ![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
 [![Native Build & Test](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml)
 
@@ -7,14 +6,17 @@
 BC Wallet to hold Verifiable Credentials
 
 # Table of Contents
+
 <!-- TOC -->
-* [Prerequisite software](#prerequisite-software)
-* [Cloning and initializing submodule](#cloning-and-initializing-submodule)
-* [React Native setup](#react-native-setup)
-* [Installing npm modules](#installing-npm-modules)
-* [Configuration](#configuration)
-* [Running in an Android emulator](#running-in-an-android-emulator)
-* [Troubleshooting and debugging](#troubleshooting-and-debugging)
+
+- [Prerequisite software](#prerequisite-software)
+- [Cloning and initializing submodule](#cloning-and-initializing-submodule)
+- [React Native setup](#react-native-setup)
+- [Installing npm modules](#installing-npm-modules)
+- [Configuration](#configuration)
+- [Code Formatting and Linting](#code-formatting-and-linting)
+- [Running in an Android emulator](#running-in-an-android-emulator)
+- [Troubleshooting and debugging](#troubleshooting-and-debugging)
 <!-- TOC -->
 
 ## Prerequisite software
@@ -22,15 +24,9 @@ BC Wallet to hold Verifiable Credentials
 Before you can proceed with building and testing the BC Wallet app, you must install and configure the following products on your development machine:
 
 - [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org) & [npm](https://docs.npmjs.com/cli/) - (version specified in the `engines` field
-  of [./app/package.json](./app/package.json))
-  > **Tip**: use [nvm](https://github.com/nvm-sh/nvm) to install node & npm. It helps to easily switch node & npm
-  > version for each project.
-- [Yarn](https://yarnpkg.com/)
 - A [JDK](https://openjdk.org/) and [Gradle](https://gradle.org) - Make sure you install compatible versions, see [here](https://docs.gradle.org/current/userguide/compatibility.html) for more information.
 - [Ruby](https://www.ruby-lang.org/en/documentation/installation/) version 2.x.x. You may want/need to use [rbenv](https://github.com/rbenv/rbenv) on MacOS.
 - [Bundler](https://bundler.io) version 2 or newer: `sudo gem install bundler:2.1.4`.
-- [Python](https://www.python.org/downloads/) version 3.11.x
 
 ## Cloning and initializing submodule
 
@@ -44,12 +40,20 @@ git clone https://github.com/bcgov/bc-wallet-mobile.git
 cd bc-wallet-mobile
 ```
 
+## Install Additional Tools
+
+1. Download [mise](https://mise.jdx.dev/getting-started.html)
+   > **Linux/WSL/OSX**: `curl https://mise.run | sh`
+2. Configure your .bashrc/.zshrc for mise
+   > **Linux/WSL**: `echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc`  
+   > **OSX**: `echo 'eval "$(~/.local/bin/mise activate zsh)"' >> ~/.zshrc`
+3. Run `mise install` to install all specified tools. This will install the tools listed in `.tool-versions`
+
 ## React Native setup
 
 React Native environment setup instructions are documented [here](https://reactnative.dev/docs/environment-setup). Be sure to select the correct React Native version (currently 0.73.x) from the dropdown and to follow the instructions for the React Native CLI. This will guide you through setting up your development environment for your operating system and choice of iOS (only if you are using a Mac) or Android.
 
 Following along, you should end up using Android SDK Platform 33 with Android 13 (API Level 33) for Android development and/or iOS 11 for iOS development.
-
 
 ## Additional Setup for Android Studio
 
@@ -58,8 +62,7 @@ Once you've followed the setup steps for React Native we have a few more things 
 1. Open Android Studio and open the folder a `~/bc-wallet-mobile/app/android`
 2. Open Android Studio settings, then select `Build, Execution, Deployment` -> `Build Tools` -> `Gradle`
 3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps
-![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
-
+   ![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
 
 ## Installing npm modules and pods
 
@@ -77,29 +80,41 @@ To install pod dependencies:
    yarn run ios:setup
 ```
 
+## Linking Bifold for development
 To work on changes to BC Wallet in Bifold (the underlying Aries project) you will also need to do the following:
 
+Next steps assume this directory structure:
+
+```
+  bc-wallet-mobile/
+  bifold/
+```
+
+Clone Bifold (once)
+
 ```sh
-# from bc-wallet-mobile
 git clone https://github.com/openwallet-foundation/bifold-wallet.git bifold
 ```
 
+Link Bifold (once per linking session)
+
 ```sh
-cd bifold
+# from: bc-wallet-mobile/
+yarn link:bifold
+```
+Note: Metro connection will need to be reloaded (R) or restarted after linking.
 
-yarn install
+Build new Bifold changes (as needed)
 
+```sh
+# from: bifold/
 yarn build
-
-cd ..
-
-yarn link bifold --all --relative
 ```
 
 Once you are happy with your changes to Bifold and have made the relevant PR there, do the following:
 
 ```sh
-# in bc-wallet-mobile
+# from: bc-wallet-mobile/
 yarn unlink --all
 ```
 
@@ -107,20 +122,61 @@ Then once your PR is merged and the packages have been published, make a PR in b
 
 ## Configuration
 
+### Google Services Files
+
+Obtain the following Firebase/Google services files from another developer and place them in the correct locations:
+
+```
+app/android/app/google-services.json
+app/ios/GoogleService-Info.plist
+```
+
+There are separate files for each build target (BC Wallet and BCSC). The files are tied to the Android package ID and iOS bundle ID respectively, so they are not interchangeable between targets. Make sure you use the files that match your `BUILD_TARGET` (in your .env).
+
+These files are required for push notifications and other Google services but are not checked into the repository.
+
+### Environment Variables
+
 In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
 BUILD_TARGET=<bcwallet | bcsc>
-LOAD_STORYBOOK=false
 OCA_URL=<url>
 MEDIATOR_URL=<url>
 MEDIATOR_USE_PUSH_NOTIFICATIONS=false
 PROOF_TEMPLATE_URL=<url>
 REMOTE_LOGGING_URL=<url>
+LOG_LEVEL=<debug | info | warn | error | fatal | trace | test>
 INDY_VDR_PROXY_URL=<url>
+SNOWPLOW_COLLECTOR_URL=<url>
 ```
 
 Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly.
+
+## Code Formatting and Linting
+
+The project uses multiple formatters and linters for different languages
+
+### Install Native Formatters (macOS)
+
+```sh
+brew install swiftformat clang-format ktlint
+```
+
+### Install VS Code Extensions
+
+The project includes recommended extensions in `.vscode/extensions.json`. VS Code will prompt you to install them when you open the project.
+
+### Available Scripts
+
+```sh
+# From the root directory
+yarn lint           # Lint all files (TypeScript, Swift, C, Kotlin)
+yarn format         # Format all files
+yarn format:check   # Check formatting without making changes
+yarn typecheck      # TypeScript type checking
+yarn check          # Run all checks (typecheck + lint + format:check + test)
+```
 
 ## Running in an Android emulator
 
@@ -334,6 +390,104 @@ Ensure you have your emulator's front and back camera set to use different sourc
    > If debug does not showup. Ensure you have enabled debugging on the device by clicking <kbd>command</kbd> + <kbd>m</kbd>
    > on the device and select <kbd>Debug</kbd>.
    > <br> > ![](./docs/Emulator-debug-menu.png)
+
+## Debuggin Android Emulator
+
+**Clear Caches**
+
+If issues are arising for the emulator, you may need to clear the caches.
+
+- run above commands for gradlew clean
+- delete `app/android/.gradle`
+- delete `app/.metro-cache`
+- delete `app/android/.yarn`
+
+### Debugging in WSL2 and Android Emulator
+
+If you're developing on Windows using WSL2, follow these setup steps to set up an emulator running on Windows that can communicate with adb running in WSL:
+
+**Configure your Android Emulator**
+
+- Install Android Studio on your Windows host (Windows)
+  - Download [Android Studio for Windows](https://developer.android.com/studio) and go through the installer, setting up an emulator / virtual device
+- Configure your wslconfig (Windows)
+  - locate your .wslconfig file
+    > HINT: it should be in `%userprofile%\.wslconfig`
+  - Change your wsl2 settings to use Mirrored Networking Mode and hostAddressLoopback. This allows you to connect to Windows from Linux in WSL using the loopback address. Include the following lines in your `.wslconfig`:
+  ```
+  [wsl2]
+  networkingmode=mirrored
+  hostAddressLoopback=true
+  ```
+  > HINT: Read more about [Mirrored mode networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) and [host address loopback](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#experimental-settings)
+- Install Android Studio Command Line Tools in your WSL2 environment (WSL)
+  - Downloads are found near the bottom of the [Android Studio Downloads](https://developer.android.com/studio) page
+  - unzip the cmdline tools with `unzip commandlinetools-linux-[VERSION]_latest.zip -d ~/Android/Sdk/tools`
+  - in your .bashrc file, define the following paths
+  ```
+  export ANDROID_HOME=/home/[your-name]/Android/Sdk
+  export PATH=$PATH:$ANDROID_HOME/platform-tools
+  export PATH=$PATH:$ANDROID_HOME/tools/bin
+  ```
+  - restart your shell (i.e. `exit` and `wsl` again)
+  - run `sdkmanager "platform-tools"` to install adb
+- (Optional) add the emulator to Windows PATH (Windows)
+  - open `sysdm.cpl`
+  - go to the `Advanced` tab
+  - Click `Environment Variables...`
+  - Select `Path`
+  - Click `Edit...`
+  - Click `New`
+  - Enter the Android emulator directory installed in a previous step
+    > HINT: By default, it is `C:\Users\\[YOUR_USERNAME]AppData\Local\Android\Sdk\emulator`
+  - Click OK on all the control panel dialogs opened
+- Run the emulator (Windows)
+  - Open Powershell
+    > Shortcut: Windows + X, A
+  - run `emulator -avd DEVICE_NAME` where DEVICE_NAME is the name of an android virtual device you have configured in Android Studio for Windows
+- Run React-Native (WSL)
+  - from `bc-wallet-mobile/app` run `yarn android` or `yarn start` and wait until you are prompted to select android
+
+At this point you should see that the app builds in your wsl environment and runs on the emulator on your Windows host.
+
+**Configure BCWallet in WSL2:**
+
+- Clone bc-wallet-mobile repository in WSL2 filesystem
+- Install openJDK in WSL2 (version 17.0.16)
+- Install Gradle in WSL2 (version 9.0.0)
+- Use Android SDK from the project
+
+**Windows Configuration:**
+
+- Disable Hyper-V in Windows Features
+- Enable nested virtualization in Windows Features
+
+**Note:** Running the Android emulator in WSL2 requires proper virtualization support. Make sure your system supports nested virtualization and that it's enabled in your BIOS/UEFI settings.
+
+**Enable Systemd for WSL2:**
+
+```sh
+# /etc/wsl.conf
+[boot]
+systemd=true
+# reboot WSL2 after this change
+```
+
+**Grant permissions to the user to access the KVM device:**
+
+```sh
+sudo mknod /dev/kvm c 10 232;
+
+sudo setfacl -m u:$USER:rwx /dev/kvm
+
+sudo chmod -R 0777 /dev/kvm
+```
+
+sources:
+
+- [enable-kvm](https://stackoverflow.com/questions/40342015/enable-vt-x-in-your-bios-security-settings-ensure-that-your-linux-distro-has-wo)
+- [grant-permissions](https://stackoverflow.com/questions/62907566/grant-current-user-access-to-dev-kvm)
+- [systemd](https://stackoverflow.com/questions/79650575/system-has-not-been-booted-with-systemd-as-init-system-pid-1)
 
 ### Debugging in VSCode and Android Emulator
 

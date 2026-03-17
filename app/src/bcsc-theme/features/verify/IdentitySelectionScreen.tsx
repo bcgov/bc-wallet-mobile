@@ -1,25 +1,27 @@
-import { ThemedText, useStore, useTheme } from '@bifold/core'
-import { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
+import { BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
-import { BCSCCardType } from '../../types/cards'
+import useSetupStepsModel from './_models/useSetupStepsModel'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
 const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
 const NO_PHOTO_CARD = Image.resolveAssetSource(NoPhotoCardImage).uri
 
 type IdentitySelectionScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IdentitySelection>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IdentitySelection>
 }
 
 const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
@@ -27,68 +29,61 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
-  const { width } = useWindowDimensions()
-
+  const [store] = useStore<BCState>()
+  const { updateCardProcess } = useSecureActions()
+  const { handleResetCardRegistration } = useSetupStepsModel(navigation)
   const styles = StyleSheet.create({
-    scrollView: {
-      flex: 1,
-      paddingHorizontal: Spacing.md,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    heading: {
-      marginTop: Spacing.md,
-      marginBottom: Spacing.sm,
-    },
-    description: {
-      marginBottom: Spacing.md,
-    },
-    pageBreakSlot: {
-      position: 'relative',
-      flex: 1,
-      height: 8,
-      marginTop: 8,
-    },
-    pageBreak: {
-      position: 'absolute',
-      width,
-      height: 8,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      left: -Spacing.md,
-    },
-    checkButton: {
-      marginVertical: Spacing.md,
-      flexWrap: 'wrap',
-      flex: 1,
-    },
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
   })
 
+  // Reset the card registration process when the user navigates back
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', async (event) => {
+      if (
+        (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
+        store.bcscSecure.deviceCode &&
+        store.bcscSecure.userCode
+      ) {
+        // If the user has registered and backs out, reset the card registration process
+        await handleResetCardRegistration()
+      }
+    })
+
+    return unsubscribe
+  }, [handleResetCardRegistration, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
+
+  /**
+   * This fixes an issue where the user has selected Non-BCSC ID,
+   * then navigated back to this screen, and the previous selection remains.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      updateCardProcess(undefined)
+    }, [updateCardProcess])
+  )
+
   const onPressCombinedCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Combined] })
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onPressPhotoCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Photo] })
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onPressNoPhotoCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.NonPhoto] })
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onCheckForServicesCard = useCallback(() => {
-    // TODO: Implement
-  }, [])
+    navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
+  }, [navigation])
 
-  const onPressOtherID = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Other] })
+  const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
-  }, [dispatch, navigation])
+    await updateCardProcess(BCSCCardProcess.NonBCSC)
+  }, [navigation, updateCardProcess])
 
   const cardButtons = useMemo(() => {
     return (
@@ -96,27 +91,27 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         {
           onPress: onPressCombinedCard,
           testIDKey: 'CombinedCard',
-          accessibilityLabel: t('Unified.ChooseYourID.CombinedCard'),
-          actionText: t('Unified.ChooseYourID.CombinedCardActionText'),
-          description: t('Unified.ChooseYourID.CombinedCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.CombinedCard'),
+          actionText: t('BCSC.ChooseYourID.CombinedCardActionText'),
+          description: t('BCSC.ChooseYourID.CombinedCardDescription'),
           imgSrc: { uri: COMBO_CARD },
           style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressPhotoCard,
           testIDKey: 'PhotoCard',
-          accessibilityLabel: t('Unified.ChooseYourID.PhotoCard'),
-          actionText: t('Unified.ChooseYourID.PhotoCardActionText'),
-          description: t('Unified.ChooseYourID.PhotoCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.PhotoCard'),
+          actionText: t('BCSC.ChooseYourID.PhotoCardActionText'),
+          description: t('BCSC.ChooseYourID.PhotoCardDescription'),
           imgSrc: { uri: PHOTO_CARD },
           style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressNoPhotoCard,
           testIDKey: 'NoPhotoCard',
-          accessibilityLabel: t('Unified.ChooseYourID.NoPhotoCard'),
-          actionText: t('Unified.ChooseYourID.NoPhotoCardActionText'),
-          description: t('Unified.ChooseYourID.NoPhotoCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.NoPhotoCard'),
+          actionText: t('BCSC.ChooseYourID.NoPhotoCardActionText'),
+          description: t('BCSC.ChooseYourID.NoPhotoCardDescription'),
           imgSrc: { uri: NO_PHOTO_CARD },
           style: { marginBottom: Spacing.md },
         },
@@ -125,41 +120,35 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('Unified.ChooseYourID.WhatCardDoYou')}
-        </ThemedText>
-        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
-        {cardButtons}
-        <View style={styles.pageBreakSlot}>
-          <View style={styles.pageBreak} />
-        </View>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('Unified.ChooseYourID.DontHaveOne')}
-        </ThemedText>
-        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.CheckBefore')}</ThemedText>
+    <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.md }}>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.WhatCardDoYou')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
+      </View>
+      <View>{cardButtons}</View>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
         <Pressable
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
-          accessibilityLabel={t('Unified.ChooseYourID.CheckForServicesCard')}
-          style={styles.checkButton}
+          accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
         >
           <ThemedText variant={'bold'} style={styles.checkButtonText}>
-            {t('Unified.ChooseYourID.CheckIfIHave') + ' '}
+            {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
             <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
           </ThemedText>
         </Pressable>
         <TileButton
           onPress={onPressOtherID}
           testIDKey={'OtherID'}
-          accessibilityLabel={t('Unified.ChooseYourID.OtherID')}
-          actionText={t('Unified.ChooseYourID.OtherIDActionText')}
-          description={t('Unified.ChooseYourID.OtherIDDescription')}
+          accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
+          actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
+          description={t('BCSC.ChooseYourID.OtherIDDescription')}
           style={{ marginBottom: Spacing.md }}
         />
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScreenWrapper>
   )
 }
 

@@ -1,16 +1,14 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { Image, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
-import { ScrollView } from 'react-native-gesture-handler'
+import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { Image, StyleSheet, View } from 'react-native'
+import { EvidenceType } from 'react-native-bcsc-core'
 
 type IDPhotoInformationScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IDPhotoInformation>
   route: { params: { cardType: EvidenceType } }
 }
 
@@ -19,75 +17,52 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      margin: Spacing.lg,
-    },
-    scrollView: {
-      flex: 1,
-      padding: Spacing.lg,
-    },
-    controlsContainer: {
-      margin: Spacing.md,
-      marginTop: 'auto',
-      position: 'relative',
-    },
-    imageContainer: {
-      alignItems: 'center',
-      marginBottom: Spacing.md,
-      height: 200,
-      justifyContent: 'center',
-    },
     image: {
       width: '100%',
-      height: '100%',
-      resizeMode: 'contain',
+      height: 250,
+      marginBottom: Spacing.md,
     },
   })
+
+  const controls = (
+    <Button
+      title={t('BCSC.IDPhotoInformation.TakePhoto')}
+      accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
+      testID={testIdWithKey('IDPhotoInformationTakePhoto')}
+      onPress={() => {
+        navigation.navigate(BCSCScreens.EvidenceCapture, {
+          cardType: cardType,
+        })
+      }}
+      buttonType={ButtonType.Primary}
+    />
+  )
+
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
-      <ScrollView>
-        <View style={styles.imageContainer}>
-          <Image source={SCAN_ID_IMAGE} style={styles.image} />
-        </View>
-        <View>
-          <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
-            {t('Unified.IDPhotoInformation.Heading')}
-          </ThemedText>
-          <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet1')}
-            iconColor={ColorPalette.grayscale.white}
-          />
-          <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet2')}
-            iconColor={ColorPalette.grayscale.white}
-          />
-          <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet3')}
-            iconColor={ColorPalette.grayscale.white}
-          />
-          <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet4')}
-            iconColor={ColorPalette.grayscale.white}
-          />
-        </View>
-        <View style={{ marginTop: Spacing.md }}>
-          <Button
-            title={t('Unified.IDPhotoInformation.TakePhoto')}
-            accessibilityLabel={t('Unified.IDPhotoInformation.TakePhoto')}
-            testID={testIdWithKey('IDPhotoInformationTakePhoto')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.EvidenceCapture, {
-                cardType: cardType,
-              })
-            }}
-            buttonType={ButtonType.Primary}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <ScreenWrapper controls={controls}>
+      <Image source={SCAN_ID_IMAGE} style={styles.image} />
+      <View style={{ marginBottom: Spacing.md }}>
+        <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
+          {t('BCSC.IDPhotoInformation.Heading')}
+        </ThemedText>
+        <BulletPointWithText
+          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet1')}
+          iconColor={ColorPalette.grayscale.white}
+        />
+        <BulletPointWithText
+          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet2')}
+          iconColor={ColorPalette.grayscale.white}
+        />
+        <BulletPointWithText
+          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet3')}
+          iconColor={ColorPalette.grayscale.white}
+        />
+        <BulletPointWithText
+          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet4')}
+          iconColor={ColorPalette.grayscale.white}
+        />
+      </View>
+    </ScreenWrapper>
   )
 }
 

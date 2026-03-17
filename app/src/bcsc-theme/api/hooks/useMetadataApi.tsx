@@ -48,7 +48,7 @@ const useMetadataApi = (apiClient: BCSCApiClient) => {
    */
   const getBCSCClientMetadata = useCallback(async (): Promise<ClientMetadata | null> => {
     const clients = await getClientMetadata()
-    const bcscClient = clients.find((client) => client.client_uri === `${apiClient.baseURL}/account/`)
+    const bcscClient = clients.find((client) => client.client_uri === `${apiClient.endpoints.account}/`)
 
     if (!bcscClient) {
       throw new Error('BCSC client metadata not found')

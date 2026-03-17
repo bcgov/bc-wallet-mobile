@@ -1,23 +1,35 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
-import { useTheme, Button, ButtonType, testIdWithKey, useStore, ThemedText, useAnimatedComponents } from '@bifold/core'
+import { withAlert } from '@/utils/alert'
+import readFileInChunks from '@/utils/read-file'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
-import { Video, VideoRef } from 'react-native-video'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useRef, useState } from 'react'
-import { hashBase64 } from 'react-native-bcsc-core'
-import RNFS from 'react-native-fs'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
-import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { Buffer } from 'buffer'
+import { Video, VideoRef } from 'react-native-video'
+
+export const VerificationVideoCache = new MediaCache()
 
 const pauseButtonSize = 60
 
 type VideoReviewScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoReview>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoReview>
   route: {
     params: {
       videoPath: string
@@ -28,16 +40,17 @@ type VideoReviewScreenProps = {
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width } = useWindowDimensions()
-  const { ButtonLoading } = useAnimatedComponents()
   const [paused, setPaused] = useState(false)
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
-  const [videoMetadata, setVideoMetadata] = useState<VerificationVideoUploadPayload>()
+  const { t } = useTranslation()
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
   if (!videoPath || !videoThumbnailPath) {
-    throw new Error('Video path and thumbnail path are required')
+    throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
   }
 
   const styles = StyleSheet.create({
@@ -45,10 +58,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       position: 'relative',
       flexGrow: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      flexGrow: 1,
-      marginTop: Spacing.xl,
     },
     videoContainer: {
       flexGrow: 1,
@@ -74,20 +83,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    controlsContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: Spacing.md,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
-    },
   })
 
   const onPressUse = () => {
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath, videoMetadata }] })
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
@@ -110,79 +108,85 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     navigation.goBack()
   }
 
+  /**
+   * Optimistically caches the video and extracts its metadata in the background,
+   * allowing the user to upload videos with minimal waiting time.
+   *
+   * Note: If the user navigates quickly through the flow, the InformationRequiredScreen will just wait
+   * for the video disk read to complete before proceeding.
+   *
+   * @param {OnLoadData} data The data object containing video load information.
+   * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
+   */
   const onVideoLoad = async (data: OnLoadData) => {
-    const duration = Math.ceil(data.duration)
-    const { mtime } = await RNFS.stat(videoPath)
-    const filename = 'selfieVideo.mp4'
-    const date = Math.floor(mtime / 1000)
-    const base64Video = await RNFS.readFile(videoPath, 'base64')
-    const videoSHA = await hashBase64(base64Video)
-    const videoBytes = new Uint8Array(Buffer.from(base64Video, 'base64'))
-    const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
-      id,
-      prompted_at: i,
-    }))
+    try {
+      // Clear the previously cached video
+      VerificationVideoCache.clearCache()
 
-    setVideoMetadata({
-      content_type: 'video/mp4',
-      content_length: videoBytes.byteLength,
-      date,
-      sha256: videoSHA,
-      duration,
-      filename,
-      prompts,
-    })
+      // Wrap the file reader with alert
+      const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
+      const videoFilePromise = readFileInChunksWithAlert(videoPath, logger)
+
+      // Set cache to a promise to be resolved by whoever needs it first
+      VerificationVideoCache.setCache(videoFilePromise)
+    } catch (error) {
+      logger.error('Error caching video file:', error as Error)
+    } finally {
+      // Optimistically save the video path and duration
+      dispatch({
+        type: BCDispatchAction.SAVE_VIDEO,
+        payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
+      })
+    }
   }
 
+  const controls = (
+    <>
+      <Button
+        buttonType={ButtonType.Primary}
+        onPress={onPressUse}
+        testID={testIdWithKey('UseVideo')}
+        title={t('BCSC.SendVideo.VideoReview.UseVideo')}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
+      />
+      <Button
+        buttonType={ButtonType.Tertiary}
+        onPress={onPressRetake}
+        testID={testIdWithKey('RetakeVideo')}
+        title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+      />
+    </>
+  )
+
   return (
-    <SafeAreaView style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
-        <View style={styles.videoContainer}>
-          <ThemedText variant={'headingFour'} style={styles.heading}>
-            Can you see and hear yourself clearly in the video?
-          </ThemedText>
-          <Video
-            ref={videoRef}
-            source={{ uri: videoPath }}
-            paused={paused}
-            audioOutput={'speaker'}
-            repeat
-            resizeMode={'cover'}
-            style={styles.video}
-            onLoad={(data) => onVideoLoad(data)}
-            disableAudioSessionManagement
-          />
-          <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
-            <Icon
-              name={paused ? 'play' : 'pause'}
-              size={pauseButtonSize}
-              color={ColorPalette.brand.primaryBackground}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            buttonType={ButtonType.Primary}
-            onPress={onPressUse}
-            testID={testIdWithKey('UseVideo')}
-            title={'Use this video'}
-            accessibilityLabel={'Use this video'}
-            disabled={!videoMetadata}
-          >
-            {!videoMetadata && <ButtonLoading />}
-          </Button>
-          <View style={styles.secondButton}>
-            <Button
-              buttonType={ButtonType.Tertiary}
-              onPress={onPressRetake}
-              testID={testIdWithKey('RetakeVideo')}
-              title={'Retake video'}
-              accessibilityLabel={'Retake video'}
-            />
-          </View>
-        </View>
+    <ScreenWrapper edges={['top', 'bottom', 'left', 'right']} style={styles.pageContainer} controls={controls}>
+      <View style={styles.videoContainer}>
+        <ThemedText variant={'headingFour'} style={styles.heading}>
+          {t('BCSC.SendVideo.VideoReview.Heading')}
+        </ThemedText>
+        <Video
+          ref={videoRef}
+          source={{ uri: videoPath }}
+          paused={paused}
+          audioOutput={'speaker'}
+          repeat
+          resizeMode={'cover'}
+          style={styles.video}
+          onLoad={(data) => onVideoLoad(data)}
+          disableAudioSessionManagement
+        />
+        <TouchableOpacity
+          style={styles.pauseButton}
+          onPress={onTogglePause}
+          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
+          accessibilityRole="button"
+          testID={testIdWithKey('TogglePlayPause')}
+        >
+          <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
+        </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

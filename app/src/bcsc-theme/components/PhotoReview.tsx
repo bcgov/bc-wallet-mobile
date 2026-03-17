@@ -1,6 +1,8 @@
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewProps = {
   photoPath: string
@@ -12,21 +14,17 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   const { ColorPalette, Spacing } = useTheme()
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    contentContainer: {
-      flexGrow: 1,
-    },
     controlsContainer: {
       position: 'absolute',
+      gap: Spacing.md,
       bottom: 0,
       left: 0,
       right: 0,
       padding: Spacing.md,
       backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
     },
   })
 
@@ -39,29 +37,27 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
     }
   }
   return (
-    <View style={styles.contentContainer}>
+    <View>
       <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
-      <View style={styles.controlsContainer}>
+      <SafeAreaView style={styles.controlsContainer} edges={['bottom', 'left', 'right']}>
         <Button
           buttonType={ButtonType.Primary}
           onPress={handleAccept}
           testID={testIdWithKey(`UsePhoto`)}
-          title={'Use this photo'}
-          accessibilityLabel={'Use this photo'}
+          title={t('BCSC.PhotoReview.UsePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.UsePhoto')}
           disabled={loading}
         >
           {loading && <ButtonLoading />}
         </Button>
-        <View style={styles.secondButton}>
-          <Button
-            buttonType={ButtonType.Tertiary}
-            onPress={onRetake}
-            testID={testIdWithKey(`RetakePhoto`)}
-            title={'Retake photo'}
-            accessibilityLabel={'Retake photo'}
-          />
-        </View>
-      </View>
+        <Button
+          buttonType={ButtonType.Tertiary}
+          onPress={onRetake}
+          testID={testIdWithKey(`RetakePhoto`)}
+          title={t('BCSC.PhotoReview.RetakePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.RetakePhoto')}
+        />
+      </SafeAreaView>
     </View>
   )
 }

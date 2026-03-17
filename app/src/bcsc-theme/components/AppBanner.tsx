@@ -1,41 +1,50 @@
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-export interface AppBannerSectionProps {
+
+export enum BCSCBanner {
+  IAS_SERVER_UNAVAILABLE = 'IASServerUnavailableBanner',
+  IAS_SERVER_NOTIFICATION = 'IASServerNotificationBanner',
+  DEVICE_LIMIT_EXCEEDED = 'DeviceLimitExceededBanner',
+  LIVE_CALL_STATUS = 'LiveCallStatusBanner',
+  APP_UPDATE_AVAILABLE = 'AppUpdateAvailableBanner',
+  ACCOUNT_EXPIRING_SOON = 'CardExpiringSoonBanner',
+  ACCOUNT_EXPIRED = 'CardExpiredBanner',
+}
+
+export interface BCSCBannerMessage {
+  id: BCSCBanner
   title: string
+  description?: string
   type: 'error' | 'warning' | 'info' | 'success'
   dismissible?: boolean
-  onDismiss?: () => void
+}
+
+export interface AppBannerSectionProps extends BCSCBannerMessage {
+  onPress?: (id: string) => void
+  description?: string
 }
 
 interface AppBannerProps {
   messages: AppBannerSectionProps[]
 }
 
-export const AppBanner: React.FC<AppBannerProps> = ({ messages }) => {
-  const [bannerMessages, setBannerMessages] = useState(messages)
-
-  const dismissBanner = (index: number) => {
-    setBannerMessages((prevMessages) => prevMessages.filter((_, i) => i !== index))
-  }
-
-  useEffect(() => {
-    setBannerMessages(messages)
-  }, [messages])
-
-  if (!bannerMessages || bannerMessages.length == 0) {
+export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps) => {
+  if (!messages || messages.length == 0) {
     return null
   }
 
   return (
     <View>
-      {bannerMessages.map((message, index) => (
+      {messages.map((message) => (
         <AppBannerSection
+          key={message.id}
+          id={message.id}
           title={message.title}
+          description={message.description}
           type={message.type}
-          onDismiss={() => dismissBanner(index)}
-          key={`${message.title}-${message.type}`}
+          onPress={message.onPress}
           dismissible={message.dismissible}
         />
       ))}
@@ -43,16 +52,26 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }) => {
   )
 }
 
-export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type, onDismiss, dismissible = true }) => {
+export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
+  id,
+  title,
+  type,
+  onPress,
+  description,
+  dismissible = true,
+}) => {
   const { Spacing, ColorPalette } = useTheme()
+  const [showBanner, setShowBanner] = useState(true)
+
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primary,
       flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
       padding: Spacing.md,
-      flexShrink: 1,
+    },
+    textContainer: {
+      flex: 1,
+      gap: Spacing.sm,
     },
     icon: {
       marginRight: Spacing.md,
@@ -89,15 +108,20 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
     }
   }
 
+  if (!showBanner) {
+    return null
+  }
+
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity
-      style={{ ...styles.container, backgroundColor: bannerColor(type) }}
+      style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
       testID={testIdWithKey(`button-${type}`)}
       onPress={() => {
-        if (dismissible && onDismiss) {
-          onDismiss()
+        if (dismissible) {
+          setShowBanner(false)
         }
+        onPress?.(id)
       }}
     >
       <Icon
@@ -107,16 +131,28 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
         style={styles.icon}
         testID={testIdWithKey(`icon-${type}`)}
       />
-      <ThemedText
-        variant={'bold'}
-        style={{
-          flex: 1,
-          color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
-        }}
-        testID={testIdWithKey(`text-${type}`)}
-      >
-        {title}
-      </ThemedText>
+      <View style={styles.textContainer}>
+        <ThemedText
+          variant={'bold'}
+          style={{
+            color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+          }}
+          testID={testIdWithKey(`text-${type}`)}
+        >
+          {title}
+        </ThemedText>
+        {description ? (
+          <ThemedText
+            style={{
+              lineHeight: 24,
+              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+            }}
+            testID={testIdWithKey(`description-${type}`)}
+          >
+            {description}
+          </ThemedText>
+        ) : null}
+      </View>
     </TouchableOpacity>
   )
 }

@@ -1,6 +1,9 @@
 source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 
+# prevents location usage from react-native-vision-camera
+$VCEnableLocation = false
+
 # From RNP docs here: https://www.npmjs.com/package/react-native-permissions/v/4.0.1
 def node_require(script)
   # Resolve script with node to allow for hoisting
@@ -30,7 +33,7 @@ setup_permissions([
   # 'LocationAlways',
   # 'LocationWhenInUse',
   # 'MediaLibrary',
-  # 'Microphone',
+  'Microphone',
   # 'Motion',
   'Notifications'
   # 'PhotoLibrary',
@@ -41,24 +44,13 @@ setup_permissions([
   # 'StoreKit',
 ])
 
-# If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
-# because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
-#
-# To fix this you can also exclude `react-native-flipper` using a `react-native.config.js`
-# ```js
-# module.exports = {
-#   dependencies: {
-#     ...(process.env.NO_FLIPPER ? { 'react-native-flipper': { platforms: { ios: null } } } : {}),
-# ```
-flipper_config = FlipperConfiguration.disabled
-
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'AriesBifold' do
+target 'BCWallet' do
   config = use_native_modules!
 
   pod 'Firebase', :modular_headers => true
@@ -66,21 +58,11 @@ target 'AriesBifold' do
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
 
-  #permissions_path = '../node_modules/react-native-permissions/ios'
-  #pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-  #pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
-  # use reactNativePermissionsIOS.json for permissions instead!!!
-
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
-
-  target 'AriesBifoldTests' do
-    inherit! :complete
-    # Pods for testing
-  end
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
@@ -89,5 +71,19 @@ target 'AriesBifold' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+
+    # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
+    # The wrapper scripts fall through to plain clang when ccache is not installed,
+    # so this is safe for both local dev and CI.
+    ccache_clang   = File.join(__dir__, 'scripts', 'ccache-clang.sh')
+    ccache_clangpp = File.join(__dir__, 'scripts', 'ccache-clang++.sh')
+    if File.exist?(ccache_clang)
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |build_config|
+          build_config.build_settings['CC']  = ccache_clang
+          build_config.build_settings['CXX'] = ccache_clangpp
+        end
+      end
+    end
   end
 end

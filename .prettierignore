@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.yarn/
+
+# Build outputs
+**/lib/
+**/build/
+coverage/
+
+# App-specific
+app/ios/
+app/android/
+app/app.json
+app/generate-app-package-json.js
+app/src/configs/ledgers/indy/ledgers.json
+
+# Package-specific
+packages/*/lib/
+packages/*/android/
+packages/*/ios/
+
+# Misc
+package-lock.json
+.gitignore

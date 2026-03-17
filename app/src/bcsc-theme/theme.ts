@@ -1,7 +1,7 @@
-import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
+import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text-dark.svg'
 import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
-import { BCThemeNames } from '@/constants'
+import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
 export const BCSCNotificationColors: INotificationColors = {
   ...NotificationColors,
@@ -9,6 +9,10 @@ export const BCSCNotificationColors: INotificationColors = {
   infoBorder: GrayscaleColors.lightGrey,
   infoIcon: '#FCBA19',
   infoText: GrayscaleColors.lightGrey,
+  error: '#A2312D',
+  errorText: GrayscaleColors.white,
+  errorBorder: '#A2312D',
+  errorIcon: GrayscaleColors.white,
 }
 
 export const BCSCColorPalette: IColorPalette = {
@@ -34,7 +38,7 @@ export const BCSCColorPalette: IColorPalette = {
     modalSecondaryBackground: '#013366',
     modalTertiaryBackground: '#013366',
     modalIcon: '#FCBA19',
-    link: '#FEF0D8',
+    link: '#FCBA19',
     unorderedList: GrayscaleColors.white,
     unorderedListModal: GrayscaleColors.white,
     text: '#01264C',
@@ -52,6 +56,13 @@ export const BCSCColorPalette: IColorPalette = {
   },
 }
 
+const BCSCTextStyles = {
+  bold: {
+    fontFamily: 'BCSans-Bold',
+    fontWeight: 'normal', // Font won't render without this property
+  },
+} as const
+
 export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
   .setColorPalette(BCSCColorPalette)
   .withOverrides({
@@ -63,21 +74,28 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       TextTheme: {
         headingOne: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
         },
         headingTwo: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
         },
         headingThree: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
         },
         headingFour: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
         },
         normal: {
           color: theme.ColorPalette.grayscale.white,
+          lineHeight: 30,
         },
         bold: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
+          lineHeight: 30,
         },
         label: {
           color: theme.ColorPalette.grayscale.white,
@@ -96,7 +114,8 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         headerTitle: {
           color: theme.ColorPalette.brand.headerText,
-          fontSize: 20,
+          ...BCSCTextStyles.bold,
+          fontSize: 18,
         },
         modalNormal: {
           color: theme.ColorPalette.grayscale.white,
@@ -122,7 +141,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         inlineErrorText: {
           ...theme.TextTheme.inlineErrorText,
-          color: theme.ColorPalette.notification.errorText,
+          color: '#FF816B',
         },
         inlineWarningText: {
           color: theme.ColorPalette.notification.warnText,
@@ -207,11 +226,18 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderColor: theme.ColorPalette.grayscale.lightGrey,
           color: theme.ColorPalette.brand.text,
           borderWidth: 1,
+          margin: 1, // borderWidth + margin should equal 2 to prevent layout shift on focus
         },
         inputSelected: {
-          borderColor: theme.ColorPalette.brand.highlight,
-          borderWidth: 1,
+          borderColor: '#7090E4',
+          borderWidth: 2,
+          margin: 0, // borderWidth + margin should equal 2 to prevent layout shift on focus
           backgroundColor: theme.ColorPalette.grayscale.white,
+          shadowColor: '#7090E4',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.5,
+          shadowRadius: 4,
+          elevation: 4,
         },
         singleSelect: {
           backgroundColor: theme.ColorPalette.brand.secondaryBackground,
@@ -232,21 +258,27 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         primaryText: {
           ...theme.TextTheme.normal,
           color: theme.ColorPalette.brand.text,
-          fontWeight: 'bold',
+          ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
         primaryTextDisabled: {
           ...theme.TextTheme.normal,
           color: theme.ColorPalette.brand.text,
-          fontWeight: 'bold',
+          ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
+        secondary: {
+          backgroundColor: '#1E5189',
+          borderWidth: 0,
+        },
         secondaryText: {
-          color: theme.ColorPalette.brand.primary,
+          color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
         secondaryTextDisabled: {
           color: theme.ColorPalette.brand.secondaryDisabled,
+          ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
         tertiary: {
@@ -260,12 +292,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderColor: theme.ColorPalette.brand.tertiaryDisabled,
         },
         tertiaryText: {
-          fontWeight: 'bold',
           color: theme.ColorPalette.brand.text,
+          ...BCSCTextStyles.bold,
         },
         tertiaryTextDisabled: {
-          fontWeight: 'bold',
           color: theme.ColorPalette.brand.secondaryDisabled,
+          ...BCSCTextStyles.bold,
         },
         modalPrimaryText: {
           textAlign: 'center',

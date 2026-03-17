@@ -1,99 +1,63 @@
-import { useTheme, useStore, Button, ButtonType, testIdWithKey } from '@bifold/core'
-import React from 'react'
-import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, Text, View } from 'react-native'
-import BouncyCheckbox from 'react-native-bouncy-checkbox'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import React, { useCallback } from 'react'
+import { setIssuer } from 'react-native-bcsc-core'
+import { BCDispatchAction, BCState, IASEnvironment } from '../store'
+import EnvironmentSelector from './EnvironmentSelector'
 
 interface IASEnvironmentProps {
   shouldDismissModal: () => void
 }
 
+/**
+ * IAS Environment screen for BCSC mode.
+ * Handles environment switching with factory reset for BCSC-specific context.
+ */
 const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModal }) => {
-  const { t } = useTranslation()
-  const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const factoryReset = useFactoryReset()
 
-  const environments = iasEnvironments
+  /**
+   * Handles the change of the IAS environment by performing a factory reset and updating the store.
+   *
+   * Note: Switching environments currently requires a factory reset.
+   * Persisting state between environments is a potential future enhancement.
+   *
+   * @param environment - The selected IAS environment to switch to.
+   * @returns A promise that resolves when the environment change process is complete.
+   */
+  const handleEnvironmentChange = useCallback(
+    async (environment: IASEnvironment) => {
+      try {
+        // hard factory reset, no state saved
+        await factoryReset()
 
-  const styles = StyleSheet.create({
-    container: {
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      width: '100%',
+        const success = await setIssuer(environment.iasApiBaseUrl)
+
+        // Update the analytics tracker with the new app ID for the selected environment
+        Analytics.setAppId(environment.analyticsAppId)
+
+        logger.info('[BCSCCore] persisting issuer:', {
+          issuer: environment.iasApiBaseUrl,
+          success: success,
+        })
+
+        dispatch({
+          type: BCDispatchAction.UPDATE_ENVIRONMENT,
+          payload: [environment],
+        })
+      } catch (error) {
+        logger.error('Error during factory reset for environment change:', error as Error)
+      }
+
+      shouldDismissModal()
     },
-    section: {
-      backgroundColor: SettingsTheme.groupBackground,
-      paddingHorizontal: 25,
-      paddingVertical: 16,
-    },
-    sectionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    itemSeparator: {
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.primaryBackground,
-      marginHorizontal: 25,
-    },
-  })
-
-  const handleEnvironmentChange = (environment: IASEnvironment) => {
-    dispatch({
-      type: BCDispatchAction.UPDATE_ENVIRONMENT,
-      payload: [environment],
-    })
-
-    shouldDismissModal()
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={environments}
-        renderItem={({ item: environment }) => {
-          const { name }: IASEnvironment = environment
-          return (
-            <View style={[styles.section, styles.sectionRow]}>
-              <Text style={TextTheme.title}>{t(`Developer.${name}`)}</Text>
-              <BouncyCheckbox
-                accessibilityLabel={name}
-                disableText
-                fillColor="#FFFFFFFF"
-                unfillColor="#FFFFFFFF"
-                size={36}
-                innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
-                ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary}></Icon>}
-                onPress={() => {
-                  handleEnvironmentChange(environment)
-                }}
-                isChecked={name === store.developer.environment.name}
-                disableBuiltInState
-                testID={testIdWithKey(name.toLocaleLowerCase())}
-              />
-            </View>
-          )
-        }}
-        ItemSeparatorComponent={() => (
-          <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-            <View style={styles.itemSeparator}></View>
-          </View>
-        )}
-      />
-      <View style={{ marginTop: 30, marginHorizontal: 20 }}>
-        <Button
-          title={t('Global.Cancel')}
-          accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('Cancel')}
-          onPress={shouldDismissModal}
-          buttonType={ButtonType.Secondary}
-        />
-      </View>
-    </SafeAreaView>
+    [shouldDismissModal, factoryReset, dispatch, logger]
   )
+
+  return <EnvironmentSelector onEnvironmentChange={handleEnvironmentChange} onCancel={shouldDismissModal} />
 }
 
 export default IASEnvironmentScreen

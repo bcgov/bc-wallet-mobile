@@ -1,48 +1,48 @@
 name: Ship to iTunes
-description: Upload an artifact to iTunes Connect
+description: |
+  Upload an IPA to App Store Connect using xcrun altool.
+  This action only uploads — it does NOT wait for Apple's server-side
+  processing or distribute to TestFlight beta groups.
+  Use the distribute-testflight action/job for that (runs on ubuntu).
 
 inputs:
   app_store_connect_issuer_id:
-    description: The iTunes Connect issuer ID
+    description: The App Store Connect API issuer ID
     required: true
   app_store_connect_key_identifier:
-    description: The iTunes Connect key identifier
+    description: The App Store Connect API key identifier
     required: true
-  app_store_connect_private_key:
+  ipa_path:
     description: |
-      The iTunes Connect private key.
-    required: true
-  version_code:
-    description: |
-      The build number for the release notes. i.e 1471
-    required: true
-  version_name:
-    description: |
-      The version name for the release notes. i.e 1.0.1
-    required: true
+      Path to the IPA file to upload.
+      Defaults to export/BCWallet.ipa (the export-ios-archive output).
+    required: false
+    default: 'export/BCWallet.ipa'
 
 runs:
   using: composite
   steps:
-    # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-    - name: Install Codemagic CLI Tools
-      shell: bash
-      run: |
-        pip3 install codemagic-cli-tools
-
-    - name: Ship to iTunes
+    - name: Upload to App Store Connect
       shell: bash
       env:
         APP_STORE_CONNECT_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
         APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ inputs.app_store_connect_key_identifier }}
-        APP_STORE_CONNECT_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
-        VERSION_CODE: ${{ inputs.version_code }}
-        VERSION_NAME: ${{ inputs.version_name }}
+        IPA_PATH: ${{ inputs.ipa_path }}
       run: |
-        export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
-        app-store-connect publish \
-        --enable-package-validation \
-        --max-build-processing-wait 10 \
-        --testflight \
-        --beta-group "The Team" "IDIM Team" \
-        --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+        echo "Uploading ${IPA_PATH} to App Store Connect..."
+
+        # xcrun altool looks for AuthKey_<KEY_ID>.p8 in specific directories.
+        # The create-ios-sig-creds action writes the key to $RUNNER_TEMP/AuthKey.p9.
+        # Create the expected directory structure and symlink the key file.
+        mkdir -p ~/.private_keys
+        ln -sf "$RUNNER_TEMP/AuthKey.p9" \
+          ~/.private_keys/AuthKey_${APP_STORE_CONNECT_KEY_IDENTIFIER}.p8
+
+        xcrun altool --upload-app \
+          --type ios \
+          --file "${IPA_PATH}" \
+          --apiKey "${APP_STORE_CONNECT_KEY_IDENTIFIER}" \
+          --apiIssuer "${APP_STORE_CONNECT_ISSUER_ID}" \
+          --show-progress
+
+        echo "✅ Upload complete. Build will be processed by Apple asynchronously."

@@ -1,4 +1,8 @@
+import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { signPairingCode } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -16,6 +20,8 @@ export interface PairingCodeLoginClientMetadata {
 }
 
 const usePairingApi = (apiClient: BCSCApiClient) => {
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
   /**
    * Logs in a user using a pairing code and returns the client metadata.
    *
@@ -26,11 +32,18 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
     async (code: string) => {
       return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
         const { issuer, clientID } = account
-        const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-        const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, apnsToken)
+        const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
+        let signedCode: string | null
+        try {
+          signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
+        } catch (error) {
+          return throwAppError(error, ErrorRegistry.SIGN_CLAIMS_ERROR)
+        }
+        if (!signedCode) {
+          return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)
+        }
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
-          // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
-          `${apiClient.baseURL}/cardtap/v3/mobile/assertion`,
+          `${apiClient.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`,
           { assertion: signedCode },
           { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         )
@@ -38,14 +51,27 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         return response.data
       })
     },
-    [apiClient]
+    [apiClient, logger]
   )
+
+  /**
+   * Forgets all device pairings by making a DELETE request to the pairings endpoint.
+   *
+   * @returns {*} {Promise<void>} A promise that resolves when the pairings are successfully removed - resolves even if there were no pairings to delete.
+   */
+  const forgetAllPairings = useCallback(async () => {
+    return withAccount<void>(async (account) => {
+      const { clientID } = account
+      await apiClient.delete(`${apiClient.endpoints.cardTap}/v3/devices/${clientID}/pairings`)
+    })
+  }, [apiClient])
 
   return useMemo(
     () => ({
       loginByPairingCode,
+      forgetAllPairings,
     }),
-    [loginByPairingCode]
+    [loginByPairingCode, forgetAllPairings]
   )
 }
 

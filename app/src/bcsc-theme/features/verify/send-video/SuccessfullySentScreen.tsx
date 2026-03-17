@@ -1,79 +1,60 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import StatusDetails from '@/bcsc-theme/components/StatusDetails'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
+import { CommonActions, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useTranslation } from 'react-i18next'
+import { BackHandler, StyleSheet } from 'react-native'
 
 type SuccessfullySentScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SuccessfullySent>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
 }
 
 const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     contentContainer: {
-      flex: 1,
-    },
-    bulletContainer: {
-      flexDirection: 'row',
-      marginBottom: Spacing.md,
-    },
-    bullet: {
-      marginRight: Spacing.xs,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   })
 
+  // Disable hardware back button on Android
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return subscription.remove
+  })
+
+  const controls = (
+    <Button
+      testID={testIdWithKey(t('BCSC.SendVideo.SuccessfullySent.ButtonText'))}
+      accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
+      title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
+      buttonType={ButtonType.Primary}
+      onPress={() =>
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      }
+    />
+  )
   return (
-    <SafeAreaView style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
-        <Icon name={'check'} size={108} color={ColorPalette.brand.primary} style={{ alignSelf: 'center' }} />
-        <ThemedText
-          variant={'headingThree'}
-          style={{ marginTop: Spacing.lg }}
-        >{`We've received your request to verify your identity.`}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>{`We review requests:`}</ThemedText>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Monday to Friday, 9am to 5pm</ThemedText>
-        </View>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>In the order they&apos;re received</ThemedText>
-        </View>
-        <ThemedText style={{ marginBottom: Spacing.md }}>Usually, we review requests within 24 hours.</ThemedText>
-        <ThemedText>
-          You&apos;ll get an email after we review your request. You can also check the status in this app.
-        </ThemedText>
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          testID={testIdWithKey('Ok')}
-          accessibilityLabel={'Ok'}
-          title={'Ok'}
-          buttonType={ButtonType.Primary}
-          onPress={() =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: BCSCScreens.SetupSteps }],
-              })
-            )
-          }
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      controls={controls}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollViewContainerStyle={styles.contentContainer}
+    >
+      <StatusDetails
+        title={t('BCSC.SendVideo.SuccessfullySent.Heading')}
+        description={t('BCSC.SendVideo.SuccessfullySent.Description1')}
+        bullets={[t('BCSC.SendVideo.SuccessfullySent.Bullet1'), t('BCSC.SendVideo.SuccessfullySent.Bullet2')]}
+        extraText={t('BCSC.SendVideo.SuccessfullySent.Description3')}
+      />
+    </ScreenWrapper>
   )
 }
 export default SuccessfullySentScreen

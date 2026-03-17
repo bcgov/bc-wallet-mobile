@@ -28,8 +28,8 @@ import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@cre
 import { PushNotificationsApnsModule, PushNotificationsFcmModule } from '@credo-ts/push-notifications'
 import { WebVhAnonCredsRegistry, WebvhDidResolver } from '@credo-ts/webvh'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
-import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { indyVdr } from '@hyperledger/indy-vdr-react-native'
+import { askar } from '@openwallet-foundation/askar-react-native'
 import { CacheSettings, IndyVdrProxyAnonCredsRegistry, IndyVdrProxyDidResolver } from 'credo-ts-indy-vdr-proxy-client'
 
 export type BCAgent = Agent<ReturnType<typeof getBCAgentModules>>
@@ -74,7 +74,7 @@ export function getBCAgentModules({
 
   const modules = {
     askar: new AskarModule({
-      ariesAskar,
+      ariesAskar: askar,
     }),
     anoncreds: new AnonCredsModule({
       anoncreds,
@@ -129,12 +129,17 @@ export function getBCAgentModules({
     modules.anoncreds = new AnonCredsModule({
       anoncreds,
       registries: [
-        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }),
+        // TODO(bm): there is a type error here (credo 0.5.15 vs 0.5.19) because the proxy package doesn't allow a range
+        // for it's credo deps even though it will work just fine with later 0.5.x versions. It's already been updated
+        // to use 0.6.x with a range so when we get to a 0.6.x version we can update and remove this. Or, if we get
+        // to using purely didwebvh we can remove indy-vdr usage entirely, including the proxy
+        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }) as any,
         new WebVhAnonCredsRegistry(),
       ],
     })
     modules.dids = new DidsModule({
-      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }), new WebvhDidResolver()],
+      // TODO(bm): same TODO as above
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }) as any, new WebvhDidResolver()],
     })
   }
 

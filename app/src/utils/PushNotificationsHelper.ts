@@ -1,34 +1,73 @@
-import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
 import { PersistentStorage } from '@bifold/core'
-import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
+import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
+import { getApp } from '@react-native-firebase/app'
+import {
+  AuthorizationStatus,
+  FirebaseMessagingTypes,
+  getMessaging,
+  getToken,
+  hasPermission,
+  isDeviceRegisteredForRemoteMessages,
+  registerDeviceForRemoteMessages,
+  requestPermission as requestMessagingPermission,
+} from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
-import { RESULTS, PermissionStatus, requestNotifications, checkNotifications } from 'react-native-permissions'
-
+import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
 import { BCLocalStorageKeys } from '../store'
 
-const enum NotificationPermissionStatus {
+const REQUEST_NOTIFICATIONS_TIMEOUT_MS = 2000
+
+export const enum NotificationPermissionStatus {
   DENIED = 'denied',
   GRANTED = 'granted',
   UNKNOWN = 'unknown',
+  BLOCKED = 'blocked',
 }
 
 /**
  * Permissions Section
  */
 
+/**
+ * Requests device notification permissions
+ *
+ * TODO (MD): Workaround for a known React Native issue where `requestNotifications` may hang indefinitely
+ * on Android if the user previously denied the permission prompt `twice`. Update to standard implementation
+ * when using React Native version 0.81.x or later.
+ *
+ * @see
+ * Issue: https://github.com/facebook/react-native/pull/53898
+ * Fixed in: https://github.com/reactwg/react-native-releases/issues/1151 V0.81.x
+ * Commit: https://github.com/facebook/react-native/commit/447a7a3527e3e38e4c3ceb330d12d77afe7bc0b4
+ *
+ * @example previously:
+ * const { status } = await requestNotifications()
+ * return status
+ */
 const requestNotificationPermission = async (): Promise<PermissionStatus> => {
-  const { status } = await requestNotifications()
-  return status
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(NotificationPermissionStatus.BLOCKED)
+    }, REQUEST_NOTIFICATIONS_TIMEOUT_MS)
+
+    requestNotifications()
+      .then(({ status }) => {
+        resolve(status)
+      })
+      .finally(() => {
+        clearTimeout(timeout)
+      })
+  })
 }
 
 const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
   switch (permission) {
-    case messaging.AuthorizationStatus.AUTHORIZED:
+    case AuthorizationStatus.AUTHORIZED:
       return NotificationPermissionStatus.GRANTED
-    case messaging.AuthorizationStatus.DENIED:
+    case AuthorizationStatus.DENIED:
       return NotificationPermissionStatus.DENIED
-    case messaging.AuthorizationStatus.PROVISIONAL:
+    case AuthorizationStatus.PROVISIONAL:
       return NotificationPermissionStatus.GRANTED
     default:
       return NotificationPermissionStatus.UNKNOWN
@@ -42,7 +81,7 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
     case RESULTS.DENIED:
       return NotificationPermissionStatus.DENIED
     case RESULTS.BLOCKED:
-      return NotificationPermissionStatus.DENIED
+      return NotificationPermissionStatus.BLOCKED
     default:
       return NotificationPermissionStatus.UNKNOWN
   }
@@ -51,11 +90,13 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
 const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   // IOS doesn't need the extra permission logic like android
   if (Platform.OS === 'ios') {
-    const permission = await messaging().requestPermission()
+    const messagingInstance = getMessaging(getApp())
+    const permission = await requestMessagingPermission(messagingInstance)
     return formatPermissionIos(permission)
   }
 
   const { status } = await checkNotifications()
+
   if (status !== RESULTS.GRANTED) {
     const result = await requestNotificationPermission()
 
@@ -97,11 +138,21 @@ const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | u
 }
 
 /**
- * Checks wether the user denied permissions on the info modal
+ * Checks if we have previously prompted the user for notification permissions.
+ * This helps work around a React Native bug where permission status may not be
+ * correctly reported on fresh installs.
  * @returns {Promise<boolean>}
  */
-const isUserDenied = async (): Promise<boolean> => {
+const hasPromptedForNotifications = async (): Promise<boolean> => {
   return (await PersistentStorage.fetchValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications)) ?? false
+}
+
+/**
+ * Marks that we have prompted the user for notification permissions.
+ * @returns {Promise<void>}
+ */
+const setHasPromptedForNotifications = async (): Promise<void> => {
+  await PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications, true)
 }
 
 /**
@@ -115,7 +166,9 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
   }
 
   const mediator = await getMediatorConnection(agent)
-  if (!mediator) return
+  if (!mediator) {
+    return
+  }
 
   const response = await agent.discovery.queryFeatures({
     awaitDisclosures: true,
@@ -140,12 +193,13 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
  * @returns {Promise<boolean>}
  */
 const isRegistered = async (): Promise<boolean> => {
-  const authorized = (await messaging().hasPermission()) === messaging.AuthorizationStatus.AUTHORIZED
+  const messagingInstance = getMessaging(getApp())
+  const authorized = (await hasPermission(messagingInstance)) === AuthorizationStatus.AUTHORIZED
   const tokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
 
   // Need to register for push notification capability on iOS
-  if (Platform.OS === 'ios' && !messaging().isDeviceRegisteredForRemoteMessages) {
-    await messaging().registerDeviceForRemoteMessages()
+  if (Platform.OS === 'ios' && !isDeviceRegisteredForRemoteMessages(messagingInstance)) {
+    await registerDeviceForRemoteMessages(messagingInstance)
   }
 
   if (authorized && tokenValue !== null) {
@@ -160,8 +214,9 @@ const isRegistered = async (): Promise<boolean> => {
  */
 const isEnabled = async (): Promise<boolean> => {
   try {
+    const messagingInstance = getMessaging(getApp())
     const deviceTokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
-    const messageTokenValue = await messaging().getToken()
+    const messageTokenValue = await getToken(messagingInstance)
 
     return messageTokenValue === deviceTokenValue
   } catch (error) {
@@ -180,7 +235,8 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
   if (blankDeviceToken) {
     token = ''
   } else {
-    token = await messaging().getToken()
+    const messagingInstance = getMessaging(getApp())
+    token = await getToken(messagingInstance)
   }
 
   const mediator = await getMediatorConnection(agent)
@@ -206,7 +262,8 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
 
 const status = async (): Promise<NotificationPermissionStatus> => {
   if (Platform.OS === 'ios') {
-    const permission = await messaging().hasPermission()
+    const messagingInstance = getMessaging(getApp())
+    const permission = await hasPermission(messagingInstance)
     return formatPermissionIos(permission)
   } else if (Platform.OS === 'android') {
     const { status } = await checkNotifications()
@@ -216,7 +273,12 @@ const status = async (): Promise<NotificationPermissionStatus> => {
 }
 
 const setup = async (): Promise<NotificationPermissionStatus> => {
-  return await requestPermission()
+  const result = await requestPermission()
+  // Mark that we have prompted the user, regardless of their response
+  // This helps work around a React Native bug where permission status may not be
+  // correctly reported on fresh installs
+  await setHasPromptedForNotifications()
+  return result
 }
 
 const activate = async (agent: Agent): Promise<void> => {
@@ -226,4 +288,14 @@ const deactivate = async (agent: Agent): Promise<void> => {
   await setDeviceInfo(agent, true)
 }
 
-export { isEnabled, isRegistered, isMediatorCapable, isUserDenied, setDeviceInfo, setup, activate, deactivate, status }
+export {
+  activate,
+  deactivate,
+  hasPromptedForNotifications,
+  isEnabled,
+  isMediatorCapable,
+  isRegistered,
+  setDeviceInfo,
+  setup,
+  status,
+}

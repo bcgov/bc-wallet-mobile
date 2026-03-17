@@ -4,22 +4,233 @@ import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.Promise
 
-abstract class BcscCoreSpec internal constructor(context: ReactApplicationContext) :
-  ReactContextBaseJavaModule(context) {
+abstract class BcscCoreSpec internal constructor(
+    context: ReactApplicationContext,
+) : ReactContextBaseJavaModule(context) {
+    abstract fun getKeyPair(
+        keyAlias: String,
+        promise: Promise,
+    )
 
-  abstract fun getKeyPair(keyAlias: String, promise: Promise)
-  abstract fun getAllKeys(promise: Promise)
-  abstract fun getToken(tokenType: Int, promise: Promise)
-  abstract fun setAccount(account: com.facebook.react.bridge.ReadableMap, promise: Promise)
-  abstract fun getAccount(promise: Promise)
-  abstract fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise)
-  abstract fun signPairingCode(code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise)
-  abstract fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise)
-  abstract fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, issuer: String, confirmationCode: String, promise: Promise)
-  abstract fun createQuickLoginJWT(accessToken: String, clientId: String, issuer: String, clientRefId: String, key: com.facebook.react.bridge.ReadableMap, fcmDeviceToken: String, deviceToken: String?, promise: Promise)
-  abstract fun createSignedJWT(claims: com.facebook.react.bridge.ReadableMap, promise: Promise)
-  abstract fun createPreVerificationJWT(deviceCode: String, clientID: String, promise: Promise)
-  abstract fun hashBase64(base64: String, promise: Promise)
-  abstract fun decodePayload(jweString: String, promise: Promise)
-  abstract fun removeAccount(promise: Promise)
+    abstract fun getAllKeys(promise: Promise)
+
+    abstract fun getToken(
+        tokenType: Int,
+        promise: Promise,
+    )
+
+    abstract fun setToken(
+        tokenType: Int,
+        token: String,
+        expiry: Double?,
+        promise: Promise,
+    )
+
+    abstract fun deleteToken(
+        tokenType: Int,
+        promise: Promise,
+    )
+
+    abstract fun setIssuer(
+        issuer: String,
+        promise: Promise,
+    )
+
+    abstract fun getIssuer(promise: Promise)
+
+    abstract fun setAccount(
+        account: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
+    abstract fun getAccount(promise: Promise)
+
+    abstract fun getDeviceId(promise: Promise)
+
+    abstract fun getRefreshTokenRequestBody(
+        issuer: String,
+        clientID: String,
+        refreshToken: String,
+        promise: Promise,
+    )
+
+    abstract fun signPairingCode(
+        code: String,
+        issuer: String,
+        clientID: String,
+        fcmDeviceToken: String,
+        deviceToken: String?,
+        promise: Promise,
+    )
+
+    abstract fun getDynamicClientRegistrationBody(
+        fcmDeviceToken: String,
+        deviceToken: String?,
+        attestation: String?,
+        nickname: String?,
+        promise: Promise,
+    )
+
+    abstract fun getDeviceCodeRequestBody(
+        deviceCode: String,
+        clientId: String,
+        issuer: String,
+        confirmationCode: String,
+        promise: Promise,
+    )
+
+    abstract fun createQuickLoginJWT(
+        accessToken: String,
+        clientId: String,
+        issuer: String,
+        clientRefId: String,
+        key: com.facebook.react.bridge.ReadableMap,
+        fcmDeviceToken: String,
+        deviceToken: String?,
+        promise: Promise,
+    )
+
+    abstract fun createSignedJWT(
+        claims: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
+    abstract fun createPreVerificationJWT(
+        deviceCode: String,
+        clientID: String,
+        promise: Promise,
+    )
+
+    abstract fun hashBase64(
+        base64: String,
+        promise: Promise,
+    )
+
+    abstract fun decodePayload(
+        jweString: String,
+        promise: Promise,
+    )
+
+    abstract fun removeAccount(promise: Promise)
+
+    // PIN Authentication Methods
+    abstract fun setPIN(
+        pin: String,
+        promise: Promise,
+    )
+
+    abstract fun verifyPIN(
+        pin: String,
+        promise: Promise,
+    )
+
+    abstract fun deletePIN(promise: Promise)
+
+    abstract fun hasPINSet(promise: Promise)
+
+    // Device Authentication Methods
+    abstract fun performDeviceAuthentication(
+        reason: String?,
+        promise: Promise,
+    )
+
+    abstract fun canPerformDeviceAuthentication(promise: Promise)
+
+    abstract fun getAvailableBiometricType(promise: Promise)
+
+    abstract fun canPerformBiometricAuthentication(promise: Promise)
+
+    // Account Security Methods
+    abstract fun setAccountSecurityMethod(
+        securityMethod: String,
+        promise: Promise,
+    )
+
+    abstract fun getAccountSecurityMethod(promise: Promise)
+
+    abstract fun isAccountLocked(promise: Promise)
+
+    // Device Security Methods (for biometric/device authentication)
+    abstract fun setupDeviceSecurity(promise: Promise)
+
+    abstract fun unlockWithDeviceSecurity(
+        reason: String?,
+        promise: Promise,
+    )
+
+    abstract fun isPINAutoGenerated(promise: Promise)
+
+    // Authorization Request Storage Methods
+    abstract fun getAuthorizationRequest(promise: Promise)
+
+    abstract fun setAuthorizationRequest(
+        data: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
+    abstract fun deleteAuthorizationRequest(promise: Promise)
+
+    // Account Flags Storage Methods
+    abstract fun getAccountFlags(promise: Promise)
+
+    abstract fun setAccountFlags(
+        flags: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
+    abstract fun deleteAccountFlags(promise: Promise)
+
+    // Evidence Storage Methods
+    abstract fun getEvidence(promise: Promise)
+
+    abstract fun setEvidence(
+        evidence: com.facebook.react.bridge.ReadableArray,
+        promise: Promise,
+    )
+
+    abstract fun deleteEvidence(promise: Promise)
+
+    abstract fun saveEvidencePhoto(
+        base64Data: String,
+        filename: String,
+        promise: Promise,
+    )
+
+    // Credential Storage Methods
+    abstract fun getCredential(promise: Promise)
+
+    abstract fun setCredential(
+        credential: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
+    abstract fun deleteCredential(promise: Promise)
+
+    abstract fun hasCredential(promise: Promise)
+
+    abstract fun showLocalNotification(
+        title: String,
+        message: String,
+        promise: Promise,
+    )
+
+    abstract fun decodeLoginChallenge(
+        jwt: String,
+        key: com.facebook.react.bridge.ReadableMap?,
+        promise: Promise,
+    )
+
+    abstract fun isThirdPartyKeyboardActive(promise: Promise)
+
+    abstract fun openKeyboardSelector()
+
+    // Saved Services (Client Metadata) Storage Methods
+    abstract fun getSavedServices(promise: Promise)
+
+    abstract fun setSavedServices(
+        services: com.facebook.react.bridge.ReadableArray,
+        promise: Promise,
+    )
+
+    abstract fun deleteSavedServices(promise: Promise)
 }

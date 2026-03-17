@@ -1,15 +1,23 @@
-import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import { BCState, Mode } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
+import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
+import NonProdOverlay from './bcsc-theme/components/NonProdOverlay'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
+import { BCSCLoadingProvider } from './bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCStackProvider } from './bcsc-theme/contexts/BCSCStackContext'
 
 const Root: React.FC = () => {
   const [store] = useStore<BCState>()
 
   return store.mode === Mode.BCSC ? (
-    <BCSCApiClientProvider>
-      <BCSCRootStack />
-    </BCSCApiClientProvider>
+    <BCSCStackProvider>
+      <BCSCApiClientProvider>
+        <BCSCLoadingProvider>
+          <BCSCRootStack />
+        </BCSCLoadingProvider>
+        <NonProdOverlay />
+      </BCSCApiClientProvider>
+    </BCSCStackProvider>
   ) : (
     <BCWalletRootStack />
   )

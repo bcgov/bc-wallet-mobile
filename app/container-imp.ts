@@ -24,11 +24,10 @@ import {
   testIdWithKey,
 } from '@bifold/core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
+import { RemoteLogger } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
 import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
-import moment from 'moment'
-import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
@@ -37,7 +36,8 @@ import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
-import BCLogger from '@utils/logger'
+import { createAppLogger } from '@utils/logger'
+import { TFunction } from 'i18next'
 import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -78,22 +78,25 @@ const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
-  private t: TFunction<'translation', undefined>
+  private readonly logger: RemoteLogger
+  private t: TFunction
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
   readonly setSurveyVisible: (visible: boolean) => void
 
   public constructor(
     bifoldContainer: Container,
-    t: TFunction<'translation', undefined>,
+    t: TFunction,
     navigate: (stack: never, params: never) => void,
-    setSurveyVisible: (visible: boolean) => void
+    setSurveyVisible: (visible: boolean) => void,
+    logger: RemoteLogger = createAppLogger()
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.t = t
     this.navigate = navigate
     this.setSurveyVisible = setSurveyVisible
-    this.storage = new PersistentStorage(BCLogger)
+    this.logger = logger
+    this.storage = new PersistentStorage(this.logger)
   }
 
   public get container(): DependencyContainer {
@@ -101,15 +104,14 @@ export class AppContainer implements Container {
   }
 
   public init(): Container {
-    const logger = BCLogger
-    logger.startEventListeners()
+    this.logger.startEventListeners()
 
     const options = {
       shouldHandleProofRequestAutomatically: true,
     }
 
-    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(logger, options))
-    this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(logger))
+    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(this.logger, options))
+    this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(this.logger))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
@@ -296,7 +298,7 @@ export class AppContainer implements Container {
       brandingOverlayType: BrandingOverlayType.Branding10,
       verifyCacheIntegrity: true,
     })
-    resolver.log = logger
+    resolver.log = this.logger
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
     this._container.registerInstance(TOKENS.NOTIFICATIONS, {
       useNotifications,
@@ -328,9 +330,10 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
-        const data = (await this.storage.getValueForKey(key)) as Type
-        if (data) {
-          updateVal(data)
+        const data = await this.storage.getValueForKey(key)
+        if (data != null) {
+          // Checks for both undefined and null before casting
+          updateVal(data as Type)
         }
       }
 
@@ -366,27 +369,14 @@ export class AppContainer implements Container {
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
-      // Convert date string to Date object (async-storage converts Dates to strings)
-      // timezone-safe parsing to prevent off-by-one date errors (consistent with date picker)
-      if (typeof bcsc.birthdate === 'string') {
-        const momentDate = moment(bcsc.birthdate)
-        const year = momentDate.year()
-        const month = momentDate.month()
-        const day = momentDate.date()
-        bcsc.birthdate = new Date(year, month, day, 12, 0, 0, 0)
-      }
-
-      if (typeof bcsc.deviceCodeExpiresAt === 'string') {
-        bcsc.deviceCodeExpiresAt = new Date(Date.parse(bcsc.deviceCodeExpiresAt))
-      }
-
       // Reset paths and prompts on load as they should not be persisted
+      bcsc.selectedNickname = undefined
       bcsc.photoPath = undefined
       bcsc.videoPath = undefined
       bcsc.videoThumbnailPath = undefined
       bcsc.prompts = undefined
       bcsc.photoMetadata = undefined
-      bcsc.videoMetadata = undefined
+      bcsc.videoDuration = undefined
 
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
@@ -414,12 +404,12 @@ export class AppContainer implements Container {
         const override = expirationOverrideInMinutes(enabledAt, autoDisableRemoteLoggingIntervalInMinutes)
 
         if (override > 0) {
-          logger.remoteLoggingEnabled = true
-          logger.sessionId = sessionId
-          logger.overrideCurrentAutoDisableExpiration(override)
+          this.logger.remoteLoggingEnabled = true
+          this.logger.sessionId = sessionId
+          this.logger.overrideCurrentAutoDisableExpiration(override)
 
-          logger.info(
-            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.  Expiration override is ${override} minutes`
+          this.logger.info(
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${this.logger.sessionId}.  Expiration override is ${override} minutes`
           )
         }
       }
@@ -429,7 +419,7 @@ export class AppContainer implements Container {
 
     this._container.registerInstance(TOKENS.ONBOARDING, generateOnboardingWorkflowSteps)
 
-    this._container.registerInstance(TOKENS.UTIL_LOGGER, logger)
+    this._container.registerInstance(TOKENS.UTIL_LOGGER, this.logger)
 
     return this
   }

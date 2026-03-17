@@ -14,7 +14,7 @@ export const useBCSCApiClient = (): BCSCApiClient => {
     throw new Error(`BCSC client error: ${context.error}`)
   }
 
-  if (!context.client || !context.clientIsReady) {
+  if (!context.client || !context.isClientReady) {
     throw new Error('BCSC client not ready. Make sure BCSCApiClientProvider is properly configured.')
   }
 
@@ -22,11 +22,18 @@ export const useBCSCApiClient = (): BCSCApiClient => {
 }
 
 // Hook that doesn't throw, useful for checking readiness state
+// Returns a default "not ready" state if used outside the provider (e.g., during provider initialization)
 export const useBCSCApiClientState = () => {
   const context = useContext(BCSCApiClientContext)
 
   if (!context) {
-    throw new Error('useBCSCClientState must be used within a BCSCApiClientProvider')
+    // Return a default state instead of throwing
+    // This allows hooks like useSecureActions to be used during BCSCApiClientProvider initialization
+    return {
+      client: null,
+      isClientReady: false,
+      error: null,
+    }
   }
 
   return context

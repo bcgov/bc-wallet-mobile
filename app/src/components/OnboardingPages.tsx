@@ -1,23 +1,25 @@
 import {
-  useStore,
   Button,
   ButtonType,
-  ITheme,
+  ContentGradient,
   createStyles,
   GenericFn,
+  ITheme,
+  ScreenWrapper,
   testIdWithKey,
-  ContentGradient,
+  useStore,
+  useTheme,
 } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { SvgProps } from 'react-native-svg'
-
 import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
 
 const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme']) => {
+  const { Spacing } = useTheme()
   const [store] = useStore()
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
@@ -28,60 +30,48 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
   }
 
   const styles = StyleSheet.create({
-    scrollView: {
-      flex: 1,
-      backgroundColor: theme.container.backgroundColor,
-      padding: 20,
-    },
-    pageContainer: {
-      height: '100%',
-      justifyContent: 'space-between',
-    },
-    controlsContainer: {
-      marginBottom: 20,
-      marginTop: 'auto',
-      marginHorizontal: 20,
-      position: 'relative',
-    },
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
+      marginBottom: Spacing.sm,
     },
   })
+
+  const controls = !(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
+    <>
+      <ContentGradient backgroundColor={theme.container.backgroundColor} height={30} />
+      <Button
+        title={t('Onboarding.GetStarted')}
+        accessibilityLabel={t('Onboarding.GetStarted')}
+        testID={testIdWithKey('GetStarted')}
+        onPress={onTutorialCompleted}
+        buttonType={ButtonType.Primary}
+      />
+    </>
+  )
+
   return (
-    <View style={styles.pageContainer}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <View style={styles.imageContainer}>
-          <SecureImage {...imageDisplayOptions} />
-        </View>
-        <View style={{ marginBottom: 20 }}>
-          <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.PrivateConfidentialHeading')}</Text>
-          <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.PrivateConfidentialParagraph')}</Text>
-        </View>
-      </ScrollView>
-      {!(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
-        <View style={styles.controlsContainer}>
-          <ContentGradient backgroundColor={theme.container.backgroundColor} height={30} />
-          <Button
-            title={t('Onboarding.GetStarted')}
-            accessibilityLabel={t('Onboarding.GetStarted')}
-            testID={testIdWithKey('GetStarted')}
-            onPress={onTutorialCompleted}
-            buttonType={ButtonType.Primary}
-          />
-        </View>
-      )}
-    </View>
+    <ScreenWrapper controls={controls} edges={['left', 'right']}>
+      <View style={styles.imageContainer}>
+        <SecureImage {...imageDisplayOptions} />
+      </View>
+      <View style={{ marginBottom: Spacing.md }}>
+        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.PrivateConfidentialHeading')}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: Spacing.md }]}>
+          {t('Onboarding.PrivateConfidentialParagraph')}
+        </Text>
+      </View>
+    </ScreenWrapper>
   )
 }
 
 const StartPage = (theme: ITheme['OnboardingTheme']) => {
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
   const styles = StyleSheet.create({
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
+      marginBottom: Spacing.sm,
     },
   })
 
@@ -92,31 +82,39 @@ const StartPage = (theme: ITheme['OnboardingTheme']) => {
   }
 
   return (
-    <ScrollView style={{ padding: 20 }}>
+    <ScreenWrapper edges={['left', 'right']}>
       <View style={styles.imageContainer}>
         <ScanShare {...imageDisplayOptions} />
       </View>
-      <View style={{ marginBottom: 20 }}>
+      <View style={{ marginBottom: Spacing.md }}>
         <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.DifferentWalletHeading')}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.DifferentWalletParagraph')}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: Spacing.md }]}>
+          {t('Onboarding.DifferentWalletParagraph')}
+        </Text>
       </View>
-    </ScrollView>
+    </ScreenWrapper>
   )
 }
 
 const guides: Array<{
-  image: React.FC<SvgProps>
+  image: (props: SvgProps) => React.JSX.Element
   title: string
   body: string
 }> = [
   {
-    image: CredentialList,
+    image: (props) => <CredentialList {...props} />,
     title: 'Onboarding.DigitalCredentialsHeading',
     body: 'Onboarding.DigitalCredentialsParagraph',
   },
 ]
 
-const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: ITheme['OnboardingTheme']) => {
+const CreatePageWith = (
+  image: (props: SvgProps) => React.JSX.Element,
+  title: string,
+  body: string,
+  theme: ITheme['OnboardingTheme']
+) => {
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
@@ -127,18 +125,18 @@ const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, 
   const styles = StyleSheet.create({
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
+      marginBottom: Spacing.sm,
     },
   })
 
   return (
-    <ScrollView style={{ padding: 20 }}>
+    <ScreenWrapper edges={['left', 'right']}>
       <View style={styles.imageContainer}>{image(imageDisplayOptions)}</View>
-      <View style={{ marginBottom: 20 }}>
+      <View style={{ marginBottom: Spacing.md }}>
         <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t(title)}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t(body)}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: Spacing.lg }]}>{t(body)}</Text>
       </View>
-    </ScrollView>
+    </ScreenWrapper>
   )
 }
 

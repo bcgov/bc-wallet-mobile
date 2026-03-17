@@ -1,3 +1,16 @@
+import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
+import { AttestationRestrictions } from '@/constants'
+import { BCState } from '@/store'
+import {
+  BasicMessageMetadata,
+  BifoldAgent,
+  CredentialMetadata,
+  basicMessageCustomMetadata,
+  credentialCustomMetadata,
+  useStore,
+} from '@bifold/core'
+import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
+import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   BasicMessageRecord,
@@ -6,22 +19,8 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@credo-ts/core'
-import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
-import {
-  BifoldAgent,
-  useStore,
-  BasicMessageMetadata,
-  CredentialMetadata,
-  basicMessageCustomMetadata,
-  credentialCustomMetadata,
-} from '@bifold/core'
-import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
-import { useEffect, useState } from 'react'
-
-import { AttestationRestrictions } from '@/constants'
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
 import { isProofRequestingAttestation } from '@services/attestation'
-import { BCState } from '@/store'
+import { useEffect, useMemo, useState } from 'react'
 
 export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
   const { agent } = useAgent()
@@ -31,14 +30,14 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
   const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
   const [notifications, setNotifications] = useState([])
   const { records: basicMessages } = useBasicMessages()
-
   const credsReceived = useCredentialByState(CredentialState.CredentialReceived)
   const credsDone = useCredentialByState(CredentialState.Done)
-  const proofsDone = useProofByState([ProofState.Done, ProofState.PresentationReceived])
+  const doneStates = useMemo(() => [ProofState.Done, ProofState.PresentationReceived] as ProofState[], [])
+  const proofsDone = useProofByState(doneStates)
 
   useEffect(() => {
     // get all unseen messages
-    const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
+    const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg: BasicMessageRecord) => {
       const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
       return !meta?.seen
     })
@@ -46,7 +45,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
     // add one unseen message per contact to notifications
     const contactsWithUnseenMessages: string[] = []
     const messagesToShow: BasicMessageRecord[] = []
-    unseenMessages.forEach((msg) => {
+    unseenMessages.forEach((msg: BasicMessageRecord) => {
       if (!contactsWithUnseenMessages.includes(msg.connectionId)) {
         contactsWithUnseenMessages.push(msg.connectionId)
         messagesToShow.push(msg)

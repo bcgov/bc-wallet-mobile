@@ -7,6 +7,7 @@ const plugins = [
       extensions: ['.tsx', 'ts'],
       alias: {
         '@': './src',
+        '@mocks': './__mocks__',
         '@assets': './src/assets',
         '@bcwallet-theme': './src/bcwallet-theme',
         '@bcsc-theme': './src/bcsc-theme',
@@ -25,6 +26,9 @@ const plugins = [
 if (process.env['ENV'] === 'prod') {
   plugins.push('transform-remove-console')
 }
+
+// react-native-reanimated plugin must be listed last
+plugins.push('react-native-reanimated/plugin')
 
 module.exports = {
   presets,

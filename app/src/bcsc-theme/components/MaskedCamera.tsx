@@ -1,17 +1,29 @@
-import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useAlerts } from '@/hooks/useAlerts'
+import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useEffect, useRef, useState } from 'react'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CameraCaptureError,
+  CodeScanner,
+  FormatFilter,
+  useCameraDevice,
+  useCameraFormat,
+} from 'react-native-vision-camera'
 
 type MaskedCameraProps = {
-  navigation: any
+  navigation: NavigationProp<ParamListBase>
   cameraFace: 'front' | 'back'
+  cameraFormatFilter?: FormatFilter[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
 
@@ -21,17 +33,22 @@ const MaskedCamera = ({
   cameraLabel,
   maskLineColor,
   maskType,
+  codeScanner,
   cameraFace = 'back',
+  cameraFormatFilter = [],
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
-
+  const { t } = useTranslation()
+  const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const { hasPermission, requestPermission } = useCameraPermission()
   const [isActive, setIsActive] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const isFocused = useIsFocused()
+  const format = useCameraFormat(device, cameraFormatFilter)
+  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -50,12 +67,13 @@ const MaskedCamera = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
+      marginBottom: safeAreaInsets.bottom,
     },
     instructionText: {
       backgroundColor: 'transparent',
       position: 'absolute',
       fontWeight: 'normal',
-      top: Spacing.lg,
+      top: Spacing.md,
       left: 0,
       right: 0,
       zIndex: 5,
@@ -80,39 +98,22 @@ const MaskedCamera = ({
     },
   })
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      if (!hasPermission) {
-        const permission = await requestPermission()
-        if (!permission) {
-          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ])
-          return
-        }
-      }
-    }
-
-    checkPermissions()
-  }, [hasPermission, requestPermission, navigation])
-
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
 
-  if (!hasPermission) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>Camera permission required</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
+  useEffect(() => {
+    if (!device) {
+      // provide back button if they have no working camera
+      navigation.setOptions({
+        headerShown: true,
+      })
+    }
+  }, [device, navigation])
 
   if (!device) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{`No ${device} camera available`}</Text>
+          <ThemedText>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device: cameraFace })}</ThemedText>
         </View>
       </SafeAreaView>
     )
@@ -123,14 +124,20 @@ const MaskedCamera = ({
   }
   const onError = (error: any) => {
     logger.error(`Camera error: ${error}`)
-    Alert.alert('Camera Error', 'An error occurred while using the camera. Please try again.')
+    Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'))
   }
 
   const takePhoto = async () => {
     try {
       if (cameraRef.current && isActive) {
-        const photo = await cameraRef.current.takePhoto({
-          flash: 'off',
+        // Use takeSnapshot (captures from the video feed at video resolution)
+        // instead of takePhoto (full sensor resolution, e.g. 12MP).
+        // Xcode 26 / iOS 26 SDK changed the default photo encoding to HEIF,
+        // which takes 5-10s to decode at 12MP in RN's Image component.
+        // Snapshot at quality 90 produces a ~1080p JPEG that decodes instantly
+        // and is still well above the resolution needed for backend barcode processing.
+        const photo = await cameraRef.current.takeSnapshot({
+          quality: 90,
         })
 
         onPhotoTaken(photo.path)
@@ -138,7 +145,14 @@ const MaskedCamera = ({
       }
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
-      Alert.alert('Error', 'Failed to take photo. Please try again.')
+
+      // Handle file I/O errors separately to provide a specific alert
+      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+        failedToWriteToLocalStorageAlert()
+        return
+      }
+
+      Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
     }
   }
 
@@ -148,30 +162,57 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
-        isActive={isActive}
+        format={format}
+        isActive={isFocused && isActive}
         photo={true}
+        video={true}
         onInitialized={() => setIsActive(true)}
         onError={onError}
+        codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
+        // Set fps to max supported by the selected format for smoother preview
+        fps={format?.maxFps}
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>
-        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
-          {cameraLabel}
-        </ThemedText>
-        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
-          {cameraInstructions}
-        </ThemedText>
+        {cameraLabel && (
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
+            {cameraLabel}
+          </ThemedText>
+        )}
+        {cameraInstructions && (
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+            {cameraInstructions}
+          </ThemedText>
+        )}
       </View>
       <View style={styles.controlsContainer}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
-          <ThemedText style={{ color: ColorPalette.grayscale.white }}>Cancel</ThemedText>
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={handleCancel}
+          accessibilityLabel={t('BCSC.CameraDisclosure.CancelCamera')}
+          accessibilityRole="button"
+          testID={testIdWithKey('CancelCamera')}
+        >
+          <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
+        <TouchableOpacity
+          style={styles.captureButton}
+          onPress={takePhoto}
+          accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
+          accessibilityRole="button"
+          testID={testIdWithKey('TakePhoto')}
+        >
           <View style={styles.captureButtonInner} />
         </TouchableOpacity>
         {hasTorch ? (
-          <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={toggleTorch}>
+          <TouchableOpacity
+            style={{ flex: 1, alignItems: 'flex-end' }}
+            onPress={toggleTorch}
+            accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
+            accessibilityRole="button"
+            testID={testIdWithKey('ToggleFlash')}
+          >
             <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (

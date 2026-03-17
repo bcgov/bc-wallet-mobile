@@ -1,25 +1,23 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-
-import { StackNavigationProp } from '@react-navigation/stack'
-
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import { MaskType } from '@bifold/core'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { MaskType, ScreenWrapper } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
-import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
+import { useCameraPermission } from 'react-native-vision-camera'
 
 type PhotoInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
-  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
 }
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      position: 'relative',
-    },
-  })
+  const { t } = useTranslation()
+  const { hasPermission, requestPermission } = useCameraPermission()
 
   const handlePhotoTaken = async (path: string) => {
     // Navigate to photo review screen with the photo data
@@ -29,16 +27,27 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
     })
   }
 
+  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+
+  if (isLoading) {
+    return <LoadingScreen />
+  }
+
+  if (!hasPermission) {
+    return <PermissionDisabled permissionType="camera" headerPadding={true} />
+  }
+
   return (
-    <SafeAreaView style={styles.pageContainer}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
-        cameraLabel="Position your face within the oval and press the button on the screen"
+        cameraInstructions={t('BCSC.SendVideo.TakePhoto.CameraInstructions')}
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
+        cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
       />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

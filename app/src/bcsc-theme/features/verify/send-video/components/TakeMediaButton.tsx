@@ -1,6 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { Image, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface TakeMediaButtonProps {

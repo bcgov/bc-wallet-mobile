@@ -1,9 +1,12 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BC_SERVICE_LOCATION_URL } from '@/constants'
+import { BCState } from '@/store'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
   Link,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -12,38 +15,26 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCDispatchAction, BCState } from '@/store'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useTranslation } from 'react-i18next'
+import { Linking, StyleSheet, View } from 'react-native'
 
 type VerifyInPersonScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerifyInPerson>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
 }
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const { Spacing } = useTheme()
+  const [store] = useStore<BCState>()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ButtonLoading } = useAnimatedComponents()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
     bulletContainer: {
       flexDirection: 'row',
     },
@@ -57,29 +48,14 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setLoading(true)
       setError(false)
 
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error('Device code or user code is missing in the store.')
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
+        throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
-      const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
-        store.bcsc.deviceCode,
-        store.bcsc.userCode
-      )
-      if (refresh_token) {
-        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
 
-        if (bcsc_devices_count !== undefined) {
-          dispatch({
-            type: BCDispatchAction.UPDATE_DEVICE_COUNT,
-            payload: [bcsc_devices_count],
-          })
-        }
-
-        navigation.navigate(BCSCScreens.VerificationSuccess)
-      } else {
-        setError(true)
-        logger.error('Device verification failed, no refresh token received.')
-      }
+      navigation.navigate(BCSCScreens.VerificationSuccess)
     } catch (e) {
       logger.error(`Error completing device verification: ${e}`)
       setError(true)
@@ -88,60 +64,66 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     }
   }
 
+  const controls = (
+    <>
+      {error && (
+        <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
+          {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
+        </ThemedText>
+      )}
+      <Button
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('Complete')}
+        accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
+        title={t('BCSC.VerifyIdentity.Complete')}
+        onPress={onPressComplete}
+        disabled={loading}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+      <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
+        {t('BCSC.VerifyIdentity.CardSerialNumber', {
+          serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
+        })}
+      </ThemedText>
+    </>
+  )
+
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          Verify in person
-        </ThemedText>
-        <ThemedText variant={'bold'}>Where to go</ThemedText>
-        <Link
-          linkText={'A Service BC Location'}
-          testID={testIdWithKey('ServiceBCLink')}
-          onPress={() => null}
-          style={{ marginBottom: Spacing.md }}
-        />
-        <ThemedText variant={'bold'}>What to bring</ThemedText>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{'This device'}</ThemedText>
-        </View>
-        <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{`Your BC Services Card - if it's a non-photo card, bring your additional ID too`}</ThemedText>
-        </View>
-        <ThemedText variant={'bold'}>Show this confirmation number</ThemedText>
-        <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
-          {`${store.bcsc.userCode?.slice(0, 4)}-${store.bcsc.userCode?.slice(4, 8)}`}
-        </ThemedText>
-        <ThemedText variant={'bold'}>You must complete this by</ThemedText>
-        <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
-          {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
-        </ThemedText>
+    <ScreenWrapper controls={controls}>
+      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.VerifyIdentity.VerifyInPersonTitle')}
+      </ThemedText>
+      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhereToGo')}</ThemedText>
+      <Link
+        linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
+        testID={testIdWithKey('ServiceBCLink')}
+        onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
+        style={{ marginBottom: Spacing.md }}
+      />
+      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
+      <View style={styles.bulletContainer}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{t('BCSC.VerifyIdentity.ThisDevice')}</ThemedText>
       </View>
-      <View style={styles.controlsContainer}>
-        <View style={{ marginBottom: Spacing.md }}>
-          {error && (
-            <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
-              You have not yet been verified
-            </ThemedText>
-          )}
-          <Button
-            buttonType={ButtonType.Primary}
-            testID={testIdWithKey('Complete')}
-            accessibilityLabel={'Complete'}
-            title={'Complete'}
-            onPress={onPressComplete}
-            disabled={loading}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-        </View>
-        <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-          Card serial number: {store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A'}
-        </ThemedText>
+      <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
       </View>
-    </SafeAreaView>
+      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
+      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
+        {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
+        {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
+      </ThemedText>
+      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
+      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
+        {store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })}
+      </ThemedText>
+    </ScreenWrapper>
   )
 }
 export default VerifyInPersonScreen

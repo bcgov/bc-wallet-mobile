@@ -1,27 +1,28 @@
+import { BCThemeNames } from '@/constants'
+import { BCDispatchAction, BCState, Mode } from '@/store'
 import {
   DispatchAction,
+  LockoutReason,
   SafeAreaModal,
   Screens,
+  ScreenWrapper,
   testIdWithKey,
   TOKENS,
   useAuth,
   useServices,
   useStore,
   useTheme,
-  LockoutReason,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCDispatchAction, BCState, Mode } from '@/store'
+import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
-import { BCThemeNames } from '@/constants'
+import WalletEnvironment from './WalletEnvironment'
 
 const Developer: React.FC = () => {
   const { t } = useTranslation()
@@ -30,6 +31,7 @@ const Developer: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPalette, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
+  const [errorAlertTestModalVisible, setErrorAlertTestModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
@@ -96,7 +98,7 @@ const Developer: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
+  const SectionHeader = ({ icon, title }: { icon: string; title: string }): React.ReactElement => (
     <View style={[styles.section, styles.sectionHeader]}>
       <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
       <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
@@ -107,9 +109,9 @@ const Developer: React.FC = () => {
     title: string
     accessibilityLabel?: string
     testID?: string
-    children: JSX.Element
+    children: React.ReactElement
     showRowSeparator?: boolean
-    subContent?: JSX.Element
+    subContent?: React.ReactElement
     onPress?: () => void
   }
   const SectionRow = ({
@@ -144,6 +146,9 @@ const Developer: React.FC = () => {
       )}
     </>
   )
+
+  const getSwitchColor = (isEnabled: boolean) =>
+    isEnabled ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey
 
   const toggleSwitch = () => {
     dispatch({
@@ -291,7 +296,7 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    lockOutUser(LockoutReason.Timeout)
+    lockOutUser(LockoutReason.Logout)
 
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
     const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
@@ -304,7 +309,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
@@ -323,7 +328,21 @@ const Developer: React.FC = () => {
           return
         }}
       >
-        <IASEnvironment shouldDismissModal={shouldDismissModal} />
+        {BCSCMode ? (
+          <IASEnvironment shouldDismissModal={shouldDismissModal} />
+        ) : (
+          <WalletEnvironment shouldDismissModal={shouldDismissModal} />
+        )}
+      </SafeAreaModal>
+      <SafeAreaModal
+        visible={errorAlertTestModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          setErrorAlertTestModalVisible(false)
+        }}
+      >
+        <ErrorAlertTest onBack={() => setErrorAlertTestModalVisible(false)} />
       </SafeAreaModal>
       <ScrollView style={styles.container}>
         <SectionRow
@@ -333,7 +352,7 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={devMode ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+            thumbColor={getSwitchColor(devMode)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleSwitch}
             value={devMode}
@@ -354,92 +373,124 @@ const Developer: React.FC = () => {
           </Text>
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
-        <SectionRow
-          title={t('Verifier.UseVerifierCapability')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleVerifierCapability')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useVerifierCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleVerifierCapabilitySwitch}
-            value={useVerifierCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.AcceptDevCredentials')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleAcceptDevCredentials')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={acceptDevCredentials ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleAcceptDevCredentialsSwitch}
-            value={acceptDevCredentials}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Connection.UseConnectionInviterCapability')}
-          accessibilityLabel={t('Connection.Toggle')}
-          testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useConnectionInviterCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleConnectionInviterCapabilitySwitch}
-            value={useConnectionInviterCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.UseDevVerifierTemplates')}
-          accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-          testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useDevVerifierTemplates ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleDevVerifierTemplatesSwitch}
-            value={useDevVerifierTemplates}
-          />
-        </SectionRow>
-        {!store.onboarding.didCreatePIN && (
-          <SectionRow
-            title={t('NameWallet.EnableWalletNaming')}
-            accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
-            testID={testIdWithKey('ToggleWalletNamingSwitch')}
-            showRowSeparator
-          >
-            <Switch
-              trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-              thumbColor={enableWalletNaming ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-              ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-              onValueChange={toggleWalletNamingSwitch}
-              value={enableWalletNaming}
-            />
-          </SectionRow>
+
+        {BCSCMode ? null : (
+          <View>
+            <SectionRow
+              title={t('PasteUrl.UseShareableLink')}
+              accessibilityLabel={t('PasteUrl.UseShareableLink')}
+              testID={testIdWithKey('ToggleUseShareableLink')}
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(enableShareableLink)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleShareableLinkSwitch}
+                value={enableShareableLink}
+                disabled={!store.authentication.didAuthenticate}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.UseVerifierCapability')}
+              accessibilityLabel={t('Verifier.Toggle')}
+              testID={testIdWithKey('ToggleVerifierCapability')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(useVerifierCapability)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleVerifierCapabilitySwitch}
+                value={useVerifierCapability}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.AcceptDevCredentials')}
+              accessibilityLabel={t('Verifier.Toggle')}
+              testID={testIdWithKey('ToggleAcceptDevCredentials')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(acceptDevCredentials)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleAcceptDevCredentialsSwitch}
+                value={acceptDevCredentials}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Connection.UseConnectionInviterCapability')}
+              accessibilityLabel={t('Connection.Toggle')}
+              testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(useConnectionInviterCapability)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleConnectionInviterCapabilitySwitch}
+                value={useConnectionInviterCapability}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.UseDevVerifierTemplates')}
+              accessibilityLabel={t('Verifier.ToggleDevTemplates')}
+              testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(useDevVerifierTemplates)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleDevVerifierTemplatesSwitch}
+                value={useDevVerifierTemplates}
+              />
+            </SectionRow>
+            {!store.onboarding.didCreatePIN && (
+              <SectionRow
+                title={t('NameWallet.EnableWalletNaming')}
+                accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
+                testID={testIdWithKey('ToggleWalletNamingSwitch')}
+                showRowSeparator
+              >
+                <Switch
+                  trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                  thumbColor={getSwitchColor(enableWalletNaming)}
+                  ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                  onValueChange={toggleWalletNamingSwitch}
+                  value={enableWalletNaming}
+                />
+              </SectionRow>
+            )}
+            <SectionRow
+              title={t('Settings.PreventAutoLock')}
+              accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+              testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(preventAutoLock)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={togglePreventAutoLockSwitch}
+                value={preventAutoLock}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Developer.EnableAppToAppPersonFlow')}
+              accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+              testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(enableAppToAppPersonFlow)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleEnableAppToAppPersonFlowSwitch}
+                value={enableAppToAppPersonFlow}
+              />
+            </SectionRow>
+          </View>
         )}
-        <SectionRow
-          title={t('Settings.PreventAutoLock')}
-          accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-          testID={testIdWithKey('TogglePreventAutoLockSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={preventAutoLock ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={togglePreventAutoLockSwitch}
-            value={preventAutoLock}
-          />
-        </SectionRow>
         <SectionRow
           title={'Remote Logging'}
           accessibilityLabel={'Remote Logging'}
@@ -457,25 +508,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={remoteLoggingEnabled ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+            thumbColor={getSwitchColor(remoteLoggingEnabled)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingSwitch}
             value={remoteLoggingEnabled}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('PasteUrl.UseShareableLink')}
-          accessibilityLabel={t('PasteUrl.UseShareableLink')}
-          testID={testIdWithKey('ToggleUseShareableLink')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableShareableLink ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleShareableLinkSwitch}
-            value={enableShareableLink}
-            disabled={!store.authentication.didAuthenticate}
           />
         </SectionRow>
 
@@ -486,24 +522,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableProxy ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+            thumbColor={getSwitchColor(enableProxy)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleEnableProxySwitch}
             value={enableProxy}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.EnableAppToAppPersonFlow')}
-          accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-          testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableAppToAppPersonFlow ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleEnableAppToAppPersonFlowSwitch}
-            value={enableAppToAppPersonFlow}
           />
         </SectionRow>
 
@@ -514,9 +536,7 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={
-              themeName === BCThemeNames.BCSC ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey
-            }
+            thumbColor={getSwitchColor(themeName === BCThemeNames.BCSC)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleTheme}
             value={themeName === BCThemeNames.BCSC}
@@ -530,14 +550,29 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={!BCSCMode ? ColorPalette.grayscale.mediumGrey : ColorPalette.brand.primary}
+            thumbColor={getSwitchColor(BCSCMode)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleMode}
             value={BCSCMode}
           />
         </SectionRow>
+
+        <View style={styles.sectionSeparator}></View>
+        {BCSCMode ? (
+          <>
+            <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
+            <SectionRow
+              title={t('Developer.ErrorAlertTest')}
+              accessibilityLabel={t('Developer.ErrorAlertTest')}
+              testID={testIdWithKey('ErrorAlertTest')}
+              onPress={() => setErrorAlertTestModalVisible(true)}
+            >
+              <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
+            </SectionRow>
+          </>
+        ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

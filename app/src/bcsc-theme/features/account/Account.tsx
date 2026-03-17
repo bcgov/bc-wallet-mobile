@@ -1,82 +1,83 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
-type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
+type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 
 /**
  * Renders the account screen component, which displays user information and provides navigation to account-related actions.
  *
- * @returns {*} {JSX.Element} The account screen component.
+ * @returns {*} {React.ReactElement} The account screen component.
  */
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
-  const { user, metadata } = useApi()
+  const { metadata } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
+  const { account, refreshAccount } = useAccount()
+  const { idToken, refreshIdToken } = useIdToken()
 
-  const openedAccountWebview = useRef(false)
+  const openedWebview = useRef(false)
 
   const { load: loadBcscServiceClient, data: bcscServiceClient } = useDataLoader(metadata.getBCSCClientMetadata, {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
   })
 
-  const {
-    load: loadUserMeta,
-    refresh: refreshUserMeta,
-    ...userMeta
-  } = useDataLoader(user.getUserMetadata, {
-    onError: (error) => logger.error('Error loading user info or picture', error as Error),
-  })
-
   // Initial data load
   useEffect(() => {
-    loadUserMeta()
     loadBcscServiceClient()
-  }, [loadUserMeta, loadBcscServiceClient])
+  }, [loadBcscServiceClient])
+
+  const refreshData = useCallback(() => {
+    refreshAccount()
+    refreshIdToken()
+  }, [refreshAccount, refreshIdToken])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
-    const appListener = AppState.addEventListener('change', async (nextAppState) => {
-      if (nextAppState === 'active' && openedAccountWebview.current) {
-        logger.info('Returning from Account webview, refreshing user info...')
-        openedAccountWebview.current = false
-        refreshUserMeta()
+    // This AppState listener handles state transitions for entering/ exiting the background
+    const appListener = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && openedWebview.current) {
+        logger.info('Returning from background, refreshing token and account metadata...')
+        openedWebview.current = false
+        refreshData()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshUserMeta])
+  }, [logger, refreshData])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
-      const fullUrl = `${client.baseURL}/account/embedded/devices`
-      navigation.navigate(BCSCScreens.WebView, {
-        url: fullUrl,
-        title: 'Manage Devices',
+      navigation.navigate(BCSCScreens.MainWebView, {
+        url: client.endpoints.accountDevices,
+        title: t('BCSC.Account.AccountInfo.ManageDevices'),
       })
+      openedWebview.current = true
     } catch (error) {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
-  }, [client, navigation, logger])
+  }, [client, navigation, logger, t])
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
@@ -89,7 +90,7 @@ const Account: React.FC = () => {
 
       if (quickLoginResult.success) {
         await Linking.openURL(quickLoginResult.url)
-        openedAccountWebview.current = true
+        openedWebview.current = true
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
@@ -119,47 +120,59 @@ const Account: React.FC = () => {
     },
   })
 
+  if (!account) {
+    return <LoadingScreen />
+  }
+
   return (
     <TabScreenWrapper>
-      {userMeta.isLoading ? (
-        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      ) : (
-        <View style={styles.container}>
-          <View style={styles.photoAndNameContainer}>
-            {/*TODO (MD): fallback for when this is undefined (silhouette) */}
-            <AccountPhoto photoUri={userMeta.data?.picture} />
-            <ThemedText variant={'headingTwo'} style={styles.name}>
-              {userMeta.data?.user?.family_name}, {userMeta.data?.user.given_name}
-            </ThemedText>
-          </View>
-          <ThemedText
-            style={styles.warning}
-          >{`This cannot be used as photo ID, a driver's licence, or a health card.`}</ThemedText>
-          <AccountField label={'App expiry date'} value={userMeta.data?.user.card_expiry ?? ''} />
-          <AccountField label={'Account type'} value={userMeta.data?.user.card_type ?? 'Non BC Services Card'} />
-          <AccountField label={'Address'} value={userMeta.data?.user.address?.formatted ?? ''} />
-          <AccountField label={'Date of birth'} value={userMeta.data?.user.birthdate ?? ''} />
-          <AccountField label={'Email address'} value={store.bcsc.email ?? ''} />
-
-          <View style={styles.buttonsContainer}>
-            <SectionButton
-              onPress={handleMyDevicesPress}
-              title={
-                store.bcsc.bcscDevicesCount !== undefined ? `My devices (${store.bcsc.bcscDevicesCount})` : 'My devices'
-              }
-            />
-            <SectionButton
-              onPress={handleAllAccountDetailsPress}
-              title="All account details"
-              description={'View your account activity, manage your email address, and more.'}
-            />
-            <SectionButton
-              onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
-              title={t('Unified.Account.RemoveAccount')}
-            />
-          </View>
+      <View style={styles.container}>
+        <View style={styles.photoAndNameContainer}>
+          {/*TODO (MD): fallback for when this is undefined (silhouette) */}
+          <AccountPhoto photoUri={account.picture} />
+          <ThemedText variant={'headingTwo'} style={styles.name}>
+            {account.fullname_formatted}
+          </ThemedText>
         </View>
-      )}
+        <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
+        <AccountField
+          label={t('BCSC.Account.AccountInfo.AppExpiryDate')}
+          value={isAccountExpired(account.account_expiration_date) ? 'Card expired!' : account.card_expiry}
+        />
+        <AccountField
+          label={t('BCSC.Account.AccountInfo.AccountType')}
+          value={account.card_type ?? t('BCSC.Account.AccountInfo.AccountTypeNonBCServicesCard')}
+        />
+        <AccountField label={t('BCSC.Account.AccountInfo.Address')} value={account.address?.formatted ?? ''} />
+        <AccountField label={t('BCSC.Account.AccountInfo.DateOfBirth')} value={account.birthdate ?? ''} />
+        <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={account.email ?? ''} />
+
+        <View style={styles.buttonsContainer}>
+          <SectionButton
+            onPress={handleMyDevicesPress}
+            title={
+              typeof idToken?.bcsc_devices_count === 'number'
+                ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idToken.bcsc_devices_count })
+                : t('BCSC.Account.AccountInfo.MyDevices')
+            }
+          />
+          <SectionButton
+            onPress={() => {
+              navigation.navigate(BCSCScreens.TransferAccountQRInformation)
+            }}
+            title={t('BCSC.Account.TransferAccount')}
+          />
+          <SectionButton
+            onPress={handleAllAccountDetailsPress}
+            title={t('BCSC.Account.AccountDetails')}
+            description={t('BCSC.Account.AccountDetailsDescription')}
+          />
+          <SectionButton
+            onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
+            title={t('BCSC.Account.RemoveAccount')}
+          />
+        </View>
+      </View>
     </TabScreenWrapper>
   )
 }

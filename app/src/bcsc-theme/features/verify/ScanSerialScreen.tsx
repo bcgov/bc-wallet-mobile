@@ -1,99 +1,109 @@
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import React, { useCallback, useState } from 'react'
+import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-
-import { BCDispatchAction, BCState } from '@/store'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useCameraPermission } from 'react-native-vision-camera'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
-
-const maxSerialNumberLength = 15
+import { BCSC_SN_SCAN_ZONES } from '../../components/utils/camera'
 
 type ScanSerialScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.ManualSerial>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
 
+/**
+ * Screen for scanning BC Services Card barcodes.
+ * Camera fills the entire screen to fit a standard ID card (CR-80, ~85.6×53.98mm).
+ * DL's are ignored, Combo, Photo, and Non-Photo cards are accepted
+ */
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const scanner = useCardScanner()
+
+  const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+
+  const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean | void> => {
+    let accepted = true
+    await scanner.scanCard(barcodes, async (bcscSerial, license) => {
+      if (bcscSerial && license) {
+        scanner.completeScan()
+        await scanner.handleScanComboCard(bcscSerial, license)
+        return
+      }
+
+      if (bcscSerial) {
+        scanner.completeScan()
+        await scanner.handleScanBCServicesCard(bcscSerial)
+        return
+      }
+
+      // DL-only or unrecognised — reject so the camera resets
+      accepted = false
+    })
+    return accepted
+  }
 
   const styles = StyleSheet.create({
-    screenContainer: {
+    container: {
       flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
+      backgroundColor: '#000',
+      justifyContent: 'flex-end',
     },
-    cameraContainer: {
-      flex: 1,
-      marginBottom: Spacing.md,
+    overlay: {
+      flexShrink: 1,
+      borderTopLeftRadius: Spacing.md,
+      borderTopRightRadius: Spacing.md,
+      backgroundColor: ColorPalette.brand.primaryBackground + 'E6',
+      paddingHorizontal: Spacing.md,
     },
-    contentContainer: {
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-    },
-
-    // below used as helpful label for view, no properties needed atp
-    controlsContainer: {},
-
-    buttonContainer: {
-      width: '100%',
+    instructionText: {
+      textAlign: 'center',
+      flexWrap: 'wrap',
+      flexShrink: 1,
+      marginVertical: Spacing.md,
     },
   })
 
-  const validateSerial = useCallback(() => {
-    // TODO: update this validation logic
-    // once we know the serial number format
-    if (serial.length < 1) {
-      return false
-    }
-    if (serial.length > maxSerialNumberLength) {
-      return false
-    }
-    return true
-  }, [serial])
+  if (isLoading) {
+    return <LoadingScreen />
+  }
 
-  const onCodeScanned = (val: any) => {
-    // the scanner might pick up multiple codes
-    // we will take the first valid one
-
-    interface ScannedCode {
-      value: string
-      [key: string]: unknown
-    }
-    for (const code of val as ScannedCode[]) {
-      setSerial(code.value)
-
-      if (validateSerial()) {
-        dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [code.value] })
-        navigation.navigate(BCSCScreens.EnterBirthdate)
-        return
-      }
-    }
+  if (!hasPermission) {
+    return <PermissionDisabled permissionType="camera" />
   }
 
   return (
-    <View style={styles.screenContainer}>
-      <View style={styles.cameraContainer}>
-        <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
-      </View>
-      <View style={styles.contentContainer}>
-        <View>
-          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Instructions.Paragraph')}</ThemedText>
-        </View>
-        <View style={styles.buttonContainer}>
-          <Button
-            title={t('Unified.Instructions.EnterManually')}
-            buttonType={ButtonType.Secondary}
-            onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
-            accessibilityLabel={t('Unified.Instructions.EnterManually')}
-            testID={testIdWithKey('EnterManually')}
-          />
-        </View>
+    <View style={styles.container}>
+      {/* Camera fills the entire screen */}
+      <CodeScanningCamera
+        onCodeScanned={onCodeScanned}
+        cameraType={'back'}
+        initialZoom={2}
+        scanZones={BCSC_SN_SCAN_ZONES}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      <View style={styles.overlay} pointerEvents="box-none">
+        <ThemedText maxFontSizeMultiplier={1} style={styles.instructionText}>
+          {t('BCSC.Instructions.Paragraph')}
+        </ThemedText>
+        <Button
+          title={t('BCSC.Instructions.EnterManually')}
+          buttonType={ButtonType.Secondary}
+          onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
+          accessibilityLabel={t('BCSC.Instructions.EnterManually')}
+          testID={testIdWithKey('EnterManually')}
+        />
+        <SafeAreaView edges={['bottom']} />
       </View>
     </View>
   )
