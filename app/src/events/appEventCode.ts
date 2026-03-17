@@ -143,6 +143,7 @@ export enum AppEventCode {
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
+  DEVICE_AUTHENTICATION_ERROR = 'device_authentication_error', // Non-IAS error code
   FATAL_UNRECOVERABLE_ERROR = 'fatal_unrecoverable_error', // Non-IAS error code
   // Wallet/Agent Errors
   STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
