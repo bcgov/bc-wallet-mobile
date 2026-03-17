@@ -37,7 +37,7 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
       fontWeight: 'bold',
       letterSpacing: Spacing.sm,
     },
-    visiblityButton: {
+    visibilityButton: {
       alignItems: 'center',
       justifyContent: 'center',
       padding: Spacing.sm,
@@ -80,7 +80,7 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity
-          style={styles.visiblityButton}
+          style={styles.visibilityButton}
           onPress={toggleVisibility}
           testID={testIdWithKey('VisibilityButton')}
           accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
