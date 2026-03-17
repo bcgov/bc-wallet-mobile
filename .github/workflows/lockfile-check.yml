@@ -57,6 +57,14 @@ jobs:
             exit 1
           fi
 
+  # Note: Sometimes `cocoapods` is installed per Ruby version via rbenv.
+  # If `pod install` uses the wrong version, reinstall for the active Ruby:
+  #
+  # Example:
+  #   rbenv shell 3.3.6
+  #   gem uninstall cocoapods -v 1.16.2
+  #   gem install cocoapods -v 1.14.3
+
   podfile-lock:
     runs-on: macos-26
     name: Podfile.lock
@@ -77,13 +85,6 @@ jobs:
       - name: Regenerate Podfile.lock
         working-directory: app/ios
         run: pod install
-
-      # Note: CocoaPods is installed per Ruby version via rbenv.
-      # If `pod install` uses the wrong version, reinstall for the active Ruby:
-      #
-      #   rbenv shell 3.3.6
-      #   gem uninstall cocoapods -v 1.16.2
-      #   gem install cocoapods -v 1.14.3
 
       - name: Check Podfile.lock is up to date
         run: |
