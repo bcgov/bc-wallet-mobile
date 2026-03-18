@@ -1,6 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BC_LOGIN_PRIVACY_URL } from '@/constants'
-import { Link, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Link, ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
 
@@ -22,6 +22,7 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
 }: PrivacyPolicyContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const theme = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     sectionContainer: {
@@ -29,8 +30,13 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
     },
   })
 
-  const onPrivacyLinkPress = () => {
-    Linking.openURL(BC_LOGIN_PRIVACY_URL)
+  const onPrivacyLinkPress = async () => {
+    try {
+      await Linking.openURL(BC_LOGIN_PRIVACY_URL)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      logger.error(`Failed to open privacy policy link: ${errorMsg}`)
+    }
   }
 
   return (
