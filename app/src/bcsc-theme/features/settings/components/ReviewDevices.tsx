@@ -19,6 +19,7 @@ interface ReviewDevicesProps {
   bannerId: BCSCBanner
   maxDevices: number
   handleClose: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
+  handleDelete: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
   onManageDevices: () => void
 }
 
@@ -94,6 +95,17 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevic
           }}
           testID={testIdWithKey('Close')}
           accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
+        />
+
+        <Button
+          title={t('BCSC.SystemChecks.Devices.DeleteButton')}
+          buttonType={ButtonType.Secondary}
+          onPress={() => {
+            handleClose({ shouldAnimate: true })
+            dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
+          }}
+          testID={testIdWithKey('Delete')}
+          accessibilityLabel={t('BCSC.SystemChecks.Devices.DeleteButton')}
         />
       </View>
     </SafeAreaView>

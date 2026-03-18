@@ -48,6 +48,12 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
     setDevicesModalVisible(false)
   }, [])
 
+  const handleDeleteDeviceCountMessage = () => {
+    setDevicesModalVisible(false)
+    // this needs to delete the message
+    // this also need to update a flag to turn off the system check
+  }
+
   return (
     <View>
       <SafeAreaModal
@@ -60,6 +66,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
           bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+          handleDelete={handleDeleteDeviceCountMessage}
           onManageDevices={onManageDevices}
         />
       </SafeAreaModal>
