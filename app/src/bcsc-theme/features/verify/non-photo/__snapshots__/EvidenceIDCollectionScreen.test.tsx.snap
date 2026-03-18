@@ -216,6 +216,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                         "color": "#313132",
                         "flex": 1,
                         "fontSize": 16,
+                        "padding": 0,
                       },
                       undefined,
                     ]
@@ -223,6 +224,30 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   testID="com.ariesbifold:id/documentNumber-input"
                   value=""
                 />
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#D8292F",
+                        "fontSize": 24,
+                      },
+                      {
+                        "marginRight": 8,
+                        "opacity": 0,
+                      },
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  󰀨
+                </Text>
               </View>
               <Text
                 maxFontSizeMultiplier={2}

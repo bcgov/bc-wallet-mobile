@@ -94,6 +94,7 @@ export interface BCSCState {
   accountSetupType?: AccountSetupType
   hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
+  hasDismissedDeviceAuthInfo?: boolean
   credentialMetadata?: CredentialMetadata
 }
 
@@ -762,6 +763,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION: {
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedDeviceAuthInfo: hasDismissed }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

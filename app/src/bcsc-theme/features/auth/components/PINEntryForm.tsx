@@ -13,10 +13,11 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useTheme,
 } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, TextInput } from 'react-native'
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
@@ -68,8 +69,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { register } = useRegistrationService()
-
   const pin2Ref = useRef<TextInput>(null)
+
+  const { Spacing } = useTheme()
 
   // Helper to get translation with prefix
   const tWithPrefix = useCallback((key: string) => t(`${translationPrefix}.${key}`), [t, translationPrefix])
@@ -163,25 +165,48 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
     [currentPIN1, validateAndContinue]
   )
 
+  const styles = StyleSheet.create({
+    pinEntryContent: {
+      gap: Spacing.lg,
+    },
+    pinFormRow: {
+      gap: Spacing.sm,
+    },
+    pinCheckboxRow: {
+      marginHorizontal: -Spacing.sm,
+    },
+    pinCheckboxError: {
+      marginLeft: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    pinCheckboxTitle: {
+      marginLeft: Spacing.md,
+    },
+    pinReminder: {
+      gap: Spacing.sm,
+    },
+  })
+
   const controls = (
     <>
-      {checkboxError ? (
-        <ThemedText variant={'inlineErrorText'} style={{ textAlign: 'right' }}>
-          {tWithPrefix('MustCheckBox')}
-        </ThemedText>
-      ) : null}
-      <CheckBoxRow
-        title={tWithPrefix('IUnderstand')}
-        accessibilityLabel={tWithPrefix('IUnderstand')}
-        testID={testIdWithKey('IUnderstand')}
-        checked={checked}
-        onPress={() => {
-          setCheckboxError(checked)
-          setChecked(!checked)
-        }}
-        reverse
-        titleStyle={{ textAlign: 'right' }}
-      />
+      <View style={styles.pinCheckboxRow}>
+        <CheckBoxRow
+          title={tWithPrefix('IUnderstand')}
+          accessibilityLabel={tWithPrefix('IUnderstand')}
+          testID={testIdWithKey('IUnderstand')}
+          checked={checked}
+          onPress={() => {
+            setCheckboxError(checked)
+            setChecked(!checked)
+          }}
+          titleStyle={styles.pinCheckboxTitle}
+        />
+        {checkboxError ? (
+          <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
+            {tWithPrefix('MustCheckBox')}
+          </ThemedText>
+        ) : null}
+      </View>
       <Button
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
@@ -197,17 +222,25 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   return (
     <ScreenWrapper padded keyboardActive controls={controls}>
-      <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
-      <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
-      <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
-      <PINInput
-        ref={pin2Ref}
-        onPINChange={handlePIN2Change}
-        onPINComplete={handlePIN2Complete}
-        errorMessage={errorMessage2}
-      />
-      <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
-      <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
+      <View style={styles.pinEntryContent}>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
+          <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
+        </View>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
+          <PINInput
+            ref={pin2Ref}
+            onPINChange={handlePIN2Change}
+            onPINComplete={handlePIN2Complete}
+            errorMessage={errorMessage2}
+          />
+        </View>
+        <View style={styles.pinReminder}>
+          <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
+          <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
+        </View>
+      </View>
     </ScreenWrapper>
   )
 }
