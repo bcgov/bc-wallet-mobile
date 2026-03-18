@@ -50,14 +50,14 @@ const TransferQRDisplayScreen: React.FC = () => {
     },
   })
 
-  const createToken = useCallback(async () => {
+  const createToken = useCallback(async (): Promise<boolean> => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
       logger.error('[TransferQRDisplayScreen] Account not found in native storage')
       accountNotFoundAlert()
       setIsLoading(false)
-      return
+      return false
     }
 
     const newJti = uuid.v4().toString()
@@ -75,6 +75,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
+    return true
   }, [store.developer.environment.iasApiBaseUrl, logger, accountNotFoundAlert])
 
   const checkAttestation = useCallback(
@@ -99,13 +100,15 @@ const TransferQRDisplayScreen: React.FC = () => {
     }, qrCodeRefreshInterval)
   }, [createToken])
 
-  const refreshToken = useCallback(() => {
+  const refreshToken = useCallback(async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
     }
 
-    createToken()
-    startInterval()
+    const success = await createToken()
+    if (success) {
+      startInterval()
+    }
   }, [createToken, startInterval])
 
   useEffect(() => {
