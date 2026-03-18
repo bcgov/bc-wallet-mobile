@@ -604,7 +604,7 @@ exports[`AuthSettings renders correctly 1`] = `
                     ]
                   }
                 >
-                  Version 2.1.0 (142)
+                  Version 4.0.0 (142)
                 </Text>
               </View>
             </View>

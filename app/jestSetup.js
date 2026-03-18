@@ -62,7 +62,7 @@ console.warn = createFilteredConsole('warn', [...suppressedPatterns, ...expected
 console.error = createFilteredConsole('error', [...suppressedPatterns, ...expectedReactWarnings])
 
 mockRNDeviceInfo.getApplicationName = jest.fn(() => 'BCServicesCard')
-mockRNDeviceInfo.getVersion = jest.fn(() => '2.1.0')
+mockRNDeviceInfo.getVersion = jest.fn(() => '4.0.0')
 mockRNDeviceInfo.getBuildNumber = jest.fn(() => '142')
 mockRNDeviceInfo.getSystemName = jest.fn(() => 'iOS')
 mockRNDeviceInfo.getSystemVersion = jest.fn(() => '17.4')

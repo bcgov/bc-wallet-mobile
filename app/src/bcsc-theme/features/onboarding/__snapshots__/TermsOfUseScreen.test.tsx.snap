@@ -84,7 +84,7 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     testID="mocked-webview"
     textZoom={200}
     thirdPartyCookiesEnabled={true}
-    userAgent="BCServicesCard/2.1.0 (iOS 17.4; Build 142)"
+    userAgent="BCServicesCard/4.0.0 (iOS 17.4; Build 142)"
   />
   <View
     style={
