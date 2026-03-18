@@ -196,6 +196,30 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 textContentType="streetAddressLine1"
                 value=""
               />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
             </View>
             <Text
               maxFontSizeMultiplier={2}
@@ -326,6 +350,30 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 textContentType="streetAddressLine2"
                 value=""
               />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
             </View>
             <Text
               maxFontSizeMultiplier={2}
@@ -456,6 +504,30 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 textContentType="addressCity"
                 value=""
               />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
             </View>
             <Text
               maxFontSizeMultiplier={2}
@@ -729,6 +801,30 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 textContentType="postalCode"
                 value=""
               />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
             </View>
             <Text
               maxFontSizeMultiplier={2}
