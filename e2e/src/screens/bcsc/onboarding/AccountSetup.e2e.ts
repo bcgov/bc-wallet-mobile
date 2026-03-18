@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class AccountSetupScreen extends BaseScreen {
+class AccountSetupE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.AccountSetup.AddAccount)
   }
@@ -19,4 +19,4 @@ class AccountSetupScreen extends BaseScreen {
   }
 }
 
-export default new AccountSetupScreen()
+export default new AccountSetupE2EScreen()

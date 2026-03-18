@@ -4,7 +4,7 @@ import { BaseScreen } from '../../BaseScreen.js'
 
 const CAROUSEL_STEPS = 3
 
-class IntroCarouselScreen extends BaseScreen {
+class IntroCarouselE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.IntroCarousel.CarouselNext)
   }
@@ -42,4 +42,4 @@ class IntroCarouselScreen extends BaseScreen {
   }
 }
 
-export default new IntroCarouselScreen()
+export default new IntroCarouselE2EScreen()

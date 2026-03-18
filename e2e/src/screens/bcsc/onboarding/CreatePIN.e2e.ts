@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class CreatePINScreen extends BaseScreen {
+class CreatePINE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.CreatePIN.Continue)
   }
@@ -34,4 +34,4 @@ class CreatePINScreen extends BaseScreen {
   }
 }
 
-export default new CreatePINScreen()
+export default new CreatePINE2EScreen()

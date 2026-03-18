@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class OptInAnalyticsScreen extends BaseScreen {
+class OptInAnalyticsE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.OptInAnalytics.Accept)
   }
@@ -15,4 +15,4 @@ class OptInAnalyticsScreen extends BaseScreen {
   }
 }
 
-export default new OptInAnalyticsScreen()
+export default new OptInAnalyticsE2EScreen()

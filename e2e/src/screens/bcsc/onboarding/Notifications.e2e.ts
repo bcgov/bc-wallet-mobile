@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class NotificationsScreen extends BaseScreen {
+class NotificationsE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.Notifications.Continue)
   }
@@ -19,4 +19,4 @@ class NotificationsScreen extends BaseScreen {
   }
 }
 
-export default new NotificationsScreen()
+export default new NotificationsE2EScreen()

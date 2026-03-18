@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class TermsOfUseScreen extends BaseScreen {
+class TermsOfUseE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.TermsOfUse.AcceptAndContinue)
   }
@@ -19,4 +19,4 @@ class TermsOfUseScreen extends BaseScreen {
   }
 }
 
-export default new TermsOfUseScreen()
+export default new TermsOfUseE2EScreen()

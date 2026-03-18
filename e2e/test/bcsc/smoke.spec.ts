@@ -1,8 +1,8 @@
 import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
 import { annotate } from '../../src/helpers/sauce.js'
-import AccountSetupScreen from '../../src/screens/bcsc/onboarding/AccountSetupScreen.js'
-import IntroCarouselScreen from '../../src/screens/bcsc/onboarding/IntroCarouselScreen.js'
-import SetupTypesScreen from '../../src/screens/bcsc/onboarding/SetupTypesScreen.js'
+import AccountSetupE2EScreen from '../../src/screens/bcsc/onboarding/AccountSetup.e2e.js'
+import IntroCarouselE2EScreen from '../../src/screens/bcsc/onboarding/IntroCarousel.e2e.js'
+import SetupTypesE2EScreen from '../../src/screens/bcsc/onboarding/SetupTypes.e2e.js'
 import { getVariantConfig } from '../../src/variant.js'
 
 describe('App Launch', () => {
@@ -11,14 +11,14 @@ describe('App Launch', () => {
   it('should launch and display the first screen', async () => {
     await acceptLocalNetworkPermissionIfPresent()
     await annotate(`Variant: ${variant.name}`)
-    await AccountSetupScreen.waitForDisplayed(60_000)
+    await AccountSetupE2EScreen.waitForDisplayed(60_000)
   })
 
   it('should complete initial onboarding navigation', async () => {
-    await AccountSetupScreen.tapAddAccount()
-    await SetupTypesScreen.waitForDisplayed()
-    await SetupTypesScreen.tapContinue()
-    await IntroCarouselScreen.waitForDisplayed()
-    await IntroCarouselScreen.swipeThroughAll()
+    await AccountSetupE2EScreen.tapAddAccount()
+    await SetupTypesE2EScreen.waitForDisplayed()
+    await SetupTypesE2EScreen.tapContinue()
+    await IntroCarouselE2EScreen.waitForDisplayed()
+    await IntroCarouselE2EScreen.swipeThroughAll()
   })
 })

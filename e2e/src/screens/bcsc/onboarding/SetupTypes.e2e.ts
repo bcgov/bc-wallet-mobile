@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class SetupTypesScreen extends BaseScreen {
+class SetupTypesE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.SetupTypes.Continue)
   }
@@ -31,4 +31,4 @@ class SetupTypesScreen extends BaseScreen {
   }
 }
 
-export default new SetupTypesScreen()
+export default new SetupTypesE2EScreen()

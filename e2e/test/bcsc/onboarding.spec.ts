@@ -1,15 +1,15 @@
 import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
 import { acceptNotificationPermissionIfPresent } from '../../src/helpers/notifications.js'
 import { annotate } from '../../src/helpers/sauce.js'
-import AccountSetupScreen from '../../src/screens/bcsc/onboarding/AccountSetupScreen.js'
-import CreatePINScreen from '../../src/screens/bcsc/onboarding/CreatePINScreen.js'
-import IntroCarouselScreen from '../../src/screens/bcsc/onboarding/IntroCarouselScreen.js'
-import NotificationsScreen from '../../src/screens/bcsc/onboarding/NotificationsScreen.js'
-import OptInAnalyticsScreen from '../../src/screens/bcsc/onboarding/OptInAnalyticsScreen.js'
-import PrivacyPolicyScreen from '../../src/screens/bcsc/onboarding/PrivacyPolicyScreen.js'
-import SecureAppScreen from '../../src/screens/bcsc/onboarding/SecureAppScreen.js'
-import SetupTypesScreen from '../../src/screens/bcsc/onboarding/SetupTypesScreen.js'
-import TermsOfUseScreen from '../../src/screens/bcsc/onboarding/TermsOfUseScreen.js'
+import AccountSetupE2EScreen from '../../src/screens/bcsc/onboarding/AccountSetup.e2e.js'
+import CreatePINE2EScreen from '../../src/screens/bcsc/onboarding/CreatePIN.e2e.js'
+import IntroCarouselE2EScreen from '../../src/screens/bcsc/onboarding/IntroCarousel.e2e.js'
+import NotificationsE2EScreen from '../../src/screens/bcsc/onboarding/Notifications.e2e.js'
+import OptInAnalyticsE2EScreen from '../../src/screens/bcsc/onboarding/OptInAnalytics.e2e.js'
+import PrivacyPolicyE2EScreen from '../../src/screens/bcsc/onboarding/PrivacyPolicy.e2e.js'
+import SecureAppE2EScreen from '../../src/screens/bcsc/onboarding/SecureApp.e2e.js'
+import SetupTypesE2EScreen from '../../src/screens/bcsc/onboarding/SetupTypes.e2e.js'
+import TermsOfUseE2EScreen from '../../src/screens/bcsc/onboarding/TermsOfUse.e2e.js'
 import { getVariantConfig } from '../../src/variant.js'
 
 describe('Onboarding', () => {
@@ -18,54 +18,54 @@ describe('Onboarding', () => {
   it('should display the Account Setup screen', async () => {
     await acceptLocalNetworkPermissionIfPresent()
     await annotate(`Variant: ${variant.name}`)
-    await AccountSetupScreen.waitForDisplayed(60_000)
+    await AccountSetupE2EScreen.waitForDisplayed(60_000)
   })
 
   it('should navigate to the Setup Types screen', async () => {
-    await AccountSetupScreen.tapAddAccount()
-    await SetupTypesScreen.waitForDisplayed()
-    await SetupTypesScreen.tapContinue()
+    await AccountSetupE2EScreen.tapAddAccount()
+    await SetupTypesE2EScreen.waitForDisplayed()
+    await SetupTypesE2EScreen.tapContinue()
   })
 
   it('should navigate to the Intro Carousel screen', async () => {
-    await IntroCarouselScreen.waitForDisplayed()
-    await IntroCarouselScreen.tapThroughAll()
+    await IntroCarouselE2EScreen.waitForDisplayed()
+    await IntroCarouselE2EScreen.tapThroughAll()
   })
 
   it('should navigate to the Privacy Policy screen', async () => {
-    await PrivacyPolicyScreen.waitForDisplayed()
-    await PrivacyPolicyScreen.tapContinue()
+    await PrivacyPolicyE2EScreen.waitForDisplayed()
+    await PrivacyPolicyE2EScreen.tapContinue()
   })
 
   it('should navigate to the Opt In Analytics screen', async () => {
-    await OptInAnalyticsScreen.waitForDisplayed()
-    await OptInAnalyticsScreen.tapAccept()
+    await OptInAnalyticsE2EScreen.waitForDisplayed()
+    await OptInAnalyticsE2EScreen.tapAccept()
   })
 
   it('should navigate to the Terms of Use screen', async () => {
-    await TermsOfUseScreen.waitForDisplayed()
-    await TermsOfUseScreen.tapAcceptAndContinue()
+    await TermsOfUseE2EScreen.waitForDisplayed()
+    await TermsOfUseE2EScreen.tapAcceptAndContinue()
   })
 
   it('should navigate to the Notifications screen', async () => {
-    await NotificationsScreen.waitForDisplayed()
-    await NotificationsScreen.tapContinue()
+    await NotificationsE2EScreen.waitForDisplayed()
+    await NotificationsE2EScreen.tapContinue()
     await acceptNotificationPermissionIfPresent()
   })
 
   it('should navigate to the Secure App screen', async () => {
-    await SecureAppScreen.waitForDisplayed()
-    await SecureAppScreen.tapPinAuth()
+    await SecureAppE2EScreen.waitForDisplayed()
+    await SecureAppE2EScreen.tapPinAuth()
   })
 
   it('should navigate to the Create PIN screen', async () => {
-    await CreatePINScreen.waitForDisplayed()
-    await CreatePINScreen.tapVisibilityButtons()
-    await CreatePINScreen.enterPIN1('123456')
-    await CreatePINScreen.enterPIN2('123456')
-    await CreatePINScreen.tapIUnderstand()
+    await CreatePINE2EScreen.waitForDisplayed()
+    await CreatePINE2EScreen.tapVisibilityButtons()
+    await CreatePINE2EScreen.enterPIN1('123456')
+    await CreatePINE2EScreen.enterPIN2('123456')
+    await CreatePINE2EScreen.tapIUnderstand()
     // Brief pause for checkbox state to propagate and Continue to become enabled
     // await new Promise((resolve) => setTimeout(resolve, 300))
-    await CreatePINScreen.tapContinue()
+    await CreatePINE2EScreen.tapContinue()
   })
 })

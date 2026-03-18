@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class SecureAppScreen extends BaseScreen {
+class SecureAppE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.SecureApp.PinAuth)
   }
@@ -19,4 +19,4 @@ class SecureAppScreen extends BaseScreen {
   }
 }
 
-export default new SecureAppScreen()
+export default new SecureAppE2EScreen()

@@ -1,7 +1,7 @@
 import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
-class PrivacyPolicyScreen extends BaseScreen {
+class PrivacyPolicyE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
     await super.waitForDisplayed(timeout, TestIds.Onboarding.PrivacyPolicy.Continue)
   }
@@ -15,4 +15,4 @@ class PrivacyPolicyScreen extends BaseScreen {
   }
 }
 
-export default new PrivacyPolicyScreen()
+export default new PrivacyPolicyE2EScreen()
