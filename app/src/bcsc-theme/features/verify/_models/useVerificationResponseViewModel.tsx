@@ -1,3 +1,4 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCState } from '@/store'
@@ -8,6 +9,7 @@ const useVerificationResponseViewModel = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
+  const { token } = useApi()
   const { updateVerified, updateUserMetadata } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
@@ -30,26 +32,27 @@ const useVerificationResponseViewModel = () => {
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to update registration: ${errMessage}`)
-      return
     }
   }, [store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, registration, logger])
 
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)
     try {
-      // this marks their account as verified, so we know to navigate them to the correct stack
-      await updateVerified(true)
       // this cleans up old metadata from the verification process (photos, address info)
       await updateUserMetadata(null)
       // this updates their registration status with their nickname and new access tokens
       await handleUpdateRegistration()
+      // force a token exchange so the backend activates the device registration before navigation
+      await token.getCachedIdTokenMetadata({ refreshCache: true })
+      // this marks their account as verified, so we know to navigate them to the correct stack
+      await updateVerified(true)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Failed to clean up verification process: ${errMessage}`)
     } finally {
       setIsSettingUpAccount(false)
     }
-  }, [updateVerified, updateUserMetadata, handleUpdateRegistration, logger])
+  }, [updateVerified, updateUserMetadata, handleUpdateRegistration, token, logger])
   return {
     isSettingUpAccount,
     handleAccountSetup,
