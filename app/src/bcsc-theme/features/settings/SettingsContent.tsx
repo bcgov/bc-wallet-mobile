@@ -7,7 +7,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import { ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -203,6 +203,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 onPress={() => {
                   logout()
                 }}
+                testID={testIdWithKey('SignOut')}
               />
             </View>
 
@@ -211,36 +212,55 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </ThemedText>
             <View style={styles.sectionContainer}>
               {onAppSecurity ? (
-                <SettingsActionCard onPress={onAppSecurity} title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')} />
+                <SettingsActionCard
+                  onPress={onAppSecurity}
+                  title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
+                  testID={testIdWithKey('AppSecurity')}
+                />
               ) : null}
               {showChangePIN ? (
-                <SettingsActionCard title={t('BCSC.Settings.ChangePIN.ButtonTitle')} onPress={onChangePIN} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.ChangePIN.ButtonTitle')}
+                  onPress={onChangePIN}
+                  testID={testIdWithKey('ChangePIN')}
+                />
               ) : null}
               {showEditNickname ? (
-                <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.EditNickname')}
+                  onPress={onEditNickname}
+                  testID={testIdWithKey('EditNickname')}
+                />
               ) : null}
               {onAutoLock ? (
                 <SettingsActionCard
                   title={t('BCSC.Settings.AutoLockTime')}
                   onPress={onAutoLock}
                   endAdornmentText={autoLockTimeText}
+                  testID={testIdWithKey('AutoLock')}
                 />
               ) : null}
               {/* TODO: (AR) Keeping this hidden for phase 1 */}
               {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
               {onForgetAllPairings ? (
-                <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.ForgetPairings')}
+                  onPress={onForgetAllPairings}
+                  testID={testIdWithKey('ForgetPairings')}
+                />
               ) : null}
               <SettingsActionCard
                 title={t('BCSC.Settings.AnalyticsOptIn')}
                 onPress={onPressOptInAnalytics}
                 endAdornmentText={analyticsOptInText}
+                testID={testIdWithKey('AnalyticsOptIn')}
               />
 
               <SettingsActionCard
                 title={t('BCSC.Settings.RemoveAccount')}
                 onPress={onPressRemoveAccount}
                 textStyle={{ color: ColorPalette.semantic.error }}
+                testID={testIdWithKey('RemoveAccount')}
               />
             </View>
           </>
@@ -250,15 +270,43 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           {t('BCSC.Settings.HeaderB')}
         </ThemedText>
         <View style={styles.sectionContainer}>
-          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} />
-          <SettingsActionCard title={t('BCSC.Settings.Privacy')} onPress={onPrivacy} />
-          <SettingsActionCard title={t('BCSC.Settings.ContactUs')} onPress={onContactUs} />
-          <SettingsActionCard title={t('BCSC.Settings.Feedback')} onPress={onPressFeedback} />
-          <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
-          <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
-          <SettingsActionCard title={t('BCSC.Settings.Analytics')} onPress={onPressAnalytics} />
+          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} testID={testIdWithKey('Help')} />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Privacy')}
+            onPress={onPrivacy}
+            testID={testIdWithKey('Privacy')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.ContactUs')}
+            onPress={onContactUs}
+            testID={testIdWithKey('ContactUs')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Feedback')}
+            onPress={onPressFeedback}
+            testID={testIdWithKey('Feedback')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Accessibility')}
+            onPress={onPressAccessibility}
+            testID={testIdWithKey('Accessibility')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.TermsOfUse')}
+            onPress={onPressTermsOfUse}
+            testID={testIdWithKey('TermsOfUse')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Analytics')}
+            onPress={onPressAnalytics}
+            testID={testIdWithKey('Analytics')}
+          />
           {store.preferences.developerModeEnabled ? (
-            <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
+            <SettingsActionCard
+              title={t('Developer.DeveloperMode')}
+              onPress={onPressDeveloperMode}
+              testID={testIdWithKey('DeveloperMode')}
+            />
           ) : null}
         </View>
 

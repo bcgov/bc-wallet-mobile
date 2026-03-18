@@ -110,19 +110,19 @@ export const AutoLockScreen: React.FC = () => {
           {
             title: t('AutoLockTimes.FiveMinutes'),
             value: AutoLockTime.FiveMinutes,
-            testID: `auto-lock-time-${AutoLockTime.FiveMinutes}`,
+            testID: testIdWithKey(`auto-lock-time-${AutoLockTime.FiveMinutes}`),
             onPress: handleTimeoutChange,
           },
           {
             title: t('AutoLockTimes.ThreeMinutes'),
             value: AutoLockTime.ThreeMinutes,
-            testID: `auto-lock-time-${AutoLockTime.ThreeMinutes}`,
+            testID: testIdWithKey(`auto-lock-time-${AutoLockTime.ThreeMinutes}`),
             onPress: handleTimeoutChange,
           },
           {
             title: t('AutoLockTimes.OneMinute'),
             value: AutoLockTime.OneMinute,
-            testID: `auto-lock-time-${AutoLockTime.OneMinute}`,
+            testID: testIdWithKey(`auto-lock-time-${AutoLockTime.OneMinute}`),
             onPress: handleTimeoutChange,
           },
         ]}
