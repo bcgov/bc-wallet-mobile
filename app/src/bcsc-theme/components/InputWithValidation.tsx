@@ -74,6 +74,8 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
     },
     inputErrorIcon: {
       marginRight: Spacing.sm,
+      // Note: Reserve space for the error icon (prevents layout shift on error)
+      opacity: props.error ? 1 : 0,
     },
     subtext: {
       marginTop: Spacing.sm,
@@ -119,14 +121,12 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           }}
         />
 
-        {props.error ? (
-          <Icon
-            name={'alert-circle'}
-            style={styles.inputErrorIcon}
-            size={Spacing.lg}
-            color={ColorPalette.semantic.error}
-          />
-        ) : null}
+        <Icon
+          name={'alert-circle'}
+          style={styles.inputErrorIcon}
+          size={Spacing.lg}
+          color={ColorPalette.semantic.error}
+        />
       </Pressable>
 
       <ThemedText

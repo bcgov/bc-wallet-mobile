@@ -114,6 +114,30 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
       testID="com.ariesbifold:id/birthdate-input"
       value="YYYY/MM/DD"
     />
+    <Text
+      allowFontScaling={false}
+      selectable={false}
+      style={
+        [
+          {
+            "color": "#D8292F",
+            "fontSize": 24,
+          },
+          {
+            "marginRight": 8,
+            "opacity": 0,
+          },
+          {
+            "fontFamily": "Material Design Icons",
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+          },
+          {},
+        ]
+      }
+    >
+      󰀨
+    </Text>
   </View>
   <Text
     maxFontSizeMultiplier={2}
