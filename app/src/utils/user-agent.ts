@@ -1,4 +1,10 @@
-import { getApplicationName, getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
+import {
+  getApplicationName,
+  getBuildNumber,
+  getSystemName,
+  getSystemVersion,
+  getVersion,
+} from 'react-native-device-info'
 
 export const getUserAgentString = (): string => {
   const appName = getApplicationName().replace(/\s+/g, '')

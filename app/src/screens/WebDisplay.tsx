@@ -1,5 +1,5 @@
-import { getUserAgentString } from '@utils/user-agent'
 import { SafeAreaModal } from '@bifold/core'
+import { getUserAgentString } from '@utils/user-agent'
 import React from 'react'
 import { StyleSheet } from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'

@@ -1,6 +1,6 @@
-import { getUserAgentString } from '@utils/user-agent'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
+import { getUserAgentString } from '@utils/user-agent'
 import React, { useCallback } from 'react'
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
