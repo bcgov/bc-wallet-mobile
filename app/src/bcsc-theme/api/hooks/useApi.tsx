@@ -10,6 +10,7 @@ import usePairingApi from './usePairingApi'
 import useRegistrationApi from './useRegistrationApi'
 import useTokenApi from './useTokens'
 import useUserApi from './useUserApi'
+import useCredentialApi from './useCredentialApi'
 import useVideoCallApi from './useVideoCallApi'
 
 const useApi = () => {
@@ -25,6 +26,7 @@ const useApi = () => {
   const jwks = useJwksApi(apiClient)
   const video = useVideoCallApi(apiClient)
   const deviceAttestation = useDeviceAttestationApi(apiClient)
+  const credential = useCredentialApi(apiClient)
 
   return useMemo(
     () => ({
@@ -39,8 +41,9 @@ const useApi = () => {
       jwks,
       video,
       deviceAttestation,
+      credential,
     }),
-    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation]
+    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation, credential]
   )
 }
 
