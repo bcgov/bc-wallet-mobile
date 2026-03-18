@@ -1,3 +1,4 @@
+import { getUserAgentString } from '@utils/user-agent'
 import { SafeAreaModal } from '@bifold/core'
 import React from 'react'
 import { StyleSheet } from 'react-native'
@@ -27,6 +28,7 @@ const WebDisplay = ({ destinationUrl, exitUrl, visible, onClose }: WebDisplayPro
         source={{ uri: destinationUrl }}
         javaScriptEnabled={true}
         domStorageEnabled={true}
+        userAgent={getUserAgentString()}
         onNavigationStateChange={(nav: WebViewNavigation) => {
           if (exitUrl && nav.url.includes(exitUrl)) {
             onClose()

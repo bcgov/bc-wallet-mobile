@@ -1,3 +1,4 @@
+import { getUserAgentString } from '@utils/user-agent'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
@@ -110,7 +111,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       mixedContentMode="compatibility"
       sharedCookiesEnabled={true}
       thirdPartyCookiesEnabled={true}
-      userAgent="Single App"
+      userAgent={getUserAgentString()}
       textZoom={Math.round(fontScale * 100)}
       onLoad={onLoaded}
     />

@@ -1,3 +1,4 @@
+import { getUserAgentString } from '@utils/user-agent'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -75,6 +76,7 @@ class BCSCApiClient {
     this.client = axios.create({
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
+        'User-Agent': getUserAgentString(),
       },
     })
 

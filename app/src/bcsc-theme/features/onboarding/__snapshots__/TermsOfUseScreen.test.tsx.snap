@@ -84,7 +84,7 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
     testID="mocked-webview"
     textZoom={200}
     thirdPartyCookiesEnabled={true}
-    userAgent="Single App"
+    userAgent="unknown/1 (unknown unknown; Build 1)"
   />
   <View
     style={
