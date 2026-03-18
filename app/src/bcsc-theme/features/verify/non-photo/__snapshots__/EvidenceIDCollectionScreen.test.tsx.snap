@@ -216,6 +216,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                         "color": "#313132",
                         "flex": 1,
                         "fontSize": 16,
+                        "padding": 0,
                       },
                       undefined,
                     ]
