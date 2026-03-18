@@ -29,14 +29,14 @@ export const getLiveCallVideoQueue = (
   environment: IASEnvironment,
   destinations: VideoDestination[]
 ): VideoQueue | null => {
-  let videoQueue = VideoQueue.DEFAULT
-
-  if (environment !== IASEnvironment.PROD) {
-    videoQueue = VideoQueue.TEST
+  if (!destinations.length) {
+    return null
   }
 
-  if (__DEV__) {
-    // Always use the TEST queue in development
+  let videoQueue = VideoQueue.DEFAULT
+  const isProd = environment.iasApiBaseUrl === IASEnvironment.PROD.iasApiBaseUrl
+
+  if (__DEV__ || !isProd) {
     videoQueue = VideoQueue.TEST
   }
 
