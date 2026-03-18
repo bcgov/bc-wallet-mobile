@@ -1,6 +1,7 @@
 import { BaseScreen } from '../../BaseScreen.js'
 
 const SettingsTestIds = {
+  BackButton: 'com.ariesbifold:id/Back',
   SignOut: 'com.ariesbifold:id/SignOut',
   AppSecurity: 'com.ariesbifold:id/AppSecurity',
   ChangePIN: 'com.ariesbifold:id/ChangePIN',
@@ -20,8 +21,12 @@ const SettingsTestIds = {
 }
 
 class SettingsE2EScreen extends BaseScreen {
-  async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, SettingsTestIds.ContactUs)
+  async waitForDisplayed(timeout = 20_000, testId: string = SettingsTestIds.AutoLock) {
+    await super.waitForDisplayed(timeout, testId)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(SettingsTestIds.BackButton)
   }
 
   async tapContactUs() {
