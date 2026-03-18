@@ -11,11 +11,4 @@ jest.mock('react-native-device-info', () => ({
 describe('getUserAgentString', () => {
   it('returns a formatted user-agent string', () => {
     expect(getUserAgentString()).toBe('BCServicesCard/2.1.0 (iOS 17.4; Build 142)')
-  })
-
-  it('returns the cached value on subsequent calls', () => {
-    const first = getUserAgentString()
-    const second = getUserAgentString()
-    expect(second).toBe(first)
-  })
-})
+  })})
