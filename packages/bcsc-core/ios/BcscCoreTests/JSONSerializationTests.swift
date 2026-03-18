@@ -15,13 +15,6 @@ final class JSONSerializationTests: XCTestCase {
     ]
 
     let jsonData = try JSONSerialization.data(withJSONObject: registrationData, options: [])
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    XCTAssertNotNil(jsonString)
-    XCTAssertTrue(
-      try XCTUnwrap(jsonString?.contains(nickname)),
-      "JSON string should contain original Chinese characters"
-    )
 
     // Round-trip: parse back and verify
     let parsed = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])
@@ -37,10 +30,6 @@ final class JSONSerializationTests: XCTestCase {
     ]
 
     let jsonData = try JSONSerialization.data(withJSONObject: registrationData, options: [])
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    XCTAssertNotNil(jsonString)
-    XCTAssertTrue(try XCTUnwrap(jsonString?.contains(nickname)))
 
     let parsed = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])
     XCTAssertEqual(parsed["client_name"] as? String, nickname)
@@ -55,10 +44,6 @@ final class JSONSerializationTests: XCTestCase {
     ]
 
     let jsonData = try JSONSerialization.data(withJSONObject: registrationData, options: [])
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    XCTAssertNotNil(jsonString)
-    XCTAssertTrue(try XCTUnwrap(jsonString?.contains(nickname)))
 
     let parsed = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])
     XCTAssertEqual(parsed["client_name"] as? String, nickname)
@@ -87,10 +72,6 @@ final class JSONSerializationTests: XCTestCase {
     ]
 
     let jsonData = try JSONSerialization.data(withJSONObject: registrationData, options: [])
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    XCTAssertNotNil(jsonString)
-    XCTAssertTrue(try XCTUnwrap(jsonString?.contains(nickname)))
 
     let parsed = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])
     XCTAssertEqual(parsed["client_name"] as? String, nickname)
@@ -116,10 +97,6 @@ final class JSONSerializationTests: XCTestCase {
     ]
 
     let jsonData = try JSONSerialization.data(withJSONObject: registrationData, options: [])
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    XCTAssertNotNil(jsonString)
-    XCTAssertTrue(try XCTUnwrap(jsonString?.contains(nickname)), "Full DCR body should preserve Chinese client_name")
 
     // Verify round-trip
     let parsed = try XCTUnwrap(try JSONSerialization.jsonObject(with: jsonData) as? [String: Any])

@@ -286,7 +286,7 @@ describe('useRegistrationApi', () => {
       expect(data).toEqual(mockRegistrationResponse)
     })
 
-    it('should preserve utf8 characters in the nickname for update registration', async () => {
+    it('should send nickname unchanged and include charset header', async () => {
       const chineseNickname = '我的钱包'
       const mockBody = JSON.stringify({ client_name: chineseNickname, software_statement: 'mock-jwt' })
       jest.mocked(getDynamicClientRegistrationBody).mockResolvedValue(mockBody)

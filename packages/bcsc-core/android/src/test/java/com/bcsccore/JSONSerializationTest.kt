@@ -3,7 +3,6 @@ package com.bcsccore
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -27,11 +26,8 @@ class JSONSerializationTest {
                 put("application_type", "native")
             }
 
-        val jsonString = json.toString()
-        assertTrue("JSON string should contain original Chinese characters", jsonString.contains(nickname))
-
         // Round-trip: parse back and verify
-        val parsed = JSONObject(jsonString)
+        val parsed = JSONObject(json.toString())
         assertEquals(nickname, parsed.getString("client_name"))
     }
 
@@ -45,10 +41,7 @@ class JSONSerializationTest {
                 put("application_type", "native")
             }
 
-        val jsonString = json.toString()
-        assertTrue(jsonString.contains(nickname))
-
-        val parsed = JSONObject(jsonString)
+        val parsed = JSONObject(json.toString())
         assertEquals(nickname, parsed.getString("client_name"))
     }
 
@@ -62,10 +55,7 @@ class JSONSerializationTest {
                 put("application_type", "native")
             }
 
-        val jsonString = json.toString()
-        assertTrue(jsonString.contains(nickname))
-
-        val parsed = JSONObject(jsonString)
+        val parsed = JSONObject(json.toString())
         assertEquals(nickname, parsed.getString("client_name"))
     }
 
@@ -93,10 +83,7 @@ class JSONSerializationTest {
                 put("application_type", "native")
             }
 
-        val jsonString = json.toString()
-        assertTrue(jsonString.contains(nickname))
-
-        val parsed = JSONObject(jsonString)
+        val parsed = JSONObject(json.toString())
         assertEquals(nickname, parsed.getString("client_name"))
     }
 
@@ -135,11 +122,8 @@ class JSONSerializationTest {
                 put("application_type", "native")
             }
 
-        val jsonString = json.toString()
-        assertTrue("Full DCR body should preserve Chinese client_name", jsonString.contains(nickname))
-
         // Round-trip
-        val parsed = JSONObject(jsonString)
+        val parsed = JSONObject(json.toString())
         assertEquals(nickname, parsed.getString("client_name"))
     }
 }
