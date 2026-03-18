@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
+import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ServiceButton from './components/ServiceButton'
 import { useFilterServiceClients } from './hooks/useFilterServiceClients'
@@ -42,7 +42,7 @@ const Services: React.FC = () => {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }
   )
-  const { serviceClients } = useFilterServiceClients({
+  const { serviceClients, isLoading } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
@@ -90,8 +90,6 @@ const Services: React.FC = () => {
       lineHeight: 30,
     },
   })
-
-  // TODO (MD): implement a loading UI
 
   return (
     <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [1], keyboardShouldPersistTaps: 'handled' }}>
@@ -154,28 +152,38 @@ const Services: React.FC = () => {
         </View>
       </View>
 
-      <View style={styles.servicesContainer}>
-        {serviceClients.map((service) => (
-          <ServiceButton
-            key={service.client_ref_id}
-            title={service.client_name}
-            description={service.client_description}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.ServiceLogin, {
-                serviceClientId: service.client_ref_id,
-              })
-            }}
-          />
-        ))}
-      </View>
+      {isLoading ? (
+        <ActivityIndicator
+          size={'large'}
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          testID={testIdWithKey('ServicesLoading')}
+        />
+      ) : (
+        <>
+          <View style={styles.servicesContainer}>
+            {serviceClients.map((service) => (
+              <ServiceButton
+                key={service.client_ref_id}
+                title={service.client_name}
+                description={service.client_description}
+                onPress={() => {
+                  navigation.navigate(BCSCScreens.ServiceLogin, {
+                    serviceClientId: service.client_ref_id,
+                  })
+                }}
+              />
+            ))}
+          </View>
 
-      <View style={styles.bottomContainer}>
-        <ThemedText variant={'bold'}>{t('BCSC.Services.NotListed')}</ThemedText>
-        <ThemedText style={styles.desciptionText}>{t('BCSC.Services.NotListedDescription')}</ThemedText>
-        <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
-          {t('BCSC.Services.NotListedDescriptionContact')}
-        </ThemedText>
-      </View>
+          <View style={styles.bottomContainer}>
+            <ThemedText variant={'bold'}>{t('BCSC.Services.NotListed')}</ThemedText>
+            <ThemedText style={styles.desciptionText}>{t('BCSC.Services.NotListedDescription')}</ThemedText>
+            <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
+              {t('BCSC.Services.NotListedDescriptionContact')}
+            </ThemedText>
+          </View>
+        </>
+      )}
     </TabScreenWrapper>
   )
 }

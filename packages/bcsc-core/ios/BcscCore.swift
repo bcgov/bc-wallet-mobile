@@ -264,7 +264,7 @@ class BcscCore: NSObject {
   private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
-    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
+    let initialKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       let existingTag = latestKeyInfo.tag
@@ -292,7 +292,7 @@ class BcscCore: NSObject {
         logger.warning(
           "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
-        let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
+        let freshGeneratedKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
         logger.log(
           "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
