@@ -9,7 +9,9 @@ import {
 let cachedUserAgentString: string | undefined
 
 export const getUserAgentString = (): string => {
-  if (cachedUserAgentString) return cachedUserAgentString
+  if (cachedUserAgentString) {
+    return cachedUserAgentString
+  }
 
   const appName = getApplicationName().replaceAll(/\s+/g, '')
   const version = getVersion()
