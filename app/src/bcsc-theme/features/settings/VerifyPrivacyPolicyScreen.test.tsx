@@ -2,9 +2,9 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import { SettingsPrivacyPolicyScreen } from './SettingsPrivacyPolicyScreen'
+import { VerifyPrivacyPolicyScreen } from './VerifyPrivacyPolicyScreen'
 
-describe('SettingsPrivacyPolicy', () => {
+describe('VerifyPrivacyPolicyScreen', () => {
   let mockNavigation: any
 
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('SettingsPrivacyPolicy', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <SettingsPrivacyPolicyScreen navigation={mockNavigation as never} />
+        <VerifyPrivacyPolicyScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 
