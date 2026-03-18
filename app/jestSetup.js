@@ -1,7 +1,6 @@
 /* eslint-disable no-undef */
 import mockRNCNetInfo from '@react-native-community/netinfo/jest/netinfo-mock.js'
 import React from 'react'
-import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock'
 import 'react-native-gesture-handler/jestSetup'
 import mockRNLocalize from 'react-native-localize/mock'
 import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
@@ -61,15 +60,8 @@ console.warn = createFilteredConsole('warn', [...suppressedPatterns, ...expected
 // eslint-disable-next-line no-console
 console.error = createFilteredConsole('error', [...suppressedPatterns, ...expectedReactWarnings])
 
-mockRNDeviceInfo.getApplicationName = jest.fn(() => 'BCServicesCard')
-mockRNDeviceInfo.getVersion = jest.fn(() => '4.0.0')
-mockRNDeviceInfo.getBuildNumber = jest.fn(() => '142')
-mockRNDeviceInfo.getSystemName = jest.fn(() => 'iOS')
-mockRNDeviceInfo.getSystemVersion = jest.fn(() => '17.4')
-
 jest.mock('react-native-safe-area-context', () => mockSafeAreaContext)
 jest.mock('@react-native-community/netinfo', () => mockRNCNetInfo)
-jest.mock('react-native-device-info', () => mockRNDeviceInfo)
 jest.mock('react-native-localize', () => mockRNLocalize)
 jest.mock('react-native-vision-camera', () => {
   return require('./__mocks__/custom/react-native-camera')
