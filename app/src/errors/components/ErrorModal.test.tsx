@@ -1,3 +1,4 @@
+import { appLogger } from '@/utils/logger'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -33,6 +34,12 @@ jest.mock('react-native-safe-area-context', () => {
 })
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
+
+jest.mock('@/utils/logger', () => ({
+  appLogger: {
+    report: jest.fn(),
+  },
+}))
 
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
@@ -173,6 +180,20 @@ describe('BCSCErrorModal', () => {
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
       expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith('general', 'Report this problem')
+    })
+
+    it('should report error via logger when report is pressed', () => {
+      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      expect(appLogger.report).toHaveBeenCalledWith({
+        name: 'ReportedError',
+        title: '[general] Test Error Title',
+        description: 'Something went wrong.',
+        message: '[general] Technical details here',
+        code: 2800,
+      })
     })
 
     it('should disable the Report button after being pressed', async () => {

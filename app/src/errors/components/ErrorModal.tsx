@@ -1,6 +1,7 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { TOKENS, useServices, useTheme } from '@bifold/core'
+import { appLogger } from '@/utils/logger'
+import { useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -55,8 +56,13 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
   enableReport = true,
 }) => {
   const { ColorPalette } = useTheme()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  /**
+   * Handler for "Report this problem" action in the error modal.
+   * Tracks the event in analytics and sends a report to the logger (Loki Grafana) with error details.
+   *
+   * @returns void
+   */
   const handleReport = useCallback(() => {
     if (!error) {
       return
@@ -64,14 +70,14 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, 'Report this problem')
 
-    logger.report({
-      name: `UserReportedError[${error.appEvent}]`,
-      title: error.title,
+    appLogger.report({
+      name: 'ReportedError',
+      title: `[${error.appEvent}] ${error.title}`,
       description: error.description,
-      message: error.message,
+      message: `[${error.appEvent}] ${error.message}`,
       code: error.code,
     })
-  }, [error, logger])
+  }, [error])
 
   const cardColors = useMemo(() => mapThemeToCardColors(ColorPalette), [ColorPalette])
 
