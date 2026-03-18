@@ -1,17 +1,21 @@
-import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
+
+const PrivacyPolicyTestIds = {
+  Continue: 'com.ariesbifold:id/Continue',
+  LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+}
 
 class PrivacyPolicyE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, TestIds.Onboarding.PrivacyPolicy.Continue)
+    await super.waitForDisplayed(timeout, PrivacyPolicyTestIds.Continue)
   }
 
   async tapContinue() {
-    await this.tapByTestId(TestIds.Onboarding.PrivacyPolicy.Continue)
+    await this.tapByTestId(PrivacyPolicyTestIds.Continue)
   }
 
   async tapLearnMore() {
-    await this.tapByTestId(TestIds.Onboarding.PrivacyPolicy.LearnMore)
+    await this.tapByTestId(PrivacyPolicyTestIds.LearnMore)
   }
 }
 

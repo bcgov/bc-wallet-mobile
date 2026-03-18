@@ -1,21 +1,26 @@
-import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
+
+const AccountSetupTestIds = {
+  DeveloperMode: 'com.ariesbifold:id/DeveloperMode',
+  AddAccount: 'com.ariesbifold:id/AddAccount',
+  TransferAccount: 'com.ariesbifold:id/TransferAccount',
+}
 
 class AccountSetupE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, TestIds.Onboarding.AccountSetup.AddAccount)
+    await super.waitForDisplayed(timeout, AccountSetupTestIds.AddAccount)
   }
 
   async tapAddAccount() {
-    await this.tapByTestId(TestIds.Onboarding.AccountSetup.AddAccount)
+    await this.tapByTestId(AccountSetupTestIds.AddAccount)
   }
 
   async tapTransferAccount() {
-    await this.tapByTestId(TestIds.Onboarding.AccountSetup.TransferAccount)
+    await this.tapByTestId(AccountSetupTestIds.TransferAccount)
   }
 
   async tapDeveloperMode() {
-    await this.tapByTestId(TestIds.Onboarding.AccountSetup.DeveloperMode)
+    await this.tapByTestId(AccountSetupTestIds.DeveloperMode)
   }
 }
 

@@ -1,33 +1,41 @@
-import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
+
+const SetupTypesTestIds = {
+  Continue: 'com.ariesbifold:id/Continue',
+  Cancel: 'com.ariesbifold:id/Cancel',
+  MyOwnIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-BCSC.NewSetup.MyOwnID',
+  SomeoneElseIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-BCSC.NewSetup.SomeoneElsesID',
+  OtherPersonPresentRadioGroupYesOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-Yes',
+  OtherPersonPresentRadioGroupNoOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-No',
+}
 
 class SetupTypesE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, TestIds.Onboarding.SetupTypes.Continue)
+    await super.waitForDisplayed(timeout, SetupTypesTestIds.Continue)
   }
 
   async tapContinue() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.Continue)
+    await this.tapByTestId(SetupTypesTestIds.Continue)
   }
 
   async tapCancel() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.Cancel)
+    await this.tapByTestId(SetupTypesTestIds.Cancel)
   }
 
   async selectMyOwnId() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.MyOwnIdRadioGroup)
+    await this.tapByTestId(SetupTypesTestIds.MyOwnIdRadioGroup)
   }
 
   async selectSomeoneElseId() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.SomeoneElseIdRadioGroup)
+    await this.tapByTestId(SetupTypesTestIds.SomeoneElseIdRadioGroup)
   }
 
   async selectOtherPersonPresentYes() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.OtherPersonPresentRadioGroupYesOption)
+    await this.tapByTestId(SetupTypesTestIds.OtherPersonPresentRadioGroupYesOption)
   }
 
   async selectOtherPersonPresentNo() {
-    await this.tapByTestId(TestIds.Onboarding.SetupTypes.OtherPersonPresentRadioGroupNoOption)
+    await this.tapByTestId(SetupTypesTestIds.OtherPersonPresentRadioGroupNoOption)
   }
 }
 

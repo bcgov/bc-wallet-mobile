@@ -1,20 +1,25 @@
-import { TestIds } from '../../../constants.js'
 import { swipeLeft, swipeRight } from '../../../helpers/gestures.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
 const CAROUSEL_STEPS = 3
 
+const IntroCarouselTestIds = {
+  CarouselNext: 'com.ariesbifold:id/CarouselNext',
+  CarouselBack: 'com.ariesbifold:id/CarouselBack',
+  WhereToUseButton: 'com.ariesbifold:id/CardButton-WhereToUse',
+}
+
 class IntroCarouselE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, TestIds.Onboarding.IntroCarousel.CarouselNext)
+    await super.waitForDisplayed(timeout, IntroCarouselTestIds.CarouselNext)
   }
 
   async tapNext() {
-    await this.tapByTestId(TestIds.Onboarding.IntroCarousel.CarouselNext)
+    await this.tapByTestId(IntroCarouselTestIds.CarouselNext)
   }
 
   async tapBack() {
-    await this.tapByTestId(TestIds.Onboarding.IntroCarousel.CarouselBack)
+    await this.tapByTestId(IntroCarouselTestIds.CarouselBack)
   }
 
   async tapThroughAll() {
@@ -38,7 +43,7 @@ class IntroCarouselE2EScreen extends BaseScreen {
   }
 
   async tapWhereToUseButton() {
-    await this.tapByTestId(TestIds.Onboarding.IntroCarousel.WhereToUseButton)
+    await this.tapByTestId(IntroCarouselTestIds.WhereToUseButton)
   }
 }
 

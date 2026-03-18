@@ -1,33 +1,41 @@
-import { TestIds } from '../../../constants.js'
 import { BaseScreen } from '../../BaseScreen.js'
+
+const CreatePINTestIds = {
+  Continue: 'com.ariesbifold:id/Continue',
+  IUnderstand: 'com.ariesbifold:id/IUnderstand',
+  PINInput1: 'com.ariesbifold:id/PINInput1',
+  PINInput2: 'com.ariesbifold:id/PINInput2',
+  PINInput1VisibilityButton: 'com.ariesbifold:id/PINInput1VisibilityButton',
+  PINInput2VisibilityButton: 'com.ariesbifold:id/PINInput2VisibilityButton',
+}
 
 class CreatePINE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, TestIds.Onboarding.CreatePIN.Continue)
+    await super.waitForDisplayed(timeout, CreatePINTestIds.Continue)
   }
 
   async tapContinue() {
-    await this.tapByTestId(TestIds.Onboarding.CreatePIN.Continue)
+    await this.tapByTestId(CreatePINTestIds.Continue)
   }
 
   async tapIUnderstand() {
-    await this.tapByTestId(TestIds.Onboarding.CreatePIN.IUnderstand)
+    await this.tapByTestId(CreatePINTestIds.IUnderstand)
   }
 
   async tapVisibilityButtons() {
-    await this.tapByTestId(TestIds.Onboarding.CreatePIN.PINInput1VisibilityButton)
-    await this.tapByTestId(TestIds.Onboarding.CreatePIN.PINInput2VisibilityButton)
+    await this.tapByTestId(CreatePINTestIds.PINInput1VisibilityButton)
+    await this.tapByTestId(CreatePINTestIds.PINInput2VisibilityButton)
   }
 
   async enterPIN1(pin: string) {
-    await this.enterText(TestIds.Onboarding.CreatePIN.PINInput1, pin, {
+    await this.enterText(CreatePINTestIds.PINInput1, pin, {
       tapFirst: true,
       characterByCharacter: true,
     })
   }
 
   async enterPIN2(pin: string) {
-    await this.enterText(TestIds.Onboarding.CreatePIN.PINInput2, pin, {
+    await this.enterText(CreatePINTestIds.PINInput2, pin, {
       tapFirst: true,
       characterByCharacter: true,
     })
