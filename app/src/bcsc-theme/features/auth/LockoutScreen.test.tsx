@@ -223,6 +223,28 @@ describe('LockoutScreen', () => {
     })
   })
 
+  describe('when unlockApp throws', () => {
+    it('renders gracefully when unlockApp rejects on initial load (not locked)', async () => {
+      mockUnlockApp.mockRejectedValue(new Error('auth error'))
+      mockIsAccountLocked.mockResolvedValue({
+        locked: false,
+        remainingTime: 0,
+      })
+
+      const tree = render(
+        <BasicAppContext>
+          <LockoutScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockUnlockApp).toHaveBeenCalled()
+      })
+
+      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
+    })
+  })
+
   describe('UI content', () => {
     it('displays all informational text', async () => {
       const tree = render(

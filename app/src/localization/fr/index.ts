@@ -199,6 +199,12 @@ const translation = {
       "SetUpApp": "Set Up App (FR)",
       "LearnMore": "Learn More (FR)"
     },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device (FR)",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it. (FR)",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app. (FR)",
+      "CheckboxLabel": "Do not show me this again (FR)",
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
@@ -1202,6 +1208,10 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
       "Action1": "Reset App (FR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (FR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
   "BCWalletError": {
