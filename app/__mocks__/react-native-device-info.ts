@@ -1,4 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// The package mock is a CJS module — ESM import causes hoisting issues in Jest.
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const diMock = require('react-native-device-info/jest/react-native-device-info-mock')
 
 diMock.getApplicationName = jest.fn(() => 'BCServicesCard')
