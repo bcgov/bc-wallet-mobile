@@ -38,9 +38,9 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
   const controls = (
     <>
       <CheckBoxRow
-        title={t('Preface.Confirmed')}
-        accessibilityLabel={t('Terms.IAgree')}
-        testID={testIdWithKey('IAgree')}
+        title={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
+        accessibilityLabel={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
+        testID={testIdWithKey('HideConfirmationCheckbox')}
         checked={checked}
         onPress={() => setChecked(!checked)}
         reverse
@@ -58,11 +58,9 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
 
   return (
     <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
-      <ThemedText variant={'headingThree'}>{`Confirm it's your device`}</ThemedText>
-      <ThemedText>{`Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.`}</ThemedText>
-      <ThemedText
-        variant={'bold'}
-      >{`Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.`}</ThemedText>
+      <ThemedText variant={'headingThree'}>{t('BCSC.ConfirmDeviceAuth.Title')}</ThemedText>
+      <ThemedText>{t('BCSC.ConfirmDeviceAuth.Description1')}</ThemedText>
+      <ThemedText variant={'bold'}>{t('BCSC.ConfirmDeviceAuth.Description2')}</ThemedText>
     </ScreenWrapper>
   )
 }

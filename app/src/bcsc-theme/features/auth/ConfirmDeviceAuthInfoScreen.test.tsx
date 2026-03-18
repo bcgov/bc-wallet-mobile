@@ -51,15 +51,9 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText(`Confirm it's your device`)).toBeTruthy()
-    expect(
-      tree.getByText(
-        `Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.`
-      )
-    ).toBeTruthy()
-    expect(
-      tree.getByText(`Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.`)
-    ).toBeTruthy()
+    expect(tree.getByText(`BCSC.ConfirmDeviceAuth.Title`)).toBeTruthy()
+    expect(tree.getByText(`BCSC.ConfirmDeviceAuth.Description1`)).toBeTruthy()
+    expect(tree.getByText(`BCSC.ConfirmDeviceAuth.Description2`)).toBeTruthy()
   })
 
   it('toggles checkbox when pressed', () => {
@@ -69,7 +63,7 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
       </BasicAppContext>
     )
 
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IAgree')
+    const checkbox = tree.getByTestId('com.ariesbifold:id/HideConfirmationCheckbox')
     fireEvent.press(checkbox)
 
     expect(checkbox).toBeTruthy()
@@ -106,7 +100,7 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
       </BasicAppContext>
     )
 
-    fireEvent.press(tree.getByTestId('com.ariesbifold:id/IAgree'))
+    fireEvent.press(tree.getByTestId('com.ariesbifold:id/HideConfirmationCheckbox'))
     fireEvent.press(tree.getByTestId('com.ariesbifold:id/Continue'))
 
     expect(mockDispatch).toHaveBeenCalledWith({
