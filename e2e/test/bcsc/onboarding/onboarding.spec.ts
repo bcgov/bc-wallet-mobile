@@ -1,23 +1,20 @@
-import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
-import { acceptNotificationPermissionIfPresent } from '../../src/helpers/notifications.js'
-import { annotate } from '../../src/helpers/sauce.js'
-import AccountSetupE2EScreen from '../../src/screens/bcsc/onboarding/AccountSetup.e2e.js'
-import CreatePINE2EScreen from '../../src/screens/bcsc/onboarding/CreatePIN.e2e.js'
-import IntroCarouselE2EScreen from '../../src/screens/bcsc/onboarding/IntroCarousel.e2e.js'
-import NotificationsE2EScreen from '../../src/screens/bcsc/onboarding/Notifications.e2e.js'
-import OptInAnalyticsE2EScreen from '../../src/screens/bcsc/onboarding/OptInAnalytics.e2e.js'
-import PrivacyPolicyE2EScreen from '../../src/screens/bcsc/onboarding/PrivacyPolicy.e2e.js'
-import SecureAppE2EScreen from '../../src/screens/bcsc/onboarding/SecureApp.e2e.js'
-import SetupTypesE2EScreen from '../../src/screens/bcsc/onboarding/SetupTypes.e2e.js'
-import TermsOfUseE2EScreen from '../../src/screens/bcsc/onboarding/TermsOfUse.e2e.js'
-import { getVariantConfig } from '../../src/variant.js'
+import { acceptLocalNetworkPermissionIfPresent } from '../../../src/helpers/iosPermissions.js'
+import { acceptNotificationPermissionIfPresent } from '../../../src/helpers/notifications.js'
+import {
+  AccountSetupE2EScreen,
+  CreatePINE2EScreen,
+  IntroCarouselE2EScreen,
+  NotificationsE2EScreen,
+  OptInAnalyticsE2EScreen,
+  PrivacyPolicyE2EScreen,
+  SecureAppE2EScreen,
+  SetupTypesE2EScreen,
+  TermsOfUseE2EScreen,
+} from '../../../src/screens/bcsc/onboarding/index.js'
 
 describe('Onboarding', () => {
-  const variant = getVariantConfig()
-
   it('should display the Account Setup screen', async () => {
     await acceptLocalNetworkPermissionIfPresent()
-    await annotate(`Variant: ${variant.name}`)
     await AccountSetupE2EScreen.waitForDisplayed(60_000)
   })
 

@@ -36,6 +36,19 @@ export abstract class BaseScreen {
   }
 
   /**
+   * Dismiss the soft keyboard using platform-native commands (no test IDs needed).
+   * Call before tapping buttons when the keyboard may be covering them.
+   */
+  async dismissKeyboard() {
+    if (driver.isIOS) {
+      const { width, height } = await driver.getWindowSize()
+      await driver.execute('mobile: tap', { x: Math.round(width / 2), y: Math.round(height / 4) })
+    } else {
+      await driver.hideKeyboard()
+    }
+  }
+
+  /**
    * Enter text into an input. Supports options for controlled/secure inputs.
    *
    * @param testId - testID of the input element
