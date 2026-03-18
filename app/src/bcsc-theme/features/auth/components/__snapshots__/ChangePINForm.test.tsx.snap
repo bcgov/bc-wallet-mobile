@@ -531,7 +531,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
               <View
                 style={
                   {
-                    "borderWidth": 1,
+                    "marginHorizontal": -8,
                   }
                 }
               >

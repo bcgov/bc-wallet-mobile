@@ -531,7 +531,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
               <View
                 style={
                   {
-                    "borderWidth": 1,
+                    "marginHorizontal": -8,
                   }
                 }
               >
