@@ -17,7 +17,11 @@ import {
 } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+<<<<<<< Updated upstream
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
+=======
+import { Keyboard, TextInput, View } from 'react-native'
+>>>>>>> Stashed changes
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
@@ -69,7 +73,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { register } = useRegistrationService()
-
+  const { Spacing } = useTheme()
   const pin2Ref = useRef<TextInput>(null)
 
   const { Spacing } = useTheme()
@@ -190,7 +194,16 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   const controls = (
     <>
+<<<<<<< Updated upstream
       <View style={styles.pinCheckboxRow}>
+=======
+      {checkboxError ? (
+        <ThemedText variant={'inlineErrorText'} style={{ textAlign: 'right' }}>
+          {tWithPrefix('MustCheckBox')}
+        </ThemedText>
+      ) : null}
+      <View style={{ backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: Spacing.sm }}>
+>>>>>>> Stashed changes
         <CheckBoxRow
           title={tWithPrefix('IUnderstand')}
           accessibilityLabel={tWithPrefix('IUnderstand')}
@@ -200,6 +213,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             setCheckboxError(checked)
             setChecked(!checked)
           }}
+<<<<<<< Updated upstream
           titleStyle={styles.pinCheckboxTitle}
         />
         {checkboxError ? (
@@ -207,6 +221,10 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             {tWithPrefix('MustCheckBox')}
           </ThemedText>
         ) : null}
+=======
+          titleStyle={{ paddingLeft: Spacing.sm, fontSize: 18 }}
+        />
+>>>>>>> Stashed changes
       </View>
       <Button
         buttonType={ButtonType.Primary}
@@ -223,6 +241,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   return (
     <ScreenWrapper padded keyboardActive controls={controls}>
+<<<<<<< Updated upstream
       <View style={styles.pinEntryContent}>
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
@@ -238,6 +257,25 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           />
         </View>
         <View style={styles.pinReminder}>
+=======
+      <View style={{ gap: Spacing.lg }}>
+        <View style={{ gap: Spacing.md }}>
+          <View style={{ gap: Spacing.sm }}>
+            <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
+            <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
+          </View>
+          <View style={{ gap: Spacing.sm }}>
+            <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
+            <PINInput
+              ref={pin2Ref}
+              onPINChange={handlePIN2Change}
+              onPINComplete={handlePIN2Complete}
+              errorMessage={errorMessage2}
+            />
+          </View>
+        </View>
+        <View style={{ gap: Spacing.xs }}>
+>>>>>>> Stashed changes
           <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
           <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
         </View>

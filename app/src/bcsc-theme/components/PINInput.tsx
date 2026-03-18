@@ -23,12 +23,22 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
     },
     inputContainer: {
       flexDirection: 'row',
+<<<<<<< Updated upstream
       borderWidth: 2,
       borderColor: isFocused ? PINInputTheme.focussedCell.borderColor : PINInputTheme.cell.backgroundColor,
+=======
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      paddingRight: Spacing.sm,
+      borderWidth: 1,
+      borderColor: isFocused ? ColorPalette.brand.primary : PINInputTheme.cell.backgroundColor,
+>>>>>>> Stashed changes
       borderRadius: Spacing.xs,
       backgroundColor: PINInputTheme.cell.backgroundColor,
     },
     input: {
+<<<<<<< Updated upstream
       ...PINInputTheme.cellText,
       flex: 1,
       paddingHorizontal: Spacing.sm,
@@ -41,6 +51,22 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
       alignItems: 'center',
       justifyContent: 'center',
       padding: Spacing.sm,
+=======
+      // ...TextTheme.headingThree,
+      // ...PINInputTheme.cellText,
+      flex: 1,
+      paddingVertical: Spacing.sm,
+      paddingHorizontal: 12,
+      letterSpacing: Spacing.sm,
+      lineHeight: 32,
+      fontSize: 24,
+    },
+    eyeIcon: {
+      padding: 5,
+    },
+    pinInput: {
+      gap: Spacing.sm,
+>>>>>>> Stashed changes
     },
   })
 
@@ -60,7 +86,11 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
   }
 
   return (
+<<<<<<< Updated upstream
     <View style={styles.pinInputContainer}>
+=======
+    <View style={styles.pinInput}>
+>>>>>>> Stashed changes
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
