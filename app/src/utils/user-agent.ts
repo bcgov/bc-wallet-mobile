@@ -6,12 +6,17 @@ import {
   getVersion,
 } from 'react-native-device-info'
 
+let cachedUserAgentString: string | undefined
+
 export const getUserAgentString = (): string => {
-  const appName = getApplicationName().replace(/\s+/g, '')
+  if (cachedUserAgentString) return cachedUserAgentString
+
+  const appName = getApplicationName().replaceAll(/\s+/g, '')
   const version = getVersion()
   const systemName = getSystemName()
   const systemVersion = getSystemVersion()
   const buildNumber = getBuildNumber()
 
-  return `${appName}/${version} (${systemName} ${systemVersion}; Build ${buildNumber})`
+  cachedUserAgentString = `${appName}/${version} (${systemName} ${systemVersion}; Build ${buildNumber})`
+  return cachedUserAgentString
 }
