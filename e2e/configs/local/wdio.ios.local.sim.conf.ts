@@ -14,6 +14,7 @@ config.capabilities = [
     'appium:platformVersion': process.env.IOS_VERSION || '18.5',
     'appium:automationName': 'XCUITest',
     'appium:app': resolve(__dirname, '../../apps', process.env.IOS_APP || 'BCWallet.app'),
+    'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
   },
 ]

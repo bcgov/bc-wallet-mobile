@@ -17,6 +17,7 @@ config.capabilities = [
     'appium:app': resolve(__dirname, '../../apps', process.env.IOS_APP_DEVICE || 'BCWallet.ipa'),
     'appium:xcodeOrgId': process.env.XCODE_ORG_ID || '',
     'appium:xcodeSigningId': process.env.XCODE_SIGNING_ID || 'iPhone Developer',
+    'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
   },
 ]

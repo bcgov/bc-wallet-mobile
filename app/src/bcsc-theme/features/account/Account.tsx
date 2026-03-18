@@ -129,7 +129,7 @@ const Account: React.FC = () => {
 
   return (
     <TabScreenWrapper>
-      <View style={styles.container}>
+      <View style={styles.container} testID={testIdWithKey('AccountScreen')}>
         <View style={styles.photoAndNameContainer}>
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
           <AccountPhoto photoUri={account.picture} />

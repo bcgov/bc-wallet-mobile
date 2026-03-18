@@ -1,14 +1,21 @@
 import { BaseScreen } from '../../BaseScreen.js'
 
-const AccountTestIds = {
+export const AccountTestIds = {
+  AccountScreen: 'com.ariesbifold:id/AccountScreen',
   MyDevices: 'com.ariesbifold:id/MyDevices',
   TransferAccount: 'com.ariesbifold:id/TransferAccount',
   AllAccountDetails: 'com.ariesbifold:id/AllAccountDetails',
   RemoveAccount: 'com.ariesbifold:id/RemoveAccount',
 }
+
 class AccountE2EScreen extends BaseScreen {
-  async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, AccountTestIds.RemoveAccount)
+  async waitForDisplayed(timeout = 60_000) {
+    const el = await this.findByText('App expiry date')
+    await el.waitForDisplayed({ timeout: timeout })
+  }
+
+  async waitForMyDevices(timeout = 60_000) {
+    await super.waitForDisplayed(timeout, AccountTestIds.MyDevices)
   }
 
   async tapMyDevices() {
@@ -25,6 +32,10 @@ class AccountE2EScreen extends BaseScreen {
 
   async tapRemoveAccount() {
     await this.tapByTestId(AccountTestIds.RemoveAccount)
+  }
+
+  async scrollToMyDevices() {
+    await super.scrollToTestId(AccountTestIds.MyDevices)
   }
 }
 

@@ -22,6 +22,13 @@ export abstract class BaseScreen {
     await el.waitForDisplayed({ timeout: timeout })
   }
 
+  protected async findByText(text: string) {
+    const selector = driver.isIOS
+      ? `-ios predicate string:value == "${text}"`
+      : `android=new UiSelector().text("${text}")`
+    return $(selector)
+  }
+
   protected async findByTestId(testId: string) {
     const selector = driver.isIOS
       ? `~${testId}` // accessibility id
@@ -70,5 +77,26 @@ export abstract class BaseScreen {
     } else {
       await el.setValue(text)
     }
+  }
+
+  /**
+   * Scroll down until an element with the given test ID is visible.
+   * Uses native `mobile: scroll` on iOS (avoids performActions/quiescence bugs)
+   * and swipe gestures on Android.
+   * @param testId - testID of the element to scroll to
+   * @param maxScrolls - maximum scroll attempts before throwing (default 10)
+   */
+  protected async scrollToTestId(testId: string, maxScrolls = 10) {
+    for (let i = 0; i < maxScrolls; i++) {
+      const el = await this.findByTestId(testId)
+      if (await el.isDisplayed()) return
+      if (driver.isIOS) {
+        await driver.execute('mobile: scroll', { direction: 'down' })
+      } else {
+        const { swipeUp } = await import('../helpers/gestures.js')
+        await swipeUp()
+      }
+    }
+    throw new Error(`Element "${testId}" not visible after ${maxScrolls} scroll attempts`)
   }
 }

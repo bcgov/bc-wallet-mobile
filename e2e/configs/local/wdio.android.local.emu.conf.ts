@@ -14,7 +14,7 @@ config.capabilities = [
     'appium:platformVersion': process.env.ANDROID_VERSION || '15.0',
     'appium:automationName': 'UiAutomator2',
     'appium:app': resolve(__dirname, '../../apps', process.env.ANDROID_APP || 'BCWallet.apk'),
-    'appium:noReset': true,
+    'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
   },
 ]

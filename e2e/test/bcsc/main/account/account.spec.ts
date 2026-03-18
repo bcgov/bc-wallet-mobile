@@ -7,12 +7,13 @@ describe('Account', () => {
   })
 
   it('should navigate to My Devices', async () => {
+    await AccountE2EScreen.scrollToMyDevices()
     await AccountE2EScreen.tapMyDevices()
     await WebViewE2EScreen.waitForDisplayed()
   })
 
   it('should go back to Account', async () => {
     await WebViewE2EScreen.tapBack()
-    await AccountE2EScreen.waitForDisplayed()
+    await AccountE2EScreen.waitForMyDevices()
   })
 })
