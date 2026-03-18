@@ -115,7 +115,7 @@ describe('useRegistrationApi', () => {
         'mock-ios-receipt'
       )
       expect(mockApiClient.post).toHaveBeenCalledWith(mockApiClient.endpoints.registration, expect.any(String), {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
         skipBearerAuth: true,
       })
       expect(setAccount).toHaveBeenCalledWith({
@@ -284,6 +284,44 @@ describe('useRegistrationApi', () => {
         registrationAccessToken: mockRegistrationResponse.registration_access_token,
       })
       expect(data).toEqual(mockRegistrationResponse)
+    })
+
+    it('should preserve utf8 characters in the nickname for update registration', async () => {
+      const chineseNickname = '我的钱包'
+      const mockBody = JSON.stringify({ client_name: chineseNickname, software_statement: 'mock-jwt' })
+      jest.mocked(getDynamicClientRegistrationBody).mockResolvedValue(mockBody)
+
+      const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+      await result.current.updateRegistration('reg-access-token', chineseNickname)
+
+      expect(getDynamicClientRegistrationBody).toHaveBeenCalledWith(
+        'mock-fcm-token',
+        'mock-device-token',
+        'mock-ios-receipt',
+        chineseNickname
+      )
+
+      // Verify the payload sent to the server contains the original Chinese characters in client_name
+      const putPayload = mockApiClient.put.mock.calls[0][1]
+      expect(putPayload.client_name).toBe(chineseNickname)
+
+      expect(mockApiClient.put).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json; charset=utf-8',
+          }),
+        })
+      )
+
+      expect(setAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nickname: chineseNickname,
+          didPostNicknameToServer: true,
+        })
+      )
     })
 
     it('should throw if client is not ready (with existing account)', async () => {
