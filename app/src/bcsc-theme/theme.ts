@@ -183,7 +183,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderWidth: undefined,
         },
         focussedCell: {
-          borderColor: '#3399FF',
+          borderColor: '#7090E4',
         },
         labelAndFieldContainer: {
           backgroundColor: theme.ColorPalette.grayscale.white,
