@@ -282,6 +282,7 @@ export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
       cancelVerificationRequestAlert,
       factoryResetAlert,
       problemWithAppAlert: _createBasicAlert(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
+      accountNotFoundAlert: _createBasicAlert(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicAlert(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
       unsecuredNetworkAlert: _createBasicAlert(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
       serverTimeoutAlert: _createBasicAlert(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),

@@ -1,17 +1,20 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
   QRRenderer,
   ScreenWrapper,
+  TOKENS,
   testIdWithKey,
   ThemedText,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +36,8 @@ const TransferQRDisplayScreen: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { accountNotFoundAlert } = useAlerts(navigation as unknown as NavigationProp<ParamListBase>)
 
   const styles = StyleSheet.create({
     qrCodeContainer: {
@@ -49,7 +54,9 @@ const TransferQRDisplayScreen: React.FC = () => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
-      // TODO: (Alfred) What needs to happen here? The account should be created when they download the app, do they need to reinstall?
+      logger.error('[TransferQRDisplayScreen] Account not found in native storage')
+      accountNotFoundAlert()
+      setIsLoading(false)
       return
     }
 
@@ -68,7 +75,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
-  }, [store.developer.environment.iasApiBaseUrl])
+  }, [store.developer.environment.iasApiBaseUrl, logger, accountNotFoundAlert])
 
   const checkAttestation = useCallback(
     async (id: string) => {

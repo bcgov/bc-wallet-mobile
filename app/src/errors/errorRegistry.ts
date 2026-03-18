@@ -821,6 +821,14 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.GENERAL,
   },
+  ACCOUNT_NOT_FOUND: {
+    statusCode: 2822,
+    appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
+    titleKey: 'BCWalletError.General.Title',
+    descriptionKey: 'BCWalletError.General.AccountNotFound',
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.GENERAL,
+  },
   VIDEO_SERVICE_HOURS_NULL: {
     statusCode: 2821,
     appEvent: AppEventCode.ERR_115_VIDEO_SERVICE_HOURS_UNEXPECTEDLY_NULL,

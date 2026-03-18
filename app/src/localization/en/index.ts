@@ -1346,6 +1346,7 @@ const translation = {
       "EmptyKeychain": "Security credentials are empty. Please sign in again.",
       "SetupNotComplete": "App setup is not complete. Please complete the setup process.",
       "StringResourceError": "Failed to retrieve required text resource. Please try again.",
+      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
     },
     "Wallet": {
       "Title": "Wallet Error",
