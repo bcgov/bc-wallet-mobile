@@ -33,8 +33,8 @@ import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
+import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -224,7 +224,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainPrivacyPolicy}
-          component={SettingsPrivacyPolicyScreen}
+          component={MainPrivacyPolicyScreen}
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.PrivacyInformation'),
