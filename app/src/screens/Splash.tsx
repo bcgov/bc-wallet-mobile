@@ -1,4 +1,3 @@
-import { toBifoldError } from '@/bcsc-theme/utils/error-utils'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import {
@@ -76,7 +75,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(toBifoldError(initError))
+      logger.report(initError.toBifoldError())
     }
 
     setReported(true)

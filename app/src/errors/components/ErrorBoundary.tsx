@@ -1,9 +1,12 @@
 import { toBifoldError } from '@/bcsc-theme/utils/error-utils'
+import { AppEventCode } from '@/events/appEventCode'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { AppError } from '../appError'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 interface ErrorBoundaryProps {
@@ -34,7 +37,18 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   componentDidCatch(error: Error): void {
     const { logger } = this.props
+
     logger.error('ErrorBoundary caught an error:', error)
+
+    if (error instanceof AppError) {
+      error.track()
+      return
+    }
+
+    Analytics.trackErrorEvent({
+      code: AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR,
+      message: error.message,
+    })
   }
 
   handleDismiss = (): void => {
