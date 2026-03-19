@@ -32,11 +32,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
    * @returns {Promise<boolean>} - A promise that resolves to true if the device count is within the limit, false otherwise.
    */
   async runCheck() {
-    const deviceCoutnBannerCooldown = __DEV__
+    const deviceCountBannerCooldown = __DEV__
       ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
       : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
     if (this.dismissedAt) {
-      if (Date.now() - new Date(this.dismissedAt).getTime() < deviceCoutnBannerCooldown) {
+      if (Date.now() - new Date(this.dismissedAt).getTime() < deviceCountBannerCooldown) {
         return true
       }
     }
