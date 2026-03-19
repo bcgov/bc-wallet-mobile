@@ -166,6 +166,8 @@ export enum AppEventCode {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error', // Non-IAS error code
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error', // Non-IAS error code
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
+  // Account Errors
+  ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
 }
 
 const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))
