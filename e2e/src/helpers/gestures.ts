@@ -54,7 +54,7 @@ async function swipeIosFromTo(
   const toY = Math.round(to.y * height)
   const dx = toX - fromX
   const dy = toY - fromY
-  const distance = Math.sqrt(dx * dx + dy * dy)
+  const distance = Math.hypot(dx, dy)
   const durationSec = Math.max(durationMs / 1000, 0.05)
   const velocity = Math.max(250, Math.round(distance / durationSec))
 

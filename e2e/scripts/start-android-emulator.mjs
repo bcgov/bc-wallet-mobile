@@ -11,14 +11,14 @@
  * after the emulator has booted.
  */
 
-import { spawn } from 'child_process'
+import { spawn } from 'node:child_process'
 
 const avd = process.env.ANDROID_DEVICE || 'Pixel_7'
-const emulatorBin = process.env.ANDROID_HOME
-  ? `${process.env.ANDROID_HOME}/emulator/emulator`
-  : process.env.ANDROID_SDK_ROOT
-    ? `${process.env.ANDROID_SDK_ROOT}/emulator/emulator`
-    : 'emulator'
+const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT
+let emulatorBin = 'emulator'
+if (sdkRoot) {
+  emulatorBin = `${sdkRoot}/emulator/emulator`
+}
 
 const child = spawn(emulatorBin, ['-avd', avd, '-dns-server', '8.8.8.8,8.8.4.4'], {
   detached: true,

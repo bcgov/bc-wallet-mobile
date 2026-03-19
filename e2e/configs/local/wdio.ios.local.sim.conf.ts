@@ -1,6 +1,6 @@
 // local/wdio.ios.local.sim.conf.ts
-import { dirname, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))

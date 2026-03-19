@@ -9,7 +9,34 @@ import { isSauceLabs } from './sauce.js'
 function isIosSimulator(): boolean {
   const caps = driver.capabilities as Record<string, unknown>
   const orgId = caps?.['appium:xcodeOrgId'] ?? caps?.['xcodeOrgId']
-  return !orgId || String(orgId).trim() === ''
+  return typeof orgId !== 'string' || orgId.trim() === ''
+}
+
+const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
+/** In-app / standard alert API — works for some system dialogs. */
+async function tryDismissAllowViaMobileAlert(): Promise<boolean> {
+  try {
+    await driver.execute('mobile: alert', { action: 'accept', buttonLabel: 'Allow' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Local-network style prompts under Springboard — switch app context, tap Allow, restore. */
+async function tryDismissAllowViaSpringboard(): Promise<boolean> {
+  try {
+    await driver.updateSettings({ defaultActiveApplication: 'com.apple.springboard' })
+    const allowButton = await $('~Allow')
+    if (!(await allowButton.isDisplayed())) return false
+    await allowButton.click()
+    return true
+  } catch {
+    return false
+  } finally {
+    await driver.updateSettings({ defaultActiveApplication: 'auto' })
+  }
 }
 
 export async function acceptLocalNetworkPermissionIfPresent(): Promise<void> {
@@ -18,37 +45,14 @@ export async function acceptLocalNetworkPermissionIfPresent(): Promise<void> {
   if (isIosSimulator()) return
 
   // Give the permission dialog time to appear (often shows 1–2s after launch)
-  await new Promise((r) => setTimeout(r, 2_000))
+  await delay(2_000)
 
   const maxAttempts = 5
   const intervalMs = 1_000
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      // Try mobile: alert first — works for in-app alerts and some system dialogs
-      await driver.execute('mobile: alert', { action: 'accept', buttonLabel: 'Allow' })
-      return
-    } catch {
-      // Fallback: system dialogs (e.g. local network) are managed by com.apple.springboard.
-      // Switch context to interact with them, then restore.
-      let handled = false
-      try {
-        await driver.updateSettings({ defaultActiveApplication: 'com.apple.springboard' })
-        const allowButton = await $('~Allow')
-        if (await allowButton.isDisplayed()) {
-          await allowButton.click()
-          handled = true
-        }
-      } catch {
-        // Allow button not found — dialog may not be present
-      } finally {
-        await driver.updateSettings({ defaultActiveApplication: 'auto' })
-      }
-      if (handled) return
-
-      if (attempt < maxAttempts - 1) {
-        await new Promise((r) => setTimeout(r, intervalMs))
-      }
-    }
+    if (await tryDismissAllowViaMobileAlert()) return
+    if (await tryDismissAllowViaSpringboard()) return
+    if (attempt < maxAttempts - 1) await delay(intervalMs)
   }
 }

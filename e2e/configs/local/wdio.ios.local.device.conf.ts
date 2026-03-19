@@ -1,6 +1,6 @@
 // local/wdio.ios.local.device.conf.ts — iOS real device (USB-connected)
-import { dirname, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))

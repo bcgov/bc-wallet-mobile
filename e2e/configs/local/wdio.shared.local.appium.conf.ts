@@ -1,6 +1,6 @@
 // local/wdio.shared.local.appium.conf.ts
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { config as baseConfig } from '../wdio.shared.conf.js'
 
@@ -13,19 +13,19 @@ const config = { ...baseConfig }
 config.port = 4723
 config.maxInstances = 1
 config.services = [
-    [
-      'appium',
-      {
-        command: 'appium',
-        logPath: join(__dirname, '../../logs'),
-        args: {
-          port: 4723,
-          relaxedSecurity: true,
-          allowInsecure: ['adb_shell'],
-          logLevel: 'info',
-        },
+  [
+    'appium',
+    {
+      command: 'appium',
+      logPath: join(__dirname, '../../logs'),
+      args: {
+        port: 4723,
+        relaxedSecurity: true,
+        allowInsecure: ['adb_shell'],
+        logLevel: 'info',
       },
-    ],
+    },
+  ],
 ]
 
 export { config }

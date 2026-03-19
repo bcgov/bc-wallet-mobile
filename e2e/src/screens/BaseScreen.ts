@@ -32,7 +32,7 @@ export abstract class BaseScreen {
     try {
       await el.waitForDisplayed({ timeout })
     } catch (error) {
-      console.error(`Element "${testId}" not visible after ${timeout}ms`)
+      console.error(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`, error)
       await this.scrollToTestId(testId, 4, 'both')
       await el.waitForDisplayed({ timeout })
     }
@@ -71,7 +71,7 @@ export abstract class BaseScreen {
     try {
       await el.waitForDisplayed({ timeout: 1_000 })
     } catch (error) {
-      console.error(`Element "${testId}" not visible after 1000ms`)
+      console.error(`Element "${testId}" not visible after 1000ms; scrolling then retrying`, error)
       await this.scrollToTestId(testId, 4, 'both')
       await el.waitForDisplayed({ timeout: 1_000 })
     }

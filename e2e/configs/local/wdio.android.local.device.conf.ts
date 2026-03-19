@@ -1,8 +1,8 @@
 // local/wdio.android.local.device.conf.ts — Android real device (USB-connected)
-import { execFileSync } from 'child_process'
-import { existsSync } from 'fs'
-import { dirname, join, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -12,7 +12,7 @@ const METRO_PORT = 8081
 /** System locations only — avoids PATH hijacking when spawning adb. */
 const SECURE_PATH =
   process.platform === 'win32'
-    ? ['C:\\Windows\\System32', 'C:\\Windows'].join(';')
+    ? [String.raw`C:\Windows\System32`, String.raw`C:\Windows`].join(';')
     : ['/usr/bin', '/bin', '/usr/sbin', '/sbin'].join(':')
 
 function resolveAdbPath(): string {
