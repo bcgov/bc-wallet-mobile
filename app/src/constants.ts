@@ -138,5 +138,5 @@ export const MINIMUM_VERIFICATION_AGE = 12
 export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'
 
 // Device Count Banner cooldown period
-export const DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV = 1 * 60 * 1000 // DEV: Banner will not be shown for 30 minutes after user 'deletes' the banner
+export const DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV = 30 * 60 * 1000 // DEV: Banner will not be shown for 30 minutes after user 'deletes' the banner
 export const DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD = 30 * 24 * 60 * 60 * 1000 // PROD: Banner will not be shown for 30 days after user 'deletes' the banner
