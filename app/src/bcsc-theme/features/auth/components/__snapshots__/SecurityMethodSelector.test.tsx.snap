@@ -212,7 +212,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle"
+            testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
             <View
               style={
@@ -312,7 +312,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+            testID="com.ariesbifold:id/ChoosePINButton"
           >
             <View
               style={
@@ -412,7 +412,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+            testID="com.ariesbifold:id/LearnMoreButton"
           >
             <View
               style={
@@ -789,7 +789,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
               "padding": 16,
             }
           }
-          testID="ChoosePINButton"
+          testID="com.ariesbifold:id/ChoosePINButton"
         >
           <View
             style={
@@ -867,7 +867,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
               "padding": 16,
             }
           }
-          testID="LearnMoreButton"
+          testID="com.ariesbifold:id/LearnMoreButton"
         >
           <View
             style={
@@ -1188,7 +1188,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle"
+            testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
             <View
               style={
@@ -1288,7 +1288,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+            testID="com.ariesbifold:id/ChoosePINButton"
           >
             <View
               style={
@@ -1388,7 +1388,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+            testID="com.ariesbifold:id/LearnMoreButton"
           >
             <View
               style={
