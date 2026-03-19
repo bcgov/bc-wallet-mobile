@@ -373,7 +373,7 @@ const translation = {
       "EmailAddress": "Email Address (PT-BR)",
       "EditEmail": "Edit (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
-      "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)", 
+      "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
     },
     "SystemChecks": {
       "Devices": {
