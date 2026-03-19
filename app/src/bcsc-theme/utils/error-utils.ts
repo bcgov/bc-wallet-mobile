@@ -129,20 +129,21 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
 }
 
 /**
- * Converts an Error into a BifoldError, preserving as much information as possible for display in the UI.
+ * Converts an Error or AppError into a BifoldError, preserving as much information as possible for display in the UI.
  *
  * @param title - The title to display for the error
  * @param description - A user-friendly description of the error
  * @param error - The original error object to convert
  * @returns A BifoldError containing the provided title, description, and details from the original error
  */
-export const toBifoldError = (title: string, description: string, error: Error): BifoldError => {
+export const toBifoldError = (title: string, description: string, error: Error | AppError): BifoldError => {
   let bifoldError: BifoldError
+
   if (error instanceof AppError) {
     bifoldError = new BifoldError(title, description, error.fullMessage, error.statusCode)
+  } else {
+    bifoldError = new BifoldError(title, description, error.message, UNKNOWN_APP_ERROR_STATUS_CODE)
   }
-
-  bifoldError = new BifoldError(title, description, error.message, UNKNOWN_APP_ERROR_STATUS_CODE)
 
   // Attach the cause and stack trace for debugging purposes
   bifoldError.cause = error.cause

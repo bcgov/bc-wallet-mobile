@@ -48,11 +48,14 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   handleReport = (): void => {
     const { error } = this.state
     const { logger } = this.props
-    if (error) {
-      const reportError = this.getReportError(error)
-      logger.error('ErrorBoundary reported:', error)
-      logger.report(reportError)
+
+    if (!error) {
+      return
     }
+
+    const reportError = this.getReportError(error)
+    logger.error('ErrorBoundary reported:', error)
+    logger.report(reportError)
   }
 
   render(): React.ReactNode {

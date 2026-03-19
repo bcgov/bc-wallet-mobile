@@ -127,6 +127,7 @@ export class AppError extends Error {
   /**
    * Convert the AppError to a BifoldError instance.
    *
+   * @deprecated FIXME (MD): Remove this method and use `error-utils.toBifoldError` instead.
    * @returns A BifoldError representing the AppError.
    */
   toBifoldError(): BifoldError {
