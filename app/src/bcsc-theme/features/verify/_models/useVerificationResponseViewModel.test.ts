@@ -1,13 +1,12 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
 import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
+import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
-
 const mockGetCachedIdTokenMetadata = jest.fn().mockResolvedValue(undefined)
+
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
   return {
@@ -16,10 +15,6 @@ jest.mock('@bifold/core', () => {
     useServices: jest.fn(),
   }
 })
-
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({}),
-}))
 
 jest.mock('react-native-bcsc-core', () => ({
   isBcscNativeError: jest.fn().mockReturnValue(false),
@@ -65,16 +60,21 @@ describe('useVerificationResponseViewModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockUpdateVerified.mockClear()
-    mockUpdateUserMetadata.mockClear()
+    jest.restoreAllMocks()
+
+    // Reset mock implementations
+    mockUpdateVerified.mockResolvedValue(undefined)
+    mockUpdateUserMetadata.mockResolvedValue(undefined)
+    mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
+    mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore as BCState, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+
     jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue(mockRegistrationService as any)
-    mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
-    jest.mocked(useApi).mockReturnValue({
-      token: { getCachedIdTokenMetadata: mockGetCachedIdTokenMetadata },
+    jest.spyOn(useTokenServiceModule, 'useTokenService').mockReturnValue({
+      getCachedIdTokenMetadata: mockGetCachedIdTokenMetadata,
     } as any)
   })
 
@@ -321,59 +321,6 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
-    })
-
-    it('should handle case where registration access token is missing', async () => {
-      const storeWithoutToken: any = {
-        bcscSecure: {
-          deviceCode: 'test-device-code',
-          userCode: 'test-user-code',
-          registrationAccessToken: null,
-        },
-        bcsc: {
-          selectedNickname: 'TestNickname',
-        },
-      }
-
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutToken as BCState, mockDispatch])
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update registration: missing registrationAccessToken')
-      )
-    })
-
-    it('should handle case where selected nickname is missing', async () => {
-      const storeWithoutNickname: any = {
-        bcscSecure: {
-          deviceCode: 'test-device-code',
-          userCode: 'test-user-code',
-          registrationAccessToken: 'test-registration-token',
-        },
-        bcsc: {
-          selectedNickname: null,
-        },
-      }
-
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutNickname as BCState, mockDispatch])
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update registration: missing selectedNickname')
-      )
-      expect(mockRegistrationService.updateRegistration).not.toHaveBeenCalled()
     })
   })
 })
