@@ -1,3 +1,4 @@
+import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { ONBOARDING_ICON_IMAGE_SIZE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
@@ -19,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface OnboardingOptInAnalyticsContentProps {
   onPress: () => void
+  onLearnMore: () => void
 }
 /**
  * Analytics Opt In content that informs users about the app's data collection practices.
@@ -26,6 +28,7 @@ interface OnboardingOptInAnalyticsContentProps {
  */
 export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsContentProps> = ({
   onPress,
+  onLearnMore,
 }: OnboardingOptInAnalyticsContentProps): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -101,6 +104,8 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
       </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
+      <ThemedText>{t('BCSC.Onboarding.AnalyticsAnonymousInfo')}</ThemedText>
+      <CardButton title={t('BCSC.Onboarding.AnalyticsLearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
     </ScreenWrapper>
   )
 }
