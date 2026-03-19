@@ -68,14 +68,15 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
-  // Clean up any incomplete evidence entries when the screen focuses
-  // This handles the case where user selected a card but backed out before completing
+  // Clean up any incomplete evidence entries when the screen focuses.
+  // This handles the case where user selected a card but backed out before completing.
+  // Intentionally empty deps — run only once per focus, not when evidence changes,
+  // because removeIncompleteEvidence itself updates the evidence array.
   useFocusEffect(
     useCallback(() => {
       removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
-      // prevent infinite loop
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.bcscSecure.additionalEvidenceData])
+    }, [])
   )
 
   useEffect(() => {
