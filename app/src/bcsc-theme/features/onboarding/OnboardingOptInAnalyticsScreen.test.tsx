@@ -5,7 +5,6 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { act } from 'react-test-renderer'
 import { OnboardingOptInAnalyticsScreen } from './OnboardingOptInAnalyticsScreen'
 
 describe('OnboardingOptInAnalytics', () => {
@@ -39,9 +38,7 @@ describe('OnboardingOptInAnalytics', () => {
     )
 
     const learnMoreButton = getByTestId(testIdWithKey('CardButton-BCSC.Onboarding.LearnMore'))
-    act(() => {
-      fireEvent.press(learnMoreButton)
-    })
+    fireEvent.press(learnMoreButton)
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingWebView, {
       title: 'BCSC.Onboarding.PrivacyPolicyTitle',
