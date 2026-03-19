@@ -18,13 +18,13 @@ jest.mock('@bifold/core', () => ({
 }))
 
 const configMock = Config as { DEFAULT_ENVIRONMENT: string; BUILD_TARGET: string }
+const originalDev = __DEV__
 
 describe('getInitialEnvironment', () => {
-  const originalDev = global.__DEV__
-
   afterEach(() => {
     configMock.DEFAULT_ENVIRONMENT = ''
     configMock.BUILD_TARGET = 'bcsc'
+    // @ts-expect-error - set global DEV
     global.__DEV__ = originalDev
   })
 
@@ -54,6 +54,7 @@ describe('getInitialEnvironment', () => {
   })
 
   it('falls back to SIT for __DEV__ BCSC builds when DEFAULT_ENVIRONMENT is empty', () => {
+    // @ts-expect-error - set global DEV
     global.__DEV__ = true
     configMock.DEFAULT_ENVIRONMENT = ''
     configMock.BUILD_TARGET = 'bcsc'
@@ -61,6 +62,7 @@ describe('getInitialEnvironment', () => {
   })
 
   it('falls back to PROD when DEFAULT_ENVIRONMENT is empty and not a __DEV__ BCSC build', () => {
+    // @ts-expect-error - set global DEV
     global.__DEV__ = true
     configMock.DEFAULT_ENVIRONMENT = ''
     configMock.BUILD_TARGET = 'bcwallet'
@@ -68,6 +70,7 @@ describe('getInitialEnvironment', () => {
   })
 
   it('falls back to PROD when __DEV__ is false and DEFAULT_ENVIRONMENT is empty', () => {
+    // @ts-expect-error - set global DEV
     global.__DEV__ = false
     configMock.DEFAULT_ENVIRONMENT = ''
     configMock.BUILD_TARGET = 'bcsc'
@@ -75,6 +78,7 @@ describe('getInitialEnvironment', () => {
   })
 
   it('falls back when DEFAULT_ENVIRONMENT is an invalid value', () => {
+    // @ts-expect-error - set global DEV
     global.__DEV__ = true
     configMock.DEFAULT_ENVIRONMENT = 'INVALID'
     configMock.BUILD_TARGET = 'bcwallet'
