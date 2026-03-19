@@ -72,10 +72,10 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   // This handles the case where user selected a card but backed out before completing
   useFocusEffect(
     useCallback(() => {
-      removeIncompleteEvidence()
+      removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
       // prevent infinite loop
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [store.bcscSecure.additionalEvidenceData])
   )
 
   useEffect(() => {

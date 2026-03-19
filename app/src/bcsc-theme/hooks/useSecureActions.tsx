@@ -620,20 +620,32 @@ export const useSecureActions = () => {
 
   /**
    * Remove incomplete evidence entries and persist to native storage
+   *
+   * @param evidence Array of evidence metadata to filter and persist
+   * @returns A updated list of evidence metadata with incomplete entries removed
    */
-  const removeIncompleteEvidence = useCallback(async () => {
-    // Filter out incomplete evidence (those without photo metadata)
-    const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
-      (evidence) => evidence.metadata && evidence.metadata.length > 0
-    )
+  const removeIncompleteEvidence = useCallback(
+    async (evidence: EvidenceMetadata[]) => {
+      if (!evidence.length) {
+        return []
+      }
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-      payload: [updatedEvidence],
-    })
+      // Filter out incomplete evidence (those without photo metadata)
+      const updatedEvidence = evidence.filter(
+        (evidence) => evidence.metadata && evidence.metadata.length > 0 && evidence.documentNumber
+      )
 
-    await persistEvidenceData(updatedEvidence)
-  }, [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData])
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+
+      return updatedEvidence
+    },
+    [dispatch, persistEvidenceData]
+  )
 
   /**
    * Clear all additional evidence data and persist to native storage
@@ -796,6 +808,8 @@ export const useSecureActions = () => {
         .filter((s: NativeSavedService) => s.bookmarked)
         .map((s: NativeSavedService) => s.clientRefId)
 
+      const cleanedEvidence = await removeIncompleteEvidence(evidenceData)
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
@@ -825,7 +839,7 @@ export const useSecureActions = () => {
           : undefined,
 
         verificationRequestId: authRequest?.backCheckVerificationId,
-        additionalEvidenceData: evidenceData,
+        additionalEvidenceData: cleanedEvidence,
         userMetadata,
         savedServices,
       }
@@ -842,7 +856,7 @@ export const useSecureActions = () => {
       logger.error('Failed to hydrate secure state:', error as Error)
       throwAppError(error, ErrorRegistry.STORAGE_READ_ERROR)
     }
-  }, [logger, updateTokens, dispatch, apiClient, isClientReady])
+  }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
