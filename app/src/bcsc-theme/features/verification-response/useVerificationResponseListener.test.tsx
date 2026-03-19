@@ -13,6 +13,7 @@ jest.mock('@react-navigation/native', () => ({
   })),
   CommonActions: {
     reset: jest.fn((config) => ({ type: 'RESET', payload: config })),
+    navigate: jest.fn((config) => ({ type: 'NAVIGATE', payload: config })),
   },
 }))
 
@@ -146,6 +147,51 @@ describe('useVerificationResponseListener', () => {
         })
       })
       expect(mockDispatch).toHaveBeenCalled()
+    })
+
+    it('should navigate to CancelledReview when status is cancelled', async () => {
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({
+        status: 'cancelled',
+        status_message: 'Face does not match',
+      })
+
+      renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(mockGetVerificationRequestStatus).toHaveBeenCalledWith('test-verification-request-id')
+      })
+
+      await waitFor(() => {
+        expect(CommonActions.navigate).toHaveBeenCalledWith({
+          name: BCSCScreens.CancelledReview,
+          params: { agentReason: 'Face does not match' },
+        })
+      })
+      expect(mockDispatch).toHaveBeenCalled()
+      expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
+    })
+
+    it('should navigate to CancelledReview with undefined reason when status_message is missing', async () => {
+      mockGetVerificationRequestStatus.mockResolvedValueOnce({ status: 'cancelled' })
+
+      renderHook(() => useVerificationResponseListener())
+
+      act(() => {
+        mockVerificationResponseService.handleRequestReviewed()
+      })
+
+      await waitFor(() => {
+        expect(CommonActions.navigate).toHaveBeenCalledWith({
+          name: BCSCScreens.CancelledReview,
+          params: { agentReason: undefined },
+        })
+      })
+      expect(mockDispatch).toHaveBeenCalled()
+      expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
     it('should not navigate if status is not verified', async () => {

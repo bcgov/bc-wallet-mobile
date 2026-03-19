@@ -7,6 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
+import { getLiveCallVideoQueue } from '../live-call/utils/videoDestinations'
 import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
 
 type useVerificationMethodModelProps = {
@@ -81,11 +82,9 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       ])
 
       const formattedHours = formatServiceAndUnavailableHours(serviceHours)
-      // TODO (bm): Look for prod queue(s) depending on environment
-      const availableDestination = destinations.find(
-        (dest) => dest.destination_name === 'Test Harness Queue Destination'
-      )
-      if (!availableDestination) {
+      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, destinations)
+
+      if (!liveCallVideoQueue) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
           formattedHours,
@@ -113,7 +112,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [videoCallApi, logger, navigation])
+  }, [videoCallApi, store.developer.environment, navigation, logger])
 
   return {
     handlePressSendVideo,
@@ -123,4 +122,5 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
   }
 }
+
 export default useVerificationMethodModel
