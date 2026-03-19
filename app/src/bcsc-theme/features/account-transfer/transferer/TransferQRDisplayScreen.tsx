@@ -14,7 +14,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +37,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { accountNotFoundAlert } = useAlerts(navigation as unknown as NavigationProp<ParamListBase>)
+  const { accountNotFoundAlert } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     qrCodeContainer: {

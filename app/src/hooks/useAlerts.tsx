@@ -5,7 +5,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
-import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
+import { CommonActions, NavigationProp } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
@@ -33,7 +33,7 @@ type AlertOnPressAction = () => void | Promise<void>
  * @returns An object containing:
  * - Predefined alert functions for each AppEventCode that can be directly invoked to show the corresponding alert.
  */
-export const useAlerts = (navigation: NavigationProp<ParamListBase>) => {
+export const useAlerts = (navigation: NavigationProp<any>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
