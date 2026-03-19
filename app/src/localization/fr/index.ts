@@ -1221,6 +1221,9 @@ const translation = {
       "KeypairGenerationError": "(FR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
       "KeypairGenerationTitle": "(FR) Problem with App",
     },
+    "General": {
+      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)",
+    },
   },
 }
 
