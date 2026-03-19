@@ -7,6 +7,9 @@ import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
 jest.mock('@bifold/core')
+jest.mock('react-native-bcsc-core', () => ({
+  setEvidence: jest.fn(),
+}))
 jest.mock('./useBCSCApiClient')
 
 const mockDispatch = jest.fn()
