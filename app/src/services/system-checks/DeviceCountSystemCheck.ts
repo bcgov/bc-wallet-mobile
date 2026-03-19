@@ -1,7 +1,7 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
-import { DEVICE_COUNT_BANNER_COOLDOWN_MS } from '@/constants'
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -32,8 +32,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
    * @returns {Promise<boolean>} - A promise that resolves to true if the device count is within the limit, false otherwise.
    */
   async runCheck() {
+    const deviceCoutnBannerCooldown = __DEV__
+      ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
+      : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
     if (this.dismissedAt) {
-      if (Date.now() - new Date(this.dismissedAt).getTime() < DEVICE_COUNT_BANNER_COOLDOWN_MS) {
+      if (Date.now() - new Date(this.dismissedAt).getTime() < deviceCoutnBannerCooldown) {
         return true
       }
     }

@@ -373,14 +373,15 @@ const translation = {
       "EmailAddress": "Email Address (PT-BR)",
       "EditEmail": "Edit (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
-      "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
+      "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)", 
     },
     "SystemChecks": {
       "Devices": {
         "DeviceLimitReachedBannerTitle": "Device limit reached (PT-BR)",
         "ManageDevicesButton": "Manage devices (PT-BR)",
         "CloseButton": "Close (PT-BR)",
-        "ReviewDevicesTitle": "Review your devices",
+        "DeleteButton": "Delete Message (PT-BR)",
+        "ReviewDevicesTitle": "Review your devices (PT-BR)",
         "ReviewDevicesContentA1": "You can have this account on a maximum of (PT-BR)",
         "ReviewDevicesContentA2": "devices. (PT-BR)",
         "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (PT-BR)",

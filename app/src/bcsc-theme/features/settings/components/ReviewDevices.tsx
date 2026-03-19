@@ -29,7 +29,13 @@ interface ReviewDevicesProps {
  * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
  * @returns {*} {React.ReactElement} The ReviewDevices component.
  */
-export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevices }: ReviewDevicesProps) => {
+export const ReviewDevices = ({
+  bannerId,
+  maxDevices,
+  handleClose,
+  handleDelete,
+  onManageDevices,
+}: ReviewDevicesProps) => {
   const [, dispatch] = useStore()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -91,7 +97,6 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevic
           buttonType={ButtonType.Secondary}
           onPress={() => {
             handleClose({ shouldAnimate: true })
-            dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
           }}
           testID={testIdWithKey('Close')}
           accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
@@ -101,7 +106,7 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevic
           title={t('BCSC.SystemChecks.Devices.DeleteButton')}
           buttonType={ButtonType.Secondary}
           onPress={() => {
-            handleClose({ shouldAnimate: true })
+            handleDelete({ shouldAnimate: true })
             dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
           }}
           testID={testIdWithKey('Delete')}
