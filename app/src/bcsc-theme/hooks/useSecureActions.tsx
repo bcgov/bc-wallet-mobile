@@ -622,11 +622,7 @@ export const useSecureActions = () => {
    * Remove incomplete evidence entries and persist to native storage
    *
    * @param evidence Array of evidence metadata to filter and persist
-<<<<<<< HEAD
-   * @returns A updated list of evidence metadata with incomplete entries removed
-=======
    * @returns An updated list of evidence metadata with incomplete entries removed
->>>>>>> e139362a3bd45813462d5ddbfd7d84e4c737b980
    */
   const removeIncompleteEvidence = useCallback(
     async (evidence: EvidenceMetadata[]) => {
@@ -636,11 +632,7 @@ export const useSecureActions = () => {
 
       // Filter out incomplete evidence (those without photo metadata)
       const updatedEvidence = evidence.filter(
-<<<<<<< HEAD
-        (evidence) => evidence.metadata && evidence.metadata.length > 0 && evidence.documentNumber
-=======
         (item) => item.metadata && item.metadata.length > 0 && item.documentNumber
->>>>>>> e139362a3bd45813462d5ddbfd7d84e4c737b980
       )
 
       dispatch({
