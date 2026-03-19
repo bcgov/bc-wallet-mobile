@@ -5,6 +5,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { Linking } from 'react-native'
 import { IntroCarouselScreen } from './IntroCarousel'
 
 describe('IntroCarouselScreen', () => {
@@ -66,7 +67,9 @@ describe('IntroCarouselScreen', () => {
   })
 
   describe('Navigation', () => {
-    it('should navigate to OnboardingWebView when "Where to use" button is pressed', () => {
+    it('should open WHERE_TO_USE_URL externally when "Where to use" button is pressed', () => {
+      const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never)
+
       const { getByTestId } = render(
         <BasicAppContext>
           <IntroCarouselScreen navigation={mockNavigation as never} />
@@ -75,10 +78,8 @@ describe('IntroCarouselScreen', () => {
 
       fireEvent.press(getByTestId(testIdWithKey('CardButton-BCSC.Home.WhereToUseTitle')))
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingWebView, {
-        title: 'BCSC.Onboarding.CarouselServicesHeader',
-        url: WHERE_TO_USE_URL,
-      })
+      expect(openURLSpy).toHaveBeenCalledWith(WHERE_TO_USE_URL)
+      openURLSpy.mockRestore()
     })
 
     it('should navigate to the next carousel page when Next is pressed', () => {

@@ -16,10 +16,10 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { useAgent, useCredentialByState } from '@bifold/react-hooks'
 import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
 import ProgressBar from '@components/ProgressBar'
 import { CredentialState } from '@credo-ts/core'
-import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'

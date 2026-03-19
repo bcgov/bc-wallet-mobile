@@ -1,59 +1,23 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
-import { isHandledAppError } from '@/errors/appError'
-import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { BCState } from '@/store'
-import {
-  DismissiblePopupModal,
-  MaskType,
-  QrCodeScanError,
-  ScanCamera,
-  SVGOverlay,
-  ThemedText,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
-import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useCameraPermission } from 'react-native-vision-camera'
+import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
-/**
- * The TransferQRScannerScreen component allows users to scan a QR code to transfer their account from an old verified device to a new, unverified one.
- * Successful scanning and verification will navigate the user to a success screen, then to the home screen of the app.
- *
- * This handles:
- *  - Camera permissions
- *  - QR code scanning
- *  - Device authorization (with IAS backend)
- *  - Device attestation and verification
- *  - Token retrieval and storage
- *
- * @returns {*} {React.ReactElement} The rendered TransferQRScannerScreen component.
- */
-const TransferQRScannerScreen: React.FC = () => {
-  const { deviceAttestation, authorization, token } = useApi()
-  const { updateTokens } = useSecureActions()
-  const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-  const [store] = useStore<BCState>()
+type TransferQRScannerScreenProps = {
+  navigation: StackNavigationProp<BCSCVerifyStackParams>
+}
+
+const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navigation }) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [isLoading, setIsLoading] = useState(false)
-  const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
-  const { updateUserInfo, updateDeviceCodes } = useSecureActions()
+  const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
+    useTransferQRScannerViewModel(navigation)
 
   const styles = StyleSheet.create({
     container: {
@@ -72,110 +36,6 @@ const TransferQRScannerScreen: React.FC = () => {
     },
   })
 
-  const registerDevice = useCallback(async () => {
-    // we already have a device code, no need to authorize again
-    if (store.bcscSecure.deviceCode) {
-      return
-    }
-
-    try {
-      const deviceAuth = await authorization.authorizeDevice()
-
-      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-
-      await updateUserInfo({
-        email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED,
-        isEmailVerified: !!deviceAuth.verified_email,
-      })
-
-      await updateDeviceCodes({
-        deviceCode: deviceAuth.device_code,
-        userCode: deviceAuth.user_code,
-        deviceCodeExpiresAt: expiresAt,
-      })
-    } catch (error) {
-      if (isHandledAppError(error)) {
-        return
-      }
-
-      logger.error('[TransferQRScannerScreen]: Device registration failed', { error })
-    }
-  }, [store.bcscSecure.deviceCode, authorization, updateDeviceCodes, updateUserInfo, logger])
-
-  const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-
-  useEffect(() => {
-    registerDevice()
-  }, [registerDevice])
-
-  const handleScan = useCallback(
-    async (value: string) => {
-      // exit early if processing a scan already or if there's an error showing
-      if (isLoading || scanError != null) {
-        return
-      }
-
-      setIsLoading(true)
-      setScanError(null)
-
-      try {
-        const account = await getAccount()
-        if (!account) {
-          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound'))
-        }
-
-        // ias tokens expect times in seconds since epoch
-        const timeInSeconds = Math.floor(Date.now() / 1000)
-        const qrParts = value.split('?')
-        const oldDeviceQRToken = qrParts.length > 1 ? qrParts[1] : undefined
-        if (!oldDeviceQRToken) {
-          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.InvalidQrCode'))
-        }
-
-        const newDeviceJWT = await createDeviceSignedJWT({
-          aud: account.issuer,
-          iss: account.clientID,
-          sub: account.clientID,
-          iat: timeInSeconds,
-          exp: timeInSeconds + 60, // give this token 1 minute to live
-          jti: uuid.v4().toString(),
-        })
-
-        if (store.bcscSecure.deviceCode) {
-          // Attest: verify the new device
-          const response = await deviceAttestation.verifyAttestation({
-            client_id: account.clientID,
-            device_code: store.bcscSecure.deviceCode,
-            attestation: oldDeviceQRToken,
-            client_assertion: newDeviceJWT,
-          })
-
-          if (!response) {
-            throw t('BCSC.Scan.NoAttestationResponse')
-          }
-
-          // fetch tokens for the new device
-          const deviceToken = await token.deviceToken({
-            client_id: account.clientID,
-            device_code: store.bcscSecure.deviceCode,
-            client_assertion: newDeviceJWT,
-          })
-
-          await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
-
-          navigator.navigate(BCSCScreens.VerificationSuccess)
-        } else {
-          throw new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound'))
-        }
-      } catch (error) {
-        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, (error as Error)?.message))
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [store, deviceAttestation, t, token, isLoading, scanError, navigator, updateTokens]
-  )
-
   if (isPermissionLoading) {
     return <LoadingScreen />
   }
@@ -187,6 +47,7 @@ const TransferQRScannerScreen: React.FC = () => {
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
+
   return (
     <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
@@ -202,8 +63,8 @@ const TransferQRScannerScreen: React.FC = () => {
           title={t('BCSC.Scan.ErrorDetails')}
           description={scanError.message}
           onCallToActionLabel={t('BCSC.Scan.Dismiss')}
-          onCallToActionPressed={() => setScanError(null)}
-          onDismissPressed={() => setScanError(null)}
+          onCallToActionPressed={dismissError}
+          onDismissPressed={dismissError}
         />
       )}
     </View>

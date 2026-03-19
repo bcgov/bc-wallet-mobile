@@ -354,7 +354,6 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }

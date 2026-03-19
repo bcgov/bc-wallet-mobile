@@ -394,7 +394,7 @@ describe('FcmViewModel', () => {
       })
     })
 
-    it('logs ERR_117 and returns early when decodeLoginChallenge throws E_FAILED_TO_PARSE_JWS', async () => {
+    it('wraps decodeLoginChallenge errors as AppError with claims set fallback', async () => {
       const nativeError = Object.assign(new Error('Invalid JWS format'), { code: 'E_FAILED_TO_PARSE_JWS' })
       ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(nativeError)
 
@@ -405,10 +405,11 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('err_117_failed_to_parse_jws'))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify'),
+        expect.anything()
+      )
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
-      // Should NOT fall through to the generic error log
-      expect(mockLogger.error).not.toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
     })
   })
 

@@ -10,10 +10,11 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useTheme,
 } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, TextInput, View } from 'react-native'
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import { setPIN as setNativePIN, verifyPIN } from 'react-native-bcsc-core'
 
 interface ChangePINFormProps {
@@ -53,6 +54,8 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
 
   const newPINRef = useRef<TextInput>(null)
   const confirmPINRef = useRef<TextInput>(null)
+
+  const { Spacing } = useTheme()
 
   const validateAndChangePIN = useCallback(
     async (current: string, newPin: string, confirm: string) => {
@@ -169,25 +172,48 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
     [currentPIN, newPIN, validateAndChangePIN]
   )
 
+  const styles = StyleSheet.create({
+    pinEntryContent: {
+      gap: Spacing.lg,
+    },
+    pinFormRow: {
+      gap: Spacing.sm,
+    },
+    pinCheckboxRow: {
+      marginHorizontal: -Spacing.sm,
+    },
+    pinCheckboxError: {
+      marginLeft: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    pinCheckboxTitle: {
+      marginLeft: Spacing.md,
+    },
+    pinReminder: {
+      gap: Spacing.sm,
+    },
+  })
+
   const controls = (
     <>
-      {checkboxError ? (
-        <ThemedText variant={'inlineErrorText'} style={{ textAlign: 'right' }}>
-          {t('BCSC.ChangePIN.MustCheckBox')}
-        </ThemedText>
-      ) : null}
-      <CheckBoxRow
-        title={t('BCSC.ChangePIN.IUnderstand')}
-        accessibilityLabel={t('BCSC.ChangePIN.IUnderstand')}
-        testID={testIdWithKey('IUnderstand')}
-        checked={checked}
-        onPress={() => {
-          setCheckboxError(checked)
-          setChecked(!checked)
-        }}
-        reverse
-        titleStyle={{ textAlign: 'right' }}
-      />
+      <View style={styles.pinCheckboxRow}>
+        <CheckBoxRow
+          title={t('BCSC.ChangePIN.IUnderstand')}
+          accessibilityLabel={t('BCSC.ChangePIN.IUnderstand')}
+          testID={testIdWithKey('IUnderstand')}
+          checked={checked}
+          onPress={() => {
+            setCheckboxError(checked)
+            setChecked(!checked)
+          }}
+          titleStyle={styles.pinCheckboxTitle}
+        />
+        {checkboxError ? (
+          <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
+            {t('BCSC.ChangePIN.MustCheckBox')}
+          </ThemedText>
+        ) : null}
+      </View>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.ChangePIN.ButtonTitle')}
@@ -203,36 +229,40 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
 
   return (
     <ScreenWrapper padded keyboardActive controls={controls}>
-      <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterCurrentPIN')}</ThemedText>
-      <PINInput
-        onPINChange={handleCurrentPINChange}
-        onPINComplete={handleCurrentPINComplete}
-        errorMessage={currentPINError}
-      />
+      <View style={styles.pinEntryContent}>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterCurrentPIN')}</ThemedText>
+          <PINInput
+            onPINChange={handleCurrentPINChange}
+            onPINComplete={handleCurrentPINComplete}
+            errorMessage={currentPINError}
+          />
+        </View>
 
-      <View style={{ marginTop: 8 }}>
-        <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterNewPIN')}</ThemedText>
-        <PINInput
-          ref={newPINRef}
-          onPINChange={handleNewPINChange}
-          onPINComplete={handleNewPINComplete}
-          errorMessage={newPINError}
-        />
-      </View>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterNewPIN')}</ThemedText>
+          <PINInput
+            ref={newPINRef}
+            onPINChange={handleNewPINChange}
+            onPINComplete={handleNewPINComplete}
+            errorMessage={newPINError}
+          />
+        </View>
 
-      <View style={{ marginTop: 8 }}>
-        <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.ReenterNewPIN')}</ThemedText>
-        <PINInput
-          ref={confirmPINRef}
-          onPINChange={handleConfirmPINChange}
-          onPINComplete={handleConfirmPINComplete}
-          errorMessage={confirmPINError}
-        />
-      </View>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.ReenterNewPIN')}</ThemedText>
+          <PINInput
+            ref={confirmPINRef}
+            onPINChange={handleConfirmPINChange}
+            onPINComplete={handleConfirmPINComplete}
+            errorMessage={confirmPINError}
+          />
+        </View>
 
-      <View style={{ marginTop: 4 }}>
-        <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.RememberPIN')}</ThemedText>
-        <ThemedText>{t('BCSC.ChangePIN.RememberPINDescription')}</ThemedText>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.RememberPIN')}</ThemedText>
+          <ThemedText>{t('BCSC.ChangePIN.RememberPINDescription')}</ThemedText>
+        </View>
       </View>
     </ScreenWrapper>
   )

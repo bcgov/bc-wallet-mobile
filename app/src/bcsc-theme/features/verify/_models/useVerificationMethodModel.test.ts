@@ -9,7 +9,7 @@ import {
   formatServiceHours,
   isLiveCallAvailable,
 } from '@/bcsc-theme/utils/service-hours-formatter'
-import { BCDispatchAction } from '@/store'
+import { BCDispatchAction, IASEnvironment } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { BCSCCardType } from 'react-native-bcsc-core'
@@ -64,6 +64,9 @@ describe('useVerificationMethodModel', () => {
         DeviceVerificationOption.SEND_VIDEO,
         DeviceVerificationOption.IN_PERSON,
       ],
+    },
+    developer: {
+      environment: IASEnvironment.DEV,
     },
   }
 

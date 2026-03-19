@@ -89,12 +89,12 @@ export interface BCSCState {
   photoPath?: string
   videoPath?: string
   videoThumbnailPath?: string
-  bookmarks: string[]
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
   hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
+  hasDismissedDeviceAuthInfo?: boolean
   credentialMetadata?: CredentialMetadata
 }
 
@@ -169,6 +169,10 @@ export interface BCSCSecureState {
   /** Additional evidence data for non-BCSC verification */
   additionalEvidenceData: EvidenceMetadata[] // initialized as an empty array to prevent ?.length usage
 
+  // === Saved Services ===
+  /** Array of bookmarked/saved service client_ref_id strings */
+  savedServices: string[]
+
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
@@ -180,6 +184,7 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
+  savedServices: [],
   verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
@@ -224,8 +229,8 @@ enum BCSCDispatchAction {
   SAVE_PHOTO = 'bcsc/savePhoto',
   SAVE_VIDEO = 'bcsc/saveVideo',
   SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
-  ADD_BOOKMARK = 'bcsc/addBookmark',
-  REMOVE_BOOKMARK = 'bcsc/removeBookmark',
+  ADD_SAVED_SERVICE = 'bcsc/addSavedService',
+  REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
@@ -382,7 +387,6 @@ export const initialBCSCState: BCSCState = {
   hasAccount: false,
   nicknames: [],
   selectedNickname: undefined,
-  bookmarks: [],
   bannerMessages: [],
   analyticsOptIn: false,
 }
@@ -516,7 +520,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
-      const prompts: VerificationPrompt[] = (action?.payload || []).pop()
+      const prompts: VerificationPrompt[] = (action?.payload || []).pop() ?? []
       const bcsc = { ...state.bcsc, prompts }
       const newState = { ...state, bcsc }
       return newState
@@ -547,26 +551,21 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         videoPath: undefined,
         videoDuration: undefined,
         videoThumbnailPath: undefined,
-        prompts: undefined,
       }
       const newState = { ...state, bcsc }
       return newState
     }
-    case BCSCDispatchAction.ADD_BOOKMARK: {
-      const bookmark = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, bookmarks: [...new Set([...state.bcsc.bookmarks, bookmark])] }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
-      return newState
+    case BCSCDispatchAction.ADD_SAVED_SERVICE: {
+      const serviceId = (action.payload ?? []).pop()
+      const savedServices = [...new Set([...state.bcscSecure.savedServices, serviceId])]
+      const bcscSecure = { ...state.bcscSecure, savedServices }
+      return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.REMOVE_BOOKMARK: {
-      const bookmark = (action.payload ?? []).pop()
-      const bookmarks = state.bcsc.bookmarks.filter((b) => b !== bookmark)
-      const bcsc = { ...state.bcsc, bookmarks }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
+    case BCSCDispatchAction.REMOVE_SAVED_SERVICE: {
+      const serviceId = (action.payload ?? []).pop()
+      const savedServices = state.bcscSecure.savedServices.filter((s) => s !== serviceId)
+      const bcscSecure = { ...state.bcscSecure, savedServices }
+      return { ...state, bcscSecure }
     }
 
     // batched state update to prevent re-renders
@@ -764,6 +763,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION: {
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedDeviceAuthInfo: hasDismissed }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

@@ -7,6 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
+import { getLiveCallVideoQueue } from '../live-call/utils/videoDestinations'
 import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
 
 type useVerificationMethodModelProps = {
@@ -25,7 +26,21 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     try {
       setSendVideoLoading(true)
 
-      const { sha256, id, prompts } = await evidence.createVerificationRequest()
+      let verificationRequest
+      if (!store.bcscSecure.verificationRequestId) {
+        // NOTE: Making this request too many times will be rate limited by the server.
+        verificationRequest = await evidence.createVerificationRequest()
+      }
+
+      if (store.bcscSecure.verificationRequestId && !store.bcsc.prompts) {
+        // NOTE: Making this request too many times will be rate limited by the server.
+        verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
+      }
+
+      if (verificationRequest) {
+        updateVerificationRequest(verificationRequest.id, verificationRequest.sha256)
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
+      }
 
       await Promise.allSettled([
         removeFileSafely(store.bcsc.videoPath, logger),
@@ -36,8 +51,6 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       VerificationVideoCache.clearCache()
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-      updateVerificationRequest(id, sha256)
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
 
       navigation.navigate(BCSCScreens.InformationRequired)
     } catch (error) {
@@ -47,14 +60,16 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       setSendVideoLoading(false)
     }
   }, [
-    updateVerificationRequest,
-    dispatch,
-    evidence,
-    logger,
-    navigation,
-    store.bcsc.photoPath,
+    store.bcscSecure.verificationRequestId,
+    store.bcsc.prompts,
     store.bcsc.videoPath,
+    store.bcsc.photoPath,
     store.bcsc.videoThumbnailPath,
+    logger,
+    dispatch,
+    navigation,
+    evidence,
+    updateVerificationRequest,
   ])
 
   const handlePressLiveCall = useCallback(async () => {
@@ -67,11 +82,9 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       ])
 
       const formattedHours = formatServiceAndUnavailableHours(serviceHours)
-      // TODO (bm): Look for prod queue(s) depending on environment
-      const availableDestination = destinations.find(
-        (dest) => dest.destination_name === 'Test Harness Queue Destination'
-      )
-      if (!availableDestination) {
+      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, destinations)
+
+      if (!liveCallVideoQueue) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
           formattedHours,
@@ -99,7 +112,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [videoCallApi, logger, navigation])
+  }, [videoCallApi, store.developer.environment, navigation, logger])
 
   return {
     handlePressSendVideo,
@@ -109,4 +122,5 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
   }
 }
+
 export default useVerificationMethodModel

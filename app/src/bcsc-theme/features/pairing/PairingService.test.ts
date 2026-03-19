@@ -1,3 +1,4 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { PairingService } from './PairingService'
 import { PairingNavigationEvent, PairingPayload } from './types'
 
@@ -54,7 +55,7 @@ describe('PairingService', () => {
 
     expect(navEvents).toHaveLength(1)
     expect(navEvents[0]).toMatchObject({
-      screen: expect.stringContaining('ServiceLogin'),
+      screen: expect.stringContaining(BCSCScreens.ServiceLogin),
       params: { serviceTitle: 'Test Service', pairingCode: 'CODE123' },
     })
     expect(service.hasPendingPairing).toBe(false)

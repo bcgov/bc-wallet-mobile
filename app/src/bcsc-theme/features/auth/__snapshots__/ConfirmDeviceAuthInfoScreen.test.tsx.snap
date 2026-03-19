@@ -72,7 +72,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
               ]
             }
           >
-            Confirm it's your device
+            BCSC.ConfirmDeviceAuth.Title
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -88,7 +88,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
               ]
             }
           >
-            Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.
+            BCSC.ConfirmDeviceAuth.Description1
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -104,7 +104,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
               ]
             }
           >
-            Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.
+            BCSC.ConfirmDeviceAuth.Description2
           </Text>
         </View>
         <View
@@ -136,7 +136,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
             }
           >
             <View
-              accessibilityLabel="Terms.IAgree"
+              accessibilityLabel="BCSC.ConfirmDeviceAuth.CheckboxLabel"
               accessibilityRole="checkbox"
               accessibilityState={
                 {
@@ -178,7 +178,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
                   "opacity": 1,
                 }
               }
-              testID="com.ariesbifold:id/IAgree"
+              testID="com.ariesbifold:id/HideConfirmationCheckbox"
             >
               <Text
                 allowFontScaling={false}
@@ -229,7 +229,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
                 ]
               }
             >
-              Preface.Confirmed
+              BCSC.ConfirmDeviceAuth.CheckboxLabel
             </Text>
           </View>
           <View
@@ -299,7 +299,6 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
                         "fontWeight": "bold",
                         "textAlign": "center",
                       },
-                      false,
                       false,
                       false,
                     ],

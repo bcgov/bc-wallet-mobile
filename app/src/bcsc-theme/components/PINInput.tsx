@@ -23,36 +23,33 @@ export const PINInput = ({
   ref,
 }: PINInputProps) => {
   const [pin, setPin] = useState('')
-  const { ColorPalette, Spacing, TextTheme, PINInputTheme } = useTheme()
+  const { ColorPalette, Spacing, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const styles = StyleSheet.create({
+    pinInputContainer: {
+      gap: Spacing.sm,
+    },
     inputContainer: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: isFocused ? ColorPalette.brand.primary : PINInputTheme.cell.backgroundColor,
+      borderWidth: 2,
+      borderColor: isFocused ? PINInputTheme.focussedCell.borderColor : PINInputTheme.cell.backgroundColor,
       borderRadius: Spacing.xs,
       backgroundColor: PINInputTheme.cell.backgroundColor,
-      padding: Spacing.sm,
-      marginTop: Spacing.md,
-      marginBottom: Spacing.sm,
     },
     input: {
-      height: PINInputTheme.cell.height,
-      ...TextTheme.headingThree,
       ...PINInputTheme.cellText,
       flex: 1,
+      paddingHorizontal: Spacing.sm,
+      minHeight: 50,
+      fontSize: 24,
+      fontWeight: 'bold',
       letterSpacing: Spacing.sm,
-      textAlignVertical: 'center',
     },
-    eyeIcon: {
-      padding: 5,
-    },
-    errorContainer: {
-      minHeight: 20,
-      justifyContent: 'flex-start',
+    visibilityButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: Spacing.sm,
     },
   })
 
@@ -72,7 +69,7 @@ export const PINInput = ({
   }
 
   return (
-    <>
+    <View style={styles.pinInputContainer}>
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
@@ -93,7 +90,7 @@ export const PINInput = ({
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity
-          style={styles.eyeIcon}
+          style={styles.visibilityButton}
           onPress={toggleVisibility}
           testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
           accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
@@ -101,10 +98,8 @@ export const PINInput = ({
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
         </TouchableOpacity>
       </View>
-      <View style={styles.errorContainer}>
-        {errorMessage && <ThemedText variant={'inlineErrorText'}>{errorMessage}</ThemedText>}
-      </View>
-    </>
+      {errorMessage && <ThemedText variant={'inlineErrorText'}>{errorMessage}</ThemedText>}
+    </View>
   )
 }
 

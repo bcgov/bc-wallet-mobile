@@ -20,7 +20,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()
-  const account = useAccount()
+  const { account } = useAccount()
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {

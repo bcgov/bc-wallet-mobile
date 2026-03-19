@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useCallback, useMemo } from 'react'
@@ -62,16 +63,14 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         })
 
         try {
-          // Pass both refreshToken and accessToken to avoid duplicate API call in updateTokens
-          await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
           apiClient.tokens = data
+          await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error)
-          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens: ${message}`)
-          throw error
+          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens`, error as Error)
+          throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
         }
 
-        return apiClient.tokens
+        return apiClient.tokens!
       })
     },
     [apiClient, updateTokens]

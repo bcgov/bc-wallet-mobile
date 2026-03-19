@@ -67,6 +67,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const bcscSerialNumber = store.bcscSecure.serial || null
     const emailAddress = store.bcscSecure.emailAddress || null
     const isEmailVerified = Boolean(store.bcscSecure.isEmailVerified)
+    const userSkippedEmailVerification = Boolean(store.bcscSecure.userSkippedEmailVerification)
     const hasSerial = Boolean(bcscSerialNumber)
 
     // Card types
@@ -100,7 +101,8 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const step1Completed = step5Completed || Boolean(nickname)
     const step2Completed = step5Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
     const step3Completed = step5Completed || (step2Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
-    const step4Completed = step5Completed || (step2Completed && Boolean(emailAddress && isEmailVerified)) // Step 2 must be completed before step 4 can be completed
+    const step4Completed =
+      step5Completed || (step2Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification)) // Step 2 must be completed before step 4 can be completed
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
@@ -119,19 +121,12 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     }
 
     const getStep2Subtext = (): string[] => {
-      // Only show document info if step 2 is explicitly completed
-      if (!step2Completed) {
-        return [t('BCSC.Steps.ScanOrTakePhotos')]
-      }
-
       const cards: string[] = []
 
-      // If the BCSC card is registered, show the BCSC serial number
       if (store.bcscSecure.serial) {
         cards.push(t('BCSC.Steps.GetVerificationStep2Subtext1', { serial: store.bcscSecure.serial }))
       }
 
-      // If the user has added additional evidence, add each to the list
       for (const evidence of store.bcscSecure.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
@@ -252,6 +247,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     store.bcscSecure.deviceCodeExpiresAt,
     store.bcscSecure.emailAddress,
     store.bcscSecure.isEmailVerified,
+    store.bcscSecure.userSkippedEmailVerification,
     store.bcscSecure.serial,
     store.bcscSecure.userMetadata?.address,
     store.bcscSecure.userSubmittedVerificationVideo,

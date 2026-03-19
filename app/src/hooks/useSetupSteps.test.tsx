@@ -348,6 +348,40 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.email.focused).toBe(false)
       expect(hook.result.current.email.completed).toBe(true)
     })
+
+    it('should be completed when user skipped email (userSkippedEmailVerification=true, no emailAddress — v3 migration case)', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.bcscSecure.serial = '123456789'
+      store.bcscSecure.emailAddress = undefined
+      store.bcscSecure.deviceCode = 'ABCDEFGH'
+      store.bcscSecure.isEmailVerified = false
+      store.bcscSecure.userSkippedEmailVerification = true
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(false)
+      expect(hook.result.current.email.completed).toBe(true)
+    })
+
+    it('should not be completed when email entered but not verified, even if userSkippedEmailVerification was previously set', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+      store.bcscSecure.serial = '123456789'
+      store.bcscSecure.emailAddress = 'steveBrule@email.com'
+      store.bcscSecure.deviceCode = 'ABCDEFGH'
+      store.bcscSecure.isEmailVerified = false
+      store.bcscSecure.userSkippedEmailVerification = false
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+    })
   })
 
   describe('Verify Step', () => {
@@ -581,6 +615,26 @@ describe('useSetupSteps Hook', () => {
       store.bcscSecure.serial = '123456789'
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.id.subtext[0]).toContain('123456789')
+    })
+
+    it('should return serial number in subtext for NPC when serial is present but step 2 is not complete', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
+      store.bcscSecure.serial = 'G00001234'
+      // No additional evidence yet — step 2 is NOT complete for NPC
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.completed).toBe(false)
+      expect(hook.result.current.id.subtext[0]).toContain('G00001234')
+    })
+
+    it('should return default subtext when no serial and no evidence is present', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
+      // No serial, no evidence
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.subtext).toEqual(['BCSC.Steps.ScanOrTakePhotos'])
     })
 
     it('should have empty subtext for email step (custom children rendering)', () => {

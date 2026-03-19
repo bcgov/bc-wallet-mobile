@@ -12,6 +12,7 @@ import {
   Animated,
   Image,
   ImageSourcePropType,
+  Linking,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -137,12 +138,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
         <View style={{ marginTop: Spacing.md }}>
           <CardButton
             title={t('BCSC.Home.WhereToUseTitle')}
-            onPress={() =>
-              navigation.navigate(BCSCScreens.OnboardingWebView, {
-                title: t('BCSC.Onboarding.CarouselServicesHeader'),
-                url: WHERE_TO_USE_URL,
-              })
-            }
+            onPress={() => Linking.openURL(WHERE_TO_USE_URL)}
             endIcon="open-in-new"
           />
         </View>

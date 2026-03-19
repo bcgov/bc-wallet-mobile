@@ -26,14 +26,14 @@ const stripOuterDocumentTags = (html: string): string => {
 }
 
 /**
- * Creates a CSS fragment that applies font scaling to the document.
- * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
- * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
+ * Creates a CSS font-size value based on the device font scale.
+ * iOS uses the fontScale, Android uses a fixed value of 1.
+ * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns {number} The CSS font-size value in pixels
  */
 const createFontScalingCss = (fontScale: number): number => {
-  const baseFontSizePx = fontScale > 0 ? Math.round(16 * fontScale) : 16
-  const applyFontScaling = Platform.OS === 'ios' && baseFontSizePx > 0
-  return applyFontScaling ? baseFontSizePx : 0
+  const scale = Platform.OS === 'ios' ? fontScale : 1
+  return Math.round(16 * scale)
 }
 
 export interface TermsOfUseHtmlOptions {
@@ -96,66 +96,4 @@ export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: 
 ${bodyContent}
 </body>
 </html>`
-}
-
-/**
- * Returns a script fragment that applies iOS font scaling (Dynamic Type) to the document.
- * Only runs on iOS (Android uses the WebView textZoom prop). Returns empty string if
- * baseFontSizePx is invalid (<= 0) to avoid injecting a zero or negative font size.
- *
- * Sets font-size on html, body, and all body descendants so that elements with explicit
- * font-sizes from the page's own CSS (e.g. intro paragraphs) are overridden.
- */
-export const createFontScalingScript = (baseFontSizePx: number): string => {
-  if (Platform.OS !== 'ios' || baseFontSizePx <= 0) {
-    return ''
-  }
-  return `
-      const baseFontSizePx = ${baseFontSizePx};
-      document.documentElement.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
-      if (document.body) document.body.style.setProperty('font-size', baseFontSizePx + 'px', 'important');
-      var fontStyle = document.createElement('style');
-      fontStyle.textContent = 'html, body, body * { font-size: ' + baseFontSizePx + 'px !important; }';
-      document.head.appendChild(fontStyle);
-    `
-}
-
-/**
- * Creates webview javascript injection to modify the HTML content loaded from a full web page URL.
- *
- * This includes applying iOS font scaling (Android uses WebView textZoom), setting the background
- * color, text color, and link colors to match the app theme, and removing page chrome.
- *
- * @param colorPalette - The color palette object containing brand colors
- * @param fontScale - Device font scale (e.g. from useWindowDimensions().fontScale)
- */
-export const createWebViewJavascriptInjection = (colorPalette: IColorPalette, fontScale: number): string => {
-  const fontSizeCss = createFontScalingCss(fontScale)
-  return `
-    document.addEventListener('DOMContentLoaded', function() {
-      ${createFontScalingScript(fontSizeCss)}
-      document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
-      document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
-      document.body.style.color = '${colorPalette.brand.secondary}';
-
-      const style = document.createElement('style');
-      style.textContent = \`
-        html, body, body * {
-          background-color: ${colorPalette.brand.primaryBackground} !important;
-          color: ${colorPalette.brand.secondary} !important;
-        }
-        a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
-          color: ${colorPalette.brand.link} !important;
-          text-decoration-color: ${colorPalette.brand.link} !important;
-          border-color: ${colorPalette.brand.link} !important;
-        }
-      \`;
-      document.head.appendChild(style);
-      document.querySelectorAll('a').forEach(el => {
-        el.style.setProperty('color', '${colorPalette.brand.link}', 'important');
-        el.style.setProperty('text-decoration-color', '${colorPalette.brand.link}', 'important');
-        el.style.setProperty('border-color', '${colorPalette.brand.link}', 'important');
-      });
-    });
-  `
 }

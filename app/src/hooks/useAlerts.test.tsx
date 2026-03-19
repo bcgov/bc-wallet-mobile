@@ -409,7 +409,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -458,7 +458,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -507,7 +507,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -714,7 +714,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCTakePhoto', {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TakePhoto, {
         forLiveCall: true,
         deviceSide: 'front',
         cameraInstructions: '',
@@ -1153,7 +1153,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -1202,7 +1202,7 @@ describe('useAlerts', () => {
 
       action.onPress()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCRemoveAccountConfirmation')
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 
@@ -1660,6 +1660,26 @@ describe('useAlerts', () => {
           event: AppEventCode.ERR_300_EMPTY_RESPONSE,
           actions: [{ text: 'Global.OK' }],
         })
+      })
+    })
+
+    describe('deviceAuthenticationErrorAlert', () => {
+      it('should show an alert with the correct title and message', () => {
+        const mockNavigation = { navigate: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+        result.current.deviceAuthenticationErrorAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.DeviceAuthenticationError.Title',
+          'Alerts.DeviceAuthenticationError.Description',
+          {
+            event: AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+            actions: [{ text: 'Global.OK' }],
+          }
+        )
       })
     })
   })

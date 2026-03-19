@@ -191,6 +191,20 @@ const translation = {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
       "AuthenticateToSecure": "Authenticate to secure your app (FR)"
     },
+    "AppReset": {
+      "Title": "App reset for security (FR)",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone. (FR)",
+      "Body2": "It looks like you may have turned off the passcode on this device. (FR)",
+      "Body3": "When you do this, your app is reset and you need to set it up again. (FR)",
+      "SetUpApp": "Set Up App (FR)",
+      "LearnMore": "Learn More (FR)"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device (FR)",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it. (FR)",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app. (FR)",
+      "CheckboxLabel": "Do not show me this again (FR)",
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
@@ -497,6 +511,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup (FR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (FR)",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act. (FR)",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy (FR)",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (FR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (FR)",
       "TermsOfUseTitle": "Terms of Use (FR)",
@@ -1194,6 +1209,10 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
       "Action1": "Reset App (FR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (FR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
   "BCWalletError": {
@@ -1201,6 +1220,9 @@ const translation = {
     "Device": {
       "KeypairGenerationError": "(FR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
       "KeypairGenerationTitle": "(FR) Problem with App",
+    },
+    "General": {
+      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)",
     },
   },
 }

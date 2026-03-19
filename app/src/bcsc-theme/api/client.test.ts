@@ -8,6 +8,20 @@ describe('BCSC Client', () => {
     initLanguages(localization)
   })
 
+  it('should set Content-Type default header to application/json with charset=utf-8', () => {
+    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.headers['Content-Type']).toBe('application/json; charset=utf-8')
+  })
+
+  it('should set User-Agent default header', () => {
+    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.headers['User-Agent']).toBeDefined()
+  })
+
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
     const mockLogger = { error: jest.fn(), info: jest.fn() }
     const baseURL = 'https://example.com'

@@ -66,7 +66,7 @@ const BCSCTabStack: React.FC = () => {
         initialRouteName={BCSCScreens.Home}
         screenOptions={{
           unmountOnBlur: false,
-          lazy: false,
+          lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
