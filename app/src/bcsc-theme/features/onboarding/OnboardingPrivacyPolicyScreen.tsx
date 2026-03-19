@@ -1,9 +1,9 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { Button, ButtonType, ContentGradient, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ContentGradient, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -15,11 +15,9 @@ interface OnboardingPrivacyPolicyScreenProps {
  *
  * @returns {*} {React.ReactElement} The OnboardingPrivacyPolicyScreen component.
  */
-export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScreenProps> = ({
-  navigation,
-}: OnboardingPrivacyPolicyScreenProps): React.ReactElement => {
+export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
+  const { ColorPalette } = useTheme()
 
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
@@ -45,15 +43,5 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
     </View>
   )
 
-  const styles = StyleSheet.create({
-    scrollViewContainerStyle: {
-      gap: Spacing.lg,
-    },
-  })
-
-  return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollViewContainerStyle}>
-      <PrivacyPolicyContent onLearnMore={handleLearnMore} />
-    </ScreenWrapper>
-  )
+  return <PrivacyPolicyContent onLearnMore={handleLearnMore} controls={controls} />
 }

@@ -9,11 +9,13 @@ import { useCallback } from 'react'
  */
 const useCancelledReviewViewModel = () => {
   const [, dispatch] = useStore<BCState>()
-  const { updateAccountFlags } = useSecureActions()
+  const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const cleanUpVerificationData = useCallback(() => {
+    updateVerificationRequest(null, null)
     dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+    dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
     updateAccountFlags({ userSubmittedVerificationVideo: false })
-  }, [dispatch, updateAccountFlags])
+  }, [dispatch, updateAccountFlags, updateVerificationRequest])
   return {
     cleanUpVerificationData,
   }

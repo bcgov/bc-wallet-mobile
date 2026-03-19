@@ -49,6 +49,7 @@ export const ACCESSIBILITY_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
 // appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
 export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
+export const BC_LOGIN_PRIVACY_URL = 'https://id.gov.bc.ca/static/privacy.html'
 export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
 export const WHERE_TO_USE_URL = ACCOUNT_SERVICES_URL
 export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
