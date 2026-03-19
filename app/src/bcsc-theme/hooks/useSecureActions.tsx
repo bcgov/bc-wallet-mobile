@@ -632,7 +632,7 @@ export const useSecureActions = () => {
 
       // Filter out incomplete evidence (those without photo metadata)
       const updatedEvidence = evidence.filter(
-        (evidence) => evidence.metadata && evidence.metadata.length > 0 && evidence.documentNumber
+        (item) => item.metadata && item.metadata.length > 0 && item.documentNumber
       )
 
       dispatch({
