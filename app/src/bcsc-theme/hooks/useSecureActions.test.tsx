@@ -13,7 +13,12 @@ jest.mock('react-native-bcsc-core', () => ({
 jest.mock('./useBCSCApiClient')
 
 const mockDispatch = jest.fn()
-const mockLogger = new MockLogger()
+const mockLogger = {
+  info: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  debug: jest.fn(),
+}
 
 const makeEvidence = (overrides: Partial<EvidenceMetadata> = {}): EvidenceMetadata => ({
   metadata: [],
