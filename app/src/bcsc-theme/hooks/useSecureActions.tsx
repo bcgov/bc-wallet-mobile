@@ -622,7 +622,7 @@ export const useSecureActions = () => {
    * Remove incomplete evidence entries and persist to native storage
    *
    * @param evidence Array of evidence metadata to filter and persist
-   * @returns A updated list of evidence metadata with incomplete entries removed
+   * @returns An updated list of evidence metadata with incomplete entries removed
    */
   const removeIncompleteEvidence = useCallback(
     async (evidence: EvidenceMetadata[]) => {
