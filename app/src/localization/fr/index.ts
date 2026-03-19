@@ -1244,7 +1244,7 @@ const translation = {
       "Title": "Problem with App (FR)",
       "ProblemWithLoginTitle": "Problem with Login (FR)",
       "ParseErrorDescription": "Please try again later. (error 304) (FR)",
-      "Rejected": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again.  (FR)",
+      "Rejected": "There may be a problem with your account in this app. Please try again. If the problem continues, remove and add your account again. (FR)",
       "Unauthorized": "You are not authorized to access this service. (FR)",
       "Forbidden": "Access to this service is forbidden. (FR)",
       "ServerErrorDescription": "Please try again later. (error 303) (FR)",
