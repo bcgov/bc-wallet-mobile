@@ -39,7 +39,7 @@ xcodebuild -workspace BCWallet.xcworkspace \
   -archivePath build/BCWallet.xcarchive \
   archive
 
-# 2) Export the archive to an .ipa
+# 2) Export the archive to an .ipa (Optional: you can use the GoogleService-Info.plist file to export the archive)
 xcodebuild -exportArchive \
   -archivePath build/BCWallet.xcarchive \
   -exportOptionsPlist ExportOptions.dev.plist \
