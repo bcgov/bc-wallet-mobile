@@ -116,7 +116,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
         BCSC.Onboarding.AnalyticsAnonymousInfo
       </Text>
       <View
-        accessibilityLabel="BCSC.Onboarding.AnalyticsLearnMore"
+        accessibilityLabel="BCSC.Onboarding.LearnMore"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -155,7 +155,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.AnalyticsLearnMore"
+        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
       >
         <View
           style={
@@ -191,7 +191,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.Onboarding.AnalyticsLearnMore
+              BCSC.Onboarding.LearnMore
             </Text>
             <Text
               allowFontScaling={false}

@@ -534,7 +534,6 @@ const translation = {
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
       "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app.",
       "AnalyticsAnonymousInfo": "All information is collected anonymously",
-      "AnalyticsLearnMore": "Learn more",
       "AcceptAnalytics": "Enable Analytics",
       "DenyAnalytics": "Skip",
     },

@@ -24,7 +24,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Onboarding.AnalyticsLearnMore'),
+      title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
       url: BC_LOGIN_PRIVACY_URL,
     })
   }
