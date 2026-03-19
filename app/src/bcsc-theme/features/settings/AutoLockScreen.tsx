@@ -50,7 +50,7 @@ const LockoutRow: React.FC<LockoutRowProps> = ({ title, value, selected, testID,
         style={styles.checkboxContainer}
         accessibilityLabel={title}
         accessibilityRole={'checkbox'}
-        testID={testIdWithKey('ToggleAutoLockSwitch')}
+        testID={testIdWithKey(testID)}
       >
         <BouncyCheckbox
           accessibilityLabel={String(value)}
@@ -63,7 +63,6 @@ const LockoutRow: React.FC<LockoutRowProps> = ({ title, value, selected, testID,
           onPress={() => onPress(value)}
           isChecked={selected}
           disableBuiltInState
-          testID={testIdWithKey(testID)}
         />
       </Pressable>
     </View>

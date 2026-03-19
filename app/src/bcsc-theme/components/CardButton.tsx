@@ -36,6 +36,12 @@ interface CardProps {
    * @type {boolean}
    */
   disabled?: boolean
+  /**
+   * Test ID for the button
+   *
+   * @type {string}
+   */
+  testID?: string
 }
 
 /**
@@ -88,7 +94,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       accessibilityRole="button"
       accessibilityState={{ disabled: props.disabled }}
       disabled={props.disabled}
-      testID={testIdWithKey(`CardButton-${props.title}`)}
+      testID={props.testID ?? testIdWithKey(`CardButton-${props.title}`)}
     >
       <View style={styles.cardContentContainer}>
         <View style={styles.cardTitleContainer}>

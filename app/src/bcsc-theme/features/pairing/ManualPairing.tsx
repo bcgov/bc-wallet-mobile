@@ -78,7 +78,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
-      <PairingCodeTextInput handleChangeCode={handleChangeCode} />
+      <PairingCodeTextInput handleChangeCode={handleChangeCode} testID={testIdWithKey('PairingCodeInput')} />
       <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
     </ScreenWrapper>
   )

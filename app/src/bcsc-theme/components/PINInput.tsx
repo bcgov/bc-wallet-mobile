@@ -9,10 +9,19 @@ interface PINInputProps {
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
+  /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
+  testIDKey?: string
   ref?: React.Ref<TextInput>
 }
 
-export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus = false, ref }: PINInputProps) => {
+export const PINInput = ({
+  onPINChange,
+  onPINComplete,
+  errorMessage,
+  autoFocus = false,
+  testIDKey,
+  ref,
+}: PINInputProps) => {
   const [pin, setPin] = useState('')
   const { ColorPalette, Spacing, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
@@ -64,6 +73,7 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
+          testID={testIDKey ? testIdWithKey(testIDKey) : undefined}
           style={styles.input}
           value={pin}
           onChangeText={handlePINChange}
@@ -82,7 +92,7 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
         <TouchableOpacity
           style={styles.visibilityButton}
           onPress={toggleVisibility}
-          testID={testIdWithKey('VisibilityButton')}
+          testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
           accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
         >
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
