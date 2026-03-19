@@ -1,4 +1,3 @@
-import { swipeLeft, swipeRight } from '../../../helpers/gestures.js'
 import { BaseScreen } from '../../BaseScreen.js'
 
 const CAROUSEL_STEPS = 3
@@ -29,11 +28,11 @@ class IntroCarouselE2EScreen extends BaseScreen {
   }
 
   async swipeLeft() {
-    await swipeLeft()
+    await super.swipeLeft()
   }
 
   async swipeRight() {
-    await swipeRight()
+    await super.swipeRight()
   }
 
   async swipeThroughAll() {

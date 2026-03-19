@@ -1,5 +1,5 @@
 // local/wdio.android.local.device.conf.ts — Android real device (USB-connected)
-import { execSync } from 'child_process'
+import { execFileSync } from 'child_process'
 import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
@@ -26,9 +26,10 @@ config.capabilities = [
 // So the device can reach Metro on the host (debug APK loads JS from packager)
 config.onPrepare = async function (_config, _capabilities) {
   const udid = process.env.ANDROID_UDID
-  const adbTarget = udid ? `-s ${udid}` : ''
+  const reverseSpec = `tcp:${METRO_PORT}`
+  const adbArgs = udid ? ['-s', udid, 'reverse', reverseSpec, reverseSpec] : ['reverse', reverseSpec, reverseSpec]
   try {
-    execSync(`adb ${adbTarget} reverse tcp:${METRO_PORT} tcp:${METRO_PORT}`, {
+    execFileSync('adb', adbArgs, {
       stdio: 'inherit',
     })
   } catch (e) {

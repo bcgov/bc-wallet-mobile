@@ -1,3 +1,10 @@
+import {
+  swipeDown as swipeDownGesture,
+  swipeLeft as swipeLeftGesture,
+  swipeRight as swipeRightGesture,
+  swipeUp as swipeUpGesture,
+} from '../helpers/gestures.js'
+
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
 export interface EnterTextOptions {
   /**
@@ -85,6 +92,25 @@ export abstract class BaseScreen {
   }
 
   /**
+   * Full-screen swipe gestures (platform-specific implementation in `gestures` helper).
+   */
+  protected async swipeUp(durationMs = 800) {
+    await swipeUpGesture(durationMs)
+  }
+
+  protected async swipeDown(durationMs = 800) {
+    await swipeDownGesture(durationMs)
+  }
+
+  protected async swipeLeft(durationMs = 800) {
+    await swipeLeftGesture(durationMs)
+  }
+
+  protected async swipeRight(durationMs = 800) {
+    await swipeRightGesture(durationMs)
+  }
+
+  /**
    * Enter text into an input. Supports options for controlled/secure inputs.
    *
    * @param testId - testID of the input element
@@ -139,8 +165,7 @@ export abstract class BaseScreen {
       if (driver.isIOS) {
         await driver.execute('mobile: scroll', { direction: 'down' })
       } else {
-        const { swipeUp } = await import('../helpers/gestures.js')
-        await swipeUp()
+        await swipeUpGesture()
       }
     }
 
@@ -152,8 +177,7 @@ export abstract class BaseScreen {
       if (driver.isIOS) {
         await driver.execute('mobile: scroll', { direction: 'up' })
       } else {
-        const { swipeDown } = await import('../helpers/gestures.js')
-        await swipeDown()
+        await swipeDownGesture()
       }
     }
 
