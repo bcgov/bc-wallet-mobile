@@ -33,6 +33,6 @@ exports[`WebViewScreen renders correctly 1`] = `
   testID="mocked-webview"
   textZoom={200}
   thirdPartyCookiesEnabled={true}
-  userAgent="Single App"
+  userAgent="BCServicesCard/4.0.0 (iOS 17.4; Build 142)"
 />
 `;

@@ -61,6 +61,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
     },
     input: {
       flex: 1,
+      padding: 0,
       color: props.error ? ColorPalette.semantic.error : Inputs.textInput.color,
       fontSize: Inputs.textInput.fontSize,
     },

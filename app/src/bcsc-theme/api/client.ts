@@ -1,6 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { RemoteLogger } from '@bifold/remote-logs'
+import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
@@ -74,7 +75,8 @@ class BCSCApiClient {
     this.logger = logger
     this.client = axios.create({
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+        'User-Agent': getUserAgentString(),
       },
     })
 

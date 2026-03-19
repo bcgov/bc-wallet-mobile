@@ -115,7 +115,6 @@ describe('useRegistrationApi', () => {
         'mock-ios-receipt'
       )
       expect(mockApiClient.post).toHaveBeenCalledWith(mockApiClient.endpoints.registration, expect.any(String), {
-        headers: { 'Content-Type': 'application/json' },
         skipBearerAuth: true,
       })
       expect(setAccount).toHaveBeenCalledWith({
