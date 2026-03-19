@@ -123,7 +123,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
-      new DeviceCountSystemCheck(getIdToken, utils),
+      new DeviceCountSystemCheck(getIdToken, utils, store.bcsc.deviceLimitBannerDismissedAt),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
       new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
@@ -147,6 +147,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcscSecure.registrationAccessToken,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
+    store.bcsc.deviceLimitBannerDismissedAt,
   ])
 
   return useMemo(() => {

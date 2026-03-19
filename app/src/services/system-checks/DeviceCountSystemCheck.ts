@@ -1,6 +1,7 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
+import { DEVICE_COUNT_BANNER_COOLDOWN_MS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -17,10 +18,12 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 export class DeviceCountSystemCheck implements SystemCheckStrategy {
   private readonly getIdToken: () => Promise<IdToken>
   private readonly utils: SystemCheckUtils
+  private readonly dismissedAt: string | undefined
 
-  constructor(getIdToken: () => Promise<IdToken>, utils: SystemCheckUtils) {
+  constructor(getIdToken: () => Promise<IdToken>, utils: SystemCheckUtils, dismissedAt?: string) {
     this.getIdToken = getIdToken
     this.utils = utils
+    this.dismissedAt = dismissedAt
   }
 
   /**
@@ -29,6 +32,12 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
    * @returns {Promise<boolean>} - A promise that resolves to true if the device count is within the limit, false otherwise.
    */
   async runCheck() {
+    if (this.dismissedAt) {
+      if (Date.now() - new Date(this.dismissedAt).getTime() < DEVICE_COUNT_BANNER_COOLDOWN_MS) {
+        return true
+      }
+    }
+
     try {
       const idToken = await this.getIdToken()
 

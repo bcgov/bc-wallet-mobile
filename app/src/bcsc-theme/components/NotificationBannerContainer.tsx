@@ -48,11 +48,11 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
     setDevicesModalVisible(false)
   }, [])
 
-  const handleDeleteDeviceCountMessage = () => {
-    setDevicesModalVisible(false)
-    // this needs to delete the message
-    // this also need to update a flag to turn off the system check
-  }
+  const handleDeleteDeviceCountMessage = useCallback(() => {
+    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
+    dispatch({ type: BCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER, payload: [new Date().toISOString()] })
+    handleCloseDevicesModal({ shouldAnimate: true })
+  }, [dispatch, handleCloseDevicesModal])
 
   return (
     <View>

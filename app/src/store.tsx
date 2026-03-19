@@ -95,6 +95,7 @@ export interface BCSCState {
   hasDismissedExpiryAlert?: boolean
   hasDismissedThirdPartyKeyboardAlert?: boolean
   hasDismissedDeviceAuthInfo?: boolean
+  deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
 }
 
@@ -268,6 +269,7 @@ enum BCSCDispatchAction {
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
+  DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
 }
 
 enum ModeDispatchAction {
@@ -770,6 +772,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION: {
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedDeviceAuthInfo: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
+      const dismissedAt = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
