@@ -1,20 +1,25 @@
-import { AutoLockE2EScreen, SettingsE2EScreen, TabBarE2EScreen } from '../../../../src/screens/bcsc/main/index.js'
+import {
+  AutoLockE2EScreen,
+  HomeE2EScreen,
+  SettingsE2EScreen,
+  TabBarE2EScreen,
+} from '../../../../src/screens/bcsc/main/index.js'
 
 describe('Settings', () => {
-  it('should open Settings from the Home tab', async () => {
+  it('should navigate through the Home tab and tap the Settings button', async () => {
+    await HomeE2EScreen.waitForDisplayed()
     await TabBarE2EScreen.tapSettings()
+  })
+
+  it('should navigate through the Settings screen and tap the Auto Lock button', async () => {
     await SettingsE2EScreen.waitForDisplayed()
-  })
-
-  it('should navigate to Auto Lock settings', async () => {
     await SettingsE2EScreen.tapAutoLock()
-    await AutoLockE2EScreen.waitForDisplayed()
   })
 
-  it('should select 3 minutes and go back', async () => {
+  it('should navigate through the Auto Lock screen and tap the 3 minutes option', async () => {
+    await AutoLockE2EScreen.waitForDisplayed()
     await AutoLockE2EScreen.tapTime3Minutes()
     await AutoLockE2EScreen.tapBack()
-    await SettingsE2EScreen.waitForDisplayed()
   })
 
   // TODO: Add tests for Sign Out
@@ -33,7 +38,8 @@ describe('Settings', () => {
   // TODO: Add tests for Analytics settings
   // TODO: Add tests for Developer Mode settings
 
-  it('should leave Settings and go back to Home', async () => {
+  it('should navigate through the Settings screen and tap the Back button', async () => {
+    await SettingsE2EScreen.waitForDisplayed()
     await SettingsE2EScreen.tapBack()
     await TabBarE2EScreen.waitForDisplayed()
   })

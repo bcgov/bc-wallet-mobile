@@ -14,8 +14,8 @@ class ManualSerialE2EScreen extends BaseScreen {
   async enterSerial(serial: string) {
     await this.enterText(ManualSerialTestIds.SerialInput, serial, {
       tapFirst: true,
-      characterByCharacter: true,
     })
+    await this.dismissKeyboard()
   }
 
   async tapContinue() {

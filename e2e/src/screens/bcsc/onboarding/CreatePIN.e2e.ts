@@ -1,17 +1,18 @@
 import { BaseScreen } from '../../BaseScreen.js'
 
-const CreatePINTestIds = {
+export const CreatePINTestIds = {
   Continue: 'com.ariesbifold:id/Continue',
   IUnderstand: 'com.ariesbifold:id/IUnderstand',
   PINInput1: 'com.ariesbifold:id/PINInput1',
   PINInput2: 'com.ariesbifold:id/PINInput2',
   PINInput1VisibilityButton: 'com.ariesbifold:id/PINInput1VisibilityButton',
   PINInput2VisibilityButton: 'com.ariesbifold:id/PINInput2VisibilityButton',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class CreatePINE2EScreen extends BaseScreen {
   async waitForDisplayed(timeout = 20_000) {
-    await super.waitForDisplayed(timeout, CreatePINTestIds.Continue)
+    await super.waitForDisplayed(timeout, CreatePINTestIds.PINInput1)
   }
 
   async tapContinue() {
@@ -30,15 +31,17 @@ class CreatePINE2EScreen extends BaseScreen {
   async enterPIN1(pin: string) {
     await this.enterText(CreatePINTestIds.PINInput1, pin, {
       tapFirst: true,
-      characterByCharacter: true,
     })
   }
 
   async enterPIN2(pin: string) {
     await this.enterText(CreatePINTestIds.PINInput2, pin, {
       tapFirst: true,
-      characterByCharacter: true,
     })
+  }
+
+  async tapBack() {
+    await this.tapByTestId(CreatePINTestIds.Back)
   }
 }
 

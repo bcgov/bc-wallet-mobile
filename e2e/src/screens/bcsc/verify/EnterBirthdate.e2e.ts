@@ -13,8 +13,8 @@ class EnterBirthdateE2EScreen extends BaseScreen {
   async enterBirthdate(date: string) {
     await this.enterText(EnterBirthdateTestIds.BirthdateInput, date, {
       tapFirst: true,
-      characterByCharacter: true,
     })
+    await this.dismissKeyboard()
   }
 
   async tapDone() {

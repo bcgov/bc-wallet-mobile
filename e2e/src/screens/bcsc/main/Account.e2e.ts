@@ -33,10 +33,6 @@ class AccountE2EScreen extends BaseScreen {
   async tapRemoveAccount() {
     await this.tapByTestId(AccountTestIds.RemoveAccount)
   }
-
-  async scrollToMyDevices() {
-    await super.scrollToTestId(AccountTestIds.MyDevices)
-  }
 }
 
 export default new AccountE2EScreen()

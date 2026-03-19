@@ -1,19 +1,29 @@
-import { AccountE2EScreen, TabBarE2EScreen, WebViewE2EScreen } from '../../../../src/screens/bcsc/main/index.js'
+import {
+  AccountE2EScreen,
+  HomeE2EScreen,
+  TabBarE2EScreen,
+  WebViewE2EScreen,
+} from '../../../../src/screens/bcsc/main/index.js'
 
 describe('Account', () => {
-  it('should open Account from the Home tab', async () => {
+  it('should navigate through the Home tab and tap the Account button', async () => {
+    await HomeE2EScreen.waitForDisplayed()
     await TabBarE2EScreen.tapAccount()
+  })
+
+  it('should navigate through the Account screen and tap the My Devices button', async () => {
     await AccountE2EScreen.waitForDisplayed()
-  })
-
-  it('should navigate to My Devices', async () => {
-    await AccountE2EScreen.scrollToMyDevices()
     await AccountE2EScreen.tapMyDevices()
-    await WebViewE2EScreen.waitForDisplayed()
   })
 
-  it('should go back to Account', async () => {
+  it('should navigate through the WebView screen and tap the Back button', async () => {
+    await WebViewE2EScreen.waitForDisplayed()
     await WebViewE2EScreen.tapBack()
-    await AccountE2EScreen.waitForMyDevices()
+  })
+
+  it('should navigate through the Account screen and go back home', async () => {
+    await TabBarE2EScreen.waitForDisplayed()
+    await TabBarE2EScreen.tapHome()
+    await HomeE2EScreen.waitForDisplayed()
   })
 })

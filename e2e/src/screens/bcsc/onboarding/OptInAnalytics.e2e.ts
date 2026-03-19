@@ -3,6 +3,7 @@ import { BaseScreen } from '../../BaseScreen.js'
 const OptInAnalyticsTestIds = {
   Accept: 'com.ariesbifold:id/Accept',
   Decline: 'com.ariesbifold:id/Decline',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class OptInAnalyticsE2EScreen extends BaseScreen {
@@ -16,6 +17,10 @@ class OptInAnalyticsE2EScreen extends BaseScreen {
 
   async tapDecline() {
     await this.tapByTestId(OptInAnalyticsTestIds.Decline)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(OptInAnalyticsTestIds.Back)
   }
 }
 

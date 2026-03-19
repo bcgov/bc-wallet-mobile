@@ -7,6 +7,7 @@ const SetupTypesTestIds = {
   SomeoneElseIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-BCSC.NewSetup.SomeoneElsesID',
   OtherPersonPresentRadioGroupYesOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-Yes',
   OtherPersonPresentRadioGroupNoOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-No',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class SetupTypesE2EScreen extends BaseScreen {
@@ -36,6 +37,10 @@ class SetupTypesE2EScreen extends BaseScreen {
 
   async selectOtherPersonPresentNo() {
     await this.tapByTestId(SetupTypesTestIds.OtherPersonPresentRadioGroupNoOption)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(SetupTypesTestIds.Back)
   }
 }
 

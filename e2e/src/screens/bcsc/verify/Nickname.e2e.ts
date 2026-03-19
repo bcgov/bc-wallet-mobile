@@ -14,7 +14,6 @@ class NicknameE2EScreen extends BaseScreen {
   async enterName(name: string) {
     await this.enterText(NicknameTestIds.NameInput, name, {
       tapFirst: true,
-      characterByCharacter: true,
     })
   }
 

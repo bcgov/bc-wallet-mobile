@@ -13,13 +13,13 @@ import {
 } from '../../../src/screens/bcsc/onboarding/index.js'
 
 describe('Onboarding', () => {
-  it('should display the Account Setup screen', async () => {
+  it('should display the Account Setup screen and tap Add Account', async () => {
     await acceptLocalNetworkPermissionIfPresent()
     await AccountSetupE2EScreen.waitForDisplayed(60_000)
+    await AccountSetupE2EScreen.tapAddAccount()
   })
 
   it('should navigate through the Setup Types screen', async () => {
-    await AccountSetupE2EScreen.tapAddAccount()
     await SetupTypesE2EScreen.waitForDisplayed()
     await SetupTypesE2EScreen.tapContinue()
   })
@@ -61,8 +61,6 @@ describe('Onboarding', () => {
     await CreatePINE2EScreen.enterPIN1('123456')
     await CreatePINE2EScreen.enterPIN2('123456')
     await CreatePINE2EScreen.tapIUnderstand()
-    // Brief pause for checkbox state to propagate and Continue to become enabled
-    // await new Promise((resolve) => setTimeout(resolve, 300))
     await CreatePINE2EScreen.tapContinue()
   })
 })

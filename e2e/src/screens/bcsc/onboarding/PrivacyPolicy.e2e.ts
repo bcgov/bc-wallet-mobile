@@ -3,6 +3,7 @@ import { BaseScreen } from '../../BaseScreen.js'
 const PrivacyPolicyTestIds = {
   Continue: 'com.ariesbifold:id/Continue',
   LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class PrivacyPolicyE2EScreen extends BaseScreen {
@@ -16,6 +17,10 @@ class PrivacyPolicyE2EScreen extends BaseScreen {
 
   async tapLearnMore() {
     await this.tapByTestId(PrivacyPolicyTestIds.LearnMore)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(PrivacyPolicyTestIds.Back)
   }
 }
 

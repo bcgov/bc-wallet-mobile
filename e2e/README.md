@@ -253,31 +253,6 @@ await this.tapByTestId('com.ariesbifold:id/Continue')
 | _iOS_      | _Accessibility ID_ | `~com.ariesbifold:id/Continue`             |
 | _Android_  | _Resource ID_      | `android=new UiSelector().resourceId(...)` |
 
-### _Flows_
-
-_For multi-screen sequences, use flow helpers in_ `src/flows/` _rather than calling page objects directly:_
-
-```typescript
-import { completeFullOnboarding } from '../src/flows/onboarding.flow'
-
-it('should complete onboarding', async () => {
-  await completeFullOnboarding()
-})
-```
-
-### _Variant-Aware Tests_
-
-_Use_ `getVariantConfig()` _to branch behavior based on the active variant:_
-
-```typescript
-import { getVariantConfig } from '../src/variant'
-
-const variant = getVariantConfig()
-if (variant.family === 'bcsc') {
-  // BCSC-specific flow
-}
-```
-
 ## _CI/CD_
 
 _Tests run automatically in GitHub Actions:_

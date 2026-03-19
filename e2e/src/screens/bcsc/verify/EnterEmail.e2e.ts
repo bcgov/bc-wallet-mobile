@@ -14,7 +14,6 @@ class EnterEmailE2EScreen extends BaseScreen {
   async enterEmail(email: string) {
     await this.enterText(EnterEmailTestIds.EmailInput, email, {
       tapFirst: true,
-      characterByCharacter: true,
     })
   }
 

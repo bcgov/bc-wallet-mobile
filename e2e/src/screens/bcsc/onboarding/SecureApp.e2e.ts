@@ -1,9 +1,10 @@
 import { BaseScreen } from '../../BaseScreen.js'
 
 const SecureAppTestIds = {
-  BiometricAuth: 'com.ariesbifold:id/CardButton-Use Device Passcode',
-  PinAuth: 'com.ariesbifold:id/CardButton-Create a PIN',
-  LearnMore: 'com.ariesbifold:id/CardButton-Learn More',
+  BiometricAuth: 'com.ariesbifold:id/ChooseDeviceAuthButton',
+  PinAuth: 'com.ariesbifold:id/ChoosePINButton',
+  LearnMore: 'com.ariesbifold:id/LearnMoreButton',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class SecureAppE2EScreen extends BaseScreen {
@@ -21,6 +22,10 @@ class SecureAppE2EScreen extends BaseScreen {
 
   async tapLearnMore() {
     await this.tapByTestId(SecureAppTestIds.LearnMore)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(SecureAppTestIds.Back)
   }
 }
 

@@ -6,31 +6,34 @@ import {
   SetupStepsE2EScreen,
 } from '../../../../src/screens/bcsc/verify/index.js'
 
+const cardSerial = process.env.CARD_SERIAL || 'XXXXXX'
+const birthDate = process.env.BIRTH_DATE || 'YYYY/MM/DD'
+
 describe('BCSC Combined Card', () => {
-  it('should select the BCSC card and navigate to the Serial Instructions screen', async () => {
+  it('should navigate through the Setup Steps screen and tap Step 2', async () => {
+    await SetupStepsE2EScreen.waitForDisplayed(60_000)
+    await SetupStepsE2EScreen.tapStep2()
+  })
+
+  it('should navigate through the Identity screen and tap Combined Card', async () => {
+    await IdentitySelectionE2EScreen.waitForDisplayed(60_000)
     await IdentitySelectionE2EScreen.tapCombinedCard()
+  })
+
+  it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
     await SerialInstructionsE2EScreen.waitForDisplayed(60_000)
-  })
-
-  it('should select the Manual Serial Instructions screen', async () => {
     await SerialInstructionsE2EScreen.tapEnterManually()
-    await ManualSerialE2EScreen.waitForDisplayed(60_000)
   })
 
-  it('should fill in the Serial', async () => {
-    await ManualSerialE2EScreen.enterSerial('C22014083')
-    await ManualSerialE2EScreen.dismissKeyboard()
+  it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
+    await ManualSerialE2EScreen.waitForDisplayed(60_000)
+    await ManualSerialE2EScreen.enterSerial(cardSerial)
     await ManualSerialE2EScreen.tapContinue()
   })
 
-  it('should navigate to the Enter Birthdate screen', async () => {
+  it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
     await EnterBirthdateE2EScreen.waitForDisplayed(60_000)
-    await EnterBirthdateE2EScreen.enterBirthdate('1984/09/13')
-    await EnterBirthdateE2EScreen.dismissKeyboard()
+    await EnterBirthdateE2EScreen.enterBirthdate(birthDate)
     await EnterBirthdateE2EScreen.tapDone()
-  })
-
-  it('should navigate back to the Setup Steps screen', async () => {
-    await SetupStepsE2EScreen.waitForDisplayed(60_000)
   })
 })

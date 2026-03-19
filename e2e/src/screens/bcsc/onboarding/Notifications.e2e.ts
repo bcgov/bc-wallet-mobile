@@ -4,6 +4,7 @@ const NotificationsTestIds = {
   Continue: 'com.ariesbifold:id/Continue',
   OpenSettings: 'com.ariesbifold:id/OpenSettings',
   ContinueWithoutNotifications: 'com.ariesbifold:id/ContinueWithoutNotifications',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class NotificationsE2EScreen extends BaseScreen {
@@ -21,6 +22,10 @@ class NotificationsE2EScreen extends BaseScreen {
 
   async tapContinueWithoutNotifications() {
     await this.tapByTestId(NotificationsTestIds.ContinueWithoutNotifications)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(NotificationsTestIds.Back)
   }
 }
 

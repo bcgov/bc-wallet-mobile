@@ -3,6 +3,7 @@ import { BaseScreen } from '../../BaseScreen.js'
 const TermsOfUseTestIds = {
   AcceptAndContinue: 'com.ariesbifold:id/AcceptAndContinue',
   RetryTermsOfUse: 'com.ariesbifold:id/RetryTermsOfUse',
+  Back: 'com.ariesbifold:id/Back',
 }
 
 class TermsOfUseE2EScreen extends BaseScreen {
@@ -20,6 +21,10 @@ class TermsOfUseE2EScreen extends BaseScreen {
 
   async tapRetry() {
     await this.tapByTestId(TermsOfUseTestIds.RetryTermsOfUse)
+  }
+
+  async tapBack() {
+    await this.tapByTestId(TermsOfUseTestIds.Back)
   }
 }
 
