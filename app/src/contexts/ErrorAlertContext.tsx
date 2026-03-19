@@ -61,8 +61,9 @@ interface ErrorAlertProviderProps extends PropsWithChildren {
  */
 export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlertProviderProps) => {
   const [error, setError] = useState<ErrorModalPayload | null>(null)
-  const [visible, setVisible] = useState(false)
   const [errorKey, setErrorKey] = useState(0)
+
+  // TODO (MD): Add a specific error emitter function for AppError's ie: emitAppErrorModal. Deprecate emitErrorModal
 
   /**
    * Show error via ErrorModal
@@ -95,9 +96,10 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
       message: technicalMessage,
       code: definition.statusCode,
       appEvent: definition.appEvent,
+      stack: originalError instanceof Error ? originalError.stack : undefined,
+      cause: originalError instanceof Error ? originalError.cause : undefined,
     })
     setErrorKey((prev) => prev + 1)
-    setVisible(true)
   }, [])
 
   /**
@@ -112,7 +114,6 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
    */
   const dismiss = useCallback((): void => {
     setError(null)
-    setVisible(false)
   }, [])
 
   const value: ErrorAlertContextType = useMemo(
@@ -129,7 +130,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
       {children}
       <BCSCErrorModal
         error={error}
-        visible={visible}
+        visible={Boolean(error)}
         errorKey={errorKey}
         onDismiss={dismiss}
         enableReport={enableReport}

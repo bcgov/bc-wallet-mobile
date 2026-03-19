@@ -1,11 +1,13 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
-import { useTheme } from '@bifold/core'
+import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
+
+const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
 
 export interface ErrorModalPayload {
   title: string
@@ -13,6 +15,8 @@ export interface ErrorModalPayload {
   message: string
   code: number
   appEvent: string
+  cause?: unknown
+  stack?: string
 }
 
 const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette']): ErrorInfoCardColors => ({
@@ -68,15 +72,13 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       return
     }
 
-    Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, 'Report this problem')
+    Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    appLogger.report({
-      name: 'ReportedError',
-      title: `[${error.appEvent}] ${error.title}`,
-      description: error.description,
-      message: `[${error.appEvent}] ${error.message}`,
-      code: error.code,
-    })
+    const reportError = new BifoldError(error.title, error.description, error.message, error.code)
+    reportError.cause = error.cause
+    reportError.stack = error.stack
+
+    appLogger.report(reportError)
   }, [error])
 
   const cardColors = useMemo(() => mapThemeToCardColors(ColorPalette), [ColorPalette])

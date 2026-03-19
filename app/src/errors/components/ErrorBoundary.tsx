@@ -1,3 +1,4 @@
+import { toBifoldError } from '@/bcsc-theme/utils/error-utils'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -40,26 +41,32 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     this.setState({ hasError: false, error: null })
   }
 
+  getReportError = (error: Error) => {
+    return toBifoldError(this.props.t('Error.Problem'), this.props.t('Error.ProblemDescription'), error)
+  }
+
   handleReport = (): void => {
     const { error } = this.state
     const { logger } = this.props
     if (error) {
+      const reportError = this.getReportError(error)
       logger.error('ErrorBoundary reported:', error)
+      logger.report(reportError)
     }
   }
 
   render(): React.ReactNode {
     const { hasError, error } = this.state
-    const { t } = this.props
 
     if (hasError && error) {
+      const reportError = this.getReportError(error)
       return (
         <SafeAreaView style={styles.overlay}>
           <ErrorInfoCard
-            title={error.name || t('Error.Problem')}
-            description={error.message || t('Error.NoMessage')}
-            message={error.message}
-            code={0}
+            title={reportError.title}
+            description={reportError.description}
+            message={reportError.message}
+            code={reportError.code}
             onDismiss={this.handleDismiss}
             onReport={this.handleReport}
             enableReport
