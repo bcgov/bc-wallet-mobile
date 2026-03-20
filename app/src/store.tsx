@@ -765,13 +765,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION: {
-      const hasDismissed = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, hasDismissedDeviceAuthInfo: hasDismissed }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
     case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
       const dismissedAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }

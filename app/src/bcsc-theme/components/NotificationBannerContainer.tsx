@@ -63,7 +63,6 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
         animationType={devicesModalShouldAnimate.current ? 'slide' : 'none'}
       >
         <ReviewDevices
-          bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
           handleDelete={handleDeleteDeviceCountMessage}
