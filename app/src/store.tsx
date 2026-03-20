@@ -8,14 +8,12 @@ import {
 } from '@bifold/core'
 import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
-import { getInstallerPackageNameSync, getVersion } from 'react-native-device-info'
+import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { ANALYTICS_APP_ID_PREFIX } from './constants'
-
-const TESTFLIGHT_PACKAGE_NAME = 'TestFlight'
 
 export interface IASEnvironment {
   name: string
@@ -295,14 +293,13 @@ const getAnalyticsAppId = (domain: string): string => {
 }
 
 export const getInitialEnvironment = (): IASEnvironment => {
-  if (__DEV__ && Config.BUILD_TARGET === Mode.BCSC) {
-    // Local development builds for BCSC use SIT environment
-    return IASEnvironment.SIT
+  const envName = Config.DEFAULT_ENVIRONMENT?.toUpperCase()
+  if (envName && envName in IASEnvironment) {
+    return IASEnvironment[envName as keyof typeof IASEnvironment]
   }
 
-  // FIXME: Remove this once #3253 or #3259 issues are resolved
-  if (Config.BUILD_TARGET === Mode.BCSC && getInstallerPackageNameSync() === TESTFLIGHT_PACKAGE_NAME) {
-    // TestFlight builds for BCSC use SIT environment (temporarily allows testing V3 migration)
+  // Fallback: local dev builds for BCSC use SIT
+  if (__DEV__ && Config.BUILD_TARGET === Mode.BCSC) {
     return IASEnvironment.SIT
   }
 
