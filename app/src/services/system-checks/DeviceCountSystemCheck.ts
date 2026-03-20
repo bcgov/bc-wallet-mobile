@@ -18,9 +18,9 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 export class DeviceCountSystemCheck implements SystemCheckStrategy {
   private readonly getIdToken: () => Promise<IdToken>
   private readonly utils: SystemCheckUtils
-  private readonly dismissedAt: string | undefined
+  private readonly dismissedAt: number | undefined
 
-  constructor(getIdToken: () => Promise<IdToken>, utils: SystemCheckUtils, dismissedAt?: string) {
+  constructor(getIdToken: () => Promise<IdToken>, utils: SystemCheckUtils, dismissedAt?: number) {
     this.getIdToken = getIdToken
     this.utils = utils
     this.dismissedAt = dismissedAt
@@ -36,7 +36,7 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       ? DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV
       : DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD
     if (this.dismissedAt) {
-      if (Date.now() - new Date(this.dismissedAt).getTime() < deviceCountBannerCooldown) {
+      if (Date.now() - this.dismissedAt < deviceCountBannerCooldown) {
         return true
       }
     }

@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
+import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
 import { AppBanner, BCSCBanner } from './AppBanner'
@@ -50,7 +51,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
     dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
-    dispatch({ type: BCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER, payload: [new Date().toISOString()] })
+    setMaxDevicesBannerLastDisplayedDate(new Date().getTime())
     handleCloseDevicesModal({ shouldAnimate: true })
   }, [dispatch, handleCloseDevicesModal])
 
