@@ -10,6 +10,7 @@ import { MockLogger } from '@bifold/core'
 
 const devGlobal = global as typeof global & { __DEV__: boolean }
 
+jest.mock('react-native-bcsc-core')
 describe('System Checks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
@@ -168,7 +169,7 @@ describe('System Checks', () => {
             logger: {} as any,
           }
           const getIdToken = jest.fn()
-          const dismissedAt = new Date(Date.now() - 29 * 60 * 1000).toISOString() // 29 minute ago
+          const dismissedAt = new Date(Date.now() - 29 * 60 * 1000).getTime() // 29 minute ago
 
           const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils, dismissedAt)
           const result = await deviceCountCheck.runCheck()
@@ -192,7 +193,7 @@ describe('System Checks', () => {
             bcsc_devices_count: 6,
             bcsc_max_devices: 5,
           })
-          const dismissedAt = new Date(Date.now() - 31 * 60 * 1000).toISOString() // 31 minutes ago
+          const dismissedAt = new Date(Date.now() - 31 * 60 * 1000).getTime() // 31 minutes ago
 
           const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils, dismissedAt)
           const result = await deviceCountCheck.runCheck()
