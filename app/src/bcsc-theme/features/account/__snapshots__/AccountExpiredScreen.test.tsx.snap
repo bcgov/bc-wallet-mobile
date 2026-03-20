@@ -240,7 +240,7 @@ exports[`AccountExpired renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/CardButton-BCSC.AccountExpired.RenewButton"
+          testID="com.ariesbifold:id/Renew"
         >
           <View
             style={
@@ -321,7 +321,7 @@ exports[`AccountExpired renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/CardButton-BCSC.AccountExpired.RemoveButton"
+          testID="com.ariesbifold:id/RemoveAccount"
         >
           <View
             style={

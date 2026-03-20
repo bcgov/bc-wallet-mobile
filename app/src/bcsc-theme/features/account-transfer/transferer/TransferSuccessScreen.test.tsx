@@ -34,7 +34,7 @@ describe('TransferSuccess', () => {
         </BasicAppContext>
       )
 
-      const homeButton = getByTestId(testIdWithKey('BCSC.TransferSuccess.ButtonText'))
+      const homeButton = getByTestId(testIdWithKey('TransferSuccessButton'))
       act(() => {
         fireEvent.press(homeButton)
       })
@@ -49,7 +49,7 @@ describe('TransferSuccess', () => {
         </BasicAppContext>
       )
 
-      const removeAccountButton = getByTestId(testIdWithKey('BCSC.Account.RemoveAccount'))
+      const removeAccountButton = getByTestId(testIdWithKey('RemoveAccountButton'))
       act(() => {
         fireEvent.press(removeAccountButton)
       })

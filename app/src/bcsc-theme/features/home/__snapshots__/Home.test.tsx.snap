@@ -126,7 +126,7 @@ exports[`Home renders full name in header when both names are present 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+            testID="com.ariesbifold:id/WhereToUse"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -206,7 +206,7 @@ exports[`Home renders full name in header when both names are present 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+            testID="com.ariesbifold:id/LogInFromComputer"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -460,7 +460,7 @@ exports[`Home renders only family_name in header when given_name is empty string
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+            testID="com.ariesbifold:id/WhereToUse"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -540,7 +540,7 @@ exports[`Home renders only family_name in header when given_name is empty string
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+            testID="com.ariesbifold:id/LogInFromComputer"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -794,7 +794,7 @@ exports[`Home renders only family_name in header when given_name is undefined (m
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+            testID="com.ariesbifold:id/WhereToUse"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -874,7 +874,7 @@ exports[`Home renders only family_name in header when given_name is undefined (m
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+            testID="com.ariesbifold:id/LogInFromComputer"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1128,7 +1128,7 @@ exports[`Home renders only given_name in header when family_name is undefined 1`
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.WhereToUseTitle"
+            testID="com.ariesbifold:id/WhereToUse"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1208,7 +1208,7 @@ exports[`Home renders only given_name in header when family_name is undefined 1`
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Home.LogInFromComputerTitle"
+            testID="com.ariesbifold:id/LogInFromComputer"
           >
             <Text
               maxFontSizeMultiplier={2}

@@ -1031,6 +1031,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/PINInput1"
                         textContentType="password"
                         value=""
                       />
@@ -1071,7 +1072,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/PINInput1VisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}
@@ -1162,6 +1163,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/PINInput2"
                         textContentType="password"
                         value=""
                       />
@@ -1202,7 +1204,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/PINInput2VisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}

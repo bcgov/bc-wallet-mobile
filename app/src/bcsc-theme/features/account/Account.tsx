@@ -9,7 +9,7 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
-import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
@@ -126,7 +126,7 @@ const Account: React.FC = () => {
 
   return (
     <TabScreenWrapper>
-      <View style={styles.container}>
+      <View style={styles.container} testID={testIdWithKey('AccountScreen')}>
         <View style={styles.photoAndNameContainer}>
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
           <AccountPhoto photoUri={account.picture} />
@@ -155,21 +155,25 @@ const Account: React.FC = () => {
                 ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idToken.bcsc_devices_count })
                 : t('BCSC.Account.AccountInfo.MyDevices')
             }
+            testID={testIdWithKey('MyDevices')}
           />
           <SectionButton
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRInformation)
             }}
             title={t('BCSC.Account.TransferAccount')}
+            testID={testIdWithKey('TransferAccount')}
           />
           <SectionButton
             onPress={handleAllAccountDetailsPress}
             title={t('BCSC.Account.AccountDetails')}
             description={t('BCSC.Account.AccountDetailsDescription')}
+            testID={testIdWithKey('AllAccountDetails')}
           />
           <SectionButton
             onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
             title={t('BCSC.Account.RemoveAccount')}
+            testID={testIdWithKey('RemoveAccount')}
           />
         </View>
       </View>

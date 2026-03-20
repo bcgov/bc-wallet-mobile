@@ -1,8 +1,7 @@
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
@@ -10,6 +9,7 @@ import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
+  getHideDeviceAuthPrepFlag,
   isAccountLocked,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
@@ -25,7 +25,6 @@ import useSecureActions from './useSecureActions'
  * @returns An object containing authentication actions (currently only `unlockApp`)
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
-  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
   const { handleSuccessfulAuth } = useSecureActions()
@@ -102,7 +101,17 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       }
 
       // Show auth disclaimer screen until the user has dismissed it
-      if (!store.bcsc.hasDismissedDeviceAuthInfo) {
+      let hideDeviceAuthPrep = false
+      try {
+        hideDeviceAuthPrep = (await getHideDeviceAuthPrepFlag()) === true
+      } catch (error) {
+        // non-fatal error, just log it - the app can still function without this flag being set,
+        // it just won't hide the prep screen on next auth
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        logger.error(`Failed to get hide device auth prep flag: ${errorMsg}`)
+      }
+
+      if (!hideDeviceAuthPrep) {
         navigation.navigate(BCSCScreens.DeviceAuthInfo)
         return
       }
@@ -112,7 +121,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
     }
-  }, [logger, navigation, performDeviceAuth, store.bcsc.hasDismissedDeviceAuthInfo])
+  }, [logger, navigation, performDeviceAuth])
 
   return useMemo(() => ({ unlockApp, performDeviceAuth }), [unlockApp, performDeviceAuth])
 }

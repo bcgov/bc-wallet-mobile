@@ -6217,7 +6217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-firebase/app@npm:~23.8.3":
+"@react-native-firebase/app@npm:23.8.3":
   version: 23.8.3
   resolution: "@react-native-firebase/app@npm:23.8.3"
   dependencies:
@@ -6233,7 +6233,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-firebase/messaging@npm:~23.8.3":
+"@react-native-firebase/messaging@npm:23.8.3":
   version: 23.8.3
   resolution: "@react-native-firebase/messaging@npm:23.8.3"
   peerDependencies:
@@ -9348,8 +9348,8 @@ __metadata:
     "@react-native-community/cli-platform-android": "npm:20.0.0"
     "@react-native-community/cli-platform-ios": "npm:20.0.0"
     "@react-native-community/netinfo": "npm:~11.4.1"
-    "@react-native-firebase/app": "npm:~23.8.3"
-    "@react-native-firebase/messaging": "npm:~23.8.3"
+    "@react-native-firebase/app": "npm:23.8.3"
+    "@react-native-firebase/messaging": "npm:23.8.3"
     "@react-native/babel-preset": "npm:~0.81.5"
     "@react-native/eslint-config": "npm:~0.81.5"
     "@react-native/eslint-plugin": "npm:~0.81.5"

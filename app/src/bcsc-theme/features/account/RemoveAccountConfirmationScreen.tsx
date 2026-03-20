@@ -1,7 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -54,6 +54,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           accessibilityLabel={t('BCSC.Account.RemoveAccount')}
           buttonType={ButtonType.Critical}
           title={t('BCSC.Account.RemoveAccount')}
+          testID={testIdWithKey('RemoveAccount')}
           onPress={async () => {
             const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
             try {
@@ -73,6 +74,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
         />
         <Button
           accessibilityLabel={t('Global.Cancel')}
+          testID={testIdWithKey('Cancel')}
           buttonType={ButtonType.Secondary}
           title={t('Global.Cancel')}
           onPress={() => navigation.goBack()}

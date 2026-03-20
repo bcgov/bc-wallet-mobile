@@ -6,9 +6,10 @@ import { StyleSheet, TextInput, TextInputProps, View } from 'react-native'
 
 interface Props extends TextInputProps {
   handleChangeCode: (text: string) => void
+  testID?: string
 }
 
-const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputProps }) => {
+const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...textInputProps }) => {
   const [focused, setFocused] = useState(false)
   const { Inputs, maxFontSizeMultiplier, Spacing } = useTheme()
   const [value, setValue] = useState('')
@@ -55,6 +56,7 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputP
         onBlur={() => setFocused(false)}
         value={value}
         onChangeText={onChangeText}
+        testID={testID}
         {...textInputProps}
       />
     </View>
