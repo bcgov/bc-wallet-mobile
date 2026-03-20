@@ -209,50 +209,34 @@ describe('System Checks', () => {
 
   describe('ServerStatusSystemCheck', () => {
     describe('runCheck', () => {
-      it('should return true when server status ok', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
-        const serverStatus: any = { status: 'ok' }
+      it('should return true when server status ok', () => {
+        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils)
 
-        const deviceCountCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
-
-        const result = deviceCountCheck.runCheck()
-
-        expect(result).toBe(true)
+        expect(check.runCheck()).toBe(true)
       })
 
-      it('should return false when server status not ok', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
-        const serverStatus: any = { status: 'unknown' }
+      it('should return false when server status not ok', () => {
+        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const check = new ServerStatusSystemCheck({ status: 'unknown' } as any, mockUtils)
 
-        const deviceCountCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
-
-        const result = deviceCountCheck.runCheck()
-
-        expect(result).toBe(false)
+        expect(check.runCheck()).toBe(false)
       })
     })
 
     describe('onFail', () => {
-      it('should dispatch an error banner message', async () => {
+      it('should dispatch an info banner with translated description when no statusMessage', () => {
         const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn().mockReturnValue('Server unavailable') as any,
           logger: {} as any,
         }
-        const serverStatus: any = { status: 'ok', contactLink: 'https://status.com' }
+        const check = new ServerStatusSystemCheck(
+          { status: 'down', contactLink: 'https://status.com' } as any,
+          mockUtils
+        )
 
-        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
-        serverStatusCheck.serverStatus.contactLink = 'https://status.com'
-
-        serverStatusCheck.onFail()
+        check.onFail()
 
         expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
@@ -263,31 +247,25 @@ describe('System Checks', () => {
               title: undefined,
               description: 'Server unavailable',
               type: 'info',
-              variant: 'summary',
               dismissible: true,
-              metadata: {
-                contactLink: 'https://status.com',
-              },
+              metadata: { contactLink: 'https://status.com' },
             }),
           ],
         })
       })
 
-      it('should use server status message if available', async () => {
+      it('should use statusMessage as description when available', () => {
         const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn().mockReturnValue('Server unavailable') as any,
           logger: {} as any,
         }
+        const check = new ServerStatusSystemCheck(
+          { status: 'down', contactLink: 'https://status.com', statusMessage: 'Custom server down message' } as any,
+          mockUtils
+        )
 
-        const serverStatus: any = { status: 'ok' }
-
-        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
-
-        serverStatusCheck.serverStatus.contactLink = 'https://status.com'
-        serverStatusCheck.serverStatus.statusMessage = 'Custom server down message'
-
-        serverStatusCheck.onFail()
+        check.onFail()
 
         expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
@@ -295,14 +273,9 @@ describe('System Checks', () => {
           payload: [
             expect.objectContaining({
               id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-              title: undefined,
               description: 'Custom server down message',
               type: 'info',
-              variant: 'summary',
-              dismissible: true,
-              metadata: {
-                contactLink: 'https://status.com',
-              },
+              metadata: { contactLink: 'https://status.com' },
             }),
           ],
         })
@@ -310,40 +283,31 @@ describe('System Checks', () => {
     })
 
     describe('onSuccess', () => {
-      it('should dispatch action to remove the banner message', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+      it('should remove both banner messages when no statusMessage', () => {
+        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils)
 
-        const serverStatus: any = { status: 'ok' }
-
-        const serverStatusCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
-
-        serverStatusCheck.onSuccess()
+        check.onSuccess()
 
         expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
+          payload: [BCSCBanner.IAS_SERVER_NOTIFICATION],
+        })
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE],
         })
       })
 
-      it('should dispatch info banner if server status message exists', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+      it('should dispatch info banner if statusMessage exists', () => {
+        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const check = new ServerStatusSystemCheck(
+          { status: 'ok', contactLink: 'https://status.com', statusMessage: 'Server maintenance scheduled' } as any,
+          mockUtils
+        )
 
-        const serverStatus: any = { status: 'ok', contactLink: 'https://status.com' }
-
-        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
-
-        serverStatusCheck.serverStatus.statusMessage = 'Server maintenance scheduled'
-
-        serverStatusCheck.onSuccess()
+        check.onSuccess()
 
         expect(mockUtils.dispatch).toHaveBeenCalledTimes(3)
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
@@ -351,14 +315,10 @@ describe('System Checks', () => {
           payload: [
             expect.objectContaining({
               id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-              title: undefined,
               description: 'Server maintenance scheduled',
               type: 'info',
-              variant: 'summary',
               dismissible: true,
-              metadata: {
-                contactLink: 'https://status.com',
-              },
+              metadata: { contactLink: 'https://status.com' },
             }),
           ],
         })

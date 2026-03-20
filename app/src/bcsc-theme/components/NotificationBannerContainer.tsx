@@ -1,9 +1,10 @@
 import { BCDispatchAction, BCState } from '@/store'
+import { openLink } from '@/utils/links'
 import { SafeAreaModal, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
-import { Linking, View } from 'react-native'
+import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
@@ -42,7 +43,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
       typeof banner.metadata?.contactLink === 'string'
     ) {
       try {
-        await Linking.openURL(banner.metadata.contactLink)
+        await openLink(banner.metadata.contactLink)
       } catch (error) {
         logger.error('Failed to open URL from banner:', error as Error)
       }

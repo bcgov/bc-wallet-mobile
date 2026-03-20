@@ -5,10 +5,10 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks the IAS server status and dispatches banner messages based on availability.
- * Will show error banner if server is unavailable, or info banner if there is a status message.
+ * Will show info banner if server is unavailable or if there is a status message from the server.
  *
  * Note:
- *   On failure, it dispatches a warning banner message.
+ *   On failure, it dispatches a info banner message.
  *   On success, it removes the banner if it exists.
  *
  * @class ServerStatusStartupCheck
@@ -33,7 +33,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Handles the failure of the server status check by dispatching an error banner message.
+   * Handles the failure of the server status check by dispatching an info banner message.
    *
    * @returns {*} {void}
    */
@@ -43,6 +43,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
+          title: undefined, // Note: Status messages can be verbose, using description for better formatting
           description:
             this.serverStatus.statusMessage ??
             this.utils.translation('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
@@ -58,7 +59,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Handles the success of the server status check by removing the error banner message if it exists.
+   * Handles the success of the server status check by removing the info banner message if it exists.
    *
    * @returns {*} {void}
    */
@@ -76,7 +77,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-          title: undefined, // Note: Staus messages can be verbose, using description for better formatting
+          title: undefined, // Note: Status messages can be verbose, using description for better formatting
           description: this.serverStatus.statusMessage,
           type: 'info',
           variant: 'summary',
