@@ -1956,7 +1956,7 @@ class BcscCore: NSObject {
 
       // Empty dictionary = no authorization request (v3 writes empty dict after removing a request)
       // return nil, don't throw an error since this is an expected scenario
-      if let nsDict = rootObject as? NSDictionary, nsDict.isEmpty {
+      if let nsDict = rootObject as? NSDictionary, nsDict.count == 0 {
         logger.log("getAuthorizationRequest: Empty dictionary - no authorization request")
         resolve(nil)
         return

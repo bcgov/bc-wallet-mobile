@@ -3060,7 +3060,7 @@ class BcscCoreModule(
         try {
             val globalPrefs =
                 reactApplicationContext.getSharedPreferences(
-                    // this is hardcoded intentionally as it is also harcoded to this value in v3 regardless of
+                    // this is hardcoded intentionally as it is also hardcoded to this value in v3 regardless of
                     // the actual package name, so we need to read from the same location for migration to work
                     "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
                     Context.MODE_PRIVATE,

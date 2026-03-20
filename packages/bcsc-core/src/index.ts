@@ -825,7 +825,7 @@ export const getHideDeviceAuthPrepFlag = async (): Promise<boolean | undefined> 
  * Platform-aware: on iOS writes to account flags (account_flag file),
  * on Android writes to global SharedPreferences (no account required).
  */
-export const setHideDeviceAuthPrepFlag = async (value: boolean): Promise<boolean | undefined> => {
+export const setHideDeviceAuthPrepFlag = async (value: boolean): Promise<boolean> => {
   if (Platform.OS === 'ios') {
     return BcscCore.setAccountFlags({ notShowDeviceAuthenticationPrepAgain: value });
   } else {
