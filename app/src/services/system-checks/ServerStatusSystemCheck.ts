@@ -43,7 +43,6 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title: undefined, // Note: Staus messages can be verbose, using description for better formatting
           description:
             this.serverStatus.statusMessage ??
             this.utils.translation('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
