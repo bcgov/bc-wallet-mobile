@@ -39,7 +39,6 @@ const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette
 
 export interface BCSCErrorModalProps {
   error: ErrorModalPayload | null
-  visible: boolean
   errorKey: number
   onDismiss: () => void
   enableReport?: boolean
@@ -52,13 +51,7 @@ export interface BCSCErrorModalProps {
  * Rendered by ErrorAlertProvider and driven by its state — no event
  * emitters or listeners involved.
  */
-export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
-  error,
-  visible,
-  errorKey,
-  onDismiss,
-  enableReport = true,
-}) => {
+export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ error, errorKey, onDismiss, enableReport = true }) => {
   const { ColorPalette } = useTheme()
 
   /**
@@ -96,12 +89,12 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     [ColorPalette]
   )
 
-  if (!visible || !error) {
+  if (!error) {
     return null
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal visible={Boolean(error)} transparent animationType="fade" onRequestClose={onDismiss}>
       <SafeAreaView style={overlayStyle.overlay}>
         <ErrorInfoCard
           key={errorKey}

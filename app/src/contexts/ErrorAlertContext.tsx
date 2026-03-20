@@ -127,13 +127,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   return (
     <ErrorAlertContext.Provider value={value}>
       {children}
-      <BCSCErrorModal
-        error={error}
-        visible={Boolean(error)}
-        errorKey={errorKey}
-        onDismiss={dismiss}
-        enableReport={enableReport}
-      />
+      <BCSCErrorModal error={error} errorKey={errorKey} onDismiss={dismiss} enableReport={enableReport} />
     </ErrorAlertContext.Provider>
   )
 }
