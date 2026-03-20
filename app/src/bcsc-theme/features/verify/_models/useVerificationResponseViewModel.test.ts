@@ -1,10 +1,12 @@
 import useVerificationResponseViewModel from '@/bcsc-theme/features/verify/_models/useVerificationResponseViewModel'
 import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
+import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
+const mockGetCachedIdTokenMetadata = jest.fn().mockResolvedValue(undefined)
+
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
   return {
@@ -13,10 +15,6 @@ jest.mock('@bifold/core', () => {
     useServices: jest.fn(),
   }
 })
-
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({}),
-}))
 
 jest.mock('react-native-bcsc-core', () => ({
   isBcscNativeError: jest.fn().mockReturnValue(false),
@@ -62,13 +60,22 @@ describe('useVerificationResponseViewModel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockUpdateVerified.mockClear()
-    mockUpdateUserMetadata.mockClear()
+    jest.restoreAllMocks()
+
+    // Reset mock implementations
+    mockUpdateVerified.mockResolvedValue(undefined)
+    mockUpdateUserMetadata.mockResolvedValue(undefined)
+    mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
+    mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore as BCState, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+
     jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue(mockRegistrationService as any)
+    jest.spyOn(useTokenServiceModule, 'useTokenService').mockReturnValue({
+      getCachedIdTokenMetadata: mockGetCachedIdTokenMetadata,
+    } as any)
   })
 
   describe('Initial state', () => {
@@ -90,10 +97,10 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      // Should have called all the setup operations in sequence
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
+      expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
+      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {
@@ -142,7 +149,7 @@ describe('useVerificationResponseViewModel', () => {
       )
     })
 
-    it('should handle missing refresh token gracefully', async () => {
+    it('should still perform token refresh and mark verified even when registration update is skipped', async () => {
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -151,10 +158,10 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      // Should still complete other operations even without refresh token
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalled()
+      expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
+      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
 
     it('should mark account as verified', async () => {
@@ -251,6 +258,7 @@ describe('useVerificationResponseViewModel', () => {
       mockUpdateVerified.mockResolvedValue(undefined)
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+      mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -258,17 +266,34 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
 
-      // Verify all operations were called in order
+      // Verify all operations were called in order:
+      // updateUserMetadata → updateRegistration → token refresh → updateVerified
       const calls = [
-        mockUpdateVerified.mock.invocationCallOrder[0],
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
         mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
+        mockGetCachedIdTokenMetadata.mock.invocationCallOrder[0],
+        mockUpdateVerified.mock.invocationCallOrder[0],
       ]
 
-      // Verify order is preserved (each call order should be increasing)
       for (let i = 1; i < calls.length; i++) {
         expect(calls[i]).toBeGreaterThan(calls[i - 1])
       }
+    })
+
+    it('should not call updateVerified when token refresh fails', async () => {
+      mockUpdateUserMetadata.mockResolvedValue(undefined)
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+      mockGetCachedIdTokenMetadata.mockRejectedValue(new Error('Token refresh failed'))
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to clean up verification process'))
+      expect(mockUpdateVerified).not.toHaveBeenCalled()
+      expect(result.current.isSettingUpAccount).toBe(false)
     })
 
     it('should handle case where device code is missing', async () => {
@@ -293,61 +318,9 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       // Should still proceed with other operations even without device code
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-    })
-
-    it('should handle case where registration access token is missing', async () => {
-      const storeWithoutToken: any = {
-        bcscSecure: {
-          deviceCode: 'test-device-code',
-          userCode: 'test-user-code',
-          registrationAccessToken: null,
-        },
-        bcsc: {
-          selectedNickname: 'TestNickname',
-        },
-      }
-
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutToken as BCState, mockDispatch])
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update registration: missing registrationAccessToken')
-      )
-    })
-
-    it('should handle case where selected nickname is missing', async () => {
-      const storeWithoutNickname: any = {
-        bcscSecure: {
-          deviceCode: 'test-device-code',
-          userCode: 'test-user-code',
-          registrationAccessToken: 'test-registration-token',
-        },
-        bcsc: {
-          selectedNickname: null,
-        },
-      }
-
-      const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutNickname as BCState, mockDispatch])
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to update registration: missing selectedNickname')
-      )
-      expect(mockRegistrationService.updateRegistration).not.toHaveBeenCalled()
+      expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
+      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
   })
 })

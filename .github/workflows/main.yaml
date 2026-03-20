@@ -556,6 +556,7 @@ jobs:
           google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
           platform: ios
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
+          default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
 
       - name: Update APS environment
         run: |
@@ -831,6 +832,7 @@ jobs:
           google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
           platform: android
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
+          default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access

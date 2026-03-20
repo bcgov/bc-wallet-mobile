@@ -1,14 +1,19 @@
 import { ConfirmDeviceAuthInfoScreen } from '@/bcsc-theme/features/auth/ConfirmDeviceAuthInfoScreen'
-import { BCDispatchAction, initialState } from '@/store'
+import { initialState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { setHideDeviceAuthPrepFlag } from 'react-native-bcsc-core'
 
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
   useStore: jest.fn(),
+}))
+
+jest.mock('react-native-bcsc-core', () => ({
+  setHideDeviceAuthPrepFlag: jest.fn().mockResolvedValue(true),
 }))
 
 const mockPerformDeviceAuth = jest.fn()
@@ -20,13 +25,11 @@ jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
 
 describe('ConfirmDeviceAuthInfoScreen', () => {
   let mockNavigation: any
-  let mockDispatch: jest.Mock
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
-    mockDispatch = jest.fn()
-    jest.mocked(Bifold.useStore).mockReturnValue([initialState as any, mockDispatch])
+    jest.mocked(Bifold.useStore).mockReturnValue([initialState as any, jest.fn()])
     jest.useFakeTimers()
   })
 
@@ -93,7 +96,7 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
     expect(mockPerformDeviceAuth).toHaveBeenCalledTimes(1)
   })
 
-  it('dispatches HIDE_DEVICE_AUTH_CONFIRMATION when checkbox is checked and Continue is pressed', () => {
+  it('calls setHideDeviceAuthPrepFlag when checkbox is checked and Continue is pressed', async () => {
     const tree = render(
       <BasicAppContext>
         <ConfirmDeviceAuthInfoScreen navigation={mockNavigation as never} />
@@ -103,13 +106,10 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
     fireEvent.press(tree.getByTestId('com.ariesbifold:id/HideConfirmationCheckbox'))
     fireEvent.press(tree.getByTestId('com.ariesbifold:id/Continue'))
 
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: BCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION,
-      payload: [true],
-    })
+    expect(setHideDeviceAuthPrepFlag).toHaveBeenCalledWith(true)
   })
 
-  it('does not dispatch when checkbox is unchecked and Continue is pressed', () => {
+  it('does not call setHideDeviceAuthPrepFlag when checkbox is unchecked and Continue is pressed', () => {
     const tree = render(
       <BasicAppContext>
         <ConfirmDeviceAuthInfoScreen navigation={mockNavigation as never} />
@@ -118,6 +118,6 @@ describe('ConfirmDeviceAuthInfoScreen', () => {
 
     fireEvent.press(tree.getByTestId('com.ariesbifold:id/Continue'))
 
-    expect(mockDispatch).not.toHaveBeenCalled()
+    expect(setHideDeviceAuthPrepFlag).not.toHaveBeenCalled()
   })
 })

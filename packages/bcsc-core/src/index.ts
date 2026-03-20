@@ -791,7 +791,47 @@ export interface AccountFlags {
   temporaryEmailId?: string;
   /** Whether user has submitted a verification video */
   userSubmittedVerificationVideo?: boolean;
+  /** Whether user has dismissed the device auth confirmation screen ("Do not show me this again") */
+  notShowDeviceAuthenticationPrepAgain?: boolean;
 }
+
+/**
+ * Android-only global flags that are not tied to any account.
+ * On Android these are stored in global SharedPreferences (v3 compatible).
+ */
+interface AndroidGlobalFlags {
+  notShowDeviceAuthenticationPrepAgain?: boolean;
+}
+
+/**
+ * Returns whether the user has dismissed the device auth preparation screen.
+ *
+ * Platform-aware: on iOS reads from account flags (account_flag file),
+ * on Android reads from global SharedPreferences (no account required).
+ */
+export const getHideDeviceAuthPrepFlag = async (): Promise<boolean | undefined> => {
+  if (Platform.OS === 'ios') {
+    const { notShowDeviceAuthenticationPrepAgain } = (await BcscCore.getAccountFlags()) as AccountFlags;
+    return notShowDeviceAuthenticationPrepAgain;
+  } else {
+    const { notShowDeviceAuthenticationPrepAgain } = (await BcscCore.getAndroidGlobalFlags()) as AndroidGlobalFlags;
+    return notShowDeviceAuthenticationPrepAgain;
+  }
+};
+
+/**
+ * Sets the "do not show device auth prep screen again" flag.
+ *
+ * Platform-aware: on iOS writes to account flags (account_flag file),
+ * on Android writes to global SharedPreferences (no account required).
+ */
+export const setHideDeviceAuthPrepFlag = async (value: boolean): Promise<boolean> => {
+  if (Platform.OS === 'ios') {
+    return BcscCore.setAccountFlags({ notShowDeviceAuthenticationPrepAgain: value });
+  } else {
+    return BcscCore.setAndroidGlobalFlags({ notShowDeviceAuthenticationPrepAgain: value });
+  }
+};
 
 /**
  * Gets account flags from native storage.

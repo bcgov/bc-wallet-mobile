@@ -170,6 +170,14 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun deleteAuthorizationRequest(promise: Promise)
 
+    // Android Global Flags Storage Methods
+    abstract fun getAndroidGlobalFlags(promise: Promise)
+
+    abstract fun setAndroidGlobalFlags(
+        flags: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
     // Account Flags Storage Methods
     abstract fun getAccountFlags(promise: Promise)
 
