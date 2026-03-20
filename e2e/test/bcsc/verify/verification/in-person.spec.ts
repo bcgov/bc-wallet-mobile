@@ -10,7 +10,7 @@ const { SetupSteps, VerificationMethodSelection, VerifyInPerson, VerificationSuc
 
 describe('In-Person Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
-    await SetupStepsE2EScreen.waitForDisplayed(60_000, SetupSteps.Step5)
+    await SetupStepsE2EScreen.waitForDisplayed(10_000, SetupSteps.Step5)
     await SetupStepsE2EScreen.tapByTestId(SetupSteps.Step5)
   })
 

@@ -76,7 +76,7 @@ async function swipeIosFromTo(
 export async function swipe(
   from: { x: number; y: number },
   to: { x: number; y: number },
-  durationMs = 800
+  durationMs = 200
 ): Promise<void> {
   if (driver.isIOS) {
     await swipeIosFromTo(from, to, durationMs)
@@ -85,7 +85,7 @@ export async function swipe(
   }
 }
 
-export async function swipeUp(durationMs = 800): Promise<void> {
+export async function swipeUp(durationMs = 200): Promise<void> {
   if (driver.isIOS) {
     await swipeIosDirection('up', durationMs)
   } else {
@@ -93,7 +93,7 @@ export async function swipeUp(durationMs = 800): Promise<void> {
   }
 }
 
-export async function swipeDown(durationMs = 800): Promise<void> {
+export async function swipeDown(durationMs = 200): Promise<void> {
   if (driver.isIOS) {
     await swipeIosDirection('down', durationMs)
   } else {
@@ -101,7 +101,7 @@ export async function swipeDown(durationMs = 800): Promise<void> {
   }
 }
 
-export async function swipeLeft(durationMs = 800): Promise<void> {
+export async function swipeLeft(durationMs = 200): Promise<void> {
   if (driver.isIOS) {
     await swipeIosDirection('left', durationMs)
   } else {
@@ -109,7 +109,7 @@ export async function swipeLeft(durationMs = 800): Promise<void> {
   }
 }
 
-export async function swipeRight(durationMs = 800): Promise<void> {
+export async function swipeRight(durationMs = 200): Promise<void> {
   if (driver.isIOS) {
     await swipeIosDirection('right', durationMs)
   } else {

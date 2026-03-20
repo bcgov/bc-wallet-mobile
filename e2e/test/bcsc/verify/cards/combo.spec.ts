@@ -24,19 +24,22 @@ describe('BCSC Combined Card', () => {
   })
 
   it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
-    await SerialInstructionsE2EScreen.waitForDisplayed(60_000, SerialInstructions.EnterManually)
+    await SerialInstructionsE2EScreen.waitForDisplayed(10_000, SerialInstructions.EnterManually)
     await SerialInstructionsE2EScreen.tapByTestId(SerialInstructions.EnterManually)
   })
 
   it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
     await ManualSerialE2EScreen.waitForDisplayed(60_000, ManualSerial.SerialInput)
     await ManualSerialE2EScreen.enterText(ManualSerial.SerialInput, cardSerial)
+    await ManualSerialE2EScreen.dismissKeyboard()
     await ManualSerialE2EScreen.tapByTestId(ManualSerial.Continue)
   })
 
   it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
-    await EnterBirthdateE2EScreen.waitForDisplayed(60_000, EnterBirthdate.BirthdateInput)
-    await EnterBirthdateE2EScreen.enterText(EnterBirthdate.BirthdateInput, birthDate)
+    await EnterBirthdateE2EScreen.waitForDisplayed(10_000, EnterBirthdate.Done)
+    await EnterBirthdateE2EScreen.tapByTestId(EnterBirthdate.BirthdateInputPressable)
+    await EnterBirthdateE2EScreen.enterText(EnterBirthdate.BirthdateInputPressable, birthDate)
+    await EnterBirthdateE2EScreen.dismissKeyboard()
     await EnterBirthdateE2EScreen.tapByTestId(EnterBirthdate.Done)
   })
 })

@@ -85,6 +85,7 @@ export const TestIDs = {
   },
   EnterBirthdate: {
     BirthdateInput: 'com.ariesbifold:id/birthDate-input',
+    BirthdateInputPressable: 'com.ariesbifold:id/birthDate-pressable',
     Done: 'com.ariesbifold:id/Done',
   },
   VerificationCardError: {

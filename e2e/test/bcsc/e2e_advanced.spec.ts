@@ -9,5 +9,4 @@
  * in order.
  */
 import './onboarding/advanced.spec.js'
-// import './verify/verify.spec.js'
-// import './main/main.spec.js'
+import './verify/advanced.spec.js'

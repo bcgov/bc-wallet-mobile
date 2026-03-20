@@ -119,7 +119,14 @@ export class BaseScreen {
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     const el = await this.findByTestId(testId)
-    await el.waitForDisplayed({ timeout: 15_000 })
+    const textFieldTimeout = 15_000
+    try {
+      await el.waitForDisplayed({ timeout: textFieldTimeout })
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${textFieldTimeout}ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 4, 'both')
+      await el.waitForDisplayed({ timeout: textFieldTimeout })
+    }
 
     if (options?.tapFirst) {
       await el.click()
