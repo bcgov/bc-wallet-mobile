@@ -77,8 +77,7 @@ describe('Error Utils', () => {
     it('should convert an AppError into a BifoldError with its statusCode and fullMessage', () => {
       const cause = new Error('technical details')
       const appError = new AppError(
-        'App Title',
-        'App Description',
+        'App Error',
         {
           category: ErrorCategory.GENERAL,
           appEvent: AppEventCode.GENERAL,
@@ -90,9 +89,7 @@ describe('Error Utils', () => {
       const result = toBifoldError('Display Title', 'Display Description', appError)
 
       expect(result).toBeInstanceOf(BifoldError)
-      expect(result.title).toBe('Display Title')
-      expect(result.description).toBe('Display Description')
-      expect(result.message).toContain('technical details')
+      expect(result.message).toBe(appError.fullMessage)
       expect(result.code).toBe(1000)
       expect(result.cause).toBe(cause)
     })

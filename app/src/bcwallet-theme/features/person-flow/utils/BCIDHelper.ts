@@ -1,4 +1,4 @@
-import { ErrorRegistryKey, getErrorDefinition } from '@/errors'
+import { AppError, ErrorRegistry, ErrorRegistryKey } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -55,8 +55,7 @@ export const connectToIASAgent = async (
   const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
-    const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_INVITATION_ERROR)
   }
 
   await removeExistingInvitationsById(agent, invite.id)
@@ -64,8 +63,7 @@ export const connectToIASAgent = async (
   const record = await agent.oob.receiveInvitation(invite)
 
   if (!record) {
-    const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.RECEIVE_INVITATION_ERROR)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
@@ -74,24 +72,21 @@ export const connectToIASAgent = async (
   const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   const dids = await didRepository.getAll(agent.context)
   const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
   if (!didRecord) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   return {

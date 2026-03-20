@@ -739,10 +739,9 @@ export const ErrorRegistry = {
   ACCOUNT_NOT_FOUND: {
     statusCode: 2822,
     appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
-    titleKey: 'BCWalletError.General.Title',
-    descriptionKey: 'BCWalletError.General.AccountNotFound',
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.GENERAL,
+    message: 'No account found for the current user — wallet state may be corrupted or missing',
   },
 
   // ============================================
