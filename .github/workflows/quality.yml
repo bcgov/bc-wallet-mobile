@@ -102,7 +102,7 @@ jobs:
         run: |
           xcodebuild test \
             -scheme BcscCoreTests-Package \
-            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation
 
   test-android:
