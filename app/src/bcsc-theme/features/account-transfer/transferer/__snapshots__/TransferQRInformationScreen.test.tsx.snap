@@ -141,7 +141,7 @@ exports[`TransferQRInformationScreen Render tests render matches snapshot 1`] = 
           "padding": 16,
         }
       }
-      testID="GetQRCodeButton"
+      testID="com.ariesbifold:id/GetQRCodeButton"
     >
       <View
         style={
@@ -218,7 +218,7 @@ exports[`TransferQRInformationScreen Render tests render matches snapshot 1`] = 
           "padding": 16,
         }
       }
-      testID="LearnMoreButton"
+      testID="com.ariesbifold:id/LearnMoreButton"
     >
       <View
         style={

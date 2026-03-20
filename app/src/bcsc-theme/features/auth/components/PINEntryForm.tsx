@@ -225,7 +225,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
       <View style={styles.pinEntryContent}>
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
-          <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
+          <PINInput
+            onPINChange={handlePIN1Change}
+            onPINComplete={handlePIN1Complete}
+            errorMessage={errorMessage1}
+            testIDKey="PINInput1"
+          />
         </View>
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
@@ -234,6 +239,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINChange={handlePIN2Change}
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
+            testIDKey="PINInput2"
           />
         </View>
         <View style={styles.pinReminder}>

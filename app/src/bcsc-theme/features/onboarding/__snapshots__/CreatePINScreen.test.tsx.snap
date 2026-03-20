@@ -138,6 +138,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/PINInput1"
                         textContentType="password"
                         value=""
                       />
@@ -178,7 +179,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/PINInput1VisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}
@@ -269,6 +270,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/PINInput2"
                         textContentType="password"
                         value=""
                       />
@@ -309,7 +311,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/PINInput2VisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}
