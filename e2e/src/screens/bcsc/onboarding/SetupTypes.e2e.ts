@@ -3,8 +3,8 @@ import { BaseScreen } from '../../BaseScreen.js'
 const SetupTypesTestIds = {
   Continue: 'com.ariesbifold:id/Continue',
   Cancel: 'com.ariesbifold:id/Cancel',
-  MyOwnIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-BCSC.NewSetup.MyOwnID',
-  SomeoneElseIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-BCSC.NewSetup.SomeoneElsesID',
+  MyOwnIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-MyOwnID',
+  SomeoneElseIdRadioGroup: "com.ariesbifold:id/MyOwnIdRadioGroup-option-SomeoneElse'sID",
   OtherPersonPresentRadioGroupYesOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-Yes',
   OtherPersonPresentRadioGroupNoOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-No',
   Back: 'com.ariesbifold:id/Back',

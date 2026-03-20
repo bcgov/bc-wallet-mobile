@@ -14,7 +14,7 @@ cp -r build/Build/Products/Debug-iphonesimulator/BCWallet.app ../../e2e/apps/
 
 ## iOS Real Device Build
 
-For a **physical iPhone** the local device config expects an **`.ipa`** (signed archive), not the simulator `.app`. Build for `iphoneos` and export to IPA.
+For a **physical iPhone** the local device config expects an `.ipa` (signed archive), not the simulator `.app`. Build for `iphoneos` and export to IPA.
 
 **Option A — Xcode GUI:**  
 Product → Archive, then Distribute App → Development, and export the `.ipa`. Copy it to `e2e/apps/BCWallet.ipa`.

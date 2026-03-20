@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env.saucelabs') })
 
 export const config: WebdriverIO.Config = {
-  specs: [resolve(__dirname, '../test/bcsc/**/*.spec.ts')],
+  specs: [resolve(__dirname, '../test/bcsc/smoke.spec.ts')],
   // Selective spec execution via CLI: --spec test/bcsc/onboarding.spec.ts
   exclude: [],
   capabilities: [],

@@ -16,7 +16,10 @@ config.capabilities = [
     'appium:automationName': 'XCUITest',
     'appium:app': resolve(__dirname, '../../apps', process.env.IOS_APP_DEVICE || 'BCWallet.ipa'),
     'appium:xcodeOrgId': process.env.XCODE_ORG_ID || '',
-    'appium:xcodeSigningId': process.env.XCODE_SIGNING_ID || 'iPhone Developer',
+    // Matches WDA automatic signing (Xcode 15+ rejects legacy "iPhone Developer" here).
+    'appium:xcodeSigningId': process.env.XCODE_SIGNING_ID || 'Apple Development',
+    // Set SHOW_XCODE_LOG=true to print full xcodebuild output when WDA fails (e.g. exit 65).
+    'appium:showXcodeLog': process.env.SHOW_XCODE_LOG === 'true',
     'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
   },

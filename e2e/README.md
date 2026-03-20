@@ -200,26 +200,27 @@ _Available variants:_ `bcsc-dev`_,_ `bcsc-test`_,_ `bcsc-qa`_,_ `bcsc-prod`_,_ `
 
 ## _Environment Variables_
 
-| _Variable_         | _Default_           | _Description_                                       |
-| ------------------ | ------------------- | --------------------------------------------------- |
-| `VARIANT`          | `bcsc-dev`          | _App variant to test_                               |
-| `SAUCE_USERNAME`   | _—_                 | _SauceLabs username (sauce runs only)_              |
-| `SAUCE_ACCESS_KEY` | _—_                 | _SauceLabs access key (sauce runs only)_            |
-| `SAUCE_REGION`     | `us`                | _SauceLabs data center region (_`us` _or_ `eu`_)_   |
-| `APP_FILENAME`     | _varies_            | _App filename in SauceLabs storage_                 |
-| `BUILD_NAME`       | `local-<timestamp>` | _SauceLabs build name_                              |
-| `TEST_NAME`        | `E2E Tests`         | _SauceLabs test name_                               |
-| `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_                 |
-| `IOS_VERSION`      | `18.3`              | _iOS simulator/device version (local)_              |
-| `IOS_APP`          | `BCWallet.app`      | _iOS app filename in_ `apps/` _(local sim)_         |
-| `IOS_APP_DEVICE`   | `BCWallet.ipa`      | _iOS app filename in_ `apps/` _(local real device)_ |
-| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | _Android emulator/device name (local)_              |
-| `ANDROID_VERSION`  | `14.0`              | _Android emulator/device version (local)_           |
-| `ANDROID_APP`      | `BCSC.apk`          | _Android app filename in_ `apps/` _(local)_         |
-| `IOS_UDID`         | _—_                 | _iOS device UDID (iOS real device only)_            |
-| `ANDROID_UDID`     | _—_                 | _Android device serial (Android real device only)_  |
-| `XCODE_ORG_ID`     | _—_                 | _Apple Team ID (iOS real device only)_              |
-| `XCODE_SIGNING_ID` | `iPhone Developer`  | _Xcode signing identity (iOS real device only)_     |
+| _Variable_         | _Default_           | _Description_                                                                   |
+| ------------------ | ------------------- | ------------------------------------------------------------------------------- |
+| `VARIANT`          | `bcsc-dev`          | _App variant to test_                                                           |
+| `SAUCE_USERNAME`   | _—_                 | _SauceLabs username (sauce runs only)_                                          |
+| `SAUCE_ACCESS_KEY` | _—_                 | _SauceLabs access key (sauce runs only)_                                        |
+| `SAUCE_REGION`     | `us`                | _SauceLabs data center region (_`us` _or_ `eu`_)_                               |
+| `APP_FILENAME`     | _varies_            | _App filename in SauceLabs storage_                                             |
+| `BUILD_NAME`       | `local-<timestamp>` | _SauceLabs build name_                                                          |
+| `TEST_NAME`        | `E2E Tests`         | _SauceLabs test name_                                                           |
+| `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_                                             |
+| `IOS_VERSION`      | `18.3`              | _iOS simulator/device version (local)_                                          |
+| `IOS_APP`          | `BCWallet.app`      | _iOS app filename in_ `apps/` _(local sim)_                                     |
+| `IOS_APP_DEVICE`   | `BCWallet.ipa`      | _iOS app filename in_ `apps/` _(local real device)_                             |
+| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | _Android emulator/device name (local)_                                          |
+| `ANDROID_VERSION`  | `14.0`              | _Android emulator/device version (local)_                                       |
+| `ANDROID_APP`      | `BCSC.apk`          | _Android app filename in_ `apps/` _(local)_                                     |
+| `IOS_UDID`         | _—_                 | _iOS device UDID (iOS real device only)_                                        |
+| `ANDROID_UDID`     | _—_                 | _Android device serial (Android real device only)_                              |
+| `XCODE_ORG_ID`     | _—_                 | _Apple Team ID (iOS real device only)_                                          |
+| `XCODE_SIGNING_ID` | `Apple Development` | _WDA signing identity; required for automatic signing with current Xcode_       |
+| `SHOW_XCODE_LOG`   | _unset_             | _Set to_ `true` _to print xcodebuild output when WebDriverAgent fails to build_ |
 
 ## _Config Hierarchy_
 

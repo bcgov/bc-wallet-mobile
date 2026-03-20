@@ -31,8 +31,8 @@ export abstract class BaseScreen {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
-    } catch (error) {
-      console.error(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`, error)
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
       await el.waitForDisplayed({ timeout })
     }
@@ -70,9 +70,9 @@ export abstract class BaseScreen {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: 1_000 })
-    } catch (error) {
-      console.error(`Element "${testId}" not visible after 1000ms; scrolling then retrying`, error)
-      await this.scrollToTestId(testId, 4, 'both')
+    } catch {
+      console.warn(`Element "${testId}" not visible after 1000ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 5, 'both')
       await el.waitForDisplayed({ timeout: 1_000 })
     }
     await el.click()
