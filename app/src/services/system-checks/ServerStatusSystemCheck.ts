@@ -43,12 +43,16 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title:
-            this.serverStatus?.statusMessage ??
+          title: undefined, // Note: Staus messages can be verbose, using description for better formatting
+          description:
+            this.serverStatus.statusMessage ??
             this.utils.translation('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
-          type: 'error',
+          type: 'info',
           variant: 'summary',
           dismissible: true,
+          metadata: {
+            contactLink: this.serverStatus.contactLink,
+          },
         },
       ],
     })
@@ -73,10 +77,14 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-          title: this.serverStatus.statusMessage,
+          title: undefined, // Note: Staus messages can be verbose, using description for better formatting
+          description: this.serverStatus.statusMessage,
           type: 'info',
           variant: 'summary',
           dismissible: true,
+          metadata: {
+            contactLink: this.serverStatus.contactLink,
+          },
         },
       ],
     })

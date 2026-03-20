@@ -247,9 +247,10 @@ describe('System Checks', () => {
           translation: jest.fn().mockReturnValue('Server unavailable') as any,
           logger: {} as any,
         }
-        const serverStatus: any = { status: 'ok' }
+        const serverStatus: any = { status: 'ok', contactLink: 'https://status.com' }
 
-        const serverStatusCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
+        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
+        serverStatusCheck.serverStatus.contactLink = 'https://status.com'
 
         serverStatusCheck.onFail()
 
@@ -259,10 +260,14 @@ describe('System Checks', () => {
           payload: [
             expect.objectContaining({
               id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-              title: 'Server unavailable',
-              type: 'error',
+              title: undefined,
+              description: 'Server unavailable',
+              type: 'info',
               variant: 'summary',
               dismissible: true,
+              metadata: {
+                contactLink: 'https://status.com',
+              },
             }),
           ],
         })
@@ -279,7 +284,7 @@ describe('System Checks', () => {
 
         const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
-        serverStatusCheck.serverStatus = {}
+        serverStatusCheck.serverStatus.contactLink = 'https://status.com'
         serverStatusCheck.serverStatus.statusMessage = 'Custom server down message'
 
         serverStatusCheck.onFail()
@@ -290,10 +295,14 @@ describe('System Checks', () => {
           payload: [
             expect.objectContaining({
               id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-              title: 'Custom server down message',
-              type: 'error',
+              title: undefined,
+              description: 'Custom server down message',
+              type: 'info',
               variant: 'summary',
               dismissible: true,
+              metadata: {
+                contactLink: 'https://status.com',
+              },
             }),
           ],
         })
@@ -328,11 +337,10 @@ describe('System Checks', () => {
           logger: {} as any,
         }
 
-        const serverStatus: any = { status: 'ok' }
+        const serverStatus: any = { status: 'ok', contactLink: 'https://status.com' }
 
         const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
-        serverStatusCheck.serverStatus = {}
         serverStatusCheck.serverStatus.statusMessage = 'Server maintenance scheduled'
 
         serverStatusCheck.onSuccess()
@@ -343,10 +351,14 @@ describe('System Checks', () => {
           payload: [
             expect.objectContaining({
               id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-              title: 'Server maintenance scheduled',
+              title: undefined,
+              description: 'Server maintenance scheduled',
               type: 'info',
               variant: 'summary',
               dismissible: true,
+              metadata: {
+                contactLink: 'https://status.com',
+              },
             }),
           ],
         })
