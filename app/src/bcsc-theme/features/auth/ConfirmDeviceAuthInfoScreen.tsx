@@ -1,6 +1,5 @@
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -8,12 +7,14 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
-  useStore,
+  TOKENS,
+  useServices,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { setHideDeviceAuthPrepFlag } from 'react-native-bcsc-core'
 
 interface ConfirmDeviceAuthInfoScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.DeviceAuthInfo>
@@ -25,15 +26,22 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [checked, setChecked] = useState(false)
-  const [, dispatch] = useStore<BCState>()
   const { performDeviceAuth } = useAuthentication(navigation)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const onPressContinue = useCallback(() => {
+  const onPressContinue = useCallback(async () => {
     if (checked) {
-      dispatch({ type: BCDispatchAction.HIDE_DEVICE_AUTH_CONFIRMATION, payload: [true] })
+      try {
+        await setHideDeviceAuthPrepFlag(true)
+      } catch (error) {
+        // non-fatal error, just log it - the app can still function without this flag being set,
+        // it just won't hide the prep screen on next auth
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        logger.error(`Failed to set hide device auth prep flag: ${errorMsg}`)
+      }
     }
     performDeviceAuth()
-  }, [checked, dispatch, performDeviceAuth])
+  }, [checked, performDeviceAuth, logger])
 
   const controls = (
     <>

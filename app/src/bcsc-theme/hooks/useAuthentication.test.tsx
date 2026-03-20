@@ -6,6 +6,7 @@ import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
   getAccountSecurityMethod,
+  getHideDeviceAuthPrepFlag,
   isAccountLocked,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
@@ -20,6 +21,7 @@ jest.mock('react-native-bcsc-core', () => ({
     DeviceAuth: 'device_authentication',
   },
   getAccountSecurityMethod: jest.fn(),
+  getHideDeviceAuthPrepFlag: jest.fn(),
   isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
@@ -45,8 +47,9 @@ describe('useAuthentication', () => {
 
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
-    // disclaimer already dismissed continue to auth code
-    jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { hasDismissedDeviceAuthInfo: true } } as any, jest.fn()])
+    // disclaimer already dismissed — getHideDeviceAuthPrepFlag returns true
+    jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(true)
+    jest.mocked(Bifold.useStore).mockReturnValue([{} as any, jest.fn()])
     jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
       deviceAuthenticationErrorAlert: jest.fn(),
     } as any)
@@ -92,9 +95,7 @@ describe('useAuthentication', () => {
   describe('device auth mode', () => {
     describe('disclaimer screen', () => {
       it('navigates to DeviceAuthInfo when disclaimer has not been dismissed', async () => {
-        jest
-          .mocked(Bifold.useStore)
-          .mockReturnValue([{ bcsc: { hasDismissedDeviceAuthInfo: false } } as any, jest.fn()])
+        jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(false)
         jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
 
         const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -109,7 +110,7 @@ describe('useAuthentication', () => {
       })
 
       it('navigates to DeviceAuthInfo when flag is undefined', async () => {
-        jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: {} } as any, jest.fn()])
+        jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(undefined)
         jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.DeviceAuth)
 
         const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -472,7 +473,7 @@ describe('useAuthentication', () => {
     })
 
     it('does not start loading when navigating to disclaimer screen', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { hasDismissedDeviceAuthInfo: false } } as any, jest.fn()])
+      jest.mocked(getHideDeviceAuthPrepFlag).mockResolvedValue(false)
       const mockStartLoading = jest.fn()
       jest.mocked(BCSCLoadingContext.useLoadingScreen).mockReturnValue({
         startLoading: mockStartLoading,

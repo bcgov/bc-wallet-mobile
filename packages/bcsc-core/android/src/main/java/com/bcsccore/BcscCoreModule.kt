@@ -3049,6 +3049,76 @@ class BcscCoreModule(
         }
     }
 
+    // MARK: - Android Global Flags Storage Methods
+
+    /**
+     * Gets global (non-account-scoped) flags from SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun getAndroidGlobalFlags(promise: Promise) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also harcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+
+            val result = Arguments.createMap()
+
+            if (globalPrefs.contains("device_auth_never_show_again")) {
+                result.putBoolean(
+                    "notShowDeviceAuthenticationPrepAgain",
+                    globalPrefs.getBoolean("device_auth_never_show_again", false),
+                )
+            }
+
+            Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_GET_GLOBAL_FLAGS_ERROR", "Error getting global flags: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Sets global (non-account-scoped) flags in SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun setAndroidGlobalFlags(
+        flags: ReadableMap,
+        promise: Promise,
+    ) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also harcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+            val editor = globalPrefs.edit()
+
+            if (flags.hasKey("notShowDeviceAuthenticationPrepAgain")) {
+                editor.putBoolean(
+                    "device_auth_never_show_again",
+                    flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
+                )
+            }
+
+            editor.apply()
+
+            Log.d(NAME, "setAndroidGlobalFlags: Successfully saved global flags")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(NAME, "setAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_SET_GLOBAL_FLAGS_ERROR", "Error setting global flags: ${e.message}", e)
+        }
+    }
+
     // MARK: - Account Flags Storage Methods
 
     /**
