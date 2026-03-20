@@ -3685,7 +3685,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
   react-native-attestation: 42885b3cd94cfc79ee11bcbbc5d7ee6610b24379
-  react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
+  react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
