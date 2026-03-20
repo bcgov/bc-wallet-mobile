@@ -145,6 +145,7 @@ export enum AppEventCode {
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
   DEVICE_AUTHENTICATION_ERROR = 'device_authentication_error', // Non-IAS error code
   FATAL_UNRECOVERABLE_ERROR = 'fatal_unrecoverable_error', // Non-IAS error code
+  UNKNOWN_ERROR_BOUNDARY_ERROR = 'unknown_error_boundary_error', // Non-IAS error code
   // Wallet/Agent Errors
   STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
   AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
