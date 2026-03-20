@@ -51,7 +51,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
 
   const handleDeleteDeviceCountMessage = useCallback(() => {
     dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
-    setMaxDevicesBannerLastDisplayedDate(new Date().getTime())
+    setMaxDevicesBannerLastDisplayedDate(Date.now())
     handleCloseDevicesModal({ shouldAnimate: true })
   }, [dispatch, handleCloseDevicesModal])
 
