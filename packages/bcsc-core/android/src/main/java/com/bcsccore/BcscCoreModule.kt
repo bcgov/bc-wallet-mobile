@@ -392,11 +392,11 @@ class BcscCoreModule(
                             promise.resolve(null)
                         } catch (e: Exception) {
                             Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
-                            promise.resolve(null)
+                            promise.reject("E_STORAGE_ERROR", "Failed to parse decrypted token data: ${e.message}", e)
                         }
                     } else {
-                        Log.d(NAME, "Decrypted content is not valid JSON")
-                        promise.resolve(null)
+                        Log.e(NAME, "Decrypted content is not valid JSON")
+                        promise.reject("E_STORAGE_ERROR", "Decrypted token content is not valid JSON")
                     }
                 } else {
                     Log.w(
@@ -407,11 +407,11 @@ class BcscCoreModule(
                 }
             } catch (e: DecryptionException) {
                 Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
-                promise.resolve(null)
+                promise.reject("E_STORAGE_ERROR", "Failed to decrypt token file: ${e.message}", e)
             }
         } catch (e: Exception) {
             Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Failed to read token file: ${e.message}", e)
         }
     }
 
@@ -722,7 +722,7 @@ class BcscCoreModule(
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "setIssuer: Error saving issuer to file: ${e.message}", e)
-            promise.resolve(false)
+            promise.reject("E_STORAGE_ERROR", "Error saving issuer to file: ${e.message}", e)
         }
     }
 
@@ -749,7 +749,7 @@ class BcscCoreModule(
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Error reading issuer from file: ${e.message}", e)
         }
     }
 
@@ -3046,6 +3046,76 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.e(NAME, "deleteAuthorizationRequest error: ${e.message}", e)
             promise.reject("E_DELETE_AUTH_REQUEST_ERROR", "Error deleting authorization request: ${e.message}", e)
+        }
+    }
+
+    // MARK: - Android Global Flags Storage Methods
+
+    /**
+     * Gets global (non-account-scoped) flags from SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun getAndroidGlobalFlags(promise: Promise) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also hardcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+
+            val result = Arguments.createMap()
+
+            if (globalPrefs.contains("device_auth_never_show_again")) {
+                result.putBoolean(
+                    "notShowDeviceAuthenticationPrepAgain",
+                    globalPrefs.getBoolean("device_auth_never_show_again", false),
+                )
+            }
+
+            Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_GET_GLOBAL_FLAGS_ERROR", "Error getting global flags: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Sets global (non-account-scoped) flags in SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun setAndroidGlobalFlags(
+        flags: ReadableMap,
+        promise: Promise,
+    ) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also harcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+            val editor = globalPrefs.edit()
+
+            if (flags.hasKey("notShowDeviceAuthenticationPrepAgain")) {
+                editor.putBoolean(
+                    "device_auth_never_show_again",
+                    flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
+                )
+            }
+
+            editor.apply()
+
+            Log.d(NAME, "setAndroidGlobalFlags: Successfully saved global flags")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(NAME, "setAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_SET_GLOBAL_FLAGS_ERROR", "Error setting global flags: ${e.message}", e)
         }
     }
 

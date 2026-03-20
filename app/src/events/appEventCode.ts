@@ -143,7 +143,9 @@ export enum AppEventCode {
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
+  DEVICE_AUTHENTICATION_ERROR = 'device_authentication_error', // Non-IAS error code
   FATAL_UNRECOVERABLE_ERROR = 'fatal_unrecoverable_error', // Non-IAS error code
+  UNKNOWN_ERROR_BOUNDARY_ERROR = 'unknown_error_boundary_error', // Non-IAS error code
   // Wallet/Agent Errors
   STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
   AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
@@ -165,6 +167,8 @@ export enum AppEventCode {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error', // Non-IAS error code
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error', // Non-IAS error code
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
+  // Account Errors
+  ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
 }
 
 const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))

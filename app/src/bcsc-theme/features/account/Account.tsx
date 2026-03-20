@@ -9,12 +9,12 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
-import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, Linking, StyleSheet, View } from 'react-native'
+import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
 
@@ -33,7 +33,7 @@ const Account: React.FC = () => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
-  const account = useAccount()
+  const { account, refreshAccount } = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
 
   const openedWebview = useRef(false)
@@ -47,28 +47,25 @@ const Account: React.FC = () => {
     loadBcscServiceClient()
   }, [loadBcscServiceClient])
 
-  useFocusEffect(
-    useCallback(() => {
-      logger.info('Account screen focused, refreshing ID token metadata...')
-      refreshIdToken()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [logger])
-  )
+  const refreshData = useCallback(() => {
+    refreshAccount()
+    refreshIdToken()
+  }, [refreshAccount, refreshIdToken])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
-    // This AppState listener handles state transitions for enterting/ exiting the background
-    const appListener = AppState.addEventListener('change', async (nextAppState) => {
+    // This AppState listener handles state transitions for entering/ exiting the background
+    const appListener = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active' && openedWebview.current) {
-        logger.info('Returning from background, refreshing user and device metadata...')
+        logger.info('Returning from background, refreshing token and account metadata...')
         openedWebview.current = false
-        refreshIdToken()
+        refreshData()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshIdToken])
+  }, [logger, refreshData])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
@@ -129,7 +126,7 @@ const Account: React.FC = () => {
 
   return (
     <TabScreenWrapper>
-      <View style={styles.container}>
+      <View style={styles.container} testID={testIdWithKey('AccountScreen')}>
         <View style={styles.photoAndNameContainer}>
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
           <AccountPhoto photoUri={account.picture} />
@@ -158,21 +155,25 @@ const Account: React.FC = () => {
                 ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idToken.bcsc_devices_count })
                 : t('BCSC.Account.AccountInfo.MyDevices')
             }
+            testID={testIdWithKey('MyDevices')}
           />
           <SectionButton
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRInformation)
             }}
             title={t('BCSC.Account.TransferAccount')}
+            testID={testIdWithKey('TransferAccount')}
           />
           <SectionButton
             onPress={handleAllAccountDetailsPress}
             title={t('BCSC.Account.AccountDetails')}
             description={t('BCSC.Account.AccountDetailsDescription')}
+            testID={testIdWithKey('AllAccountDetails')}
           />
           <SectionButton
             onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
             title={t('BCSC.Account.RemoveAccount')}
+            testID={testIdWithKey('RemoveAccount')}
           />
         </View>
       </View>

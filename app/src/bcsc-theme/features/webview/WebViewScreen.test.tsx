@@ -1,9 +1,9 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import { AuthWebViewScreen } from './AuthWebViewScreen'
+import { WebViewScreen } from './WebViewScreen'
 
-describe('AuthWebView', () => {
+describe('WebViewScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -14,14 +14,10 @@ describe('AuthWebView', () => {
   })
 
   it('renders correctly', () => {
-    const route = {
-      key: 'auth-webview',
-      name: 'AuthWebView',
-      params: { url: 'https://example.com', title: 'Test' },
-    } as any
+    const route = { params: { url: 'https://example.com', title: 'Test' } }
     const tree = render(
       <BasicAppContext>
-        <AuthWebViewScreen route={route} />
+        <WebViewScreen route={route as never} />
       </BasicAppContext>
     )
 

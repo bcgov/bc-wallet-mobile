@@ -21,14 +21,14 @@ const TransferSuccessScreen: React.FC = () => {
   const controls = (
     <>
       <Button
-        testID={testIdWithKey(t('BCSC.TransferSuccess.ButtonText'))}
+        testID={testIdWithKey('TransferSuccessButton')}
         accessibilityLabel={t('BCSC.TransferSuccess.ButtonText')}
         title={t('BCSC.TransferSuccess.ButtonText')}
         buttonType={ButtonType.Primary}
         onPress={() => navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })}
       />
       <Button
-        testID={testIdWithKey(t('BCSC.Account.RemoveAccount'))}
+        testID={testIdWithKey('RemoveAccountButton')}
         buttonType={ButtonType.Critical}
         title={t('BCSC.Account.RemoveAccount')}
         onPress={() => {

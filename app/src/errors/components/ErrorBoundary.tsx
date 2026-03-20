@@ -1,8 +1,12 @@
+import { toBifoldError } from '@/bcsc-theme/utils/error-utils'
+import { AppEventCode } from '@/events/appEventCode'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { AppError } from '../appError'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 interface ErrorBoundaryProps {
@@ -33,33 +37,53 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   componentDidCatch(error: Error): void {
     const { logger } = this.props
+
     logger.error('ErrorBoundary caught an error:', error)
+
+    if (error instanceof AppError) {
+      error.track()
+      return
+    }
+
+    Analytics.trackErrorEvent({
+      code: AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR,
+      message: error.message,
+    })
   }
 
   handleDismiss = (): void => {
     this.setState({ hasError: false, error: null })
   }
 
+  getReportError = (error: Error) => {
+    return toBifoldError(this.props.t('Error.Problem'), this.props.t('Error.ProblemDescription'), error)
+  }
+
   handleReport = (): void => {
     const { error } = this.state
     const { logger } = this.props
-    if (error) {
-      logger.error('ErrorBoundary reported:', error)
+
+    if (!error) {
+      return
     }
+
+    const reportError = this.getReportError(error)
+    logger.error('ErrorBoundary reported:', error)
+    logger.report(reportError)
   }
 
   render(): React.ReactNode {
     const { hasError, error } = this.state
-    const { t } = this.props
 
     if (hasError && error) {
+      const reportError = this.getReportError(error)
       return (
         <SafeAreaView style={styles.overlay}>
           <ErrorInfoCard
-            title={error.name || t('Error.Problem')}
-            description={error.message || t('Error.NoMessage')}
-            message={error.message}
-            code={0}
+            title={reportError.title}
+            description={reportError.description}
+            message={reportError.message}
+            code={reportError.code}
             onDismiss={this.handleDismiss}
             onReport={this.handleReport}
             enableReport

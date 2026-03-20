@@ -1,20 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
-[
+<View
+  style={
+    {
+      "gap": 8,
+    }
+  }
+>
   <View
     style={
       {
-        "alignItems": "center",
         "backgroundColor": "#D3D3D3",
         "borderColor": "#D3D3D3",
         "borderRadius": 4,
-        "borderWidth": 1,
+        "borderWidth": 2,
         "flexDirection": "row",
-        "justifyContent": "center",
-        "marginBottom": 8,
-        "marginTop": 16,
-        "padding": 8,
       }
     }
   >
@@ -34,12 +35,11 @@ exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
         {
           "color": "#313132",
           "flex": 1,
-          "fontFamily": "BCSans-Regular",
-          "fontSize": 26,
+          "fontSize": 24,
           "fontWeight": "bold",
-          "height": 48,
           "letterSpacing": 8,
-          "textAlignVertical": "center",
+          "minHeight": 50,
+          "paddingHorizontal": 8,
         }
       }
       textContentType="password"
@@ -76,8 +76,10 @@ exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
       onStartShouldSetResponder={[Function]}
       style={
         {
+          "alignItems": "center",
+          "justifyContent": "center",
           "opacity": 1,
-          "padding": 5,
+          "padding": 8,
         }
       }
       testID="com.ariesbifold:id/VisibilityButton"
@@ -104,33 +106,26 @@ exports[`PINInput Snapshot renders correctly with autoFocus 1`] = `
         󰈉
       </Text>
     </View>
-  </View>,
-  <View
-    style={
-      {
-        "justifyContent": "flex-start",
-        "minHeight": 20,
-      }
-    }
-  />,
-]
+  </View>
+</View>
 `;
 
 exports[`PINInput Snapshot renders correctly with error message 1`] = `
-[
+<View
+  style={
+    {
+      "gap": 8,
+    }
+  }
+>
   <View
     style={
       {
-        "alignItems": "center",
         "backgroundColor": "#D3D3D3",
         "borderColor": "#D3D3D3",
         "borderRadius": 4,
-        "borderWidth": 1,
+        "borderWidth": 2,
         "flexDirection": "row",
-        "justifyContent": "center",
-        "marginBottom": 8,
-        "marginTop": 16,
-        "padding": 8,
       }
     }
   >
@@ -150,12 +145,11 @@ exports[`PINInput Snapshot renders correctly with error message 1`] = `
         {
           "color": "#313132",
           "flex": 1,
-          "fontFamily": "BCSans-Regular",
-          "fontSize": 26,
+          "fontSize": 24,
           "fontWeight": "bold",
-          "height": 48,
           "letterSpacing": 8,
-          "textAlignVertical": "center",
+          "minHeight": 50,
+          "paddingHorizontal": 8,
         }
       }
       textContentType="password"
@@ -192,8 +186,10 @@ exports[`PINInput Snapshot renders correctly with error message 1`] = `
       onStartShouldSetResponder={[Function]}
       style={
         {
+          "alignItems": "center",
+          "justifyContent": "center",
           "opacity": 1,
-          "padding": 5,
+          "padding": 8,
         }
       }
       testID="com.ariesbifold:id/VisibilityButton"
@@ -220,50 +216,42 @@ exports[`PINInput Snapshot renders correctly with error message 1`] = `
         󰈉
       </Text>
     </View>
-  </View>,
-  <View
+  </View>
+  <Text
+    maxFontSizeMultiplier={2}
     style={
-      {
-        "justifyContent": "flex-start",
-        "minHeight": 20,
-      }
+      [
+        {
+          "color": "#A12622",
+          "fontFamily": "BCSans-Regular",
+          "fontSize": 16,
+          "fontWeight": "normal",
+        },
+        undefined,
+      ]
     }
   >
-    <Text
-      maxFontSizeMultiplier={2}
-      style={
-        [
-          {
-            "color": "#A12622",
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 16,
-            "fontWeight": "normal",
-          },
-          undefined,
-        ]
-      }
-    >
-      Incorrect PIN
-    </Text>
-  </View>,
-]
+    Incorrect PIN
+  </Text>
+</View>
 `;
 
 exports[`PINInput Snapshot renders correctly without error message 1`] = `
-[
+<View
+  style={
+    {
+      "gap": 8,
+    }
+  }
+>
   <View
     style={
       {
-        "alignItems": "center",
         "backgroundColor": "#D3D3D3",
         "borderColor": "#D3D3D3",
         "borderRadius": 4,
-        "borderWidth": 1,
+        "borderWidth": 2,
         "flexDirection": "row",
-        "justifyContent": "center",
-        "marginBottom": 8,
-        "marginTop": 16,
-        "padding": 8,
       }
     }
   >
@@ -283,12 +271,11 @@ exports[`PINInput Snapshot renders correctly without error message 1`] = `
         {
           "color": "#313132",
           "flex": 1,
-          "fontFamily": "BCSans-Regular",
-          "fontSize": 26,
+          "fontSize": 24,
           "fontWeight": "bold",
-          "height": 48,
           "letterSpacing": 8,
-          "textAlignVertical": "center",
+          "minHeight": 50,
+          "paddingHorizontal": 8,
         }
       }
       textContentType="password"
@@ -325,8 +312,10 @@ exports[`PINInput Snapshot renders correctly without error message 1`] = `
       onStartShouldSetResponder={[Function]}
       style={
         {
+          "alignItems": "center",
+          "justifyContent": "center",
           "opacity": 1,
-          "padding": 5,
+          "padding": 8,
         }
       }
       testID="com.ariesbifold:id/VisibilityButton"
@@ -353,14 +342,6 @@ exports[`PINInput Snapshot renders correctly without error message 1`] = `
         󰈉
       </Text>
     </View>
-  </View>,
-  <View
-    style={
-      {
-        "justifyContent": "flex-start",
-        "minHeight": 20,
-      }
-    }
-  />,
-]
+  </View>
+</View>
 `;

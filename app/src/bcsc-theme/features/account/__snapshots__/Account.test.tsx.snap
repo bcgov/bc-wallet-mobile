@@ -32,6 +32,7 @@ exports[`Account renders full name when both given_name and family_name are pres
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/AccountScreen"
       >
         <View
           style={
@@ -362,7 +363,7 @@ exports[`Account renders full name when both given_name and family_name are pres
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountInfo.MyDevicesCount"
+            testID="com.ariesbifold:id/MyDevices"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -423,7 +424,7 @@ exports[`Account renders full name when both given_name and family_name are pres
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.TransferAccount"
+            testID="com.ariesbifold:id/TransferAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -484,7 +485,7 @@ exports[`Account renders full name when both given_name and family_name are pres
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountDetails"
+            testID="com.ariesbifold:id/AllAccountDetails"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -564,7 +565,7 @@ exports[`Account renders full name when both given_name and family_name are pres
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.RemoveAccount"
+            testID="com.ariesbifold:id/RemoveAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -624,6 +625,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/AccountScreen"
       >
         <View
           style={
@@ -954,7 +956,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountInfo.MyDevicesCount"
+            testID="com.ariesbifold:id/MyDevices"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1015,7 +1017,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.TransferAccount"
+            testID="com.ariesbifold:id/TransferAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1076,7 +1078,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountDetails"
+            testID="com.ariesbifold:id/AllAccountDetails"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1156,7 +1158,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.RemoveAccount"
+            testID="com.ariesbifold:id/RemoveAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1216,6 +1218,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/AccountScreen"
       >
         <View
           style={
@@ -1546,7 +1549,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountInfo.MyDevicesCount"
+            testID="com.ariesbifold:id/MyDevices"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1607,7 +1610,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.TransferAccount"
+            testID="com.ariesbifold:id/TransferAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1668,7 +1671,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountDetails"
+            testID="com.ariesbifold:id/AllAccountDetails"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1748,7 +1751,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.RemoveAccount"
+            testID="com.ariesbifold:id/RemoveAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -1808,6 +1811,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
             "padding": 16,
           }
         }
+        testID="com.ariesbifold:id/AccountScreen"
       >
         <View
           style={
@@ -2138,7 +2142,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountInfo.MyDevicesCount"
+            testID="com.ariesbifold:id/MyDevices"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -2199,7 +2203,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.TransferAccount"
+            testID="com.ariesbifold:id/TransferAccount"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -2260,7 +2264,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.AccountDetails"
+            testID="com.ariesbifold:id/AllAccountDetails"
           >
             <Text
               maxFontSizeMultiplier={2}
@@ -2340,7 +2344,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/SectionButton-BCSC.Account.RemoveAccount"
+            testID="com.ariesbifold:id/RemoveAccount"
           >
             <Text
               maxFontSizeMultiplier={2}

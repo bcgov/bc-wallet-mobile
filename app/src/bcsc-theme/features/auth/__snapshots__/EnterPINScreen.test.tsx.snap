@@ -56,149 +56,153 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
             ]
           }
         >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                },
-                undefined,
-              ]
-            }
-          >
-            Enter your 6-digit PIN
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 14,
-                  "fontWeight": "normal",
-                },
-                undefined,
-              ]
-            }
-          >
-            The one you chose to secure this app
-          </Text>
           <View
             style={
               {
-                "alignItems": "center",
-                "backgroundColor": "#D3D3D3",
-                "borderColor": "#D3D3D3",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "flexDirection": "row",
-                "justifyContent": "center",
-                "marginBottom": 8,
-                "marginTop": 16,
-                "padding": 8,
+                "gap": 8,
               }
             }
           >
-            <TextInput
-              accessibilityHint="Enter your 6-digit PIN"
-              accessibilityLabel=""
-              autoFocus={false}
-              cursorColor="#313132"
-              keyboardType="number-pad"
-              maxFontSizeMultiplier={1}
-              maxLength={6}
-              onBlur={[Function]}
-              onChangeText={[Function]}
-              onFocus={[Function]}
-              secureTextEntry={true}
+            <Text
+              maxFontSizeMultiplier={2}
               style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 26,
-                  "fontWeight": "bold",
-                  "height": 48,
-                  "letterSpacing": 8,
-                  "textAlignVertical": "center",
-                }
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  undefined,
+                ]
               }
-              textContentType="password"
-              value=""
-            />
-            <View
-              accessibilityLabel="Show PIN"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onClick={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "opacity": 1,
-                  "padding": 5,
-                }
-              }
-              testID="com.ariesbifold:id/VisibilityButton"
             >
-              <Text
-                allowFontScaling={false}
-                selectable={false}
+              Enter your 6-digit PIN
+            </Text>
+            <View
+              style={
+                {
+                  "gap": 8,
+                }
+              }
+            >
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontSize": 32,
-                    },
-                    undefined,
-                    {
-                      "fontFamily": "Material Design Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
+                  {
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 2,
+                    "flexDirection": "row",
+                  }
                 }
               >
-                󰈉
-              </Text>
+                <TextInput
+                  accessibilityHint="Enter your 6-digit PIN"
+                  accessibilityLabel=""
+                  autoFocus={false}
+                  cursorColor="#313132"
+                  keyboardType="number-pad"
+                  maxFontSizeMultiplier={1}
+                  maxLength={6}
+                  onBlur={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  secureTextEntry={true}
+                  style={
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 24,
+                      "fontWeight": "bold",
+                      "letterSpacing": 8,
+                      "minHeight": 50,
+                      "paddingHorizontal": 8,
+                    }
+                  }
+                  textContentType="password"
+                  value=""
+                />
+                <View
+                  accessibilityLabel="Show PIN"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": undefined,
+                      "selected": undefined,
+                    }
+                  }
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
+                  }
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onClick={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
+                    {
+                      "alignItems": "center",
+                      "justifyContent": "center",
+                      "opacity": 1,
+                      "padding": 8,
+                    }
+                  }
+                  testID="com.ariesbifold:id/VisibilityButton"
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontSize": 32,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Design Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    󰈉
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-          <View
-            style={
-              {
-                "justifyContent": "flex-start",
-                "minHeight": 20,
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  undefined,
+                ]
               }
-            }
-          />
+            >
+              The one you chose to secure this app
+            </Text>
+          </View>
         </View>
         <View
           style={

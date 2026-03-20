@@ -736,6 +736,14 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Video service hours config returned null — service availability cannot be determined',
   },
+  ACCOUNT_NOT_FOUND: {
+    statusCode: 2822,
+    appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
+    titleKey: 'BCWalletError.General.Title',
+    descriptionKey: 'BCWalletError.General.AccountNotFound',
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.GENERAL,
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)

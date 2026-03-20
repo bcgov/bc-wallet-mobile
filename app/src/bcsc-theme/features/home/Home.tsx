@@ -5,7 +5,7 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { useTheme } from '@bifold/core'
+import { testIdWithKey, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +20,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()
-  const account = useAccount()
+  const { account } = useAccount()
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
@@ -58,11 +58,13 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
             description={t('BCSC.Home.WhereToUseDescription')}
             style={{ marginBottom: Spacing.md }}
             onPress={handleWhereToUsePress}
+            testID={testIdWithKey('WhereToUse')}
           />
           <SectionButton
             title={t('BCSC.Home.LogInFromComputerTitle')}
             description={t('BCSC.Home.LogInFromComputerDescription')}
             onPress={handlePairingCodePress}
+            testID={testIdWithKey('LogInFromComputer')}
           />
         </View>
         <SavedServices />

@@ -212,7 +212,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle"
+            testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
             <View
               style={
@@ -312,7 +312,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+            testID="com.ariesbifold:id/ChoosePINButton"
           >
             <View
               style={
@@ -412,7 +412,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+            testID="com.ariesbifold:id/LearnMoreButton"
           >
             <View
               style={
@@ -854,7 +854,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle"
+            testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
             <View
               style={
@@ -954,7 +954,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle"
+            testID="com.ariesbifold:id/ChoosePINButton"
           >
             <View
               style={
@@ -1054,7 +1054,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                 "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+            testID="com.ariesbifold:id/LearnMoreButton"
           >
             <View
               style={
@@ -1510,7 +1510,7 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
               "padding": 16,
             }
           }
-          testID="ChoosePINButton"
+          testID="com.ariesbifold:id/ChoosePINButton"
         >
           <View
             style={
@@ -1588,7 +1588,7 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
               "padding": 16,
             }
           }
-          testID="LearnMoreButton"
+          testID="com.ariesbifold:id/LearnMoreButton"
         >
           <View
             style={

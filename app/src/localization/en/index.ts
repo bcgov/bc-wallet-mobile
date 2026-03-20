@@ -38,6 +38,7 @@ const translation = {
     "Reported": "Reported",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
   },
   "Screens": {
     "Preface": "BC Wallet",
@@ -190,6 +191,20 @@ const translation = {
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app",
       "AuthenticateToSecure": "Authenticate to secure your app"
+    },
+    "AppReset": {
+      "Title": "App reset for security",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone.",
+      "Body2": "It looks like you may have turned off the passcode on this device.",
+      "Body3": "When you do this, your app is reset and you need to set it up again.",
+      "SetUpApp": "Set Up App",
+      "LearnMore": "Learn More"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.",
+      "CheckboxLabel": "Do not show me this again",
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN",
@@ -497,6 +512,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
       "TermsOfUseTitle": "Terms of Use",
@@ -1196,6 +1212,10 @@ const translation = {
       "Title": "Problem with App",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again.",
       "Action1": "Reset App"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed",
+      "Description": "Unable to authenticate using the device's built-in authentication."
     }
   },
   "BCWalletError": {
@@ -1327,6 +1347,7 @@ const translation = {
       "EmptyKeychain": "Security credentials are empty. Please sign in again.",
       "SetupNotComplete": "App setup is not complete. Please complete the setup process.",
       "StringResourceError": "Failed to retrieve required text resource. Please try again.",
+      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
     },
     "Wallet": {
       "Title": "Wallet Error",

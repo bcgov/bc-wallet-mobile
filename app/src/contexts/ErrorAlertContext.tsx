@@ -1,4 +1,4 @@
-import { extractErrorMessage } from '@/errors'
+import { AppError } from '@/errors'
 import { BCSCErrorModal, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { logError } from '@/errors/errorHandler'
 import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
@@ -61,8 +61,9 @@ interface ErrorAlertProviderProps extends PropsWithChildren {
  */
 export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlertProviderProps) => {
   const [error, setError] = useState<ErrorModalPayload | null>(null)
-  const [visible, setVisible] = useState(false)
   const [errorKey, setErrorKey] = useState(0)
+
+  // TODO (MD): Add a specific error emitter function for AppError's ie: emitAppErrorModal. Deprecate emitErrorModal
 
   /**
    * Show error via ErrorModal
@@ -77,27 +78,27 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
       return
     }
 
-    const { error: originalError, context } = options
-    const technicalMessage = extractErrorMessage(originalError)
+    const appError = AppError.fromErrorDefinition(definition, { cause: options.error })
 
-    logError(key, definition, technicalMessage, context)
+    logError(key, definition, appError.fullMessage, options.context)
 
     const title = i18next.t(definition.titleKey)
     const description = i18next.t(definition.descriptionKey)
 
     // Track alert display and error events in analytics
     Analytics.trackAlertDisplayEvent(definition.appEvent)
-    Analytics.trackErrorEvent({ code: definition.appEvent, message: technicalMessage })
+    appError.track()
 
     setError({
       title,
       description,
-      message: technicalMessage,
+      message: appError.fullMessage,
       code: definition.statusCode,
       appEvent: definition.appEvent,
+      stack: appError.stack,
+      cause: appError.cause,
     })
     setErrorKey((prev) => prev + 1)
-    setVisible(true)
   }, [])
 
   /**
@@ -112,7 +113,6 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
    */
   const dismiss = useCallback((): void => {
     setError(null)
-    setVisible(false)
   }, [])
 
   const value: ErrorAlertContextType = useMemo(
@@ -127,13 +127,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   return (
     <ErrorAlertContext.Provider value={value}>
       {children}
-      <BCSCErrorModal
-        error={error}
-        visible={visible}
-        errorKey={errorKey}
-        onDismiss={dismiss}
-        enableReport={enableReport}
-      />
+      <BCSCErrorModal error={error} errorKey={errorKey} onDismiss={dismiss} enableReport={enableReport} />
     </ErrorAlertContext.Provider>
   )
 }

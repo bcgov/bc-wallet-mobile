@@ -113,30 +113,115 @@ exports[`ResidentialAddress renders correctly 1`] = `
             >
               BCSC.Address.StreetAddressLabel
             </Text>
-            <TextInput
-              accessibilityLabel="BCSC.Address.StreetAddressLabel"
-              autoComplete="address-line1"
-              autoCorrect={false}
-              onChange={[Function]}
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
+                    "alignItems": "center",
                     "backgroundColor": "#D3D3D3",
                     "borderColor": "#D3D3D3",
                     "borderRadius": 4,
                     "borderWidth": 1,
                     "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
                     "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
                   },
+                  false,
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/streetAddress1-input"
-              textContentType="streetAddressLine1"
-              value=""
-            />
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.StreetAddressLabel"
+                autoComplete="address-line1"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/streetAddress1-input"
+                textContentType="streetAddressLine1"
+                value=""
+              />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -183,30 +268,115 @@ exports[`ResidentialAddress renders correctly 1`] = `
             >
               BCSC.Address.StreetAddress2Label
             </Text>
-            <TextInput
-              accessibilityLabel="BCSC.Address.StreetAddress2Label"
-              autoComplete="address-line2"
-              autoCorrect={false}
-              onChange={[Function]}
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
+                    "alignItems": "center",
                     "backgroundColor": "#D3D3D3",
                     "borderColor": "#D3D3D3",
                     "borderRadius": 4,
                     "borderWidth": 1,
                     "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
                     "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
                   },
+                  false,
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/streetAddress2-input"
-              textContentType="streetAddressLine2"
-              value=""
-            />
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.StreetAddress2Label"
+                autoComplete="address-line2"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/streetAddress2-input"
+                textContentType="streetAddressLine2"
+                value=""
+              />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -253,30 +423,115 @@ exports[`ResidentialAddress renders correctly 1`] = `
             >
               BCSC.Address.CityLabel
             </Text>
-            <TextInput
-              accessibilityLabel="BCSC.Address.CityLabel"
-              autoComplete="postal-address-locality"
-              autoCorrect={false}
-              onChange={[Function]}
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
+                    "alignItems": "center",
                     "backgroundColor": "#D3D3D3",
                     "borderColor": "#D3D3D3",
                     "borderRadius": 4,
                     "borderWidth": 1,
                     "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
                     "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
                   },
+                  false,
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/city-input"
-              textContentType="addressCity"
-              value=""
-            />
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.CityLabel"
+                autoComplete="postal-address-locality"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/city-input"
+                textContentType="addressCity"
+                value=""
+              />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -465,31 +720,116 @@ exports[`ResidentialAddress renders correctly 1`] = `
             >
               BCSC.Address.PostalCodeLabel
             </Text>
-            <TextInput
-              accessibilityLabel="BCSC.Address.PostalCodeLabel"
-              autoCapitalize="characters"
-              autoComplete="postal-code"
-              autoCorrect={false}
-              onChange={[Function]}
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
+                    "alignItems": "center",
                     "backgroundColor": "#D3D3D3",
                     "borderColor": "#D3D3D3",
                     "borderRadius": 4,
                     "borderWidth": 1,
                     "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
                     "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
                   },
+                  false,
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/postalCode-input"
-              textContentType="postalCode"
-              value=""
-            />
+            >
+              <TextInput
+                accessibilityLabel="BCSC.Address.PostalCodeLabel"
+                autoCapitalize="characters"
+                autoComplete="postal-code"
+                autoCorrect={false}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/postalCode-input"
+                textContentType="postalCode"
+                value=""
+              />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={

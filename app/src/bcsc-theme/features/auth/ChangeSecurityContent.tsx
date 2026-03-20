@@ -1,5 +1,7 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { upperFirst } from 'lodash'
 import { useCallback, useEffect, useState } from 'react'
@@ -42,8 +44,8 @@ export const ChangeSecurityContent = ({
         const biometricType = await getAvailableBiometricType()
         setDeviceAuthMethodName(biometricType === BiometricType.None ? 'Device Passcode' : upperFirst(biometricType))
       } catch (err) {
-        const errMessage = err instanceof Error ? err.message : String(err)
-        logger.error(`Error loading biometric type: ${errMessage}`)
+        const appError = toAppError(err, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+        logger.error(`Error loading biometric type: ${appError.technicalMessage ?? appError.message}`)
         setDeviceAuthMethodName('Device Passcode')
       }
     }
@@ -57,8 +59,8 @@ export const ChangeSecurityContent = ({
         const method = await getAccountSecurityMethod()
         setCurrentMethod(method)
       } catch (err) {
-        const errMessage = err instanceof Error ? err.message : String(err)
-        logger.error(`Error loading security method: ${errMessage}`)
+        const appError = toAppError(err, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+        logger.error(`Error loading security method: ${appError.technicalMessage ?? appError.message}`)
         emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
       }
     }
@@ -89,8 +91,8 @@ export const ChangeSecurityContent = ({
 
       onDeviceAuthSuccess()
     } catch (err) {
-      const errMessage = err instanceof Error ? err.message : String(err)
-      logger.error(`Error setting account security method: ${errMessage}`)
+      const appError = toAppError(err, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`Error setting account security method: ${appError.technicalMessage ?? appError.message}`)
       emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
   }, [logger, t, deviceAuthMethodName, onDeviceAuthSuccess, emitAlert])

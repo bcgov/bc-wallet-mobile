@@ -1,10 +1,14 @@
+import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import { MainWebViewScreen } from './MainWebViewScreen'
+import { AuthPrivacyPolicyScreen } from './AuthPrivacyPolicyScreen'
 
-describe('MainWebView', () => {
+describe('AuthPrivacyPolicyScreen', () => {
+  let mockNavigation: any
+
   beforeEach(() => {
+    mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
   })
@@ -14,10 +18,9 @@ describe('MainWebView', () => {
   })
 
   it('renders correctly', () => {
-    const route = { params: { url: 'https://example.com', title: 'Test' } }
     const tree = render(
       <BasicAppContext>
-        <MainWebViewScreen route={route as never} />
+        <AuthPrivacyPolicyScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 

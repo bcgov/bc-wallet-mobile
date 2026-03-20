@@ -38,6 +38,7 @@ const translation = {
     "Reported": "Reportado",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"
   },
   "Screens": {
     "Preface": "BC Wallet (PT-BR)",
@@ -190,6 +191,20 @@ const translation = {
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
       "AuthenticateToSecure": "Authenticate to secure your app (PT-BR)"
+    },
+    "AppReset": {
+      "Title": "App reset for security (PT-BR)",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone. (PT-BR)",
+      "Body2": "It looks like you may have turned off the passcode on this device. (PT-BR)",
+      "Body3": "When you do this, your app is reset and you need to set it up again. (PT-BR)",
+      "SetUpApp": "Set Up App (PT-BR)",
+      "LearnMore": "Learn More (PT-BR)"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device (PT-BR)",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it. (PT-BR)",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app. (PT-BR)",
+      "CheckboxLabel": "Do not show me this again (PT-BR)",
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (PT-BR)",
@@ -497,6 +512,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup (PT-BR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (PT-BR)",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act. (PT-BR)",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy (PT-BR)",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (PT-BR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (PT-BR)",
       "TermsOfUseTitle": "Terms of Use (PT-BR)",
@@ -1194,6 +1210,10 @@ const translation = {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (PT-BR)",
       "Action1": "Reset App (PT-BR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (PT-BR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (PT-BR)"
     }
 	},
   "BCWalletError": {
@@ -1201,6 +1221,9 @@ const translation = {
     "Device": {
       "KeypairGenerationError": "(PT-BR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
       "KeypairGenerationTitle": "(PT-BR) Problem with App",
+    },
+    "General": {
+      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (PT-BR)",
     },
   },
 }
