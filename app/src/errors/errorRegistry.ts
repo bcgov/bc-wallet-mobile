@@ -40,9 +40,9 @@ export interface ErrorDefinition {
   statusCode: number
   /** App event code */
   appEvent: AppEventCode
-  /** i18n key for title */
+  /** @deprecated TODO (MD): Remove UI properties from ErrorDefinition - i18n key for title */
   titleKey: string
-  /** i18n key for description */
+  /** @deprecated TODO (MD): Remove UI properties from ErrorDefinition - i18n key for description */
   descriptionKey: string
   /** Error severity */
   severity: ErrorSeverity

@@ -25,10 +25,14 @@ export type ErrorIdentity = {
  */
 export class AppError extends Error {
   private readonly identity: ErrorIdentity
+  private tracked: boolean // Whether this error has been tracked in analytics
 
   code: string // ie: network.err_no_internet.2100
+  /** @deprecated TODO (MD): Remove UI properties from AppError **/
   title: string // ie: No Internet
   appEvent: AppEventCode // ie: no_internet
+  statusCode: number // ie: 2100
+  /** @deprecated TODO (MD): Remove UI properties from AppError **/
   description: string // ie: Please check your network connection and try again.
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
@@ -42,9 +46,11 @@ export class AppError extends Error {
     this.code = `${identity.category}.${identity.appEvent}.${identity.statusCode}` // ie: network.err_no_internet.2100
     this.title = title
     this.appEvent = identity.appEvent
+    this.statusCode = identity.statusCode
     this.description = description
     this.timestamp = new Date().toISOString()
     this.handled = false
+    this.tracked = false
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -62,11 +68,26 @@ export class AppError extends Error {
   }
 
   /**
+   * Get the full error message, including technical details if available.
+   *
+   * @returns The full error message string.
+   */
+  get fullMessage(): string {
+    return this.technicalMessage
+      ? `[${this.code}] ${this.message} | Technical: ${this.technicalMessage}`
+      : `[${this.code}] ${this.message}`
+  }
+
+  /**
    * Track the error in analytics.
    *
    * @returns void
    */
   track() {
+    if (this.tracked) {
+      return
+    }
+
     Analytics.trackErrorEvent({
       /**
        * NOTE: We use AppEventCode as the error code for backwards compatibility with V3 and the
@@ -79,6 +100,8 @@ export class AppError extends Error {
        */
       message: `[${this.code}] ${this.message}`,
     })
+
+    this.tracked = true
   }
 
   /**
@@ -104,6 +127,7 @@ export class AppError extends Error {
   /**
    * Convert the AppError to a BifoldError instance.
    *
+   * @deprecated FIXME (MD): Remove this method and use `error-utils.toBifoldError` instead.
    * @returns A BifoldError representing the AppError.
    */
   toBifoldError(): BifoldError {

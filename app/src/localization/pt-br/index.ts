@@ -38,6 +38,7 @@ const translation = {
     "Reported": "Reportado",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"
   },
   "Screens": {
     "Preface": "BC Wallet (PT-BR)",
