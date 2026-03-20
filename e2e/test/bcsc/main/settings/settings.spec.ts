@@ -1,25 +1,28 @@
-import {
-  AutoLockE2EScreen,
-  HomeE2EScreen,
-  SettingsE2EScreen,
-  TabBarE2EScreen,
-} from '../../../../src/screens/bcsc/main/index.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { TestIDs } from '../../../../src/testIDs.js'
+
+const AutoLockE2EScreen = new BaseScreen()
+const HomeE2EScreen = new BaseScreen()
+const SettingsE2EScreen = new BaseScreen()
+const TabBarE2EScreen = new BaseScreen()
+
+const { AutoLock, Home, Settings, TabBar } = TestIDs
 
 describe('Settings', () => {
   it('should navigate through the Home tab and tap the Settings button', async () => {
-    await HomeE2EScreen.waitForDisplayed()
-    await TabBarE2EScreen.tapSettings()
+    await HomeE2EScreen.waitForDisplayed(60_000, Home.SettingsMenuButton)
+    await TabBarE2EScreen.tapByTestId(TabBar.SettingsMenuButton)
   })
 
   it('should navigate through the Settings screen and tap the Auto Lock button', async () => {
-    await SettingsE2EScreen.waitForDisplayed()
-    await SettingsE2EScreen.tapAutoLock()
+    await SettingsE2EScreen.waitForDisplayed(60_000, Settings.AutoLock)
+    await SettingsE2EScreen.tapByTestId(Settings.AutoLock)
   })
 
   it('should navigate through the Auto Lock screen and tap the 3 minutes option', async () => {
-    await AutoLockE2EScreen.waitForDisplayed()
-    await AutoLockE2EScreen.tapTime3Minutes()
-    await AutoLockE2EScreen.tapBack()
+    await AutoLockE2EScreen.waitForDisplayed(60_000, AutoLock.AutoLockTime3)
+    await AutoLockE2EScreen.tapByTestId(AutoLock.AutoLockTime3)
+    await AutoLockE2EScreen.tapByTestId(AutoLock.BackButton)
   })
 
   // Add tests for Sign Out
@@ -39,8 +42,8 @@ describe('Settings', () => {
   // Add tests for Developer Mode settings
 
   it('should navigate through the Settings screen and tap the Back button', async () => {
-    await SettingsE2EScreen.waitForDisplayed()
-    await SettingsE2EScreen.tapBack()
-    await TabBarE2EScreen.waitForDisplayed()
+    await SettingsE2EScreen.waitForDisplayed(60_000, Settings.BackButton)
+    await SettingsE2EScreen.tapByTestId(Settings.BackButton)
+    await TabBarE2EScreen.waitForDisplayed(60_000, TabBar.Home)
   })
 })

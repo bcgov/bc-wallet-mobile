@@ -19,7 +19,7 @@ export interface EnterTextOptions {
   characterByCharacter?: boolean
 }
 
-export abstract class BaseScreen {
+export class BaseScreen {
   /**
    * Wait until this screen is visible.
    * Each subclass defines its own "screen loaded" selector.
@@ -43,7 +43,7 @@ export abstract class BaseScreen {
    * @param text - text to find
    * @returns the element
    */
-  protected async findByText(text: string) {
+  public async findByText(text: string) {
     const selector = driver.isIOS
       ? `-ios predicate string:value == "${text}"`
       : `android=new UiSelector().text("${text}")`
@@ -55,7 +55,7 @@ export abstract class BaseScreen {
    * @param testId - test ID to find
    * @returns the element
    */
-  protected async findByTestId(testId: string) {
+  public async findByTestId(testId: string) {
     const selector = driver.isIOS
       ? `~${testId}` // accessibility id
       : `android=new UiSelector().resourceId("${testId}")`
@@ -66,7 +66,7 @@ export abstract class BaseScreen {
    * Tap an element by test ID.
    * @param testId - test ID to tap
    */
-  protected async tapByTestId(testId: string) {
+  public async tapByTestId(testId: string) {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: 1_000 })
@@ -94,19 +94,19 @@ export abstract class BaseScreen {
   /**
    * Full-screen swipe gestures (platform-specific implementation in `gestures` helper).
    */
-  protected async swipeUp(durationMs = 800) {
+  public async swipeUp(durationMs = 800) {
     await swipeUpGesture(durationMs)
   }
 
-  protected async swipeDown(durationMs = 800) {
+  public async swipeDown(durationMs = 800) {
     await swipeDownGesture(durationMs)
   }
 
-  protected async swipeLeft(durationMs = 800) {
+  public async swipeLeft(durationMs = 800) {
     await swipeLeftGesture(durationMs)
   }
 
-  protected async swipeRight(durationMs = 800) {
+  public async swipeRight(durationMs = 800) {
     await swipeRightGesture(durationMs)
   }
 
@@ -117,7 +117,7 @@ export abstract class BaseScreen {
    * @param text - text to enter
    * @param options - optional: tapFirst (focus), characterByCharacter (for secure/controlled inputs)
    */
-  protected async enterText(testId: string, text: string, options?: EnterTextOptions) {
+  public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout: 15_000 })
 
