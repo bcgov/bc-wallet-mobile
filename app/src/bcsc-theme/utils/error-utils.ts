@@ -112,8 +112,7 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   // Create a generic AppError for known event codes that don't have a predefined error definition
   if (isAppEventCode(errorCode)) {
     return new AppError(
-      'Server Error',
-      `Unhandled app event code (${errorCode})`,
+      `Server Error: Unhandled app event code (${errorCode})`,
       {
         statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
         appEvent: errorCode,

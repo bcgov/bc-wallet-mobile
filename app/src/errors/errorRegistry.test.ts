@@ -103,12 +103,6 @@ describe('errorRegistry', () => {
         expect(definition.appEvent).toBeDefined()
         expect(typeof definition.appEvent).toBe('string')
 
-        expect(definition.titleKey).toBeDefined()
-        expect(typeof definition.titleKey).toBe('string')
-
-        expect(definition.descriptionKey).toBeDefined()
-        expect(typeof definition.descriptionKey).toBe('string')
-
         expect(definition.severity).toBeDefined()
         expect(Object.values(ErrorSeverity)).toContain(definition.severity)
 
@@ -175,19 +169,6 @@ describe('errorRegistry', () => {
       expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeLessThan(3200)
     })
 
-    it('should have proper i18n key formats', () => {
-      const errorKeys = Object.keys(ErrorRegistry) as ErrorRegistryKey[]
-
-      errorKeys.forEach((key) => {
-        const definition = ErrorRegistry[key]
-
-        // Title keys should be in format 'BCWalletError.Category.Title' or 'Error.Title...'
-        expect(definition.titleKey).toMatch(/^(BCWalletError\..+Title|Error\.Title)$/)
-
-        // Description keys should be in format 'BCWalletError.Category.Something'
-        expect(definition.descriptionKey).toMatch(/^(BCWalletError\..+\..+|Error\.Message\d+)$/)
-      })
-    })
   })
 
   describe('ErrorRegistryKey type', () => {
