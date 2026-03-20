@@ -1,27 +1,25 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { TestIDs } from '../../../../src/testIDs.js'
 
-const TabBarE2EScreen = new BaseScreen()
-const HomeE2EScreen = new BaseScreen()
-const ServicesE2EScreen = new BaseScreen()
-const AccountE2EScreen = new BaseScreen()
-
-const { TabBar, Home, Services, Account } = TestIDs
+const TabBar = new BaseScreen(TestIDs.TabBar)
+const Home = new BaseScreen(TestIDs.Home)
+const Services = new BaseScreen(TestIDs.Services)
+const Account = new BaseScreen(TestIDs.Account)
 
 describe('Tab Navigation', () => {
   it('should navigate through the Home tab and to the Services tab', async () => {
-    await TabBarE2EScreen.waitForDisplayed(60_000, TabBar.Home)
-    await HomeE2EScreen.waitForDisplayed(60_000, Home.SettingsMenuButton)
-    await TabBarE2EScreen.tapByTestId(TabBar.Services)
+    await TabBar.waitFor('Home')
+    await Home.waitFor('SettingsMenuButton')
+    await TabBar.tap('Services')
   })
 
   it('should navigate through the Services tab and to the Account tab', async () => {
-    await ServicesE2EScreen.waitForDisplayed(60_000, Services.Search)
-    await TabBarE2EScreen.tapByTestId(TabBar.Account)
+    await Services.waitFor('Search')
+    await TabBar.tap('Account')
   })
 
   it('should navigate through the Account tab and to the Home tab', async () => {
-    await AccountE2EScreen.waitForDisplayed(60_000, Account.AccountScreen)
-    await TabBarE2EScreen.tapByTestId(TabBar.Home)
+    await Account.waitFor('AccountScreen')
+    await TabBar.tap('Home')
   })
 })

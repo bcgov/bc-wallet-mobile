@@ -19,7 +19,56 @@ export interface EnterTextOptions {
   characterByCharacter?: boolean
 }
 
-export class BaseScreen {
+/**
+ * Base screen object for E2E tests.
+ *
+ * When constructed with a TestIDs object (`new BaseScreen(TestIDs.AccountSetup)`),
+ * the typed convenience methods (`tap`, `waitFor`, `type`, `scrollTo`) provide
+ * full autocomplete on the TestID keys. Subclasses can extend for custom behaviour.
+ *
+ * @typeParam T - shape of the TestIDs object for this screen (e.g. `typeof TestIDs.AccountSetup`)
+ */
+export class BaseScreen<T extends Record<string, string> = Record<string, string>> {
+  /** The TestID map for this screen. Access raw values via `ids.KeyName`. */
+  public readonly ids: T
+
+  constructor(ids?: T) {
+    this.ids = (ids ?? {}) as T
+  }
+
+  // ---------------------------------------------------------------------------
+  // Typed convenience methods — keys autocomplete from T
+  // ---------------------------------------------------------------------------
+
+  /** Tap an element by its TestID key. */
+  async tap(key: keyof T & string) {
+    await this.tapByTestId(this.ids[key])
+  }
+
+  /** Wait until an element (by TestID key) is visible. */
+  async waitFor(key: keyof T & string, timeout?: number) {
+    await this.waitForDisplayed(this.ids[key], timeout)
+  }
+
+  /** Enter text into an input identified by its TestID key. */
+  async type(key: keyof T & string, text: string, options?: EnterTextOptions) {
+    await this.enterText(this.ids[key], text, options)
+  }
+
+  /** Scroll until an element (by TestID key) is visible. */
+  async scrollTo(key: keyof T & string, maxScrolls?: number, directions?: 'down' | 'both') {
+    await this.scrollToTestId(this.ids[key], maxScrolls, directions)
+  }
+
+  /** Get the raw testID string for a given key. */
+  id(key: keyof T & string): string {
+    return this.ids[key]
+  }
+
+  // ---------------------------------------------------------------------------
+  // Low-level methods — accept raw testID strings
+  // ---------------------------------------------------------------------------
+
   /**
    * Wait until this screen is visible.
    * Each subclass defines its own "screen loaded" selector.
@@ -27,7 +76,7 @@ export class BaseScreen {
    * @param testId - test ID of the element to wait for
    * @returns void
    */
-  async waitForDisplayed(timeout: number, testId: string) {
+  async waitForDisplayed(testId: string, timeout: number = 10_000) {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
@@ -151,10 +200,6 @@ export class BaseScreen {
    * @param directions - `down` scrolls toward content below; `both` tries down then up
    */
   public async scrollToTestId(testId: string, maxScrolls = 4, directions: 'down' | 'both' = 'down') {
-    /**
-     * Check if an element is visible.
-     * @returns boolean
-     */
     const isVisible = async () => {
       const candidate = await this.findByTestId(testId)
       try {
@@ -164,10 +209,6 @@ export class BaseScreen {
       }
     }
 
-    /**
-     * Scroll down once.
-     * @returns void
-     */
     const scrollDownOnce = async () => {
       if (driver.isIOS) {
         await driver.execute('mobile: scroll', { direction: 'down' })
@@ -176,10 +217,6 @@ export class BaseScreen {
       }
     }
 
-    /**
-     * Scroll up once.
-     * @returns void
-     */
     const scrollUpOnce = async () => {
       if (driver.isIOS) {
         await driver.execute('mobile: scroll', { direction: 'up' })

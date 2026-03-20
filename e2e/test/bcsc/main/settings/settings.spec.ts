@@ -1,28 +1,26 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { TestIDs } from '../../../../src/testIDs.js'
 
-const AutoLockE2EScreen = new BaseScreen()
-const HomeE2EScreen = new BaseScreen()
-const SettingsE2EScreen = new BaseScreen()
-const TabBarE2EScreen = new BaseScreen()
-
-const { AutoLock, Home, Settings, TabBar } = TestIDs
+const AutoLock = new BaseScreen(TestIDs.AutoLock)
+const Home = new BaseScreen(TestIDs.Home)
+const Settings = new BaseScreen(TestIDs.Settings)
+const TabBar = new BaseScreen(TestIDs.TabBar)
 
 describe('Settings', () => {
   it('should navigate through the Home tab and tap the Settings button', async () => {
-    await HomeE2EScreen.waitForDisplayed(60_000, Home.SettingsMenuButton)
-    await TabBarE2EScreen.tapByTestId(TabBar.SettingsMenuButton)
+    await Home.waitFor('SettingsMenuButton')
+    await TabBar.tap('SettingsMenuButton')
   })
 
   it('should navigate through the Settings screen and tap the Auto Lock button', async () => {
-    await SettingsE2EScreen.waitForDisplayed(60_000, Settings.AutoLock)
-    await SettingsE2EScreen.tapByTestId(Settings.AutoLock)
+    await Settings.waitFor('AutoLock')
+    await Settings.tap('AutoLock')
   })
 
   it('should navigate through the Auto Lock screen and tap the 3 minutes option', async () => {
-    await AutoLockE2EScreen.waitForDisplayed(60_000, AutoLock.AutoLockTime3)
-    await AutoLockE2EScreen.tapByTestId(AutoLock.AutoLockTime3)
-    await AutoLockE2EScreen.tapByTestId(AutoLock.BackButton)
+    await AutoLock.waitFor('AutoLockTime3')
+    await AutoLock.tap('AutoLockTime3')
+    await AutoLock.tap('BackButton')
   })
 
   // Add tests for Sign Out
@@ -42,8 +40,8 @@ describe('Settings', () => {
   // Add tests for Developer Mode settings
 
   it('should navigate through the Settings screen and tap the Back button', async () => {
-    await SettingsE2EScreen.waitForDisplayed(60_000, Settings.BackButton)
-    await SettingsE2EScreen.tapByTestId(Settings.BackButton)
-    await TabBarE2EScreen.waitForDisplayed(60_000, TabBar.Home)
+    await Settings.waitFor('BackButton')
+    await Settings.tap('BackButton')
+    await TabBar.waitFor('Home')
   })
 })

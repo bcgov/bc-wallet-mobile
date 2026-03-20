@@ -1,60 +1,61 @@
 import { acceptBiometricPermissionIfPresent } from '../../../src/helpers/biometrics.js'
 import { acceptLocalNetworkPermissionIfPresent } from '../../../src/helpers/iosPermissions.js'
 import { acceptNotificationPermissionIfPresent } from '../../../src/helpers/notifications.js'
-import {
-  AccountSetupE2EScreen,
-  IntroCarouselE2EScreen,
-  NotificationsE2EScreen,
-  OptInAnalyticsE2EScreen,
-  PrivacyPolicyE2EScreen,
-  SecureAppE2EScreen,
-  SetupTypesE2EScreen,
-  TermsOfUseE2EScreen,
-} from '../../../src/screens/bcsc/onboarding/index.js'
+import { BaseScreen } from '../../../src/screens/BaseScreen.js'
+import { TestIDs } from '../../../src/testIDs.js'
+
+const AccountSetup = new BaseScreen(TestIDs.AccountSetup)
+const SetupTypes = new BaseScreen(TestIDs.SetupTypes)
+const IntroCarousel = new BaseScreen(TestIDs.IntroCarousel)
+const PrivacyPolicy = new BaseScreen(TestIDs.PrivacyPolicy)
+const OptInAnalytics = new BaseScreen(TestIDs.OptInAnalytics)
+const TermsOfUse = new BaseScreen(TestIDs.TermsOfUse)
+const Notifications = new BaseScreen(TestIDs.Notifications)
+const SecureApp = new BaseScreen(TestIDs.SecureApp)
 
 describe('Onboarding', () => {
   it('should display the Account Setup screen and tap Add Account', async () => {
     await acceptLocalNetworkPermissionIfPresent()
-    await AccountSetupE2EScreen.waitForDisplayed(60_000)
-    await AccountSetupE2EScreen.tapAddAccount()
+    await AccountSetup.waitFor('AddAccount')
+    await AccountSetup.tap('AddAccount')
   })
 
   it('should navigate through the Setup Types screen', async () => {
-    await SetupTypesE2EScreen.waitForDisplayed()
-    await SetupTypesE2EScreen.selectSomeoneElseId()
-    await SetupTypesE2EScreen.selectOtherPersonPresentYes()
-    await SetupTypesE2EScreen.tapContinue()
+    await SetupTypes.waitFor('Continue')
+    await SetupTypes.tap('Continue')
   })
 
   it('should navigate through the Intro Carousel screen', async () => {
-    await IntroCarouselE2EScreen.waitForDisplayed()
-    await IntroCarouselE2EScreen.swipeThroughAll()
+    await IntroCarousel.waitFor('CarouselNext')
+    await IntroCarousel.tap('CarouselNext')
+    await IntroCarousel.tap('CarouselNext')
+    await IntroCarousel.tap('CarouselNext')
   })
 
   it('should navigate through the Privacy Policy screen', async () => {
-    await PrivacyPolicyE2EScreen.waitForDisplayed()
-    await PrivacyPolicyE2EScreen.tapContinue()
+    await PrivacyPolicy.waitFor('Continue')
+    await PrivacyPolicy.tap('Continue')
   })
 
   it('should navigate through the Opt In Analytics screen', async () => {
-    await OptInAnalyticsE2EScreen.waitForDisplayed()
-    await OptInAnalyticsE2EScreen.tapAccept()
+    await OptInAnalytics.waitFor('Accept')
+    await OptInAnalytics.tap('Accept')
   })
 
   it('should navigate through the Terms of Use screen', async () => {
-    await TermsOfUseE2EScreen.waitForDisplayed()
-    await TermsOfUseE2EScreen.tapAcceptAndContinue()
+    await TermsOfUse.waitFor('AcceptAndContinue')
+    await TermsOfUse.tap('AcceptAndContinue')
   })
 
   it('should navigate through the Notifications screen', async () => {
-    await NotificationsE2EScreen.waitForDisplayed()
-    await NotificationsE2EScreen.tapContinue()
+    await Notifications.waitFor('Continue')
+    await Notifications.tap('Continue')
     await acceptNotificationPermissionIfPresent()
   })
 
   it('should navigate through the Secure App screen', async () => {
-    await SecureAppE2EScreen.waitForDisplayed()
-    await SecureAppE2EScreen.tapBiometricAuth()
+    await SecureApp.waitFor('BiometricAuth')
+    await SecureApp.tap('BiometricAuth')
     await acceptBiometricPermissionIfPresent()
   })
 })

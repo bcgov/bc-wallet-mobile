@@ -1,31 +1,29 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { TestIDs } from '../../../../src/testIDs.js'
 
-const SetupStepsE2EScreen = new BaseScreen()
-const VerificationMethodSelectionE2EScreen = new BaseScreen()
-const VerifyInPersonE2EScreen = new BaseScreen()
-const VerificationSuccessE2EScreen = new BaseScreen()
-
-const { SetupSteps, VerificationMethodSelection, VerifyInPerson, VerificationSuccess } = TestIDs
+const SetupSteps = new BaseScreen(TestIDs.SetupSteps)
+const VerificationMethodSelection = new BaseScreen(TestIDs.VerificationMethodSelection)
+const VerifyInPerson = new BaseScreen(TestIDs.VerifyInPerson)
+const VerificationSuccess = new BaseScreen(TestIDs.VerificationSuccess)
 
 describe('In-Person Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
-    await SetupStepsE2EScreen.waitForDisplayed(10_000, SetupSteps.Step5)
-    await SetupStepsE2EScreen.tapByTestId(SetupSteps.Step5)
+    await SetupSteps.waitFor('Step5', 10_000)
+    await SetupSteps.tap('Step5')
   })
 
   it('should navigate through the Verification Method Selection screen and tap In Person', async () => {
-    await VerificationMethodSelectionE2EScreen.waitForDisplayed(60_000, VerificationMethodSelection.InPerson)
-    await VerificationMethodSelectionE2EScreen.tapByTestId(VerificationMethodSelection.InPerson)
+    await VerificationMethodSelection.waitFor('InPerson')
+    await VerificationMethodSelection.tap('InPerson')
   })
 
   it('should navigate through the Verify In Person screen and tap Complete', async () => {
-    await VerifyInPersonE2EScreen.waitForDisplayed(60_000, VerifyInPerson.Complete)
+    await VerifyInPerson.waitFor('Complete')
 
     // TEMPORARY manual verification for now until we can automate it
     await new Promise((resolve) => setTimeout(resolve, 100_000))
-    await VerifyInPersonE2EScreen.tapByTestId(VerifyInPerson.Complete)
-    await VerificationSuccessE2EScreen.waitForDisplayed(60_000, VerificationSuccess.Ok)
-    await VerificationSuccessE2EScreen.tapByTestId(VerificationSuccess.Ok)
+    await VerifyInPerson.tap('Complete')
+    await VerificationSuccess.waitFor('Ok')
+    await VerificationSuccess.tap('Ok')
   })
 })
