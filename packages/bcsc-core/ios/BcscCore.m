@@ -114,6 +114,12 @@ RCT_EXTERN_METHOD(setAuthorizationRequest : (NSDictionary *)data resolve : (RCTP
 
 RCT_EXTERN_METHOD(deleteAuthorizationRequest : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+// Android Global Flags Storage Methods (no-op stubs on iOS; platform branching in TypeScript)
+RCT_EXTERN_METHOD(getAndroidGlobalFlags : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(setAndroidGlobalFlags : (NSDictionary *)flags resolve : (RCTPromiseResolveBlock)
+                      resolve reject : (RCTPromiseRejectBlock)reject)
+
 // Account Flags Storage Methods
 RCT_EXTERN_METHOD(getAccountFlags : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 

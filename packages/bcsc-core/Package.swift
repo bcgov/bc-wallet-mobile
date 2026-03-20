@@ -15,7 +15,10 @@ let package = Package(
             sources: [
                 "Account.swift",
                 "AccountSecurityMethod.swift",
+                "AuthorizationRequest.swift",
+                "ClientMetadataModel.swift",
                 "CommonCryptoWrapper.swift",
+                "DocumentsDataModel.swift",
                 "LAContext+Extensions.swift",
                 "Logger.swift",
                 "PINCryptoPolicy.swift",
@@ -24,6 +27,7 @@ let package = Package(
                 "PINService.swift",
                 "PINServiceProtocol.swift",
                 "SPMCompat.swift",
+                "StorageService.swift",
             ],
             swiftSettings: [.define("SPM_BUILD")]
         ),

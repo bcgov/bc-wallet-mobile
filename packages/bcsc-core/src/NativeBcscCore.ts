@@ -346,6 +346,24 @@ export interface Spec extends TurboModule {
    */
   deleteAuthorizationRequest(): Promise<boolean>;
 
+  // Android Global Flags Storage Methods
+  /**
+   * Gets global (non-account-scoped) flags from Android SharedPreferences.
+   * On iOS this is a no-op stub (returns empty object); use getAccountFlags instead.
+   * @returns Object containing global flags
+   * @platform Android only (no-op on iOS)
+   */
+  getAndroidGlobalFlags(): Promise<Object>;
+
+  /**
+   * Sets global (non-account-scoped) flags in Android SharedPreferences.
+   * On iOS this is a no-op stub (returns true); use setAccountFlags instead.
+   * @param flags Object containing flags to set (merges with existing)
+   * @returns true if saved successfully
+   * @platform Android only (no-op on iOS)
+   */
+  setAndroidGlobalFlags(flags: Object): Promise<boolean>;
+
   // Account Flags Storage Methods
   /**
    * Gets account flags from native storage.
