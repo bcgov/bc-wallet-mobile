@@ -90,14 +90,7 @@ exports[`ManualSerial renders correctly 1`] = `
           >
             BCSC.ManualSerial.InputSubText
           </Text>
-          <View
-            style={
-              {
-                "marginVertical": 10,
-                "width": "100%",
-              }
-            }
-          >
+          <View>
             <Text
               maxFontSizeMultiplier={2}
               style={
@@ -105,45 +98,151 @@ exports[`ManualSerial renders correctly 1`] = `
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
+                    "fontSize": 16,
+                    "fontWeight": "bold",
                   },
-                  {
-                    "marginBottom": 5,
-                  },
+                  [
+                    {
+                      "marginBottom": 8,
+                    },
+                    undefined,
+                  ],
                 ]
               }
+              testID="com.ariesbifold:id/serial-label"
             >
               BCSC.ManualSerial.InputLabel
             </Text>
-            <TextInput
-              accessibilityLabel="BCSC.ManualSerial.InputLabel"
-              autoCapitalize="characters"
-              autoComplete="off"
-              autoCorrect={false}
-              defaultValue=""
-              maxFontSizeMultiplier={2}
-              maxLength={15}
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              hitSlop={
+                {
+                  "bottom": 44,
+                  "left": 44,
+                  "right": 44,
+                  "top": 44,
+                }
+              }
               onBlur={[Function]}
-              onChangeText={[Function]}
+              onClick={[Function]}
               onFocus={[Function]}
-              selectionColor="#313132"
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
                 [
                   {
+                    "alignItems": "center",
                     "backgroundColor": "#D3D3D3",
                     "borderColor": "#D3D3D3",
                     "borderRadius": 4,
                     "borderWidth": 1,
                     "color": "#313132",
+                    "elevation": 0,
+                    "flexDirection": "row",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 16,
                     "padding": 10,
+                    "shadowColor": undefined,
+                    "shadowOffset": undefined,
+                    "shadowOpacity": 0,
+                    "shadowRadius": undefined,
                   },
                   false,
+                  undefined,
                 ]
               }
-              testID="com.ariesbifold:id/SerialInput"
+            >
+              <TextInput
+                accessibilityLabel="BCSC.ManualSerial.InputLabel"
+                autoCapitalize="characters"
+                autoComplete="off"
+                autoCorrect={false}
+                maxLength={15}
+                onBlur={[Function]}
+                onChange={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/serial-input"
+                value=""
+              />
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#D8292F",
+                      "fontSize": 24,
+                    },
+                    {
+                      "marginRight": 8,
+                      "opacity": 0,
+                    },
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰀨
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "marginTop": 8,
+                    },
+                    undefined,
+                  ],
+                ]
+              }
+              testID="com.ariesbifold:id/serial-subtext"
             />
           </View>
           <Image
