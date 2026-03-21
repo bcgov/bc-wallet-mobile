@@ -714,6 +714,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (FR)",
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter your email address (FR)",
+      "EmailAddress": "Email address (FR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (FR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (FR)",
     },
