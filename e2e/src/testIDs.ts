@@ -7,6 +7,10 @@ export const TestIDs = {
     TransferAccount: 'com.ariesbifold:id/TransferAccount',
     DeveloperMode: 'com.ariesbifold:id/DeveloperMode',
   },
+  TransferInformation: {
+    TransferAccountButton: 'com.ariesbifold:id/TransferAccountButton',
+    Back: 'com.ariesbifold:id/Back',
+  },
   SetupTypes: {
     Continue: 'com.ariesbifold:id/Continue',
     Cancel: 'com.ariesbifold:id/Cancel',

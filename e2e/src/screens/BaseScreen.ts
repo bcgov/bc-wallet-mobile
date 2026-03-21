@@ -60,6 +60,11 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     await this.scrollToTestId(this.ids[key], maxScrolls, directions)
   }
 
+  /** Wait until an element (by TestID key) is enabled, then tap it. */
+  async tapWhenEnabled(key: keyof T & string, timeout?: number) {
+    await this.waitForEnabledAndTap(this.ids[key], timeout)
+  }
+
   /** Get the raw testID string for a given key. */
   id(key: keyof T & string): string {
     return this.ids[key]
@@ -124,6 +129,20 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await this.scrollToTestId(testId, 5, 'both')
       await el.waitForDisplayed({ timeout: 1_000 })
     }
+    await el.click()
+  }
+
+  /**
+   * Wait until an element is enabled, then tap it.
+   * Useful for buttons that start disabled (e.g. "Accept" gates behind a scroll or timer).
+   *
+   * @param testId - test ID of the element
+   * @param timeout - max time to wait for the element to become enabled (default 30s)
+   */
+  public async waitForEnabledAndTap(testId: string, timeout: number = 30_000) {
+    const el = await this.findByTestId(testId)
+    await el.waitForDisplayed({ timeout })
+    await el.waitForEnabled({ timeout })
     await el.click()
   }
 
