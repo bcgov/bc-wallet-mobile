@@ -84,8 +84,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
     // Clear stale server status banners from previous session before fresh check
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
-    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
+    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
+    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
 
     const serverStatus = await configApi.getServerStatus()
 
