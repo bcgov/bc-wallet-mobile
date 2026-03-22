@@ -1,6 +1,5 @@
-import BCSCApiClient from '@/bcsc-theme/api/client'
 import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCAuthStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { BCState } from '@/store'
@@ -17,11 +16,18 @@ const useServiceOutageViewModel = () => {
   const route = useRoute<ServiceOutageRouteProps>()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const client = useBCSCApiClient()
-  const configApi = useConfigApi(client as BCSCApiClient)
+  const { client } = useBCSCApiClientState()
+  const configApi = useConfigApi(client!)
   const [statusMessage, setStatusMessage] = useState(route.params?.statusMessage)
+  const [isChecking, setIsChecking] = useState(false)
 
   const handleCheckAgain = useCallback(async () => {
+    if (!client) {
+      logger.warn('ServiceOutage: API client not ready, skipping re-check')
+      return
+    }
+
+    setIsChecking(true)
     try {
       const serverStatus = await configApi.getServerStatus()
       const utils = { dispatch, translation: t, logger }
@@ -38,8 +44,10 @@ const useServiceOutageViewModel = () => {
       }
     } catch (error) {
       logger.error('ServiceOutage: Failed to re-check server status', error as Error)
+    } finally {
+      setIsChecking(false)
     }
-  }, [configApi, dispatch, t, logger, navigation])
+  }, [client, configApi, dispatch, t, logger, navigation])
 
   const contentText = statusMessage
     ? [statusMessage]
@@ -49,6 +57,7 @@ const useServiceOutageViewModel = () => {
     headerText: t('BCSC.Modals.ServiceOutage.Header'),
     contentText,
     buttonText: t('BCSC.Modals.ServiceOutage.CheckAgainButton'),
+    isChecking,
     handleCheckAgain,
   }
 }
