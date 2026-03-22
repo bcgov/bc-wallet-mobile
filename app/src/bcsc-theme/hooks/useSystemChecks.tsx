@@ -1,3 +1,5 @@
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { SERVER_STATUS_RECHECK_INTERVAL_MS } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -43,6 +45,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const { emitAlert } = useErrorAlert()
 
+  const hasServerOutage = store.bcsc.bannerMessages.some((b) => b.id === BCSCBanner.IAS_SERVER_UNAVAILABLE)
+
   // Updated credential metadata ref
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
@@ -51,7 +55,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
 
-  // Internet connectivity listener
+  // Internet connectivity and foreground listener
   useEffect(() => {
     if (scope !== SystemCheckScope.STARTUP) {
       return
@@ -82,6 +86,19 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       appStateSubscription.remove()
     }
   }, [scope, logger, navigation, recheckServerStatus])
+
+  // Periodic server status re-check during active outage (matches v3 60-second interval)
+  useEffect(() => {
+    if (scope !== SystemCheckScope.STARTUP || !hasServerOutage) {
+      return
+    }
+
+    const intervalId = setInterval(() => {
+      recheckServerStatus()
+    }, SERVER_STATUS_RECHECK_INTERVAL_MS)
+
+    return () => clearInterval(intervalId)
+  }, [scope, hasServerOutage, recheckServerStatus])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
