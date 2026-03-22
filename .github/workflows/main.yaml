@@ -83,6 +83,23 @@ jobs:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
 
+  # ─── Dynamic Variant Matrix ──────────────────────────────────────────
+  # PRs build only bcwallet-prod + bcsc-dev (fast feedback).
+  # Merges to main and workflow_dispatch build all BCSC variants.
+  compute-variants:
+    runs-on: ubuntu-22.04
+    outputs:
+      variants: ${{ steps.set-variants.outputs.variants }}
+    steps:
+      - name: Determine variant matrix
+        id: set-variants
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "merge_group" ]]; then
+            echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
+          fi
+
   early-exit-check:
     runs-on: ubuntu-22.04
     outputs:
@@ -144,10 +161,6 @@ jobs:
   # variant build.  The pre-built bundle is uploaded as an artifact and
   # downloaded by build-ios (SKIP_BUNDLING=1) and build-android
   # (SKIP_METRO_BUNDLE=1), so Metro is never invoked during native builds.
-  #
-  # Future optimizations:
-  #   - Use dynamic matrix (fromJSON) to build only bcwallet-prod +
-  #     bcsc-dev on pull requests, all variants on main/dispatch.
   prepare-ios:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
@@ -390,12 +403,12 @@ jobs:
 
   build-ios:
     name: Build iOS - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare-ios]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-ios, compute-variants]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -700,13 +713,13 @@ jobs:
 
   build-android:
     name: Build Android - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare-android]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-android, compute-variants]
     if: |-
       needs.early-exit-check.outputs.should_skip_build != 'true' &&
       needs.prepare-android.result == 'success'
     strategy:
       matrix:
-        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -978,12 +991,12 @@ jobs:
   distribute-testflight:
     name: 'Distribute TestFlight - ${{ matrix.variant }}'
     if: success() && github.ref_name == 'main'
-    needs: [build-ios, build-summary]
+    needs: [build-ios, build-summary, compute-variants]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -1008,12 +1021,12 @@ jobs:
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
-    needs: [build-ios, build-android, build-summary]
+    needs: [build-ios, build-android, build-summary, compute-variants]
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         platform: [ios, android]
-        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -1057,7 +1070,7 @@ jobs:
   # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
   run-on-device-tests:
     name: 'App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}'
-    needs: [ship-to-saucelabs]
+    needs: [ship-to-saucelabs, compute-variants]
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
@@ -1068,7 +1081,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [iOS, Android]
-        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
