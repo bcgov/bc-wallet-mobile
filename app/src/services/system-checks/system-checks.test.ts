@@ -277,7 +277,11 @@ describe('System Checks', () => {
           logger: {} as any,
         }
         const check = new ServerStatusSystemCheck(
-          { status: 'unavailable', contactLink: 'https://status.com', statusMessage: 'Custom server down message' } as any,
+          {
+            status: 'unavailable',
+            contactLink: 'https://status.com',
+            statusMessage: 'Custom server down message',
+          } as any,
           mockUtils,
           mockNavigation
         )

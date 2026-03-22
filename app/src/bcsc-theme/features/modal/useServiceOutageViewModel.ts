@@ -38,9 +38,7 @@ const useServiceOutageViewModel = () => {
         check.onSuccess()
       } else {
         check.onFail()
-        setStatusMessage(
-          serverStatus.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')
-        )
+        setStatusMessage(serverStatus.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'))
       }
     } catch (error) {
       logger.error('ServiceOutage: Failed to re-check server status', error as Error)
@@ -49,9 +47,7 @@ const useServiceOutageViewModel = () => {
     }
   }, [isClientReady, configApi, dispatch, t, logger, navigation])
 
-  const contentText = statusMessage
-    ? [statusMessage]
-    : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
+  const contentText = statusMessage ? [statusMessage] : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
 
   return {
     headerText: t('BCSC.Modals.ServiceOutage.Header'),
