@@ -27,7 +27,7 @@ import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
 
-type ScopeSystemChecks = {
+type SystemCheckScopeEntry = {
   /**
    * Callback to get system checks for the scope
    * @return Array of system check strategies
@@ -39,7 +39,7 @@ type ScopeSystemChecks = {
   isReady: boolean
 }
 
-type UseGetSystemChecksReturn = Record<SystemCheckScope, ScopeSystemChecks> & {
+type UseGetSystemChecksReturn = Record<SystemCheckScope, SystemCheckScopeEntry> & {
   /**
    * Re-checks the server status. Used when the app returns to foreground.
    */
