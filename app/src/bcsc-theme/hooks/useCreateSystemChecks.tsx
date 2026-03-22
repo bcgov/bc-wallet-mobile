@@ -27,24 +27,20 @@ import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
 
-type SystemCheckScopeEntry = {
-  /**
-   * Callback to get system checks for the scope
-   * @return Array of system check strategies
-   */
-  getSystemChecks: () => Promise<SystemCheckStrategy[]>
-  /**
-   * Indicates if the system checks for the scope are ready to be run
-   */
-  isReady: boolean
-}
-
-type UseGetSystemChecksReturn = Record<SystemCheckScope, SystemCheckScopeEntry> & {
-  /**
-   * Re-checks the server status. Used when the app returns to foreground.
-   */
-  recheckServerStatus: () => Promise<void>
-}
+type UseGetSystemChecksReturn = Record<
+  SystemCheckScope,
+  {
+    /**
+     * Callback to get system checks for the scope
+     * @return Array of system check strategies
+     */
+    getSystemChecks: () => Promise<SystemCheckStrategy[]>
+    /**
+     * Indicates if the system checks for the scope are ready to be run
+     */
+    isReady: boolean
+  }
+>
 
 /**
  * Hook to create system checks to be used by useSystemChecks hook.
@@ -158,21 +154,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appVersion,
   ])
 
-  const recheckServerStatus = useCallback(async () => {
-    try {
-      const serverStatus = await configApi.getServerStatus()
-      const check = new ServerStatusSystemCheck(serverStatus, utils, navigation)
-
-      if (check.runCheck()) {
-        check.onSuccess()
-      } else {
-        check.onFail()
-      }
-    } catch (error) {
-      logger.error('[useCreateSystemChecks]: Failed to re-check server status on foreground', error as Error)
-    }
-  }, [configApi, utils, navigation, logger])
-
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -183,14 +164,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && accountExpirationDate),
       },
-      recheckServerStatus,
     }
   }, [
     accountExpirationDate,
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
-    recheckServerStatus,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
   ])
