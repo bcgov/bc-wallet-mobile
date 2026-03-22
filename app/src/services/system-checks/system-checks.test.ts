@@ -229,7 +229,7 @@ describe('System Checks', () => {
 
       it('should return false when server status not ok', () => {
         const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'unknown' } as any, mockUtils, mockNavigation)
+        const check = new ServerStatusSystemCheck({ status: 'unavailable' } as any, mockUtils, mockNavigation)
 
         expect(check.runCheck()).toBe(false)
       })
@@ -243,7 +243,7 @@ describe('System Checks', () => {
           logger: {} as any,
         }
         const check = new ServerStatusSystemCheck(
-          { status: 'down', contactLink: 'https://status.com' } as any,
+          { status: 'unavailable', contactLink: 'https://status.com' } as any,
           mockUtils,
           mockNavigation
         )
@@ -277,7 +277,7 @@ describe('System Checks', () => {
           logger: {} as any,
         }
         const check = new ServerStatusSystemCheck(
-          { status: 'down', contactLink: 'https://status.com', statusMessage: 'Custom server down message' } as any,
+          { status: 'unavailable', contactLink: 'https://status.com', statusMessage: 'Custom server down message' } as any,
           mockUtils,
           mockNavigation
         )
@@ -309,7 +309,7 @@ describe('System Checks', () => {
           logger: {} as any,
         }
         const check = new ServerStatusSystemCheck(
-          { status: 'down', contactLink: 'https://status.com' } as any,
+          { status: 'unavailable', contactLink: 'https://status.com' } as any,
           mockUtils,
           navWithModal
         )

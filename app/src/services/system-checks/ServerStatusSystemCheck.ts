@@ -27,7 +27,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
 
   private get isModalVisible() {
     const state = this.navigation.getState()
-    const currentRouteName = state?.routes[state.index].name
+    const currentRouteName = state?.routes?.[state.index]?.name
     return currentRouteName === BCSCModals.ServiceOutage
   }
 

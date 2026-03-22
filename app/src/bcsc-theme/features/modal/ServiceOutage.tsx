@@ -2,7 +2,7 @@ import { SystemModal } from './components/SystemModal'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
 export const ServiceOutage = (): React.ReactElement => {
-  const { headerText, contentText, buttonText, isChecking, handleCheckAgain } = useServiceOutageViewModel()
+  const { headerText, contentText, buttonText, isCheckDisabled, handleCheckAgain } = useServiceOutageViewModel()
 
   return (
     <SystemModal
@@ -10,7 +10,7 @@ export const ServiceOutage = (): React.ReactElement => {
       headerText={headerText}
       contentText={contentText}
       buttonText={buttonText}
-      buttonDisabled={isChecking}
+      buttonDisabled={isCheckDisabled}
       onButtonPress={handleCheckAgain}
     />
   )
