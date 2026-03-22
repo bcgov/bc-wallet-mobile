@@ -395,8 +395,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -707,8 +706,7 @@ jobs:
       needs.prepare-android.result == 'success'
     strategy:
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -978,14 +976,14 @@ jobs:
   # Decoupled from build-ios so the upload→process wait no longer
   # blocks the iOS build critical path.
   distribute-testflight:
-    name: "Distribute TestFlight - ${{ matrix.variant }}"
+    name: 'Distribute TestFlight - ${{ matrix.variant }}'
     if: success() && github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
+        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
     steps:
       - uses: actions/checkout@v6
 
@@ -1006,7 +1004,7 @@ jobs:
           beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
 
   ship-to-saucelabs:
-    name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
+    name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
@@ -1015,8 +1013,7 @@ jobs:
     strategy:
       matrix:
         platform: [ios, android]
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
     steps:
       - uses: actions/checkout@v6
 
@@ -1059,7 +1056,7 @@ jobs:
   #
   # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
   run-on-device-tests:
-    name: "App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}"
+    name: 'App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}'
     needs: [ship-to-saucelabs]
     if: >-
       success() &&
@@ -1071,8 +1068,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [iOS, Android]
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: [bcwallet-prod, bcsc-dev, bcsc-qa, bcsc-test, bcsc-prod]
     steps:
       - uses: actions/checkout@v6
 
