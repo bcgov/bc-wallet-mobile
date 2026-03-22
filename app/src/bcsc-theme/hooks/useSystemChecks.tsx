@@ -38,6 +38,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
   const systemChecks = useCreateSystemChecks()
+  const { recheckServerStatus } = systemChecks
   const appStateRef = useRef(AppState.currentState)
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const { emitAlert } = useErrorAlert()
@@ -68,10 +69,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     const appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
       appStateRef.current = nextAppState
 
-      // When app becomes active, refresh network state to ensure accurate status
+      // When app becomes active, refresh network state and server status to ensure accurate status
       if (nextAppState === 'active') {
         const { isConnected, isInternetReachable } = await NetInfo.refresh()
         await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
+        await recheckServerStatus()
       }
     })
 
@@ -79,7 +81,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       unsubscribeNetInfo()
       appStateSubscription.remove()
     }
-  }, [scope, logger, navigation])
+  }, [scope, logger, navigation, recheckServerStatus])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {

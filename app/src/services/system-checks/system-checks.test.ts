@@ -208,24 +208,35 @@ describe('System Checks', () => {
   })
 
   describe('ServerStatusSystemCheck', () => {
+    const mockNavigation = {
+      navigate: jest.fn(),
+      canGoBack: jest.fn().mockReturnValue(false),
+      goBack: jest.fn(),
+      getState: jest.fn().mockReturnValue({ routes: [{ name: 'SomeScreen' }], index: 0 }),
+    }
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
     describe('runCheck', () => {
       it('should return true when server status ok', () => {
         const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils)
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, mockNavigation)
 
         expect(check.runCheck()).toBe(true)
       })
 
       it('should return false when server status not ok', () => {
         const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'unknown' } as any, mockUtils)
+        const check = new ServerStatusSystemCheck({ status: 'unknown' } as any, mockUtils, mockNavigation)
 
         expect(check.runCheck()).toBe(false)
       })
     })
 
     describe('onFail', () => {
-      it('should dispatch an info banner with translated description when no statusMessage', () => {
+      it('should navigate to ServiceOutage modal and dispatch a non-dismissible info banner', () => {
         const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn().mockReturnValue('Server unavailable') as any,
@@ -233,11 +244,16 @@ describe('System Checks', () => {
         }
         const check = new ServerStatusSystemCheck(
           { status: 'down', contactLink: 'https://status.com' } as any,
-          mockUtils
+          mockUtils,
+          mockNavigation
         )
 
         check.onFail()
 
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.ServiceOutage, {
+          statusMessage: undefined,
+          contactLink: 'https://status.com',
+        })
         expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.ADD_BANNER_MESSAGE,
@@ -247,7 +263,7 @@ describe('System Checks', () => {
               title: undefined,
               description: 'Server unavailable',
               type: 'info',
-              dismissible: true,
+              dismissible: false,
               metadata: { contactLink: 'https://status.com' },
             }),
           ],
@@ -262,7 +278,8 @@ describe('System Checks', () => {
         }
         const check = new ServerStatusSystemCheck(
           { status: 'down', contactLink: 'https://status.com', statusMessage: 'Custom server down message' } as any,
-          mockUtils
+          mockUtils,
+          mockNavigation
         )
 
         check.onFail()
@@ -280,12 +297,34 @@ describe('System Checks', () => {
           ],
         })
       })
+
+      it('should not navigate if modal is already visible', () => {
+        const navWithModal = {
+          ...mockNavigation,
+          getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.ServiceOutage }], index: 0 }),
+        }
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn().mockReturnValue('Server unavailable') as any,
+          logger: {} as any,
+        }
+        const check = new ServerStatusSystemCheck(
+          { status: 'down', contactLink: 'https://status.com' } as any,
+          mockUtils,
+          navWithModal
+        )
+
+        check.onFail()
+
+        expect(navWithModal.navigate).not.toHaveBeenCalled()
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+      })
     })
 
     describe('onSuccess', () => {
       it('should remove both banner messages when no statusMessage', () => {
         const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils)
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, mockNavigation)
 
         check.onSuccess()
 
@@ -300,11 +339,26 @@ describe('System Checks', () => {
         })
       })
 
-      it('should dispatch info banner if statusMessage exists', () => {
+      it('should dismiss modal if visible and go back', () => {
+        const navWithModal = {
+          ...mockNavigation,
+          getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.ServiceOutage }], index: 0 }),
+          canGoBack: jest.fn().mockReturnValue(true),
+        }
+        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, navWithModal)
+
+        check.onSuccess()
+
+        expect(navWithModal.goBack).toHaveBeenCalled()
+      })
+
+      it('should dispatch non-dismissible info banner if statusMessage exists', () => {
         const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
         const check = new ServerStatusSystemCheck(
           { status: 'ok', contactLink: 'https://status.com', statusMessage: 'Server maintenance scheduled' } as any,
-          mockUtils
+          mockUtils,
+          mockNavigation
         )
 
         check.onSuccess()
@@ -317,7 +371,7 @@ describe('System Checks', () => {
               id: BCSCBanner.IAS_SERVER_NOTIFICATION,
               description: 'Server maintenance scheduled',
               type: 'info',
-              dismissible: true,
+              dismissible: false,
               metadata: { contactLink: 'https://status.com' },
             }),
           ],

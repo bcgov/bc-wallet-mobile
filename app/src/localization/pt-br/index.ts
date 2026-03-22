@@ -341,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (PT-BR)",
+        "CheckAgainButton": "Check again (PT-BR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
