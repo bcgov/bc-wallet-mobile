@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { Spacing } from '@/bcwallet-theme/theme'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { BCState, Mode } from '@/store'
 import {
@@ -47,14 +48,58 @@ type ServiceLoginUnavailableViewProps = {
 
 const RenderState = {
   Loading: 'Loading',
-  Unavailable: 'Unavailable',
-  Default: 'Default',
+  Unavailable: 'Unavailable', // quick login in 'unavailable' so the links take the user out of the app
+  Default: 'Default', // Quick login is available
 } as const
+
+// This compares fields in LocalState to determine if the service supports quicklogin. v3 checks against these same fields
+const isQuickLoginAvailable = (state: LocalState): boolean =>
+  state.service?.initiate_login_uri != null &&
+  state.service?.claims_description != null &&
+  state.service?.policy_uri != null
 
 const ServiceLoginLoadingView = () => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1, justifyContent: 'center' }}>
     <ActivityIndicator size="large" />
   </SafeAreaView>
+)
+
+type DevicePreferenceURLViewProps = {
+  serviceClientUri?: string
+  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
+  t: (key: string, options?: Record<string, unknown>) => string
+}
+
+const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({ serviceClientUri, ColorPalette, t }) =>
+  serviceClientUri ? (
+    <View style={{ marginTop: Spacing.lg }}>
+      <View
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: ColorPalette.grayscale.white,
+          marginBottom: Spacing.lg,
+        }}
+      />
+      <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{serviceClientUri}</ThemedText>
+    </View>
+  ) : null
+
+type ReportSuspiciousLinkProps = {
+  t: (key: string, options?: Record<string, unknown>) => string
+  testID?: string
+}
+
+const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }) => (
+  <ThemedText variant={'bold'}>
+    {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
+    <Link
+      linkText={t('BCSC.Services.ReportSuspicious')}
+      testID={testID}
+      onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
+    />
+  </ThemedText>
 )
 
 const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
@@ -88,15 +133,8 @@ const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }:
             <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
           </View>
         </TouchableOpacity>
-
-        <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
-          <Link
-            linkText={t('BCSC.Services.ReportSuspicious')}
-            testID={testIdWithKey('ReportSuspiciousLink')}
-            onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
-          />
-        </ThemedText>
+        <DevicePreferenceURLView serviceClientUri={state.serviceClientUri} ColorPalette={ColorPalette} t={t} />
+        <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
       </View>
     </ScrollView>
   </SafeAreaView>
@@ -162,13 +200,6 @@ const ServiceLoginDefaultView = ({
             </TouchableOpacity>
           ) : null}
         </View>
-
-        <View>
-          <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
-          {state.serviceClientUri ? (
-            <ThemedText>{t('BCSC.Services.GotoUrl', { url: state.serviceClientUri })}</ThemedText>
-          ) : null}
-        </View>
       </View>
       <View style={styles.buttonsContainer}>
         <View style={styles.continueButtonContainer}>
@@ -188,6 +219,8 @@ const ServiceLoginDefaultView = ({
           onPress={onCancel}
         />
       </View>
+      <DevicePreferenceURLView serviceClientUri={state.serviceClientUri} ColorPalette={ColorPalette} t={t} />
+      <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
     </ScrollView>
   </SafeAreaView>
 )
@@ -238,7 +271,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       gap: Spacing.md,
     },
     buttonsContainer: {
-      marginTop: 'auto',
+      marginTop: Spacing.lg,
     },
     infoContainer: {
       display: 'flex',
@@ -380,13 +413,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return RenderState.Loading
     }
 
-    if (!state.serviceInitiateLoginUri && !state.pairingCode) {
-      return RenderState.Unavailable
+    if (isQuickLoginAvailable(state)) {
+      return RenderState.Default
     }
 
-    return RenderState.Default
+    return RenderState.Unavailable
   })()
-
   switch (renderState) {
     case RenderState.Loading:
       return <ServiceLoginLoadingView />

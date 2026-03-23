@@ -305,7 +305,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later.",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
       "NoLoginProof": "You will use this app to prove who you are when you log in.",
-      "Goto": "Go to",
+      "Goto": "On that device, go to:",
       "GotoService": "Go to {{- service}}",
       "GotoUrl": "Go to: {{- url}}",
       "NotListed": "Services not listed?",
