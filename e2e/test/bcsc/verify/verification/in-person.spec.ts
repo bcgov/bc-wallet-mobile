@@ -1,10 +1,10 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-const SetupSteps = new BaseScreen(TestIDs.SetupSteps)
-const VerificationMethodSelection = new BaseScreen(TestIDs.VerificationMethodSelection)
-const VerifyInPerson = new BaseScreen(TestIDs.VerifyInPerson)
-const VerificationSuccess = new BaseScreen(TestIDs.VerificationSuccess)
+const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
+const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
+const VerifyInPerson = new BaseScreen(BCSC_TestIDs.VerifyInPerson)
+const VerificationSuccess = new BaseScreen(BCSC_TestIDs.VerificationSuccess)
 
 describe('In-Person Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {

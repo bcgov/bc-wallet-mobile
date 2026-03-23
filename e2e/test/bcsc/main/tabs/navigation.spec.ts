@@ -1,10 +1,10 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-const TabBar = new BaseScreen(TestIDs.TabBar)
-const Home = new BaseScreen(TestIDs.Home)
-const Services = new BaseScreen(TestIDs.Services)
-const Account = new BaseScreen(TestIDs.Account)
+const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
+const Home = new BaseScreen(BCSC_TestIDs.Home)
+const Services = new BaseScreen(BCSC_TestIDs.Services)
+const Account = new BaseScreen(BCSC_TestIDs.Account)
 
 describe('Tab Navigation', () => {
   it('should navigate through the Home tab and to the Services tab', async () => {

@@ -1,8 +1,8 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-const Nickname = new BaseScreen(TestIDs.Nickname)
-const SetupSteps = new BaseScreen(TestIDs.SetupSteps)
+const Nickname = new BaseScreen(BCSC_TestIDs.Nickname)
+const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Nickname', () => {
   it('should display the Setup Steps screen and tap Step 1', async () => {

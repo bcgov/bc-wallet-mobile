@@ -1,10 +1,10 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-const AutoLock = new BaseScreen(TestIDs.AutoLock)
-const Home = new BaseScreen(TestIDs.Home)
-const Settings = new BaseScreen(TestIDs.Settings)
-const TabBar = new BaseScreen(TestIDs.TabBar)
+const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
+const Home = new BaseScreen(BCSC_TestIDs.Home)
+const Settings = new BaseScreen(BCSC_TestIDs.Settings)
+const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
 
 describe('Settings', () => {
   it('should navigate through the Home tab and tap the Settings button', async () => {

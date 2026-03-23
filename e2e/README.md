@@ -6,7 +6,7 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
 2. **_Variant + flow driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `E2E_FLOW` _(`simple` | `advanced`) controls how deep each stage goes (detours, biometric auth, extra verification steps)._
-3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
+3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `BCSC_TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
 ## _Directory Structure_
@@ -48,7 +48,7 @@ e2e/
 │   │   ├── notifications.ts                 # notification permission dialog handling (iOS + Android)
 │   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
 │   │
-│   └── screens/                             # screen objects — generic base + TestIDs registry
+│   └── screens/                             # screen objects — generic base + BCSC_TestIDs registry
 │       └── BaseScreen.ts                    # cross-platform element lookup, tap, wait, scroll
 │
 ├── test/
@@ -297,14 +297,14 @@ _Each leaf config only contains **capabilities** (device name, platform version,
 
 ### _Screen Objects & TestIDs_
 
-_Screen interactions use_ `BaseScreen` _instances backed by the central_ `TestIDs` _registry in_ `src/testIDs.ts`_. Each screen group is created by passing its TestID section to_ `BaseScreen`_:_
+_Screen interactions use_ `BaseScreen` _instances backed by the central_ `BCSC_TestIDs` _registry in_ `src/testIDs.ts`_. Each screen group is created by passing its TestID section to_ `BaseScreen`_:_
 
 ```typescript
 import { BaseScreen } from '../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../src/testIDs.js'
 
-const AccountSetup = new BaseScreen(TestIDs.AccountSetup)
-const IntroCarousel = new BaseScreen(TestIDs.IntroCarousel)
+const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
+const IntroCarousel = new BaseScreen(BCSC_TestIDs.IntroCarousel)
 
 describe('App Launch', () => {
   it('should launch and display the first screen', async () => {

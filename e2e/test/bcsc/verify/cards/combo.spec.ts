@@ -1,11 +1,11 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-const SetupSteps = new BaseScreen(TestIDs.SetupSteps)
-const IdentitySelection = new BaseScreen(TestIDs.IdentitySelection)
-const SerialInstructions = new BaseScreen(TestIDs.SerialInstructions)
-const ManualSerial = new BaseScreen(TestIDs.ManualSerial)
-const EnterBirthdate = new BaseScreen(TestIDs.EnterBirthdate)
+const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
+const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
+const SerialInstructions = new BaseScreen(BCSC_TestIDs.SerialInstructions)
+const ManualSerial = new BaseScreen(BCSC_TestIDs.ManualSerial)
+const EnterBirthdate = new BaseScreen(BCSC_TestIDs.EnterBirthdate)
 
 const cardSerial = process.env.CARD_SERIAL || 'XXXXXX'
 const birthDate = process.env.BIRTH_DATE || 'YYYY/MM/DD'

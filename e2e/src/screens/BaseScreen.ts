@@ -24,11 +24,11 @@ export interface EnterTextOptions {
 /**
  * Base screen object for E2E tests.
  *
- * When constructed with a TestIDs object (`new BaseScreen(TestIDs.AccountSetup)`),
+ * When constructed with a BCSC_TestIDs object (`new BaseScreen(BCSC_TestIDs.AccountSetup)`),
  * the typed convenience methods (`tap`, `waitFor`, `type`, `scrollTo`) provide
  * full autocomplete on the TestID keys. Subclasses can extend for custom behaviour.
  *
- * @typeParam T - shape of the TestIDs object for this screen (e.g. `typeof TestIDs.AccountSetup`)
+ * @typeParam T - shape of the BCSC_TestIDs object for this screen (e.g. `typeof BCSC_TestIDs.AccountSetup`)
  */
 export class BaseScreen<T extends Record<string, string> = Record<string, string>> {
   /** The TestID map for this screen. Access raw values via `ids.KeyName`. */

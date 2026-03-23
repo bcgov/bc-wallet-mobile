@@ -3,21 +3,21 @@ import { acceptBiometricPermissionIfPresent } from '../../../src/helpers/biometr
 import { acceptLocalNetworkPermissionIfPresent } from '../../../src/helpers/iosPermissions.js'
 import { acceptNotificationPermissionIfPresent } from '../../../src/helpers/notifications.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { TestIDs } from '../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
 const { onboarding } = getE2EConfig()
 
-const AccountSetup = new BaseScreen(TestIDs.AccountSetup)
-const TransferInformation = new BaseScreen(TestIDs.TransferInformation)
-const SetupTypes = new BaseScreen(TestIDs.SetupTypes)
-const IntroCarousel = new BaseScreen(TestIDs.IntroCarousel)
-const PrivacyPolicy = new BaseScreen(TestIDs.PrivacyPolicy)
-const OptInAnalytics = new BaseScreen(TestIDs.OptInAnalytics)
-const TermsOfUse = new BaseScreen(TestIDs.TermsOfUse)
-const Notifications = new BaseScreen(TestIDs.Notifications)
-const SecureApp = new BaseScreen(TestIDs.SecureApp)
-const CreatePIN = new BaseScreen(TestIDs.CreatePIN)
-const WebView = new BaseScreen(TestIDs.WebView)
+const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
+const TransferInformation = new BaseScreen(BCSC_TestIDs.TransferInformation)
+const SetupTypes = new BaseScreen(BCSC_TestIDs.SetupTypes)
+const IntroCarousel = new BaseScreen(BCSC_TestIDs.IntroCarousel)
+const PrivacyPolicy = new BaseScreen(BCSC_TestIDs.PrivacyPolicy)
+const OptInAnalytics = new BaseScreen(BCSC_TestIDs.OptInAnalytics)
+const TermsOfUse = new BaseScreen(BCSC_TestIDs.TermsOfUse)
+const Notifications = new BaseScreen(BCSC_TestIDs.Notifications)
+const SecureApp = new BaseScreen(BCSC_TestIDs.SecureApp)
+const CreatePIN = new BaseScreen(BCSC_TestIDs.CreatePIN)
+const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 
 describe('Onboarding', () => {
   it('should display the Account Setup screen', async () => {

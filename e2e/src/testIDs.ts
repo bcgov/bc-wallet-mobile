@@ -1,7 +1,7 @@
 /**
  * Central registry of accessibility / resource IDs used by BCSC E2E screen objects.
  */
-export const TestIDs = {
+export const BCSC_TestIDs = {
   AccountSetup: {
     AddAccount: 'com.ariesbifold:id/AddAccount',
     TransferAccount: 'com.ariesbifold:id/TransferAccount',
@@ -363,5 +363,21 @@ export const TestIDs = {
   },
   SystemModal: {
     SystemModalButton: 'com.ariesbifold:id/SystemModalButton',
+  },
+} as const
+
+export const BCWallet_TestIDs = {
+  Preface: {
+    IAgree: 'com.ariesbifold:id/IAgree',
+    Continue: 'com.ariesbifold:id/Continue',
+  },
+  Update: {
+    UpdateNow: 'com.ariesbifold:id/UpdateNow',
+    UpdateLater: 'com.ariesbifold:id/UpdateLater',
+  },
+  Onboarding: {
+    Next: 'com.ariesbifold:id/Next',
+    Back: 'com.ariesbifold:id/Back',
+    GetStarted: 'com.ariesbifold:id/GetStarted',
   },
 } as const
