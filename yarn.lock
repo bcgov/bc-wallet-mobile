@@ -9439,7 +9439,7 @@ __metadata:
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.16.0"
-    react-test-renderer: "npm:~19.1.4"
+    react-test-renderer: "npm:~19.1.5"
     reflect-metadata: "npm:~0.1.14"
     rxjs: "npm:~7.8.2"
     tsyringe: "npm:~4.8.0"
