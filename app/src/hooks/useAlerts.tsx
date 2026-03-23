@@ -3,6 +3,7 @@ import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
+import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -46,7 +47,24 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
   const _createBasicAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-      return () => {
+      return (config?: { asError: boolean }) => {
+        const errorDefinition = getErrorDefinitionFromAppEventCode(event)
+
+        if (config?.asError && !errorDefinition) {
+          logger.error(
+            `[useAlerts] Attempted to create error modal for AppEventCode ${event} but no error definition was found.`
+          )
+        }
+
+        if (config?.asError && errorDefinition) {
+          emitErrorModal(
+            t(`Alerts.${alertKey}.Title`, params),
+            t(`Alerts.${alertKey}.Description`, params),
+            AppError.fromErrorDefinition(errorDefinition)
+          )
+          return
+        }
+
         emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
           event,
           actions: [
@@ -57,7 +75,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
         })
       }
     },
-    [emitAlert, t]
+    [emitAlert, emitErrorModal, logger, t]
   )
 
   // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
@@ -271,20 +289,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitAlert, t]
   )
 
-  // ERROR MODALS - These are for more severe errors
-  const appErrorModal = useCallback(
-    (appError: AppError) => {
-      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
-    },
-    [emitErrorModal, t]
-  )
-
   return useMemo(
     () =>
       // prettier-ignore
       ({
-      // Error Modals
-      appErrorModal,
       // Native Alerts
       appUpdateRequiredAlert,
       setupExpiredAlert,
@@ -352,7 +360,6 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       invalidRegistrationRequestAlert: _createBasicAlert(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
     }),
     [
-      appErrorModal,
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
