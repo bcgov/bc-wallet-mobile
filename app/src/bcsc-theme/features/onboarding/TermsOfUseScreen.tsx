@@ -124,19 +124,25 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
 
   return (
     <ScreenWrapper scrollable={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
-      <WebViewContent
-        html={createTermsOfUseHtml(
-          {
-            termsOfUse,
-            colorPalette: ColorPalette,
-            headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
-            subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
-            versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
-          },
-          fontScale
-        )}
-        onLoaded={() => setWebViewIsLoaded(true)}
-      />
+      <View
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden={true}
+        style={{ flex: 1 }}
+      >
+        <WebViewContent
+          html={createTermsOfUseHtml(
+            {
+              termsOfUse,
+              colorPalette: ColorPalette,
+              headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
+              subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
+              versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
+            },
+            fontScale
+          )}
+          onLoaded={() => setWebViewIsLoaded(true)}
+        />
+      </View>
     </ScreenWrapper>
   )
 }
