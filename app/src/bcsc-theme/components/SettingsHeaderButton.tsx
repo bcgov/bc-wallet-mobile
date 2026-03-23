@@ -15,7 +15,7 @@ export const createMainSettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={t('BCSC.Screens.Settings')}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.MainSettings)}
       />
@@ -35,7 +35,7 @@ export const createVerifySettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={t('BCSC.Screens.Settings')}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.VerifySettings)}
       />
@@ -55,7 +55,7 @@ export const createAuthSettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={t('BCSC.Screens.Settings')}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.AuthSettings)}
       />
