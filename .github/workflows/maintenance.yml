@@ -47,7 +47,8 @@ jobs:
   prune-saucelabs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
-    permissions: {}
+    permissions:
+      contents: read
     name: SauceLabs Storage
     steps:
       - uses: actions/checkout@v6
