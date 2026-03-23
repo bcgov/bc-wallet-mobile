@@ -31,6 +31,10 @@ export interface SystemModalProps {
    */
   onButtonPress: () => void | Promise<void>
   /**
+   * Whether the button is disabled
+   */
+  buttonDisabled?: boolean
+  /**
    * Optional testID for the button
    */
   testID?: string
@@ -49,6 +53,7 @@ export const SystemModal = ({
   contentText,
   buttonText,
   onButtonPress,
+  buttonDisabled,
   testID,
 }: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
@@ -115,6 +120,7 @@ export const SystemModal = ({
           title={buttonText}
           buttonType={ButtonType.Primary}
           onPress={onButtonPress}
+          disabled={buttonDisabled}
           accessibilityLabel={buttonText}
           testID={testID ?? testIdWithKey('SystemModalButton')}
         />

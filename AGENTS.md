@@ -8,18 +8,18 @@ You are an expert mobile developer specializing in React Native, clean architect
 
 This project follows a **React-adapted MVVM pattern** using hooks. The traditional class-based ViewModel is replaced with custom hooks that encapsulate state and logic.
 
-#### Model Hook (`useXxxModel`)
+#### ViewModel Hook (`useXxxViewModel`)
 
 - Custom React hook that serves as the **ViewModel** layer in MVVM
 - Consumes the Model layer (stores, API hooks, services) and exposes state/actions to the View
 - Returns state values and action handlers for the View to consume
 - Should not contain any TSX or UI components
 
-> **Note:** These hooks are named with a `Model` suffix (e.g., `useSetupStepsModel`) for brevity and consistency, but they _function as the ViewModel_ layer in our MVVM architecture. The actual **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services, which the model hooks consume and orchestrate.
+> **Note:** The **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services. ViewModel hooks consume and orchestrate these.
 
 ```typescript
-// useSetupStepsModel.tsx
-const useSetupStepsModel = (navigation: StackNavigationProp<...>) => {
+// useSetupStepsViewModel.tsx
+const useSetupStepsViewModel = (navigation: StackNavigationProp<...>) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
@@ -51,14 +51,14 @@ const useSetupStepsModel = (navigation: StackNavigationProp<...>) => {
   }
 }
 
-export default useSetupStepsModel
+export default useSetupStepsViewModel
 ```
 
 #### View (Screen/Component)
 
-- React component that consumes the model hook
+- React component that consumes the ViewModel hook
 - Handles UI rendering and user interactions
-- Should contain minimal logic—delegate to the model hook
+- Should contain minimal logic—delegate to the ViewModel hook
 - Focus on layout, styling, and presenting data
 
 ```typescript
@@ -67,9 +67,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
 
-  // Consume the model hook
+  // Consume the ViewModel hook
   const { steps, stepActions, isCheckingStatus, handleCheckStatus } =
-    useSetupStepsModel(navigation)
+    useSetupStepsViewModel(navigation)
 
   return (
     <ScreenWrapper>
@@ -91,8 +91,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 #### Pattern Benefits
 
 - **Separation of concerns**: Logic in hooks, rendering in components
-- **Testability**: Model hooks can be tested independently with `renderHook`
-- **Reusability**: Model hooks can be shared across multiple views if needed
+- **Testability**: ViewModel hooks can be tested independently with `renderHook`
+- **Reusability**: ViewModel hooks can be shared across multiple views if needed
 - **React-native**: Leverages React's built-in reactivity (`useState`, `useMemo`, `useCallback`)
 
 ### Directory Structure
@@ -113,8 +113,8 @@ This codebase uses a **feature-based structure** where each feature contains its
       /verify                    # Identity verification feature
         VerificationMethodSelectionScreen.tsx
         SetupStepsScreen.tsx
-        useVerificationMethodModel.tsx
-        useSetupStepsModel.tsx
+        useVerificationMethodViewModel.tsx
+        useSetupStepsViewModel.tsx
         /components              # Feature-specific components
         /send-video              # Sub-feature
         /live-call               # Sub-feature
@@ -143,36 +143,36 @@ This codebase uses a **feature-based structure** where each feature contains its
 
 1. **Separation of Concerns**
 
-   - Model hooks should not contain JSX or UI components
-   - Views should delegate logic to model hooks
+   - ViewModel hooks should not contain JSX or UI components
+   - Views should delegate logic to ViewModel hooks
    - Keep styling and layout in Views, business logic in hooks
 
 2. **Data Flow**
 
-   - Model hook manages state and exposes it to the View
-   - User actions call handlers returned by the model hook
+   - ViewModel hook manages state and exposes it to the View
+   - User actions call handlers returned by the ViewModel hook
    - Use `useMemo` for derived state, `useCallback` for stable handlers
 
 3. **Testing**
 
-   - Model hooks: Test with `renderHook` from `@testing-library/react-native`
+   - ViewModel hooks: Test with `renderHook` from `@testing-library/react-native`
    - Views: Test UI interactions and rendering with mocked hooks
-   - Co-locate tests with source files (e.g., `useSetupStepsModel.test.ts`)
+   - Co-locate tests with source files (e.g., `useSetupStepsViewModel.test.ts`)
 
 4. **State Management**
 
-   - Model hook owns the state for its View
+   - ViewModel hook owns the state for its View
    - Use React hooks (`useState`, `useMemo`, `useCallback`) for reactivity
    - Access global state via `useStore` or context hooks
 
 5. **Naming Conventions**
 
-   - Model hooks: Prefer `use[Feature]Model` (e.g., `useSetupStepsModel`) for new and updated code. Some legacy hooks may use `use[Feature]ViewModel` (e.g., `useVerificationSuccessViewModel`); these should be gradually renamed to the `Model` suffix as the codebase is standardized.
+   - ViewModel hooks: `use[Feature]ViewModel` (e.g., `useServiceOutageViewModel`, `useTransferQRScannerViewModel`). Some older hooks use a `Model` suffix (e.g., `useSetupStepsModel`); these may be renamed to `ViewModel` over time for consistency.
    - Views: `[Feature]Screen` or descriptive component names
 
 6. **Error Handling**
 
-   - **User-facing errors belong in the UI layer** (Views or Model hooks), not in API/data hooks. API hooks should throw errors and let callers decide whether and how to surface them.
+   - **User-facing errors belong in the UI layer** (Views or ViewModel hooks), not in API/data hooks. API hooks should throw errors and let callers decide whether and how to surface them.
    - Use `emitErrorAlert` with `AppError.fromErrorDefinition(ErrorRegistry.XXX, { cause: error })` to show errors as native alerts. Prefer this over `emitError` with registry keys.
    - Callers should inspect error types (e.g., `isBcscNativeError`) and choose the appropriate response — some errors are critical (onboarding, auth), others are intentionally non-critical (background tasks, optional nickname updates).
    - API hooks should remain single-responsibility: make the API call, return data, throw on failure. No UI side effects.

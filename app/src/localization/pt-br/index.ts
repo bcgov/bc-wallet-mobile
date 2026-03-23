@@ -341,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (PT-BR)",
+        "CheckAgainButton": "Check again (PT-BR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -715,6 +719,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (PT-BR)",
       "EmailSkipButton2": "Skip (PT-BR)",
       "EnterEmailAddress": "Enter your email address (PT-BR)",
+      "EmailAddress": "Email address (PT-BR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (PT-BR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (PT-BR)",
     },

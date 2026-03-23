@@ -1,17 +1,9 @@
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import {
-  Button,
-  ButtonType,
-  LimitedTextInput,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +25,7 @@ type ManualSerialScreenProps = {
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { updateUserInfo } = useSecureActions()
   const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
@@ -50,9 +42,6 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       padding: Spacing.lg,
       alignSelf: 'center',
       marginVertical: Spacing.lg,
-    },
-    error: {
-      color: ColorPalette.semantic.error,
     },
   })
 
@@ -96,23 +85,19 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       <ThemedText variant={'headingFour'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
       <ThemedText>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
 
-      <LimitedTextInput
-        defaultValue={serial}
+      <InputWithValidation
+        id={'serial'}
         label={t('BCSC.ManualSerial.InputLabel')}
-        limit={maxSerialNumberLength}
-        handleChangeText={handleChangeText}
-        accessibilityLabel={t('BCSC.ManualSerial.InputLabel')}
-        testID={testIdWithKey('SerialInput')}
-        autoCapitalize={'characters'}
-        autoCorrect={false}
-        autoComplete={'off'}
-        showLimitCounter={false}
+        value={serial}
+        onChangeText={handleChangeText}
+        error={errorState.visible ? errorState.description : undefined}
+        textInputProps={{
+          maxLength: maxSerialNumberLength,
+          autoCapitalize: 'characters',
+          autoCorrect: false,
+          autoComplete: 'off',
+        }}
       />
-      {errorState.visible ? (
-        <ThemedText variant={'labelSubtitle'} style={styles.error}>
-          {errorState.description}
-        </ThemedText>
-      ) : null}
       <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
     </ScreenWrapper>
   )
