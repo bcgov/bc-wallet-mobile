@@ -97,12 +97,26 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Resolve iOS Simulator destination
+        id: sim
+        run: |
+          SIM_NAME=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for d in devices[runtime]:
+                if 'iPhone' in d['name']:
+                  print(d['name']); sys.exit(0)
+          sys.exit(1)")
+          echo "destination=platform=iOS Simulator,name=$SIM_NAME,OS=latest" >> "$GITHUB_OUTPUT"
+
       - name: Run iOS tests
         working-directory: packages/bcsc-core
         run: |
           xcodebuild test \
             -scheme BcscCoreTests-Package \
-            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+            -destination '${{ steps.sim.outputs.destination }}' \
             -skipPackagePluginValidation
 
   test-android:
