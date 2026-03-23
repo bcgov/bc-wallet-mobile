@@ -597,7 +597,7 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
-      "Label": "Enter Birthdate",
+      "Label": "Birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
       "ExampleDate": "The birthdate format is: YYYY/MM/DD",
     },
