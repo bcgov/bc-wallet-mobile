@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-semi, @typescript-eslint/no-extra-semi */
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
@@ -7,6 +8,9 @@ import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/s
 import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
 
+const devGlobal = global as typeof global & { __DEV__: boolean }
+
+jest.mock('react-native-bcsc-core')
 describe('System Checks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
@@ -153,6 +157,52 @@ describe('System Checks', () => {
 
         expect(getIdToken).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
+      })
+
+      it('should return true early when dismissed before cooldown time', async () => {
+        const devReplacement = jest.replaceProperty(devGlobal, '__DEV__', true)
+
+        try {
+          const mockUtils = {
+            dispatch: jest.fn(),
+            translation: jest.fn() as any,
+            logger: {} as any,
+          }
+          const getIdToken = jest.fn()
+          const dismissedAt = new Date(Date.now() - 29 * 60 * 1000).getTime() // 29 minute ago
+
+          const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils, dismissedAt)
+          const result = await deviceCountCheck.runCheck()
+
+          expect(getIdToken).not.toHaveBeenCalled()
+          expect(result).toBe(true)
+        } finally {
+          devReplacement?.restore()
+        }
+      })
+
+      it('should run the check when dismissed for longer than cooldown time', async () => {
+        const devReplacement = jest.replaceProperty(devGlobal, '__DEV__', true)
+        try {
+          const mockUtils = {
+            dispatch: jest.fn(),
+            translation: jest.fn() as any,
+            logger: {} as any,
+          }
+          const getIdToken = jest.fn().mockResolvedValue({
+            bcsc_devices_count: 6,
+            bcsc_max_devices: 5,
+          })
+          const dismissedAt = new Date(Date.now() - 31 * 60 * 1000).getTime() // 31 minutes ago
+
+          const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils, dismissedAt)
+          const result = await deviceCountCheck.runCheck()
+
+          expect(getIdToken).toHaveBeenCalledTimes(1)
+          expect(result).toBe(false)
+        } finally {
+          devReplacement?.restore()
+        }
       })
     })
 
