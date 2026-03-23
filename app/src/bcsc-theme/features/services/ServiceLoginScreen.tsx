@@ -70,7 +70,11 @@ type DevicePreferenceURLViewProps = {
   t: (key: string, options?: Record<string, unknown>) => string
 }
 
-const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({ serviceClientUri, ColorPalette, t }) =>
+const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
+  serviceClientUri,
+  ColorPalette,
+  t,
+}: DevicePreferenceURLViewProps) =>
   serviceClientUri ? (
     <View style={{ marginTop: Spacing.lg }}>
       <View
@@ -91,7 +95,7 @@ type ReportSuspiciousLinkProps = {
   testID?: string
 }
 
-const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }) => (
+const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }: ReportSuspiciousLinkProps) => (
   <ThemedText variant={'bold'}>
     {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
     <Link
