@@ -1059,7 +1059,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
       "RemoveAccountLoading": "Removing account... (PT-BR)",
       "TransferAccount": "Transfer account to another device (PT-BR)",
+      "TransferAccountAccessibilityLabel": "Transfer (PT-BR)",
       "AccountDetails": "All account details (PT-BR)",
+      "AccountDetailsAccessibilityLabel": "Details (PT-BR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (PT-BR)",
