@@ -2,7 +2,6 @@ import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -37,7 +36,7 @@ type AlertOnPressAction = () => void | Promise<void>
 export const useAlerts = (navigation: NavigationProp<any>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitAlert, emitErrorModal } = useErrorAlert()
+  const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
   const { stack } = useBCSCStack()
 
@@ -271,21 +270,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitAlert, t]
   )
 
-  // ERROR MODALS - These are for more severe errors
-  const appErrorModal = useCallback(
-    (appError: AppError) => {
-      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
-    },
-    [emitErrorModal, t]
-  )
-
   return useMemo(
     () =>
       // prettier-ignore
       ({
-      // Error Modals
-      appErrorModal,
-      // Native Alerts
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
@@ -352,7 +340,6 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       invalidRegistrationRequestAlert: _createBasicAlert(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
     }),
     [
-      appErrorModal,
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,

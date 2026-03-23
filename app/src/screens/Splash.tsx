@@ -76,7 +76,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(toBifoldError('Wallet Initialization Error', 'Failed to initialize wallet', initError))
+      logger.report(toBifoldError('Wallet Error', 'Failed to initialize wallet', initError))
     }
 
     setReported(true)
