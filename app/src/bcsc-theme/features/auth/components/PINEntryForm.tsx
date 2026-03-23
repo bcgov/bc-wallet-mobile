@@ -230,6 +230,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
             testIDKey="PINInput1"
+            accessibilityLabel={tWithPrefix('CreatePIN').replace(/ /g, '\u00A0')}
           />
         </View>
         <View style={styles.pinFormRow}>
@@ -240,6 +241,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
             testIDKey="PINInput2"
+            accessibilityLabel={tWithPrefix('ConfirmPIN').replace(/ /g, '\u00A0')}
           />
         </View>
         <View style={styles.pinReminder}>

@@ -9,6 +9,8 @@ interface PINInputProps {
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
+  /** Accessibility label for the PIN input field */
+  accessibilityLabel?: string
   /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
   testIDKey?: string
   ref?: React.Ref<TextInput>
@@ -21,6 +23,7 @@ export const PINInput = ({
   autoFocus = false,
   testIDKey,
   ref,
+  accessibilityLabel,
 }: PINInputProps) => {
   const [pin, setPin] = useState('')
   const { ColorPalette, Spacing, PINInputTheme } = useTheme()
@@ -86,7 +89,7 @@ export const PINInput = ({
           maxFontSizeMultiplier={1}
           cursorColor={ColorPalette.grayscale.darkGrey}
           textContentType={'password'}
-          accessibilityLabel={pin.split('').join(' ')}
+          accessibilityLabel={accessibilityLabel ?? pin.split('').join(' ')}
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity
