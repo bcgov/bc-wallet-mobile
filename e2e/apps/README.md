@@ -16,18 +16,15 @@ cp -r build/Build/Products/Debug-iphonesimulator/BCWallet.app ../../e2e/apps/
 
 For a **physical iPhone** the local device config expects an `.ipa` (signed archive), not the simulator `.app`. Build for `iphoneos` and export to IPA.
 
-**Option A — Xcode GUI:**  
-Product → Archive, then Distribute App → Development, and export the `.ipa`. Copy it to `e2e/apps/BCWallet.ipa`.
+### Google Services Files
 
-**Option B — Command line (automated):**  
-One-time: copy the export-options template and set your Apple Team ID (same as `XCODE_ORG_ID` for WDIO):
+Obtain the following Firebase/Google services files from another developer and place them in the correct locations:
 
-```bash
-cp e2e/apps/ExportOptions.dev.plist.example app/ios/ExportOptions.dev.plist
-# Edit app/ios/ExportOptions.dev.plist and replace YOUR_TEAM_ID with your team ID.
+```
+app/ios/GoogleService-Info.plist
 ```
 
-Then from the repo root:
+### Build and Export
 
 ```bash
 cd app/ios
@@ -39,10 +36,10 @@ xcodebuild -workspace BCWallet.xcworkspace \
   -archivePath build/BCWallet.xcarchive \
   archive
 
-# 2) Export the archive to an .ipa (Optional: you can use the GoogleService-Info.plist file to export the archive)
+# 2) Export the archive to an .ipa
 xcodebuild -exportArchive \
   -archivePath build/BCWallet.xcarchive \
-  -exportOptionsPlist ExportOptions.dev.plist \
+  -exportOptionsPlist GoogleService-Info.plist \
   -exportPath build/export
 
 # 3) Copy the .ipa into e2e/apps for WDIO

@@ -81,7 +81,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID of the element to wait for
    * @returns void
    */
-  async waitForDisplayed(testId: string, timeout: number = 10_000) {
+  async waitForDisplayed(testId: string, timeout: number = 5_000) {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })

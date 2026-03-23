@@ -21,7 +21,7 @@ describe('In-Person Verification', () => {
     await VerifyInPerson.waitFor('Complete')
 
     // TEMPORARY manual verification for now until we can automate it
-    await new Promise((resolve) => setTimeout(resolve, 100_000))
+    await new Promise((resolve) => setTimeout(resolve, 25_000))
     await VerifyInPerson.tap('Complete')
     await VerificationSuccess.waitFor('Ok')
     await VerificationSuccess.tap('Ok')

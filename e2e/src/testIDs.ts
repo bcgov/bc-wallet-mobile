@@ -23,7 +23,7 @@ export const TestIDs = {
   IntroCarousel: {
     CarouselNext: 'com.ariesbifold:id/CarouselNext',
     CarouselBack: 'com.ariesbifold:id/CarouselBack',
-    WhereToUseButton: 'com.ariesbifold:id/CardButton-WhereToUse',
+    WhereToUseButton: 'com.ariesbifold:id/CardButton-Where to use',
   },
   PrivacyPolicy: {
     Continue: 'com.ariesbifold:id/Continue',
@@ -40,6 +40,7 @@ export const TestIDs = {
     OpenSettings: 'com.ariesbifold:id/OpenSettings',
     ContinueWithoutNotifications: 'com.ariesbifold:id/ContinueWithoutNotifications',
     Back: 'com.ariesbifold:id/Back',
+    Help: 'com.ariesbifold:id/Help',
   },
   TermsOfUse: {
     AcceptAndContinue: 'com.ariesbifold:id/AcceptAndContinue',
@@ -252,9 +253,6 @@ export const TestIDs = {
   VerifySettings: {
     Back: 'com.ariesbifold:id/Back',
   },
-  VerifyWebView: {
-    Back: 'com.ariesbifold:id/Back',
-  },
   PermissionDisabled: {
     OpenSettings: 'com.ariesbifold:id/OpenSettings',
   },
@@ -360,7 +358,7 @@ export const TestIDs = {
   ForgetAllPairings: {
     ForgetAllPairings: 'com.ariesbifold:id/ForgetAllPairings',
   },
-  MainWebView: {
+  WebView: {
     Back: 'com.ariesbifold:id/Back',
   },
   SystemModal: {
