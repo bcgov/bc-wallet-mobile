@@ -5,6 +5,7 @@ import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { BCState, Mode } from '@/store'
+import { a11yLabel } from '@utils/accessibility'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -132,7 +133,7 @@ const Services: React.FC = () => {
                 })
               }
             }}
-            accessibilityLabel={t('BCSC.Services.CatalogueSearch')}
+            accessibilityLabel={a11yLabel(t('BCSC.Services.CatalogueSearch'))}
             testID={testIdWithKey('search')}
             style={styles.searchText}
           />
@@ -145,7 +146,7 @@ const Services: React.FC = () => {
                 Keyboard.dismiss()
                 setSearch('')
               }}
-              accessibilityLabel={t('Global.Close')}
+              accessibilityLabel={a11yLabel(t('Global.Close'))}
               testID={testIdWithKey('clearSearch')}
             />
           ) : null}

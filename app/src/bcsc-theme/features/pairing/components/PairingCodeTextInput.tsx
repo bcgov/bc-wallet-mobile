@@ -1,5 +1,6 @@
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { splitSplice } from '@utils/splitSplice'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -59,7 +60,7 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...te
         value={value}
         onChangeText={onChangeText}
         testID={testID}
-        accessibilityLabel={textInputProps?.accessibilityLabel ?? t('BCSC.ManualPairing.EnterPairingCodeTitle')}
+        accessibilityLabel={a11yLabel(textInputProps?.accessibilityLabel ?? t('BCSC.ManualPairing.EnterPairingCodeTitle'))}
         {...textInputProps}
       />
     </View>

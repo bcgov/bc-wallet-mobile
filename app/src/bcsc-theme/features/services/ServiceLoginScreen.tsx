@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { a11yLabel } from '@utils/accessibility'
 import { usePairingService } from '../pairing'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
@@ -119,7 +120,7 @@ const ServiceLoginUnavailableView = ({
 
         <TouchableOpacity
           testID={testIdWithKey('GoToServiceClient')}
-          accessibilityLabel={t('BCSC.Services.GotoService', { service: state.serviceTitle })}
+          accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
           accessibilityRole="link"
           hitSlop={hitSlop}
           onPress={async () => {
@@ -195,7 +196,7 @@ const ServiceLoginDefaultView = ({
               </ThemedText>
               <TouchableOpacity
                 testID={testIdWithKey('HelpButton')}
-                accessibilityLabel={t('BCSC.Screens.HelpCentre')}
+                accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
                 accessibilityRole="button"
                 hitSlop={hitSlop}
                 onPress={onOpenInfoShared}
@@ -209,7 +210,7 @@ const ServiceLoginDefaultView = ({
           {state.privacyPolicyUri ? (
             <TouchableOpacity
               testID={testIdWithKey('ReadPrivacyPolicy')}
-              accessibilityLabel={t('BCSC.Services.PrivacyNotice')}
+              accessibilityLabel={a11yLabel(t('BCSC.Services.PrivacyNotice'))}
               accessibilityRole="link"
               hitSlop={hitSlop}
               onPress={onOpenPrivacyPolicy}
@@ -226,7 +227,7 @@ const ServiceLoginDefaultView = ({
         <View style={styles.continueButtonContainer}>
           <Button
             title="Continue"
-            accessibilityLabel={'Continue'}
+            accessibilityLabel={a11yLabel('Continue')}
             testID={testIdWithKey('ServiceLoginContinue')}
             buttonType={ButtonType.Primary}
             onPress={onContinue}
@@ -234,7 +235,7 @@ const ServiceLoginDefaultView = ({
         </View>
         <Button
           title="Cancel"
-          accessibilityLabel={'Cancel'}
+          accessibilityLabel={a11yLabel('Cancel')}
           testID={testIdWithKey('ServiceLoginCancel')}
           buttonType={ButtonType.Secondary}
           onPress={onCancel}

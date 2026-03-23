@@ -3,6 +3,7 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { a11yLabel } from '@utils/accessibility'
 import {
   Button,
   ButtonType,
@@ -230,7 +231,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
             testIDKey="PINInput1"
-            accessibilityLabel={tWithPrefix('CreatePINShort')}
+            accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
           />
         </View>
         <View style={styles.pinFormRow}>
@@ -241,7 +242,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
             testIDKey="PINInput2"
-            accessibilityLabel={tWithPrefix('ConfirmPIN')}
+            accessibilityLabel={a11yLabel(tWithPrefix('ConfirmPIN'))}
           />
         </View>
         <View style={styles.pinReminder}>

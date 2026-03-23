@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { a11yLabel } from '@utils/accessibility'
 import useSetupStepsModel from './_models/useSetupStepsModel'
 import { SetupStep, shouldStepBeDisabled } from './components/SetupStep'
 
@@ -137,7 +138,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               <TouchableOpacity
                 onPress={stepActions.email}
                 testID={testIdWithKey('EditEmail')}
-                accessibilityLabel={t('BCSC.Steps.EditEmail')}
+                accessibilityLabel={a11yLabel(t('BCSC.Steps.EditEmail'))}
                 hitSlop={hitSlop}
               >
                 <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
@@ -224,7 +225,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCheckStatus}
-            accessibilityLabel={t('BCSC.Steps.CheckStatus')}
+            accessibilityLabel={a11yLabel(t('BCSC.Steps.CheckStatus'))}
             accessibilityRole="button"
             testID={testIdWithKey('CheckStatus')}
           >
@@ -251,7 +252,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCancelVerification}
-            accessibilityLabel={t('BCSC.Steps.ChooseAnotherWayToVerify')}
+            accessibilityLabel={a11yLabel(t('BCSC.Steps.ChooseAnotherWayToVerify'))}
             accessibilityRole="button"
             testID={testIdWithKey('ChooseAnotherWayToVerify')}
           >

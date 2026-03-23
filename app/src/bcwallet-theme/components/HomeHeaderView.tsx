@@ -1,6 +1,7 @@
 import { Screens, Stacks, testIdWithKey, useTheme } from '@bifold/core'
 import { useAgent } from '@bifold/react-hooks'
 import { RemoteLogger } from '@bifold/remote-logs'
+import { a11yLabel } from '@utils/accessibility'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,7 +36,7 @@ const HomeHeaderView = () => {
     <Pressable
       onPress={onPressBanner}
       testID={testIdWithKey('SessionIdBanner')}
-      accessibilityLabel={t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() })}
+      accessibilityLabel={a11yLabel(t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() }))}
       accessibilityRole="button"
     >
       <View style={styles.banner}>

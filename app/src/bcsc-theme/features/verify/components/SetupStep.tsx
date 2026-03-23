@@ -3,6 +3,8 @@ import React, { PropsWithChildren } from 'react'
 import { GestureResponderEvent, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface SetupStepProps {
   title: string
   subtext: string[]
@@ -48,7 +50,7 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
       accessible={true}
       onPress={props.onPress}
       testID={testIdWithKey(props.title)}
-      accessibilityLabel={props.title.replace(/ /g, '\u00A0')}
+      accessibilityLabel={a11yLabel(props.title)}
       accessibilityRole="button"
       disabled={props.isDisabled}
       style={{

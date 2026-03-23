@@ -213,8 +213,8 @@ describe('PINInput', () => {
 
       fireEvent.changeText(input, '123')
 
-      // Accessibility label should space out the digits for screen readers
-      expect(input.props.accessibilityLabel).toBe('1 2 3')
+      // Accessibility label should space out the digits for screen readers (uses non-breaking spaces via a11yLabel)
+      expect(input.props.accessibilityLabel).toBe('1\u00A02\u00A03')
     })
   })
 })

@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface PINInputProps {
   onPINChange?: (pin: string) => void
   onPINComplete?: (pin: string) => void
@@ -89,7 +91,7 @@ export const PINInput = ({
           maxFontSizeMultiplier={1}
           cursorColor={ColorPalette.grayscale.darkGrey}
           textContentType={'password'}
-          accessibilityLabel={accessibilityLabel ?? pin.split('').join(' ')}
+          accessibilityLabel={a11yLabel(accessibilityLabel ?? pin.split('').join(' '))}
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity

@@ -6,6 +6,7 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +56,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <View style={styles.buttonsContainer}>
           <SectionButton
             title={t('BCSC.Home.WhereToUseTitle')}
-            accessibilityLabel={t('BCSC.Home.WhereToUseAccessibilityLabel')}
+            accessibilityLabel={a11yLabel(t('BCSC.Home.WhereToUseAccessibilityLabel'))}
             description={t('BCSC.Home.WhereToUseDescription')}
             style={{ marginBottom: Spacing.md }}
             onPress={handleWhereToUsePress}
@@ -63,7 +64,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           />
           <SectionButton
             title={t('BCSC.Home.LogInFromComputerTitle')}
-            accessibilityLabel={t('BCSC.Home.LogInFromComputerAccessibilityLabel')}
+            accessibilityLabel={a11yLabel(t('BCSC.Home.LogInFromComputerAccessibilityLabel'))}
             description={t('BCSC.Home.LogInFromComputerDescription')}
             onPress={handlePairingCodePress}
             testID={testIdWithKey('LogInFromComputer')}

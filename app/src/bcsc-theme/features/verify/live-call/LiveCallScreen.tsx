@@ -18,6 +18,7 @@ import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { VolumeManager } from 'react-native-volume-manager'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
+import { a11yLabel } from '@utils/accessibility'
 import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
@@ -397,7 +398,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             <TouchableOpacity
               onPress={handleHavingTrouble}
               style={styles.hasTroubleContainer}
-              accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
+              accessibilityLabel={a11yLabel(t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble'))}
               accessibilityRole="button"
               testID={testIdWithKey('HavingTrouble')}
             >

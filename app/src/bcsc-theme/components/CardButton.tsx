@@ -2,6 +2,8 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface CardProps {
   /**
    * Title text to display at the top of the card
@@ -89,7 +91,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
   return (
     <Pressable
       accessible={true}
-      accessibilityLabel={props.title}
+      accessibilityLabel={a11yLabel(props.title)}
       accessibilityRole="button"
       style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
       onPress={props.disabled ? undefined : props.onPress}
