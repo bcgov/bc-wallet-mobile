@@ -43,13 +43,15 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
 
   return (
     <SafeAreaView style={styles.container}>
-      <IconButton
-        buttonLocation={ButtonLocation.Left}
-        accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
-        testID={testIdWithKey('CloseReviewDevices')}
-        onPress={() => handleClose({ shouldAnimate: true })}
-        icon={'close'}
-      />
+      <View style={{ alignSelf: 'flex-start' }}>
+        <IconButton
+          buttonLocation={ButtonLocation.Left}
+          accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
+          testID={testIdWithKey('CloseReviewDevices')}
+          onPress={() => handleClose({ shouldAnimate: true })}
+          icon={'close'}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
 
