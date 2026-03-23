@@ -578,6 +578,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (FR)",
       "ErrorDetails": "Error details (FR)",
       "Dismiss": "Dismiss (FR)",
+      "SaveScanZones": "Save Scan Zones (FR)",
+      "ContinueScanning": "Continue Scanning (FR)",
+      "Confirm": "Confirm (FR)",
+      "TryAgain": "Try Again (FR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",

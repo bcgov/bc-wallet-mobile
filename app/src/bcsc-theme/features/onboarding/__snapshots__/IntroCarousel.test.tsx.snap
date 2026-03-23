@@ -155,7 +155,9 @@ exports[`IntroCarouselScreen Rendering should render correctly 1`] = `
                   accessible={true}
                   collapsable={false}
                   focusable={true}
+                  onBlur={[Function]}
                   onClick={[Function]}
+                  onFocus={[Function]}
                   onResponderGrant={[Function]}
                   onResponderMove={[Function]}
                   onResponderRelease={[Function]}
@@ -163,14 +165,16 @@ exports[`IntroCarouselScreen Rendering should render correctly 1`] = `
                   onResponderTerminationRequest={[Function]}
                   onStartShouldSetResponder={[Function]}
                   style={
-                    {
-                      "backgroundColor": "#FFFFFF",
-                      "borderColor": "#D9EAF7",
-                      "borderRadius": 4,
-                      "borderWidth": 1,
-                      "opacity": 1,
-                      "padding": 16,
-                    }
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "#D9EAF7",
+                        "borderRadius": 4,
+                        "borderWidth": 1,
+                        "padding": 16,
+                      },
+                      undefined,
+                    ]
                   }
                   testID="com.ariesbifold:id/CardButton-BCSC.Home.WhereToUseTitle"
                 >

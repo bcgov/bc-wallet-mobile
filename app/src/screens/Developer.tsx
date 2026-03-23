@@ -521,7 +521,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingSwitch}
             value={remoteLoggingEnabled}
-            accessibilityLabel={'Remote Logging'}
+            accessibilityLabel={t('RemoteLogging.ScreenTitle')}
           />
         </SectionRow>
 

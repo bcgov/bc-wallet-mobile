@@ -10,7 +10,7 @@ exports[`PairingCodeTextInput Component Rendering renders correctly 1`] = `
   }
 >
   <TextInput
-    accessibilityLabel="Pairing code"
+    accessibilityLabel="BCSC.ManualPairing.EnterPairingCodeTitle"
     autoCapitalize="characters"
     autoComplete="off"
     autoCorrect={false}

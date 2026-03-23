@@ -2,6 +2,7 @@ import { PAIRING_CODE_LENGTH } from '@/constants'
 import { useTheme } from '@bifold/core'
 import { splitSplice } from '@utils/splitSplice'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native'
 
 interface Props extends TextInputProps {
@@ -11,6 +12,7 @@ interface Props extends TextInputProps {
 
 const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...textInputProps }) => {
   const [focused, setFocused] = useState(false)
+  const { t } = useTranslation()
   const { Inputs, maxFontSizeMultiplier, Spacing } = useTheme()
   const [value, setValue] = useState('')
 
@@ -57,7 +59,7 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...te
         value={value}
         onChangeText={onChangeText}
         testID={testID}
-        accessibilityLabel={textInputProps?.accessibilityLabel ?? 'Pairing code'}
+        accessibilityLabel={textInputProps?.accessibilityLabel ?? t('BCSC.ManualPairing.EnterPairingCodeTitle')}
         {...textInputProps}
       />
     </View>

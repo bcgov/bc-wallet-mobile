@@ -1211,7 +1211,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleRemoteLoggingSwitch"
           >
             <RCTSwitch
-              accessibilityLabel="Remote Logging"
+              accessibilityLabel="RemoteLogging.ScreenTitle"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
