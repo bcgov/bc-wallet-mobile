@@ -5,6 +5,13 @@
  *
  * Run with: E2E_FLOW=simple wdio ... --spec test/bcsc/e2e.spec.ts
  */
+import { annotate } from '../../src/helpers/sauce.js'
+import { getE2EConfig } from '../../src/e2eConfig.js'
+
+const { flow } = getE2EConfig()
+
+await annotate(`Running E2E flow: ${flow}`)
+
 import './onboarding/onboarding.spec.js'
 import './verify/verify.spec.js'
 import './main/main.spec.js'

@@ -1,11 +1,11 @@
-import { getFlowConfig } from '../../../src/flowConfig.js'
+import { getE2EConfig } from '../../../src/e2eConfig.js'
 import { acceptBiometricPermissionIfPresent } from '../../../src/helpers/biometrics.js'
 import { acceptLocalNetworkPermissionIfPresent } from '../../../src/helpers/iosPermissions.js'
 import { acceptNotificationPermissionIfPresent } from '../../../src/helpers/notifications.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { TestIDs } from '../../../src/testIDs.js'
 
-const flow = getFlowConfig()
+const { onboarding } = getE2EConfig()
 
 const AccountSetup = new BaseScreen(TestIDs.AccountSetup)
 const TransferInformation = new BaseScreen(TestIDs.TransferInformation)
@@ -25,7 +25,7 @@ describe('Onboarding', () => {
     await AccountSetup.waitFor('AddAccount')
   })
 
-  if (flow.onboarding.includeTransferDetour) {
+  if (onboarding.includeTransferDetour) {
     it('should detour through Transfer Account and navigate back', async () => {
       await AccountSetup.tap('TransferAccount')
       await TransferInformation.waitFor('TransferAccountButton')
@@ -42,7 +42,7 @@ describe('Onboarding', () => {
     await AccountSetup.tap('AddAccount')
   })
 
-  if (flow.onboarding.includeSetupTypeInteraction) {
+  if (onboarding.includeSetupTypeInteraction) {
     it('should select radio options on the Setup Types screen', async () => {
       await SetupTypes.waitFor('SomeoneElseIdRadioGroup')
       await SetupTypes.tap('SomeoneElseIdRadioGroup')
@@ -80,7 +80,7 @@ describe('Onboarding', () => {
     await TermsOfUse.tapWhenEnabled('AcceptAndContinue')
   })
 
-  if (flow.onboarding.includeHelpDetours) {
+  if (onboarding.includeHelpDetours) {
     it('should tap Help on the Notifications screen', async () => {
       await Notifications.waitFor('Help')
       await Notifications.tap('Help')
@@ -95,7 +95,7 @@ describe('Onboarding', () => {
     await acceptNotificationPermissionIfPresent()
   })
 
-  if (flow.onboarding.includeHelpDetours) {
+  if (onboarding.includeHelpDetours) {
     it('should tap Learn More on the Secure App screen', async () => {
       await SecureApp.waitFor('LearnMore')
       await SecureApp.tap('LearnMore')
@@ -104,7 +104,7 @@ describe('Onboarding', () => {
     })
   }
 
-  if (flow.onboarding.authMethod === 'biometric') {
+  if (onboarding.authMethod === 'biometric') {
     it('should select Biometric Auth on the Secure App screen', async () => {
       await SecureApp.waitFor('BiometricAuth')
       await SecureApp.tap('BiometricAuth')
@@ -112,7 +112,7 @@ describe('Onboarding', () => {
     })
   }
 
-  if (flow.onboarding.authMethod === 'pin') {
+  if (onboarding.authMethod === 'pin') {
     it('should select Pin Auth on the Secure App screen', async () => {
       await SecureApp.waitFor('PinAuth')
       await SecureApp.tap('PinAuth')

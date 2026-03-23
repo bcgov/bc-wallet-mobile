@@ -3,6 +3,9 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import dotenv from 'dotenv'
+import { getE2EConfig } from '../src/e2eConfig.js'
+
+const { variant } = getE2EConfig()
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -10,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../.env.saucelabs') })
 
 export const config: WebdriverIO.Config = {
-  specs: [resolve(__dirname, '../test/bcsc/smoke.spec.ts')],
+  specs: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
   // Selective spec execution via CLI: --spec test/bcsc/onboarding.spec.ts
   exclude: [],
   capabilities: [],
