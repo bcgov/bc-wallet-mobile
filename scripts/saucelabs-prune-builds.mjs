@@ -259,6 +259,7 @@ const main = async () => {
 
 try {
   await main()
+  process.exit(0)
 } catch (err) {
   console.error('\nFatal error:', err.message)
   process.exit(1)
