@@ -145,7 +145,7 @@ const Services: React.FC = () => {
                 Keyboard.dismiss()
                 setSearch('')
               }}
-              accessibilityLabel={'clearSearch'}
+              accessibilityLabel={t('Global.Close')}
               testID={testIdWithKey('clearSearch')}
             />
           ) : null}

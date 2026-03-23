@@ -43,7 +43,7 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       style={styles.cardContainer}
       onPress={props.onPress}
       accessibilityRole="button"
-      accessibilityLabel={props.title}
+      accessibilityLabel={props.title.replace(/ /g, '\u00A0')}
       testID={props.testID ?? testIdWithKey(`SettingsActionCard-${props.title}`)}
     >
       <View style={styles.textContainer}>

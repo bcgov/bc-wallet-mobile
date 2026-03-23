@@ -27,7 +27,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
     <TouchableOpacity
       onPress={onPress}
       style={styles.container}
-      accessibilityLabel={title}
+      accessibilityLabel={title.replace(/ /g, '\u00A0')}
       accessibilityRole="button"
       testID={testID ?? testIdWithKey(`ServiceButton-${title.replaceAll(/\s+/g, '')}`)}
     >
