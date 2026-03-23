@@ -4,7 +4,7 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { a11yLabel } from '@utils/accessibility'
+import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -232,7 +232,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
-            accessibilityLabel={a11yLabel(data.item.evidence_type_label)}
+            accessibilityLabel={a11yShortLabel(data.item.evidence_type_label)}
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.cardSection,

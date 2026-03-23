@@ -163,7 +163,7 @@ export const DropdownWithValidation = <T extends string | number>({
         testID={testIdWithKey(`${id}-input`)}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: isOpen }}
-        accessibilityLabel={a11yLabel(`${label}, ${selectedOption?.label || placeholder}`)}
+        accessibilityLabel={a11yLabel(label)}
       >
         <ThemedText
           style={[styles.dropdownText, selectedOption ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder]}
