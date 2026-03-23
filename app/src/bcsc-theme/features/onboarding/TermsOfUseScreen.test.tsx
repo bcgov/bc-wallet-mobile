@@ -42,7 +42,7 @@ describe('TermsOfUse', () => {
     )
 
     await waitFor(() => {
-      expect(tree.queryByTestId('mocked-webview')).toBeTruthy()
+      expect(tree.queryByTestId('mocked-webview', { includeHiddenElements: true })).toBeTruthy()
     })
 
     expect(tree).toMatchSnapshot()

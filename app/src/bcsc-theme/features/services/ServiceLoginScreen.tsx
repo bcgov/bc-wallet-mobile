@@ -119,7 +119,7 @@ const ServiceLoginUnavailableView = ({
 
         <TouchableOpacity
           testID={testIdWithKey('GoToServiceClient')}
-          accessibilityLabel={t('BCSC.Services.GotoService', { service: state.serviceTitle }).replace(/ /g, '\u00A0')}
+          accessibilityLabel={t('BCSC.Services.GotoService', { service: state.serviceTitle })}
           accessibilityRole="link"
           hitSlop={hitSlop}
           onPress={async () => {
@@ -209,7 +209,7 @@ const ServiceLoginDefaultView = ({
           {state.privacyPolicyUri ? (
             <TouchableOpacity
               testID={testIdWithKey('ReadPrivacyPolicy')}
-              accessibilityLabel={t('BCSC.Services.PrivacyNotice').replace(/ /g, '\u00A0')}
+              accessibilityLabel={t('BCSC.Services.PrivacyNotice')}
               accessibilityRole="link"
               hitSlop={hitSlop}
               onPress={onOpenPrivacyPolicy}

@@ -208,6 +208,7 @@ const translation = {
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
+      "CreatePINShort": "Create PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
       "RememberPIN": "Remember your PIN (FR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",

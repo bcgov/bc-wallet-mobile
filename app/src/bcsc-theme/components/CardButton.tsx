@@ -89,7 +89,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
   return (
     <Pressable
       accessible={true}
-      accessibilityLabel={props.title.replace(/ /g, '\u00A0')}
+      accessibilityLabel={props.title}
       accessibilityRole="button"
       style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
       onPress={props.disabled ? undefined : props.onPress}

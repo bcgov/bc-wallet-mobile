@@ -117,7 +117,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                     >
                       <TextInput
                         accessibilityHint="Enter your 6-digit PIN"
-                        accessibilityLabel=""
+                        accessibilityLabel="BCSC.PIN.CreatePINShort"
                         autoFocus={false}
                         cursorColor="#313132"
                         keyboardType="number-pad"
@@ -249,7 +249,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                     >
                       <TextInput
                         accessibilityHint="Enter your 6-digit PIN"
-                        accessibilityLabel=""
+                        accessibilityLabel="BCSC.PIN.ConfirmPIN"
                         autoFocus={false}
                         cursorColor="#313132"
                         keyboardType="number-pad"

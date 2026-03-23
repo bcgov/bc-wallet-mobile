@@ -34,7 +34,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={onPress}
-      accessibilityLabel={title.replace(/ /g, '\u00A0')}
+      accessibilityLabel={title}
       accessibilityRole="button"
       testID={testID ?? testIdWithKey(`SectionButton-${title.replaceAll(/\s+/g, '')}`)}
     >
