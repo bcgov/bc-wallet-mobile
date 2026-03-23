@@ -881,7 +881,7 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
     message: 'Current platform does not support attestation — requires iOS 14+ or Android with Play Services',
   },
-} as const
+} as const satisfies Record<string, ErrorDefinition>
 
 export const ErrorRegistryAppEventMap = new Map<AppEventCode, ErrorDefinition>(
   Object.values(ErrorRegistry).map((definition) => [definition.appEvent, definition])

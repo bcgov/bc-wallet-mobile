@@ -1,8 +1,10 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
+import { ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
@@ -11,12 +13,14 @@ import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
+  const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const { isClientReady } = useBCSCApiClientState()
@@ -35,9 +39,9 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (err) {
-      emitErrorModal('STATE_LOAD_ERROR', { error: err })
+      emitErrorModal(t('Error.Problem'), t('Erorr.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
-  }, [dispatch, loadState, emitErrorModal, store.stateLoaded])
+  }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {

@@ -2,6 +2,7 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -231,17 +232,13 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     return icons[category] || 'error'
   }
 
-  const triggerError = (key: ErrorRegistryKey) => {
+  const triggerError = (key: ErrorRegistryKey, description: string) => {
     onBack()
-    emitErrorModal(key, {
-      error: new Error(`Test error triggered for: ${key}`),
-      context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },
-    })
+    emitErrorModal('Error Modal Triggered', description, AppError.fromErrorDefinition(ErrorRegistry[key]))
   }
 
-  const triggerErrorAsAlert = (key: ErrorRegistryKey) => {
-    const definition = ErrorRegistry[key]
-    emitAlert(t(definition.titleKey), t(definition.descriptionKey), {
+  const triggerErrorAsAlert = (key: ErrorRegistryKey, description: string) => {
+    emitAlert('Native alert triggered', description, {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
         { text: t('Global.Okay'), style: 'default' },
@@ -313,7 +310,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                   accessibilityLabel={`Trigger ${key} error`}
                   testID={`error-${key}`}
                   buttonType={ButtonType.Secondary}
-                  onPress={() => triggerError(key)}
+                  onPress={() => triggerError(key, description)}
                 />
                 <Text style={[styles.description, { marginTop: 4, marginBottom: 0 }]}>{description}</Text>
               </View>
@@ -361,14 +358,14 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           <Text style={styles.sectionHeader}>{t('Developer.ErrorAsNativeAlert')}</Text>
           <Text style={styles.description}>{t('Developer.ErrorAsNativeAlertDescription')}</Text>
 
-          {sampleErrors.slice(0, 4).map(({ key }) => (
+          {sampleErrors.slice(0, 4).map(({ key, description }) => (
             <View key={`alert-${key}`} style={styles.buttonRow}>
               <Button
                 title={`${key} (Native Alert)`}
                 accessibilityLabel={`Trigger ${key} as native alert`}
                 testID={`error-alert-${key}`}
                 buttonType={ButtonType.Secondary}
-                onPress={() => triggerErrorAsAlert(key)}
+                onPress={() => triggerErrorAsAlert(key, description)}
               />
             </View>
           ))}

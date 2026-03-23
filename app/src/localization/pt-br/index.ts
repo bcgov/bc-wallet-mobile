@@ -1216,16 +1216,6 @@ const translation = {
       "Description": "Unable to authenticate using the device's built-in authentication. (PT-BR)"
     }
 	},
-  "BCWalletError": {
-    // TODO (MD): Fill in translations once all english errors are completed
-    "Device": {
-      "KeypairGenerationError": "(PT-BR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
-      "KeypairGenerationTitle": "(PT-BR) Problem with App",
-    },
-    "General": {
-      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (PT-BR)",
-    },
-  },
 }
 
 export default translation

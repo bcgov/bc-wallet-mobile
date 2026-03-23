@@ -1,13 +1,4 @@
-import { AlertInteractionEvent } from '../events/appEventCode'
-import { Analytics } from '../utils/analytics/analytics-singleton'
-import { appLogger } from '../utils/logger'
-import {
-  extractErrorMessage,
-  getErrorDefinition,
-  getErrorDefinitionFromAppEventCode,
-  logError,
-  trackErrorInAnalytics,
-} from './errorHandler'
+import { extractErrorMessage, getErrorDefinition, getErrorDefinitionFromAppEventCode } from './errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 // Mock dependencies
@@ -81,68 +72,6 @@ describe('errorHandler', () => {
     })
   })
 
-  describe('trackErrorInAnalytics', () => {
-    it('should track error event in analytics', () => {
-      const definition = ErrorRegistry.CAMERA_BROKEN
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(definition.statusCode),
-        message: definition.appEvent,
-      })
-    })
-
-    it('should track alert display event', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.appEvent)
-    })
-
-    it('should not track error event or alert display for action events', () => {
-      const definition = ErrorRegistry.SERVER_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
-
-      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
-      expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
-    })
-
-    it('should track alert action event when user reports', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, 'Report this problem')
-
-      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
-    })
-
-    it('should use default action label when not provided for ALERT_ACTION', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
-
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
-    })
-
-    it('should log debug information', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(appLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(AlertInteractionEvent.ALERT_DISPLAY),
-        expect.objectContaining({
-          code: definition.statusCode,
-          category: definition.category,
-          severity: definition.severity,
-        })
-      )
-    })
-  })
-
   describe('getErrorDefinition', () => {
     it('should return the error definition for a valid key', () => {
       const definition = getErrorDefinition('CAMERA_BROKEN')
@@ -164,53 +93,6 @@ describe('errorHandler', () => {
       expect(getErrorDefinition('GENERAL_ERROR').category).toBe(ErrorCategory.GENERAL)
       expect(getErrorDefinition('STATE_LOAD_ERROR').category).toBe(ErrorCategory.WALLET)
       expect(getErrorDefinition('PARSE_INVITATION_ERROR').category).toBe(ErrorCategory.CONNECTION)
-    })
-  })
-
-  describe('logError', () => {
-    it('should log error with all details', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-      const technicalMessage = 'Network request failed'
-
-      logError('NO_INTERNET', definition, technicalMessage)
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('NO_INTERNET'),
-        expect.objectContaining({
-          code: definition.statusCode,
-          category: definition.category,
-          severity: definition.severity,
-          technicalMessage,
-        })
-      )
-    })
-
-    it('should include additional context in logs', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-      const context = { userId: '123', screen: 'Home' }
-
-      logError('GENERAL_ERROR', definition, 'Some error', context)
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          userId: '123',
-          screen: 'Home',
-        })
-      )
-    })
-
-    it('should handle empty technical message', () => {
-      const definition = ErrorRegistry.CAMERA_BROKEN
-
-      logError('CAMERA_BROKEN', definition, '')
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: '',
-        })
-      )
     })
   })
 

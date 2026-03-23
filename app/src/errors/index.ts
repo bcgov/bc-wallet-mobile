@@ -3,7 +3,7 @@
  *
  * This module provides a centralized error handling framework that:
  * - Uses a registry of predefined errors with localized messages
- * - Integrates with the Bifold ErrorModal for user-facing error display
+ * - Integrates with the ErrorModal for user-facing error display
  * - Supports native alerts via ErrorAlertContext
  * - Supports Snowplow analytics tracking
  * - Provides remote logging via the app logger
@@ -16,10 +16,10 @@
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
  *
  * const MyComponent = () => {
- *   const { emitError, emitAlert, dismiss } = useErrorAlert()
+ *   const { emitErrorModal, emitAlert, dismiss } = useErrorAlert()
  *
  *   // Show error via ErrorModal
- *   emitError('INVALID_QR_CODE', { error: err })
+ *   emitErrorModal('Error Title', 'Something went wrong', appErrorInstance)
  *
  *   // Show informational native alert
  *   emitAlert('Update available', 'A new version is ready', {
@@ -43,4 +43,4 @@ export {
 } from './errorRegistry'
 
 // Error handler utilities
-export { extractErrorMessage, getErrorDefinition, logError, trackErrorInAnalytics } from './errorHandler'
+export { extractErrorMessage, getErrorDefinition } from './errorHandler'

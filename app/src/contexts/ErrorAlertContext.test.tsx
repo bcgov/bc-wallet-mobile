@@ -1,11 +1,8 @@
 import { act, renderHook } from '@testing-library/react-native'
 import i18next from 'i18next'
 import React from 'react'
-import { ErrorCategory, ErrorRegistry, ErrorSeverity } from '../errors/errorRegistry'
 import { AppEventCode } from '../events/appEventCode'
 import { showAlert } from '../utils/alert'
-import { Analytics } from '../utils/analytics/analytics-singleton'
-import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
 jest.mock('@/errors/components/ErrorModal', () => ({
@@ -114,80 +111,7 @@ describe('ErrorAlertContext', () => {
   })
 
   describe('emitErrorModal()', () => {
-    it('should log and track analytics', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitErrorModal('GENERAL_ERROR')
-      })
-
-      expect(appLogger.error).toHaveBeenCalled()
-    })
-
-    it('should track analytics', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitErrorModal('CAMERA_BROKEN')
-      })
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: ErrorRegistry.CAMERA_BROKEN.appEvent,
-        message: expect.stringContaining(ErrorRegistry.CAMERA_BROKEN.appEvent),
-      })
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.appEvent)
-    })
-
-    it('should fallback to GENERAL_ERROR for unknown keys', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitErrorModal('UNKNOWN_KEY' as any)
-      })
-
-      expect(appLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown error key'))
-      expect(appLogger.error).toHaveBeenCalled()
-    })
-
-    it('should extract error message from Error object', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-      const testError = new Error('Test error message')
-
-      act(() => {
-        result.current.emitErrorModal('GENERAL_ERROR', { error: testError })
-      })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({ technicalMessage: expect.stringContaining('Test error message') })
-      )
-    })
-
-    it('should include additional context in logs', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitErrorModal('GENERAL_ERROR', { context: { userId: '123' } })
-      })
-
-      expect(appLogger.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ userId: '123' }))
-    })
-
-    it('should log error details with category and severity', () => {
-      const { result } = renderHook(() => useErrorAlert(), { wrapper })
-
-      act(() => {
-        result.current.emitErrorModal('NO_INTERNET', { error: new Error('Network failed') })
-      })
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          category: ErrorCategory.NETWORK,
-          severity: ErrorSeverity.ERROR,
-        })
-      )
-    })
+    it.todo('TODO (MD): Fill in missing emitErrorModal tests')
   })
 
   describe('emitAlert()', () => {

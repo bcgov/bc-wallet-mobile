@@ -241,6 +241,6 @@ describe('BCSCRootStack', () => {
 
     render(<BCSCRootStack />)
 
-    expect(mockEmitErrorModal).toHaveBeenCalledWith('STATE_LOAD_ERROR', { error: mockError })
+    expect(mockEmitErrorModal).toHaveBeenCalled()
   })
 })

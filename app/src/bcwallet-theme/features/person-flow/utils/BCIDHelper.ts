@@ -1,4 +1,5 @@
-import { AppError, ErrorRegistry, ErrorRegistryKey } from '@/errors'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { AppError, ErrorRegistry } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -12,7 +13,7 @@ import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 /** Error handler callback type for utility functions */
-export type ErrorHandler = (key: ErrorRegistryKey, options?: { error?: unknown }) => void
+export type ErrorHandler = (error: AppError) => void
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -114,7 +115,7 @@ export const initiateAppToAppFlow = async (url: string, onError?: ErrorHandler, 
     }
   } catch (err: unknown) {
     logger?.error(`Error opening URL ${(err as Error).message}`)
-    onError?.('APP_TO_APP_URL_ERROR', { error: err })
+    onError?.(toAppError(err, ErrorRegistry.APP_TO_APP_URL_ERROR))
   }
 }
 
