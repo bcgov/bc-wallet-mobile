@@ -4,10 +4,10 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 
 ## _Design Principles_
 
-1. **\*One test suite, many targets** — the same specs run locally and on SauceLabs. Config files are the only difference.\*
-2. **\*Variant-driven, not variant-duplicated** — a single test file uses the* `VARIANT` *env var to branch flows, avoiding duplicate specs.\*
-3. **\*Page Object Model** — screens are abstracted behind page objects that hide platform/selector details.\*
-4. **\*Workspace package** —* `e2e/` *is a Yarn workspace package with its own* `package.json`*, isolated from* `app/`*.\*
+1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
+2. **_Variant + flow driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `E2E_FLOW` _(`simple` | `advanced`) controls how deep each stage goes (detours, biometric auth, extra verification steps)._
+3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
+4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
 ## _Directory Structure_
 
@@ -15,7 +15,12 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 e2e/
 ├── package.json                             # workspace package with WDIO + Appium deps
 ├── tsconfig.json                            # TypeScript config (strict, ESNext modules)
+├── USERS.md                                 # test account reference (Scooby-Doo themed)
 ├── .env.saucelabs.example                   # template (copy to .env.saucelabs)
+│
+├── scripts/
+│   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
+│   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
 │
 ├── configs/
 │   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, hooks)
@@ -31,26 +36,46 @@ e2e/
 │       └── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
 │
 ├── src/
-│   ├── constants.ts                         # test IDs, timeouts, shared values
-│   ├── variant.ts                           # variant detection + variant-specific config
+│   ├── constants.ts                         # timeouts and shared values
+│   ├── e2eConfig.ts                         # variant detection + flow presets (simple/advanced)
+│   ├── testIDs.ts                           # central registry of accessibility / resource IDs
 │   │
 │   ├── helpers/
 │   │   ├── biometrics.ts                    # biometric simulation (local + SauceLabs)
 │   │   ├── camera.ts                        # camera/image injection helpers
 │   │   ├── gestures.ts                      # swipe, scroll, long-press wrappers
-│   │   ├── sauce.ts                         # SauceLabs-specific utilities
-│   │   └── waits.ts                         # custom wait strategies
+│   │   ├── iosPermissions.ts                # iOS local-network permission dialog handling
+│   │   ├── notifications.ts                 # notification permission dialog handling (iOS + Android)
+│   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
 │   │
-│   ├── screens/                             # Page Object Model — one class per screen
-│   │   ├── BaseScreen.ts                    # abstract base with shared selectors/actions
-│   │   ├── OnboardingScreen.ts              # onboarding carousel + agreement
-│   │   └── PinScreen.ts                     # PIN setup / entry
-│   │
-│   └── flows/                               # multi-screen orchestrations
-│       └── onboarding.flow.ts               # complete onboarding (variant-aware)
+│   └── screens/                             # screen objects — generic base + TestIDs registry
+│       └── BaseScreen.ts                    # cross-platform element lookup, tap, wait, scroll
 │
 ├── test/
-│   └── smoke.spec.ts                        # app launch + onboarding navigation
+│   └── bcsc/                                # BCSC variant test suite
+│       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
+│       ├── e2e.spec.ts                      # full flow orchestrator (onboarding → verify → main)
+│       ├── onboarding/
+│       │   └── onboarding.spec.ts           # onboarding carousel, PIN, nickname
+│       ├── verify/
+│       │   ├── verify.spec.ts               # verification flow orchestrator
+│       │   ├── cards/
+│       │   │   └── combo.spec.ts            # combo card verification
+│       │   ├── steps/
+│       │   │   ├── step_0.spec.ts           # serial + birthdate entry
+│       │   │   └── step_1.spec.ts           # evidence capture + ID collection
+│       │   └── verification/
+│       │       └── in-person.spec.ts        # in-person verification method
+│       └── main/
+│           ├── main.spec.ts                 # main stack orchestrator
+│           ├── account/
+│           │   └── account.spec.ts          # account screen tests
+│           ├── settings/
+│           │   └── settings.spec.ts         # settings screen tests
+│           └── tabs/
+│               └── navigation.spec.ts       # tab bar navigation tests
+│
+├── logs/                                    # Appium logs (gitignored)
 │
 └── apps/                                    # local app binaries (gitignored)
     ├── .gitkeep
@@ -59,8 +84,8 @@ e2e/
 
 ## _Prerequisites_
 
-- **\*Node.js 20+** and **Yarn\***
-- _For local runs: [Appium 3](https://appium.io/) is installed as a devDependency; platform drivers are installed via the setup script_
+- **_Node.js 20+_** _and_ **_Yarn_**
+- _For local runs: [Appium](https://appium.io/) is installed as a devDependency; platform drivers are installed via the setup script_
 - _For SauceLabs runs: a SauceLabs account with_ `SAUCE_USERNAME` _and_ `SAUCE_ACCESS_KEY`
 
 ## _Setup_
@@ -75,6 +100,19 @@ _The_ `yarn setup` _step registers the Appium drivers into Appium's driver regis
 
 ## _Running Tests_
 
+_By default, only_ `smoke.spec.ts` _runs (configured in_ `wdio.shared.conf.ts`_). To run other specs or the full E2E flow, use the_ `--spec` _flag:_
+
+```bash
+# Default: smoke test only
+yarn test:ios:local
+
+# Full E2E flow (onboarding → verify → main, in one session)
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
+
+# Single spec
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/onboarding/onboarding.spec.ts
+```
+
 ### _Local — iOS Simulator_
 
 ```bash
@@ -82,7 +120,7 @@ _The_ `yarn setup` _step registers the Appium drivers into Appium's driver regis
 yarn test:ios:local
 
 # Run a single spec
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/smoke.spec.ts
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/smoke.spec.ts
 ```
 
 ### _Local — Android Emulator_
@@ -117,14 +155,14 @@ cd e2e && yarn test:android:local
 yarn test:android:local
 
 # Run a single spec
-yarn wdio configs/local/wdio.android.local.emu.conf.ts --spec test/smoke.spec.ts
+yarn wdio configs/local/wdio.android.local.emu.conf.ts --spec test/bcsc/smoke.spec.ts
 ```
 
 ### _Local — iOS Real Device_
 
 Real-device runs use a **signed `.ipa`** (device build), not the simulator `.app`. The device config uses `IOS_APP_DEVICE` (default `BCWallet.ipa`) so that `IOS_APP=BCWallet.app` in `.env.saucelabs` does not load the wrong binary.
 
-1. **Build and place the .ipa** in `e2e/apps/` (see [apps/README.md](apps/README.md) — “iOS Real Device Build”).
+1. **Build and place the .ipa** in `e2e/apps/` (see [apps/README.md](apps/README.md) — "iOS Real Device Build").
 2. In `.env.saucelabs` set `IOS_APP_DEVICE=BCWallet.ipa` (or leave unset to use the default), and set `IOS_UDID` and `XCODE_ORG_ID` for your device and team.
 
 ```bash
@@ -133,7 +171,7 @@ IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> yarn test:ios:device
 
 # Run a single spec
 IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> \
-  yarn wdio configs/local/wdio.ios.local.device.conf.ts --spec test/smoke.spec.ts
+  yarn wdio configs/local/wdio.ios.local.device.conf.ts --spec test/bcsc/smoke.spec.ts
 ```
 
 _Find your device UDID via Finder (click the device name in the sidebar) or:_
@@ -142,11 +180,11 @@ _Find your device UDID via Finder (click the device name in the sidebar) or:_
 xcrun xctrace list devices
 ```
 
-**WebDriverAgent (WDA) on real device**  
+**WebDriverAgent (WDA) on real device**
 Appium installs **WebDriverAgentRunner** on the device to drive automation. It must be built and signed with your Apple team. If you see `xcodebuild failed with code 65` or "Unable to launch WebDriverAgent", WDA code signing is not set up:
 
 1. **Device:** Trust the computer (USB prompt), enable **Developer Mode** (iOS 16+: Settings → Privacy & Security), and **trust your developer certificate** (Settings → General → VPN & Device Management → your team → Trust).
-2. **WDA signing:** Follow [Appium’s real device preparation](https://appium.github.io/appium-xcuitest-driver/latest/preparation/real-device-config/). Easiest is [Basic Automatic Configuration](https://appium.github.io/appium-xcuitest-driver/latest/preparation/prov-profile-basic-auto/) (paid Apple Developer account). If that fails, use one of the manual approaches (e.g. open WDA in Xcode: `appium driver run xcuitest open-wda` from the e2e folder, then sign the WebDriverAgent target with your team).
+2. **WDA signing:** Follow [Appium's real device preparation](https://appium.github.io/appium-xcuitest-driver/latest/preparation/real-device-config/). Easiest is [Basic Automatic Configuration](https://appium.github.io/appium-xcuitest-driver/latest/preparation/prov-profile-basic-auto/) (paid Apple Developer account). If that fails, use one of the manual approaches (e.g. open WDA in Xcode: `appium driver run xcuitest open-wda` from the e2e folder, then sign the WebDriverAgent target with your team).
 3. **Logs:** The device config sets `showXcodeLog: true` so Appium logs show the actual xcodebuild error; check `e2e/logs/` after a run.
 
 ### _Local — Android Real Device_
@@ -163,7 +201,7 @@ ANDROID_UDID=<device-serial> yarn test:android:device
 
 # Run a single spec
 ANDROID_UDID=<device-serial> \
-  yarn wdio configs/local/wdio.android.local.device.conf.ts --spec test/smoke.spec.ts
+  yarn wdio configs/local/wdio.android.local.device.conf.ts --spec test/bcsc/smoke.spec.ts
 ```
 
 _Find your device serial via:_
@@ -177,7 +215,7 @@ adb devices
 ```bash
 # One-time: create .env.saucelabs and add your credentials
 cp e2e/.env.saucelabs.example e2e/.env.saucelabs
-# Edit e2e/.env.saucelabs with SAUCE_USERNAME, SAUCE_ACCESS_KEY, APP_FILENAME
+# Edit e2e/.env.saucelabs with SAUCE_USERNAME, SAUCE_ACCESS_KEY, app filenames
 
 # Run on both platforms (env is loaded automatically from .env.saucelabs)
 yarn test:sauce
@@ -189,38 +227,55 @@ yarn test:ios:sauce
 
 ### _Variant Selection_
 
-_All commands respect the_ `VARIANT` _env var. Defaults to_ `bcsc-dev` _if not set._
+_All commands respect the_ `VARIANT` _env var. Defaults to_ `bcsc` _if not set. Values starting with_ `bcsc` _normalize to_ `bcsc`_; values starting with_ `bcwallet` _normalize to_ `bcwallet`_._
 
 ```bash
-VARIANT=bcwallet-prod yarn test:ios:local
-VARIANT=bcsc-qa yarn test:android:sauce
+VARIANT=bcwallet yarn test:ios:local
+VARIANT=bcsc yarn test:android:sauce
 ```
 
-_Available variants:_ `bcsc-dev`_,_ `bcsc-test`_,_ `bcsc-qa`_,_ `bcsc-prod`_,_ `bcwallet-prod`_._
+### _Flow Mode_
+
+_The_ `E2E_FLOW` _env var controls how thorough each test stage is. Defaults to_ `simple`_._
+
+| _Mode_     | _Description_                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `simple`   | _Straight-line path: skips detours, uses PIN auth, no step 0 in verification_                       |
+| `advanced` | _Full coverage: includes transfer/setup/help detours, biometric auth, step 0 in verification_       |
+
+```bash
+E2E_FLOW=advanced yarn test:ios:local
+E2E_FLOW=simple yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
+```
 
 ## _Environment Variables_
 
-| _Variable_         | _Default_           | _Description_                                                                   |
-| ------------------ | ------------------- | ------------------------------------------------------------------------------- |
-| `VARIANT`          | `bcsc-dev`          | _App variant to test_                                                           |
-| `SAUCE_USERNAME`   | _—_                 | _SauceLabs username (sauce runs only)_                                          |
-| `SAUCE_ACCESS_KEY` | _—_                 | _SauceLabs access key (sauce runs only)_                                        |
-| `SAUCE_REGION`     | `us`                | _SauceLabs data center region (_`us` _or_ `eu`_)_                               |
-| `APP_FILENAME`     | _varies_            | _App filename in SauceLabs storage_                                             |
-| `BUILD_NAME`       | `local-<timestamp>` | _SauceLabs build name_                                                          |
-| `TEST_NAME`        | `E2E Tests`         | _SauceLabs test name_                                                           |
-| `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_                                             |
-| `IOS_VERSION`      | `18.3`              | _iOS simulator/device version (local)_                                          |
-| `IOS_APP`          | `BCWallet.app`      | _iOS app filename in_ `apps/` _(local sim)_                                     |
-| `IOS_APP_DEVICE`   | `BCWallet.ipa`      | _iOS app filename in_ `apps/` _(local real device)_                             |
-| `ANDROID_DEVICE`   | `Pixel_7_API_34`    | _Android emulator/device name (local)_                                          |
-| `ANDROID_VERSION`  | `14.0`              | _Android emulator/device version (local)_                                       |
-| `ANDROID_APP`      | `BCSC.apk`          | _Android app filename in_ `apps/` _(local)_                                     |
-| `IOS_UDID`         | _—_                 | _iOS device UDID (iOS real device only)_                                        |
-| `ANDROID_UDID`     | _—_                 | _Android device serial (Android real device only)_                              |
-| `XCODE_ORG_ID`     | _—_                 | _Apple Team ID (iOS real device only)_                                          |
-| `XCODE_SIGNING_ID` | `Apple Development` | _WDA signing identity; required for automatic signing with current Xcode_       |
-| `SHOW_XCODE_LOG`   | _unset_             | _Set to_ `true` _to print xcodebuild output when WebDriverAgent fails to build_ |
+| _Variable_              | _Default_              | _Description_                                                                   |
+| ----------------------- | ---------------------- | ------------------------------------------------------------------------------- |
+| `VARIANT`               | `bcsc`                 | _App variant to test (normalized:_ `bcsc` _or_ `bcwallet`_)_                   |
+| `E2E_FLOW`              | `simple`               | _Flow mode (_`simple` _or_ `advanced`_) — controls test depth_                 |
+| `SAUCE_USERNAME`        | _—_                    | _SauceLabs username (sauce runs only)_                                          |
+| `SAUCE_ACCESS_KEY`      | _—_                    | _SauceLabs access key (sauce runs only)_                                        |
+| `SAUCE_REGION`          | `us`                   | _SauceLabs data center region (_`us` _or_ `eu`_)_                              |
+| `ANDROID_APP_FILENAME`  | `BCSC-Dev-latest.aab`  | _Android app filename in SauceLabs storage_                                     |
+| `IOS_APP_FILENAME`      | `BCSC-Dev-latest.ipa`  | _iOS app filename in SauceLabs storage_                                         |
+| `BUILD_NAME`            | `local-<timestamp>`    | _SauceLabs build name_                                                          |
+| `TEST_NAME`             | `E2E Tests`            | _SauceLabs test name_                                                           |
+| `IOS_DEVICE`            | `iPhone 16`            | _iOS simulator/device name (local)_                                             |
+| `IOS_VERSION`           | `18.5`                 | _iOS simulator/device version (local)_                                          |
+| `IOS_APP`               | `BCWallet.app`         | _iOS app filename in_ `apps/` _(local sim)_                                    |
+| `IOS_APP_DEVICE`        | `BCWallet.ipa`         | _iOS app filename in_ `apps/` _(local real device)_                            |
+| `ANDROID_DEVICE`        | `Pixel_7_API_35`       | _Android emulator/device name (local)_                                          |
+| `ANDROID_VERSION`       | `15.0`                 | _Android emulator/device version (local)_                                       |
+| `ANDROID_APP`           | `BCWallet.apk`         | _Android app filename in_ `apps/` _(local)_                                    |
+| `IOS_UDID`              | _—_                    | _iOS device UDID (iOS real device only)_                                        |
+| `ANDROID_UDID`          | _—_                    | _Android device serial (Android real device only)_                              |
+| `XCODE_ORG_ID`          | _—_                    | _Apple Team ID (iOS real device only)_                                          |
+| `XCODE_SIGNING_ID`      | `Apple Development`    | _WDA signing identity; required for automatic signing with current Xcode_       |
+| `SHOW_XCODE_LOG`        | _unset_                | _Set to_ `true` _to print xcodebuild output when WebDriverAgent fails to build_|
+| `NO_RESET`              | `false`                | _Set to_ `true` _to skip app reinstall between runs (preserves app state)_     |
+| `CARD_SERIAL`           | _—_                    | _Test card serial number for verification flows_                                |
+| `BIRTH_DATE`            | _—_                    | _Test birthdate for verification flows (format:_ `YYYYMMDD`_)_                 |
 
 ## _Config Hierarchy_
 
@@ -240,19 +295,60 @@ _Each leaf config only contains **capabilities** (device name, platform version,
 
 ## _Writing Tests_
 
-### _Page Objects_
+### _Screen Objects & TestIDs_
 
-_Screen interactions are encapsulated in page objects under_ `src/screens/`_. Each extends_ `BaseScreen` _which provides cross-platform element lookup via_ `testID`_:_
+_Screen interactions use_ `BaseScreen` _instances backed by the central_ `TestIDs` _registry in_ `src/testIDs.ts`_. Each screen group is created by passing its TestID section to_ `BaseScreen`_:_
 
 ```typescript
-// All elements are found by testID — cross-platform with no branching
-await this.tapByTestId('com.ariesbifold:id/Continue')
+import { BaseScreen } from '../../src/screens/BaseScreen.js'
+import { TestIDs } from '../../src/testIDs.js'
+
+const AccountSetup = new BaseScreen(TestIDs.AccountSetup)
+const IntroCarousel = new BaseScreen(TestIDs.IntroCarousel)
+
+describe('App Launch', () => {
+  it('should launch and display the first screen', async () => {
+    await AccountSetup.waitFor('AddAccount')
+  })
+
+  it('should navigate through setup', async () => {
+    await AccountSetup.tap('AddAccount')
+    await IntroCarousel.waitFor('CarouselNext', 20_000)
+    await IntroCarousel.tap('CarouselNext')
+  })
+})
 ```
+
+_Element lookup is cross-platform with no branching:_
 
 | _Platform_ | _Strategy_         | _WDIO Selector_                            |
 | ---------- | ------------------ | ------------------------------------------ |
 | _iOS_      | _Accessibility ID_ | `~com.ariesbifold:id/Continue`             |
 | _Android_  | _Resource ID_      | `android=new UiSelector().resourceId(...)` |
+
+### _Flow-Aware Tests_
+
+_Tests can read_ `getE2EConfig()` _to branch on flow mode:_
+
+```typescript
+import { getE2EConfig } from '../../src/e2eConfig.js'
+
+const { flow, onboarding } = getE2EConfig()
+
+describe('Onboarding', () => {
+  if (onboarding.includeTransferDetour) {
+    it('should show transfer option', async () => { /* ... */ })
+  }
+})
+```
+
+### _Full E2E Orchestration_
+
+_The_ `test/bcsc/e2e.spec.ts` _file imports sub-specs in order (onboarding → verify → main) to run the entire app flow in a single session:_
+
+```bash
+E2E_FLOW=advanced yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
+```
 
 ## _CI/CD_
 
@@ -265,4 +361,4 @@ _Tests run automatically in GitHub Actions:_
 
 ## _Local App Binaries_
 
-_Place local builds in_ `e2e/apps/` _for local testing. See_ `[apps/README.md](apps/README.md)` _for instructions on producing builds._
+_Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](apps/README.md) _for instructions on producing builds._
