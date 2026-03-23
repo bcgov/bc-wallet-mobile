@@ -45,9 +45,11 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
 
   return (
     <TouchableOpacity
+      accessible={true}
       onPress={props.onPress}
       testID={testIdWithKey(props.title)}
-      accessibilityLabel={props.title}
+      accessibilityLabel={props.title.replace(/ /g, '\u00A0')}
+      accessibilityRole="button"
       disabled={props.isDisabled}
       style={{
         paddingVertical: 24,
@@ -56,33 +58,37 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
       }}
     >
       <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden={true}
       >
-        <ThemedText
-          variant={'headingFour'}
+        <View
           style={{
-            marginRight: 16,
-            color: textColor,
+            flexDirection: 'row',
+            alignItems: 'center',
           }}
-          accessibilityLabel={props.title}
         >
-          {props.title}
-        </ThemedText>
-
-        {props.isComplete ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
-      </View>
-
-      <View style={{ marginTop: 8 }}>
-        {props.subtext.map((subtext, id) => (
-          <ThemedText key={`${subtext}-${id}`} style={{ color: textColor }}>
-            {subtext}
+          <ThemedText
+            variant={'headingFour'}
+            style={{
+              marginRight: 16,
+              color: textColor,
+            }}
+          >
+            {props.title}
           </ThemedText>
-        ))}
 
-        {props.children}
+          {props.isComplete ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+        </View>
+
+        <View style={{ marginTop: 8 }}>
+          {props.subtext.map((subtext, id) => (
+            <ThemedText key={`${subtext}-${id}`} style={{ color: textColor }}>
+              {subtext}
+            </ThemedText>
+          ))}
+
+          {props.children}
+        </View>
       </View>
     </TouchableOpacity>
   )
