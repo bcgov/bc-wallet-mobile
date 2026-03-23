@@ -120,6 +120,8 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     <TouchableOpacity
       style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
       testID={testIdWithKey(`button-${type}`)}
+      accessibilityLabel={title || description}
+      accessibilityRole="button"
       onPress={() => {
         if (dismissible) {
           setShowBanner(false)

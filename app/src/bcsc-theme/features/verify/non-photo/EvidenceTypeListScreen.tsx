@@ -231,6 +231,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
+            accessibilityLabel={data.item.evidence_type_label}
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.cardSection,
               pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
@@ -256,6 +258,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                   })
                 }}
                 testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+                accessibilityLabel={t('BCSC.EvidenceTypeList.ShowMoreOptions')}
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.cardSection,
                   pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },

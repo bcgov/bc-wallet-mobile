@@ -8,7 +8,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -394,7 +394,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               </View>
             )}
 
-            <TouchableOpacity onPress={handleHavingTrouble} style={styles.hasTroubleContainer}>
+            <TouchableOpacity
+              onPress={handleHavingTrouble}
+              style={styles.hasTroubleContainer}
+              accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
+              accessibilityRole="button"
+              testID={testIdWithKey('HavingTrouble')}
+            >
               <ThemedText>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
             </TouchableOpacity>
           </View>

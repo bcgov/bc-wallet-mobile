@@ -119,6 +119,9 @@ const ServiceLoginUnavailableView = ({
 
         <TouchableOpacity
           testID={testIdWithKey('GoToServiceClient')}
+          accessibilityLabel={t('BCSC.Services.GotoService', { service: state.serviceTitle })}
+          accessibilityRole="link"
+          hitSlop={hitSlop}
           onPress={async () => {
             if (!state.serviceClientUri) {
               logger.error('ServiceLoginScreen: No service client URI available for navigation')
@@ -204,7 +207,13 @@ const ServiceLoginDefaultView = ({
           </View>
 
           {state.privacyPolicyUri ? (
-            <TouchableOpacity testID={testIdWithKey('ReadPrivacyPolicy')} onPress={onOpenPrivacyPolicy}>
+            <TouchableOpacity
+              testID={testIdWithKey('ReadPrivacyPolicy')}
+              accessibilityLabel={t('BCSC.Services.PrivacyNotice')}
+              accessibilityRole="link"
+              hitSlop={hitSlop}
+              onPress={onOpenPrivacyPolicy}
+            >
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
                 <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
                 <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />

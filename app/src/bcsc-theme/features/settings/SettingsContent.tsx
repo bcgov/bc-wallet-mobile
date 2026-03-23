@@ -323,6 +323,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <TouchableWithoutFeedback
             onPress={incrementDeveloperMenuCounter}
             disabled={store.preferences.developerModeEnabled}
+            accessibilityLabel={t('BCSC.Title')}
           >
             <View style={{ alignItems: 'center' }}>
               <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>

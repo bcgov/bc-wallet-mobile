@@ -10,6 +10,7 @@ exports[`PairingCodeTextInput Component Rendering renders correctly 1`] = `
   }
 >
   <TextInput
+    accessibilityLabel="Pairing code"
     autoCapitalize="characters"
     autoComplete="off"
     autoCorrect={false}

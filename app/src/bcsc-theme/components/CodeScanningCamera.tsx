@@ -1377,23 +1377,25 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         <View style={styles.lockedButtonsContainer}>
           {enableScanZones ? (
             <>
-              <Pressable style={styles.saveButton} onPress={handleSaveScanZones} testID="save-scan-zones-button">
+              <Pressable style={styles.saveButton} onPress={handleSaveScanZones} testID="save-scan-zones-button" accessibilityLabel="Save Scan Zones" accessibilityRole="button">
                 <Text style={styles.saveButtonText}>{'\uD83D\uDCD0'} Save Scan Zones</Text>
               </Pressable>
               <Pressable
                 style={styles.continueButton}
                 onPress={handleContinueScanning}
                 testID="continue-scanning-button"
+                accessibilityLabel="Continue Scanning"
+                accessibilityRole="button"
               >
                 <Text style={styles.continueButtonText}>{'\u25B6'} Continue Scanning</Text>
               </Pressable>
             </>
           ) : (
             <>
-              <Pressable style={styles.confirmButton} onPress={confirmScan} testID="confirm-scan-button">
+              <Pressable style={styles.confirmButton} onPress={confirmScan} testID="confirm-scan-button" accessibilityLabel="Confirm" accessibilityRole="button">
                 <Text style={styles.confirmButtonText}>{'\u2714'} Confirm</Text>
               </Pressable>
-              <Pressable style={styles.continueButton} onPress={handleContinueScanning} testID="try-again-button">
+              <Pressable style={styles.continueButton} onPress={handleContinueScanning} testID="try-again-button" accessibilityLabel="Try Again" accessibilityRole="button">
                 <Text style={styles.continueButtonText}>{'\uD83D\uDD04'} Try Again</Text>
               </Pressable>
             </>

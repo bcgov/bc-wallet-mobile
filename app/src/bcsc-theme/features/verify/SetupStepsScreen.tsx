@@ -224,6 +224,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCheckStatus}
+            accessibilityLabel={t('BCSC.Steps.CheckStatus')}
+            accessibilityRole="button"
+            testID={testIdWithKey('CheckStatus')}
           >
             <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               {t('BCSC.Steps.CheckStatus')}
@@ -248,6 +251,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCancelVerification}
+            accessibilityLabel={t('BCSC.Steps.ChooseAnotherWayToVerify')}
+            accessibilityRole="button"
+            testID={testIdWithKey('ChooseAnotherWayToVerify')}
           >
             <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               {t('BCSC.Steps.ChooseAnotherWayToVerify')}

@@ -32,7 +32,12 @@ const HomeHeaderView = () => {
   }
 
   return logger?.remoteLoggingEnabled ? (
-    <Pressable onPress={onPressBanner} testID={testIdWithKey('SessionIdBanner')}>
+    <Pressable
+      onPress={onPressBanner}
+      testID={testIdWithKey('SessionIdBanner')}
+      accessibilityLabel={t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() })}
+      accessibilityRole="button"
+    >
       <View style={styles.banner}>
         <Text style={styles.bannerText}>{t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() })}</Text>
       </View>

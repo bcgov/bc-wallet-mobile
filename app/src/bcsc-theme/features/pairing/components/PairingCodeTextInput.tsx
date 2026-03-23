@@ -57,6 +57,7 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...te
         value={value}
         onChangeText={onChangeText}
         testID={testID}
+        accessibilityLabel={textInputProps?.accessibilityLabel ?? 'Pairing code'}
         {...textInputProps}
       />
     </View>

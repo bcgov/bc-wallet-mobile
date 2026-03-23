@@ -135,6 +135,7 @@ export const DropdownWithValidation = <T extends string | number>({
         style={[styles.optionItem, isSelected && styles.optionItemSelected, isLastItem && { borderBottomWidth: 0 }]}
         onPress={() => handleSelect(item.value)}
         testID={testIdWithKey(`${id}-option-${item.value}`)}
+        accessibilityLabel={item.label}
         accessibilityRole="menuitem"
         accessibilityState={{ selected: isSelected }}
       >

@@ -99,6 +99,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           inputRef.current?.focus()
         }}
         hitSlop={hitSlop}
+        accessible={false}
       >
         <TextInput
           ref={inputRef}
