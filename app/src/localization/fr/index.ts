@@ -38,6 +38,7 @@ const translation = {
     "Reported": "Signalé",
     "Unknown": "Inconnu",
     "Problem": "Un problème est survenu",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (FR)"
   },
   "Screens": {
     "Preface": "BC Wallet (FR)",
@@ -340,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (FR)",
+        "CheckAgainButton": "Check again (FR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
@@ -532,7 +537,8 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (FR)",
       "AnalyticsTitle": "Enable Analytics? (FR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (FR)",
+      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (FR)",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously (FR)",
       "AcceptAnalytics": "Enable Analytics (FR)",
       "DenyAnalytics":  "Skip (FR)",
     },
@@ -712,6 +718,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (FR)",
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter your email address (FR)",
+      "EmailAddress": "Email address (FR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (FR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (FR)",
     },

@@ -133,7 +133,7 @@ describe('ErrorAlertContext', () => {
 
       expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
         code: ErrorRegistry.CAMERA_BROKEN.appEvent,
-        message: '',
+        message: expect.stringContaining(ErrorRegistry.CAMERA_BROKEN.appEvent),
       })
       expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(ErrorRegistry.CAMERA_BROKEN.appEvent)
     })
@@ -159,7 +159,7 @@ describe('ErrorAlertContext', () => {
 
       expect(appLogger.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.objectContaining({ technicalMessage: 'Test error message' })
+        expect.objectContaining({ technicalMessage: expect.stringContaining('Test error message') })
       )
     })
 

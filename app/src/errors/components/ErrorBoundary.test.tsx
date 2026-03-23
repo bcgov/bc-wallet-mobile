@@ -6,6 +6,9 @@ import { ErrorBoundaryWrapper } from './ErrorBoundary'
 jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.0',
   getBuildNumber: () => '42',
+  getApplicationName: () => 'BCWallet',
+  getSystemName: () => 'iOS',
+  getSystemVersion: () => '17.0',
 }))
 
 jest.mock('react-native-safe-area-context', () => {
@@ -19,6 +22,7 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 jest.mock('@bifold/core', () => ({
   AbstractBifoldLogger: class {},
+  BifoldError: jest.requireActual('@bifold/core').BifoldError,
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
 }))
 
@@ -99,7 +103,7 @@ describe('ErrorBoundaryWrapper', () => {
         </ErrorBoundaryWrapper>
       )
 
-      expect(getByText('Error')).toBeTruthy()
+      expect(getByText('Error.Problem')).toBeTruthy()
     })
 
     it('should display error message as description', () => {
@@ -111,7 +115,7 @@ describe('ErrorBoundaryWrapper', () => {
         </ErrorBoundaryWrapper>
       )
 
-      expect(getByText('Test render error')).toBeTruthy()
+      expect(getByText('Error.ProblemDescription')).toBeTruthy()
     })
 
     it('should not render children when in error state', () => {

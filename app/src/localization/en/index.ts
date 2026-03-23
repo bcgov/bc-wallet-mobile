@@ -38,6 +38,7 @@ const translation = {
     "Reported": "Reported",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
   },
   "Screens": {
     "Preface": "BC Wallet",
@@ -340,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable",
+        "CheckAgainButton": "Check again",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -532,7 +537,8 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.",
       "AnalyticsTitle": "Enable Analytics?",
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",
+      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app.",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously",
       "AcceptAnalytics": "Enable Analytics",
       "DenyAnalytics": "Skip",
     },
@@ -714,6 +720,7 @@ const translation = {
       "EmailSkipButton": "Provide email address",
       "EmailSkipButton2": "Skip",
       "EnterEmailAddress": "Enter your email address",
+      "EmailAddress": "Email address",
       "EmailDescription1": "It is recommended that you provide one for security purposes.",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card.",
     },

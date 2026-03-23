@@ -15,10 +15,11 @@ export enum BCSCBanner {
 
 export interface BCSCBannerMessage {
   id: BCSCBanner
-  title: string
+  title: string | undefined
   description?: string
   type: 'error' | 'warning' | 'info' | 'success'
   dismissible?: boolean
+  metadata?: Record<string, unknown>
 }
 
 export interface AppBannerSectionProps extends BCSCBannerMessage {
@@ -75,6 +76,8 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     },
     icon: {
       marginRight: Spacing.md,
+      // Aligns the icon and the first line of text vertically (assuming the icon is 24px and line height is 24)
+      marginTop: 2,
     },
   })
 
@@ -132,15 +135,17 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
         testID={testIdWithKey(`icon-${type}`)}
       />
       <View style={styles.textContainer}>
-        <ThemedText
-          variant={'bold'}
-          style={{
-            color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
-          }}
-          testID={testIdWithKey(`text-${type}`)}
-        >
-          {title}
-        </ThemedText>
+        {title ? (
+          <ThemedText
+            variant={'bold'}
+            style={{
+              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+            }}
+            testID={testIdWithKey(`text-${type}`)}
+          >
+            {title}
+          </ThemedText>
+        ) : null}
         {description ? (
           <ThemedText
             style={{

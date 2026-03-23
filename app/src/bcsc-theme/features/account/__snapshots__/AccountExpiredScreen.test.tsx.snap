@@ -69,6 +69,7 @@ exports[`AccountExpired renders correctly 1`] = `
           },
           {
             "marginRight": 16,
+            "marginTop": 2,
           },
           {
             "fontFamily": "Material Design Icons",

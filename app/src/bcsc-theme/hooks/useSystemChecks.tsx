@@ -1,13 +1,18 @@
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { SERVER_STATUS_RECHECK_INTERVAL_MS } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
+import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks } from '@/services/system-checks/system-checks'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -33,6 +38,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
+  const configApi = useConfigApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
@@ -42,6 +48,9 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const { emitAlert } = useErrorAlert()
 
+  const hasServerOutage = store.bcsc.bannerMessages.some((b) => b.id === BCSCBanner.IAS_SERVER_UNAVAILABLE)
+  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, t, logger])
+
   // Updated credential metadata ref
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
@@ -50,7 +59,32 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   // Get system checks for the specified scope (useGetSystemChecks)
   const scopeSystemCheck = systemChecks[scope]
 
-  // Internet connectivity listener
+  /**
+   * Re-checks server status on demand (foreground return, interval timer).
+   * Creates a ServerStatusSystemCheck inline and runs it — on success the
+   * modal is dismissed and banners are cleared, on failure the modal is
+   * shown and banners are re-added.
+   */
+  const recheckServerStatus = useCallback(async () => {
+    if (!isClientReady) {
+      return
+    }
+
+    try {
+      const serverStatus = await configApi.getServerStatus()
+      const check = new ServerStatusSystemCheck(serverStatus, utils, navigation)
+
+      if (check.runCheck()) {
+        check.onSuccess()
+      } else {
+        check.onFail()
+      }
+    } catch (error) {
+      logger.error('[useSystemChecks]: Failed to re-check server status', error as Error)
+    }
+  }, [isClientReady, configApi, utils, navigation, logger])
+
+  // Internet connectivity and foreground listener
   useEffect(() => {
     if (scope !== SystemCheckScope.STARTUP) {
       return
@@ -68,10 +102,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     const appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
       appStateRef.current = nextAppState
 
-      // When app becomes active, refresh network state to ensure accurate status
+      // When app becomes active, refresh network state and server status to ensure accurate status
       if (nextAppState === 'active') {
         const { isConnected, isInternetReachable } = await NetInfo.refresh()
         await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
+        await recheckServerStatus()
       }
     })
 
@@ -79,7 +114,20 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       unsubscribeNetInfo()
       appStateSubscription.remove()
     }
-  }, [scope, logger, navigation])
+  }, [scope, logger, navigation, recheckServerStatus])
+
+  // Periodic server status re-check during active outage (matches v3 60-second interval)
+  useEffect(() => {
+    if (scope !== SystemCheckScope.STARTUP || !hasServerOutage) {
+      return
+    }
+
+    const intervalId = setInterval(() => {
+      recheckServerStatus()
+    }, SERVER_STATUS_RECHECK_INTERVAL_MS)
+
+    return () => clearInterval(intervalId)
+  }, [scope, hasServerOutage, recheckServerStatus])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
@@ -91,10 +139,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       logger.info('useSystemChecks: Tokens refreshed, running event reason alerts system check')
 
       try {
-        const utils = { dispatch, translation: t, logger }
-
-        // Tokens have already been refreshed before this event; use refreshCache: false
-        // to reuse the freshly updated ID token from cache without forcing another refresh.
         const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
         await runSystemChecks([
@@ -106,7 +150,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     })
 
     return () => subscription.remove()
-  }, [scope, isClientReady, client, dispatch, t, logger, navigation, emitAlert, tokenService])
+  }, [scope, isClientReady, client, utils, logger, navigation, emitAlert, tokenService])
 
   useEffect(() => {
     const runSystemChecksByScope = async () => {
