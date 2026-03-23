@@ -34,10 +34,20 @@ jobs:
             "PLAY_STORE_JKS_BASE64_SADEV"
             "PLAY_STORE_JKS_ALIAS_SADEV"
             "PLAY_STORE_JKS_PASSWD_SADEV"
+            "PLAY_STORE_JKS_BASE64_SAQA"
+            "PLAY_STORE_JKS_ALIAS_SAQA"
+            "PLAY_STORE_JKS_PASSWD_SAQA"
+            "PLAY_STORE_JKS_BASE64_SATEST"
+            "PLAY_STORE_JKS_ALIAS_SATEST"
+            "PLAY_STORE_JKS_PASSWD_SATEST"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST"
             "GOOGLE_SERVICES_CREDENTIALS_IOS"
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -55,10 +65,20 @@ jobs:
           PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
           PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_BASE64_SAQA: ${{ secrets.PLAY_STORE_JKS_BASE64_SAQA }}
+          PLAY_STORE_JKS_ALIAS_SAQA: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD_SAQA: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
+          PLAY_STORE_JKS_BASE64_SATEST: ${{ secrets.PLAY_STORE_JKS_BASE64_SATEST }}
+          PLAY_STORE_JKS_ALIAS_SATEST: ${{ secrets.PLAY_STORE_JKS_ALIAS_SATEST }}
+          PLAY_STORE_JKS_PASSWD_SATEST: ${{ secrets.PLAY_STORE_JKS_PASSWD_SATEST }}
           GOOGLE_SERVICES_CREDENTIALS_ANDROID: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
     steps:
@@ -97,7 +117,8 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "merge_group" ]]; then
             echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
+            # TODO: Add bcsc-prod once PROD secrets/vars are configured
+            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test"]' >> "$GITHUB_OUTPUT"
           fi
 
   early-exit-check:
