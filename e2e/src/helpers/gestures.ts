@@ -101,6 +101,41 @@ export async function swipeDown(durationMs = 200): Promise<void> {
   }
 }
 
+/**
+ * Swipe up (content scrolls down) by a controlled fraction of screen height.
+ * Centered vertically so the swipe origin/destination stay in the safe area.
+ *
+ * @param fraction - portion of screen height to cover (0–1, default 0.25)
+ * @param durationMs - swipe duration; slower = more reliable (default 500)
+ */
+export async function swipeUpBy(fraction = 0.25, durationMs = 500): Promise<void> {
+  const half = fraction / 2
+  const from = { x: 0.5, y: 0.5 + half }
+  const to = { x: 0.5, y: 0.5 - half }
+  if (driver.isIOS) {
+    await swipeIosFromTo(from, to, durationMs)
+  } else {
+    await swipeAndroid(from, to, durationMs)
+  }
+}
+
+/**
+ * Swipe down (content scrolls up) by a controlled fraction of screen height.
+ *
+ * @param fraction - portion of screen height to cover (0–1, default 0.25)
+ * @param durationMs - swipe duration; slower = more reliable (default 500)
+ */
+export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<void> {
+  const half = fraction / 2
+  const from = { x: 0.5, y: 0.5 - half }
+  const to = { x: 0.5, y: 0.5 + half }
+  if (driver.isIOS) {
+    await swipeIosFromTo(from, to, durationMs)
+  } else {
+    await swipeAndroid(from, to, durationMs)
+  }
+}
+
 export async function swipeLeft(durationMs = 200): Promise<void> {
   if (driver.isIOS) {
     await swipeIosDirection('left', durationMs)

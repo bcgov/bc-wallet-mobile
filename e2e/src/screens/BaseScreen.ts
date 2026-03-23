@@ -1,7 +1,9 @@
 import {
+  swipeDownBy,
   swipeDown as swipeDownGesture,
   swipeLeft as swipeLeftGesture,
   swipeRight as swipeRightGesture,
+  swipeUpBy,
   swipeUp as swipeUpGesture,
 } from '../helpers/gestures.js'
 
@@ -211,14 +213,14 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
   /**
    * Scroll until an element with the given test ID is visible.
-   * Uses native `mobile: scroll` on iOS (avoids performActions/quiescence bugs)
-   * and swipe gestures on Android.
+   * Uses small, controlled swipe increments (25% of screen height) to avoid
+   * overshooting elements. Pauses briefly after each swipe for the UI to settle.
    *
    * @param testId - testID of the element to scroll to
-   * @param maxScrolls - maximum scroll attempts per direction before throwing (default 4)
+   * @param maxScrolls - maximum scroll attempts per direction before throwing (default 8)
    * @param directions - `down` scrolls toward content below; `both` tries down then up
    */
-  public async scrollToTestId(testId: string, maxScrolls = 4, directions: 'down' | 'both' = 'down') {
+  public async scrollToTestId(testId: string, maxScrolls = 8, directions: 'down' | 'both' = 'down') {
     const isVisible = async () => {
       const candidate = await this.findByTestId(testId)
       try {
@@ -228,31 +230,22 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       }
     }
 
-    const scrollDownOnce = async () => {
-      if (driver.isIOS) {
-        await driver.execute('mobile: scroll', { direction: 'down' })
-      } else {
-        await swipeUpGesture()
-      }
-    }
+    if (await isVisible()) return
 
-    const scrollUpOnce = async () => {
-      if (driver.isIOS) {
-        await driver.execute('mobile: scroll', { direction: 'up' })
-      } else {
-        await swipeDownGesture()
-      }
-    }
+    const scrollFraction = 0.25
+    const settlePauseMs = 150
 
     for (let i = 0; i < maxScrolls; i++) {
+      await swipeUpBy(scrollFraction)
+      await driver.pause(settlePauseMs)
       if (await isVisible()) return
-      await scrollDownOnce()
     }
 
     if (directions === 'both') {
-      for (let i = 0; i < maxScrolls; i++) {
+      for (let i = 0; i < maxScrolls * 2; i++) {
+        await swipeDownBy(scrollFraction)
+        await driver.pause(settlePauseMs)
         if (await isVisible()) return
-        await scrollUpOnce()
       }
     }
 
