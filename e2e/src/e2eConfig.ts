@@ -1,4 +1,4 @@
-export type VariantName = 'bcsc' | 'bcwallet'
+export type VariantName = 'bcsc' | 'bc-wallet'
 export type FlowMode = 'simple' | 'advanced'
 
 export interface E2EConfig {
@@ -36,10 +36,10 @@ const FLOW_PRESETS: Record<FlowMode, Omit<E2EConfig, 'variant' | 'flow'>> = {
   },
 }
 
-/** Maps environment variant names (bcsc-dev, bcwallet-prod, etc.) to the base variant */
+/** Maps environment variant names (bcsc-dev, bc-wallet-prod, etc.) to the base variant */
 function normalizeVariantName(raw: string): VariantName {
   if (raw.startsWith('bcsc')) return 'bcsc'
-  if (raw.startsWith('bcwallet')) return 'bcwallet'
+  if (raw.startsWith('bc-wallet') || raw.startsWith('bcwallet')) return 'bc-wallet'
   return raw as VariantName
 }
 
