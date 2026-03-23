@@ -341,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable",
+        "CheckAgainButton": "Check again",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -381,6 +385,7 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached",
         "ManageDevicesButton": "Manage devices",
         "CloseButton": "Close",
+        "DeleteButton": "Delete Message",
         "ReviewDevicesTitle": "Review your devices",
         "ReviewDevicesContentA1": "You can have this account on a maximum of",
         "ReviewDevicesContentA2": "devices.",

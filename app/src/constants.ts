@@ -92,6 +92,7 @@ export const ONBOARDING_ICON_IMAGE_SIZE = 125
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
+export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
 export const enum DaysOfTheWeek {
   MONDAY = 'MONDAY',
   TUESDAY = 'TUESDAY',
@@ -137,3 +138,7 @@ export const MINIMUM_VERIFICATION_AGE = 12
 
 // Analytics constants
 export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'
+
+// Device Count Banner cooldown period
+export const DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV = 30 * 60 * 1000 // DEV: Banner will not be shown for 30 minutes after user 'deletes' the banner
+export const DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD = 30 * 24 * 60 * 60 * 1000 // PROD: Banner will not be shown for 30 days after user 'deletes' the banner

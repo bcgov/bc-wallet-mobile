@@ -1,26 +1,34 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks the IAS server status and dispatches banner messages based on availability.
- * Will show info banner if server is unavailable or if there is a status message from the server.
  *
  * Note:
- *   On failure, it dispatches a info banner message.
- *   On success, it removes the banner if it exists.
+ *   On failure, it navigates to the ServiceOutage modal and dispatches an info banner.
+ *   On success, it dismisses the modal (if visible) and removes the banner if it exists.
  *
- * @class ServerStatusStartupCheck
+ * @class ServerStatusSystemCheck
  * @implements {SystemCheckStrategy}
  */
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
   private readonly serverStatus: ServerStatusResponseData
   private readonly utils: SystemCheckUtils
+  private readonly navigation: SystemCheckNavigation
 
-  constructor(serverStatus: ServerStatusResponseData, utils: SystemCheckUtils) {
+  constructor(serverStatus: ServerStatusResponseData, utils: SystemCheckUtils, navigation: SystemCheckNavigation) {
     this.serverStatus = serverStatus
     this.utils = utils
+    this.navigation = navigation
+  }
+
+  private get isModalVisible() {
+    const state = this.navigation.getState()
+    const currentRouteName = state?.routes?.[state.index]?.name
+    return currentRouteName === BCSCModals.ServiceOutage
   }
 
   /**
@@ -33,23 +41,30 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Handles the failure of the server status check by dispatching an info banner message.
+   * Handles the failure of the server status check by navigating to the ServiceOutage modal
+   * and dispatching an info banner message.
    *
    * @returns {*} {void}
    */
   onFail() {
+    if (!this.isModalVisible) {
+      this.navigation.navigate(BCSCModals.ServiceOutage, {
+        statusMessage: this.serverStatus.statusMessage,
+        contactLink: this.serverStatus.contactLink,
+      })
+    }
+
     this.utils.dispatch({
       type: BCDispatchAction.ADD_BANNER_MESSAGE,
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title: undefined, // Note: Status messages can be verbose, using description for better formatting
+          title: undefined,
           description:
             this.serverStatus.statusMessage ??
             this.utils.translation('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
           type: 'info',
-          variant: 'summary',
-          dismissible: true,
+          dismissible: false,
           metadata: {
             contactLink: this.serverStatus.contactLink,
           },
@@ -59,11 +74,16 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Handles the success of the server status check by removing the info banner message if it exists.
+   * Handles the success of the server status check by dismissing the ServiceOutage modal
+   * (if visible) and removing the info banner message if it exists.
    *
    * @returns {*} {void}
    */
   onSuccess() {
+    if (this.isModalVisible && this.navigation.canGoBack()) {
+      this.navigation.goBack()
+    }
+
     this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
     this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
 
@@ -77,11 +97,10 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_NOTIFICATION,
-          title: undefined, // Note: Status messages can be verbose, using description for better formatting
+          title: undefined,
           description: this.serverStatus.statusMessage,
           type: 'info',
-          variant: 'summary',
-          dismissible: true,
+          dismissible: false,
           metadata: {
             contactLink: this.serverStatus.contactLink,
           },
