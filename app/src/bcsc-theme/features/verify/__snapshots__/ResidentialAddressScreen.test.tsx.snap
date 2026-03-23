@@ -114,6 +114,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddressLabel
             </Text>
             <View
+              accessibilityLabel="BCSC.Address.StreetAddressLabel"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -174,6 +175,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/streetAddress1-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.StreetAddressLabel"
@@ -269,6 +271,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddress2Label
             </Text>
             <View
+              accessibilityLabel="BCSC.Address.StreetAddress2Label"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -329,6 +332,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/streetAddress2-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.StreetAddress2Label"
@@ -424,6 +428,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.CityLabel
             </Text>
             <View
+              accessibilityLabel="BCSC.Address.CityLabel"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -484,6 +489,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/city-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.CityLabel"
@@ -721,6 +727,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeLabel
             </Text>
             <View
+              accessibilityLabel="BCSC.Address.PostalCodeLabel"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -781,6 +788,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/postalCode-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.PostalCodeLabel"
