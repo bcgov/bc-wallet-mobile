@@ -79,17 +79,19 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
 
   return (
     <ScreenWrapper keyboardActive controls={controls}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.NicknameAccount.AccountName')}
-      </ThemedText>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden={true}>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          {t('BCSC.NicknameAccount.AccountName')}
+        </ThemedText>
 
-      <ThemedText>
-        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-      </ThemedText>
+        <ThemedText>
+          {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+        </ThemedText>
 
-      <View style={styles.bulletPointContainer}>
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
+        <View style={styles.bulletPointContainer}>
+          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
+        </View>
       </View>
 
       <InputWithValidation
