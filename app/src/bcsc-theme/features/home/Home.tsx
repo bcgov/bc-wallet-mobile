@@ -55,6 +55,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <View style={styles.buttonsContainer}>
           <SectionButton
             title={t('BCSC.Home.WhereToUseTitle')}
+            accessibilityLabel={t('BCSC.Home.WhereToUseAccessibilityLabel')}
             description={t('BCSC.Home.WhereToUseDescription')}
             style={{ marginBottom: Spacing.md }}
             onPress={handleWhereToUsePress}
@@ -62,6 +63,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           />
           <SectionButton
             title={t('BCSC.Home.LogInFromComputerTitle')}
+            accessibilityLabel={t('BCSC.Home.LogInFromComputerAccessibilityLabel')}
             description={t('BCSC.Home.LogInFromComputerDescription')}
             onPress={handlePairingCodePress}
             testID={testIdWithKey('LogInFromComputer')}

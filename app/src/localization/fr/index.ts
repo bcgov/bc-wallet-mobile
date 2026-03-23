@@ -351,8 +351,10 @@ const translation = {
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
+      "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from a computer (FR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (FR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
       "ViewMessages": "View new messages (FR)",
     },
