@@ -17,6 +17,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -123,12 +124,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       throw new Error('Account expiration date undefined. Did you forget to check isReady?')
     }
 
+    const dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
       registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
 
     const systemChecks: SystemCheckStrategy[] = [
-      new DeviceCountSystemCheck(getIdToken, utils),
+      new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
       new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future

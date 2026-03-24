@@ -144,7 +144,10 @@ export const deleteAuthorizationRequest = jest.fn().mockResolvedValue(true)
 export const getAccountFlags = jest.fn().mockResolvedValue({})
 export const setAccountFlags = jest.fn().mockResolvedValue(true)
 export const deleteAccountFlags = jest.fn().mockResolvedValue(true)
-
+export const getMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(null)
+export const getHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(false)
 // Evidence Storage
 export const getEvidence = jest.fn().mockResolvedValue([])
 export const setEvidence = jest.fn().mockResolvedValue(true)

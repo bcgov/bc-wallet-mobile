@@ -793,6 +793,8 @@ export interface AccountFlags {
   userSubmittedVerificationVideo?: boolean;
   /** Whether user has dismissed the device auth confirmation screen ("Do not show me this again") */
   notShowDeviceAuthenticationPrepAgain?: boolean;
+  /** Epoch ms timestamp of when the user last closed the max devices banner */
+  userClosedMaxDevicesBannerDate?: number;
 }
 
 /**
@@ -801,6 +803,8 @@ export interface AccountFlags {
  */
 interface AndroidGlobalFlags {
   notShowDeviceAuthenticationPrepAgain?: boolean;
+  /** Epoch ms timestamp of when the user last closed the max devices banner */
+  maxDevicesBannerLastTimeDisplayed?: number;
 }
 
 /**
@@ -830,6 +834,37 @@ export const setHideDeviceAuthPrepFlag = async (value: boolean): Promise<boolean
     return BcscCore.setAccountFlags({ notShowDeviceAuthenticationPrepAgain: value });
   } else {
     return BcscCore.setAndroidGlobalFlags({ notShowDeviceAuthenticationPrepAgain: value });
+  }
+};
+
+/**
+ * Returns the epoch ms timestamp of when the user last closed the max devices banner,
+ * or undefined if it has never been closed.
+ *
+ * Platform-aware: on iOS reads from account flags (account_flag file),
+ * on Android reads from global SharedPreferences (no account required).
+ */
+export const getMaxDevicesBannerLastDisplayedDate = async (): Promise<number | undefined> => {
+  if (Platform.OS === 'ios') {
+    const { userClosedMaxDevicesBannerDate } = (await BcscCore.getAccountFlags()) as AccountFlags;
+    return userClosedMaxDevicesBannerDate;
+  } else {
+    const { maxDevicesBannerLastTimeDisplayed } = (await BcscCore.getAndroidGlobalFlags()) as AndroidGlobalFlags;
+    return maxDevicesBannerLastTimeDisplayed;
+  }
+};
+
+/**
+ * Sets the epoch ms timestamp for when the user last closed the max devices banner.
+ *
+ * Platform-aware: on iOS writes to account flags (account_flag file),
+ * on Android writes to global SharedPreferences (no account required).
+ */
+export const setMaxDevicesBannerLastDisplayedDate = async (value: number): Promise<boolean> => {
+  if (Platform.OS === 'ios') {
+    return BcscCore.setAccountFlags({ userClosedMaxDevicesBannerDate: value });
+  } else {
+    return BcscCore.setAndroidGlobalFlags({ maxDevicesBannerLastTimeDisplayed: value });
   }
 };
 
