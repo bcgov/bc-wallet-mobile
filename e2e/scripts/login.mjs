@@ -70,11 +70,7 @@ function extractErrorMessage(html) {
     // cheerio parse failed, fall through
   }
 
-  const plain = html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return plain.slice(0, 400)
+  return html.slice(0, 400)
 }
 
 /**
