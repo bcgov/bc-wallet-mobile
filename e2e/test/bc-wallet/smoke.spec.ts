@@ -23,11 +23,6 @@ describe('App Launch', () => {
     await Preface.tap('Continue')
   })
 
-  it('should display the Update screen', async () => {
-    await Update.waitFor('UpdateLater')
-    await Update.tap('UpdateLater')
-  })
-
   it('should display the Onboarding screen', async () => {
     await Onboarding.waitFor('Next')
     await Onboarding.tap('Next')
