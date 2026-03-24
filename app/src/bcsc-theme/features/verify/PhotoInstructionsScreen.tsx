@@ -1,6 +1,7 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import SelfieImage from '@assets/img/selfie_example.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -46,7 +47,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
         })
       }}
       testID={'TakePhotoButton'}
-      accessibilityLabel={t('BCSC.PhotoInstructions.TakePhoto')}
+      accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
     />
   )
 

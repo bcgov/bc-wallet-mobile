@@ -865,6 +865,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
       "TakePhoto": "Take Photo of Face",
+      "TakePhotoAccessibilityLabel": "Take photo",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required",

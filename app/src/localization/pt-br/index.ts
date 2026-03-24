@@ -863,6 +863,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
       "TakePhoto": "Take Photo of Face (PT-BR)",
+      "TakePhotoAccessibilityLabel": "Take photo (PT-BR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (PT-BR)",
