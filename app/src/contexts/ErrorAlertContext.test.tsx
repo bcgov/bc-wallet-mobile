@@ -9,7 +9,7 @@ import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
-const mockBCSCErrorModal = jest.fn(() => null)
+const mockBCSCErrorModal = jest.fn()
 jest.mock('@/errors/components/ErrorModal', () => ({
   BCSCErrorModal: (props: any) => mockBCSCErrorModal(props),
 }))
