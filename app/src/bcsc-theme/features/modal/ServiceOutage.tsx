@@ -3,6 +3,7 @@ import { HELP_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -10,6 +11,7 @@ import useServiceOutageViewModel from './useServiceOutageViewModel'
 
 export const ServiceOutage = (): React.ReactElement => {
   const { headerText, contentText, buttonText, isCheckDisabled, handleCheckAgain } = useServiceOutageViewModel()
+  const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const navigation = useNavigation()
 
@@ -18,11 +20,10 @@ export const ServiceOutage = (): React.ReactElement => {
       flex: 1,
       backgroundColor: ColorPalette.brand.modalPrimaryBackground,
     },
-    scollContainer: {
-      alignItems: 'center',
-    },
+    scollContainer: {},
     icon: {
       paddingVertical: Spacing.lg,
+      alignSelf: 'center',
     },
     buttonContainer: {
       padding: Spacing.md,
@@ -61,7 +62,7 @@ export const ServiceOutage = (): React.ReactElement => {
             </ThemedText>
           ))}
           <CardButton
-            title={headerText}
+            title={t('BCSC.Modals.ServiceOutage.LearnMore')}
             onPress={() => Linking.openURL(HELP_URL)}
             endIcon="open-in-new"
             testID={testIdWithKey('ServiceOutageHelpCentre')}
