@@ -1,5 +1,3 @@
-import { isSauceLabs } from './sauce.js'
-
 /**
  * Handles the native notification permission dialog that appears when the app requests
  * notification access (e.g. after tapping "Continue" on the Notifications onboarding screen).
@@ -8,22 +6,37 @@ import { isSauceLabs } from './sauce.js'
  * iOS: "Allow [App] to send you notifications?" with "Don't Allow" and "Allow"
  * Android 13+: Runtime permission dialog with "Don't allow" and "Allow"
  *
- * Skipped on Sauce Labs — system dialogs may not appear reliably on their real-device cloud.
+ * Runs on Sauce Labs RDC as well — if the system dialog appears it must be accepted or the
+ * next onboarding step will time out; when no dialog is shown the accept helpers no-op.
  */
 export async function acceptNotificationPermissionIfPresent(): Promise<void> {
-  if (isSauceLabs()) return
-
   // Give the permission dialog time to appear (shows shortly after the app requests it)
   await new Promise((r) => setTimeout(r, 1_500))
 
   if (driver.isIOS) {
-    await acceptIosNotificationPermission()
+    await acceptIosAllowPermissionDialog()
   } else if (driver.isAndroid) {
-    await acceptAndroidNotificationPermission()
+    await acceptAndroidAllowPermissionDialog()
   }
 }
 
-async function acceptIosNotificationPermission(): Promise<void> {
+/**
+ * Dismisses the native camera permission dialog after the app requests camera access
+ * (e.g. after tapping Take Photo). Same UI patterns as notification runtime permission.
+ * Safe when no dialog is shown (already granted). Same Sauce Labs behaviour as
+ * {@link acceptNotificationPermissionIfPresent}.
+ */
+export async function acceptCameraPermissionIfPresent(): Promise<void> {
+  await new Promise((r) => setTimeout(r, 1_500))
+
+  if (driver.isIOS) {
+    await acceptIosAllowPermissionDialog()
+  } else if (driver.isAndroid) {
+    await acceptAndroidAllowPermissionDialog()
+  }
+}
+
+async function acceptIosAllowPermissionDialog(): Promise<void> {
   const maxAttempts = 5
   const intervalMs = 1_000
 
@@ -56,7 +69,7 @@ async function acceptIosNotificationPermission(): Promise<void> {
   }
 }
 
-async function acceptAndroidNotificationPermission(): Promise<void> {
+async function acceptAndroidAllowPermissionDialog(): Promise<void> {
   const maxAttempts = 5
   const intervalMs = 1_000
 

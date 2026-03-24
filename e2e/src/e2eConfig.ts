@@ -1,3 +1,5 @@
+import { TestUsers } from './constants.js'
+
 export type VariantName = 'bcsc' | 'bc-wallet'
 export type FlowMode = 'simple' | 'advanced'
 
@@ -12,6 +14,13 @@ export interface E2EConfig {
   }
   verify: {
     includeStep0: boolean
+    verifyCardType: 'combined' | 'photo' | 'non-photo' | 'na'
+    testUser: {
+      username: string
+      cardSerial: string
+      dob: string
+      documentNumber: string
+    }
   }
 }
 
@@ -23,16 +32,16 @@ const FLOW_PRESETS: Record<FlowMode, Omit<E2EConfig, 'variant' | 'flow'>> = {
       includeHelpDetours: false,
       authMethod: 'pin',
     },
-    verify: { includeStep0: false },
+    verify: { includeStep0: false, verifyCardType: 'combined', testUser: TestUsers.combined },
   },
   advanced: {
     onboarding: {
       includeTransferDetour: true,
       includeSetupTypeInteraction: true,
       includeHelpDetours: true,
-      authMethod: 'biometric',
+      authMethod: 'pin',
     },
-    verify: { includeStep0: true },
+    verify: { includeStep0: false, verifyCardType: 'non-photo', testUser: TestUsers.nonPhoto },
   },
 }
 

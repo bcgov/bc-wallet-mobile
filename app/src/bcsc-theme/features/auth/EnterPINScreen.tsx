@@ -133,7 +133,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     <ScreenWrapper keyboardActive controls={controls}>
       <View style={{ gap: Spacing.sm }}>
         <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
-        <PINInput onPINChange={handlePINChange} onPINComplete={handlePINComplete} errorMessage={errorMessage} />
+        <PINInput
+          testIDKey="PINInput"
+          onPINChange={handlePINChange}
+          onPINComplete={handlePINComplete}
+          errorMessage={errorMessage}
+        />
         <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
       </View>
     </ScreenWrapper>

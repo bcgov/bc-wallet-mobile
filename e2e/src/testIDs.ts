@@ -115,14 +115,15 @@ export const BCSC_TestIDs = {
   EvidenceIDCollection: {
     Continue: 'com.ariesbifold:id/EvidenceIDCollectionContinue',
     Cancel: 'com.ariesbifold:id/EvidenceIDCollectionCancel',
-    DocumentNumberInput: 'com.ariesbifold:id/documentNumber-input',
-    LastNameInput: 'com.ariesbifold:id/lastName-input',
-    FirstNameInput: 'com.ariesbifold:id/firstName-input',
-    MiddleNamesInput: 'com.ariesbifold:id/middleNames-input',
-    BirthdateInput: 'com.ariesbifold:id/birthDate-input',
+    DocumentNumberPressable: 'com.ariesbifold:id/documentNumber-pressable',
+    LastNamePressable: 'com.ariesbifold:id/lastName-pressable',
+    FirstNamePressable: 'com.ariesbifold:id/firstName-pressable',
+    MiddleNamesPressable: 'com.ariesbifold:id/middleNames-pressable',
+    BirthdatePressable: 'com.ariesbifold:id/birthDate-pressable',
     Help: 'com.ariesbifold:id/Help',
   },
   EvidenceTypeList: {
+    CanadianPassport: 'com.ariesbifold:id/EvidenceTypeListItem Canadian Passport',
     OtherOptions: 'com.ariesbifold:id/EvidenceTypeListOtherOptions',
     Help: 'com.ariesbifold:id/Help',
   },
@@ -252,6 +253,37 @@ export const BCSC_TestIDs = {
     Help: 'com.ariesbifold:id/Help',
   },
   VerifySettings: {
+    Back: 'com.ariesbifold:id/Back',
+  },
+  AccountSelector: {
+    SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
+    ContinueSetup: 'com.ariesbifold:id/ContinueSetup',
+  },
+  EnterPIN: {
+    PINInput: 'com.ariesbifold:id/PINInput',
+    Continue: 'com.ariesbifold:id/Continue',
+    GetHelp: 'com.ariesbifold:id/GetHelp',
+    VisibilityButton: 'com.ariesbifold:id/VisibilityButton',
+  },
+  Lockout: {
+    RemoveAccount: 'com.ariesbifold:id/RemoveAccount',
+  },
+  DeviceAuthAppReset: {
+    SetUpApp: 'com.ariesbifold:id/SetUpApp',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
+  },
+  DeviceAuthInfo: {
+    HideConfirmationCheckbox: 'com.ariesbifold:id/HideConfirmationCheckbox',
+    Continue: 'com.ariesbifold:id/Continue',
+  },
+  AuthPrivacyPolicy: {
+    PrivacyPolicyBCLoginLink: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+    LearnMoreCardEn: 'com.ariesbifold:id/CardButton-Learn more',
+  },
+  AuthWebView: {
+    Back: 'com.ariesbifold:id/Back',
+  },
+  AuthDeveloper: {
     Back: 'com.ariesbifold:id/Back',
   },
   PermissionDisabled: {
