@@ -52,11 +52,12 @@ const RenderState = {
   Default: 'Default', // Quick login is available
 } as const
 
-// This compares fields in LocalState to determine if the service supports quicklogin. v3 checks against these same fields
+// This compares fields in LocalState to determine if the service supports quicklogin
 const isQuickLoginAvailable = (state: LocalState): boolean =>
   state.service?.initiate_login_uri != null &&
   state.service?.claims_description != null &&
-  state.service?.policy_uri != null
+  state.service?.policy_uri != null &&
+  state.pairingCode != null
 
 const ServiceLoginLoadingView = () => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1, justifyContent: 'center' }}>
