@@ -1,7 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
+import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { useCallback } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -11,7 +10,8 @@ export const ServiceOutage = (): React.ReactElement => {
   const { headerText, contentText, learnMoreText, buttonText, isCheckDisabled, handleCheckAgain, handleLearnMore } =
     useServiceOutageViewModel()
   const { Spacing, ColorPalette } = useTheme()
-  const navigation = useNavigation()
+
+  usePreventGestureBack()
 
   const styles = StyleSheet.create({
     container: {
@@ -34,19 +34,6 @@ export const ServiceOutage = (): React.ReactElement => {
       gap: Spacing.lg,
     },
   })
-
-  useFocusEffect(
-    useCallback(() => {
-      const beforeRemove = navigation.addListener('beforeRemove', (event) => {
-        if (!event.data.action.source) {
-          event.preventDefault()
-        }
-      })
-      return () => {
-        beforeRemove()
-      }
-    }, [navigation])
-  )
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
