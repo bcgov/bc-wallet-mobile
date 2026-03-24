@@ -82,7 +82,7 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       <View
         style={{
           borderBottomWidth: 1,
-          borderBottomColor: ColorPalette.grayscale.greyLight,
+          borderBottomColor: ColorPalette.grayscale.lightGrey,
           marginBottom: Spacing.lg,
         }}
       />
