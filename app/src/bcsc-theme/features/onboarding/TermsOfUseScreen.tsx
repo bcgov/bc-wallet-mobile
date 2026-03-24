@@ -1,3 +1,4 @@
+import { a11yLabel } from '@utils/accessibility'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -79,7 +80,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
           buttonType={ButtonType.Primary}
           onPress={fetchTermsOfUse}
           testID={testIdWithKey('RetryTermsOfUse')}
-          accessibilityLabel={t('Init.Retry')}
+          accessibilityLabel={a11yLabel(t('Init.Retry'))}
           disabled={isLoading}
         />
       ) : (
@@ -97,7 +98,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
             navigation.navigate(BCSCScreens.OnboardingNotifications)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
+          accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
           disabled={!webViewIsLoaded || isLoading}
         />
       )}

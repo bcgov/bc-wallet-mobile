@@ -1378,7 +1378,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         <View style={styles.lockedButtonsContainer}>
           {enableScanZones ? (
             <>
-              <Pressable style={styles.saveButton} onPress={handleSaveScanZones} testID="save-scan-zones-button" accessibilityLabel={a11yLabel(t('BCSC.Scan.SaveScanZones'))} accessibilityRole="button">
+              <Pressable
+                style={styles.saveButton}
+                onPress={handleSaveScanZones}
+                testID="save-scan-zones-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.SaveScanZones'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.saveButtonText}>{'\uD83D\uDCD0'} Save Scan Zones</Text>
               </Pressable>
               <Pressable
@@ -1393,10 +1399,22 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
             </>
           ) : (
             <>
-              <Pressable style={styles.confirmButton} onPress={confirmScan} testID="confirm-scan-button" accessibilityLabel={a11yLabel(t('BCSC.Scan.Confirm'))} accessibilityRole="button">
+              <Pressable
+                style={styles.confirmButton}
+                onPress={confirmScan}
+                testID="confirm-scan-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.Confirm'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.confirmButtonText}>{'\u2714'} Confirm</Text>
               </Pressable>
-              <Pressable style={styles.continueButton} onPress={handleContinueScanning} testID="try-again-button" accessibilityLabel={a11yLabel(t('BCSC.Scan.TryAgain'))} accessibilityRole="button">
+              <Pressable
+                style={styles.continueButton}
+                onPress={handleContinueScanning}
+                testID="try-again-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.TryAgain'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.continueButtonText}>{'\uD83D\uDD04'} Try Again</Text>
               </Pressable>
             </>

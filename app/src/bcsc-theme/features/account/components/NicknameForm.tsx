@@ -1,3 +1,4 @@
+import { a11yLabel } from '@utils/accessibility'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { formStringLengths } from '@/constants'
@@ -69,7 +70,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
       title={t('BCSC.NicknameAccount.SaveAndContinue')}
       buttonType={ButtonType.Primary}
       testID={testIdWithKey('SaveAndContinue')}
-      accessibilityLabel={t('BCSC.NicknameAccount.SaveAndContinue')}
+      accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
       onPress={handleButtonPress}
       disabled={loading}
     >
@@ -79,19 +80,17 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
 
   return (
     <ScreenWrapper keyboardActive controls={controls}>
-      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden={true}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.NicknameAccount.AccountName')}
-        </ThemedText>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.NicknameAccount.AccountName')}
+      </ThemedText>
 
-        <ThemedText>
-          {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-        </ThemedText>
+      <ThemedText>
+        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+      </ThemedText>
 
-        <View style={styles.bulletPointContainer}>
-          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
-        </View>
+      <View style={styles.bulletPointContainer}>
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
       </View>
 
       <InputWithValidation

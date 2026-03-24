@@ -213,7 +213,7 @@ export const DropdownWithValidation = <T extends string | number>({
                   style={styles.closeButton}
                   onPress={handleClose}
                   testID={testIdWithKey(`${id}-close`)}
-                  accessibilityLabel={a11yLabel('Close')}
+                  accessibilityLabel={a11yLabel(t('Global.Close'))}
                   accessibilityRole="button"
                 >
                   <Icon name="close" size={24} color={ColorPalette.brand.secondary} />

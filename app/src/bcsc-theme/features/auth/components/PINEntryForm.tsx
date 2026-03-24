@@ -211,7 +211,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
       <Button
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        accessibilityLabel={a11yLabel(t('Global.Continue'))}
         testID={testIdWithKey('Continue')}
         disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
