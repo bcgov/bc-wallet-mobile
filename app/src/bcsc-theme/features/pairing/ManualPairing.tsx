@@ -46,10 +46,10 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   }, [])
 
   const onSubmit = async () => {
-    if (code.length < 6) {
-      setError(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
-    } else if (!code.length) {
+    if (!code.length) {
       setError(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
+    } else if (code.length < PAIRING_CODE_LENGTH) {
+      setError(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
     } else {
       try {
         setLoading(true)
