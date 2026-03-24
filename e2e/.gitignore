@@ -17,3 +17,6 @@ logs/
 
 # Notes
 .notes/
+
+# Local environment variables
+local.env

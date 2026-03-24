@@ -22,7 +22,7 @@ const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 describe('Onboarding', () => {
   it('should display the Account Setup screen', async () => {
     await acceptLocalNetworkPermissionIfPresent()
-    await AccountSetup.waitFor('AddAccount')
+    await AccountSetup.waitFor('AddAccount', 20000)
   })
 
   if (onboarding.includeTransferDetour) {
