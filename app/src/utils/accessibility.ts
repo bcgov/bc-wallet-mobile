@@ -3,7 +3,7 @@
  * iOS Voice Control and Android Voice Access display the full label
  * text in their overlays instead of truncating at word boundaries.
  */
-export const a11yLabel = (label?: string | null): string => label?.replace(/ /g, '\u00A0') ?? ''
+export const a11yLabel = (label?: string | null): string => label?.replaceAll(' ', '\u00A0') ?? ''
 
 /**
  * Truncates a label to the first N words for use as an accessibility
