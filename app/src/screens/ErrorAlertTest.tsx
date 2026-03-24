@@ -228,6 +228,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       [ErrorCategory.STORAGE]: 'storage',
       [ErrorCategory.TOKEN]: 'vpn-key',
       [ErrorCategory.GENERAL]: 'error',
+      [ErrorCategory.UNKNOWN]: 'help-outline',
     }
     return icons[category] || 'error'
   }

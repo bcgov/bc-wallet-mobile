@@ -1,9 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { getRegistryAppError } from '@/bcsc-theme/utils/error-utils'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -38,23 +36,22 @@ type AlertOnPressAction = () => void | Promise<void>
 export const useAlerts = (navigation: NavigationProp<any>) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitAlert, emitErrorModal } = useErrorAlert()
+  const { emitAlert } = useErrorAlert()
   const factoryReset = useFactoryReset()
   const { stack } = useBCSCStack()
 
   // HELPER FUNCTIONS
 
-  // _createBasicErrorModal is a factory function that generates simple error modals for a given AppEventCode and localization key.
   // TODO (MD): Swap _createBasicAlert for _createBasicErrorModal for all basic error alerts
-  const _createBasicErrorModal = useCallback(
-    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-      return (error?: AppError) => {
-        const appError = error ?? getRegistryAppError(event)
-        emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
-      }
-    },
-    [emitErrorModal, t]
-  )
+  // const _createBasicErrorModal = useCallback(
+  //   (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+  //     return (error?: AppError) => {
+  //       const appError = error ?? getRegistryAppError(event)
+  //       emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
+  //     }
+  //   },
+  //   [emitErrorModal, t]
+  // )
 
   // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
   const _createBasicAlert = useCallback(

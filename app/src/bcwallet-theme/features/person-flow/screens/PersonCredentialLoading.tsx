@@ -107,7 +107,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     const connect = async () => {
       try {
-        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
+        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl)
         setRemoteAgentDetails(remoteAgentDetails)
         setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)

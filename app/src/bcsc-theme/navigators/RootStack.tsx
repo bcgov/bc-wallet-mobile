@@ -39,7 +39,7 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (err) {
-      emitErrorModal(t('Error.Problem'), t('Erorr.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
+      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
