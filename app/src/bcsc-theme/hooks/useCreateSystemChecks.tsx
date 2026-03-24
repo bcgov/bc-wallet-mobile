@@ -80,9 +80,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    // Clear stale server status banners from previous session before fresh check
-    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
-    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
+    // TODO: Removed stale banner clearing to verify VPN banner behavior.
+    // Previously cleared IAS_SERVER_UNAVAILABLE and IAS_SERVER_NOTIFICATION here.
 
     const serverStatus = await configApi.getServerStatus()
 
