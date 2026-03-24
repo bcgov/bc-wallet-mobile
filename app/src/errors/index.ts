@@ -2,7 +2,7 @@
  * BC Wallet Error Handling Module
  *
  * This module provides a centralized error handling framework that:
- * - Uses a registry of predefined errors with localized messages
+ * - Uses a registry of predefined errors with technical messages
  * - Integrates with the ErrorModal for user-facing error display
  * - Supports native alerts via ErrorAlertContext
  * - Supports Snowplow analytics tracking

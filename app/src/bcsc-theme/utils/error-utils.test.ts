@@ -90,6 +90,8 @@ describe('Error Utils', () => {
 
       expect(result).toBeInstanceOf(BifoldError)
       expect(result.message).toBe(appError.fullMessage)
+      expect(result.title).toBe('Display Title')
+      expect(result.description).toBe('Display Description')
       expect(result.code).toBe(1000)
       expect(result.cause).toBe(cause)
     })

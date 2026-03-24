@@ -9,8 +9,9 @@ import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
+const mockBCSCErrorModal = jest.fn(() => null)
 jest.mock('@/errors/components/ErrorModal', () => ({
-  BCSCErrorModal: () => null,
+  BCSCErrorModal: (props: any) => mockBCSCErrorModal(props),
 }))
 
 jest.mock('react-native', () => ({
@@ -198,10 +199,19 @@ describe('ErrorAlertContext', () => {
         result.current.emitErrorModal('No Internet', 'Check your connection', appError)
       })
 
-      // Dismiss returns null — verifying the modal was set by checking dismiss works
-      act(() => {
-        result.current.dismiss()
-      })
+      expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            title: 'No Internet',
+            description: 'Check your connection',
+            message: appError.fullMessage,
+            code: 2100,
+            appEvent: AppEventCode.NO_INTERNET,
+            cause,
+          }),
+          errorKey: 1,
+        })
+      )
     })
 
     it('should increment errorKey on each call for re-render', () => {

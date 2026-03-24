@@ -108,6 +108,9 @@ describe('errorRegistry', () => {
 
         expect(definition.category).toBeDefined()
         expect(Object.values(ErrorCategory)).toContain(definition.category)
+
+        expect(definition.message).toBeDefined()
+        expect(typeof definition.message).toBe('string')
       })
     })
 
@@ -168,7 +171,6 @@ describe('errorRegistry', () => {
       expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeGreaterThanOrEqual(3100)
       expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeLessThan(3200)
     })
-
   })
 
   describe('ErrorRegistryKey type', () => {
