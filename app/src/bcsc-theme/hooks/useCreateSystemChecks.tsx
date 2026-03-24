@@ -1,5 +1,5 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
@@ -80,8 +80,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    // TODO: Removed stale banner clearing to verify VPN banner behavior.
-    // Previously cleared IAS_SERVER_UNAVAILABLE and IAS_SERVER_NOTIFICATION here.
+    // Server status banners are not cleared on startup so they persist across app restarts
+    // and remain visible for VPN users who bypass the blocking outage modal.
 
     const serverStatus = await configApi.getServerStatus()
 
