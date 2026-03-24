@@ -1,7 +1,7 @@
 import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
-import { isAppEventCode } from '@/events/appEventCode'
+import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { BifoldError } from '@bifold/core'
 import { AxiosError } from 'axios'
 
@@ -149,4 +149,17 @@ export const toBifoldError = (title: string, description: string, error: Error |
   bifoldError.stack = error.stack
 
   return bifoldError
+}
+
+/**
+ * Creates an AppError based on a given app event code and an optional cause. It looks up the error definition for the app event code and constructs an AppError with the appropriate message, status code, and category.
+ * If no specific error definition is found for the app event code, it defaults to using the `UNKNOWN_ERROR` definition.
+ *
+ * @param event - The app event code to create the error for
+ * @param cause - An optional Error that caused this AppError, which will be included in the technical message and can be used for debugging
+ * @returns An instance of AppError corresponding to the provided app event code and cause
+ */
+export const getRegistryAppError = (event: AppEventCode, cause?: Error): AppError => {
+  const errorDefinition = getErrorDefinitionFromAppEventCode(event) ?? ErrorRegistry.UNKNOWN_ERROR
+  return AppError.fromErrorDefinition(errorDefinition, { cause })
 }

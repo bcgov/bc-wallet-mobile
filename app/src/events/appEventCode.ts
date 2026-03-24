@@ -13,6 +13,7 @@ export enum AlertInteractionEvent {
  */
 export enum AppEventCode {
   GENERAL = 'general',
+  UNKNOWN_APP_ERROR = 'unknown_app_error', // Non-IAS error code
   ADD_CARD_CAMERA_BROKEN = 'add_card_camera_broken',
   ADD_CARD_DYNAMIC_REGISTRATION = 'add_card_dynamic_registration', //being tracked
   ADD_CARD_INCORRECT_OS = 'add_card_incorrect_os',

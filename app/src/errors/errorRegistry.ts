@@ -1,3 +1,4 @@
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
 import { AppEventCode } from '../events/appEventCode'
 
 /**
@@ -30,6 +31,7 @@ export enum ErrorCategory {
   STORAGE = 'storage',
   TOKEN = 'token',
   GENERAL = 'general',
+  UNKNOWN = 'unknown',
 }
 
 /**
@@ -64,6 +66,17 @@ export interface ErrorDefinition {
  *   2800-2899: General/Misc errors
  */
 export const ErrorRegistry = {
+  // ============================================
+  // Special Errors
+  // ===========================================
+  UNKNOWN_ERROR: {
+    statusCode: UNKNOWN_APP_ERROR_STATUS_CODE, // 9999
+    appEvent: AppEventCode.UNKNOWN_APP_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.UNKNOWN,
+    message: 'An unknown error occurred',
+  },
+
   // ============================================
   // Camera/Scanning Errors (2000-2099)
   // ============================================
