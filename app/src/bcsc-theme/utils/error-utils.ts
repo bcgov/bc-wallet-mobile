@@ -152,14 +152,13 @@ export const toBifoldError = (title: string, description: string, error: Error |
 }
 
 /**
- * Creates an AppError based on a given app event code and an optional cause. It looks up the error definition for the app event code and constructs an AppError with the appropriate message, status code, and category.
- * If no specific error definition is found for the app event code, it defaults to using the `UNKNOWN_ERROR` definition.
+ * Gets an AppError from the ErrorRegistry or fallsback to `UNKNOWN_ERROR`
  *
  * @param event - The app event code to create the error for
- * @param cause - An optional Error that caused this AppError, which will be included in the technical message and can be used for debugging
+ * @param cause - An optional cause (e.g., an underlying error) that provides additional context for the AppError
  * @returns An instance of AppError corresponding to the provided app event code and cause
  */
-export const getRegistryAppError = (event: AppEventCode, cause?: Error): AppError => {
+export const getRegistryAppError = (event: AppEventCode, cause?: unknown): AppError => {
   const errorDefinition = getErrorDefinitionFromAppEventCode(event) ?? ErrorRegistry.UNKNOWN_ERROR
   return AppError.fromErrorDefinition(errorDefinition, { cause })
 }
