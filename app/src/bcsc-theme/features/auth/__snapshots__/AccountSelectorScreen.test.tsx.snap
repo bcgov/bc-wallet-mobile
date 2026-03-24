@@ -371,7 +371,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
     }
   >
     <View
-      accessibilityLabel="Continue setting up account"
+      accessibilityLabel="Global.ContinueSetup"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -443,7 +443,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
             ]
           }
         >
-          Continue setting up account
+          Global.ContinueSetup
         </Text>
       </View>
     </View>

@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (FR)",
     "ShowDetails": "Afficher les détails",
     "Dismiss": "Fermer",
+    "GetHelp": "Get help (FR)",
+    "ContinueSetup": "Continue setup (FR)",
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",

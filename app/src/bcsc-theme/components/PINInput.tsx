@@ -1,6 +1,7 @@
 import { PIN_LENGTH } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -27,6 +28,7 @@ export const PINInput = ({
   ref,
   accessibilityLabel,
 }: PINInputProps) => {
+  const { t } = useTranslation()
   const [pin, setPin] = useState('')
   const { ColorPalette, Spacing, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
@@ -98,7 +100,8 @@ export const PINInput = ({
           style={styles.visibilityButton}
           onPress={toggleVisibility}
           testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
-          accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
+          accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
+          accessibilityRole="button"
         >
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
         </TouchableOpacity>

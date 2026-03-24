@@ -1,3 +1,4 @@
+import { a11yLabel } from '@utils/accessibility'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
@@ -50,8 +51,8 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
     <Button
       buttonType={ButtonType.Primary}
       testID={testIdWithKey('ContinueSetup')}
-      title={'Continue setting up account'}
-      accessibilityLabel={'Continue setting up account'}
+      title={t('Global.ContinueSetup')}
+      accessibilityLabel={a11yLabel(t('Global.ContinueSetup'))}
       onPress={authentication.unlockApp}
     />
   )

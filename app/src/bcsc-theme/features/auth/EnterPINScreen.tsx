@@ -1,3 +1,4 @@
+import { a11yLabel } from '@utils/accessibility'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -121,8 +122,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
-        title={'Get Help'}
-        accessibilityLabel={'Get Help'}
+        title={t('Global.GetHelp')}
+        accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />

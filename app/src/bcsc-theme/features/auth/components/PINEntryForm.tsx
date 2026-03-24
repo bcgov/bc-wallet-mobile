@@ -193,7 +193,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
       <View style={styles.pinCheckboxRow}>
         <CheckBoxRow
           title={tWithPrefix('IUnderstand')}
-          accessibilityLabel={tWithPrefix('IUnderstand')}
+          accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
           testID={testIdWithKey('IUnderstand')}
           checked={checked}
           onPress={() => {

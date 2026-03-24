@@ -294,7 +294,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
           }
         >
           <View
-            accessibilityLabel="Continue"
+            accessibilityLabel="Global.Continue"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -371,7 +371,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
             </View>
           </View>
           <View
-            accessibilityLabel="Cancel"
+            accessibilityLabel="Global.Cancel"
             accessibilityRole="button"
             accessibilityState={
               {

@@ -1,3 +1,4 @@
+import { a11yLabel } from '@utils/accessibility'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -237,7 +238,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     <>
       <Button
         title="Continue"
-        accessibilityLabel={'Continue'}
+        accessibilityLabel={a11yLabel(t('Global.Continue'))}
         testID={testIdWithKey('EvidenceIDCollectionContinue')}
         buttonType={ButtonType.Primary}
         onPress={handleOnContinue}
@@ -247,7 +248,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       </Button>
       <Button
         title="Cancel"
-        accessibilityLabel={'Cancel'}
+        accessibilityLabel={a11yLabel(t('Global.Cancel'))}
         testID={testIdWithKey('EvidenceIDCollectionCancel')}
         buttonType={ButtonType.Secondary}
         onPress={handleOnCancel}

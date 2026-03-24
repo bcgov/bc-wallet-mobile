@@ -156,12 +156,12 @@ describe('PINInput', () => {
 
       const visibilityButton = getByTestId(testIdWithKey('VisibilityButton'))
 
-      // Initially shows "Show PIN"
-      expect(visibilityButton.props.accessibilityLabel).toBe('Show PIN')
+      // Initially shows Show PIN label (key returned in test env since Bifold translations not loaded)
+      expect(visibilityButton.props.accessibilityLabel).toBe('PINCreate.Show')
 
-      // After pressing, shows "Hide PIN"
+      // After pressing, shows Hide PIN label
       fireEvent.press(visibilityButton)
-      expect(visibilityButton.props.accessibilityLabel).toBe('Hide PIN')
+      expect(visibilityButton.props.accessibilityLabel).toBe('PINCreate.Hide')
     })
   })
 

@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close",
     "ShowDetails": "Show Details",
     "Dismiss": "Dismiss",
+    "GetHelp": "Get help",
+    "ContinueSetup": "Continue setup",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
