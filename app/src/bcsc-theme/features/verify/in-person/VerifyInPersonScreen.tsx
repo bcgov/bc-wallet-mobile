@@ -111,7 +111,12 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
       </View>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
-      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
+      <ThemedText
+        testID={testIdWithKey('ConfirmationCode')}
+        accessibilityLabel={`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
+        variant={'headingTwo'}
+        style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}
+      >
         {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
         {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
       </ThemedText>
