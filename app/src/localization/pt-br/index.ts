@@ -341,7 +341,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (PT-BR)",
+        "CheckAgainButton": "Check again (PT-BR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -381,7 +385,8 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached (PT-BR)",
         "ManageDevicesButton": "Manage devices (PT-BR)",
         "CloseButton": "Close (PT-BR)",
-        "ReviewDevicesTitle": "Review your devices",
+        "DeleteButton": "Delete Message (PT-BR)",
+        "ReviewDevicesTitle": "Review your devices (PT-BR)",
         "ReviewDevicesContentA1": "You can have this account on a maximum of (PT-BR)",
         "ReviewDevicesContentA2": "devices. (PT-BR)",
         "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (PT-BR)",
