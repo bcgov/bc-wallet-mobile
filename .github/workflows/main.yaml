@@ -978,7 +978,7 @@ jobs:
   # Decoupled from build-ios so the upload→process wait no longer
   # blocks the iOS build critical path.
   distribute-testflight:
-    name: "Distribute TestFlight - ${{ matrix.variant }}"
+    name: 'Distribute TestFlight - ${{ matrix.variant }}'
     if: success() && github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
@@ -1006,7 +1006,7 @@ jobs:
           beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
 
   ship-to-saucelabs:
-    name: "Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}"
+    name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
@@ -1051,15 +1051,14 @@ jobs:
           artifact_ref: ${{ env.ARTIFACT_REF }}
           artifact_name: ${{ env.ARTIFACT_INNER_NAME }}
 
-  # ─── App Launch Verification ──────────────────────────────────────────
-  # Lightweight smoke test: verifies each app/bundle can be installed and
-  # launched on a real device via SauceLabs Appium.  No AATH agents,
-  # SauceConnect tunnels, or mobile test harness are needed — just the
-  # W3C WebDriver protocol via Node.js native fetch.
+  # ─── E2E Tests ──────────────────────────────────────────────────────
+  # PR:   smoke specs — basic launch + first navigation (all variants)
+  # Main: full E2E specs — onboarding → verify → main (bcsc only;
+  #        variants without e2e.spec.ts are skipped on main)
   #
   # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
-  run-on-device-tests:
-    name: "App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}"
+  e2e-tests:
+    name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
     needs: [ship-to-saucelabs]
     if: >-
       success() &&
@@ -1070,7 +1069,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        platform: [iOS, Android]
+        platform: [ios, android]
         variant: [bcwallet-prod, bcsc-dev]
         # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
     steps:
@@ -1081,21 +1080,63 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - name: Derive platform artifact filename
+      - name: Determine test mode
+        id: mode
+        working-directory: e2e
+        shell: bash
         run: |
-          if [ "${{ matrix.platform }}" = "iOS" ]; then EXT="ipa"; else EXT="aab"; fi
-          echo "APP_FILENAME=${SAUCE_LABS_PREFIX}-${{ github.run_number }}.${EXT}" >> "$GITHUB_ENV"
+          VARIANT="${{ matrix.variant }}"
+          if [[ "$VARIANT" == bcsc* ]]; then E2E_VARIANT="bcsc"; else E2E_VARIANT="bc-wallet"; fi
+
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            if [ -f "test/${E2E_VARIANT}/e2e.spec.ts" ]; then
+              echo "spec=--spec test/${E2E_VARIANT}/e2e.spec.ts" >> "$GITHUB_OUTPUT"
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "No full E2E spec for ${E2E_VARIANT} — skipping on main"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "spec=" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup NodeJS
+        if: steps.mode.outputs.skip != 'true'
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Verify app launches on real device
+      - name: Cache E2E dependencies
+        if: steps.mode.outputs.skip != 'true'
+        uses: actions/cache@v5
+        with:
+          path: |
+            e2e/.yarn/cache
+            e2e/node_modules
+          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: e2e-deps-
+
+      - name: Install E2E dependencies
+        if: steps.mode.outputs.skip != 'true'
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Run WDIO tests
+        if: steps.mode.outputs.skip != 'true'
+        working-directory: e2e
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-          PLATFORM_NAME: ${{ matrix.platform }}
-          APP_FILENAME: ${{ env.APP_FILENAME }}
+          SAUCE_REGION: us
           VARIANT: ${{ matrix.variant }}
-          TEST_NAME: 'App Launch - ${{ matrix.variant }} ${{ matrix.platform }}'
           BUILD_NAME: 'build-${{ github.run_number }}'
-        run: node scripts/saucelabs-app-launch-test.mjs
+          TEST_NAME: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
+          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+        run: |
+          if [ "${{ matrix.platform }}" = "ios" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.ipa" \
+              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+          else
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.aab" \
+              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+          fi
