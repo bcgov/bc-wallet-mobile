@@ -1,4 +1,4 @@
-gimport BCSCApiClient from '@/bcsc-theme/api/client'
+import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
