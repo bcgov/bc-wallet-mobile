@@ -152,7 +152,7 @@ export const toBifoldError = (title: string, description: string, error: Error |
 }
 
 /**
- * Gets an AppError from the ErrorRegistry or fallsback to `UNKNOWN_ERROR`
+ * Gets an AppError from the ErrorRegistry or fallback to `UNKNOWN_ERROR`
  *
  * @param event - The app event code to create the error for
  * @param cause - An optional cause (e.g., an underlying error) that provides additional context for the AppError
