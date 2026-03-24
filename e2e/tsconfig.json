@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "sourceMap": false,
-    "target": "es2020",
+    "target": "es2021",
     "module": "NodeNext",
     "moduleResolution": "Node16",
     "removeComments": true,
