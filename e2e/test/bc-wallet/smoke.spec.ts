@@ -5,7 +5,6 @@ import { BaseScreen } from '../../src/screens/BaseScreen.js'
 import { BCWallet_TestIDs } from '../../src/testIDs.js'
 
 const Preface = new BaseScreen(BCWallet_TestIDs.Preface)
-const Update = new BaseScreen(BCWallet_TestIDs.Update)
 const Onboarding = new BaseScreen(BCWallet_TestIDs.Onboarding)
 
 describe('App Launch', () => {
