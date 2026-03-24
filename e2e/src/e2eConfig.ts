@@ -32,7 +32,7 @@ const FLOW_PRESETS: Record<FlowMode, Omit<E2EConfig, 'variant' | 'flow'>> = {
       includeHelpDetours: false,
       authMethod: 'pin',
     },
-    verify: { includeStep0: false, verifyCardType: 'combined', testUser: TestUsers.combined },
+    verify: { includeStep0: false, verifyCardType: 'combined', testUser: TestUsers.basic },
   },
   advanced: {
     onboarding: {

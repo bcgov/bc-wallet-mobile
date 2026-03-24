@@ -217,7 +217,7 @@ describe('In-Person Verification', () => {
     const confirmationCode = await VerifyInPerson.getText('ConfirmationCode')
     console.log(`[e2e] Read confirmation code from screen: "${confirmationCode}"`)
 
-    await approveInPersonRequest(confirmationCode)
+    await approveInPersonRequest(confirmationCode, verify.testUser.cardSerial, verify.testUser.dob)
 
     await VerifyInPerson.waitFor('Complete')
     await VerifyInPerson.tap('Complete')

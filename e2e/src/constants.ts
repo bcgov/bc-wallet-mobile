@@ -16,6 +16,12 @@ export const Timeouts = {
 } as const
 
 export const TestUsers = {
+  basic: {
+    username: 'e2e_scooby',
+    cardSerial: 'C22014083',
+    dob: '19840913',
+    documentNumber: 'WG12345678',
+  },
   photo: {
     username: 'e2e_shaggy',
     cardSerial: 'C74455103',
