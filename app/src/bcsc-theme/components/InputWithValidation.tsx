@@ -1,5 +1,6 @@
 import { hitSlop } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { useRef, useState } from 'react'
 import {
   LayoutChangeEvent,
@@ -108,7 +109,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           onChangeText={props.onChangeText}
           onChange={(e) => props.onChange?.(e.nativeEvent.text)}
           onPressIn={props.onPressIn}
-          accessibilityLabel={props.label}
+          accessibilityLabel={a11yLabel(props.label)}
           testID={testIdWithKey(`${props.id}-input`)}
           keyboardType={props.keyboardType}
           {...props.textInputProps}
