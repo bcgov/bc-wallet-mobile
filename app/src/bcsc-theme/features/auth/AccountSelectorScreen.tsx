@@ -1,5 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
+import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
@@ -56,12 +57,15 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   )
 
   return (
-    <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
-      <GenericCardImage />
-      <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-        {t('BCSC.AccountSetup.Title')}
-      </ThemedText>
-    </ScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={() => {}} />
+      <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
+        <GenericCardImage />
+        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+          {t('BCSC.AccountSetup.Title')}
+        </ThemedText>
+      </ScreenWrapper>
+    </>
   )
 }
 
