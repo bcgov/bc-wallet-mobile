@@ -17,12 +17,10 @@ on:
     branches: [main]
   merge_group:
 
-permissions:
-  contents: read
-
 jobs:
   check-secrets:
     runs-on: ubuntu-22.04
+    permissions: {}
     steps:
       - name: Check secrets
         shell: bash
@@ -64,6 +62,7 @@ jobs:
           GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
+    permissions: {}
     steps:
       - name: Check variables
         shell: bash
@@ -88,6 +87,8 @@ jobs:
 
   early-exit-check:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     outputs:
       should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
@@ -155,6 +156,8 @@ jobs:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -246,6 +249,8 @@ jobs:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
@@ -395,6 +400,8 @@ jobs:
     name: Build iOS - ${{ matrix.variant }}
     needs: [check-secrets, check-vars, early-exit-check, prepare-ios]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -933,6 +940,7 @@ jobs:
 
   build-summary:
     runs-on: ubuntu-latest
+    permissions: {}
     needs:
       - early-exit-check
       - build-android
@@ -985,6 +993,8 @@ jobs:
     if: success() && github.ref_name == 'main'
     needs: [build-ios, build-summary]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -1015,6 +1025,8 @@ jobs:
       github.event.pull_request.head.repo.fork != true
     needs: [build-ios, build-android, build-summary]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     strategy:
       matrix:
         platform: [ios, android]
@@ -1067,6 +1079,8 @@ jobs:
       success() &&
       github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     timeout-minutes: 15
     strategy:
       max-parallel: 2
