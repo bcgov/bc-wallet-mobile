@@ -327,7 +327,11 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable",
+        "CheckAgainButton": "Check again",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -367,6 +371,7 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached",
         "ManageDevicesButton": "Manage devices",
         "CloseButton": "Close",
+        "DeleteButton": "Delete Message",
         "ReviewDevicesTitle": "Review your devices",
         "ReviewDevicesContentA1": "You can have this account on a maximum of",
         "ReviewDevicesContentA2": "devices.",
@@ -701,6 +706,7 @@ const translation = {
       "EmailSkipButton": "Provide email address",
       "EmailSkipButton2": "Skip",
       "EnterEmailAddress": "Enter your email address",
+      "EmailAddress": "Email address",
       "EmailDescription1": "It is recommended that you provide one for security purposes.",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card.",
     },

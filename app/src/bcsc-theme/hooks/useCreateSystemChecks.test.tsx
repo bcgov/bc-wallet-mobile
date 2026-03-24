@@ -81,6 +81,19 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
   ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
 }))
 
+jest.mock('@/bcsc-theme/components/AppBanner', () => ({
+  BCSCBanner: {
+    IAS_SERVER_UNAVAILABLE: 'IASServerUnavailableBanner',
+    IAS_SERVER_NOTIFICATION: 'IASServerNotificationBanner',
+  },
+}))
+
+jest.mock('@/store', () => ({
+  BCDispatchAction: {
+    REMOVE_BANNER_MESSAGE: 'bcsc/removeBannerMessage',
+  },
+}))
+
 describe('useGetSystemChecks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
