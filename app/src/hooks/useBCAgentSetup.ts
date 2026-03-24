@@ -11,7 +11,21 @@ import {
   useStore,
   WalletSecret,
 } from '@bifold/core'
-import { Agent, ConnectionEventTypes, ConnectionRecord, ConnectionRepository, ConnectionStateChangedEvent, ConnectionType, DidExchangeState, HttpOutboundTransport, KeylistUpdateAction, MediationEventTypes, MediationRepository, MediationRole, MediationStateChangedEvent, MediatorPickupStrategy, MediatorService, OutOfBandRepository, WsOutboundTransport } from '@credo-ts/core'
+import {
+  Agent,
+  ConnectionEventTypes,
+  ConnectionRecord,
+  ConnectionRepository,
+  ConnectionStateChangedEvent,
+  ConnectionType,
+  DidExchangeState,
+  HttpOutboundTransport,
+  KeylistUpdateAction,
+  MediationRepository,
+  MediatorPickupStrategy,
+  OutOfBandRepository,
+  WsOutboundTransport,
+} from '@credo-ts/core'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
