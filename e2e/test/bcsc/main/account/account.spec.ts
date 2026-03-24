@@ -4,7 +4,7 @@ import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 const Account = new BaseScreen(BCSC_TestIDs.Account)
 const Home = new BaseScreen(BCSC_TestIDs.Home)
 const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
-const MainWebView = new BaseScreen(BCSC_TestIDs.MainWebView)
+const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 
 describe('Account', () => {
   it('should navigate through the Home tab and tap the Account button', async () => {
@@ -18,8 +18,8 @@ describe('Account', () => {
   })
 
   it('should navigate through the WebView screen and tap the Back button', async () => {
-    await MainWebView.waitFor('Back')
-    await MainWebView.tap('Back')
+    await WebView.waitFor('Back')
+    await WebView.tap('Back')
   })
 
   it('should navigate through the Account screen and go back home', async () => {

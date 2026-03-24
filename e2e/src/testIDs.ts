@@ -63,7 +63,7 @@ export const BCSC_TestIDs = {
     Back: 'com.ariesbifold:id/Back',
   },
   Nickname: {
-    NameInput: 'com.ariesbifold:id/NameInput',
+    AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
     Back: 'com.ariesbifold:id/Back',
   },
@@ -84,7 +84,7 @@ export const BCSC_TestIDs = {
     Help: 'com.ariesbifold:id/Help',
   },
   ManualSerial: {
-    SerialInput: 'com.ariesbifold:id/SerialInput',
+    SerialPressable: 'com.ariesbifold:id/serial-pressable',
     Continue: 'com.ariesbifold:id/Continue',
     Help: 'com.ariesbifold:id/Help',
   },
@@ -222,6 +222,7 @@ export const BCSC_TestIDs = {
   },
   VerifyInPerson: {
     ServiceBCLink: 'com.ariesbifold:id/ServiceBCLink',
+    ConfirmationCode: 'com.ariesbifold:id/ConfirmationCode',
     Complete: 'com.ariesbifold:id/Complete',
     Help: 'com.ariesbifold:id/Help',
   },

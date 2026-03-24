@@ -5,3 +5,4 @@
  */
 import './tabs/navigation.spec.js'
 import './settings/settings.spec.js'
+import './account/account.spec.js'

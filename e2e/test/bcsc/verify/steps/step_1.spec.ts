@@ -11,8 +11,8 @@ describe('Nickname', () => {
   })
 
   it('should fill in the Nickname', async () => {
-    await Nickname.waitFor('NameInput')
-    await Nickname.type('NameInput', 'John Doe')
+    await Nickname.waitFor('AccountNicknamePressable')
+    await Nickname.type('AccountNicknamePressable', 'John Doe')
     await Nickname.tap('SaveAndContinue')
   })
 })

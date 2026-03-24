@@ -1,3 +1,4 @@
+import { approveInPersonRequest } from '../../../../src/helpers/approval.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
@@ -18,10 +19,13 @@ describe('In-Person Verification', () => {
   })
 
   it('should navigate through the Verify In Person screen and tap Complete', async () => {
-    await VerifyInPerson.waitFor('Complete')
+    await VerifyInPerson.waitFor('ConfirmationCode')
 
-    // TEMPORARY manual verification for now until we can automate it
-    await new Promise((resolve) => setTimeout(resolve, 25_000))
+    const confirmationCode = await VerifyInPerson.getText('ConfirmationCode')
+    console.log(`[e2e] Read confirmation code from screen: "${confirmationCode}"`)
+
+    approveInPersonRequest(confirmationCode)
+
     await VerifyInPerson.tap('Complete')
     await VerificationSuccess.waitFor('Ok')
     await VerificationSuccess.tap('Ok')

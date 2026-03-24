@@ -67,6 +67,11 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     await this.waitForEnabledAndTap(this.ids[key], timeout)
   }
 
+  /** Get the visible text content of an element by its TestID key. */
+  async getText(key: keyof T & string, timeout?: number): Promise<string> {
+    return this.getTextByTestId(this.ids[key], timeout)
+  }
+
   /** Get the raw testID string for a given key. */
   id(key: keyof T & string): string {
     return this.ids[key]
@@ -92,6 +97,23 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await this.scrollToTestId(testId, 4, 'both')
       await el.waitForDisplayed({ timeout })
     }
+  }
+
+  /**
+   * Get the visible text content of an element identified by test ID.
+   * On iOS, falls back to the `label` attribute when `getText()` returns empty
+   * (common for styled ThemedText / accessibility-labelled elements).
+   */
+  public async getTextByTestId(testId: string, timeout: number = 5_000): Promise<string> {
+    const el = await this.findByTestId(testId)
+    await el.waitForDisplayed({ timeout })
+    const text = await el.getText()
+    if (text) return text
+    if (driver.isIOS) {
+      const label = await el.getAttribute('label')
+      if (label) return label
+    }
+    return ''
   }
 
   /**

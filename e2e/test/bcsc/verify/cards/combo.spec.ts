@@ -27,8 +27,8 @@ describe('BCSC Combined Card', () => {
   })
 
   it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
-    await ManualSerial.waitFor('SerialInput')
-    await ManualSerial.type('SerialInput', cardSerial)
+    await ManualSerial.waitFor('SerialPressable')
+    await ManualSerial.type('SerialPressable', cardSerial)
     await ManualSerial.dismissKeyboard()
     await ManualSerial.tap('Continue')
   })
