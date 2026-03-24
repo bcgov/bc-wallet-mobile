@@ -10,14 +10,7 @@
  * next onboarding step will time out; when no dialog is shown the accept helpers no-op.
  */
 export async function acceptNotificationPermissionIfPresent(): Promise<void> {
-  // Give the permission dialog time to appear (shows shortly after the app requests it)
-  await new Promise((r) => setTimeout(r, 1_500))
-
-  if (driver.isIOS) {
-    await acceptIosAllowPermissionDialog()
-  } else if (driver.isAndroid) {
-    await acceptAndroidAllowPermissionDialog()
-  }
+  await acceptPermissionDialogIfPresent()
 }
 
 /**
@@ -27,6 +20,10 @@ export async function acceptNotificationPermissionIfPresent(): Promise<void> {
  * {@link acceptNotificationPermissionIfPresent}.
  */
 export async function acceptCameraPermissionIfPresent(): Promise<void> {
+  await acceptPermissionDialogIfPresent()
+}
+
+async function acceptPermissionDialogIfPresent(): Promise<void> {
   await new Promise((r) => setTimeout(r, 1_500))
 
   if (driver.isIOS) {

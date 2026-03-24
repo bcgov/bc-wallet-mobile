@@ -73,8 +73,8 @@ describe(`BCSC ${verify.verifyCardType} Card`, () => {
   })
 
   it('should navigate through the Identity screen and select card type', async () => {
-    await IdentitySelection.waitFor(buttonId as CardTypeButtonId)
-    await IdentitySelection.tap(buttonId as CardTypeButtonId)
+    await IdentitySelection.waitFor(buttonId)
+    await IdentitySelection.tap(buttonId)
   })
 
   it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
