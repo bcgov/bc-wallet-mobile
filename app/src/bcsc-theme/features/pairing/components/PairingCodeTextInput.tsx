@@ -60,8 +60,8 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, testID, ...te
         value={value}
         onChangeText={onChangeText}
         testID={testID}
-        accessibilityLabel={a11yLabel(textInputProps?.accessibilityLabel ?? t('BCSC.ManualPairing.EnterPairingCodeTitle'))}
         {...textInputProps}
+        accessibilityLabel={a11yLabel(textInputProps?.accessibilityLabel ?? t('BCSC.ManualPairing.EnterPairingCodeTitle'))}
       />
     </View>
   )

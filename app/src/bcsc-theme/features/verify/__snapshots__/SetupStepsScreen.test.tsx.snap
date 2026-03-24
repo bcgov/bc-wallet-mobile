@@ -31,6 +31,7 @@ exports[`SetupSteps renders correctly 1`] = `
   >
     <View>
       <View
+        accessibilityHint="BCSC.NicknameAccount.AccountName"
         accessibilityLabel="BCSC.Steps.Step1"
         accessibilityRole="button"
         accessibilityState={
@@ -140,6 +141,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.ScanOrTakePhotos"
         accessibilityLabel="BCSC.Steps.Step2"
         accessibilityRole="button"
         accessibilityState={
@@ -249,6 +251,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.GetVerificationStep3Subtext3"
         accessibilityLabel="BCSC.Steps.Step3"
         accessibilityRole="button"
         accessibilityState={
@@ -358,6 +361,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint=""
         accessibilityLabel="BCSC.Steps.Step4"
         accessibilityRole="button"
         accessibilityState={
@@ -476,6 +480,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.GetVerificationStep5Subtext3"
         accessibilityLabel="BCSC.Steps.Step5"
         accessibilityRole="button"
         accessibilityState={

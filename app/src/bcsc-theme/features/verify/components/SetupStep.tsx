@@ -51,6 +51,7 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
       onPress={props.onPress}
       testID={testIdWithKey(props.title)}
       accessibilityLabel={a11yLabel(props.title)}
+      accessibilityHint={props.subtext.join(', ')}
       accessibilityRole="button"
       disabled={props.isDisabled}
       style={{

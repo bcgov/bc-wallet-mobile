@@ -93,6 +93,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       accessible={true}
       accessibilityLabel={a11yLabel(props.title)}
       accessibilityRole="button"
+      accessibilityState={{ disabled: props.disabled }}
       style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
       onPress={props.disabled ? undefined : props.onPress}
       disabled={props.disabled}
