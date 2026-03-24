@@ -1,4 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import { PAIRING_CODE_LENGTH } from '@/constants'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import {
   Button,
@@ -12,32 +14,42 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useState } from 'react'
+import { splitSplice } from '@utils/splitSplice'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import PairingCodeTextInput from './components/PairingCodeTextInput'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
 
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const [code, setCode] = useState('')
+  const [displayValue, setDisplayValue] = useState('')
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | undefined>(undefined)
+  const [error, setError] = useState<string | null>(null)
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
 
-  const handleChangeCode = (text: string) => {
-    setCode(text)
-    setMessage(undefined)
-  }
+  const handleChangeCode = useCallback((text: string) => {
+    const normalized = text.toUpperCase().replace(/\s/g, '')
+    const limited = normalized.slice(0, PAIRING_CODE_LENGTH)
+
+    let formatted = limited
+    if (limited.length > PAIRING_CODE_LENGTH / 2) {
+      formatted = splitSplice(limited, PAIRING_CODE_LENGTH / 2, 0, ' ')
+    }
+
+    setDisplayValue(formatted)
+    setCode(limited)
+    setError(null)
+  }, [])
 
   const onSubmit = async () => {
     if (code.length < 6) {
-      setMessage(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
+      setError(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
     } else if (!code.length) {
-      setMessage(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
+      setError(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
     } else {
       try {
         setLoading(true)
@@ -52,7 +64,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
-        setMessage(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
+        setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
       } finally {
         setLoading(false)
       }
@@ -78,8 +90,21 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
-      <PairingCodeTextInput handleChangeCode={handleChangeCode} testID={testIdWithKey('PairingCodeInput')} />
-      <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
+      <InputWithValidation
+        id={'pairingCode'}
+        label={t('BCSC.ManualPairing.PairingCodeLabel')}
+        value={displayValue}
+        onChangeText={handleChangeCode}
+        error={error}
+        onErrorClear={() => setError(null)}
+        inputProps={{ textAlign: 'center' }}
+        textInputProps={{
+          maxLength: PAIRING_CODE_LENGTH + 1,
+          autoCapitalize: 'characters',
+          autoComplete: 'off',
+          autoCorrect: false,
+        }}
+      />
     </ScreenWrapper>
   )
 }

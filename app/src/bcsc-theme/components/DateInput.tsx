@@ -8,7 +8,7 @@ interface DateInputProps {
   value: string
   onChange: (value: string) => void
   onLayout?: (e: LayoutChangeEvent) => void
-  error?: string
+  error?: string | null
   subtext?: string
 }
 

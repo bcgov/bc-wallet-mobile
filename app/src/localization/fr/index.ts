@@ -480,6 +480,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "PairingCodeLabel": "Pairing code (FR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",

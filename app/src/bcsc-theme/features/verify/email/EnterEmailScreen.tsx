@@ -127,7 +127,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         label={t('BCSC.EnterEmail.EmailAddress')}
         value={email}
         onChangeText={handleChangeEmail}
-        error={error ?? undefined}
+        error={error}
+        onErrorClear={() => setError(null)}
         keyboardType={'email-address'}
         textInputProps={{
           maxLength: 50,
