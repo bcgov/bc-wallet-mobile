@@ -120,6 +120,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                       "paddingHorizontal": 8,
                     }
                   }
+                  testID="com.ariesbifold:id/PINInput"
                   textContentType="password"
                   value=""
                 />
@@ -160,7 +161,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                       "padding": 8,
                     }
                   }
-                  testID="com.ariesbifold:id/VisibilityButton"
+                  testID="com.ariesbifold:id/PINInputVisibilityButton"
                 >
                   <Text
                     allowFontScaling={false}
