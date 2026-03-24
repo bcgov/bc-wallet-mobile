@@ -131,7 +131,7 @@ exports[`ManualSerial renders correctly 1`] = `
                   "text": undefined,
                 }
               }
-              accessible={true}
+              accessible={false}
               collapsable={false}
               focusable={true}
               hitSlop={
