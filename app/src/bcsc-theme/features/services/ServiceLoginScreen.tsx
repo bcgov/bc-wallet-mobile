@@ -52,13 +52,6 @@ const RenderState = {
   Default: 'Default', // Quick login is available
 } as const
 
-// This compares fields in LocalState to determine if the service supports quicklogin
-const isQuickLoginAvailable = (state: LocalState): boolean =>
-  state.service?.initiate_login_uri != null &&
-  state.service?.claims_description != null &&
-  state.service?.policy_uri != null &&
-  state.pairingCode != null
-
 const ServiceLoginLoadingView = () => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1, justifyContent: 'center' }}>
     <ActivityIndicator size="large" />
@@ -436,12 +429,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     if (isLoading || !serviceHydrated) {
       return RenderState.Loading
     }
-
-    if (isQuickLoginAvailable(state)) {
-      return RenderState.Default
+    if (!state.serviceInitiateLoginUri && !state.pairingCode) {
+      return RenderState.Unavailable
     }
 
-    return RenderState.Unavailable
+    return RenderState.Default
   })()
   switch (renderState) {
     case RenderState.Loading:
