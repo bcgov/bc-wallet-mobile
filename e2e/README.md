@@ -42,7 +42,8 @@ e2e/
 │   │
 │   ├── helpers/
 │   │   ├── biometrics.ts                    # biometric simulation (local + SauceLabs)
-│   │   ├── camera.ts                        # camera/image injection helpers
+│   │   ├── camera.ts                        # camera image injection (QR codes, photos)
+│   │   ├── video.ts                         # video frame injection + device file push
 │   │   ├── gestures.ts                      # swipe, scroll, long-press wrappers
 │   │   ├── iosPermissions.ts                # iOS local-network permission dialog handling
 │   │   ├── notifications.ts                 # notification permission dialog handling (iOS + Android)
@@ -74,6 +75,9 @@ e2e/
 │           │   └── settings.spec.ts         # settings screen tests
 │           └── tabs/
 │               └── navigation.spec.ts       # tab bar navigation tests
+│
+├── assets/                                  # test images for camera/video injection
+│   └── README.md
 │
 ├── logs/                                    # Appium logs (gitignored)
 │
@@ -238,10 +242,10 @@ VARIANT=bcsc yarn test:android:sauce
 
 _The_ `E2E_FLOW` _env var controls how thorough each test stage is. Defaults to_ `simple`_._
 
-| _Mode_     | _Description_                                                                                       |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| `simple`   | _Straight-line path: skips detours, uses PIN auth, no step 0 in verification_                       |
-| `advanced` | _Full coverage: includes transfer/setup/help detours, biometric auth, step 0 in verification_       |
+| _Mode_     | _Description_                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| `simple`   | _Straight-line path: skips detours, uses PIN auth, no step 0 in verification_                 |
+| `advanced` | _Full coverage: includes transfer/setup/help detours, biometric auth, step 0 in verification_ |
 
 ```bash
 E2E_FLOW=advanced yarn test:ios:local
@@ -250,32 +254,32 @@ E2E_FLOW=simple yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/b
 
 ## _Environment Variables_
 
-| _Variable_              | _Default_              | _Description_                                                                   |
-| ----------------------- | ---------------------- | ------------------------------------------------------------------------------- |
-| `VARIANT`               | `bcsc`                 | _App variant to test (normalized:_ `bcsc` _or_ `bcwallet`_)_                   |
-| `E2E_FLOW`              | `simple`               | _Flow mode (_`simple` _or_ `advanced`_) — controls test depth_                 |
-| `SAUCE_USERNAME`        | _—_                    | _SauceLabs username (sauce runs only)_                                          |
-| `SAUCE_ACCESS_KEY`      | _—_                    | _SauceLabs access key (sauce runs only)_                                        |
-| `SAUCE_REGION`          | `us`                   | _SauceLabs data center region (_`us` _or_ `eu`_)_                              |
-| `ANDROID_APP_FILENAME`  | `BCSC-Dev-latest.aab`  | _Android app filename in SauceLabs storage_                                     |
-| `IOS_APP_FILENAME`      | `BCSC-Dev-latest.ipa`  | _iOS app filename in SauceLabs storage_                                         |
-| `BUILD_NAME`            | `local-<timestamp>`    | _SauceLabs build name_                                                          |
-| `TEST_NAME`             | `E2E Tests`            | _SauceLabs test name_                                                           |
-| `IOS_DEVICE`            | `iPhone 16`            | _iOS simulator/device name (local)_                                             |
-| `IOS_VERSION`           | `18.5`                 | _iOS simulator/device version (local)_                                          |
-| `IOS_APP`               | `BCWallet.app`         | _iOS app filename in_ `apps/` _(local sim)_                                    |
-| `IOS_APP_DEVICE`        | `BCWallet.ipa`         | _iOS app filename in_ `apps/` _(local real device)_                            |
-| `ANDROID_DEVICE`        | `Pixel_7_API_35`       | _Android emulator/device name (local)_                                          |
-| `ANDROID_VERSION`       | `15.0`                 | _Android emulator/device version (local)_                                       |
-| `ANDROID_APP`           | `BCWallet.apk`         | _Android app filename in_ `apps/` _(local)_                                    |
-| `IOS_UDID`              | _—_                    | _iOS device UDID (iOS real device only)_                                        |
-| `ANDROID_UDID`          | _—_                    | _Android device serial (Android real device only)_                              |
-| `XCODE_ORG_ID`          | _—_                    | _Apple Team ID (iOS real device only)_                                          |
-| `XCODE_SIGNING_ID`      | `Apple Development`    | _WDA signing identity; required for automatic signing with current Xcode_       |
-| `SHOW_XCODE_LOG`        | _unset_                | _Set to_ `true` _to print xcodebuild output when WebDriverAgent fails to build_|
-| `NO_RESET`              | `false`                | _Set to_ `true` _to skip app reinstall between runs (preserves app state)_     |
-| `CARD_SERIAL`           | _—_                    | _Test card serial number for verification flows_                                |
-| `BIRTH_DATE`            | _—_                    | _Test birthdate for verification flows (format:_ `YYYYMMDD`_)_                 |
+| _Variable_             | _Default_             | _Description_                                                                   |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------- |
+| `VARIANT`              | `bcsc`                | _App variant to test (normalized:_ `bcsc` _or_ `bcwallet`_)_                    |
+| `E2E_FLOW`             | `simple`              | _Flow mode (_`simple` _or_ `advanced`_) — controls test depth_                  |
+| `SAUCE_USERNAME`       | _—_                   | _SauceLabs username (sauce runs only)_                                          |
+| `SAUCE_ACCESS_KEY`     | _—_                   | _SauceLabs access key (sauce runs only)_                                        |
+| `SAUCE_REGION`         | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_                               |
+| `ANDROID_APP_FILENAME` | `BCSC-Dev-latest.aab` | _Android app filename in SauceLabs storage_                                     |
+| `IOS_APP_FILENAME`     | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_                                         |
+| `BUILD_NAME`           | `local-<timestamp>`   | _SauceLabs build name_                                                          |
+| `TEST_NAME`            | `E2E Tests`           | _SauceLabs test name_                                                           |
+| `IOS_DEVICE`           | `iPhone 16`           | _iOS simulator/device name (local)_                                             |
+| `IOS_VERSION`          | `18.5`                | _iOS simulator/device version (local)_                                          |
+| `IOS_APP`              | `BCWallet.app`        | _iOS app filename in_ `apps/` _(local sim)_                                     |
+| `IOS_APP_DEVICE`       | `BCWallet.ipa`        | _iOS app filename in_ `apps/` _(local real device)_                             |
+| `ANDROID_DEVICE`       | `Pixel_7_API_35`      | _Android emulator/device name (local)_                                          |
+| `ANDROID_VERSION`      | `15.0`                | _Android emulator/device version (local)_                                       |
+| `ANDROID_APP`          | `BCWallet.apk`        | _Android app filename in_ `apps/` _(local)_                                     |
+| `IOS_UDID`             | _—_                   | _iOS device UDID (iOS real device only)_                                        |
+| `ANDROID_UDID`         | _—_                   | _Android device serial (Android real device only)_                              |
+| `XCODE_ORG_ID`         | _—_                   | _Apple Team ID (iOS real device only)_                                          |
+| `XCODE_SIGNING_ID`     | `Apple Development`   | _WDA signing identity; required for automatic signing with current Xcode_       |
+| `SHOW_XCODE_LOG`       | _unset_               | _Set to_ `true` _to print xcodebuild output when WebDriverAgent fails to build_ |
+| `NO_RESET`             | `false`               | _Set to_ `true` _to skip app reinstall between runs (preserves app state)_      |
+| `CARD_SERIAL`          | _—_                   | _Test card serial number for verification flows_                                |
+| `BIRTH_DATE`           | _—_                   | _Test birthdate for verification flows (format:_ `YYYYMMDD`_)_                  |
 
 ## _Config Hierarchy_
 
@@ -337,10 +341,39 @@ const { flow, onboarding } = getE2EConfig()
 
 describe('Onboarding', () => {
   if (onboarding.includeTransferDetour) {
-    it('should show transfer option', async () => { /* ... */ })
+    it('should show transfer option', async () => {
+      /* ... */
+    })
   }
 })
 ```
+
+### _Camera & Video Injection_
+
+_The_ `camera` _and_ `video` _helpers simulate camera input on Sauce Labs RDC. Both use Sauce Labs' image injection under the hood — still images for photo capture / QR scanning, and the same mechanism for video frames (Sauce feeds the injected image into_ `AVCaptureVideoDataOutput` _on iOS and_ `camera2` _on Android)._
+
+_Place test images in_ `e2e/assets/` _(see_ [`assets/README.md`](assets/README.md)_). Helpers resolve relative filenames from that directory automatically._
+
+```typescript
+import { injectQRCode, injectPhoto } from '../../src/helpers/camera.js'
+import { injectVideoFrame, sustainedFrameInjection } from '../../src/helpers/video.js'
+
+// Inject a QR code before the scanner screen opens
+await injectQRCode('qr-invite.png')
+await SerialInstructions.tap('ScanBarcode')
+
+// Inject an ID photo for evidence capture
+await injectPhoto('id-drivers-license.jpg')
+await EvidenceCapture.tap('TakePhoto')
+
+// Inject a face image as video frames while recording
+await injectVideoFrame('selfie-liveness.png')
+await TakeVideo.tap('StartRecordingButton')
+// Keep re-injecting during the recording duration
+await sustainedFrameInjection('selfie-liveness.png', { durationMs: 8_000 })
+```
+
+_For local testing, camera injection is not available — use a test-mode flag in the app instead._
 
 ### _Full E2E Orchestration_
 
