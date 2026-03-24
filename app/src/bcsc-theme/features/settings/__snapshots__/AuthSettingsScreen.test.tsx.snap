@@ -557,7 +557,6 @@ exports[`AuthSettings renders correctly 1`] = `
               }
             >
               <View
-                accessibilityLabel="BCSC.Title"
                 accessibilityState={
                   {
                     "busy": undefined,
@@ -567,7 +566,7 @@ exports[`AuthSettings renders correctly 1`] = `
                     "selected": undefined,
                   }
                 }
-                accessible={true}
+                accessible={false}
                 focusable={true}
                 onClick={[Function]}
                 onResponderGrant={[Function]}

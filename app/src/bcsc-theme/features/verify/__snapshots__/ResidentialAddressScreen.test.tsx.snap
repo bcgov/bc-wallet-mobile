@@ -579,7 +579,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.ProvinceLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
+              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
               accessibilityRole="combobox"
               accessibilityState={
                 {
