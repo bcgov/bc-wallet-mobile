@@ -1,4 +1,4 @@
-import BCSCApiClient from '@/bcsc-theme/api/client'
+gimport BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
@@ -11,7 +11,7 @@ import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClock
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
