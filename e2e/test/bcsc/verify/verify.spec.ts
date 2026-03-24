@@ -56,106 +56,50 @@ describe('Nickname', () => {
   })
 })
 
-if (verify.verifyCardType === 'combined') {
-  describe('BCSC Combined Card', () => {
-    it('should navigate through the Setup Steps screen and tap Step 2', async () => {
-      await SetupSteps.waitFor('Step2')
-      await SetupSteps.tap('Step2')
-    })
-
-    it('should navigate through the Identity screen and tap Combined Card', async () => {
-      await IdentitySelection.waitFor('CombinedCard')
-      await IdentitySelection.tap('CombinedCard')
-    })
-
-    it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
-      await SerialInstructions.waitFor('EnterManually', 10_000)
-      await SerialInstructions.tap('EnterManually')
-    })
-
-    it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
-      await ManualSerial.waitFor('SerialPressable')
-      await ManualSerial.type('SerialPressable', verify.testUser.cardSerial)
-      await ManualSerial.dismissKeyboard()
-      await ManualSerial.tap('Continue')
-    })
-
-    it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
-      await EnterBirthdate.waitFor('Done', 10_000)
-      await EnterBirthdate.tap('BirthdateInputPressable')
-      await EnterBirthdate.type('BirthdateInputPressable', verify.testUser.dob)
-      await EnterBirthdate.dismissKeyboard()
-      await EnterBirthdate.tap('Done')
-    })
-  })
+type CardTypeButtonId = 'CombinedCard' | 'PhotoCard' | 'NoPhotoCard' | 'CheckForServicesCard' | 'OtherID'
+const cardTypeButtonId: Record<string, CardTypeButtonId> = {
+  combined: 'CombinedCard',
+  photo: 'PhotoCard',
+  nonPhoto: 'NoPhotoCard',
+  na: 'OtherID',
 }
 
-if (verify.verifyCardType === 'photo') {
-  describe('BCSC Photo Card', () => {
-    it('should navigate through the Setup Steps screen and tap Step 2', async () => {
-      await SetupSteps.waitFor('Step2')
-      await SetupSteps.tap('Step2')
-    })
+describe(`BCSC ${verify.verifyCardType} Card`, () => {
+  const buttonId = cardTypeButtonId[verify.verifyCardType]
 
-    it('should navigate through the Identity screen and tap Photo Card', async () => {
-      await IdentitySelection.waitFor('PhotoCard')
-      await IdentitySelection.tap('PhotoCard')
-    })
-
-    it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
-      await SerialInstructions.waitFor('EnterManually', 10_000)
-      await SerialInstructions.tap('EnterManually')
-    })
-
-    it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
-      await ManualSerial.waitFor('SerialPressable')
-      await ManualSerial.type('SerialPressable', verify.testUser.cardSerial)
-      await ManualSerial.dismissKeyboard()
-      await ManualSerial.tap('Continue')
-    })
-
-    it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
-      await EnterBirthdate.waitFor('Done', 10_000)
-      await EnterBirthdate.tap('BirthdateInputPressable')
-      await EnterBirthdate.type('BirthdateInputPressable', verify.testUser.dob)
-      await EnterBirthdate.dismissKeyboard()
-      await EnterBirthdate.tap('Done')
-    })
+  it('should navigate through the Setup Steps screen and tap Step 2', async () => {
+    await SetupSteps.waitFor('Step2')
+    await SetupSteps.tap('Step2')
   })
-}
 
-if (verify.verifyCardType === 'non-photo') {
-  describe('BCSC Non-Photo Card', () => {
-    it('should navigate through the Setup Steps screen and tap Step 2', async () => {
-      await SetupSteps.waitFor('Step2')
-      await SetupSteps.tap('Step2')
-    })
+  it('should navigate through the Identity screen and select card type', async () => {
+    await IdentitySelection.waitFor(buttonId as CardTypeButtonId)
+    await IdentitySelection.tap(buttonId as CardTypeButtonId)
+  })
 
-    it('should navigate through the Identity screen and tap Non-Photo Card', async () => {
-      await IdentitySelection.waitFor('NoPhotoCard')
-      await IdentitySelection.tap('NoPhotoCard')
-    })
+  it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
+    await SerialInstructions.waitFor('EnterManually', 10_000)
+    await SerialInstructions.tap('EnterManually')
+  })
 
-    it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
-      await SerialInstructions.waitFor('EnterManually', 10_000)
-      await SerialInstructions.tap('EnterManually')
-    })
+  it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
+    await ManualSerial.waitFor('SerialPressable')
+    await ManualSerial.type('SerialPressable', verify.testUser.cardSerial)
+    await ManualSerial.dismissKeyboard()
+    await ManualSerial.tap('Continue')
+  })
 
-    it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
-      await ManualSerial.waitFor('SerialPressable')
-      await ManualSerial.type('SerialPressable', verify.testUser.cardSerial)
-      await ManualSerial.dismissKeyboard()
-      await ManualSerial.tap('Continue')
-    })
+  it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
+    await EnterBirthdate.waitFor('Done', 10_000)
+    await EnterBirthdate.tap('BirthdateInputPressable')
+    await EnterBirthdate.type('BirthdateInputPressable', verify.testUser.dob)
+    await EnterBirthdate.dismissKeyboard()
+    await EnterBirthdate.tap('Done')
+  })
+})
 
-    it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
-      await EnterBirthdate.waitFor('Done', 10_000)
-      await EnterBirthdate.tap('BirthdateInputPressable')
-      await EnterBirthdate.type('BirthdateInputPressable', verify.testUser.dob)
-      await EnterBirthdate.dismissKeyboard()
-      await EnterBirthdate.tap('Done')
-    })
-
+if (verify.verifyCardType === 'nonPhoto') {
+  describe('Additional Identification', () => {
     it('should click step 2 again to add additional identification', async () => {
       await SetupSteps.waitFor('Step2')
       await SetupSteps.tap('Step2')

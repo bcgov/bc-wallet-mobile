@@ -14,7 +14,7 @@ export interface E2EConfig {
   }
   verify: {
     includeStep0: boolean
-    verifyCardType: 'combined' | 'photo' | 'non-photo' | 'na'
+    verifyCardType: 'combined' | 'photo' | 'nonPhoto' | 'na'
     testUser: {
       username: string
       cardSerial: string
@@ -41,7 +41,7 @@ const FLOW_PRESETS: Record<FlowMode, Omit<E2EConfig, 'variant' | 'flow'>> = {
       includeHelpDetours: true,
       authMethod: 'pin',
     },
-    verify: { includeStep0: false, verifyCardType: 'non-photo', testUser: TestUsers.nonPhoto },
+    verify: { includeStep0: false, verifyCardType: 'nonPhoto', testUser: TestUsers.nonPhoto },
   },
 }
 
