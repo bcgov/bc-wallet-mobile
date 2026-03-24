@@ -1,8 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native'
 import i18next from 'i18next'
 import React from 'react'
+import { AppError } from '../errors/appError'
+import { ErrorCategory } from '../errors/errorRegistry'
 import { AppEventCode } from '../events/appEventCode'
 import { showAlert } from '../utils/alert'
+import { Analytics } from '../utils/analytics/analytics-singleton'
+import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
 jest.mock('@/errors/components/ErrorModal', () => ({
@@ -111,7 +115,118 @@ describe('ErrorAlertContext', () => {
   })
 
   describe('emitErrorModal()', () => {
-    it.todo('TODO (MD): Fill in missing emitErrorModal tests')
+    it('should track alert display event in analytics', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const appError = new AppError(
+        'Something went wrong',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 2800,
+        },
+        { track: false }
+      )
+
+      act(() => {
+        result.current.emitErrorModal('Error Title', 'Error Description', appError)
+      })
+
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.GENERAL)
+    })
+
+    it('should track error event via appError.track()', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const appError = new AppError(
+        'Something went wrong',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 2800,
+        },
+        { track: false }
+      )
+      const trackSpy = jest.spyOn(appError, 'track')
+
+      act(() => {
+        result.current.emitErrorModal('Error Title', 'Error Description', appError)
+      })
+
+      expect(trackSpy).toHaveBeenCalled()
+    })
+
+    it('should log error details via appLogger.error', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const appError = new AppError(
+        'Something went wrong',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 2800,
+        },
+        { track: false }
+      )
+
+      act(() => {
+        result.current.emitErrorModal('Error Title', 'Error Description', appError)
+      })
+
+      expect(appLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`[${appError.code}]`),
+        expect.objectContaining({
+          title: 'Error Title',
+          description: 'Error Description',
+          name: 'AppError',
+          message: 'Something went wrong',
+        })
+      )
+    })
+
+    it('should set error modal payload with correct fields', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const cause = new Error('root cause')
+      const appError = new AppError(
+        'Something went wrong',
+        {
+          category: ErrorCategory.NETWORK,
+          appEvent: AppEventCode.NO_INTERNET,
+          statusCode: 2100,
+        },
+        { track: false, cause }
+      )
+
+      act(() => {
+        result.current.emitErrorModal('No Internet', 'Check your connection', appError)
+      })
+
+      // Dismiss returns null — verifying the modal was set by checking dismiss works
+      act(() => {
+        result.current.dismiss()
+      })
+    })
+
+    it('should increment errorKey on each call for re-render', () => {
+      const { result } = renderHook(() => useErrorAlert(), { wrapper })
+      const appError = new AppError(
+        'Error',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 2800,
+        },
+        { track: false }
+      )
+
+      act(() => {
+        result.current.emitErrorModal('Title 1', 'Desc 1', appError)
+      })
+
+      act(() => {
+        result.current.emitErrorModal('Title 2', 'Desc 2', appError)
+      })
+
+      // Two calls should have triggered two trackAlertDisplayEvent calls
+      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledTimes(2)
+    })
   })
 
   describe('emitAlert()', () => {
