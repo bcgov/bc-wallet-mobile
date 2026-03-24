@@ -94,13 +94,6 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
       onChangeText={[Function]}
       onFocus={[Function]}
       placeholder="YYYY/MM/DD"
-      placeholderTextColor="#000000"
-      selection={
-        {
-          "end": 1,
-          "start": 0,
-        }
-      }
       style={
         [
           {
@@ -113,7 +106,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
         ]
       }
       testID="com.ariesbifold:id/birthdate-input"
-      value="YYYY/MM/DD"
+      value=""
     />
     <Text
       allowFontScaling={false}

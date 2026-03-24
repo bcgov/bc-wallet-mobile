@@ -197,13 +197,6 @@ exports[`EnterBirthdate renders correctly 1`] = `
               onChangeText={[Function]}
               onFocus={[Function]}
               placeholder="YYYY/MM/DD"
-              placeholderTextColor="#000000"
-              selection={
-                {
-                  "end": 1,
-                  "start": 0,
-                }
-              }
               style={
                 [
                   {
@@ -216,7 +209,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 ]
               }
               testID="com.ariesbifold:id/birthDate-input"
-              value="YYYY/MM/DD"
+              value=""
             />
             <Text
               allowFontScaling={false}

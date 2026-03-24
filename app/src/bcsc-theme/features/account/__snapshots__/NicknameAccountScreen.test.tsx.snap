@@ -271,7 +271,7 @@ exports[`NicknameAccount renders correctly 1`] = `
                     "shadowRadius": undefined,
                   },
                   false,
-                  undefined,
+                  null,
                 ]
               }
             >

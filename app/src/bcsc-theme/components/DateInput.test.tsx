@@ -75,35 +75,35 @@ describe('DateInput Component', () => {
     })
   })
 
-  describe('Masking', () => {
-    test('shows YYYY/MM/DD when no value is present', () => {
+  describe('Progressive reveal', () => {
+    test('shows empty value when no digits are present', () => {
       renderDefault({ value: '' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('YYYY/MM/DD')
+      expect(input.props.value).toBe('')
     })
 
-    test('overlays template helper characters after first digit', () => {
+    test('shows only the entered digits for a partial year', () => {
       renderDefault({ value: '1' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('1YYY/MM/DD')
+      expect(input.props.value).toBe('1')
     })
 
-    test('overlays template characters for partial year', () => {
+    test('shows three digits without slashes', () => {
       renderDefault({ value: '198' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('198Y/MM/DD')
+      expect(input.props.value).toBe('198')
     })
 
-    test('shows full year with month template after 4 digits', () => {
+    test('eagerly adds slash after 4 digits', () => {
       renderDefault({ value: '1985' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('1985/MM/DD')
+      expect(input.props.value).toBe('1985/')
     })
 
     test('shows year and partial month', () => {
       renderDefault({ value: '1985/0' })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      expect(input.props.value).toBe('1985/0M/DD')
+      expect(input.props.value).toBe('1985/0')
     })
 
     test('shows full date when 8 digits are entered', () => {
@@ -122,12 +122,12 @@ describe('DateInput Component', () => {
       expect(onChange).toHaveBeenCalledWith('19')
     })
 
-    test('shows YYYY/MM format once 6 digits are entered', () => {
+    test('shows YYYY/MM/ format once 6 digits are entered', () => {
       const onChange = jest.fn()
       renderDefault({ onChange })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
       fireEvent.changeText(input, '198503')
-      expect(onChange).toHaveBeenCalledWith('1985/03')
+      expect(onChange).toHaveBeenCalledWith('1985/03/')
     })
 
     test('shows YYYY/MM/DD value once all 8 digits are present', () => {
@@ -143,7 +143,7 @@ describe('DateInput Component', () => {
       renderDefault({ onChange })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
       fireEvent.changeText(input, 'ab1985xy03')
-      expect(onChange).toHaveBeenCalledWith('1985/03')
+      expect(onChange).toHaveBeenCalledWith('1985/03/')
     })
 
     test('clamps canonical value to 8 digits (YYYY/MM/DD)', () => {
@@ -156,23 +156,20 @@ describe('DateInput Component', () => {
   })
 
   describe('Deleting digits', () => {
-    test('removes the last digit of the entered date when backspace lands on a template character', async () => {
+    test('removes the last digit when backspacing', async () => {
       const { rerender } = render(<ControlledDateInput initialValue="1985/03/14" />)
 
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      // Simulate the user deleting: displayed value shrinks by 1, but digit count stays the same
-      // because it removed the template 'D' — maskDate should strip the real last digit instead
       fireEvent.changeText(input, '1985/03/1')
 
       rerender(<ControlledDateInput initialValue="1985/03/1" />)
-      expect(screen.getByTestId(testIdWithKey('birthdate-input')).props.value).toBe('1985/03/1D')
+      expect(screen.getByTestId(testIdWithKey('birthdate-input')).props.value).toBe('1985/03/1')
     })
 
     test('allows full removal back to an empty input', () => {
       const onChange = jest.fn()
       renderDefault({ value: '1', onChange })
       const input = screen.getByTestId(testIdWithKey('birthdate-input'))
-      // Simulate deleting everything (text is now shorter than display '1YYY/MM/DD')
       fireEvent.changeText(input, '')
       expect(onChange).toHaveBeenCalledWith('')
     })

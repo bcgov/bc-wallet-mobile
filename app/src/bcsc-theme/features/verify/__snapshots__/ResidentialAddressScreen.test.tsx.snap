@@ -181,6 +181,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 autoCorrect={false}
                 onBlur={[Function]}
                 onChange={[Function]}
+                onChangeText={[Function]}
                 onFocus={[Function]}
                 style={
                   [
@@ -336,6 +337,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 autoCorrect={false}
                 onBlur={[Function]}
                 onChange={[Function]}
+                onChangeText={[Function]}
                 onFocus={[Function]}
                 style={
                   [
@@ -491,6 +493,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 autoCorrect={false}
                 onBlur={[Function]}
                 onChange={[Function]}
+                onChangeText={[Function]}
                 onFocus={[Function]}
                 style={
                   [
@@ -789,6 +792,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 autoCorrect={false}
                 onBlur={[Function]}
                 onChange={[Function]}
+                onChangeText={[Function]}
                 onFocus={[Function]}
                 style={
                   [
