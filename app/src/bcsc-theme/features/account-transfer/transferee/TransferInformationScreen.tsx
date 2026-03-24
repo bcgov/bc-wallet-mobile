@@ -1,7 +1,7 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
 import TwoPhones from '@assets/img/transfer-account-two-phones.png'
-import { Button, ButtonType, ScreenWrapper, ThemedText } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -22,6 +22,8 @@ const TransferInformationScreen: React.FC = () => {
       onPress={() => {
         navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
       }}
+      testID={testIdWithKey('TransferAccountButton')}
+      accessibilityLabel={t('BCSC.TransferInformation.TransferAccount')}
     />
   )
   return (

@@ -1,13 +1,24 @@
-import { Button, ButtonLocation, ButtonType, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCDispatchAction } from '@/store'
+import {
+  Button,
+  ButtonLocation,
+  ButtonType,
+  IconButton,
+  testIdWithKey,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface ReviewDevicesProps {
+  bannerId: BCSCBanner
   maxDevices: number
   handleClose: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
-  handleDelete: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
   onManageDevices: () => void
 }
 
@@ -17,7 +28,8 @@ interface ReviewDevicesProps {
  * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
  * @returns {*} {React.ReactElement} The ReviewDevices component.
  */
-export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageDevices }: ReviewDevicesProps) => {
+export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevices }: ReviewDevicesProps) => {
+  const [, dispatch] = useStore()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
 
@@ -76,17 +88,12 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
         <Button
           title={t('BCSC.SystemChecks.Devices.CloseButton')}
           buttonType={ButtonType.Secondary}
-          onPress={() => handleClose({ shouldAnimate: true })}
+          onPress={() => {
+            handleClose({ shouldAnimate: true })
+            dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
+          }}
           testID={testIdWithKey('Close')}
           accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
-        />
-
-        <Button
-          title={t('BCSC.SystemChecks.Devices.DeleteButton')}
-          buttonType={ButtonType.Secondary}
-          onPress={() => handleDelete({ shouldAnimate: true })}
-          testID={testIdWithKey('Delete')}
-          accessibilityLabel={t('BCSC.SystemChecks.Devices.DeleteButton')}
         />
       </View>
     </SafeAreaView>

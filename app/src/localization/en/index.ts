@@ -385,7 +385,6 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached",
         "ManageDevicesButton": "Manage devices",
         "CloseButton": "Close",
-        "DeleteButton": "Delete Message",
         "ReviewDevicesTitle": "Review your devices",
         "ReviewDevicesContentA1": "You can have this account on a maximum of",
         "ReviewDevicesContentA2": "devices.",

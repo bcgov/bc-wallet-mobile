@@ -214,6 +214,7 @@ exports[`EditNickname renders correctly 1`] = `
               BCSC.NicknameAccount.AccountName
             </Text>
             <View
+              accessibilityLabel="BCSC.NicknameAccount.AccountName"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -274,6 +275,7 @@ exports[`EditNickname renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/accountNickname-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.NicknameAccount.AccountName"
