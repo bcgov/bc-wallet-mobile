@@ -839,14 +839,20 @@ class BcscCoreModule(
                 // Native app stores accounts as a list (for multi-account support)
                 val accounts = listOf(nativeAccount)
 
-                if (nativeStorage.saveAccounts(accounts, issuerName)) {
-                    Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
-                    nativeStorage.saveIssuerToFile(issuer) // Keep file in sync with account data for easier issuer retrieval
-                    promise.resolve(null)
-                } else {
+                if (!nativeStorage.saveAccounts(accounts, issuerName)) {
                     Log.e(NAME, "setAccount - Failed to save account to native-compatible storage")
                     promise.reject("E_STORAGE_ERROR", "Failed to save account to native-compatible storage")
+                    return
                 }
+
+                if (!nativeStorage.saveIssuerToFile(issuer)) {
+                    Log.e(NAME, "setAccount - Failed to save issuer to file")
+                    promise.reject("E_STORAGE_ERROR", "Failed to save issuer to file")
+                    return
+                }
+                
+                Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
+                promise.resolve(null)
             } catch (e: Exception) {
                 Log.e(NAME, "setAccount - Exception occurred while saving account: ${e.message}", e)
                 promise.reject("E_FILE_ACCESS_ERROR", "Failed to save account: ${e.message}")
