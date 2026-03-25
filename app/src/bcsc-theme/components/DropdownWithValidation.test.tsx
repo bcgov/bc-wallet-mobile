@@ -405,7 +405,7 @@ describe('DropdownWithValidation Component', () => {
       await waitFor(() => {
         const closeButton = getByTestId('com.ariesbifold:id/test-dropdown-close')
         expect(closeButton.props.accessibilityRole).toBe('button')
-        expect(closeButton.props.accessibilityLabel).toBe('Close')
+        expect(closeButton.props.accessibilityLabel).toBe('Global.Close')
       })
     })
 
