@@ -841,6 +841,7 @@ class BcscCoreModule(
 
                 if (nativeStorage.saveAccounts(accounts, issuerName)) {
                     Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
+                    nativeStorage.saveIssuerToFile(issuer) // Keep file insynce with account data for easier issuer retrieval
                     promise.resolve(null)
                 } else {
                     Log.e(NAME, "setAccount - Failed to save account to native-compatible storage")
