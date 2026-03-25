@@ -19,6 +19,8 @@
  *
  * ── Local development ──────────────────────────────────────────────────
  * Reads scripts/.env.saucelabs if present (same as saucelabs-app-launch-test).
+ * For GITHUB_TOKEN, use: GITHUB_TOKEN=$(gh auth token)
+ * For GITHUB_REPOSITORY, use: GITHUB_REPOSITORY=bcgov/bc-wallet-mobile
  */
 
 import './saucelabs-env.mjs'
@@ -206,6 +208,11 @@ const main = async () => {
   console.log(`  Deleting: ${toDelete.length} build(s) for closed PRs`)
   if (noTag.length > 0) {
     console.log(`  Skipped:  ${noTag.length} build(s) with no pr-NNNN tag`)
+    if (DEBUG) {
+      for (const file of noTag) {
+        console.log(`    [DEBUG] No pr-NNNN tag: ${file.name} (id: ${file.id}, tags: ${(file.tags ?? []).join(', ')})`)
+      }
+    }
   }
 
   if (toDelete.length === 0) {
