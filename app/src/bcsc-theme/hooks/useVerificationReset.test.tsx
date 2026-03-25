@@ -5,8 +5,8 @@ import { useNavigation } from '@react-navigation/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { deleteToken, getAccount, getAccountSecurityMethod, TokenType } from 'react-native-bcsc-core'
 import * as useRegistrationServiceModule from '../services/hooks/useRegistrationService'
-import { useRenewAccount } from './useRenewAccount'
 import * as useSecureActionsModule from './useSecureActions'
+import { useVerificationReset } from './useVerificationReset'
 
 jest.mock('@bifold/core')
 jest.mock('@react-navigation/core', () => ({
@@ -81,7 +81,7 @@ describe('useRenewalReset', () => {
   })
 
   it('account is renewed successfully', async () => {
-    const { result } = renderHook(() => useRenewAccount())
+    const { result } = renderHook(() => useVerificationReset())
 
     await act(async () => {
       await result.current()
@@ -91,7 +91,6 @@ describe('useRenewalReset', () => {
       isHydrated: true,
       walletKey: 'wallet-key',
       registrationAccessToken: 'registration-token',
-      savedServices: ['service-a', 'service-b'],
       verified: false,
       verifiedStatus: VerificationStatus.UNVERIFIED,
     })
@@ -100,8 +99,8 @@ describe('useRenewalReset', () => {
     expect(getAccountSecurityMethod).toHaveBeenCalledTimes(1)
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
     expect(deleteToken).toHaveBeenCalledTimes(3)
-    expect(deleteToken).toHaveBeenNthCalledWith(1, TokenType.Refresh)
-    expect(deleteToken).toHaveBeenNthCalledWith(2, TokenType.Access)
+    expect(deleteToken).toHaveBeenNthCalledWith(1, TokenType.Access)
+    expect(deleteToken).toHaveBeenNthCalledWith(2, TokenType.Refresh)
     expect(deleteToken).toHaveBeenNthCalledWith(3, TokenType.Registration)
     expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
     expect(mockFactoryResetAlert).not.toHaveBeenCalled()
@@ -111,7 +110,7 @@ describe('useRenewalReset', () => {
   it('shows the factory reset alert when no account exists', async () => {
     jest.mocked(getAccount).mockResolvedValue(null)
 
-    const { result } = renderHook(() => useRenewAccount())
+    const { result } = renderHook(() => useVerificationReset())
 
     await act(async () => {
       await result.current()
@@ -130,7 +129,7 @@ describe('useRenewalReset', () => {
   it('shows the factory reset alert when re-registration fails', async () => {
     mockCreateRegistration.mockRejectedValueOnce(new Error('create failed'))
 
-    const { result } = renderHook(() => useRenewAccount())
+    const { result } = renderHook(() => useVerificationReset())
 
     await act(async () => {
       await result.current()

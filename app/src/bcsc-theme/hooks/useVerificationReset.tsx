@@ -8,7 +8,22 @@ import { withAccount } from '../api/hooks/withAccountGuard'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
 
-export const useRenewAccount = () => {
+/**
+ * Returns a hook that resets local verification state and re-registers the
+ * device with IAS, keeping the nickname and security method the same.
+ * The user will be placed back at Setup Step 2
+ *
+ * Reset sequence:
+ *   1. Clears the in-memory secure store, marking the device as unverified
+ *   2. In parallel: fetches the account security method and deletes the existing IAS registration
+ *   3. Deletes all verification data and tokens from native storage
+ *   4. Creates a new IAS registration, writing the new account data
+ *
+ * A factory reset alert is shown if any error occurs so the user isn't stuck with a broken app
+ *
+ * @returns {() => Promise<void>} Callback that performs the verification reset
+ */
+export const useVerificationReset = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteVerificationData } = useSecureActions()
@@ -16,7 +31,7 @@ export const useRenewAccount = () => {
   const { factoryResetAlert } = useAlerts(navigation)
   const registrationService = useRegistrationService()
 
-  const renewAccount = useCallback(async () => {
+  const verificationReset = useCallback(async () => {
     try {
       await withAccount(async (account) => {
         logger.info(`[useRenewalReset] Starting renewal reset for account with clientID: ${account.clientID}`)
@@ -24,10 +39,10 @@ export const useRenewAccount = () => {
         clearSecureState({
           isHydrated: true,
           walletKey: store.bcscSecure.walletKey,
+          // this token is used to clean up other verification data, a new one is saved once the device is registered again
           registrationAccessToken: store.bcscSecure.registrationAccessToken,
-          savedServices: store.bcscSecure.savedServices,
-          verified: false,
-          verifiedStatus: VerificationStatus.UNVERIFIED,
+          verified: false, // device is no longer verified
+          verifiedStatus: VerificationStatus.UNVERIFIED, // device is no longer verified
         })
 
         logger.info('[useRenewalReset] Secure state cleared. Deleting IAS registration and fetching security method...')
@@ -69,9 +84,8 @@ export const useRenewAccount = () => {
     logger,
     store.bcscSecure.walletKey,
     store.bcscSecure.registrationAccessToken,
-    store.bcscSecure.savedServices,
     registrationService,
   ])
 
-  return renewAccount
+  return verificationReset
 }

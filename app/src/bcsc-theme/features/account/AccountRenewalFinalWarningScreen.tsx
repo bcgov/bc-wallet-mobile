@@ -1,5 +1,6 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
-import { useRenewalReset } from '@/bcsc-theme/hooks/useRenewAccount'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
+
 import { ThemedText, TOKENS, useServices } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 
@@ -11,14 +12,14 @@ import { useTranslation } from 'react-i18next'
 export const AccountRenewalFinalWarningScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const renewAccount = useRenewalReset()
+  const verificationReset = useVerificationReset()
 
   return (
     <ActionScreenLayout
       primaryActionText={t('BCSC.AccountRenewal.WarningRenewButton')}
       onPressPrimaryAction={async () => {
         try {
-          await renewAccount()
+          await verificationReset()
         } catch (error) {
           logger.error(
             'AccountRenewalFinalWarningScreen: Error during factory reset on account renewal',

@@ -1,5 +1,5 @@
-import { useRenewAccount } from '@/bcsc-theme/hooks/useRenewAccount'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
@@ -31,7 +31,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { updateCardProcess } = useSecureActions()
-  const renewAccount = useRenewAccount()
+  const verificationReset = useVerificationReset()
   const styles = StyleSheet.create({
     checkButtonText: {
       color: ColorPalette.brand.primary,
@@ -47,12 +47,12 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         store.bcscSecure.userCode
       ) {
         // If the user has registered and backs out, reset the card registration process
-        await renewAccount()
+        await verificationReset()
       }
     })
 
     return unsubscribe
-  }, [renewAccount, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
+  }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
 
   /**
    * This fixes an issue where the user has selected Non-BCSC ID,
