@@ -345,6 +345,7 @@ const translation = {
       "ServiceOutage": {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
+        "LearnMore": "Learn more",
       },
     },
     "Home": {
