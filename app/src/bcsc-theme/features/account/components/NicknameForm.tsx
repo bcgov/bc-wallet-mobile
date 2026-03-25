@@ -1,4 +1,3 @@
-import { a11yLabel } from '@utils/accessibility'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { formStringLengths } from '@/constants'
@@ -13,6 +12,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'

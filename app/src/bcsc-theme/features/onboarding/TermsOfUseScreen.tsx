@@ -1,4 +1,3 @@
-import { a11yLabel } from '@utils/accessibility'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -15,6 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'

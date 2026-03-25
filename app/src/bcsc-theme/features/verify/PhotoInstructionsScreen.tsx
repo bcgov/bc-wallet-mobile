@@ -1,9 +1,9 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import SelfieImage from '@assets/img/selfie_example.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
-import { a11yLabel } from '@utils/accessibility'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
 

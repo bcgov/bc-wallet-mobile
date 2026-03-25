@@ -3,7 +3,6 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { a11yLabel } from '@utils/accessibility'
 import {
   Button,
   ButtonType,
@@ -16,6 +15,7 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'

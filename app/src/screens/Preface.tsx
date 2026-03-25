@@ -67,7 +67,11 @@ const Preface: React.FC = () => {
   return (
     <ScreenWrapper controls={controls}>
       <Assets.svg.preface style={{ alignSelf: 'center', marginBottom: Spacing.lg }} height={200} />
-      <Pressable onPress={incrementDeveloperMenuCounter} testID={testIdWithKey('DeveloperCounter')} accessibilityLabel={t('Preface.PrimaryHeading')}>
+      <Pressable
+        onPress={incrementDeveloperMenuCounter}
+        testID={testIdWithKey('DeveloperCounter')}
+        accessibilityLabel={t('Preface.PrimaryHeading')}
+      >
         <Text style={TextTheme.headingTwo}>{t('Preface.PrimaryHeading')}</Text>
       </Pressable>
       <Text style={[TextTheme.normal, { marginVertical: Spacing.md }]}>{t('Preface.Paragraph1')}</Text>

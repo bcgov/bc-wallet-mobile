@@ -60,10 +60,7 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
         backgroundColor: backgroundColor,
       }}
     >
-      <View
-        importantForAccessibility="no-hide-descendants"
-        accessibilityElementsHidden={true}
-      >
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden={true}>
         <View
           style={{
             flexDirection: 'row',

@@ -13,7 +13,14 @@ interface SectionButtonProps {
   testID?: string
 }
 
-const SectionButton: React.FC<SectionButtonProps> = ({ title, description, accessibilityLabel, style, onPress, testID }) => {
+const SectionButton: React.FC<SectionButtonProps> = ({
+  title,
+  description,
+  accessibilityLabel,
+  style,
+  onPress,
+  testID,
+}) => {
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({

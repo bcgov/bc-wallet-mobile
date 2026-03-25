@@ -15,12 +15,12 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { a11yLabel } from '@utils/accessibility'
 import { usePairingService } from '../pairing'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 

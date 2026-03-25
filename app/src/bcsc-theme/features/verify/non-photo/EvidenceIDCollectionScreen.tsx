@@ -1,4 +1,3 @@
-import { a11yLabel } from '@utils/accessibility'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -19,6 +18,7 @@ import {
 } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, View } from 'react-native'

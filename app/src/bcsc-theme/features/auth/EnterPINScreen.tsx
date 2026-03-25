@@ -1,4 +1,3 @@
-import { a11yLabel } from '@utils/accessibility'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -16,6 +15,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'

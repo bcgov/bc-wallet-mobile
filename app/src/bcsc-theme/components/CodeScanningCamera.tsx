@@ -1,6 +1,6 @@
-import { a11yLabel } from '@utils/accessibility'
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
