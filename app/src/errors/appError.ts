@@ -1,7 +1,5 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { BifoldError } from '@bifold/core'
-import i18next from 'i18next'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
 type AppErrorOptions = ErrorOptions & {
@@ -24,30 +22,21 @@ export type ErrorIdentity = {
  * @class
  */
 export class AppError extends Error {
-  private readonly identity: ErrorIdentity
   private tracked: boolean // Whether this error has been tracked in analytics
 
   code: string // ie: network.err_no_internet.2100
-  /** @deprecated TODO (MD): Remove UI properties from AppError **/
-  title: string // ie: No Internet
   appEvent: AppEventCode // ie: no_internet
   statusCode: number // ie: 2100
-  /** @deprecated TODO (MD): Remove UI properties from AppError **/
-  description: string // ie: Please check your network connection and try again.
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
 
-  constructor(title: string, description: string, identity: ErrorIdentity, options?: AppErrorOptions) {
-    super(`${title}: ${description}`, options)
+  constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
+    super(message, options)
     this.name = this.constructor.name
 
-    this.identity = identity
-
     this.code = `${identity.category}.${identity.appEvent}.${identity.statusCode}` // ie: network.err_no_internet.2100
-    this.title = title
     this.appEvent = identity.appEvent
     this.statusCode = identity.statusCode
-    this.description = description
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
@@ -113,29 +102,13 @@ export class AppError extends Error {
    */
   static fromErrorDefinition(definition: ErrorDefinition, options?: AppErrorOptions): AppError {
     return new AppError(
-      i18next.t(definition.titleKey) ?? definition.titleKey,
-      i18next.t(definition.descriptionKey) ?? definition.descriptionKey,
+      definition.message,
       {
         category: definition.category,
         appEvent: definition.appEvent,
         statusCode: definition.statusCode,
       },
       options
-    )
-  }
-
-  /**
-   * Convert the AppError to a BifoldError instance.
-   *
-   * @deprecated FIXME (MD): Remove this method and use `error-utils.toBifoldError` instead.
-   * @returns A BifoldError representing the AppError.
-   */
-  toBifoldError(): BifoldError {
-    return new BifoldError(
-      this.title,
-      this.description,
-      this.technicalMessage ?? this.message,
-      this.identity.statusCode
     )
   }
 

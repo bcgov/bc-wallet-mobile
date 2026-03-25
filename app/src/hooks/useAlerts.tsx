@@ -42,6 +42,17 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
 
   // HELPER FUNCTIONS
 
+  // TODO (MD): Swap _createBasicAlert for _createBasicErrorModal for all basic error alerts
+  // const _createBasicErrorModal = useCallback(
+  //   (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+  //     return (error?: AppError) => {
+  //       const appError = error ?? getRegistryAppError(event)
+  //       emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
+  //     }
+  //   },
+  //   [emitErrorModal, t]
+  // )
+
   // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
   const _createBasicAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
@@ -166,6 +177,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
             {
               text: t('Global.OK'),
               onPress: () => {
+                // FIXME: This won't reset the state of the application. We would need a partial `factory reset` to happen here instead
                 navigation.dispatch(
                   CommonActions.reset({
                     index: 0,
