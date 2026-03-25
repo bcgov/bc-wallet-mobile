@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "sourceMap": false,
+    "target": "es2021",
+    "module": "NodeNext",
+    "moduleResolution": "Node16",
+    "removeComments": true,
+    "noImplicitAny": true,
+    "strictPropertyInitialization": true,
+    "strictNullChecks": true,
+    "types": [
+      "node",
+      "@wdio/types",
+      "@wdio/globals/types",
+      "@wdio/mocha-framework",
+      "expect-webdriverio",
+      "@wdio/sauce-service"
+    ]
+  },
+  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts"]
+}

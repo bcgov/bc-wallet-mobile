@@ -274,6 +274,7 @@ exports[`NicknameAccount renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/accountNickname-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.NicknameAccount.AccountName"
