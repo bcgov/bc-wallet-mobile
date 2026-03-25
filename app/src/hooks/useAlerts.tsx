@@ -58,21 +58,21 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   )
 
   // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
-  // const _createBasicAlert = useCallback(
-  //   (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-  //     return () => {
-  //       emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
-  //         event,
-  //         actions: [
-  //           {
-  //             text: t('Global.OK'),
-  //           },
-  //         ],
-  //       })
-  //     }
-  //   },
-  //   [emitAlert, t]
-  // )
+  const _createBasicAlert = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return () => {
+        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
+          event,
+          actions: [
+            {
+              text: t('Global.OK'),
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, t]
+  )
 
   // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
   const _createProblemWithAccountAlert = useCallback(
@@ -89,6 +89,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
               text: t('Alerts.ProblemWithAccount.Action1'),
               style: 'destructive',
               onPress: () => {
+                // QUESTION (MD): Should we disable the "Remove Account" action to hope the underlying issue is fixed before user needs to remove their account?
+                // Trying to prevent unnecessary account verifications whenever possible.
                 switch (stack) {
                   case BCSCStacks.Main:
                     return navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
@@ -290,6 +292,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     () =>
       // prettier-ignore
       ({
+      // ALERTS
       appUpdateRequiredAlert,
       setupExpiredAlert,
       liveCallFileUploadAlert,
@@ -297,13 +300,14 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
       factoryResetAlert,
+      forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'),
+      // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
       unsecuredNetworkAlert: _createBasicErrorModal(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
       serverTimeoutAlert: _createBasicErrorModal(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),
       serverErrorAlert: _createBasicErrorModal(AppEventCode.SERVER_ERROR, 'ServerError'),
-      forgetPairingsAlert: _createBasicErrorModal(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'),
       tooManyAttemptsAlert: _createBasicErrorModal(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts'),
       verificationNotCompleteAlert: _createBasicErrorModal(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete'),
       invalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode'),
@@ -363,6 +367,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
       factoryResetAlert,
+      _createBasicAlert,
       _createBasicErrorModal,
       _createProblemWithAccountAlert,
       _createProblemWithServiceReturnToSetupAlert,

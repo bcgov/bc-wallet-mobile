@@ -444,10 +444,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (PT-BR)",
       "ButtonTitle": "Forget all pairings (PT-BR)",
-      "SuccessTitle": "Success (PT-BR)",
-      "SuccessMessage": "Successfully unpaired your device (PT-BR)",
-      "ErrorTitle": "Error (PT-BR)",
-      "ErrorMessage": "Failed to unpair device (PT-BR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (PT-BR)",

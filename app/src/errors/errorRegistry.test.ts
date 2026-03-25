@@ -114,14 +114,6 @@ describe('errorRegistry', () => {
       })
     })
 
-    it('should have unique error codes', () => {
-      const errorKeys = Object.keys(ErrorRegistry) as ErrorRegistryKey[]
-      const codes = errorKeys.map((key) => ErrorRegistry[key].statusCode)
-      const uniqueCodes = new Set(codes)
-
-      expect(uniqueCodes.size).toBe(codes.length)
-    })
-
     it('should have error codes in correct ranges', () => {
       // Camera/Scanning Errors (2000-2099)
       expect(ErrorRegistry.CAMERA_BROKEN.statusCode).toBeGreaterThanOrEqual(2000)

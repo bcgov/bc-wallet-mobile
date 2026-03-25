@@ -369,6 +369,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Verification request TTL exceeded — user must restart the flow',
   },
+  ALREADY_VERIFIED: {
+    statusCode: 2410,
+    appEvent: AppEventCode.ALREADY_VERIFIED,
+    severity: ErrorSeverity.INFO,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Verification request was already completed in a previous session',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)
@@ -598,6 +605,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
     message: 'OS version does not meet minimum requirements for card provisioning',
   },
+  DEVICE_AUTHENTICATION_ERROR: {
+    statusCode: 2707,
+    appEvent: AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Device authentication failed — biometric or passcode verification did not succeed',
+  },
 
   // ============================================
   // General/Registration Errors (2800-2899)
@@ -754,7 +768,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.GENERAL,
-    message: 'No account found for the current user — wallet state may be corrupted or missing',
+    message: 'No account found for the current user — state may be corrupted or missing',
   },
 
   // ============================================
