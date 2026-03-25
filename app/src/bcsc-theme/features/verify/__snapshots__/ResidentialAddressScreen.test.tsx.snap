@@ -114,7 +114,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddressLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.StreetAddressLabel"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -271,7 +270,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddress2Label
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.StreetAddress2Label"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -428,7 +426,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.CityLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.CityLabel"
               accessibilityState={
                 {
                   "busy": undefined,
@@ -727,7 +724,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.PostalCodeLabel"
               accessibilityState={
                 {
                   "busy": undefined,

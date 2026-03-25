@@ -218,7 +218,6 @@ exports[`VerifyInPerson renders correctly 1`] = `
         BCSC.VerifyIdentity.ShowThisConfirmationNumber
       </Text>
       <Text
-        accessibilityLabel="undefined-undefined"
         maxFontSizeMultiplier={2}
         style={
           [

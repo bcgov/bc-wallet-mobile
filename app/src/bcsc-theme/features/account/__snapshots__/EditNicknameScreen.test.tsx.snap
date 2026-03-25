@@ -214,7 +214,6 @@ exports[`EditNickname renders correctly 1`] = `
               BCSC.NicknameAccount.AccountName
             </Text>
             <View
-              accessibilityLabel="BCSC.NicknameAccount.AccountName"
               accessibilityState={
                 {
                   "busy": undefined,

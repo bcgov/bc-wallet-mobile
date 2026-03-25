@@ -143,7 +143,6 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                 Passport Number
               </Text>
               <View
-                accessibilityLabel="Passport Number"
                 accessibilityState={
                   {
                     "busy": undefined,

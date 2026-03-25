@@ -114,7 +114,6 @@ exports[`ManualSerial renders correctly 1`] = `
               BCSC.ManualSerial.InputLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.ManualSerial.InputLabel"
               accessibilityState={
                 {
                   "busy": undefined,

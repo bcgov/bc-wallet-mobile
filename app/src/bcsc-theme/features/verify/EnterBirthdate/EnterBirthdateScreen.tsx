@@ -89,7 +89,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls}>
+    <ScreenWrapper controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.Birthdate.CardSerialNumber', { serial: vm.serial })}
       </ThemedText>
