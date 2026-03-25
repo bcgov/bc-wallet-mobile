@@ -9,7 +9,7 @@ import { ConnectionRepository, MediationRepository, OutOfBandRepository } from '
 import { act, renderHook } from '@testing-library/react-native'
 import useBCAgentSetup from './useBCAgentSetup'
 
-import { PersistentStorage } from '@bifold/core'
+import { PersistentStorage, useServices, useStore as useStoreBifold } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import moment from 'moment'
 
@@ -193,23 +193,12 @@ const mockOutOfBandRepository = {
 // ---- TESTS ----
 
 describe('useBCAgentSetup', () => {
-  let useStoreMock: jest.Mock
-  let useServicesMock: jest.Mock
-
   beforeEach(() => {
     jest.clearAllMocks()
 
-    useStoreMock = require('@bifold/core').useStore
-    useServicesMock = require('@bifold/core').useServices
+    jest.mocked(useStoreBifold).mockReturnValue([mockStore as any, jest.fn()])
 
-    useStoreMock.mockReturnValue([mockStore, jest.fn()])
-    useServicesMock.mockReturnValue([
-      mockLogger,
-      [], // indyLedgers
-      { stop: jest.fn(), start: jest.fn() }, // attestationMonitor
-      [], // credDefs
-      [], // schemas
-    ])
+    jest.mocked(useServices).mockReturnValue([mockLogger, [], { stop: jest.fn(), start: jest.fn() }, [], []] as any)
   })
 
   it('should initialize a new agent successfully', async () => {
@@ -219,6 +208,7 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({
         id: 'wallet-id',
         key: 'wallet-key',
+        salt: 'wallet-salt',
       })
     })
 
@@ -230,11 +220,11 @@ describe('useBCAgentSetup', () => {
     const mockAgent = createMockAgent()
 
     // Make sure restart doesn't fail
-    mockAgent.wallet.open.mockResolvedValue(undefined)
-    mockAgent.initialize.mockResolvedValue(undefined)
+    ;(mockAgent.wallet.open as jest.Mock).mockResolvedValue(undefined)
+    ;(mockAgent.initialize as jest.Mock).mockResolvedValue(undefined)
 
     // First call → create agent
-    Agent.mockImplementation(() => mockAgent)
+    ;(Agent as jest.Mock).mockImplementation(() => mockAgent)
 
     const { result } = renderHook(() => useBCAgentSetup())
 
@@ -242,18 +232,20 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({
         id: 'wallet-id',
         key: 'wallet-key',
+        salt: 'wallet-salt',
       })
     })
 
     // Clear calls so we only track restart behavior
-    mockAgent.wallet.open.mockClear()
-    mockAgent.initialize.mockClear()
+    ;(mockAgent.wallet.open as jest.Mock).mockClear()
+    ;(mockAgent.initialize as jest.Mock).mockClear()
 
     // Second call → should restart existing agent
     await act(async () => {
       await result.current.initializeAgent({
         id: 'wallet-id',
         key: 'wallet-key',
+        salt: 'wallet-salt',
       })
     })
 
@@ -265,13 +257,14 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agentInstance = new Agent({} as any)
-    agentInstance.initialize.mockRejectedValue(new Error('fail'))
+    ;(agentInstance.initialize as jest.Mock).mockRejectedValue(new Error('fail'))
     ;(Agent as jest.Mock).mockImplementation(() => agentInstance)
 
     await act(async () => {
       await result.current.initializeAgent({
         id: 'wallet-id',
         key: 'wallet-key',
+        salt: 'wallet-salt',
       })
     })
 
@@ -285,6 +278,7 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({
         id: 'wallet-id',
         key: 'wallet-key',
+        salt: 'wallet-salt',
       })
     })
 
@@ -311,28 +305,30 @@ describe('useBCAgentSetup', () => {
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    existingAgent.dependencyManager.resolve = jest.fn((dep) => {
+    const mockResolve = (impl: any) => impl as unknown as typeof existingAgent.dependencyManager.resolve
+    existingAgent.dependencyManager.resolve = mockResolve((dep: any) => {
       if (dep === ConnectionRepository) {
         return {
           getById: jest.fn().mockResolvedValue({
             id: 'conn1',
-            getTag: jest.fn().mockReturnValue(new Date().toISOString()), // mediation not expired
+            getTag: jest.fn().mockReturnValue(new Date().toISOString()),
             updatedAt: new Date(),
           }),
+          getAll: jest.fn().mockResolvedValue([]),
         }
       }
       return {}
     })
 
     // Mock Agent constructor to always return our mock agent
-    jest.spyOn(require('@credo-ts/core'), 'Agent').mockImplementation(() => existingAgent)
+    ;(Agent as jest.Mock).mockImplementation(() => existingAgent)
 
     // Also make sure cached ledgers are empty so new agent creation triggers
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
 
-    await expect(result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key' })).rejects.toThrow(
-      'Mediation connection is not passed the expiration threshold, no need to reset mediation'
-    )
+    await expect(
+      result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+    ).rejects.toThrow('Mediation connection is not passed the expiration threshold, no need to reset mediation')
 
     expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('below the expiration threshold'))
   })
@@ -347,7 +343,7 @@ describe('useBCAgentSetup', () => {
     agentInstance.initialize = jest.fn().mockRejectedValue(new Error('fail during initialize'))
 
     // Ensure nested objects exist
-    agentInstance.oob = {
+    ;(agentInstance as any).oob = {
       receiveInvitationFromUrl: jest.fn().mockRejectedValue(new Error('fail')),
     }
     agentInstance.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
@@ -371,18 +367,26 @@ describe('useBCAgentSetup', () => {
     const outOfBandRepository = { getById: jest.fn(), delete: jest.fn(), save: jest.fn() }
 
     agentInstance.dependencyManager.resolve = jest.fn((dep) => {
-      if (dep === MediationRepository) return mediationRepository
-      if (dep === ConnectionRepository) return connectionRepository
-      if (dep === OutOfBandRepository) return outOfBandRepository
+      if (dep === MediationRepository) {
+        return mediationRepository
+      }
+      if (dep === ConnectionRepository) {
+        return connectionRepository
+      }
+      if (dep === OutOfBandRepository) {
+        return outOfBandRepository
+      }
       return {}
-    })
+    }) as any
 
     // --- Step 2: force new agent path ---
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
-    jest.spyOn(require('@credo-ts/core'), 'Agent').mockImplementation(() => agentInstance)
+    ;(Agent as jest.Mock).mockImplementation(() => agentInstance)
 
     // --- Step 3: Run initializeAgent, which will call recoverMediationIfExpired and fail ---
-    await expect(result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key' })).rejects.toThrow('fail')
+    await expect(
+      result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+    ).rejects.toThrow('fail')
 
     // --- Step 4: Ensure rollback is called ---
     expect(mediationRepository.save).toHaveBeenCalledWith(agentInstance.context, expect.any(Object))
