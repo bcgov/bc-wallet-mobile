@@ -1,7 +1,7 @@
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { AppError } from '@/errors/appError'
-import { AppEventCode } from '@/events/appEventCode'
 import { ErrorCategory } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -87,18 +87,22 @@ describe('ServiceLogin', () => {
     }
 
     it('should not show alert when pairing code error is already handled by error policy', async () => {
-      const handledError = new AppError('Test', 'test error', {
-        category: ErrorCategory.AUTHENTICATION,
-        appEvent: AppEventCode.INVALID_PAIRING_CODE,
-        statusCode: 2205,
-      }, { track: false })
+      const handledError = new AppError(
+        'Test',
+        'test error',
+        {
+          category: ErrorCategory.AUTHENTICATION,
+          appEvent: AppEventCode.INVALID_PAIRING_CODE,
+          statusCode: 2205,
+        },
+        { track: false }
+      )
       handledError.handled = true
 
       const mockLoginServerErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(
-        jest.fn().mockRejectedValue(handledError),
-        { loginServerErrorAlert: mockLoginServerErrorAlert }
-      )
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(handledError), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
 
       const continueButton = tree.queryByTestId('com.ariesbifold:id/ServiceLoginContinue')
       if (continueButton) {
@@ -109,10 +113,9 @@ describe('ServiceLogin', () => {
 
     it('should show loginServerErrorAlert when pairing code error is not handled', async () => {
       const mockLoginServerErrorAlert = jest.fn()
-      const tree = renderWithPairingCode(
-        jest.fn().mockRejectedValue(new Error('unexpected failure')),
-        { loginServerErrorAlert: mockLoginServerErrorAlert }
-      )
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
 
       const continueButton = tree.queryByTestId('com.ariesbifold:id/ServiceLoginContinue')
       if (continueButton) {

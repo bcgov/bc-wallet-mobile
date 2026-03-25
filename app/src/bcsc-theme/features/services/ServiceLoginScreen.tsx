@@ -2,6 +2,8 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
+import { isHandledAppError } from '@/errors/appError'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState, Mode } from '@/store'
 import {
   Button,
@@ -21,8 +23,6 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { isHandledAppError } from '@/errors/appError'
-import { useAlerts } from '@/hooks/useAlerts'
 import { usePairingService } from '../pairing'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
