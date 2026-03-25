@@ -44,7 +44,6 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
 
   // HELPER FUNCTIONS
 
-  // TODO (MD): Swap _createBasicAlert for _createBasicErrorModal for all basic error alerts
   const _createBasicErrorModal = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return (error?: AppError | unknown) => {
