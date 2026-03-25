@@ -1,9 +1,5 @@
-import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
-import { AppError } from '@/errors/appError'
-import { ErrorCategory, ErrorRegistry } from '@/errors/errorRegistry'
-import { AppEventCode } from '@/events/appEventCode'
-import { BifoldError } from '@bifold/core'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError, toBifoldError } from './error-utils'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from './error-utils'
 
 describe('Error Utils', () => {
   describe('getAppErrorFromAxiosError', () => {
@@ -56,54 +52,6 @@ describe('Error Utils', () => {
 
       expect(appError.appEvent).toBe('unknown_server_error')
       expect(appError.code).toContain(String(ErrorRegistry.UNKNOWN_SERVER_ERROR.statusCode))
-    })
-  })
-
-  describe('toBifoldError', () => {
-    it('should convert a plain Error into a BifoldError with UNKNOWN_APP_ERROR_STATUS_CODE', () => {
-      const error = new Error('something broke')
-      error.stack = 'fake stack'
-
-      const result = toBifoldError('Title', 'Description', error)
-
-      expect(result).toBeInstanceOf(BifoldError)
-      expect(result.title).toBe('Title')
-      expect(result.description).toBe('Description')
-      expect(result.message).toBe('something broke')
-      expect(result.code).toBe(UNKNOWN_APP_ERROR_STATUS_CODE)
-      expect(result.stack).toBe('fake stack')
-    })
-
-    it('should convert an AppError into a BifoldError with its statusCode and fullMessage', () => {
-      const cause = new Error('technical details')
-      const appError = new AppError(
-        'App Error',
-        {
-          category: ErrorCategory.GENERAL,
-          appEvent: AppEventCode.GENERAL,
-          statusCode: 1000,
-        },
-        { cause, track: false }
-      )
-
-      const result = toBifoldError('Display Title', 'Display Description', appError)
-
-      expect(result).toBeInstanceOf(BifoldError)
-      expect(result.message).toBe(appError.fullMessage)
-      expect(result.title).toBe('Display Title')
-      expect(result.description).toBe('Display Description')
-      expect(result.code).toBe(1000)
-      expect(result.cause).toBe(cause)
-    })
-
-    it('should preserve the cause from the original error', () => {
-      const cause = new Error('root cause')
-      const error = new Error('wrapper')
-      error.cause = cause
-
-      const result = toBifoldError('T', 'D', error)
-
-      expect(result.cause).toBe(cause)
     })
   })
 

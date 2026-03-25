@@ -1,5 +1,10 @@
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import { BifoldError } from '@bifold/core'
 import { AppEventCode } from '../events/appEventCode'
+import { AppError } from './appError'
 import { ErrorDefinition, ErrorRegistry, ErrorRegistryAppEventMap, ErrorRegistryKey } from './errorRegistry'
+
+// TODO (MD): Rename file to errorUtils or something similar
 
 /**
  * Extract a meaningful message from an unknown error value
@@ -40,4 +45,40 @@ export function getErrorDefinition(errorKey: ErrorRegistryKey): ErrorDefinition 
  */
 export const getErrorDefinitionFromAppEventCode = (appEvent?: string): ErrorDefinition | null => {
   return ErrorRegistryAppEventMap.get(appEvent as AppEventCode) ?? null
+}
+
+/**
+ * Gets an AppError from the ErrorRegistry or fallback to `UNKNOWN_ERROR`
+ *
+ * @param event - The app event code to create the error for
+ * @param cause - An optional cause (e.g., an underlying error) that provides additional context for the AppError
+ * @returns An instance of AppError corresponding to the provided app event code and cause
+ */
+export const getRegistryAppError = (event: AppEventCode, cause?: unknown): AppError => {
+  const errorDefinition = getErrorDefinitionFromAppEventCode(event) ?? ErrorRegistry.UNKNOWN_ERROR
+  return AppError.fromErrorDefinition(errorDefinition, { cause })
+}
+
+/**
+ * Converts an Error or AppError into a BifoldError, preserving as much information as possible for display in the UI.
+ *
+ * @param title - The title to display for the error
+ * @param description - A user-friendly description of the error
+ * @param error - The original error object to convert
+ * @returns A BifoldError containing the provided title, description, and details from the original error
+ */
+export const toBifoldError = (title: string, description: string, error: Error | AppError): BifoldError => {
+  let bifoldError: BifoldError
+
+  if (error instanceof AppError) {
+    bifoldError = new BifoldError(title, description, error.fullMessage, error.statusCode)
+  } else {
+    bifoldError = new BifoldError(title, description, error.message, UNKNOWN_APP_ERROR_STATUS_CODE)
+  }
+
+  // Attach the cause and stack trace for debugging purposes
+  bifoldError.cause = error.cause
+  bifoldError.stack = error.stack
+
+  return bifoldError
 }
