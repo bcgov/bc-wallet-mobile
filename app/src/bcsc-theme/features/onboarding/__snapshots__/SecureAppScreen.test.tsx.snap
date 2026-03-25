@@ -111,16 +111,13 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  false,
-                ],
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
                 false,
               ]
             }
@@ -218,16 +215,13 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  false,
-                ],
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
                 false,
               ]
             }
@@ -325,17 +319,14 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  undefined,
-                ],
-                false,
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
               ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"

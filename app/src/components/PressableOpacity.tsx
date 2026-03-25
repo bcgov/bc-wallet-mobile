@@ -10,12 +10,16 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
   return (
     <Pressable
       {...props}
-      style={(state) => [
-        typeof props.style === 'function' ? props.style(state) : props.style,
-        state.pressed && {
-          opacity: 0.2, // Mimics the default opacity from TouchableOpacity
-        },
-      ]}
+      // Note: Writing the style like this prevents having to update all Pressable related snapshots
+      style={(state) => {
+        const style = typeof props.style === 'function' ? props.style(state) : props.style
+
+        if (!state.pressed) {
+          return style
+        }
+
+        return [style, { opacity: 0.2 }] // Mimics the default opacity from TouchableOpacity
+      }}
     />
   )
 }

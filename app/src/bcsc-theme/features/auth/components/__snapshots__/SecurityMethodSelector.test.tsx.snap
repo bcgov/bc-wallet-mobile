@@ -206,19 +206,16 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  {
-                    "opacity": 0.6,
-                  },
-                ],
-                false,
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                {
+                  "opacity": 0.6,
+                },
               ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
@@ -315,16 +312,13 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  false,
-                ],
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
                 false,
               ]
             }
@@ -422,17 +416,14 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  undefined,
-                ],
-                false,
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
               ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
@@ -1205,16 +1196,13 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  false,
-                ],
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
                 false,
               ]
             }
@@ -1312,16 +1300,13 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  false,
-                ],
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
                 false,
               ]
             }
@@ -1419,17 +1404,14 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onStartShouldSetResponder={[Function]}
             style={
               [
-                [
-                  {
-                    "backgroundColor": "#FFFFFF",
-                    "borderColor": "#D9EAF7",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "padding": 16,
-                  },
-                  undefined,
-                ],
-                false,
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
               ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
