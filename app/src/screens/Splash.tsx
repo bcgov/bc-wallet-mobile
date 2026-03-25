@@ -1,4 +1,3 @@
-import { toBifoldError } from '@/bcsc-theme/utils/error-utils'
 import { AppError, ErrorRegistry } from '@/errors'
 import { toBifoldError } from '@/errors/errorHandler'
 import { BCState } from '@/store'
