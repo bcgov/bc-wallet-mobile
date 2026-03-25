@@ -1,0 +1,22 @@
+# .yarn
+.yarn/
+
+# Appium drivers (installed via e2e/yarn setup)
+.appium/
+
+# Environment variables for local SauceLabs runs
+.env.saucelabs
+
+# Local app binaries
+apps/*.app/
+apps/*.apk
+apps/*.ipa
+
+# Logs
+logs/
+
+# Notes
+.notes/
+
+# Local environment variables
+local.env

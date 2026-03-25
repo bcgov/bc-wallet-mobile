@@ -160,7 +160,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                     "text": undefined,
                   }
                 }
-                accessible={true}
+                accessible={false}
                 collapsable={false}
                 focusable={true}
                 hitSlop={
@@ -203,9 +203,10 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                     undefined,
                   ]
                 }
+                testID="com.ariesbifold:id/documentNumber-pressable"
               >
                 <TextInput
-                  accessibilityLabel="Passport Number"
+                  accessibilityLabel="Passport Number"
                   autoCorrect={false}
                   onBlur={[Function]}
                   onChange={[Function]}
@@ -294,7 +295,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
           }
         >
           <View
-            accessibilityLabel="Continue"
+            accessibilityLabel="Global.Continue"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -371,7 +372,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
             </View>
           </View>
           <View
-            accessibilityLabel="Cancel"
+            accessibilityLabel="Global.Cancel"
             accessibilityRole="button"
             accessibilityState={
               {

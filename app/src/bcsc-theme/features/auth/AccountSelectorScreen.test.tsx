@@ -61,7 +61,7 @@ describe('AccountSetup', () => {
         </BasicAppContext>
       )
 
-      expect(tree.getByText('Continue setting up account')).toBeTruthy()
+      expect(tree.getByText('Global.ContinueSetup')).toBeTruthy()
       expect(tree.queryByText('BCSC.AccountSetup.ContinueAs')).toBeNull()
       expect(tree).toMatchSnapshot()
     })
