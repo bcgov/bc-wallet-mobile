@@ -61,7 +61,7 @@ describe('AppError', () => {
       }
       const error = new AppError('Something went wrong', identity)
 
-      expect(error.fullMessage).toBe('[general.unknown_server_error.1234] Something went wrong')
+      expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
     })
 
     it('should return message with technicalMessage if cause is present', () => {
@@ -74,8 +74,7 @@ describe('AppError', () => {
       const error = new AppError('Something went wrong', identity, { cause: new Error(technicalMessage) })
 
       expect(error.fullMessage).toBe(
-        `[general.unknown_server_error.1234] Something went wrong
-Debug: ${technicalMessage}`
+        'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
       )
     })
   })

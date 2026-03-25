@@ -61,19 +61,21 @@ export class AppError extends Error {
    * Get the full error message, including technical details if available.
    *
    * @example
-   * `[network.err_no_internet.2100] No internet connection
-   *  Technical: Failed to fetch resource`
+   * `No internet connection
+   * Debug: [network.err_no_internet.2100] Failed to fetch resource`
    *
    * @returns The full error message string.
    */
   get fullMessage(): string {
-    const lines = [`[${this.code}] ${this.message}`]
+    let formattedMessage = this.message
+
+    formattedMessage += `\nDebug: [${this.code}]`
 
     if (this.technicalMessage) {
-      lines.push(`Debug: ${this.technicalMessage}`)
+      formattedMessage += ` ${this.technicalMessage}`
     }
 
-    return lines.join('\n')
+    return formattedMessage
   }
 
   /**
