@@ -52,6 +52,34 @@ describe('AppError', () => {
     })
   })
 
+  describe('fullMessage', () => {
+    it('should return message without technicalMessage', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+
+      expect(error.fullMessage).toBe('[general.unknown_server_error.1234] Something went wrong')
+    })
+
+    it('should return message with technicalMessage if cause is present', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const technicalMessage = 'Technical details about the error'
+      const error = new AppError('Something went wrong', identity, { cause: new Error(technicalMessage) })
+
+      expect(error.fullMessage).toBe(
+        `[general.unknown_server_error.1234] Something went wrong
+Debug: ${technicalMessage}`
+      )
+    })
+  })
+
   describe('track', () => {
     it('should track error event in analytics', () => {
       const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')

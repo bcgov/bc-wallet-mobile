@@ -64,6 +64,9 @@ export interface ErrorDefinition {
  *   2600-2699: Storage errors
  *   2700-2799: Device errors
  *   2800-2899: General/Misc errors
+ *
+ * Special codes:
+ *   9999: Reserved for unknown/unmapped errors
  */
 export const ErrorRegistry = {
   // ============================================
@@ -621,7 +624,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.GENERAL,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.GENERAL,
-    message: 'Unhandled exception caught by top-level error boundary',
+    message: 'An unexpected error occurred',
   },
   DYNAMIC_REGISTRATION_ERROR: {
     statusCode: 2801,

@@ -53,18 +53,27 @@ export class AppError extends Error {
    * @returns The technical message or null if not available.
    */
   get technicalMessage(): string | null {
+    // QUESTION (MD): Max length? Detect HTML string?
     return this.cause instanceof Error ? this.cause.message : null
   }
 
   /**
    * Get the full error message, including technical details if available.
    *
+   * @example
+   * `[network.err_no_internet.2100] No internet connection
+   *  Technical: Failed to fetch resource`
+   *
    * @returns The full error message string.
    */
   get fullMessage(): string {
-    return this.technicalMessage
-      ? `[${this.code}] ${this.message} | Technical: ${this.technicalMessage}`
-      : `[${this.code}] ${this.message}`
+    const lines = [`[${this.code}] ${this.message}`]
+
+    if (this.technicalMessage) {
+      lines.push(`Debug: ${this.technicalMessage}`)
+    }
+
+    return lines.join('\n')
   }
 
   /**
