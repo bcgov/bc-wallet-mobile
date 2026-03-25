@@ -234,6 +234,7 @@ exports[`VerifyInPerson renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/ConfirmationCode"
       >
         undefined-undefined
       </Text>

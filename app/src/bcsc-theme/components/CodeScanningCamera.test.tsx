@@ -92,24 +92,6 @@ jest.mock('../contexts/BCSCActivityContext', () => ({
   })),
 }))
 
-// Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => {
-  return {
-    __esModule: true,
-    default: {
-      addWhitelistedNativeProps: jest.fn(),
-      createAnimatedComponent: (component: any) => component,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      View: require('react-native').View,
-    },
-    useSharedValue: (initial: number) => ({ value: initial }),
-    useAnimatedProps: (factory: () => any) => factory(),
-    interpolate: jest.fn((value: number) => value),
-    Extrapolation: { CLAMP: 'clamp' },
-    runOnJS: (fn: any) => fn,
-  }
-})
-
 // Mock gesture handler
 const mockGestureChain = () => {
   const chain: any = {}
