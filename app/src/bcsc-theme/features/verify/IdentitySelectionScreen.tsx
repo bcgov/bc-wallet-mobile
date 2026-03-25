@@ -1,3 +1,4 @@
+import { useRenewAccount } from '@/bcsc-theme/hooks/useRenewAccount'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
@@ -14,7 +15,6 @@ import { Image, Pressable, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
-import useSetupStepsModel from './_models/useSetupStepsModel'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
 const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
@@ -31,7 +31,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { updateCardProcess } = useSecureActions()
-  const { handleResetCardRegistration } = useSetupStepsModel(navigation)
+  const renewAccount = useRenewAccount()
   const styles = StyleSheet.create({
     checkButtonText: {
       color: ColorPalette.brand.primary,
@@ -47,12 +47,12 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         store.bcscSecure.userCode
       ) {
         // If the user has registered and backs out, reset the card registration process
-        await handleResetCardRegistration()
+        await renewAccount()
       }
     })
 
     return unsubscribe
-  }, [handleResetCardRegistration, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
+  }, [renewAccount, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
 
   /**
    * This fixes an issue where the user has selected Non-BCSC ID,
