@@ -1,7 +1,8 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { a11yLabel } from '@utils/accessibility'
 
 interface CardProps {
@@ -89,7 +90,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
   })
 
   return (
-    <Pressable
+    <PressableOpacity
       accessible={true}
       accessibilityLabel={a11yLabel(props.title)}
       accessibilityRole="button"
@@ -106,6 +107,6 @@ export const CardButton = (props: CardProps): React.ReactElement => {
         </View>
         {props.subtext ? <ThemedText style={styles.cardSubtext}>{props.subtext}</ThemedText> : null}
       </View>
-    </Pressable>
+    </PressableOpacity>
   )
 }
