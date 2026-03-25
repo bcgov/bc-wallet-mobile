@@ -32,11 +32,6 @@ jobs:
             "PROVISIONING_PROFILE_SAQA"
             "PROVISIONING_PROFILE_SATEST"
             "PROVISIONING_PROFILE_SAPROD"
-            "PROVISIONING_PROFILE_UUID"
-            "PROVISIONING_PROFILE_UUID_SADEV"
-            "PROVISIONING_PROFILE_UUID_SAQA"
-            "PROVISIONING_PROFILE_UUID_SATEST"
-            "PROVISIONING_PROFILE_UUID_SAPROD"
             "PLAY_STORE_JKS_BASE64"
             "PLAY_STORE_JKS_ALIAS"
             "PLAY_STORE_JKS_PASSWD"
@@ -77,11 +72,6 @@ jobs:
           PROVISIONING_PROFILE_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
           PROVISIONING_PROFILE_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 }}
           PROVISIONING_PROFILE_SAPROD: ${{ secrets.BUILD_PROVISION_PROFILE_SAPROD_BASE64 }}
-          PROVISIONING_PROFILE_UUID: ${{ secrets.BUILD_PROVISION_PROFILE_UUID }}
-          PROVISIONING_PROFILE_UUID_SADEV: ${{ secrets.BUILD_PROVISION_PROFILE_UUID_SADEV }}
-          PROVISIONING_PROFILE_UUID_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_UUID_SAQA }}
-          PROVISIONING_PROFILE_UUID_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_UUID_SATEST }}
-          PROVISIONING_PROFILE_UUID_SAPROD: ${{ secrets.BUILD_PROVISION_PROFILE_UUID_SAPROD }}
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
@@ -623,8 +613,23 @@ jobs:
           plutil -replace aps-environment -string production app/ios/BCWallet/BCWallet.entitlements
           plutil -p app/ios/BCWallet/BCWallet.entitlements
 
+      - name: Create prod signing credentials
+        uses: ./.github/workflows/actions/create-ios-sig-creds
+        with:
+          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+
       - name: Generate iOS signing config
+        env:
+          PROVISIONING_PROFILE: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
         run: |
+          # Extract the UUID from the provisioning profile
+          PP_UUID=$(/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \
+            "$(echo "${PROVISIONING_PROFILE}" | base64 -d | security cms -D)")
+          echo "Provisioning profile UUID: ${PP_UUID}"
+
           cat > export-options.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -645,33 +650,22 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>${IOS_BUNDLE_ID}</key>
-              <string>${{ secrets[env.IOS_PROVISIONING_PROFILE_UUID_SECRET] }}</string>
+              <string>${PP_UUID}</string>
             </dict>
           </dict>
           </plist>
           EOF
-          cat > release-variant.xcconfig <<'XCEOF'
+          cat > release-variant.xcconfig <<XCEOF
           DEVELOPMENT_TEAM = L796QSLV3E
           CODE_SIGN_STYLE = Manual
           CODE_SIGN_IDENTITY = iPhone Distribution
-          PROVISIONING_PROFILE_SPECIFIER = ${{ secrets[env.IOS_PROVISIONING_PROFILE_UUID_SECRET] }}
-          CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/BCWallet/BCWallet.entitlements
+          PROVISIONING_PROFILE_SPECIFIER = ${PP_UUID}
+          CODE_SIGN_ENTITLEMENTS = \$(PROJECT_DIR)/BCWallet/BCWallet.entitlements
           XCEOF
           echo "Generated export-options.plist:"
           cat export-options.plist
           echo "Generated release-variant.xcconfig:"
           cat release-variant.xcconfig
-
-      - name: Create prod signing credentials
-        # This step will not work in a `fork` because it will not have access
-        # to org and repo secrets.
-        if: github.event.pull_request.head.repo.fork != true
-        uses: ./.github/workflows/actions/create-ios-sig-creds
-        with:
-          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
