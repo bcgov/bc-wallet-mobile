@@ -1,3 +1,4 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
@@ -60,11 +61,11 @@ describe('ServiceLogin', () => {
   })
 
   describe('onContinueWithPairingCode error handling', () => {
-    const useApi = require('@/bcsc-theme/api/hooks/useApi').default as jest.Mock
+    const mockedUseApi = useApi as jest.MockedFunction<typeof useApi>
 
     const renderWithPairingCode = (mockLoginByPairingCode: jest.Mock, mockAlerts: Record<string, jest.Mock>) => {
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
-      useApi.mockReturnValue({
+      mockedUseApi.mockReturnValue({
         pairing: { loginByPairingCode: mockLoginByPairingCode },
         metadata: {},
       })

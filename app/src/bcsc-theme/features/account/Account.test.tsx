@@ -1,4 +1,5 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -23,6 +24,7 @@ jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
 }))
 
 const mockedUseQuickLoginURL = useQuickLoginURL as jest.MockedFunction<typeof useQuickLoginURL>
+const mockedUseDataLoader = useDataLoader as jest.MockedFunction<typeof useDataLoader>
 
 jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
   __esModule: true,
@@ -173,8 +175,6 @@ describe('Account', () => {
       account_expiration_date: new Date('2025-12-31'),
     }
 
-    const useDataLoader = require('@/bcsc-theme/hooks/useDataLoader').default as jest.Mock
-
     beforeEach(() => {
       mockedUseAccount.mockReturnValue({
         account: mockAccount,
@@ -191,7 +191,7 @@ describe('Account', () => {
 
       const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, error: 'No access token' })
       mockedUseQuickLoginURL.mockReturnValue(mockGetQuickLoginURL)
-      useDataLoader.mockReturnValue({
+      mockedUseDataLoader.mockReturnValue({
         data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
         load: jest.fn(),
         isLoading: false,
@@ -215,7 +215,7 @@ describe('Account', () => {
 
       const mockGetQuickLoginURL = jest.fn().mockRejectedValue(new Error('network failure'))
       mockedUseQuickLoginURL.mockReturnValue(mockGetQuickLoginURL)
-      useDataLoader.mockReturnValue({
+      mockedUseDataLoader.mockReturnValue({
         data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
         load: jest.fn(),
         isLoading: false,
