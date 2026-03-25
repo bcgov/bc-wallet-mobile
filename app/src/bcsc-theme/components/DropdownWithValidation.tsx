@@ -5,6 +5,8 @@ import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 export type DropdownOption<T> = {
   label: string
   value: T
@@ -135,6 +137,7 @@ export const DropdownWithValidation = <T extends string | number>({
         style={[styles.optionItem, isSelected && styles.optionItemSelected, isLastItem && { borderBottomWidth: 0 }]}
         onPress={() => handleSelect(item.value)}
         testID={testIdWithKey(`${id}-option-${item.value}`)}
+        accessibilityLabel={a11yLabel(item.label)}
         accessibilityRole="menuitem"
         accessibilityState={{ selected: isSelected }}
       >
@@ -160,7 +163,7 @@ export const DropdownWithValidation = <T extends string | number>({
         testID={testIdWithKey(`${id}-input`)}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: isOpen }}
-        accessibilityLabel={`${label}, ${selectedOption?.label || placeholder}`}
+        accessibilityLabel={a11yLabel(`${label}, ${selectedOption?.label || placeholder}`)}
       >
         <ThemedText
           style={[styles.dropdownText, selectedOption ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder]}
@@ -193,7 +196,7 @@ export const DropdownWithValidation = <T extends string | number>({
         <Pressable
           style={styles.modalOverlay}
           onPress={handleClose}
-          accessibilityLabel={t('BCSC.Components.CloseDropdown')}
+          accessibilityLabel={a11yLabel(t('BCSC.Components.CloseDropdown'))}
           accessibilityRole="button"
           testID={testIdWithKey(`${id}-modal-overlay`)}
         >
@@ -210,7 +213,7 @@ export const DropdownWithValidation = <T extends string | number>({
                   style={styles.closeButton}
                   onPress={handleClose}
                   testID={testIdWithKey(`${id}-close`)}
-                  accessibilityLabel="Close"
+                  accessibilityLabel={a11yLabel(t('Global.Close'))}
                   accessibilityRole="button"
                 >
                   <Icon name="close" size={24} color={ColorPalette.brand.secondary} />

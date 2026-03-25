@@ -155,6 +155,7 @@ const Account: React.FC = () => {
                 ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idToken.bcsc_devices_count })
                 : t('BCSC.Account.AccountInfo.MyDevices')
             }
+            accessibilityLabel={t('BCSC.Account.AccountInfo.MyDevices')}
             testID={testIdWithKey('MyDevices')}
           />
           <SectionButton
@@ -162,11 +163,13 @@ const Account: React.FC = () => {
               navigation.navigate(BCSCScreens.TransferAccountQRInformation)
             }}
             title={t('BCSC.Account.TransferAccount')}
+            accessibilityLabel={t('BCSC.Account.TransferAccountAccessibilityLabel')}
             testID={testIdWithKey('TransferAccount')}
           />
           <SectionButton
             onPress={handleAllAccountDetailsPress}
             title={t('BCSC.Account.AccountDetails')}
+            accessibilityLabel={t('BCSC.Account.AccountDetailsAccessibilityLabel')}
             description={t('BCSC.Account.AccountDetailsDescription')}
             testID={testIdWithKey('AllAccountDetails')}
           />

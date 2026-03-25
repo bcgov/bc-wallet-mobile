@@ -1,4 +1,5 @@
 import { Button, ButtonLocation, ButtonType, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -43,13 +44,15 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
 
   return (
     <SafeAreaView style={styles.container}>
-      <IconButton
-        buttonLocation={ButtonLocation.Left}
-        accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
-        testID={testIdWithKey('CloseReviewDevices')}
-        onPress={() => handleClose({ shouldAnimate: true })}
-        icon={'close'}
-      />
+      <View style={{ alignSelf: 'flex-start' }}>
+        <IconButton
+          buttonLocation={ButtonLocation.Left}
+          accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.CloseButton'))}
+          testID={testIdWithKey('CloseReviewDevices')}
+          onPress={() => handleClose({ shouldAnimate: true })}
+          icon={'close'}
+        />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
 
@@ -70,7 +73,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           buttonType={ButtonType.Primary}
           onPress={handleManageDevices}
           testID={testIdWithKey('ManageDevices')}
-          accessibilityLabel={t('BCSC.SystemChecks.Devices.ManageDevicesButton')}
+          accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.ManageDevicesButton'))}
         />
 
         <Button
@@ -78,7 +81,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           buttonType={ButtonType.Secondary}
           onPress={() => handleClose({ shouldAnimate: true })}
           testID={testIdWithKey('Close')}
-          accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
+          accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.CloseButton'))}
         />
 
         <Button
@@ -86,7 +89,7 @@ export const ReviewDevices = ({ maxDevices, handleClose, handleDelete, onManageD
           buttonType={ButtonType.Secondary}
           onPress={() => handleDelete({ shouldAnimate: true })}
           testID={testIdWithKey('Delete')}
-          accessibilityLabel={t('BCSC.SystemChecks.Devices.DeleteButton')}
+          accessibilityLabel={a11yLabel(t('BCSC.SystemChecks.Devices.DeleteButton'))}
         />
       </View>
     </SafeAreaView>

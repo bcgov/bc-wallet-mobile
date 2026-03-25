@@ -31,7 +31,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
   >
     <View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -211,7 +211,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         </Text>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -365,7 +365,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         </View>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -554,7 +554,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
   >
     <View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -734,7 +734,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         </Text>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -888,7 +888,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         </View>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -1077,7 +1077,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
   >
     <View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -1257,7 +1257,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         </Text>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -1411,7 +1411,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         </View>
       </View>
       <View
-        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle verification method"
+        accessibilityLabel="BCSC.VerificationMethods.InPersonTitle"
         accessibilityRole="button"
         accessibilityState={
           {

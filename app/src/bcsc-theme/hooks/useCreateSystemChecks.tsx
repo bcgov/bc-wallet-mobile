@@ -1,5 +1,5 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
@@ -11,7 +11,7 @@ import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClock
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -80,9 +80,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    // Clear stale server status banners from previous session before fresh check
-    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
-    utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
+    // Server status banners are not cleared on startup so they persist across app restarts
+    // and remain visible for VPN users who bypass the blocking outage modal.
 
     const serverStatus = await configApi.getServerStatus()
 

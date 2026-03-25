@@ -15,6 +15,7 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
@@ -192,7 +193,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
       <View style={styles.pinCheckboxRow}>
         <CheckBoxRow
           title={tWithPrefix('IUnderstand')}
-          accessibilityLabel={tWithPrefix('IUnderstand')}
+          accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
           testID={testIdWithKey('IUnderstand')}
           checked={checked}
           onPress={() => {
@@ -210,7 +211,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
       <Button
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        accessibilityLabel={a11yLabel(t('Global.Continue'))}
         testID={testIdWithKey('Continue')}
         disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
@@ -230,6 +231,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
             testIDKey="PINInput1"
+            accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
           />
         </View>
         <View style={styles.pinFormRow}>
@@ -240,6 +242,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
             testIDKey="PINInput2"
+            accessibilityLabel={a11yLabel(tWithPrefix('ConfirmPIN'))}
           />
         </View>
         <View style={styles.pinReminder}>
