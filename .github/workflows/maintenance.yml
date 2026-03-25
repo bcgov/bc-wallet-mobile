@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
+      pull-requests: read
     name: SauceLabs Storage
     steps:
       - uses: actions/checkout@v6
@@ -60,4 +61,6 @@ jobs:
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: node scripts/saucelabs-prune-builds.mjs --delete
