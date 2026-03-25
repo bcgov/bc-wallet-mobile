@@ -78,7 +78,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           {filteredBannerMessages.length > 0 && (
             <View style={{ marginTop: Spacing.lg }}>
               <CardButton
-                title={'Renew'}
+                title={t('BCSC.AccountRenewal.WarningRenewButton')}
                 onPress={() => navigation.getParent()?.navigate(BCSCScreens.AccountRenewalInformation)}
               />
             </View>
