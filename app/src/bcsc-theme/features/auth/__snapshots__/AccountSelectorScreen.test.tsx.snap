@@ -145,14 +145,17 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
           onStartShouldSetResponder={[Function]}
           style={
             [
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "padding": 16,
-              },
-              undefined,
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ],
+              false,
             ]
           }
           testID="com.ariesbifold:id/CardButton-John"
@@ -230,14 +233,17 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
           onStartShouldSetResponder={[Function]}
           style={
             [
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "padding": 16,
-              },
-              undefined,
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ],
+              false,
             ]
           }
           testID="com.ariesbifold:id/CardButton-Jane"

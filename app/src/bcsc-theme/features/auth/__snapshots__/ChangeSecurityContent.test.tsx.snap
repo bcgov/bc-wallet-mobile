@@ -206,16 +206,19 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
-                {
-                  "opacity": 0.6,
-                },
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  {
+                    "opacity": 0.6,
+                  },
+                ],
+                false,
               ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
@@ -312,13 +315,16 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  false,
+                ],
                 false,
               ]
             }
@@ -416,14 +422,17 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
-                undefined,
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  undefined,
+                ],
+                false,
               ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
@@ -862,13 +871,16 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  false,
+                ],
                 false,
               ]
             }
@@ -966,16 +978,19 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
-                {
-                  "opacity": 0.6,
-                },
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  {
+                    "opacity": 0.6,
+                  },
+                ],
+                false,
               ]
             }
             testID="com.ariesbifold:id/ChoosePINButton"
@@ -1072,14 +1087,17 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onStartShouldSetResponder={[Function]}
             style={
               [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
-                undefined,
+                [
+                  {
+                    "backgroundColor": "#FFFFFF",
+                    "borderColor": "#D9EAF7",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "padding": 16,
+                  },
+                  undefined,
+                ],
+                false,
               ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
