@@ -1,5 +1,6 @@
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -1377,23 +1378,43 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         <View style={styles.lockedButtonsContainer}>
           {enableScanZones ? (
             <>
-              <Pressable style={styles.saveButton} onPress={handleSaveScanZones} testID="save-scan-zones-button">
+              <Pressable
+                style={styles.saveButton}
+                onPress={handleSaveScanZones}
+                testID="save-scan-zones-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.SaveScanZones'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.saveButtonText}>{'\uD83D\uDCD0'} Save Scan Zones</Text>
               </Pressable>
               <Pressable
                 style={styles.continueButton}
                 onPress={handleContinueScanning}
                 testID="continue-scanning-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.ContinueScanning'))}
+                accessibilityRole="button"
               >
                 <Text style={styles.continueButtonText}>{'\u25B6'} Continue Scanning</Text>
               </Pressable>
             </>
           ) : (
             <>
-              <Pressable style={styles.confirmButton} onPress={confirmScan} testID="confirm-scan-button">
+              <Pressable
+                style={styles.confirmButton}
+                onPress={confirmScan}
+                testID="confirm-scan-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.Confirm'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.confirmButtonText}>{'\u2714'} Confirm</Text>
               </Pressable>
-              <Pressable style={styles.continueButton} onPress={handleContinueScanning} testID="try-again-button">
+              <Pressable
+                style={styles.continueButton}
+                onPress={handleContinueScanning}
+                testID="try-again-button"
+                accessibilityLabel={a11yLabel(t('BCSC.Scan.TryAgain'))}
+                accessibilityRole="button"
+              >
                 <Text style={styles.continueButtonText}>{'\uD83D\uDD04'} Try Again</Text>
               </Pressable>
             </>

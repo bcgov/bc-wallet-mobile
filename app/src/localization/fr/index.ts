@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (FR)",
     "ShowDetails": "Afficher les détails",
     "Dismiss": "Fermer",
+    "GetHelp": "Get help (FR)",
+    "ContinueSetup": "Continue setup (FR)",
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",
@@ -208,6 +210,7 @@ const translation = {
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
+      "CreatePINShort": "Create PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
       "RememberPIN": "Remember your PIN (FR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",
@@ -350,8 +353,10 @@ const translation = {
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
+      "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from a computer (FR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (FR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
       "ViewMessages": "View new messages (FR)",
     },
@@ -578,6 +583,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (FR)",
       "ErrorDetails": "Error details (FR)",
       "Dismiss": "Dismiss (FR)",
+      "SaveScanZones": "Save Scan Zones (FR)",
+      "ContinueScanning": "Continue Scanning (FR)",
+      "Confirm": "Confirm (FR)",
+      "TryAgain": "Try Again (FR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",
@@ -856,6 +865,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
       "TakePhoto": "Take Photo of Face (FR)",
+      "TakePhotoAccessibilityLabel": "Take photo (FR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (FR)",
@@ -1052,7 +1062,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
       "RemoveAccountLoading": "Removing account... (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
+      "TransferAccountAccessibilityLabel": "Transfer (FR)",
       "AccountDetails": "All account details (FR)",
+      "AccountDetailsAccessibilityLabel": "Details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (FR)",

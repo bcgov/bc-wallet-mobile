@@ -15,6 +15,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -119,6 +120,9 @@ const ServiceLoginUnavailableView = ({
 
         <TouchableOpacity
           testID={testIdWithKey('GoToServiceClient')}
+          accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
+          accessibilityRole="link"
+          hitSlop={hitSlop}
           onPress={async () => {
             if (!state.serviceClientUri) {
               logger.error('ServiceLoginScreen: No service client URI available for navigation')
@@ -192,7 +196,7 @@ const ServiceLoginDefaultView = ({
               </ThemedText>
               <TouchableOpacity
                 testID={testIdWithKey('HelpButton')}
-                accessibilityLabel={t('BCSC.Screens.HelpCentre')}
+                accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
                 accessibilityRole="button"
                 hitSlop={hitSlop}
                 onPress={onOpenInfoShared}
@@ -204,7 +208,13 @@ const ServiceLoginDefaultView = ({
           </View>
 
           {state.privacyPolicyUri ? (
-            <TouchableOpacity testID={testIdWithKey('ReadPrivacyPolicy')} onPress={onOpenPrivacyPolicy}>
+            <TouchableOpacity
+              testID={testIdWithKey('ReadPrivacyPolicy')}
+              accessibilityLabel={a11yLabel(t('BCSC.Services.PrivacyNotice'))}
+              accessibilityRole="link"
+              hitSlop={hitSlop}
+              onPress={onOpenPrivacyPolicy}
+            >
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
                 <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
                 <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
@@ -217,7 +227,7 @@ const ServiceLoginDefaultView = ({
         <View style={styles.continueButtonContainer}>
           <Button
             title="Continue"
-            accessibilityLabel={'Continue'}
+            accessibilityLabel={a11yLabel('Continue')}
             testID={testIdWithKey('ServiceLoginContinue')}
             buttonType={ButtonType.Primary}
             onPress={onContinue}
@@ -225,7 +235,7 @@ const ServiceLoginDefaultView = ({
         </View>
         <Button
           title="Cancel"
-          accessibilityLabel={'Cancel'}
+          accessibilityLabel={a11yLabel('Cancel')}
           testID={testIdWithKey('ServiceLoginCancel')}
           buttonType={ButtonType.Secondary}
           onPress={onCancel}

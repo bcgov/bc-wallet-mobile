@@ -86,7 +86,7 @@ exports[`Home renders full name in header when both names are present 1`] = `
           }
         >
           <View
-            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityLabel="BCSC.Home.WhereToUseAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -167,7 +167,7 @@ exports[`Home renders full name in header when both names are present 1`] = `
             </Text>
           </View>
           <View
-            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityLabel="BCSC.Home.LogInFromComputerAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -420,7 +420,7 @@ exports[`Home renders only family_name in header when given_name is empty string
           }
         >
           <View
-            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityLabel="BCSC.Home.WhereToUseAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -501,7 +501,7 @@ exports[`Home renders only family_name in header when given_name is empty string
             </Text>
           </View>
           <View
-            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityLabel="BCSC.Home.LogInFromComputerAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -754,7 +754,7 @@ exports[`Home renders only family_name in header when given_name is undefined (m
           }
         >
           <View
-            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityLabel="BCSC.Home.WhereToUseAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -835,7 +835,7 @@ exports[`Home renders only family_name in header when given_name is undefined (m
             </Text>
           </View>
           <View
-            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityLabel="BCSC.Home.LogInFromComputerAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -1088,7 +1088,7 @@ exports[`Home renders only given_name in header when family_name is undefined 1`
           }
         >
           <View
-            accessibilityLabel="BCSC.Home.WhereToUseTitle"
+            accessibilityLabel="BCSC.Home.WhereToUseAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -1169,7 +1169,7 @@ exports[`Home renders only given_name in header when family_name is undefined 1`
             </Text>
           </View>
           <View
-            accessibilityLabel="BCSC.Home.LogInFromComputerTitle"
+            accessibilityLabel="BCSC.Home.LogInFromComputerAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
               {

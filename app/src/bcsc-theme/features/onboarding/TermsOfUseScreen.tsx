@@ -14,6 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -79,7 +80,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
           buttonType={ButtonType.Primary}
           onPress={fetchTermsOfUse}
           testID={testIdWithKey('RetryTermsOfUse')}
-          accessibilityLabel={t('Init.Retry')}
+          accessibilityLabel={a11yLabel(t('Init.Retry'))}
           disabled={isLoading}
         />
       ) : (
@@ -97,7 +98,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
             navigation.navigate(BCSCScreens.OnboardingNotifications)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
+          accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
           disabled={!webViewIsLoaded || isLoading}
         />
       )}
