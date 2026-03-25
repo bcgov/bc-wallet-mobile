@@ -262,7 +262,7 @@ const useBCAgentSetup = () => {
       }
 
       const daysSinceLastSeen = moment().diff(moment(lastSeen), 'days')
-      const mediationExpiredThresholdDays = parseInt(
+      const mediationExpiredThresholdDays = Number.parseInt(
         Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
       )
       if (daysSinceLastSeen < mediationExpiredThresholdDays) {
@@ -391,7 +391,9 @@ const useBCAgentSetup = () => {
       refreshAttestationMonitor(newAgent)
 
       logger.info('Tag mediation connection with last seen time')
-      void updateLastSeen(newAgent)
+      updateLastSeen(newAgent).catch((e) =>
+        logger.error(`Failed to update last seen tag on mediation connection: ${e}`)
+      )
 
       logger.info('Setting new agent...')
       agentInstanceRef.current = newAgent
