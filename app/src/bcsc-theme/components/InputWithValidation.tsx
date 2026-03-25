@@ -100,7 +100,6 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           inputRef.current?.focus()
         }}
         hitSlop={hitSlop}
-        testID={testIdWithKey(`${props.id}-pressable`)}
         accessible={false}
       >
         <TextInput
