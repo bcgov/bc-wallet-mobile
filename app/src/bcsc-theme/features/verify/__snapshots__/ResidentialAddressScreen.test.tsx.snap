@@ -174,7 +174,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/streetAddress1-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.StreetAddressLabel"
@@ -330,7 +329,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/streetAddress2-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.StreetAddress2Label"
@@ -486,7 +484,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/city-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.CityLabel"
@@ -784,7 +781,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
-              testID="com.ariesbifold:id/postalCode-pressable"
             >
               <TextInput
                 accessibilityLabel="BCSC.Address.PostalCodeLabel"

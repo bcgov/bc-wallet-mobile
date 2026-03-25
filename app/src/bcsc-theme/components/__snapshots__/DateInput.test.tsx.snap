@@ -85,7 +85,6 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
         undefined,
       ]
     }
-    testID="com.ariesbifold:id/birthdate-pressable"
   >
     <TextInput
       accessibilityLabel="Date of Birth"

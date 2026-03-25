@@ -203,7 +203,6 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                     undefined,
                   ]
                 }
-                testID="com.ariesbifold:id/documentNumber-pressable"
               >
                 <TextInput
                   accessibilityLabel="Passport Number"
