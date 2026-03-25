@@ -3,6 +3,8 @@ import React, { PropsWithChildren } from 'react'
 import { GestureResponderEvent, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface SetupStepProps {
   title: string
   subtext: string[]
@@ -45,9 +47,12 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
 
   return (
     <TouchableOpacity
+      accessible={true}
       onPress={props.onPress}
       testID={testIdWithKey(props.title)}
-      accessibilityLabel={props.title}
+      accessibilityLabel={a11yLabel(props.title)}
+      accessibilityHint={props.subtext.join(', ')}
+      accessibilityRole="button"
       disabled={props.isDisabled}
       style={{
         paddingVertical: 24,
@@ -55,34 +60,35 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
         backgroundColor: backgroundColor,
       }}
     >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
-        <ThemedText
-          variant={'headingFour'}
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden={true}>
+        <View
           style={{
-            marginRight: 16,
-            color: textColor,
+            flexDirection: 'row',
+            alignItems: 'center',
           }}
-          accessibilityLabel={props.title}
         >
-          {props.title}
-        </ThemedText>
-
-        {props.isComplete ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
-      </View>
-
-      <View style={{ marginTop: 8 }}>
-        {props.subtext.map((subtext, id) => (
-          <ThemedText key={`${subtext}-${id}`} style={{ color: textColor }}>
-            {subtext}
+          <ThemedText
+            variant={'headingFour'}
+            style={{
+              marginRight: 16,
+              color: textColor,
+            }}
+          >
+            {props.title}
           </ThemedText>
-        ))}
 
-        {props.children}
+          {props.isComplete ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+        </View>
+
+        <View style={{ marginTop: 8 }}>
+          {props.subtext.map((subtext, id) => (
+            <ThemedText key={`${subtext}-${id}`} style={{ color: textColor }}>
+              {subtext}
+            </ThemedText>
+          ))}
+
+          {props.children}
+        </View>
       </View>
     </TouchableOpacity>
   )

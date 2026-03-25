@@ -100,6 +100,7 @@ exports[`TransferInformation renders correctly 1`] = `
     }
   >
     <View
+      accessibilityLabel="BCSC.TransferInformation.TransferAccount"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -136,6 +137,7 @@ exports[`TransferInformation renders correctly 1`] = `
           "padding": 16,
         }
       }
+      testID="com.ariesbifold:id/TransferAccountButton"
     >
       <View
         style={

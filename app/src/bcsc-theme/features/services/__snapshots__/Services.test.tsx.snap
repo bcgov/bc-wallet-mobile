@@ -255,7 +255,7 @@ exports[`Services renders service list when loading is complete 1`] = `
         }
       >
         <View
-          accessibilityLabel="Test Service"
+          accessibilityLabel="Test Service"
           accessibilityRole="button"
           accessibilityState={
             {

@@ -194,8 +194,10 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             }
             accessible={true}
             collapsable={false}
-            focusable={false}
+            focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -203,14 +205,18 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 0.6,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                {
+                  "opacity": 0.6,
+                },
+              ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -295,7 +301,9 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -303,14 +311,16 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                false,
+              ]
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -395,7 +405,9 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -403,14 +415,16 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >
@@ -837,7 +851,9 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -845,14 +861,16 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                false,
+              ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -936,8 +954,10 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             }
             accessible={true}
             collapsable={false}
-            focusable={false}
+            focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -945,14 +965,18 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 0.6,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                {
+                  "opacity": 0.6,
+                },
+              ]
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -1037,7 +1061,9 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -1045,14 +1071,16 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >

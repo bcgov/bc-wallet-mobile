@@ -48,7 +48,7 @@ const mockDeleteVerificationData = jest.fn().mockResolvedValue(undefined)
 const mockDeleteRegistration = jest.fn().mockResolvedValue({ success: true })
 const mockCreateRegistration = jest.fn().mockResolvedValue({})
 
-describe('useRenewalReset', () => {
+describe('useVerificationReset', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 

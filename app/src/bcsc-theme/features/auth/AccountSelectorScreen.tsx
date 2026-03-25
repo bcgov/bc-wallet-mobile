@@ -1,10 +1,12 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
+import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -49,19 +51,22 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
     <Button
       buttonType={ButtonType.Primary}
       testID={testIdWithKey('ContinueSetup')}
-      title={'Continue setting up account'}
-      accessibilityLabel={'Continue setting up account'}
+      title={t('Global.ContinueSetup')}
+      accessibilityLabel={a11yLabel(t('Global.ContinueSetup'))}
       onPress={authentication.unlockApp}
     />
   )
 
   return (
-    <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
-      <GenericCardImage />
-      <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-        {t('BCSC.AccountSetup.Title')}
-      </ThemedText>
-    </ScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={() => {}} />
+      <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
+        <GenericCardImage />
+        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+          {t('BCSC.AccountSetup.Title')}
+        </ThemedText>
+      </ScreenWrapper>
+    </>
   )
 }
 
