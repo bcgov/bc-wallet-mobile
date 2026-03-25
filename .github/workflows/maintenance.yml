@@ -1,4 +1,4 @@
-name: Backlog Maintenance
+name: Maintenance
 
 on:
   workflow_dispatch:
@@ -43,3 +43,24 @@ jobs:
             This pull request has been automatically closed due
             to inactivity. If it's still relevant, please
             feel free to reopen it.
+
+  prune-saucelabs:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      pull-requests: read
+    name: SauceLabs Storage
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Prune old PR builds from SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/saucelabs-prune-builds.mjs --delete
