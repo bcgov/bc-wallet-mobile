@@ -32,31 +32,6 @@ jest.mock('../../contexts/BCSCActivityContext', () => ({
   })),
 }))
 
-// Mock react-native-reanimated (must include Easing etc. — @bifold/core → gifted-chat loads at import)
-jest.mock('react-native-reanimated', () => {
-  const Easing = {
-    linear: (t: number) => t,
-    bezier: () => (t: number) => t,
-  }
-  return {
-    __esModule: true,
-    default: {
-      addWhitelistedNativeProps: jest.fn(),
-      createAnimatedComponent: (component: any) => component,
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      View: require('react-native').View,
-    },
-    Easing,
-    useSharedValue: (initial: number) => ({ value: initial }),
-    useAnimatedStyle: (factory: () => any) => factory(),
-    useAnimatedProps: (factory: () => any) => factory(),
-    withTiming: (toValue: unknown) => toValue,
-    interpolate: jest.fn((value: number) => value),
-    Extrapolation: { CLAMP: 'clamp' },
-    runOnJS: (fn: any) => fn,
-  }
-})
-
 // Mock gesture handler
 const mockGestureChain = () => {
   const chain: any = {}

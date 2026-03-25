@@ -113,7 +113,6 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
       <ThemedText
         testID={testIdWithKey('ConfirmationCode')}
-        accessibilityLabel={`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
         variant={'headingTwo'}
         style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}
       >

@@ -25,7 +25,6 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
     Date of Birth
   </Text>
   <View
-    accessibilityLabel="Date of Birth"
     accessibilityState={
       {
         "busy": undefined,
