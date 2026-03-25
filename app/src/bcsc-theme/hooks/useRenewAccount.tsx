@@ -8,7 +8,7 @@ import { withAccount } from '../api/hooks/withAccountGuard'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useSecureActions } from './useSecureActions'
 
-export const useRenewalReset = () => {
+export const useRenewAccount = () => {
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteVerificationData } = useSecureActions()
@@ -19,8 +19,7 @@ export const useRenewalReset = () => {
   const renewAccount = useCallback(async () => {
     try {
       await withAccount(async (account) => {
-        logger.info(`[useRenewalReset] Starting renewal reset. Old clientID: ${account.clientID}`)
-
+        logger.info(`[useRenewalReset] Starting renewal reset for account with clientID: ${account.clientID}`)
         // Clear/reset store values
         clearSecureState({
           isHydrated: true,
@@ -44,18 +43,19 @@ export const useRenewalReset = () => {
           `[useRenewalReset] IAS registration deleted (success=${deleteResult.success}), securityMethod=${securityMethod}`
         )
 
-        // Delete verification data from native storage (credential, auth request, account flags, additional evidence)
+        // Delete verification data from native storage (credential, auth request, account flags, additional evidence, tokens)
+        await deleteVerificationData()
         await Promise.all([
-          deleteVerificationData(),
-          deleteToken(TokenType.Refresh),
           deleteToken(TokenType.Access),
+          deleteToken(TokenType.Refresh),
           deleteToken(TokenType.Registration),
         ])
         logger.info('[useRenewalReset] Verification data and refresh token deleted from native storage')
 
         // Register device again with original security method
         logger.info('[useRenewalReset] Creating new IAS registration...')
-        await registrationService.createRegistration(securityMethod)
+        const temp = await registrationService.createRegistration(securityMethod)
+        temp.client_id && logger.info(`[useRenewalReset] New registration created with client_id: ${temp.client_id}`)
         logger.info('[useRenewalReset] New IAS registration created. Renewal reset complete.')
       })
     } catch (error) {
