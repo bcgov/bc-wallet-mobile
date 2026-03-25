@@ -333,7 +333,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 "text": undefined,
               }
             }
-            accessible={true}
+            accessible={false}
             collapsable={false}
             focusable={false}
             onClick={[Function]}

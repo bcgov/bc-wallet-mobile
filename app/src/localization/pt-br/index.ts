@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (PT-BR)",
     "ShowDetails": "Mostrar detalhes",
     "Dismiss": "Dispensar",
+    "GetHelp": "Get help (PT-BR)",
+    "ContinueSetup": "Continue setup (PT-BR)",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
@@ -208,6 +210,7 @@ const translation = {
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (PT-BR)",
+      "CreatePINShort": "Create PIN (PT-BR)",
       "ConfirmPIN": "Confirm PIN (PT-BR)",
       "RememberPIN": "Remember your PIN (PT-BR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (PT-BR)",
@@ -305,7 +308,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (PT-BR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-      "Goto": "Go to (PT-BR)",
+      "Goto": "On that device, go to: (PT-BR)",
       "GotoService": "Go to {{- service}} (PT-BR)",
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
@@ -345,12 +348,15 @@ const translation = {
       "ServiceOutage": {
         "Header": "Service unavailable (PT-BR)",
         "CheckAgainButton": "Check again (PT-BR)",
+        "LearnMore": "Learn more (PT-BR)",
       },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
+      "WhereToUseAccessibilityLabel": "Find services (PT-BR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
       "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (PT-BR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
@@ -577,6 +583,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (PT-BR)",
       "ErrorDetails": "Error details (PT-BR)",
       "Dismiss": "Dismiss (PT-BR)",
+      "SaveScanZones": "Save Scan Zones (PT-BR)",
+      "ContinueScanning": "Continue Scanning (PT-BR)",
+      "Confirm": "Confirm (PT-BR)",
+      "TryAgain": "Try Again (PT-BR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (PT-BR)",
@@ -855,6 +865,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
       "TakePhoto": "Take Photo of Face (PT-BR)",
+      "TakePhotoAccessibilityLabel": "Take photo (PT-BR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (PT-BR)",
@@ -1051,7 +1062,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
       "RemoveAccountLoading": "Removing account... (PT-BR)",
       "TransferAccount": "Transfer account to another device (PT-BR)",
+      "TransferAccountAccessibilityLabel": "Transfer (PT-BR)",
       "AccountDetails": "All account details (PT-BR)",
+      "AccountDetailsAccessibilityLabel": "Details (PT-BR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (PT-BR)",

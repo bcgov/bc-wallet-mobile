@@ -360,7 +360,7 @@ describe('DropdownWithValidation Component', () => {
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
-      expect(dropdownButton.props.accessibilityLabel).toBe('Province, Select province')
+      expect(dropdownButton.props.accessibilityLabel).toBe('Province,\u00A0Select\u00A0province')
     })
 
     test('dropdown button shows selected value in accessibility label', () => {
@@ -371,7 +371,7 @@ describe('DropdownWithValidation Component', () => {
       )
 
       const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
-      expect(dropdownButton.props.accessibilityLabel).toBe('Province, Option 2')
+      expect(dropdownButton.props.accessibilityLabel).toBe('Province,\u00A0Option\u00A02')
     })
 
     test('option items have correct accessibility role', async () => {
@@ -405,7 +405,7 @@ describe('DropdownWithValidation Component', () => {
       await waitFor(() => {
         const closeButton = getByTestId('com.ariesbifold:id/test-dropdown-close')
         expect(closeButton.props.accessibilityRole).toBe('button')
-        expect(closeButton.props.accessibilityLabel).toBe('Close')
+        expect(closeButton.props.accessibilityLabel).toBe('Global.Close')
       })
     })
 

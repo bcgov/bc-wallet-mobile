@@ -194,8 +194,10 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             }
             accessible={true}
             collapsable={false}
-            focusable={false}
+            focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -203,14 +205,18 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 0.6,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                {
+                  "opacity": 0.6,
+                },
+              ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -295,7 +301,9 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -303,14 +311,16 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                false,
+              ]
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -395,7 +405,9 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -403,14 +415,16 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >
@@ -1171,7 +1185,9 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -1179,14 +1195,16 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                false,
+              ]
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -1271,7 +1289,9 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -1279,14 +1299,16 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                false,
+              ]
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -1371,7 +1393,9 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             accessible={true}
             collapsable={false}
             focusable={true}
+            onBlur={[Function]}
             onClick={[Function]}
+            onFocus={[Function]}
             onResponderGrant={[Function]}
             onResponderMove={[Function]}
             onResponderRelease={[Function]}
@@ -1379,14 +1403,16 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
-                "borderRadius": 4,
-                "borderWidth": 1,
-                "opacity": 1,
-                "padding": 16,
-              }
+              [
+                {
+                  "backgroundColor": "#FFFFFF",
+                  "borderColor": "#D9EAF7",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "padding": 16,
+                },
+                undefined,
+              ]
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >
