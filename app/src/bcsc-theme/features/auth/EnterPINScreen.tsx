@@ -15,6 +15,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'
@@ -121,8 +122,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
-        title={'Get Help'}
-        accessibilityLabel={'Get Help'}
+        title={t('Global.GetHelp')}
+        accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />

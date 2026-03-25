@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close",
     "ShowDetails": "Show Details",
     "Dismiss": "Dismiss",
+    "GetHelp": "Get help",
+    "ContinueSetup": "Continue setup",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
@@ -208,6 +210,7 @@ const translation = {
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN",
+      "CreatePINShort": "Create PIN",
       "ConfirmPIN": "Confirm PIN",
       "RememberPIN": "Remember your PIN",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
@@ -350,8 +353,10 @@ const translation = {
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
+      "WhereToUseAccessibilityLabel": "Find services",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
       "LogInFromComputerTitle": "Log in from a computer",
+      "LogInFromComputerAccessibilityLabel": "Computer login",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
       "ViewMessages": "View new messages",
     },
@@ -578,6 +583,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically",
       "ErrorDetails": "Error details",
       "Dismiss": "Dismiss",
+      "SaveScanZones": "Save Scan Zones",
+      "ContinueScanning": "Continue Scanning",
+      "Confirm": "Confirm",
+      "TryAgain": "Try Again",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number",
@@ -590,7 +599,7 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
-      "Label": "Enter Birthdate",
+      "Label": "Birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
       "ExampleDate": "The birthdate format is: YYYY/MM/DD",
     },
@@ -858,6 +867,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
       "TakePhoto": "Take Photo of Face",
+      "TakePhotoAccessibilityLabel": "Take photo",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required",
@@ -1054,7 +1064,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
       "RemoveAccountLoading": "Removing account...",
       "TransferAccount": "Transfer account to another device",
+      "TransferAccountAccessibilityLabel": "Transfer",
       "AccountDetails": "All account details",
+      "AccountDetailsAccessibilityLabel": "Details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
       "AccountInfo": {
         "ManageDevices": "Manage Devices",

@@ -1,14 +1,19 @@
 import { PIN_LENGTH } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+import { a11yLabel } from '@utils/accessibility'
 
 interface PINInputProps {
   onPINChange?: (pin: string) => void
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
+  /** Accessibility label for the PIN input field */
+  accessibilityLabel?: string
   /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
   testIDKey?: string
   ref?: React.Ref<TextInput>
@@ -21,7 +26,9 @@ export const PINInput = ({
   autoFocus = false,
   testIDKey,
   ref,
+  accessibilityLabel,
 }: PINInputProps) => {
+  const { t } = useTranslation()
   const [pin, setPin] = useState('')
   const { ColorPalette, Spacing, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
@@ -86,14 +93,15 @@ export const PINInput = ({
           maxFontSizeMultiplier={1}
           cursorColor={ColorPalette.grayscale.darkGrey}
           textContentType={'password'}
-          accessibilityLabel={pin.split('').join(' ')}
+          accessibilityLabel={a11yLabel(accessibilityLabel ?? pin.split('').join(' '))}
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity
           style={styles.visibilityButton}
           onPress={toggleVisibility}
           testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
-          accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
+          accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
+          accessibilityRole="button"
         >
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
         </TouchableOpacity>

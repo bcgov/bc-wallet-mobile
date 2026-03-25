@@ -8,6 +8,7 @@ import { BCState, Mode } from '@/store'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native'
@@ -132,7 +133,7 @@ const Services: React.FC = () => {
                 })
               }
             }}
-            accessibilityLabel={t('BCSC.Services.CatalogueSearch')}
+            accessibilityLabel={a11yLabel(t('BCSC.Services.CatalogueSearch'))}
             testID={testIdWithKey('search')}
             style={styles.searchText}
           />
@@ -145,7 +146,7 @@ const Services: React.FC = () => {
                 Keyboard.dismiss()
                 setSearch('')
               }}
-              accessibilityLabel={'clearSearch'}
+              accessibilityLabel={a11yLabel(t('Global.Close'))}
               testID={testIdWithKey('clearSearch')}
             />
           ) : null}
