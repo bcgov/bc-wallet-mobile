@@ -614,6 +614,9 @@ jobs:
           plutil -p app/ios/BCWallet/BCWallet.entitlements
 
       - name: Create prod signing credentials
+        # This step will not work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
@@ -622,6 +625,9 @@ jobs:
           provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
 
       - name: Generate iOS signing config
+        # This step will not work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
         env:
           PROVISIONING_PROFILE: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
         run: |
