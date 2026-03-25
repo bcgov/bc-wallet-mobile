@@ -850,7 +850,7 @@ class BcscCoreModule(
                     promise.reject("E_STORAGE_ERROR", "Failed to save issuer to file")
                     return
                 }
-                
+
                 Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
                 promise.resolve(null)
             } catch (e: Exception) {

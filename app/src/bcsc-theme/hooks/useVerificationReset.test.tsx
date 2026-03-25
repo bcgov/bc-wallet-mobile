@@ -121,7 +121,7 @@ describe('useVerificationReset', () => {
     expect(mockCreateRegistration).not.toHaveBeenCalled()
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '[useRenewalReset] Error during account renewal reset',
+      '[useVerificationReset] Error during account renewal reset',
       expect.any(Error)
     )
   })
@@ -141,7 +141,7 @@ describe('useVerificationReset', () => {
     expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).toHaveBeenCalledWith(
-      '[useRenewalReset] Error during account renewal reset',
+      '[useVerificationReset] Error during account renewal reset',
       expect.any(Error)
     )
   })
