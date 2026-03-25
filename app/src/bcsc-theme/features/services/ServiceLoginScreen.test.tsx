@@ -68,7 +68,7 @@ describe('ServiceLogin', () => {
       mockedUseApi.mockReturnValue({
         pairing: { loginByPairingCode: mockLoginByPairingCode },
         metadata: {},
-      })
+      } as any)
 
       const route = {
         params: {

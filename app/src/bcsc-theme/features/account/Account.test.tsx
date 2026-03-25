@@ -195,7 +195,7 @@ describe('Account', () => {
         data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
         load: jest.fn(),
         isLoading: false,
-      })
+      } as any)
 
       const tree = render(
         <BasicAppContext>
@@ -219,7 +219,7 @@ describe('Account', () => {
         data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
         load: jest.fn(),
         isLoading: false,
-      })
+      } as any)
 
       const tree = render(
         <BasicAppContext>
