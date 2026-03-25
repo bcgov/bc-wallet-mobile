@@ -20,7 +20,7 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  */
 export const isAccountExpired = (accountExpiration: Date | string, warningPeriod = 0): boolean => {
   const format = typeof accountExpiration === 'string' ? 'MMMM D, YYYY' : undefined
-  return moment(accountExpiration, format).diff(moment(), 'days') < warningPeriod
+  return moment(accountExpiration, format).diff(moment(), 'days') <= warningPeriod
 }
 
 /**
