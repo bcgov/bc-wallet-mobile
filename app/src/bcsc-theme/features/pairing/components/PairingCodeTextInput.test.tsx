@@ -292,7 +292,7 @@ describe('PairingCodeTextInput Component', () => {
       const input = getByTestId('pairing-code-input')
       expect(input.props.placeholder).toBe('Enter code')
       expect(input.props.editable).toBe(false)
-      expect(input.props.accessibilityLabel).toBe('Pairing code input')
+      expect(input.props.accessibilityLabel).toBe('Pairing\u00A0code\u00A0input')
     })
   })
 
