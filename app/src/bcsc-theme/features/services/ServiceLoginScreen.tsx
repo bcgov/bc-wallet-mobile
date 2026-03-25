@@ -21,6 +21,8 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { isHandledAppError } from '@/errors/appError'
+import { useAlerts } from '@/hooks/useAlerts'
 import { usePairingService } from '../pairing'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
@@ -266,6 +268,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const alerts = useAlerts(navigation)
   const pairingService = usePairingService()
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
   const { pairing, metadata } = useApi()
@@ -346,14 +349,16 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       })
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
-      Alert.alert(t('BCSC.Services.LoginErrorTitle'), (error as Error).message)
+      if (!isHandledAppError(error)) {
+        alerts.loginServerErrorAlert()
+      }
     }
-  }, [state.pairingCode, pairing, navigation, logger, t, fromAppSwitch])
+  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch])
 
   const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
-      Alert.alert(t('BCSC.Services.LoginErrorTitle'), t('BCSC.Services.LoginErrorMessage'))
+      alerts.loginServerErrorAlert()
       return
     }
 
@@ -379,9 +384,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
     if ('error' in result) {
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
-      Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
+      alerts.loginServerErrorAlert()
     }
-  }, [getQuickLoginURL, logger, state.service, navigation, t])
+  }, [getQuickLoginURL, logger, state.service, navigation, alerts, t])
 
   const onContinue = useCallback(async () => {
     if (state.pairingCode) {
@@ -390,9 +395,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       await onContinueWithQuickLoginUrl()
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
-      Alert.alert(t('BCSC.Services.LoginErrorTitle'), t('BCSC.Services.LoginErrorMessage'))
+      alerts.loginServerErrorAlert()
     }
-  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
+  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, alerts])
 
   const onOpenInfoShared = useCallback(() => {
     try {

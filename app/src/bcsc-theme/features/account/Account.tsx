@@ -9,6 +9,7 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { useAlerts } from '@/hooks/useAlerts'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -32,6 +33,7 @@ const Account: React.FC = () => {
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const alerts = useAlerts(navigation)
   const getQuickLoginURL = useQuickLoginURL()
   const { account, refreshAccount } = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
@@ -82,7 +84,6 @@ const Account: React.FC = () => {
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
       if (!bcscServiceClient) {
-        // only generate quick login url if we have the bcsc service client metadata
         return
       }
 
@@ -91,11 +92,15 @@ const Account: React.FC = () => {
       if (quickLoginResult.success) {
         await Linking.openURL(quickLoginResult.url)
         openedWebview.current = true
+      } else if ('error' in quickLoginResult) {
+        logger.debug(`Account: Error generating quick login URL: ${quickLoginResult.error}`)
+        alerts.loginServerErrorAlert()
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
+      alerts.loginServerErrorAlert()
     }
-  }, [logger, getQuickLoginURL, bcscServiceClient])
+  }, [logger, getQuickLoginURL, bcscServiceClient, alerts])
 
   const styles = StyleSheet.create({
     container: {
