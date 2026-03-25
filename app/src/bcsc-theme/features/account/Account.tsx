@@ -84,6 +84,7 @@ const Account: React.FC = () => {
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
       if (!bcscServiceClient) {
+        // only generate quick login url if we have the bcsc service client metadata
         return
       }
 

@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
+import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -34,6 +35,7 @@ jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: jest.fn(() => jest.fn()),
 }))
 
+
 describe('ServiceLogin', () => {
   let mockNavigation: any
 
@@ -65,6 +67,11 @@ describe('ServiceLogin', () => {
 
     const renderWithPairingCode = (mockLoginByPairingCode: jest.Mock, mockAlerts: Record<string, jest.Mock>) => {
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+      jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
+        state: { pairingCode: 'ABC123', serviceTitle: 'Test Service' },
+        isLoading: false,
+        serviceHydrated: true,
+      })
       mockedUseApi.mockReturnValue({
         pairing: { loginByPairingCode: mockLoginByPairingCode },
         metadata: {},
@@ -105,11 +112,9 @@ describe('ServiceLogin', () => {
         loginServerErrorAlert: mockLoginServerErrorAlert,
       })
 
-      const continueButton = tree.queryByTestId('com.ariesbifold:id/ServiceLoginContinue')
-      if (continueButton) {
-        fireEvent.press(continueButton)
-        await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
-      }
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
     })
 
     it('should show loginServerErrorAlert when pairing code error is not handled', async () => {
@@ -118,11 +123,9 @@ describe('ServiceLogin', () => {
         loginServerErrorAlert: mockLoginServerErrorAlert,
       })
 
-      const continueButton = tree.queryByTestId('com.ariesbifold:id/ServiceLoginContinue')
-      if (continueButton) {
-        fireEvent.press(continueButton)
-        await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
-      }
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
     })
   })
 })
