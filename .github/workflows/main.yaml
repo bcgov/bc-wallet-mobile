@@ -20,6 +20,7 @@ on:
 jobs:
   check-secrets:
     runs-on: ubuntu-22.04
+    permissions: {}
     steps:
       - name: Check secrets
         shell: bash
@@ -99,6 +100,7 @@ jobs:
           GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
+    permissions: {}
     steps:
       - name: Check variables
         shell: bash
@@ -140,6 +142,8 @@ jobs:
 
   early-exit-check:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     outputs:
       should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
@@ -203,6 +207,8 @@ jobs:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -294,6 +300,8 @@ jobs:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
@@ -443,6 +451,8 @@ jobs:
     name: Build iOS - ${{ matrix.variant }}
     needs: [check-secrets, check-vars, early-exit-check, prepare-ios, compute-variants]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -989,6 +999,7 @@ jobs:
 
   build-summary:
     runs-on: ubuntu-latest
+    permissions: {}
     needs:
       - early-exit-check
       - build-android
@@ -1041,6 +1052,8 @@ jobs:
     if: success() && github.ref_name == 'main'
     needs: [build-ios, build-summary, compute-variants]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -1071,6 +1084,8 @@ jobs:
       github.event.pull_request.head.repo.fork != true
     needs: [build-ios, build-android, build-summary, compute-variants]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     strategy:
       matrix:
         platform: [ios, android]
@@ -1109,20 +1124,21 @@ jobs:
           artifact_ref: ${{ env.ARTIFACT_REF }}
           artifact_name: ${{ env.ARTIFACT_INNER_NAME }}
 
-  # ─── App Launch Verification ──────────────────────────────────────────
-  # Lightweight smoke test: verifies each app/bundle can be installed and
-  # launched on a real device via SauceLabs Appium.  No AATH agents,
-  # SauceConnect tunnels, or mobile test harness are needed — just the
-  # W3C WebDriver protocol via Node.js native fetch.
+  # ─── E2E Tests ──────────────────────────────────────────────────────
+  # PR:   smoke specs — basic launch + first navigation (all variants)
+  # Main: full E2E specs — onboarding → verify → main (bcsc only;
+  #        variants without e2e.spec.ts are skipped on main)
   #
   # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
-  run-on-device-tests:
-    name: 'App Launch Test - ${{ matrix.variant }} ${{ matrix.platform }}'
+  e2e-tests:
+    name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
     needs: [ship-to-saucelabs, compute-variants]
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     timeout-minutes: 15
     strategy:
       max-parallel: 2
@@ -1138,21 +1154,63 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - name: Derive platform artifact filename
+      - name: Determine test mode
+        id: mode
+        working-directory: e2e
+        shell: bash
         run: |
-          if [ "${{ matrix.platform }}" = "iOS" ]; then EXT="ipa"; else EXT="aab"; fi
-          echo "APP_FILENAME=${SAUCE_LABS_PREFIX}-${{ github.run_number }}.${EXT}" >> "$GITHUB_ENV"
+          VARIANT="${{ matrix.variant }}"
+          if [[ "$VARIANT" == bcsc* ]]; then E2E_VARIANT="bcsc"; else E2E_VARIANT="bc-wallet"; fi
+
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            if [ -f "test/${E2E_VARIANT}/e2e.spec.ts" ]; then
+              echo "spec=--spec test/${E2E_VARIANT}/e2e.spec.ts" >> "$GITHUB_OUTPUT"
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "No full E2E spec for ${E2E_VARIANT} — skipping on main"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "spec=" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup NodeJS
+        if: steps.mode.outputs.skip != 'true'
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Verify app launches on real device
+      - name: Cache E2E dependencies
+        if: steps.mode.outputs.skip != 'true'
+        uses: actions/cache@v5
+        with:
+          path: |
+            e2e/.yarn/cache
+            e2e/node_modules
+          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: e2e-deps-
+
+      - name: Install E2E dependencies
+        if: steps.mode.outputs.skip != 'true'
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Run WDIO tests
+        if: steps.mode.outputs.skip != 'true'
+        working-directory: e2e
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-          PLATFORM_NAME: ${{ matrix.platform }}
-          APP_FILENAME: ${{ env.APP_FILENAME }}
+          SAUCE_REGION: us
           VARIANT: ${{ matrix.variant }}
-          TEST_NAME: 'App Launch - ${{ matrix.variant }} ${{ matrix.platform }}'
           BUILD_NAME: 'build-${{ github.run_number }}'
-        run: node scripts/saucelabs-app-launch-test.mjs
+          TEST_NAME: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
+          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+        run: |
+          if [ "${{ matrix.platform }}" = "ios" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.ipa" \
+              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+          else
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.aab" \
+              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+          fi

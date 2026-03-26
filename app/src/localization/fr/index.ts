@@ -450,10 +450,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
-      "SuccessTitle": "Success (FR)",
-      "SuccessMessage": "Successfully unpaired your device (FR)",
-      "ErrorTitle": "Error (FR)",
-      "ErrorMessage": "Failed to unpair device (FR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",
@@ -1236,16 +1232,6 @@ const translation = {
       "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
-  "BCWalletError": {
-    // TODO (MD): Fill in translations once all english errors are completed
-    "Device": {
-      "KeypairGenerationError": "(FR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
-      "KeypairGenerationTitle": "(FR) Problem with App",
-    },
-    "General": {
-      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)",
-    },
-  },
 }
 
 export default translation

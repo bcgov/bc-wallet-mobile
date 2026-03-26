@@ -24,7 +24,7 @@ import {
 } from './clientErrorPolicies'
 
 const newError = (code: string): AxiosAppError => {
-  const err = new AppError('test error', 'This is a test error', {
+  const err = new AppError('This is a test error', {
     appEvent: code as AppEventCode,
     category: ErrorCategory.NETWORK,
     statusCode: 5000,

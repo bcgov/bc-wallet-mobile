@@ -94,7 +94,7 @@ class BarcodeData: NSObject, NSSecureCoding {
     var result = [String: Any]()
 
     // Check if it has address fields that need to be nested
-    let addressKeys: Set<String> = ["street_address", "locality", "province", "postal_code", "country"]
+    let addressKeys: Set = ["street_address", "locality", "province", "postal_code", "country"]
     var addressDict = [String: String]()
 
     for (key, val) in value {

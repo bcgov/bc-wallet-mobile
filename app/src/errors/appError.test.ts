@@ -1,9 +1,7 @@
 import { AppEventCode } from '@/events/appEventCode'
-import { localization } from '@/localization'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { initLanguages } from '@bifold/core'
 import { AppError, isAppError, isHandledAppError } from './appError'
-import { ErrorCategory, ErrorDefinition, ErrorRegistry, ErrorSeverity } from './errorRegistry'
+import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 describe('AppError', () => {
   beforeEach(() => {
@@ -17,14 +15,10 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const title = 'Test Error'
-      const description = 'This is a test error'
       const message = 'Detailed technical message'
-      const error = new AppError(title, description, identity, { cause: new Error(message) })
+      const error = new AppError(message, identity, { cause: new Error(message) })
 
-      expect(error.title).toBe(title)
-      expect(error.description).toBe(description)
-      expect(error.message).toBe(`${title}: ${description}`)
+      expect(error.message).toBe(message)
       expect(error.code).toBe('general.unknown_server_error.1234')
       expect(error.appEvent).toBe('unknown_server_error')
       expect(error.technicalMessage).toBe(message)
@@ -41,7 +35,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Something went wrong', identity)
 
       expect(error.technicalMessage).toBeNull()
     })
@@ -52,9 +46,36 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity, { cause: 'Not an error' as any })
+      const error = new AppError('Something went wrong', identity, { cause: 'Not an error' as any })
 
       expect(error.technicalMessage).toBeNull()
+    })
+  })
+
+  describe('fullMessage', () => {
+    it('should return message without technicalMessage', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+
+      expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
+    })
+
+    it('should return message with technicalMessage if cause is present', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const technicalMessage = 'Technical details about the error'
+      const error = new AppError('Something went wrong', identity, { cause: new Error(technicalMessage) })
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
+      )
     })
   })
 
@@ -67,7 +88,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Something went wrong', identity)
 
       error.track()
 
@@ -80,32 +101,21 @@ describe('AppError', () => {
 
   describe('fromErrorDefinition', () => {
     it('should create an AppError from an ErrorDefinition', () => {
-      const definition: ErrorDefinition = {
+      const definition = {
         category: ErrorCategory.NETWORK,
         appEvent: AppEventCode.NO_INTERNET,
         statusCode: 2100,
-        titleKey: 'titleKey',
-        descriptionKey: 'descriptionKey',
         severity: ErrorSeverity.ERROR,
+        message: 'No internet connection',
       }
 
       const error = AppError.fromErrorDefinition(definition, { cause: new Error('Network unreachable') })
 
-      expect(error.title).toBe('titleKey')
-      expect(error.description).toBe('descriptionKey')
+      expect(error.message).toBe('No internet connection')
       expect(error.code).toBe('network.no_internet.2100')
       expect(error.appEvent).toBe('no_internet')
       expect(error.technicalMessage).toBe('Network unreachable')
       expect(error.cause).toBeInstanceOf(Error)
-    })
-
-    it('should translate title and description keys if translations are available', () => {
-      initLanguages(localization) // initialize i18next with localization
-
-      const error = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR)
-
-      expect(error.title).not.toBe('titleKey')
-      expect(error.description).not.toBe('descriptionKey')
     })
 
     it('should track error event in analytics upon creation from definition by default', () => {
@@ -139,35 +149,6 @@ describe('AppError', () => {
     })
   })
 
-  describe('toBifoldError', () => {
-    it('should convert AppError to BifoldError', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Title', 'Description', identity, { cause: new Error('Technical message') })
-      const bifoldError = error.toBifoldError()
-
-      expect(bifoldError.title).toBe('Title')
-      expect(bifoldError.description).toBe('Description')
-      expect(bifoldError.message).toBe('Technical message')
-      expect(bifoldError.code).toBe(1234)
-    })
-
-    it('should use message if technicalMessage is null', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Title', 'Description', identity)
-      const bifoldError = error.toBifoldError()
-
-      expect(bifoldError.message).toBe('Title: Description')
-    })
-  })
-
   describe('toJSON', () => {
     it('should serialize AppError to JSON', () => {
       jest.useFakeTimers().setSystemTime(new Date('2024-01-01T00:00:00Z'))
@@ -178,12 +159,12 @@ describe('AppError', () => {
         statusCode: 1234,
       }
       const cause = new Error('Technical message')
-      const error = new AppError('Title', 'Description', identity, { cause: cause })
+      const error = new AppError('Something went wrong', identity, { cause })
       const json = error.toJSON()
 
       expect(json).toEqual({
         name: 'AppError',
-        message: 'Title: Description',
+        message: 'Something went wrong',
         technicalMessage: 'Technical message',
         code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
@@ -202,7 +183,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Error', identity)
       error.handled = true
 
       expect(isHandledAppError(error)).toBe(true)
@@ -214,7 +195,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Error', identity)
 
       expect(isHandledAppError(error)).toBe(false)
     })
@@ -233,7 +214,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Error', identity)
 
       expect(isAppError(error)).toBe(true)
     })
@@ -244,7 +225,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Error', identity)
 
       expect(isAppError(error, AppEventCode.UNKNOWN_SERVER_ERROR)).toBe(true)
     })
@@ -255,7 +236,7 @@ describe('AppError', () => {
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         statusCode: 1234,
       }
-      const error = new AppError('Title', 'Description', identity)
+      const error = new AppError('Error', identity)
 
       expect(isAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)).toBe(false)
     })
