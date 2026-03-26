@@ -5,7 +5,7 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 ## _Design Principles_
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
-2. **_Variant + flow driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `E2E_FLOW` _(`simple` | `advanced`) controls how deep each stage goes (detours, biometric auth, extra verification steps)._
+2. **_Named suites_** _— tests are organized into named suites (`smoke`, `happy-path`, `full-regression`), each with dedicated spec files describing a single, explicit test path with no runtime conditionals._
 3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `BCSC_TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
@@ -23,7 +23,7 @@ e2e/
 │   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
 │
 ├── configs/
-│   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, hooks)
+│   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, suites)
 │   ├── local/
 │   │   ├── wdio.shared.local.appium.conf.ts # local Appium server settings
 │   │   ├── wdio.android.local.emu.conf.ts   # Android emulator capabilities
@@ -36,8 +36,8 @@ e2e/
 │       └── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
 │
 ├── src/
-│   ├── constants.ts                         # timeouts and shared values
-│   ├── e2eConfig.ts                         # variant detection + flow presets (simple/advanced)
+│   ├── constants.ts                         # timeouts, test users, and shared values
+│   ├── e2eConfig.ts                         # variant detection (VARIANT env var)
 │   ├── testIDs.ts                           # central registry of accessibility / resource IDs
 │   │
 │   ├── helpers/
@@ -53,28 +53,26 @@ e2e/
 │       └── BaseScreen.ts                    # cross-platform element lookup, tap, wait, scroll
 │
 ├── test/
+│   ├── bc-wallet/                           # BC Wallet variant test suite
+│   │   └── smoke.spec.ts                    # app launch + initial navigation
 │   └── bcsc/                                # BCSC variant test suite
-│       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
-│       ├── e2e.spec.ts                      # full flow orchestrator (onboarding → verify → main)
-│       ├── onboarding/
-│       │   └── onboarding.spec.ts           # onboarding carousel, PIN, nickname
-│       ├── verify/
-│       │   ├── verify.spec.ts               # verification flow orchestrator
-│       │   ├── cards/
-│       │   │   └── combo.spec.ts            # combo card verification
-│       │   ├── steps/
-│       │   │   ├── step_0.spec.ts           # serial + birthdate entry
-│       │   │   └── step_1.spec.ts           # evidence capture + ID collection
-│       │   └── verification/
-│       │       └── in-person.spec.ts        # in-person verification method
-│       └── main/
-│           ├── main.spec.ts                 # main stack orchestrator
-│           ├── account/
-│           │   └── account.spec.ts          # account screen tests
-│           ├── settings/
-│           │   └── settings.spec.ts         # settings screen tests
-│           └── tabs/
-│               └── navigation.spec.ts       # tab bar navigation tests
+│       ├── smoke.spec.ts                    # app launch + initial navigation (default)
+│       ├── happy-path/                      # straight-through flow, no detours
+│       │   ├── happy-path.spec.ts           # orchestrator: onboarding → verify → main
+│       │   ├── onboarding/
+│       │   │   └── onboarding.spec.ts       # PIN auth, no detours
+│       │   ├── verify/
+│       │   │   └── verify.spec.ts           # combined card, in-person verification
+│       │   └── main/
+│       │       └── main.spec.ts             # tab navigation, settings
+│       └── full-regression/                 # comprehensive flow with detours & extra coverage
+│           ├── full-regression.spec.ts      # orchestrator: onboarding → verify → main
+│           ├── onboarding/
+│           │   └── onboarding.spec.ts       # transfer detour, setup types, help detours, PIN auth
+│           ├── verify/
+│           │   └── verify.spec.ts           # non-photo card, additional ID evidence, in-person
+│           └── main/
+│               └── main.spec.ts             # tab navigation, settings
 │
 ├── assets/                                  # test images for camera/video injection
 │   └── README.md
@@ -104,18 +102,24 @@ _The_ `yarn setup` _step registers the Appium drivers into Appium's driver regis
 
 ## _Running Tests_
 
-_By default, only_ `smoke.spec.ts` _runs (configured in_ `wdio.shared.conf.ts`_). To run other specs or the full E2E flow, use the_ `--spec` _flag:_
+### _Suites_
+
+_Tests are organized into named suites. Use the_ `--suite` _flag to select which suite to run:_
+
+| _Suite_            | _What it tests_                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `smoke`            | _App launch + initial navigation (fast sanity check)_                                            |
+| `happy-path`       | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
+| `full-regression`  | _Full flow: onboarding with transfer/setup/help detours, non-photo card with additional ID_      |
 
 ```bash
-# Default: smoke test only
-yarn test:ios:local
-
-# Full E2E flow (onboarding → verify → main, in one session)
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
-
-# Single spec
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/onboarding/onboarding.spec.ts
+# Run by suite name
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite full-regression
 ```
+
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_._
 
 ### _Local — iOS Simulator_
 
@@ -123,7 +127,10 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/onboarding/o
 # Place your .app build in e2e/apps/ (see apps/README.md)
 yarn test:ios:local
 
-# Run a single spec
+# Run a specific suite
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
+
+# Run a single spec directly
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/smoke.spec.ts
 ```
 
@@ -158,8 +165,8 @@ cd e2e && yarn test:android:local
 # Place your .apk build in e2e/apps/ (see apps/README.md)
 yarn test:android:local
 
-# Run a single spec
-yarn wdio configs/local/wdio.android.local.emu.conf.ts --spec test/bcsc/smoke.spec.ts
+# Run a specific suite
+yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite happy-path
 ```
 
 ### _Local — iOS Real Device_
@@ -173,9 +180,9 @@ Real-device runs use a **signed `.ipa`** (device build), not the simulator `.app
 # Place your .ipa in e2e/apps/; set IOS_UDID and XCODE_ORG_ID (e.g. in .env.saucelabs or inline)
 IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> yarn test:ios:device
 
-# Run a single spec
+# Run a specific suite
 IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> \
-  yarn wdio configs/local/wdio.ios.local.device.conf.ts --spec test/bcsc/smoke.spec.ts
+  yarn wdio configs/local/wdio.ios.local.device.conf.ts --suite happy-path
 ```
 
 _Find your device UDID via Finder (click the device name in the sidebar) or:_
@@ -203,9 +210,9 @@ The debug APK loads the JS bundle from Metro. To avoid Metro connection errors o
 # Place your .apk build in e2e/apps/ (see apps/README.md)
 ANDROID_UDID=<device-serial> yarn test:android:device
 
-# Run a single spec
+# Run a specific suite
 ANDROID_UDID=<device-serial> \
-  yarn wdio configs/local/wdio.android.local.device.conf.ts --spec test/bcsc/smoke.spec.ts
+  yarn wdio configs/local/wdio.android.local.device.conf.ts --suite happy-path
 ```
 
 _Find your device serial via:_
@@ -227,6 +234,9 @@ yarn test:sauce
 # Or individually
 yarn test:android:sauce
 yarn test:ios:sauce
+
+# Run a specific suite on SauceLabs
+yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite happy-path
 ```
 
 ### _Variant Selection_
@@ -238,26 +248,11 @@ VARIANT=bcwallet yarn test:ios:local
 VARIANT=bcsc yarn test:android:sauce
 ```
 
-### _Flow Mode_
-
-_The_ `E2E_FLOW` _env var controls how thorough each test stage is. Defaults to_ `simple`_._
-
-| _Mode_     | _Description_                                                                                 |
-| ---------- | --------------------------------------------------------------------------------------------- |
-| `simple`   | _Straight-line path: skips detours, uses PIN auth, no step 0 in verification_                 |
-| `advanced` | _Full coverage: includes transfer/setup/help detours, biometric auth, step 0 in verification_ |
-
-```bash
-E2E_FLOW=advanced yarn test:ios:local
-E2E_FLOW=simple yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
-```
-
 ## _Environment Variables_
 
 | _Variable_             | _Default_             | _Description_                                                                   |
 | ---------------------- | --------------------- | ------------------------------------------------------------------------------- |
 | `VARIANT`              | `bcsc`                | _App variant to test (normalized:_ `bcsc` _or_ `bcwallet`_)_                    |
-| `E2E_FLOW`             | `simple`              | _Flow mode (_`simple` _or_ `advanced`_) — controls test depth_                  |
 | `SAUCE_USERNAME`       | _—_                   | _SauceLabs username (sauce runs only)_                                          |
 | `SAUCE_ACCESS_KEY`     | _—_                   | _SauceLabs access key (sauce runs only)_                                        |
 | `SAUCE_REGION`         | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_                               |
@@ -284,7 +279,7 @@ E2E_FLOW=simple yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/b
 ## _Config Hierarchy_
 
 ```
-wdio.shared.conf.ts                         ← base (specs, framework, reporters, hooks)
+wdio.shared.conf.ts                         ← base (specs, suites, framework, reporters, hooks)
   ├── local/wdio.shared.local.appium.conf.ts   ← + local Appium service
   │   ├── local/wdio.android.local.emu.conf.ts    ← + Android emulator caps
   │   ├── local/wdio.android.local.device.conf.ts ← + Android real device caps
@@ -330,22 +325,22 @@ _Element lookup is cross-platform with no branching:_
 | _iOS_      | _Accessibility ID_ | `~com.ariesbifold:id/Continue`             |
 | _Android_  | _Resource ID_      | `android=new UiSelector().resourceId(...)` |
 
-### _Flow-Aware Tests_
+### _Suite-Based Tests_
 
-_Tests can read_ `getE2EConfig()` _to branch on flow mode:_
+_Each suite has its own dedicated spec files with explicit test steps — no runtime conditionals. Suite selection replaces the old_ `E2E_FLOW` _env var:_
+
+| _Old (flow-based)_                               | _New (suite-based)_                                        |
+| ------------------------------------------------- | ---------------------------------------------------------- |
+| `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`  | `--suite happy-path`                                       |
+| `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression`                                  |
+
+_Each suite's orchestrator imports sub-specs in order (onboarding → verify → main), preserving a single Mocha session for stateful flows:_
 
 ```typescript
-import { getE2EConfig } from '../../src/e2eConfig.js'
-
-const { flow, onboarding } = getE2EConfig()
-
-describe('Onboarding', () => {
-  if (onboarding.includeTransferDetour) {
-    it('should show transfer option', async () => {
-      /* ... */
-    })
-  }
-})
+// test/bcsc/happy-path/happy-path.spec.ts
+import './onboarding/onboarding.spec.js'
+import './verify/verify.spec.js'
+import './main/main.spec.js'
 ```
 
 ### _Camera & Video Injection_
@@ -375,22 +370,14 @@ await sustainedFrameInjection('selfie-liveness.png', { durationMs: 8_000 })
 
 _For local testing, camera injection is not available — use a test-mode flag in the app instead._
 
-### _Full E2E Orchestration_
-
-_The_ `test/bcsc/e2e.spec.ts` _file imports sub-specs in order (onboarding → verify → main) to run the entire app flow in a single session:_
-
-```bash
-E2E_FLOW=advanced yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/e2e.spec.ts
-```
-
 ## _CI/CD_
 
 _Tests run automatically in GitHub Actions:_
 
-| _Trigger_      | _Scope_                | _Devices_                   |
-| -------------- | ---------------------- | --------------------------- |
-| _PR_           | `smoke.spec.ts` _only_ | _1 Android RDC + 1 iOS RDC_ |
-| `main` _merge_ | _All specs_            | _Multiple device/OS combos_ |
+| _Trigger_      | _Scope_                  | _Devices_                   |
+| -------------- | ------------------------ | --------------------------- |
+| _PR_           | `--suite smoke` _only_   | _1 Android RDC + 1 iOS RDC_ |
+| `main` _merge_ | _All suites_             | _Multiple device/OS combos_ |
 
 ## _Local App Binaries_
 
