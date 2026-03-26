@@ -1,13 +1,20 @@
 import React, { createContext, useContext } from 'react'
+import { FcmViewModel } from './FcmViewModel'
 import { FcmService } from './services/fcm-service'
 
-const FcmServiceContext = createContext<FcmService | null>(null)
+type FcmServiceContextType = {
+  service: FcmService
+  viewModel: FcmViewModel
+}
+
+const FcmServiceContext = createContext<FcmServiceContextType | null>(null)
 
 export const FcmServiceProvider: React.FC<{
   service: FcmService
+  viewModel: FcmViewModel
   children: React.ReactNode
-}> = ({ service, children }) => {
-  return <FcmServiceContext.Provider value={service}>{children}</FcmServiceContext.Provider>
+}> = ({ service, viewModel, children }) => {
+  return <FcmServiceContext.Provider value={{ service, viewModel }}>{children}</FcmServiceContext.Provider>
 }
 
 export const useFcmService = () => {

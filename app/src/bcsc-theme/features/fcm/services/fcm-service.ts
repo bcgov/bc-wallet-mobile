@@ -127,7 +127,10 @@ export class FcmService {
     // Handle when app was killed and user taps notification to launch it
     const initialNotification = await getInitialNotification(messagingInstance)
     if (initialNotification) {
+      this.logger?.info('[FcmService] Cold-start notification detected, emitting now')
       this.emit(initialNotification)
+    } else {
+      this.logger?.info('[FcmService] No cold-start notification found')
     }
 
     // Note: background messages (including potential challenge data) are intentionally
