@@ -47,3 +47,14 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
   },
 }
+
+export type TestUser = (typeof TestUsers)[keyof typeof TestUsers]
+
+/**
+ * Shared mutable state for the verify flow.
+ * Card-type specs set `testUser` at module evaluation time;
+ * downstream specs (e.g. in-person-verification) read it lazily inside `it` blocks.
+ */
+export const verifyContext: { testUser: TestUser } = {
+  testUser: null as unknown as TestUser,
+}
