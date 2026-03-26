@@ -33,7 +33,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   const [isLoading, setIsLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { forgetPairingsAlert } = useAlerts(navigation)
+  const { forgetPairingsAlert, unknownErrorModal } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -52,10 +52,11 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
       navigation.goBack()
     } catch (error) {
       logger.error('Error forgetting all pairings', error instanceof Error ? error : new Error(String(error)))
+      unknownErrorModal(error)
     } finally {
       setIsLoading(false)
     }
-  }, [pairing, forgetPairingsAlert, navigation, logger])
+  }, [pairing, forgetPairingsAlert, navigation, logger, unknownErrorModal])
 
   const controls = (
     <Button

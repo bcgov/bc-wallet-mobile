@@ -212,6 +212,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         // Handle file I/O errors separately to provide a specific alert
         if (error.code === 'capture/file-io-error') {
           failedToWriteToLocalStorageAlert(error)
+          return
         }
 
         Alert.alert(

@@ -1,8 +1,9 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
+import { AppError, ErrorRegistry } from '@/errors'
 import { getRegistryAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
@@ -107,6 +108,14 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       }
     },
     [emitAlert, logger, navigation, stack, t]
+  )
+
+  const unknownErrorModal = useCallback(
+    (error?: AppError | unknown) => {
+      const appError = error instanceof AppError ? error : toAppError(error, ErrorRegistry.UNKNOWN_ERROR)
+      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
+    },
+    [emitErrorModal, t]
   )
 
   // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
@@ -299,8 +308,9 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
       factoryResetAlert,
-      forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'),
+      forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
       // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
+      unknownErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
@@ -367,6 +377,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       cancelVerificationRequestAlert,
       factoryResetAlert,
       _createBasicAlert,
+      unknownErrorModal,
       _createBasicErrorModal,
       _createProblemWithAccountAlert,
       _createProblemWithServiceReturnToSetupAlert,
