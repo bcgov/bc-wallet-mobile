@@ -121,11 +121,10 @@ export class FcmViewModel {
       const apiClient = getBCSCApiClient()
 
       if (!apiClient) {
-        // apiClient isn't ready, save these for later
-        this.pendingChallenges.push(data)
         this.logger.info(
           `[FcmViewModel] API client not ready, save for later. (Current count: ${this.pendingChallenges.length})`
         )
+        this.pendingChallenges.push(data)
         return
       }
 

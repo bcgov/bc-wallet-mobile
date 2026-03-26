@@ -129,8 +129,6 @@ export class FcmService {
     if (initialNotification) {
       this.logger?.info('[FcmService] Cold-start notification detected, emitting now')
       this.emit(initialNotification)
-    } else {
-      this.logger?.info('[FcmService] No cold-start notification found')
     }
 
     // Note: background messages (including potential challenge data) are intentionally
