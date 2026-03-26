@@ -57,22 +57,33 @@ e2e/
 │   │   └── smoke.spec.ts                    # app launch + initial navigation
 │   └── bcsc/                                # BCSC variant test suite
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default)
+│       │
+│       ├── onboarding/                      # composable onboarding specs
+│       │   ├── app-launch.spec.ts           # iOS permissions + display Account Setup
+│       │   ├── transfer-detour.spec.ts      # transfer account detour + back
+│       │   ├── add-account.spec.ts          # tap Add Account
+│       │   ├── setup-type-interaction.spec.ts # radio option interaction
+│       │   ├── consent.spec.ts              # setup types → carousel → privacy → analytics → terms
+│       │   ├── notifications-help.spec.ts   # help link on notifications + back
+│       │   ├── notifications.spec.ts        # accept notifications
+│       │   ├── secure-app-help.spec.ts      # learn more on secure app + back
+│       │   └── pin-auth.spec.ts             # select PIN auth + create PIN
+│       │
+│       ├── verify/                          # composable verify specs
+│       │   ├── context.ts                   # shared mutable state (testUser)
+│       │   ├── combined-card.spec.ts        # nickname + combined card CSN (sets context)
+│       │   ├── non-photo-card.spec.ts       # nickname + non-photo card CSN (sets context)
+│       │   ├── additional-id-passport.spec.ts # additional ID evidence capture
+│       │   └── in-person-verification.spec.ts # in-person verification (reads context)
+│       │
+│       ├── main/                            # composable main specs
+│       │   └── main.spec.ts                 # tab navigation, settings, account
+│       │
 │       ├── happy-path/                      # straight-through flow, no detours
-│       │   ├── happy-path.spec.ts           # orchestrator: onboarding → verify → main
-│       │   ├── onboarding/
-│       │   │   └── onboarding.spec.ts       # PIN auth, no detours
-│       │   ├── verify/
-│       │   │   └── verify.spec.ts           # combined card, in-person verification
-│       │   └── main/
-│       │       └── main.spec.ts             # tab navigation, settings
+│       │   └── happy-path.spec.ts           # orchestrator (imports composable specs)
+│       │
 │       └── full-regression/                 # comprehensive flow with detours & extra coverage
-│           ├── full-regression.spec.ts      # orchestrator: onboarding → verify → main
-│           ├── onboarding/
-│           │   └── onboarding.spec.ts       # transfer detour, setup types, help detours, PIN auth
-│           ├── verify/
-│           │   └── verify.spec.ts           # non-photo card, additional ID evidence, in-person
-│           └── main/
-│               └── main.spec.ts             # tab navigation, settings
+│           └── full-regression.spec.ts      # orchestrator (imports composable specs)
 │
 ├── assets/                                  # test images for camera/video injection
 │   └── README.md
@@ -325,23 +336,47 @@ _Element lookup is cross-platform with no branching:_
 | _iOS_      | _Accessibility ID_ | `~com.ariesbifold:id/Continue`             |
 | _Android_  | _Resource ID_      | `android=new UiSelector().resourceId(...)` |
 
-### _Suite-Based Tests_
+### _Composable Specs & Suite Orchestrators_
 
-_Each suite has its own dedicated spec files with explicit test steps — no runtime conditionals. Suite selection replaces the old_ `E2E_FLOW` _env var:_
+_Specs are small, focused files that each test a single action or feature. Suites are composed by importing the relevant specs in order — no runtime conditionals, no test logic duplication._
 
 | _Old (flow-based)_                               | _New (suite-based)_                                        |
 | ------------------------------------------------- | ---------------------------------------------------------- |
 | `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`  | `--suite happy-path`                                       |
 | `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression`                                  |
 
-_Each suite's orchestrator imports sub-specs in order (onboarding → verify → main), preserving a single Mocha session for stateful flows:_
+_Each suite's orchestrator imports composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
 
 ```typescript
 // test/bcsc/happy-path/happy-path.spec.ts
-import './onboarding/onboarding.spec.js'
-import './verify/verify.spec.js'
-import './main/main.spec.js'
+import '../onboarding/app-launch.spec.js'
+import '../onboarding/add-account.spec.js'
+import '../onboarding/consent.spec.js'
+import '../onboarding/notifications.spec.js'
+import '../onboarding/pin-auth.spec.js'
+import '../verify/combined-card.spec.js'
+import '../verify/in-person-verification.spec.js'
+import '../main/main.spec.js'
 ```
+
+```typescript
+// test/bcsc/full-regression/full-regression.spec.ts
+import '../onboarding/app-launch.spec.js'
+import '../onboarding/transfer-detour.spec.js'
+import '../onboarding/add-account.spec.js'
+import '../onboarding/setup-type-interaction.spec.js'
+import '../onboarding/consent.spec.js'
+import '../onboarding/notifications-help.spec.js'
+import '../onboarding/notifications.spec.js'
+import '../onboarding/secure-app-help.spec.js'
+import '../onboarding/pin-auth.spec.js'
+import '../verify/non-photo-card.spec.js'
+import '../verify/additional-id-passport.spec.js'
+import '../verify/in-person-verification.spec.js'
+import '../main/main.spec.js'
+```
+
+_Shared state (e.g. test user data) flows between specs via_ `verify/context.ts`_. Card-type specs set_ `verifyContext.testUser` _at module evaluation time; downstream specs like_ `in-person-verification.spec.ts` _read it lazily inside_ `it` _blocks._
 
 ### _Camera & Video Injection_
 

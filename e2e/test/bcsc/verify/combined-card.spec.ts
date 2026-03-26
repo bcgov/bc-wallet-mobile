@@ -1,9 +1,9 @@
-import { TestUsers } from '../../../../src/constants.js'
-import { approveInPersonRequest } from '../../../../src/helpers/approval.js'
-import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { TestUsers, verifyContext } from '../../../src/constants.js'
+import { BaseScreen } from '../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
 const testUser = TestUsers.basic
+verifyContext.testUser = testUser
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const Nickname = new BaseScreen(BCSC_TestIDs.Nickname)
@@ -11,9 +11,6 @@ const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
 const SerialInstructions = new BaseScreen(BCSC_TestIDs.SerialInstructions)
 const ManualSerial = new BaseScreen(BCSC_TestIDs.ManualSerial)
 const EnterBirthdate = new BaseScreen(BCSC_TestIDs.EnterBirthdate)
-const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
-const VerifyInPerson = new BaseScreen(BCSC_TestIDs.VerifyInPerson)
-const VerificationSuccess = new BaseScreen(BCSC_TestIDs.VerificationSuccess)
 
 describe('Nickname', () => {
   it('should display the Setup Steps screen and tap Step 1', async () => {
@@ -57,31 +54,5 @@ describe('BCSC Combined Card', () => {
     await EnterBirthdate.type('BirthdateInputPressable', testUser.dob)
     await EnterBirthdate.dismissKeyboard()
     await EnterBirthdate.tap('Done')
-  })
-})
-
-describe('In-Person Verification', () => {
-  it('should navigate through the Setup Steps screen and tap Step 5', async () => {
-    await SetupSteps.waitFor('Step5', 10_000)
-    await SetupSteps.tap('Step5')
-  })
-
-  it('should navigate through the Verification Method Selection screen and tap In Person', async () => {
-    await VerificationMethodSelection.waitFor('InPerson')
-    await VerificationMethodSelection.tap('InPerson')
-  })
-
-  it('should navigate through the Verify In Person screen and tap Complete', async () => {
-    await VerifyInPerson.waitFor('ConfirmationCode')
-
-    const confirmationCode = await VerifyInPerson.getText('ConfirmationCode')
-    console.log(`[e2e] Read confirmation code from screen: "${confirmationCode}"`)
-
-    await approveInPersonRequest(confirmationCode, testUser.cardSerial, testUser.dob)
-
-    await VerifyInPerson.waitFor('Complete')
-    await VerifyInPerson.tap('Complete')
-    await VerificationSuccess.waitFor('Ok')
-    await VerificationSuccess.tap('Ok')
   })
 })
