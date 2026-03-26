@@ -14,7 +14,11 @@ const { variant } = getE2EConfig()
 
 export const config: WebdriverIO.Config = {
   specs: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
-  // Selective spec execution via CLI: --spec test/bcsc/onboarding.spec.ts
+  suites: {
+    smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
+    'happy-path': [resolve(__dirname, `../test/${variant}/happy-path/happy-path.spec.ts`)],
+    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/full-regression.spec.ts`)],
+  },
   exclude: [],
   capabilities: [],
 
