@@ -7,7 +7,7 @@ import { getE2EConfig } from '../src/e2eConfig.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Load .env.e2e before reading config so VARIANT / E2E_FLOW are available
+// Load .env.e2e before reading config so VARIANT is available
 dotenv.config({ path: resolve(__dirname, '../.env.e2e') })
 
 const { variant } = getE2EConfig()
