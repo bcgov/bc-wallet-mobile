@@ -212,8 +212,8 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 
 _The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `e2e/local.env`_:_
 
-| _Variable_    | _Description_                                        |
-| ------------- | ---------------------------------------------------- |
+| _Variable_    | _Description_                                          |
+| ------------- | ------------------------------------------------------ |
 | `SM_USER`     | _SiteMinder username for the IDCheck test environment_ |
 | `SM_PASSWORD` | _SiteMinder password for the IDCheck test environment_ |
 

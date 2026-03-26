@@ -1,9 +1,9 @@
-import { verifyContext } from '../../../src/constants.js'
 import { injectPhoto } from '../../../src/helpers/camera.js'
 import { acceptCameraPermissionIfPresent } from '../../../src/helpers/notifications.js'
 import { isSauceLabs } from '../../../src/helpers/sauce.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
+import { verifyContext } from './card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const AdditionalIdentificationRequired = new BaseScreen(BCSC_TestIDs.AdditionalIdentificationRequired)
