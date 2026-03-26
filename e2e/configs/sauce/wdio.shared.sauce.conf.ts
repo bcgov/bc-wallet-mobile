@@ -1,7 +1,13 @@
 // sauce/wdio.shared.sauce.conf.ts
 /// <reference types="@wdio/globals/types" />
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
+import dotenv from 'dotenv'
 import { config as baseConfig } from '../wdio.shared.conf.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({ path: resolve(__dirname, '../../.env.saucelabs') })
 
 const config = { ...baseConfig }
 

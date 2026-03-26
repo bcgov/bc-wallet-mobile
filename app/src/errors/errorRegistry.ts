@@ -64,6 +64,9 @@ export interface ErrorDefinition {
  *   2600-2699: Storage errors
  *   2700-2799: Device errors
  *   2800-2899: General/Misc errors
+ *
+ * Special codes:
+ *   9999: Reserved for unknown/unmapped errors
  */
 export const ErrorRegistry = {
   // ============================================
@@ -369,6 +372,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Verification request TTL exceeded — user must restart the flow',
   },
+  ALREADY_VERIFIED: {
+    statusCode: 2410,
+    appEvent: AppEventCode.ALREADY_VERIFIED,
+    severity: ErrorSeverity.INFO,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Verification request was already completed in a previous session',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)
@@ -598,6 +608,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
     message: 'OS version does not meet minimum requirements for card provisioning',
   },
+  DEVICE_AUTHENTICATION_ERROR: {
+    statusCode: 2707,
+    appEvent: AppEventCode.DEVICE_AUTHENTICATION_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Device authentication failed — biometric or passcode verification did not succeed',
+  },
 
   // ============================================
   // General/Registration Errors (2800-2899)
@@ -607,7 +624,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.GENERAL,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.GENERAL,
-    message: 'Unhandled exception caught by top-level error boundary',
+    message: 'An unexpected error occurred',
   },
   DYNAMIC_REGISTRATION_ERROR: {
     statusCode: 2801,
@@ -754,7 +771,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ACCOUNT_NOT_FOUND,
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.GENERAL,
-    message: 'No account found for the current user — wallet state may be corrupted or missing',
+    message: 'No account found for the current user — state may be corrupted or missing',
   },
 
   // ============================================

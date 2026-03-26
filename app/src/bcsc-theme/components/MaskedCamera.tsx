@@ -148,7 +148,7 @@ const MaskedCamera = ({
 
       // Handle file I/O errors separately to provide a specific alert
       if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-        failedToWriteToLocalStorageAlert()
+        failedToWriteToLocalStorageAlert(error)
         return
       }
 
