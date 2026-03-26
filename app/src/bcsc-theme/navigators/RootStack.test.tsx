@@ -21,6 +21,9 @@ jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
 jest.mock('../hooks/useBCSCApiClient', () => ({
   useBCSCApiClientState: () => ({ isClientReady: true }),
 }))
+jest.mock('../features/fcm', () => ({
+  useFcmService: () => ({ service: {}, viewModel: { processPendingChallenges: jest.fn() } }),
+}))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { STARTUP: 'STARTUP' },
   useSystemChecks: jest.fn(),
