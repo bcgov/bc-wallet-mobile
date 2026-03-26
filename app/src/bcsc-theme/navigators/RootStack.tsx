@@ -32,6 +32,7 @@ const BCSCRootStack: React.FC = () => {
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
+  // Wait until the apiClient is ready and process any pending FCM Challenges
   useEffect(() => {
     if (isClientReady) {
       fcmService.viewModel.processPendingChallenges()
