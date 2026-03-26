@@ -159,7 +159,7 @@ yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite happy-path
 
 ### _Variant Selection_
 
-_All commands respect the_ `VARIANT` _env var. Defaults to_ `bcsc` _if not set. Values starting with_ `bcsc` _normalize to_ `bcsc`_; values starting with_ `bcwallet` _normalize to_ `bcwallet`_._
+_All commands respect the_ `VARIANT` _env var. Defaults to_ `bcsc` _if not set. Values starting with_ `bcsc` _normalize to_ `bcsc`_; values starting with_ `bcwallet` _or_ `bc-wallet` _normalize to_ `bc-wallet`_._
 
 ```bash
 VARIANT=bcwallet yarn test:ios:local
@@ -178,8 +178,7 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 
 | _Variable_         | _Default_           | _Description_                                                                   |
 | ------------------ | ------------------- | ------------------------------------------------------------------------------- |
-| `VARIANT`          | `bcsc`              | _App variant to test (normalized:_ `bcsc` _or_ `bcwallet`_)_                    |
-| `E2E_FLOW`         | `simple`            | _Flow mode (_`simple` _or_ `advanced`_) — controls test depth_                  |
+| `VARIANT`          | `bcsc`              | _App variant to test (normalized:_ `bcsc` _or_ `bc-wallet`_)_                   |
 | `IOS_DEVICE`       | `iPhone 16`         | _iOS simulator/device name (local)_                                             |
 | `IOS_VERSION`      | `18.5`              | _iOS simulator/device version (local)_                                          |
 | `IOS_APP`          | `BCWallet.app`      | _iOS app filename in_ `apps/` _(local sim)_                                     |
@@ -193,8 +192,6 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `ANDROID_APP`      | `BCWallet.apk`      | _Android app filename in_ `apps/` _(local)_                                     |
 | `ANDROID_UDID`     | _—_                 | _Android device serial (Android real device only)_                              |
 | `NO_RESET`         | `false`             | _Set to_ `true` _to skip app reinstall between runs (preserves app state)_      |
-| `CARD_SERIAL`      | _—_                 | _Test card serial number for verification flows_                                |
-| `BIRTH_DATE`       | _—_                 | _Test birthdate for verification flows (format:_ `YYYYMMDD`_)_                  |
 
 ### _SauceLabs (`.env.saucelabs`)_
 
@@ -288,35 +285,39 @@ _Specs are small, focused files that each test a single action or feature. Suite
 _Each suite's orchestrator imports composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
 
 ```typescript
-// test/bcsc/happy-path/happy-path.spec.ts
-import '../onboarding/app-launch.spec.js'
-import '../onboarding/add-account.spec.js'
-import '../onboarding/consent.spec.js'
-import '../onboarding/notifications.spec.js'
-import '../onboarding/pin-auth.spec.js'
-import '../verify/combined-card.spec.js'
-import '../verify/in-person-verification.spec.js'
-import '../main/main.spec.js'
+// test/bcsc/happy-path.spec.ts
+import './onboarding/app-launch.spec.js'
+import './onboarding/add-account.spec.js'
+import './onboarding/consent.spec.js'
+import './onboarding/notifications.spec.js'
+import './onboarding/pin-auth.spec.js'
+import './verify/card-type/config-combined-card.js'
+import './verify/nickname.spec.js'
+import './verify/card-csn.spec.js'
+import './verify/in-person-verification.spec.js'
+import './main/main.spec.js'
 ```
 
 ```typescript
-// test/bcsc/full-regression/full-regression.spec.ts
-import '../onboarding/app-launch.spec.js'
-import '../onboarding/transfer-detour.spec.js'
-import '../onboarding/add-account.spec.js'
-import '../onboarding/setup-type-interaction.spec.js'
-import '../onboarding/consent.spec.js'
-import '../onboarding/notifications-help.spec.js'
-import '../onboarding/notifications.spec.js'
-import '../onboarding/secure-app-help.spec.js'
-import '../onboarding/pin-auth.spec.js'
-import '../verify/non-photo-card.spec.js'
-import '../verify/additional-id-passport.spec.js'
-import '../verify/in-person-verification.spec.js'
-import '../main/main.spec.js'
+// test/bcsc/full-regression.spec.ts
+import './onboarding/app-launch.spec.js'
+import './onboarding/transfer-detour.spec.js'
+import './onboarding/add-account.spec.js'
+import './onboarding/setup-type-interaction.spec.js'
+import './onboarding/consent.spec.js'
+import './onboarding/notifications-help.spec.js'
+import './onboarding/notifications.spec.js'
+import './onboarding/secure-app-help.spec.js'
+import './onboarding/pin-auth.spec.js'
+import './verify/card-type/config-non-photo-card.js'
+import './verify/nickname.spec.js'
+import './verify/card-csn.spec.js'
+import './verify/additional-id-passport.spec.js'
+import './verify/in-person-verification.spec.js'
+import './main/main.spec.js'
 ```
 
-_Shared state (e.g. test user data) flows between specs via_ `verify/context.ts`_. Card-type specs set_ `verifyContext.testUser` _at module evaluation time; downstream specs like_ `in-person-verification.spec.ts` _read it lazily inside_ `it` _blocks._
+_Shared state (e.g. test user data) flows between specs via_ `verify/card-type/card-context.ts`_. Card-type config modules (e.g._ `config-combined-card.ts`_) set_ `verifyContext.testUser` _and_ `verifyContext.cardTypeButton` _at module evaluation time; downstream specs like_ `card-csn.spec.ts` _and_ `in-person-verification.spec.ts` _read them lazily inside_ `it` _blocks._
 
 ### _Camera & Video Injection_
 
@@ -349,10 +350,10 @@ _For local testing, camera injection is not available — use a test-mode flag i
 
 _Tests run automatically in GitHub Actions:_
 
-| _Trigger_      | _Scope_                  | _Devices_                   |
-| -------------- | ------------------------ | --------------------------- |
-| _PR_           | `--suite smoke` _only_   | _1 Android RDC + 1 iOS RDC_ |
-| `main` _merge_ | _All suites_             | _Multiple device/OS combos_ |
+| _Trigger_      | _Scope_                                        | _Devices_                   |
+| -------------- | ---------------------------------------------- | --------------------------- |
+| _PR_           | `--suite smoke` _only_                         | _1 Android RDC + 1 iOS RDC_ |
+| `main` _merge_ | _Temporarily disabled (re-enable when stable)_ | _—_                         |
 
 ## _Local App Binaries_
 
@@ -361,7 +362,7 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 ## _Design Principles_
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
-2. **_Variant + flow driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `E2E_FLOW` _(`simple` | `advanced`) controls how deep each stage goes (detours, biometric auth, extra verification steps)._
+2. **_Variant + suite driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `--suite` _selects the depth:_ `smoke` _for a quick sanity check,_ `happy-path` _for a straight-through flow,_ `full-regression` _for full coverage with detours and additional verification._
 3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `BCSC_TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
@@ -371,16 +372,16 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 e2e/
 ├── package.json                             # workspace package with WDIO + Appium deps
 ├── tsconfig.json                            # TypeScript config (strict, ESNext modules)
-├── USERS.md                                 # test account reference (Scooby-Doo themed)
 ├── .env.e2e.example                         # general e2e config template (copy to .env.e2e)
 ├── .env.saucelabs.example                   # SauceLabs credentials template (copy to .env.saucelabs)
 │
 ├── scripts/
+│   ├── login.mjs                            # SiteMinder login helper for approval flow
 │   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
 │   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
 │
 ├── configs/
-│   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, hooks)
+│   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, suites, hooks)
 │   ├── local/
 │   │   ├── wdio.shared.local.appium.conf.ts # local Appium server settings
 │   │   ├── wdio.android.local.emu.conf.ts   # Android emulator capabilities
@@ -393,11 +394,12 @@ e2e/
 │       └── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
 │
 ├── src/
-│   ├── constants.ts                         # timeouts and shared values
-│   ├── e2eConfig.ts                         # variant detection + flow presets (simple/advanced)
+│   ├── constants.ts                         # timeouts, TestUsers, and shared values
+│   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
 │   ├── testIDs.ts                           # central registry of accessibility / resource IDs
 │   │
 │   ├── helpers/
+│   │   ├── approval.ts                      # in-person verification approval via SiteMinder
 │   │   ├── biometrics.ts                    # biometric simulation (local + SauceLabs)
 │   │   ├── camera.ts                        # camera image injection (QR codes, photos)
 │   │   ├── video.ts                         # video frame injection + device file push
@@ -410,31 +412,41 @@ e2e/
 │       └── BaseScreen.ts                    # cross-platform element lookup, tap, wait, scroll
 │
 ├── test/
+│   ├── bc-wallet/                           # BC Wallet variant test suite
+│   │   └── smoke.spec.ts                    # app launch (default spec)
+│   │
 │   └── bcsc/                                # BCSC variant test suite
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
-│       ├── e2e.spec.ts                      # full flow orchestrator (onboarding → verify → main)
+│       ├── happy-path.spec.ts               # suite orchestrator: onboarding → combined card → main
+│       ├── full-regression.spec.ts          # suite orchestrator: full onboarding → non-photo + passport → main
 │       ├── onboarding/
-│       │   └── onboarding.spec.ts           # onboarding carousel, PIN, nickname
+│       │   ├── app-launch.spec.ts           # app launch + first screen
+│       │   ├── add-account.spec.ts          # add account flow
+│       │   ├── consent.spec.ts              # consent screen
+│       │   ├── notifications.spec.ts        # notification permission
+│       │   ├── notifications-help.spec.ts   # notification help detour (full-regression)
+│       │   ├── pin-auth.spec.ts             # PIN creation
+│       │   ├── secure-app-help.spec.ts      # secure app help detour (full-regression)
+│       │   ├── setup-type-interaction.spec.ts # setup type selection detour (full-regression)
+│       │   └── transfer-detour.spec.ts      # transfer detour (full-regression)
 │       ├── verify/
-│       │   ├── verify.spec.ts               # verification flow orchestrator
-│       │   ├── cards/
-│       │   │   └── combo.spec.ts            # combo card verification
-│       │   ├── steps/
-│       │   │   ├── step_0.spec.ts           # serial + birthdate entry
-│       │   │   └── step_1.spec.ts           # evidence capture + ID collection
-│       │   └── verification/
-│       │       └── in-person.spec.ts        # in-person verification method
+│       │   ├── card-csn.spec.ts             # card serial + birthdate entry
+│       │   ├── nickname.spec.ts             # nickname entry
+│       │   ├── additional-id-passport.spec.ts # passport evidence capture (full-regression)
+│       │   ├── in-person-verification.spec.ts # in-person verification method
+│       │   └── card-type/
+│       │       ├── card-context.ts          # shared mutable verify context (testUser, cardType)
+│       │       ├── config-combined-card.ts  # sets context for combined card (happy-path)
+│       │       └── config-non-photo-card.ts # sets context for non-photo card (full-regression)
 │       └── main/
-│           ├── main.spec.ts                 # main stack orchestrator
-│           ├── account/
-│           │   └── account.spec.ts          # account screen tests
-│           ├── settings/
-│           │   └── settings.spec.ts         # settings screen tests
-│           └── tabs/
-│               └── navigation.spec.ts       # tab bar navigation tests
+│           └── main.spec.ts                 # tab navigation, settings, account tests
 │
 ├── assets/                                  # test images for camera/video injection
-│   └── README.md
+│   ├── README.md
+│   ├── USERS.md                             # test account reference (Scooby-Doo themed)
+│   └── images/                              # ID and passport photos for evidence capture
+│       ├── id-1.jpg .. id-4.jpg
+│       └── passport.jpg
 │
 ├── logs/                                    # Appium logs (gitignored)
 │

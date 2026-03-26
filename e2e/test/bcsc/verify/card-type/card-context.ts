@@ -1,6 +1,6 @@
 import { TestUser } from '../../../../src/constants.js'
 
-export type CardTypeButton = 'CombinedCard' | 'PhotoCard' | 'NoPhotoCard' | 'CheckForServicesCard' | 'OtherID'
+export type CardTypeButton = 'CombinedCard' | 'PhotoCard' | 'NoPhotoCard' | 'OtherID'
 
 /**
  * Shared mutable state for the verify flow.
