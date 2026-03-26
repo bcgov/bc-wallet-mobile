@@ -53,7 +53,7 @@ export class AppError extends Error {
    * @returns The technical message or null if not available.
    */
   get technicalMessage(): string | null {
-    // QUESTION (MD): Max length? Detect HTML string?
+    // QUESTION (MD): Should we have a max length? Or detect HTML strings or other non-user-friendly content and truncate/remove it?
     return this.cause instanceof Error ? this.cause.message : null
   }
 

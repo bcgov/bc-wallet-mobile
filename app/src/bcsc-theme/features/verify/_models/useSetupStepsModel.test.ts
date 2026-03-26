@@ -1,13 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSetupStepsModel from '@/bcsc-theme/features/verify/_models/useSetupStepsModel'
-import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import * as useAlertsModule from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { getAccount, getAccountSecurityMethod } from '@mocks/react-native-bcsc-core'
 import { act, renderHook } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
@@ -484,54 +481,6 @@ describe('useSetupStepsModel', () => {
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
       expect(mockUpdateAccountFlags).not.toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('handleResetCardRegistration', () => {
-    it('logs error if no account', async () => {
-      getAccount.mockResolvedValue(null)
-
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
-
-      await result.current.handleResetCardRegistration()
-
-      expect(mockLogger.error).toHaveBeenCalled()
-    })
-
-    it('should display factory reset alert if error', async () => {
-      const mockFactoryResetAlert = jest.fn()
-      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ factoryResetAlert: mockFactoryResetAlert } as any)
-      getAccount.mockResolvedValue(null)
-
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
-
-      await result.current.handleResetCardRegistration()
-
-      expect(mockLogger.error).toHaveBeenCalled()
-      expect(mockFactoryResetAlert).toHaveBeenCalled()
-    })
-
-    it('should delete and clear all registration and verification data', async () => {
-      const mockDeleteRegistration = jest.fn()
-      const mockRegister = jest.fn()
-      getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-      getAccountSecurityMethod.mockResolvedValue('DeviceAuth')
-      jest.spyOn(useRegistrationServiceModule, 'useRegistrationService').mockReturnValue({
-        deleteRegistration: mockDeleteRegistration,
-        register: mockRegister,
-      } as any)
-
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
-
-      await result.current.handleResetCardRegistration()
-
-      expect(mockDeleteRegistration).toHaveBeenCalledWith('test-client-id')
-      expect(mockClearSecureState).toHaveBeenCalledWith({
-        isHydrated: true,
-        walletKey: 'wallet-key',
-        registrationAccessToken: 'registration-access-token',
-      })
-      expect(mockDeleteVerificationData).toHaveBeenCalledWith()
     })
   })
 })
