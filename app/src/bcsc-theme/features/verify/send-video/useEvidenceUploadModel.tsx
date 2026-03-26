@@ -177,7 +177,7 @@ const useEvidenceUploadModel = (
        */
       const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error })
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
-      fileUploadErrorAlert()
+      fileUploadErrorAlert(appError)
     } finally {
       stopLoading()
     }
