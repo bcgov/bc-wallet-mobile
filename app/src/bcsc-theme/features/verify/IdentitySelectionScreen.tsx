@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
@@ -10,7 +11,7 @@ import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Pressable, StyleSheet, View } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
@@ -129,7 +130,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
       <View style={{ gap: Spacing.md }}>
         <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
         <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
-        <Pressable
+        <PressableOpacity
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
           accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
@@ -138,7 +139,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
             {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
             <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
           </ThemedText>
-        </Pressable>
+        </PressableOpacity>
         <TileButton
           onPress={onPressOtherID}
           testIDKey={'OtherID'}

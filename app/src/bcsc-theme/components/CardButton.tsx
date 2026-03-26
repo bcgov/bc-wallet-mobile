@@ -1,9 +1,8 @@
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { PressableOpacity } from '@/components/PressableOpacity'
-import { a11yLabel } from '@utils/accessibility'
 
 interface CardProps {
   /**
