@@ -113,7 +113,7 @@ const App = () => {
           >
             <NavigationContainerProvider>
               <PairingServiceProvider service={pairingService}>
-                <FcmServiceProvider service={fcmService}>
+                <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
                   <VerificationResponseServiceProvider service={verificationResponseService}>
                     <AnimatedComponentsProvider value={animatedComponents}>
                       <AuthProvider>

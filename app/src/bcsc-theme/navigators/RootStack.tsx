@@ -11,6 +11,7 @@ import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { toAppError } from '../utils/native-error-map'
@@ -24,11 +25,18 @@ const BCSCRootStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const { isClientReady } = useBCSCApiClientState()
+  const fcmService = useFcmService()
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
+
+  useEffect(() => {
+    if (isClientReady) {
+      fcmService.viewModel.processPendingChallenges()
+    }
+  }, [isClientReady, fcmService])
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
