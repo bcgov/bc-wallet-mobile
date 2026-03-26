@@ -168,10 +168,11 @@ VARIANT=bcsc yarn test:android:sauce
 
 ## _Environment Variables_
 
-_Two env files split general e2e config from SauceLabs credentials:_
+_Three env files split general e2e config, SauceLabs credentials, and SiteMinder credentials:_
 
 - **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
+- **`local.env`** _— SiteMinder credentials for the in-person verification approval flow (gitignored). Create manually — see_ [_SiteMinder section_](#siteminder-localenv) _below._
 
 ### _General (`.env.e2e`)_
 
@@ -206,6 +207,25 @@ _Two env files split general e2e config from SauceLabs credentials:_
 | `IOS_APP_FILENAME`     | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_           |
 | `BUILD_NAME`           | `local-<timestamp>`   | _SauceLabs build name_                            |
 | `TEST_NAME`            | `E2E Tests`           | _SauceLabs test name_                             |
+
+### _SiteMinder (`local.env`)_
+
+_The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `e2e/local.env`_:_
+
+| _Variable_    | _Description_                                        |
+| ------------- | ---------------------------------------------------- |
+| `SM_USER`     | _SiteMinder username for the IDCheck test environment_ |
+| `SM_PASSWORD` | _SiteMinder password for the IDCheck test environment_ |
+
+_Create the file manually (it is gitignored):_
+
+```bash
+# e2e/local.env
+SM_USER='your-siteminder-username'
+SM_PASSWORD='your-siteminder-password'
+```
+
+_Without these credentials, any test suite that includes in-person verification (e.g._ `happy-path`_,_ `full-regression`_) will fail at the approval step._
 
 ## _Config Hierarchy_
 
