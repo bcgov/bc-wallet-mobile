@@ -83,7 +83,14 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       />
       <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>{serviceClientUri}</ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>
+        <Link
+          style={{ textAlign: 'center' }}
+          linkText={serviceClientUri}
+          testID={testIdWithKey('ServiceClientLink')}
+          onPress={() => Linking.openURL(serviceClientUri)}
+        />
+      </ThemedText>
     </View>
   ) : null
 
