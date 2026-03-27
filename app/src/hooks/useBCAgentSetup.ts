@@ -291,6 +291,7 @@ const useBCAgentSetup = () => {
         await outOfBandRepository.delete(agent.context, oldOobRecord)
       }
 
+      let newConnectionEstablished = false
       try {
         logger.info('Mediation state cleared. Creating new mediation connection...')
 
@@ -299,6 +300,7 @@ const useBCAgentSetup = () => {
           autoAcceptConnection: true,
           autoAcceptInvitation: true,
         })
+        newConnectionEstablished = true
 
         logger.info(`New connection created ${connectionRecord?.id}. Waiting for completion...`)
 
@@ -328,7 +330,7 @@ const useBCAgentSetup = () => {
         logger.error(`Error during mediation recovery. Attempting recovery of the deleted mediation records: ${error}`)
         await mediationRepository.save(agent.context, oldMediationRecord)
         await connectionRepository.save(agent.context, oldMediatorConnectionRecord)
-        if (oldOobRecord) {
+        if (oldOobRecord && !newConnectionEstablished) {
           await outOfBandRepository.save(agent.context, oldOobRecord)
         }
         throw error
