@@ -1,16 +1,10 @@
 import { AppError } from '@/errors'
-import { BCSCErrorModal, ErrorModalPayload } from '@/errors/components/ErrorModal'
+import { BCSCErrorModal, ErrorModalAction, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
-
-export interface ErrorModalAction {
-  text: string
-  onPress: () => void
-  style?: 'default' | 'destructive' | undefined
-}
 
 interface ErrorModalOptions {
   action?: ErrorModalAction

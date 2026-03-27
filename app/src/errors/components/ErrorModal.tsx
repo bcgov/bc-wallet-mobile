@@ -1,4 +1,3 @@
-import { ErrorModalAction } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
@@ -8,6 +7,12 @@ import { Modal, Pressable, StyleSheet } from 'react-native'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
+
+export interface ErrorModalAction {
+  text: string
+  onPress: () => void
+  style?: 'default' | 'destructive'
+}
 
 export interface ErrorModalPayload {
   title: string

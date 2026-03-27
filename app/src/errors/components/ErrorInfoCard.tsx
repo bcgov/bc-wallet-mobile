@@ -1,10 +1,12 @@
-import { ErrorModalAction } from '@/contexts/ErrorAlertContext'
+import { PressableOpacity } from '@/components/PressableOpacity'
+import { hitSlop } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { ErrorModalAction } from './ErrorModal'
 
 export const fallbackColors = {
   cardBackground: '#FFFFFF',
@@ -74,14 +76,15 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               {title}
             </Text>
           </View>
-          <Icon
-            name="close"
-            size={24}
-            color={colors.icon}
+          <PressableOpacity
             onPress={onDismiss}
+            hitSlop={hitSlop}
             testID={testIdWithKey('CloseButton')}
             accessibilityLabel={t('Global.Close')}
-          />
+            accessibilityRole="button"
+          >
+            <Icon name="close" size={24} color={colors.icon} />
+          </PressableOpacity>
         </View>
 
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
