@@ -190,7 +190,7 @@
     "pod-install": "~0.1.39",
     "prettier": "~3.4.2",
     "react-native-svg-transformer": "~1.5.0",
-    "react-test-renderer": "~19.1.4",
+    "react-test-renderer": "~19.1.5",
     "typescript": "~5.9.2",
     "typescript-eslint": "~7.18.0"
   }
