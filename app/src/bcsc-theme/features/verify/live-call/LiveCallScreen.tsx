@@ -143,7 +143,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     fcmService.service.setSuppressed(true)
     return () => fcmService.service.setSuppressed(false)
-  }, [fcmService])
+  }, [fcmService.service])
 
   // setup volume detection
   useEffect(() => {

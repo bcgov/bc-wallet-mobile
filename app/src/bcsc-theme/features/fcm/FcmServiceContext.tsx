@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmService } from './services/fcm-service'
 
@@ -14,7 +14,8 @@ export const FcmServiceProvider: React.FC<{
   viewModel: FcmViewModel
   children: React.ReactNode
 }> = ({ service, viewModel, children }) => {
-  return <FcmServiceContext.Provider value={{ service, viewModel }}>{children}</FcmServiceContext.Provider>
+  const memoedValue = useMemo(() => ({ service, viewModel }), [service, viewModel])
+  return <FcmServiceContext.Provider value={memoedValue}>{children}</FcmServiceContext.Provider>
 }
 
 export const useFcmService = () => {

@@ -664,6 +664,95 @@ describe('FcmViewModel', () => {
     })
   })
 
+  describe('processPendingChallenges', () => {
+    const mockGetBCSCApiClient = getBCSCApiClient as jest.Mock
+
+    beforeEach(() => {
+      viewModel.initialize()
+    })
+
+    it('buffers challenge when API client is not ready', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'test-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('API client not ready'))
+    })
+
+    it('processes buffered challenge once API client is ready', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+
+      const mockResult = {
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'challenge123' },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'test-jwt' } } as FcmMessage)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).toHaveBeenCalledWith({
+        serviceTitle: 'Test Service',
+        pairingCode: 'challenge123',
+        source: 'fcm',
+      })
+    })
+
+    it('processes multiple buffered challenges', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
+      })
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'jwt-1' } } as FcmMessage)
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'jwt-2' } } as FcmMessage)
+
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).toHaveBeenCalledTimes(2)
+    })
+
+    it('does nothing when queue is empty', async () => {
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('0 pending challenge(s)'))
+    })
+
+    it('clears the queue so a second call does not reprocess', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
+      })
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'test-jwt' } } as FcmMessage)
+
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+      expect(mockPairingService.handlePairing).toHaveBeenCalledTimes(1)
+
+      mockPairingService.handlePairing.mockClear()
+      await viewModel.processPendingChallenges()
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+    })
+  })
+
   // TODO: Remove these tests when BCWallet mode is deprecated and only BCSC remains
   describe('BCWallet mode - FCM service bypassed', () => {
     let bcWalletFcmService: jest.Mocked<FcmService>
