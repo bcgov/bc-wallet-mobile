@@ -29,16 +29,35 @@ jobs:
             "CERTIFICATE"
             "KEYCHIAN_PASSWD"
             "PROVISIONING_PROFILE"
+            "PROVISIONING_PROFILE_SADEV"
+            "PROVISIONING_PROFILE_SAQA"
+            "PROVISIONING_PROFILE_SATEST"
+            "PROVISIONING_PROFILE_SAPROD"
             "PLAY_STORE_JKS_BASE64"
             "PLAY_STORE_JKS_ALIAS"
             "PLAY_STORE_JKS_PASSWD"
             "PLAY_STORE_JKS_BASE64_SADEV"
             "PLAY_STORE_JKS_ALIAS_SADEV"
             "PLAY_STORE_JKS_PASSWD_SADEV"
+            "PLAY_STORE_JKS_BASE64_SAQA"
+            "PLAY_STORE_JKS_ALIAS_SAQA"
+            "PLAY_STORE_JKS_PASSWD_SAQA"
+            "PLAY_STORE_JKS_BASE64_SATEST"
+            "PLAY_STORE_JKS_ALIAS_SATEST"
+            "PLAY_STORE_JKS_PASSWD_SATEST"
+            "PLAY_STORE_JKS_BASE64_SAPROD"
+            "PLAY_STORE_JKS_ALIAS_SAPROD"
+            "PLAY_STORE_JKS_PASSWD_SAPROD"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
             "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST"
+            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD"
             "GOOGLE_SERVICES_CREDENTIALS_IOS"
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
+            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -50,16 +69,35 @@ jobs:
           CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          PROVISIONING_PROFILE_SADEV: ${{ secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
+          PROVISIONING_PROFILE_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
+          PROVISIONING_PROFILE_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 }}
+          PROVISIONING_PROFILE_SAPROD: ${{ secrets.BUILD_PROVISION_PROFILE_SAPROD_BASE64 }}
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
           PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
           PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+          PLAY_STORE_JKS_BASE64_SAQA: ${{ secrets.PLAY_STORE_JKS_BASE64_SAQA }}
+          PLAY_STORE_JKS_ALIAS_SAQA: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
+          PLAY_STORE_JKS_PASSWD_SAQA: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
+          PLAY_STORE_JKS_BASE64_SATEST: ${{ secrets.PLAY_STORE_JKS_BASE64_SATEST }}
+          PLAY_STORE_JKS_ALIAS_SATEST: ${{ secrets.PLAY_STORE_JKS_ALIAS_SATEST }}
+          PLAY_STORE_JKS_PASSWD_SATEST: ${{ secrets.PLAY_STORE_JKS_PASSWD_SATEST }}
+          PLAY_STORE_JKS_BASE64_SAPROD: ${{ secrets.PLAY_STORE_JKS_BASE64_SAPROD }}
+          PLAY_STORE_JKS_ALIAS_SAPROD: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAPROD }}
+          PLAY_STORE_JKS_PASSWD_SAPROD: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAPROD }}
           GOOGLE_SERVICES_CREDENTIALS_ANDROID: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
+          GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
     permissions: {}
@@ -84,6 +122,23 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
+
+  # ─── Dynamic Variant Matrix ──────────────────────────────────────────
+  # PRs build only bcwallet-prod + bcsc-dev (fast feedback).
+  # Merges to main and workflow_dispatch build all BCSC variants.
+  compute-variants:
+    runs-on: ubuntu-22.04
+    outputs:
+      variants: ${{ steps.set-variants.outputs.variants }}
+    steps:
+      - name: Determine variant matrix
+        id: set-variants
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "merge_group" ]]; then
+            echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
+          fi
 
   early-exit-check:
     runs-on: ubuntu-22.04
@@ -148,10 +203,6 @@ jobs:
   # variant build.  The pre-built bundle is uploaded as an artifact and
   # downloaded by build-ios (SKIP_BUNDLING=1) and build-android
   # (SKIP_METRO_BUNDLE=1), so Metro is never invoked during native builds.
-  #
-  # Future optimizations:
-  #   - Use dynamic matrix (fromJSON) to build only bcwallet-prod +
-  #     bcsc-dev on pull requests, all variants on main/dispatch.
   prepare-ios:
     needs: [early-exit-check]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
@@ -398,15 +449,14 @@ jobs:
 
   build-ios:
     name: Build iOS - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare-ios]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-ios, compute-variants]
     if: needs.early-exit-check.outputs.should_skip_build != 'true'
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
@@ -573,8 +623,29 @@ jobs:
           plutil -replace aps-environment -string production app/ios/BCWallet/BCWallet.entitlements
           plutil -p app/ios/BCWallet/BCWallet.entitlements
 
+      - name: Create prod signing credentials
+        # This step will not work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
+        uses: ./.github/workflows/actions/create-ios-sig-creds
+        with:
+          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+
       - name: Generate iOS signing config
+        # This step will not work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          PROVISIONING_PROFILE: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
         run: |
+          # Extract the UUID from the provisioning profile
+          PP_UUID=$(/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \
+            "$(echo "${PROVISIONING_PROFILE}" | base64 -d | security cms -D)")
+          echo "Provisioning profile UUID: ${PP_UUID}"
+
           cat > export-options.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -595,33 +666,22 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>${IOS_BUNDLE_ID}</key>
-              <string>${{ env.IOS_PROVISIONING_PROFILE_UUID }}</string>
+              <string>${PP_UUID}</string>
             </dict>
           </dict>
           </plist>
           EOF
-          cat > release-variant.xcconfig <<'XCEOF'
+          cat > release-variant.xcconfig <<XCEOF
           DEVELOPMENT_TEAM = L796QSLV3E
           CODE_SIGN_STYLE = Manual
           CODE_SIGN_IDENTITY = iPhone Distribution
-          PROVISIONING_PROFILE_SPECIFIER = ${{ env.IOS_PROVISIONING_PROFILE_UUID }}
-          CODE_SIGN_ENTITLEMENTS = $(PROJECT_DIR)/BCWallet/BCWallet.entitlements
+          PROVISIONING_PROFILE_SPECIFIER = ${PP_UUID}
+          CODE_SIGN_ENTITLEMENTS = \$(PROJECT_DIR)/BCWallet/BCWallet.entitlements
           XCEOF
           echo "Generated export-options.plist:"
           cat export-options.plist
           echo "Generated release-variant.xcconfig:"
           cat release-variant.xcconfig
-
-      - name: Create prod signing credentials
-        # This step will not work in a `fork` because it will not have access
-        # to org and repo secrets.
-        if: github.event.pull_request.head.repo.fork != true
-        uses: ./.github/workflows/actions/create-ios-sig-creds
-        with:
-          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -711,14 +771,13 @@ jobs:
 
   build-android:
     name: Build Android - ${{ matrix.variant }}
-    needs: [check-secrets, check-vars, early-exit-check, prepare-android]
+    needs: [check-secrets, check-vars, early-exit-check, prepare-android, compute-variants]
     if: |-
       needs.early-exit-check.outputs.should_skip_build != 'true' &&
       needs.prepare-android.result == 'success'
     strategy:
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -991,14 +1050,14 @@ jobs:
   distribute-testflight:
     name: 'Distribute TestFlight - ${{ matrix.variant }}'
     if: success() && github.ref_name == 'main'
-    needs: [build-ios, build-summary]
+    needs: [build-ios, build-summary, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        variant: [bcwallet-prod, bcsc-dev]
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -1023,15 +1082,14 @@ jobs:
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
-    needs: [build-ios, build-android, build-summary]
+    needs: [build-ios, build-android, build-summary, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     strategy:
       matrix:
         platform: [ios, android]
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -1067,14 +1125,18 @@ jobs:
           artifact_name: ${{ env.ARTIFACT_INNER_NAME }}
 
   # ─── E2E Tests ──────────────────────────────────────────────────────
-  # PR:   smoke specs — basic launch + first navigation (all variants)
-  # Main: full E2E specs — onboarding → verify → main (bcsc only;
-  #        variants without e2e.spec.ts are skipped on main)
+  # Available suites (defined in e2e/configs/wdio.shared.conf.ts):
+  #   smoke          — basic launch + first navigation
+  #   happy-path     — onboarding → verify → main (straight-through)
+  #   full-regression — onboarding → verify → main (with detours)
+  #
+  # PR:   smoke suite (all variants)
+  # Main: disabled for now (re-enable once SauceLabs pipeline is stable)
   #
   # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
   e2e-tests:
     name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
-    needs: [ship-to-saucelabs]
+    needs: [ship-to-saucelabs, compute-variants]
     if: >-
       success() &&
       github.event.pull_request.head.repo.fork != true
@@ -1087,8 +1149,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [iOS, Android]
-        variant: [bcwallet-prod, bcsc-dev]
-        # TODO: Add bcsc-test, bcsc-qa, bcsc-prod once secrets are created
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
@@ -1097,24 +1158,15 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - name: Determine test mode
+      - name: Determine test suite
         id: mode
-        working-directory: e2e
         shell: bash
         run: |
-          VARIANT="${{ matrix.variant }}"
-          if [[ "$VARIANT" == bcsc* ]]; then E2E_VARIANT="bcsc"; else E2E_VARIANT="bc-wallet"; fi
-
           if [ "${{ github.ref_name }}" = "main" ]; then
-            if [ -f "test/${E2E_VARIANT}/e2e.spec.ts" ]; then
-              echo "spec=--spec test/${E2E_VARIANT}/e2e.spec.ts" >> "$GITHUB_OUTPUT"
-              echo "skip=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "No full E2E spec for ${E2E_VARIANT} — skipping on main"
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-            fi
+            echo "E2E on main is temporarily disabled"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
           else
-            echo "spec=" >> "$GITHUB_OUTPUT"
+            echo "suite=--suite smoke" >> "$GITHUB_OUTPUT"
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -1152,8 +1204,8 @@ jobs:
         run: |
           if [ "${{ matrix.platform }}" = "ios" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.ipa" \
-              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts ${{ steps.mode.outputs.suite }}
           else
             ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.aab" \
-              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts ${{ steps.mode.outputs.spec }}
+              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts ${{ steps.mode.outputs.suite }}
           fi

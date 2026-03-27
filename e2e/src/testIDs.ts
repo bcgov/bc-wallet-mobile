@@ -145,13 +145,13 @@ export const BCSC_TestIDs = {
     ProvinceInput: 'com.ariesbifold:id/province-input',
     PostalCodeInput: 'com.ariesbifold:id/postalCode-input',
   },
-  /** App uses plain testIDs (no `com.ariesbifold:id/` prefix) on this screen. */
   EnterEmail: {
-    EmailInput: 'EmailInput',
+    EmailInput: 'com.ariesbifold:id/email-input',
     ContinueButton: 'ContinueButton',
     SkipButton: 'SkipButton',
   },
   EmailConfirmation: {
+    CodeInput: 'com.ariesbifold:id/EmailConfirmationCodeInput',
     ContinueButton: 'ContinueButton',
     ResendCodeButton: 'ResendCodeButton',
     GoToEmailButton: 'GoToEmailButton',
@@ -312,7 +312,7 @@ export const BCSC_TestIDs = {
   },
   ManualPairingCode: {
     Submit: 'com.ariesbifold:id/Submit',
-    PairingCodeInput: 'com.ariesbifold:id/PairingCodeInput',
+    PairingCodeInput: 'com.ariesbifold:id/ManualPairingCodeInput',
   },
   Services: {
     Search: 'com.ariesbifold:id/search',

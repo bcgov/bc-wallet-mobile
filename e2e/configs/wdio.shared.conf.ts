@@ -7,14 +7,18 @@ import { getE2EConfig } from '../src/e2eConfig.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-// Load .env.saucelabs before reading config so VARIANT is available
-dotenv.config({ path: resolve(__dirname, '../.env.saucelabs') })
+// Load .env.e2e before reading config so VARIANT is available
+dotenv.config({ path: resolve(__dirname, '../.env.e2e') })
 
 const { variant } = getE2EConfig()
 
 export const config: WebdriverIO.Config = {
   specs: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
-  // Selective spec execution via CLI: --spec test/bcsc/onboarding.spec.ts
+  suites: {
+    smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
+    'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
+    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression.spec.ts`)],
+  },
   exclude: [],
   capabilities: [],
 
