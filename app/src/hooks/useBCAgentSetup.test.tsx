@@ -316,8 +316,12 @@ describe('useBCAgentSetup', () => {
       save: jest.fn(),
       getById: jest
         .fn()
-        .mockResolvedValue({ getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()), outOfBandId: 'oob1', updatedAt: moment().subtract(100, 'days').toDate() }),
-        delete: jest.fn(),
+        .mockResolvedValue({
+          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+          outOfBandId: 'oob1',
+          updatedAt: moment().subtract(100, 'days').toDate(),
+        }),
+      delete: jest.fn(),
     }
     const outOfBandRepository = {
       getById: jest.fn().mockResolvedValue({ id: 'oob1' }),
@@ -351,7 +355,9 @@ describe('useBCAgentSetup', () => {
         theirDid: 'did:example:123',
       },
     })
-    agent.connections.sendPing = jest.fn().mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
+    agent.connections.sendPing = jest
+      .fn()
+      .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
@@ -376,8 +382,12 @@ describe('useBCAgentSetup', () => {
       save: jest.fn(),
       getById: jest
         .fn()
-        .mockResolvedValue({ getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()), outOfBandId: 'oob1', updatedAt: moment().subtract(100, 'days').toDate() }),
-        delete: jest.fn(),
+        .mockResolvedValue({
+          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+          outOfBandId: 'oob1',
+          updatedAt: moment().subtract(100, 'days').toDate(),
+        }),
+      delete: jest.fn(),
     }
     const outOfBandRepository = {
       getById: jest.fn().mockResolvedValue({ id: 'oob1' }),
@@ -402,7 +412,9 @@ describe('useBCAgentSetup', () => {
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    agent.oob.receiveInvitationFromUrl = jest.fn().mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
+    agent.oob.receiveInvitationFromUrl = jest
+      .fn()
+      .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
@@ -428,8 +440,12 @@ describe('useBCAgentSetup', () => {
       save: jest.fn(),
       getById: jest
         .fn()
-        .mockResolvedValue({ getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()), outOfBandId: 'oob1', updatedAt: moment().subtract(100, 'days').toDate() }),
-        delete: jest.fn(),
+        .mockResolvedValue({
+          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+          outOfBandId: 'oob1',
+          updatedAt: moment().subtract(100, 'days').toDate(),
+        }),
+      delete: jest.fn(),
     }
     const outOfBandRepository = {
       getById: jest.fn().mockResolvedValue({ id: 'oob1' }),
