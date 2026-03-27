@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import {
@@ -14,7 +14,6 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import { splitSplice } from '@utils/splitSplice'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -23,7 +22,6 @@ type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.Manu
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const [code, setCode] = useState('')
-  const [displayValue, setDisplayValue] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { Spacing } = useTheme()
@@ -32,16 +30,8 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const { pairing } = useApi()
 
   const handleChangeCode = useCallback((text: string) => {
-    const normalized = text.toUpperCase().replace(/\s/g, '')
-    const limited = normalized.slice(0, PAIRING_CODE_LENGTH)
-
-    let formatted = limited
-    if (limited.length > PAIRING_CODE_LENGTH / 2) {
-      formatted = splitSplice(limited, PAIRING_CODE_LENGTH / 2, 0, ' ')
-    }
-
-    setDisplayValue(formatted)
-    setCode(limited)
+    // strip non-alphanumeric characters and convert to uppercase
+    setCode(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
     setError(null)
   }, [])
 
@@ -90,19 +80,18 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
-      <InputWithValidation
-        id={'pairingCode'}
-        label={t('BCSC.ManualPairing.PairingCodeLabel')}
-        value={displayValue}
-        onChangeText={handleChangeCode}
+      <CodeInput
+        value={code}
+        onChange={handleChangeCode}
         error={error}
         onErrorClear={() => setError(null)}
-        inputProps={{ textAlign: 'center' }}
+        separator
         textInputProps={{
-          maxLength: PAIRING_CODE_LENGTH + 1,
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
+          testID: testIdWithKey('ManualPairingCodeInput'),
+          accessibilityLabel: 'Pairing-Code-Input',
         }}
       />
     </ScreenWrapper>

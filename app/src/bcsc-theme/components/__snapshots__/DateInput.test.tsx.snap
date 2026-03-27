@@ -86,28 +86,81 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
       ]
     }
   >
-    <TextInput
-      accessibilityLabel="Date of Birth"
-      keyboardType="number-pad"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onChangeText={[Function]}
-      onFocus={[Function]}
-      placeholder="YYYY/MM/DD"
+    <View
       style={
-        [
-          {
-            "color": "#313132",
-            "flex": 1,
-            "fontSize": 16,
-            "padding": 0,
-          },
-          undefined,
-        ]
+        {
+          "flex": 1,
+        }
       }
-      testID="com.ariesbifold:id/birthdate-input"
-      value=""
-    />
+    >
+      <View
+        pointerEvents="none"
+        style={
+          [
+            {
+              "bottom": 0,
+              "left": 0,
+              "position": "absolute",
+              "right": 0,
+              "top": 0,
+            },
+            {
+              "justifyContent": "center",
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            {
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 16,
+              "marginBottom": undefined,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "transparent",
+              }
+            }
+          />
+          <Text
+            style={
+              {
+                "color": "#606060",
+              }
+            }
+          >
+            YYYY/MM/DD
+          </Text>
+        </Text>
+      </View>
+      <TextInput
+        accessibilityLabel="Date of Birth"
+        keyboardType="number-pad"
+        onBlur={[Function]}
+        onChange={[Function]}
+        onChangeText={[Function]}
+        onFocus={[Function]}
+        style={
+          [
+            {
+              "backgroundColor": "transparent",
+              "color": "#313132",
+              "flex": 1,
+              "fontSize": 16,
+              "includeFontPadding": false,
+              "padding": 0,
+            },
+            undefined,
+          ]
+        }
+        testID="com.ariesbifold:id/birthdate-input"
+        value=""
+      />
+    </View>
     <Text
       allowFontScaling={false}
       selectable={false}

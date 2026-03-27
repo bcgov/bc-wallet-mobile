@@ -1,5 +1,6 @@
+import { useTheme } from '@bifold/core'
 import { useCallback, useState } from 'react'
-import { LayoutChangeEvent } from 'react-native'
+import { LayoutChangeEvent, Platform, Text } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -40,7 +41,23 @@ const formatDigits = (digits: string): string => {
 }
 
 const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
+  const { Inputs, ColorPalette } = useTheme()
   const [displayValue, setDisplayValue] = useState(formatDigits(getDigits(value)))
+
+  const remainingTemplate = DATE_TEMPLATE.slice(displayValue.length)
+
+  const templateOverlay = (
+    <Text
+      style={{
+        marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0,
+        fontSize: Inputs.textInput.fontSize,
+        fontFamily: Inputs.textInput.fontFamily,
+      }}
+    >
+      <Text style={{ color: 'transparent' }}>{displayValue}</Text>
+      <Text style={{ color: ColorPalette.grayscale.mediumGrey }}>{remainingTemplate}</Text>
+    </Text>
+  )
 
   const handleChangeText = useCallback(
     (rawText: string) => {
@@ -69,8 +86,8 @@ const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: Dat
       error={error}
       subtext={subtext}
       onLayout={onLayout}
+      inputOverlay={templateOverlay}
       textInputProps={{
-        placeholder: DATE_TEMPLATE,
         keyboardType: 'number-pad',
       }}
     />

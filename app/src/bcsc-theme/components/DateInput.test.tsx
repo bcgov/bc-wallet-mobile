@@ -75,6 +75,33 @@ describe('DateInput Component', () => {
     })
   })
 
+  describe('Template overlay', () => {
+    test('shows full YYYY/MM/DD template when input is empty', () => {
+      renderDefault({ value: '' })
+      expect(screen.getByText('YYYY/MM/DD')).toBeTruthy()
+    })
+
+    test('shows remaining template characters after entered digits', () => {
+      renderDefault({ value: '199' })
+      expect(screen.getByText('Y/MM/DD')).toBeTruthy()
+    })
+
+    test('shows MM/DD template after year is fully entered', () => {
+      renderDefault({ value: '1985' })
+      expect(screen.getByText('MM/DD')).toBeTruthy()
+    })
+
+    test('shows DD template after month is fully entered', () => {
+      renderDefault({ value: '1985/03' })
+      expect(screen.getByText('DD')).toBeTruthy()
+    })
+
+    test('shows no template characters when all digits are entered', () => {
+      renderDefault({ value: '1985/03/14' })
+      expect(screen.queryByText(/[Y]{4}|[M]{2}|[D]{2}/)).toBeNull()
+    })
+  })
+
   describe('Progressive reveal', () => {
     test('shows empty value when no digits are present', () => {
       renderDefault({ value: '' })
