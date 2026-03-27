@@ -320,7 +320,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       cancelVerificationRequestAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
-      // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
+      // ERROR MODALS
       unknownErrorModal,
       factoryResetAlert: factoryResetErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),

@@ -41,10 +41,10 @@ describe('ErrorInfoCard', () => {
       expect(getByText('Settings.Version 1.0.0 (42)')).toBeTruthy()
     })
 
-    it('should always show the Okay button', () => {
+    it('should always show the close button', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
 
-      expect(getByTestId('com.aries.bifold:id/Okay')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/CloseButton')).toBeTruthy()
     })
   })
 
@@ -107,10 +107,10 @@ describe('ErrorInfoCard', () => {
   })
 
   describe('dismiss button', () => {
-    it('should call onDismiss when Okay is pressed', () => {
+    it('should call onDismiss when Close is pressed', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
 
-      fireEvent.press(getByTestId('com.aries.bifold:id/Okay'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CloseButton'))
 
       expect(mockOnDismiss).toHaveBeenCalledTimes(1)
     })
