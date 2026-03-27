@@ -5,14 +5,6 @@ import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCSCErrorModal, BCSCErrorModalProps, ErrorModalPayload } from './ErrorModal'
 
-const mockTrackErrorInAnalytics = jest.fn()
-const mockGetErrorDefinitionFromAppEventCode = jest.fn()
-
-jest.mock('@/errors/errorHandler', () => ({
-  trackErrorInAnalytics: (...args: any[]) => mockTrackErrorInAnalytics(...args),
-  getErrorDefinitionFromAppEventCode: (...args: any[]) => mockGetErrorDefinitionFromAppEventCode(...args),
-}))
-
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: {
     trackErrorEvent: jest.fn(),
@@ -194,8 +186,6 @@ describe('BCSCErrorModal', () => {
     })
 
     it('should disable the Report button after being pressed', async () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
       const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
       const reportBtn = getByTestId('com.aries.bifold:id/ReportThisProblem')
@@ -209,8 +199,6 @@ describe('BCSCErrorModal', () => {
 
   describe('errorKey reset', () => {
     it('should reset showDetails and reported state when errorKey changes', () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
       const { getByTestId, queryByTestId, rerender } = renderModal({
         error: validPayload,
         errorKey: 1,

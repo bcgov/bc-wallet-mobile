@@ -15,6 +15,7 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { InteractionManager, View } from 'react-native'
@@ -121,8 +122,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
-        title={'Get Help'}
-        accessibilityLabel={'Get Help'}
+        title={t('Global.GetHelp')}
+        accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />
@@ -133,7 +134,12 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     <ScreenWrapper keyboardActive controls={controls}>
       <View style={{ gap: Spacing.sm }}>
         <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
-        <PINInput onPINChange={handlePINChange} onPINComplete={handlePINComplete} errorMessage={errorMessage} />
+        <PINInput
+          testIDKey="PINInput"
+          onPINChange={handlePINChange}
+          onPINComplete={handlePINComplete}
+          errorMessage={errorMessage}
+        />
         <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
       </View>
     </ScreenWrapper>

@@ -1,25 +1,14 @@
-import { AlertInteractionEvent } from '../events/appEventCode'
-import { Analytics } from '../utils/analytics/analytics-singleton'
-import { appLogger } from '../utils/logger'
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import { AppEventCode } from '@/events/appEventCode'
+import { BifoldError } from '@bifold/core'
+import { AppError } from './appError'
 import {
   extractErrorMessage,
   getErrorDefinition,
   getErrorDefinitionFromAppEventCode,
-  logError,
-  trackErrorInAnalytics,
+  toBifoldError,
 } from './errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
-
-// Mock dependencies
-jest.mock('react-native', () => ({
-  DeviceEventEmitter: {
-    emit: jest.fn(),
-  },
-  Platform: {
-    OS: 'ios',
-    select: jest.fn((obj) => obj.ios ?? obj.default),
-  },
-}))
 
 jest.mock('../../src/utils/analytics/analytics-singleton', () => ({
   Analytics: {
@@ -81,68 +70,6 @@ describe('errorHandler', () => {
     })
   })
 
-  describe('trackErrorInAnalytics', () => {
-    it('should track error event in analytics', () => {
-      const definition = ErrorRegistry.CAMERA_BROKEN
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(definition.statusCode),
-        message: definition.appEvent,
-      })
-    })
-
-    it('should track alert display event', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(Analytics.trackAlertDisplayEvent).toHaveBeenCalledWith(definition.appEvent)
-    })
-
-    it('should not track error event or alert display for action events', () => {
-      const definition = ErrorRegistry.SERVER_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
-
-      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
-      expect(Analytics.trackAlertDisplayEvent).not.toHaveBeenCalled()
-    })
-
-    it('should track alert action event when user reports', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, 'Report this problem')
-
-      expect(Analytics.trackErrorEvent).not.toHaveBeenCalled()
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
-    })
-
-    it('should use default action label when not provided for ALERT_ACTION', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION)
-
-      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith(definition.appEvent, 'Report this problem')
-    })
-
-    it('should log debug information', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-
-      trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-
-      expect(appLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(AlertInteractionEvent.ALERT_DISPLAY),
-        expect.objectContaining({
-          code: definition.statusCode,
-          category: definition.category,
-          severity: definition.severity,
-        })
-      )
-    })
-  })
-
   describe('getErrorDefinition', () => {
     it('should return the error definition for a valid key', () => {
       const definition = getErrorDefinition('CAMERA_BROKEN')
@@ -164,53 +91,6 @@ describe('errorHandler', () => {
       expect(getErrorDefinition('GENERAL_ERROR').category).toBe(ErrorCategory.GENERAL)
       expect(getErrorDefinition('STATE_LOAD_ERROR').category).toBe(ErrorCategory.WALLET)
       expect(getErrorDefinition('PARSE_INVITATION_ERROR').category).toBe(ErrorCategory.CONNECTION)
-    })
-  })
-
-  describe('logError', () => {
-    it('should log error with all details', () => {
-      const definition = ErrorRegistry.NO_INTERNET
-      const technicalMessage = 'Network request failed'
-
-      logError('NO_INTERNET', definition, technicalMessage)
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('NO_INTERNET'),
-        expect.objectContaining({
-          code: definition.statusCode,
-          category: definition.category,
-          severity: definition.severity,
-          technicalMessage,
-        })
-      )
-    })
-
-    it('should include additional context in logs', () => {
-      const definition = ErrorRegistry.GENERAL_ERROR
-      const context = { userId: '123', screen: 'Home' }
-
-      logError('GENERAL_ERROR', definition, 'Some error', context)
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          userId: '123',
-          screen: 'Home',
-        })
-      )
-    })
-
-    it('should handle empty technical message', () => {
-      const definition = ErrorRegistry.CAMERA_BROKEN
-
-      logError('CAMERA_BROKEN', definition, '')
-
-      expect(appLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          technicalMessage: '',
-        })
-      )
     })
   })
 
@@ -238,6 +118,54 @@ describe('errorHandler', () => {
       const definition = getErrorDefinitionFromAppEventCode('')
 
       expect(definition).toBeNull()
+    })
+  })
+
+  describe('toBifoldError', () => {
+    it('should convert a plain Error into a BifoldError with UNKNOWN_APP_ERROR_STATUS_CODE', () => {
+      const error = new Error('something broke')
+      error.stack = 'fake stack'
+
+      const result = toBifoldError('Title', 'Description', error)
+
+      expect(result).toBeInstanceOf(BifoldError)
+      expect(result.title).toBe('Title')
+      expect(result.description).toBe('Description')
+      expect(result.message).toBe('something broke')
+      expect(result.code).toBe(UNKNOWN_APP_ERROR_STATUS_CODE)
+      expect(result.stack).toBe('fake stack')
+    })
+
+    it('should convert an AppError into a BifoldError with its statusCode and fullMessage', () => {
+      const cause = new Error('technical details')
+      const appError = new AppError(
+        'App Error',
+        {
+          category: ErrorCategory.GENERAL,
+          appEvent: AppEventCode.GENERAL,
+          statusCode: 1000,
+        },
+        { cause, track: false }
+      )
+
+      const result = toBifoldError('Display Title', 'Display Description', appError)
+
+      expect(result).toBeInstanceOf(BifoldError)
+      expect(result.message).toBe(appError.fullMessage)
+      expect(result.title).toBe('Display Title')
+      expect(result.description).toBe('Display Description')
+      expect(result.code).toBe(1000)
+      expect(result.cause).toBe(cause)
+    })
+
+    it('should preserve the cause from the original error', () => {
+      const cause = new Error('root cause')
+      const error = new Error('wrapper')
+      error.cause = cause
+
+      const result = toBifoldError('T', 'D', error)
+
+      expect(result.cause).toBe(cause)
     })
   })
 })

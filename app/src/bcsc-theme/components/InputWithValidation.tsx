@@ -1,4 +1,5 @@
 import { hitSlop } from '@/constants'
+import { a11yLabel } from '@/utils/accessibility'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import type { ReactNode } from 'react'
 import { useRef, useState } from 'react'
@@ -104,6 +105,8 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           inputRef.current?.focus()
         }}
         hitSlop={hitSlop}
+        testID={testIdWithKey(`${props.id}-pressable`)}
+        accessible={false}
       >
         <View style={{ flex: 1 }}>
           {props.inputOverlay && (
@@ -125,7 +128,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
               props.onChange?.(e.nativeEvent.text)
             }}
             onPressIn={props.onPressIn}
-            accessibilityLabel={props.label}
+            accessibilityLabel={a11yLabel(props.label)}
             testID={testIdWithKey(`${props.id}-input`)}
             keyboardType={props.keyboardType}
             {...props.textInputProps}

@@ -145,7 +145,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 "text": undefined,
               }
             }
-            accessible={true}
+            accessible={false}
             collapsable={false}
             focusable={true}
             hitSlop={
@@ -188,6 +188,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 undefined,
               ]
             }
+            testID="com.ariesbifold:id/birthDate-pressable"
           >
             <View
               style={

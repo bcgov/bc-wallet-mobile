@@ -2,6 +2,8 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface ServiceButtonProps {
   title: string
   description?: string
@@ -27,7 +29,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
     <TouchableOpacity
       onPress={onPress}
       style={styles.container}
-      accessibilityLabel={title}
+      accessibilityLabel={a11yLabel(title)}
       accessibilityRole="button"
       testID={testID ?? testIdWithKey(`ServiceButton-${title.replaceAll(/\s+/g, '')}`)}
     >

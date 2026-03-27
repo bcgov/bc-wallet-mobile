@@ -1,7 +1,9 @@
+import { ErrorRegistry } from '@/errors'
 import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
+import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
 jest.mock('@bifold/core')
@@ -241,6 +243,10 @@ describe('BCSCRootStack', () => {
 
     render(<BCSCRootStack />)
 
-    expect(mockEmitErrorModal).toHaveBeenCalledWith('STATE_LOAD_ERROR', { error: mockError })
+    expect(mockEmitErrorModal).toHaveBeenCalledWith(
+      'Error.Problem',
+      'Error.ProblemDescription',
+      toAppError(mockError, ErrorRegistry.STATE_LOAD_ERROR)
+    )
   })
 })

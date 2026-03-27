@@ -12,6 +12,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -69,7 +70,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
       title={t('BCSC.NicknameAccount.SaveAndContinue')}
       buttonType={ButtonType.Primary}
       testID={testIdWithKey('SaveAndContinue')}
-      accessibilityLabel={t('BCSC.NicknameAccount.SaveAndContinue')}
+      accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
       onPress={handleButtonPress}
       disabled={loading}
     >

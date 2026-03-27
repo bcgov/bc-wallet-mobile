@@ -2,6 +2,8 @@ import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { t } from 'i18next'
+
+import { a11yLabel } from '@utils/accessibility'
 import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 
 /**
@@ -15,7 +17,7 @@ export const createMainSettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={a11yLabel(t('BCSC.Screens.Settings'))}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.MainSettings)}
       />
@@ -35,7 +37,7 @@ export const createVerifySettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={a11yLabel(t('BCSC.Screens.Settings'))}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.VerifySettings)}
       />
@@ -55,7 +57,7 @@ export const createAuthSettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.ButtonTitle')}
+        accessibilityLabel={a11yLabel(t('BCSC.Screens.Settings'))}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => navigation.navigate(BCSCScreens.AuthSettings)}
       />

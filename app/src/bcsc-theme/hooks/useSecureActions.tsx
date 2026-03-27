@@ -902,13 +902,13 @@ export const useSecureActions = () => {
     try {
       await Promise.all([
         deleteAuthorizationRequest(),
+        deleteAccountFlags(),
+        deleteEvidence(),
+        deleteSavedServices(),
+        deleteCredential(),
         deleteToken(TokenType.Refresh),
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
-        deleteAccountFlags(),
-        deleteEvidence(),
-        deleteCredential(),
-        deleteSavedServices(),
       ])
       logger.info('Secure data deleted from native storage')
     } catch (error) {

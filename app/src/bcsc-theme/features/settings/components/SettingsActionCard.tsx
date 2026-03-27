@@ -2,6 +2,8 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode } from 'react'
 import { StyleProp, StyleSheet, TextStyle, TouchableOpacity, View } from 'react-native'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface SettingsActionCardProps {
   title: string
   onPress: () => void
@@ -43,7 +45,7 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       style={styles.cardContainer}
       onPress={props.onPress}
       accessibilityRole="button"
-      accessibilityLabel={props.title}
+      accessibilityLabel={a11yLabel(props.title)}
       testID={props.testID ?? testIdWithKey(`SettingsActionCard-${props.title}`)}
     >
       <View style={styles.textContainer}>

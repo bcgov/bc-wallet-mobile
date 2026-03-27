@@ -2,8 +2,10 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCAuthStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
+import { HELP_URL } from '@/constants'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { BCState } from '@/store'
+import { openLink } from '@/utils/links'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
@@ -49,12 +51,18 @@ const useServiceOutageViewModel = () => {
 
   const contentText = statusMessage ? [statusMessage] : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
 
+  const handleLearnMore = useCallback(() => {
+    openLink(HELP_URL)
+  }, [])
+
   return {
     headerText: t('BCSC.Modals.ServiceOutage.Header'),
     contentText,
+    learnMoreText: t('BCSC.Modals.ServiceOutage.LearnMore'),
     buttonText: t('BCSC.Modals.ServiceOutage.CheckAgainButton'),
     isCheckDisabled: isChecking || !isClientReady,
     handleCheckAgain,
+    handleLearnMore,
   }
 }
 
