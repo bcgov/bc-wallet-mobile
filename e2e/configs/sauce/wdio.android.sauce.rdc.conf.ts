@@ -11,6 +11,8 @@ config.capabilities = [
     'appium:deviceName': 'Google.*',
     'appium:automationName': 'UiAutomator2',
     'appium:app': `storage:filename=${appFilename}`,
+    'appium:noReset': false,
+    'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
     'sauce:options': {
       appiumVersion: 'latest',
