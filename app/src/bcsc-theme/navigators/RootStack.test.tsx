@@ -3,6 +3,7 @@ import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
+import { useFcmService } from '../features/fcm'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
 
@@ -20,6 +21,10 @@ jest.mock('../api/hooks/useThirdPartyKeyboardWarning', () => ({
 }))
 jest.mock('../hooks/useBCSCApiClient', () => ({
   useBCSCApiClientState: () => ({ isClientReady: true }),
+}))
+jest.mock('../features/fcm', () => ({
+  useFcmService: jest.fn(),
+  FcmServiceProvider: ({ children }: any) => children,
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { STARTUP: 'STARTUP' },
@@ -62,6 +67,8 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
   ...overrides,
 })
 
+const mockProcessPendingChallenges = jest.fn()
+
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -71,6 +78,10 @@ describe('BCSCRootStack', () => {
     jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
       initializingAccount: false,
     })
+    jest.mocked(useFcmService).mockReturnValue({
+      service: {},
+      viewModel: { processPendingChallenges: mockProcessPendingChallenges },
+    } as any)
   })
 
   it('renders LoadingScreen when stateLoaded is false', () => {
@@ -248,5 +259,32 @@ describe('BCSCRootStack', () => {
       'Error.ProblemDescription',
       toAppError(mockError, ErrorRegistry.STATE_LOAD_ERROR)
     )
+  })
+
+  it('processPendingChallenges is called when api client is ready', () => {
+    const mockDispatch = jest.fn()
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+
+    render(<BCSCRootStack />)
+
+    expect(mockProcessPendingChallenges).toHaveBeenCalledTimes(1)
+  })
+
+  it('processPendingChallenges is not called when api client is not ready', () => {
+    const mockDispatch = jest.fn()
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore(), mockDispatch] as any)
+
+    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
+      isClientReady: false,
+    })
+
+    render(<BCSCRootStack />)
+
+    expect(mockProcessPendingChallenges).not.toHaveBeenCalled()
+
+    // Reset for other tests
+    jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
+      isClientReady: true,
+    })
   })
 })
