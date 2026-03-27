@@ -3,8 +3,7 @@ import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError, ErrorRegistry } from '@/errors'
-import { getRegistryAppError } from '@/errors/errorHandler'
+import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -48,10 +47,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   const _createBasicErrorModal = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return (error?: AppError | unknown) => {
-        // If an error is provided and it's an AppError, use it.
-        // Otherwise, attempt to get a registry app error based on the event code and inject the cause
-        const appError = error instanceof AppError ? error : getRegistryAppError(event, error)
-        emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
+        emitErrorModal(
+          t(`Alerts.${alertKey}.Title`, params),
+          t(`Alerts.${alertKey}.Description`, params),
+          toAppError(error, event)
+        )
       }
     },
     [emitErrorModal, t]
@@ -75,17 +75,15 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   )
 
   // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
-  const _createProblemWithAccountAlert = useCallback(
+  const _createProblemWithAccountErrorModal = useCallback(
     (event: AppEventCode, errorCode: string) => {
-      return () => {
-        emitAlert(t(`Alerts.ProblemWithAccount.Title`), t(`Alerts.ProblemWithAccount.Description`, { errorCode }), {
-          event,
-          actions: [
-            {
-              text: t('Global.Close'),
-              style: 'cancel',
-            },
-            {
+      return (error?: AppError | unknown) => {
+        emitErrorModal(
+          t(`Alerts.ProblemWithAccount.Title`),
+          t(`Alerts.ProblemWithAccount.Description`, { errorCode }),
+          toAppError(error, event),
+          {
+            action: {
               text: t('Alerts.ProblemWithAccount.Action1'),
               style: 'destructive',
               onPress: () => {
@@ -100,20 +98,25 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
                     return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
                 }
 
-                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', { stack })
+                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', {
+                  stack,
+                })
               },
             },
-          ],
-        })
+          }
+        )
       }
     },
-    [emitAlert, logger, navigation, stack, t]
+    [emitErrorModal, logger, navigation, stack, t]
   )
 
   const unknownErrorModal = useCallback(
     (error?: AppError | unknown) => {
-      const appError = error instanceof AppError ? error : toAppError(error, ErrorRegistry.UNKNOWN_ERROR)
-      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
+      emitErrorModal(
+        t('Error.Problem'),
+        t('Error.ProblemDescription'),
+        toAppError(error, AppEventCode.UNKNOWN_APP_ERROR)
+      )
     },
     [emitErrorModal, t]
   )
@@ -344,11 +347,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '119' }),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
-      loginRejected401Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401'),
-      loginRejected403Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403'),
-      loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
-      noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
-      invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
+      loginRejected401Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_401, '401'),
+      loginRejected403Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_403, '403'),
+      loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
+      noTokensReturnedAlert: _createProblemWithAccountErrorModal(AppEventCode.NO_TOKENS_RETURNED, '214'),
+      invalidTokenAlert: _createProblemWithAccountErrorModal(AppEventCode.INVALID_TOKEN, '215'),
       serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
       dynamicRegistrationErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError'),
       termsOfUseErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
@@ -379,7 +382,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       _createBasicAlert,
       unknownErrorModal,
       _createBasicErrorModal,
-      _createProblemWithAccountAlert,
+      _createProblemWithAccountErrorModal,
       _createProblemWithServiceReturnToSetupAlert,
     ]
   )

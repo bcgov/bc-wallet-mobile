@@ -70,9 +70,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
    */
   const emitErrorModal = useCallback(
     (title: string, description: string, error: AppError, options?: ErrorModalOptions): void => {
-      if (options) {
-        setErrorModalOptions(options)
-      }
+      setErrorModalOptions(options ?? null)
 
       // Track alert display and error events in analytics
       Analytics.trackAlertDisplayEvent(error.appEvent)
