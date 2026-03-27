@@ -1,9 +1,9 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
+import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -50,7 +50,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
         emitErrorModal(
           t(`Alerts.${alertKey}.Title`, params),
           t(`Alerts.${alertKey}.Description`, params),
-          toAppError(error, event)
+          ensureAppError(error, event)
         )
       }
     },
@@ -81,7 +81,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
         emitErrorModal(
           t(`Alerts.ProblemWithAccount.Title`),
           t(`Alerts.ProblemWithAccount.Description`, { errorCode }),
-          toAppError(error, event),
+          ensureAppError(error, event),
           {
             action: {
               text: t('Alerts.ProblemWithAccount.Action1'),
@@ -115,7 +115,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       emitErrorModal(
         t('Error.Problem'),
         t('Error.ProblemDescription'),
-        toAppError(error, AppEventCode.UNKNOWN_APP_ERROR)
+        ensureAppError(error, AppEventCode.UNKNOWN_APP_ERROR)
       )
     },
     [emitErrorModal, t]
@@ -143,28 +143,33 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   }, [emitAlert, logger, t])
 
   // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
-  const factoryResetAlert = useCallback(() => {
-    emitAlert(t('Alerts.FactoryReset.Title'), t('Alerts.FactoryReset.Description'), {
-      event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
-      actions: [
+  const factoryResetAlert = useCallback(
+    (error?: AppError | unknown) => {
+      emitErrorModal(
+        t('Alerts.FactoryReset.Title'),
+        t('Alerts.FactoryReset.Description'),
+        ensureAppError(error, AppEventCode.FATAL_UNRECOVERABLE_ERROR),
         {
-          text: t('Alerts.FactoryReset.Action1'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await factoryReset()
+          action: {
+            text: t('Alerts.FactoryReset.Action1'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const result = await factoryReset()
 
-              if (!result.success) {
-                throw result.error
+                if (!result.success) {
+                  throw result.error
+                }
+              } catch (error) {
+                logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
               }
-            } catch (error) {
-              logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
-            }
+            },
           },
-        },
-      ],
-    })
-  }, [emitAlert, logger, t, factoryReset])
+        }
+      )
+    },
+    [emitErrorModal, t, factoryReset, logger]
+  )
 
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
@@ -310,9 +315,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      factoryResetAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
+
       // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
+      factoryResetAlert,
       unknownErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
