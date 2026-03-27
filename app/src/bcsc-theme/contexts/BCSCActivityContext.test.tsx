@@ -89,7 +89,7 @@ describe('BCSCActivityContext', () => {
     const removeMock = jest.fn()
     const addListenerSpy = jest.spyOn(Keyboard, 'addListener').mockReturnValue({
       remove: removeMock,
-    })
+    } as unknown as ReturnType<typeof Keyboard.addListener>)
 
     const { unmount } = renderHook(() => useBCSCActivity(), { wrapper })
 
