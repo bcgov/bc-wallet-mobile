@@ -213,7 +213,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   }
                 >
                   <TextInput
-                    accessibilityLabel="Passport Number"
+                    accessibilityLabel="Passport Number"
                     autoCorrect={false}
                     onBlur={[Function]}
                     onChange={[Function]}

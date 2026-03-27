@@ -139,7 +139,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
         </Text>
       </View>
       <TextInput
-        accessibilityLabel="Date of Birth"
+        accessibilityLabel="Date of Birth"
         keyboardType="number-pad"
         onBlur={[Function]}
         onChange={[Function]}
