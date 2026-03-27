@@ -1,7 +1,13 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
+import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
+import { AppError } from '@/errors/appError'
+import { ErrorCategory } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
@@ -16,6 +22,18 @@ const createMockPairingService = () =>
     clearPendingPairing: jest.fn(),
     getPendingPairing: jest.fn(),
   }) as unknown as PairingService
+
+jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    pairing: { loginByPairingCode: jest.fn() },
+    metadata: {},
+  })),
+}))
+
+jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
+  useQuickLoginURL: jest.fn(() => jest.fn()),
+}))
 
 describe('ServiceLogin', () => {
   let mockNavigation: any
@@ -41,5 +59,71 @@ describe('ServiceLogin', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  describe('onContinueWithPairingCode error handling', () => {
+    const mockedUseApi = useApi as jest.MockedFunction<typeof useApi>
+
+    const renderWithPairingCode = (mockLoginByPairingCode: jest.Mock, mockAlerts: Record<string, jest.Mock>) => {
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+      jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
+        state: { pairingCode: 'ABC123', serviceTitle: 'Test Service' },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      mockedUseApi.mockReturnValue({
+        pairing: { loginByPairingCode: mockLoginByPairingCode },
+        metadata: {},
+      } as any)
+
+      const route = {
+        params: {
+          pairingCode: 'ABC123',
+          serviceTitle: 'Test Service',
+          serviceClientId: 'test-client',
+        },
+      }
+
+      return render(
+        <BasicAppContext>
+          <PairingServiceProvider service={createMockPairingService()}>
+            <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
+          </PairingServiceProvider>
+        </BasicAppContext>
+      )
+    }
+
+    it('should not show alert when pairing code error is already handled by error policy', async () => {
+      const handledError = new AppError(
+        'test error',
+        {
+          category: ErrorCategory.AUTHENTICATION,
+          appEvent: AppEventCode.INVALID_PAIRING_CODE,
+          statusCode: 2205,
+        },
+        { track: false }
+      )
+      handledError.handled = true
+
+      const mockLoginServerErrorAlert = jest.fn()
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(handledError), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockLoginServerErrorAlert).not.toHaveBeenCalled())
+    })
+
+    it('should show loginServerErrorAlert when pairing code error is not handled', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const tree = renderWithPairingCode(jest.fn().mockRejectedValue(new Error('unexpected failure')), {
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
   })
 })
