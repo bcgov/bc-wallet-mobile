@@ -35,7 +35,6 @@ jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: jest.fn(() => jest.fn()),
 }))
 
-
 describe('ServiceLogin', () => {
   let mockNavigation: any
 
