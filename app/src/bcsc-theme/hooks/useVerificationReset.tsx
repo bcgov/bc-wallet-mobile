@@ -78,7 +78,7 @@ export const useVerificationReset = () => {
       })
     } catch (error) {
       logger.error('[useVerificationReset] Error during account renewal reset', error as Error)
-      factoryResetAlert()
+      factoryResetAlert(error)
     }
   }, [
     clearSecureState,

@@ -143,7 +143,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   }, [emitAlert, logger, t])
 
   // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
-  const factoryResetAlert = useCallback(
+  const factoryResetErrorModal = useCallback(
     (error?: AppError | unknown) => {
       emitErrorModal(
         t('Alerts.FactoryReset.Title'),
@@ -192,27 +192,30 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   // IAS error 202, 203, 204 — OK closes alert and returns to Start Setup
   const _createProblemWithServiceReturnToSetupAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-      return () => {
-        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
-          event,
-          actions: [
-            {
-              text: t('Global.OK'),
-              onPress: () => {
-                // FIXME: This won't reset the state of the application. We would need a partial `factory reset` to happen here instead
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: BCSCScreens.SetupSteps }],
-                  })
-                )
-              },
-            },
-          ],
-        })
+      return (error?: AppError | unknown) => {
+        emitErrorModal(
+          t(`Alerts.${alertKey}.Title`, params),
+          t(`Alerts.${alertKey}.Description`, params),
+          ensureAppError(error, event)
+          // FIXME: This won't reset the state of the application. Will need to use `useVerificationReset` hook.
+          // Additionally, will need to update `useVerificationHook` to remove the `useAlerts` dependency to prevent circular dep issue.
+          // {
+          //   action: {
+          //     text: t('Global.OK'),
+          //     onPress: () => {
+          //       navigation.dispatch(
+          //         CommonActions.reset({
+          //           index: 0,
+          //           routes: [{ name: BCSCScreens.SetupSteps }],
+          //         })
+          //       )
+          //     },
+          //   },
+          // }
+        )
       }
     },
-    [emitAlert, navigation, t]
+    [emitErrorModal, t]
   )
 
   const liveCallFileUploadAlert = useCallback(() => {
@@ -318,8 +321,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
 
       // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
-      factoryResetAlert,
       unknownErrorModal,
+      factoryResetAlert: factoryResetErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
@@ -384,9 +387,9 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      factoryResetAlert,
       _createBasicAlert,
       unknownErrorModal,
+      factoryResetErrorModal,
       _createBasicErrorModal,
       _createProblemWithAccountErrorModal,
       _createProblemWithServiceReturnToSetupAlert,

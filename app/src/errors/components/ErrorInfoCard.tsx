@@ -139,7 +139,10 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
                 accessibilityRole="button"
                 testID={testIdWithKey('ActionButton')}
                 style={action.style === 'destructive' ? styles.destructiveButton : styles.secondaryButton}
-                onPress={action.onPress}
+                onPress={() => {
+                  onDismiss()
+                  action.onPress()
+                }}
                 activeOpacity={0.8}
               >
                 <Text

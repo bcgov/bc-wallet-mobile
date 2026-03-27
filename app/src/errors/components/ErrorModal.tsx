@@ -37,8 +37,6 @@ const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette
   secondaryButtonText: palette.grayscale.darkGrey,
   destructiveButton: palette.semantic.error,
   destructiveButtonText: palette.grayscale.white,
-  actionButton: palette.brand.modalPrimaryBackground,
-  actionButtonText: palette.grayscale.white,
 })
 
 export interface BCSCErrorModalProps {
