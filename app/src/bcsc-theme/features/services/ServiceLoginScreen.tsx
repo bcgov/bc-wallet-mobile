@@ -64,6 +64,7 @@ type DevicePreferenceURLViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string, options?: Record<string, unknown>) => string
   Spacing: ReturnType<typeof useTheme>['Spacing']
+  isQuickLogin: boolean
 }
 
 const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
@@ -71,6 +72,7 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
   ColorPalette,
   t,
   Spacing,
+  isQuickLogin,
 }: DevicePreferenceURLViewProps) =>
   serviceClientUri ? (
     <View style={{ marginTop: Spacing.lg }}>
@@ -84,12 +86,16 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
       <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>
-        <Link
-          style={{ textAlign: 'center' }}
-          linkText={serviceClientUri}
-          testID={testIdWithKey('ServiceClientLink')}
-          onPress={() => Linking.openURL(serviceClientUri)}
-        />
+        {isQuickLogin ? (
+          serviceClientUri
+        ) : (
+          <Link
+            style={{ textAlign: 'center' }}
+            linkText={serviceClientUri}
+            testID={testIdWithKey('ServiceClientLink')}
+            onPress={() => Linking.openURL(serviceClientUri)}
+          />
+        )}
       </ThemedText>
     </View>
   ) : null
@@ -156,6 +162,7 @@ const ServiceLoginUnavailableView = ({
           ColorPalette={ColorPalette}
           t={t}
           Spacing={Spacing}
+          isQuickLogin={false}
         />
         <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
       </View>
@@ -253,6 +260,7 @@ const ServiceLoginDefaultView = ({
         ColorPalette={ColorPalette}
         t={t}
         Spacing={Spacing}
+        isQuickLogin={true}
       />
       <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
     </ScrollView>
