@@ -8139,7 +8139,7 @@ __metadata:
     prettier: "npm:~3.4.2"
     prettier-plugin-organize-imports: "npm:^4.3.0"
     query-string: "npm:~7.1.3"
-    react: "npm:~19.1.4"
+    react: "npm:~19.1.5"
     react-i18next: "npm:~16.5.4"
     react-native: "npm:0.81.5"
     react-native-animated-pagination-dots: "npm:~0.1.73"
@@ -16705,7 +16705,7 @@ __metadata:
     eslint-plugin-prettier: "npm:~5.2.6"
     jest: "npm:~29.6.4"
     prettier: "npm:~3.4.2"
-    react: "npm:~19.1.4"
+    react: "npm:~19.1.5"
     react-native: "npm:0.81.5"
     react-native-builder-bob: "npm:~0.40.13"
     release-it: "npm:~17.10.0"
@@ -17379,10 +17379,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:19.1.0":
-  version: 19.1.0
-  resolution: "react@npm:19.1.0"
-  checksum: 10c0/530fb9a62237d54137a13d2cfb67a7db6a2156faed43eecc423f4713d9b20c6f2728b026b45e28fcd72e8eadb9e9ed4b089e99f5e295d2f0ad3134251bdd3698
+"react@npm:~19.1.5":
+  version: 19.1.5
+  resolution: "react@npm:19.1.5"
+  checksum: 10c0/0c2351cc449294d20e120857515234c017288d0b15957550ed40ca8eb0aba19edda7682ebd3a1ce4e63eb53f5d2502d02e6be6fefe401574465e1f761bb56deb
   languageName: node
   linkType: hard
 
