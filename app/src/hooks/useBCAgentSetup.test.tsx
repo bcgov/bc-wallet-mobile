@@ -314,13 +314,11 @@ describe('useBCAgentSetup', () => {
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
       save: jest.fn(),
-      getById: jest
-        .fn()
-        .mockResolvedValue({
-          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-          outOfBandId: 'oob1',
-          updatedAt: moment().subtract(100, 'days').toDate(),
-        }),
+      getById: jest.fn().mockResolvedValue({
+        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+        outOfBandId: 'oob1',
+        updatedAt: moment().subtract(100, 'days').toDate(),
+      }),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
@@ -380,13 +378,11 @@ describe('useBCAgentSetup', () => {
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
       save: jest.fn(),
-      getById: jest
-        .fn()
-        .mockResolvedValue({
-          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-          outOfBandId: 'oob1',
-          updatedAt: moment().subtract(100, 'days').toDate(),
-        }),
+      getById: jest.fn().mockResolvedValue({
+        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+        outOfBandId: 'oob1',
+        updatedAt: moment().subtract(100, 'days').toDate(),
+      }),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
@@ -438,13 +434,11 @@ describe('useBCAgentSetup', () => {
     const mediationRepository = { delete: jest.fn(), save: jest.fn() }
     const connectionRepository = {
       save: jest.fn(),
-      getById: jest
-        .fn()
-        .mockResolvedValue({
-          getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
-          outOfBandId: 'oob1',
-          updatedAt: moment().subtract(100, 'days').toDate(),
-        }),
+      getById: jest.fn().mockResolvedValue({
+        getTag: jest.fn().mockReturnValue(moment().subtract(100, 'days').toISOString()),
+        outOfBandId: 'oob1',
+        updatedAt: moment().subtract(100, 'days').toDate(),
+      }),
       delete: jest.fn(),
     }
     const outOfBandRepository = {
