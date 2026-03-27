@@ -4,9 +4,11 @@ import { Keyboard } from 'react-native'
 
 import { BCSCActivityProvider, useBCSCActivity } from './BCSCActivityContext'
 
+const mockLogout = jest.fn()
+
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
-  default: () => ({ logout: jest.fn() }),
+  default: () => ({ logout: mockLogout }),
 }))
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -18,6 +20,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('BCSCActivityContext', () => {
   beforeEach(() => {
     jest.useFakeTimers()
+    mockLogout.mockClear()
   })
 
   afterEach(() => {
@@ -49,8 +52,14 @@ describe('BCSCActivityContext', () => {
       jest.advanceTimersByTime(4 * 60 * 1000)
     })
 
-    // Should still have a valid context (not logged out)
-    expect(result.current.reportActivity).toBeDefined()
+    expect(mockLogout).not.toHaveBeenCalled()
+
+    // Advance past the full 5 min from last reset — should trigger logout
+    act(() => {
+      jest.advanceTimersByTime(2 * 60 * 1000)
+    })
+
+    expect(mockLogout).toHaveBeenCalledTimes(1)
   })
 
   it('should not reset timeout when reportActivity is called while paused', () => {
@@ -65,12 +74,12 @@ describe('BCSCActivityContext', () => {
       result.current.reportActivity()
     })
 
-    // Resuming should work normally after
+    // Advance well past the timeout — logout should not fire while paused
     act(() => {
-      result.current.resumeActivityTracking()
+      jest.advanceTimersByTime(10 * 60 * 1000)
     })
 
-    expect(result.current.reportActivity).toBeDefined()
+    expect(mockLogout).not.toHaveBeenCalled()
   })
 
   it('should subscribe to keyboardDidShow and keyboardDidHide events', () => {

@@ -161,16 +161,12 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   const panResponder = useMemo(() => {
     return PanResponder.create({
       onStartShouldSetPanResponderCapture: () => {
-        // some user interaction detected, reset timeout (unless paused)
-        if (!isPausedRef.current) {
-          resetInactivityTimeout(timeoutInMilliseconds.current)
-        }
-
+        reportActivity()
         // returns false so the PanResponder doesn't consume the touch event
         return false
       },
     })
-  }, [resetInactivityTimeout])
+  }, [reportActivity])
 
   const contextValue = useMemo(
     () => ({ appStateStatus, pauseActivityTracking, reportActivity, resumeActivityTracking }),
