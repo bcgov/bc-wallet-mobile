@@ -1,5 +1,5 @@
 import { BCSCActivityProvider } from '@/bcsc-theme/contexts/BCSCActivityContext'
-import { FcmService, FcmServiceProvider } from '@/bcsc-theme/features/fcm'
+import { FcmService, FcmServiceProvider, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { CROP_DELAY_MS } from '@/constants'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
@@ -26,6 +26,8 @@ const defaultVideoCallFlowReturn = {
   setCallEnded: jest.fn(),
 }
 
+const mockFcmViewModel = { processPendingChallenges: jest.fn() } as unknown as FcmViewModel
+
 describe('LiveCall', () => {
   let mockNavigation: any
 
@@ -45,7 +47,7 @@ describe('LiveCall', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCActivityProvider>
-          <FcmServiceProvider service={fcmService}>
+          <FcmServiceProvider service={fcmService} viewModel={mockFcmViewModel}>
             <LiveCallScreen navigation={mockNavigation as never} />
           </FcmServiceProvider>
         </BCSCActivityProvider>
@@ -64,7 +66,7 @@ describe('LiveCall', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCActivityProvider>
-          <FcmServiceProvider service={fcmService}>
+          <FcmServiceProvider service={fcmService} viewModel={mockFcmViewModel}>
             <LiveCallScreen navigation={mockNavigation as never} />
           </FcmServiceProvider>
         </BCSCActivityProvider>
@@ -89,7 +91,7 @@ describe('LiveCall', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCActivityProvider>
-            <FcmServiceProvider service={fcmService}>
+            <FcmServiceProvider service={fcmService} viewModel={mockFcmViewModel}>
               <LiveCallScreen navigation={mockNavigation as never} />
             </FcmServiceProvider>
           </BCSCActivityProvider>
@@ -111,7 +113,7 @@ describe('LiveCall', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCActivityProvider>
-            <FcmServiceProvider service={fcmService}>
+            <FcmServiceProvider service={fcmService} viewModel={mockFcmViewModel}>
               <LiveCallScreen navigation={mockNavigation as never} />
             </FcmServiceProvider>
           </BCSCActivityProvider>
