@@ -37,7 +37,7 @@ const BCSCRootStack: React.FC = () => {
     if (isClientReady) {
       fcmService.viewModel.processPendingChallenges()
     }
-  }, [isClientReady, fcmService])
+  }, [isClientReady, fcmService.viewModel])
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
