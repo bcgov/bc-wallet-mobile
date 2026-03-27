@@ -95,7 +95,6 @@ describe('ServiceLogin', () => {
 
     it('should not show alert when pairing code error is already handled by error policy', async () => {
       const handledError = new AppError(
-        'Test',
         'test error',
         {
           category: ErrorCategory.AUTHENTICATION,
