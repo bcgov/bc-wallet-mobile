@@ -271,33 +271,43 @@ exports[`EditNickname renders correctly 1`] = `
                     "shadowRadius": undefined,
                   },
                   false,
-                  undefined,
+                  null,
                 ]
               }
               testID="com.ariesbifold:id/accountNickname-pressable"
             >
-              <TextInput
-                accessibilityLabel="BCSC.NicknameAccount.AccountName"
-                autoCorrect={false}
-                maxLength={30}
-                onBlur={[Function]}
-                onChange={[Function]}
-                onChangeText={[Function]}
-                onFocus={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "flex": 1,
-                      "fontSize": 16,
-                      "padding": 0,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "flex": 1,
+                  }
                 }
-                testID="com.ariesbifold:id/accountNickname-input"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="BCSC.NicknameAccount.AccountName"
+                  autoCorrect={false}
+                  maxLength={30}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "transparent",
+                        "color": "#313132",
+                        "flex": 1,
+                        "fontSize": 16,
+                        "includeFontPadding": false,
+                        "padding": 0,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/accountNickname-input"
+                  value=""
+                />
+              </View>
               <Text
                 allowFontScaling={false}
                 selectable={false}

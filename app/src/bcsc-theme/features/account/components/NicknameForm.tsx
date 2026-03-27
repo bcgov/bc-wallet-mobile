@@ -98,7 +98,8 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         label={t('BCSC.NicknameAccount.AccountName')}
         value={accountNickname}
         onChangeText={handleChangeText}
-        error={error ?? undefined}
+        error={error}
+        onErrorClear={() => setError(null)}
         textInputProps={{
           maxLength: formStringLengths.maximumLength,
           autoCorrect: false,
