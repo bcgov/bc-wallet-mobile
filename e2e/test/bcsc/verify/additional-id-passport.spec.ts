@@ -3,7 +3,7 @@ import { acceptCameraPermissionIfPresent } from '../../../src/helpers/notificati
 import { isSauceLabs } from '../../../src/helpers/sauce.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { verifyContext } from './card-type/card-context.js'
+import { getVerifyContext } from './card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const AdditionalIdentificationRequired = new BaseScreen(BCSC_TestIDs.AdditionalIdentificationRequired)
@@ -50,7 +50,7 @@ describe('Additional Identification', () => {
   })
 
   it('should navigate through the Evidence ID Collection screen and fill in the Document Number', async () => {
-    const { testUser } = verifyContext
+    const { testUser } = getVerifyContext()
     await EvidenceIDCollection.waitFor('DocumentNumberPressable')
     await EvidenceIDCollection.type('DocumentNumberPressable', testUser.documentNumber)
     await EvidenceIDCollection.dismissKeyboard()
