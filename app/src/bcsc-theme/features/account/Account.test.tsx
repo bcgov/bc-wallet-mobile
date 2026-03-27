@@ -1,6 +1,9 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import * as useAlertsModule from '@/hooks/useAlerts'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import Account from './Account'
 
@@ -19,6 +22,9 @@ jest.mock('@/bcsc-theme/contexts/BCSCIdTokenContext', () => ({
 jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: jest.fn(() => jest.fn()),
 }))
+
+const mockedUseQuickLoginURL = useQuickLoginURL as jest.MockedFunction<typeof useQuickLoginURL>
+const mockedUseDataLoader = useDataLoader as jest.MockedFunction<typeof useDataLoader>
 
 jest.mock('@/bcsc-theme/hooks/useDataLoader', () => ({
   __esModule: true,
@@ -156,5 +162,73 @@ describe('Account', () => {
     expect(tree.getByText('Prince')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
     expect(tree).toMatchSnapshot()
+  })
+
+  describe('handleAllAccountDetailsPress', () => {
+    const mockAccount = {
+      given_name: 'Test',
+      family_name: 'User',
+      birthdate: '1990-01-01',
+      card_expiry: '2025-12-31',
+      picture: null,
+      fullname_formatted: 'User, Test',
+      account_expiration_date: new Date('2025-12-31'),
+    }
+
+    beforeEach(() => {
+      mockedUseAccount.mockReturnValue({
+        account: mockAccount,
+        isLoadingAccount: false,
+        refreshAccount: jest.fn(),
+      } as any)
+    })
+
+    it('should show loginServerErrorAlert when quick login returns an error result', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      } as any)
+
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: false, error: 'No access token' })
+      mockedUseQuickLoginURL.mockReturnValue(mockGetQuickLoginURL)
+      mockedUseDataLoader.mockReturnValue({
+        data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
+        load: jest.fn(),
+        isLoading: false,
+      } as any)
+
+      const tree = render(
+        <BasicAppContext>
+          <Account />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/AllAccountDetails'))
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+
+    it('should show loginServerErrorAlert when quick login throws', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      } as any)
+
+      const mockGetQuickLoginURL = jest.fn().mockRejectedValue(new Error('network failure'))
+      mockedUseQuickLoginURL.mockReturnValue(mockGetQuickLoginURL)
+      mockedUseDataLoader.mockReturnValue({
+        data: { client_ref_id: 'bcsc-client', initiate_login_uri: 'https://example.com' },
+        load: jest.fn(),
+        isLoading: false,
+      } as any)
+
+      const tree = render(
+        <BasicAppContext>
+          <Account />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/AllAccountDetails'))
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
   })
 })
