@@ -110,18 +110,9 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
   return (
     <Modal visible={Boolean(error)} transparent animationType="fade" onRequestClose={onDismiss}>
       {/* Allow presses outside of the modal to dismiss it */}
-      <Pressable
-        onPress={onDismiss}
-        style={overlayStyle.overlay}
-        accessible={false}
-        importantForAccessibility="no"
-      >
+      <Pressable onPress={onDismiss} style={overlayStyle.overlay} accessible={false} importantForAccessibility="no">
         {/* Prevent presses inside the modal from propagating to the overlay */}
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessible={false}
-          importantForAccessibility="no"
-        >
+        <Pressable onPress={(e) => e.stopPropagation()} accessible={false} importantForAccessibility="no">
           <ErrorInfoCard
             key={errorKey}
             title={error.title}

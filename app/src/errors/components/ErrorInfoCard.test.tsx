@@ -195,7 +195,9 @@ describe('ErrorInfoCard', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} action={action} />)
 
       const button = getByTestId('com.aries.bifold:id/ActionButton')
-      const buttonStyle = Array.isArray(button.props.style) ? Object.assign({}, ...button.props.style) : button.props.style
+      const buttonStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style
 
       expect(buttonStyle.backgroundColor).toBe(fallbackColors.destructiveButton)
     })
@@ -205,7 +207,9 @@ describe('ErrorInfoCard', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} action={action} />)
 
       const button = getByTestId('com.aries.bifold:id/ActionButton')
-      const buttonStyle = Array.isArray(button.props.style) ? Object.assign({}, ...button.props.style) : button.props.style
+      const buttonStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style
 
       expect(buttonStyle.backgroundColor).toBe(fallbackColors.secondaryButtonBackground)
     })
