@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import CodeInput from '@/bcsc-theme/components/CodeInput'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
@@ -6,6 +7,7 @@ import {
   Button,
   ButtonType,
   ScreenWrapper,
+  testIdWithKey,
   ThemedText,
   ToastType,
   TOKENS,
@@ -18,8 +20,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Linking, Platform, StyleSheet } from 'react-native'
-import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmation-code-field'
+import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
@@ -32,7 +33,7 @@ type EmailConfirmationScreenProps = {
 }
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { evidence } = useApi()
   const { updateUserInfo } = useSecureActions()
@@ -43,34 +44,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   const { ButtonLoading } = useAnimatedComponents()
   const { emailAddressId } = route.params
   const [id, setId] = useState(emailAddressId)
-  const [props, getCellOnLayoutHandler] = useClearByFocusCell({
-    value: code,
-    setValue: setCode,
-  })
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const styles = StyleSheet.create({
-    codeFieldRoot: {
-      marginTop: Spacing.lg,
-      marginBottom: Spacing.md,
-    },
-    cell: {
-      width: 50,
-      height: 60,
-      lineHeight: 60,
-      fontSize: 32,
-      backgroundColor: ColorPalette.grayscale.white,
-      textAlign: 'center',
-      textAlignVertical: 'center',
-      borderRadius: 8,
-      alignSelf: 'center',
-      color: ColorPalette.brand.text,
-    },
-    focusCell: {
-      borderColor: ColorPalette.brand.primary,
-    },
-  })
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
@@ -173,34 +148,25 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   )
 
   return (
-    <ScreenWrapper keyboardActive={true} controls={controls}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.EmailConfirmation.VerifyYourEmail')}
-      </ThemedText>
+    <ScreenWrapper keyboardActive={true} controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+      <ThemedText variant={'headingThree'}>{t('BCSC.EmailConfirmation.VerifyYourEmail')}</ThemedText>
       <ThemedText>
         {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
         <ThemedText variant={'bold'}>{store.bcscSecure.emailAddress}</ThemedText>
       </ThemedText>
-      <CodeField
-        {...props}
+      <CodeInput
         value={code}
-        onChangeText={setCode}
-        cellCount={6}
-        rootStyle={styles.codeFieldRoot}
-        keyboardType="number-pad"
-        textContentType="oneTimeCode"
-        autoComplete="sms-otp"
-        renderCell={({ index, symbol, isFocused }) => (
-          <ThemedText
-            key={index}
-            style={[styles.cell, isFocused && styles.focusCell]}
-            onLayout={getCellOnLayoutHandler(index)}
-          >
-            {symbol || (isFocused ? <Cursor /> : null)}
-          </ThemedText>
-        )}
+        onChange={setCode}
+        error={error}
+        onErrorClear={() => setError(null)}
+        textInputProps={{
+          keyboardType: 'number-pad',
+          textContentType: 'oneTimeCode',
+          autoComplete: 'sms-otp',
+          testID: testIdWithKey('EmailConfirmationCodeInput'),
+          accessibilityLabel: 'Confirmation-Code-Input',
+        }}
       />
-      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
     </ScreenWrapper>
   )
 }
