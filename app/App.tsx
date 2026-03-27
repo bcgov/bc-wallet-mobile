@@ -105,8 +105,8 @@ const App = () => {
   }, [])
 
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <ErrorBoundaryWrapper logger={logger}>
+    <ErrorBoundaryWrapper logger={logger}>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <ContainerProvider value={bcwContainer}>
           <StoreProvider initialState={initialState} reducer={reducer}>
             <ThemeProvider
@@ -145,8 +145,8 @@ const App = () => {
             </ThemeProvider>
           </StoreProvider>
         </ContainerProvider>
-      </ErrorBoundaryWrapper>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </ErrorBoundaryWrapper>
   )
 }
 
