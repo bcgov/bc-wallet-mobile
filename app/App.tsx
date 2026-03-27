@@ -42,6 +42,7 @@ import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import Orientation from 'react-native-orientation-locker'
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
@@ -104,46 +105,48 @@ const App = () => {
   }, [])
 
   return (
-    <ErrorBoundaryWrapper logger={logger}>
-      <ContainerProvider value={bcwContainer}>
-        <StoreProvider initialState={initialState} reducer={reducer}>
-          <ThemeProvider
-            themes={themes}
-            defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
-          >
-            <NavigationContainerProvider>
-              <PairingServiceProvider service={pairingService}>
-                <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
-                  <VerificationResponseServiceProvider service={verificationResponseService}>
-                    <AnimatedComponentsProvider value={animatedComponents}>
-                      <AuthProvider>
-                        <NetworkProvider>
-                          <ErrorModal enableReport />
-                          <WebDisplay
-                            destinationUrl={surveyMonkeyUrl}
-                            exitUrl={surveyMonkeyExitUrl}
-                            visible={surveyVisible}
-                            onClose={() => setSurveyVisible(false)}
-                          />
-                          <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                            <ErrorAlertProvider enableReport>
-                              <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
-                                <Root />
-                              </KeyboardProvider>
-                            </ErrorAlertProvider>
-                          </TourProvider>
-                          <Toast topOffset={15} config={toastConfig} />
-                        </NetworkProvider>
-                      </AuthProvider>
-                    </AnimatedComponentsProvider>
-                  </VerificationResponseServiceProvider>
-                </FcmServiceProvider>
-              </PairingServiceProvider>
-            </NavigationContainerProvider>
-          </ThemeProvider>
-        </StoreProvider>
-      </ContainerProvider>
-    </ErrorBoundaryWrapper>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ErrorBoundaryWrapper logger={logger}>
+        <ContainerProvider value={bcwContainer}>
+          <StoreProvider initialState={initialState} reducer={reducer}>
+            <ThemeProvider
+              themes={themes}
+              defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
+            >
+              <NavigationContainerProvider>
+                <PairingServiceProvider service={pairingService}>
+                  <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
+                    <VerificationResponseServiceProvider service={verificationResponseService}>
+                      <AnimatedComponentsProvider value={animatedComponents}>
+                        <AuthProvider>
+                          <NetworkProvider>
+                            <ErrorModal enableReport />
+                            <WebDisplay
+                              destinationUrl={surveyMonkeyUrl}
+                              exitUrl={surveyMonkeyExitUrl}
+                              visible={surveyVisible}
+                              onClose={() => setSurveyVisible(false)}
+                            />
+                            <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                              <ErrorAlertProvider enableReport>
+                                <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                                  <Root />
+                                </KeyboardProvider>
+                              </ErrorAlertProvider>
+                            </TourProvider>
+                            <Toast topOffset={15} config={toastConfig} />
+                          </NetworkProvider>
+                        </AuthProvider>
+                      </AnimatedComponentsProvider>
+                    </VerificationResponseServiceProvider>
+                  </FcmServiceProvider>
+                </PairingServiceProvider>
+              </NavigationContainerProvider>
+            </ThemeProvider>
+          </StoreProvider>
+        </ContainerProvider>
+      </ErrorBoundaryWrapper>
+    </SafeAreaProvider>
   )
 }
 
