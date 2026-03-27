@@ -709,7 +709,6 @@ describe('FcmViewModel', () => {
 
     it('processes multiple buffered challenges', async () => {
       mockGetBCSCApiClient.mockReturnValue(null)
-
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
         verified: true,
         claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
@@ -735,7 +734,6 @@ describe('FcmViewModel', () => {
 
     it('clears the queue so a second call does not reprocess', async () => {
       mockGetBCSCApiClient.mockReturnValue(null)
-
       ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
         verified: true,
         claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
