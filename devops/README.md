@@ -25,11 +25,35 @@ The current proxy implementation is Caddy. Read more about Caddy [here](https://
 
 ### Deployment
 
-Deploy the Loki Logstack using the following command:
+Deploy the Loki Logstack using the following command, substituting the appropriate values file and namespace for the target environment:
+
+**Dev:**
 
 ```bash
 helm install bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_dev.yaml \
---set-string namespace=ca7123-dev \
+--set-string namespace=ca7f8f-dev \
+--set-string minio_access_key=$MINIO_ACCESS_KEY \
+--set-string minio_secret_key=$MINIO_SECRET_KEY \
+--set-string proxyUserName=$PROXY_USER_NAME \
+--set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD| awk -F: '{ print $2 }'|tr -d '[:space:]'|base64)
+```
+
+**Test:**
+
+```bash
+helm install bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_test.yaml \
+--set-string namespace=ca7f8f-test \
+--set-string minio_access_key=$MINIO_ACCESS_KEY \
+--set-string minio_secret_key=$MINIO_SECRET_KEY \
+--set-string proxyUserName=$PROXY_USER_NAME \
+--set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD| awk -F: '{ print $2 }'|tr -d '[:space:]'|base64)
+```
+
+**Prod:**
+
+```bash
+helm install bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_prod.yaml \
+--set-string namespace=ca7f8f-prod \
 --set-string minio_access_key=$MINIO_ACCESS_KEY \
 --set-string minio_secret_key=$MINIO_SECRET_KEY \
 --set-string proxyUserName=$PROXY_USER_NAME \
