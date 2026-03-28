@@ -5,7 +5,9 @@ metadata:
   name: {{ include "logstack.fullname" . }}-loki
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
+  {{- if .Values.autoscaling.enabled }}
+  replicas: {{ .Values.autoscaling.minReplicas }}
+  {{- else }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
@@ -86,7 +88,9 @@ metadata:
   name: {{ include "logstack.fullname" . }}-proxy
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
+  {{- if .Values.autoscaling.enabled }}
+  replicas: {{ .Values.autoscaling.minReplicas }}
+  {{- else }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:

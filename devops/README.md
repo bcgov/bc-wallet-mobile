@@ -54,7 +54,7 @@ helm install bcwallet ./devops/charts/loki-logstack \
   --set-string minio_access_key=$MINIO_ACCESS_KEY \
   --set-string minio_secret_key=$MINIO_SECRET_KEY \
   --set-string proxyUserName=$PROXY_USER_NAME \
-  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]' | base64)
+  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]')
 ```
 
 For example, to deploy to prod:
@@ -66,7 +66,7 @@ helm install bcwallet ./devops/charts/loki-logstack \
   --set-string minio_access_key=$MINIO_ACCESS_KEY \
   --set-string minio_secret_key=$MINIO_SECRET_KEY \
   --set-string proxyUserName=$PROXY_USER_NAME \
-  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]' | base64)
+  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]')
 ```
 
 #### Parameters
@@ -75,7 +75,7 @@ helm install bcwallet ./devops/charts/loki-logstack \
 | ------------------ | ----------------------------------------------------------------------------------- |
 | `namespace`        | Target namespace. Used by Caddy to resolve the Loki service via cluster DNS.        |
 | `proxyUserName`    | Plaintext username for Caddy Basic Auth.                                            |
-| `proxyPassword`    | Base64-encoded bcrypt hash of the password (the `htpasswd` pipeline handles this).  |
+| `proxyPassword`    | Bcrypt hash of the password (the `htpasswd` pipeline handles this).                 |
 | `minio_access_key` | Minio access key (stored in a Secret).                                              |
 | `minio_secret_key` | Minio secret key (stored in a Secret).                                              |
 
