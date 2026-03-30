@@ -27,8 +27,13 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
 
   it('should navigate through the Manual Serial screen and fill in the Serial', async () => {
     const { testUser } = getVerifyContext()
-    await ManualSerial.waitFor('SerialPressable')
-    await ManualSerial.type('SerialPressable', testUser.cardSerial)
+    if (driver.isAndroid) {
+      await ManualSerial.tap('SerialInput')
+      await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true, characterByCharacter: false })
+    } else {
+      await ManualSerial.tap('SerialPressable')
+      await ManualSerial.type('SerialPressable', testUser.cardSerial, { tapFirst: true })
+    }
     await ManualSerial.dismissKeyboard()
     await ManualSerial.tap('Continue')
   })
@@ -36,8 +41,13 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
   it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
     const { testUser } = getVerifyContext()
     await EnterBirthdate.waitFor('Done', 10_000)
-    await EnterBirthdate.tap('BirthdateInputPressable')
-    await EnterBirthdate.type('BirthdateInputPressable', testUser.dob)
+    if (driver.isAndroid) {
+      await EnterBirthdate.tap('BirthdateInput')
+      await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true, characterByCharacter: false })
+    } else {
+      await EnterBirthdate.tap('BirthdateInputPressable')
+      await EnterBirthdate.type('BirthdateInputPressable', testUser.dob, { tapFirst: true })
+    }
     await EnterBirthdate.dismissKeyboard()
     await EnterBirthdate.tap('Done')
   })
