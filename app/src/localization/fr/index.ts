@@ -315,7 +315,7 @@ const translation = {
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
       "NotListedDescriptionContact": "Contact the service to the link to their website. (FR)",
       "PrivacyPolicy": "Privacy Policy (FR)",
-      "LoginErrorTitle": "Unable to quick login to service (FR)",
+      "LoginErrorTitle": "Problem with Login (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
       "Remove": "Remove (FR)",
@@ -483,6 +483,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "PairingCodeLabel": "Pairing code (FR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",

@@ -1,6 +1,6 @@
 export const Timeouts = {
   /** Default wait for an element to appear on screen */
-  elementVisible: 15_000,
+  elementVisible: 5_000,
   /** Wait for a screen transition to complete */
   screenTransition: 20_000,
   /** Initial app launch — generous for cold starts on real devices */
@@ -13,15 +13,11 @@ export const Timeouts = {
   newCommand: 180,
   /** WDIO connection retry timeout */
   connectionRetry: 180_000,
+  /** swipe duration */
+  swipeDuration: 800,
 } as const
 
 export const TestUsers = {
-  basic: {
-    username: 'e2e_scooby',
-    cardSerial: 'C22014083',
-    dob: '19840913',
-    documentNumber: 'WG12345678',
-  },
   photo: {
     username: 'e2e_shaggy',
     cardSerial: 'C74455103',

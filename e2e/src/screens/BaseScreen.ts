@@ -1,3 +1,4 @@
+import { Timeouts } from '../constants.js'
 import {
   swipeDownBy,
   swipeDown as swipeDownGesture,
@@ -89,7 +90,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID of the element to wait for
    * @returns void
    */
-  async waitForDisplayed(testId: string, timeout: number = 5_000) {
+  async waitForDisplayed(testId: string, timeout: number = Timeouts.elementVisible) {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
@@ -105,7 +106,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * On iOS, falls back to the `label` attribute when `getText()` returns empty
    * (common for styled ThemedText / accessibility-labelled elements).
    */
-  public async getTextByTestId(testId: string, timeout: number = 5_000): Promise<string> {
+  public async getTextByTestId(testId: string, timeout: number = Timeouts.elementVisible): Promise<string> {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     const text = await el.getText()
@@ -162,9 +163,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * Useful for buttons that start disabled (e.g. "Accept" gates behind a scroll or timer).
    *
    * @param testId - test ID of the element
-   * @param timeout - max time to wait for the element to become enabled (default 30s)
+   * @param timeout - max time to wait for the element to become enabled (default 20s)
    */
-  public async waitForEnabledAndTap(testId: string, timeout: number = 30_000) {
+  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.screenTransition) {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     await el.waitForEnabled({ timeout })
@@ -187,19 +188,19 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   /**
    * Full-screen swipe gestures (platform-specific implementation in `gestures` helper).
    */
-  public async swipeUp(durationMs = 800) {
+  public async swipeUp(durationMs = Timeouts.swipeDuration) {
     await swipeUpGesture(durationMs)
   }
 
-  public async swipeDown(durationMs = 800) {
+  public async swipeDown(durationMs = Timeouts.swipeDuration) {
     await swipeDownGesture(durationMs)
   }
 
-  public async swipeLeft(durationMs = 800) {
+  public async swipeLeft(durationMs = Timeouts.swipeDuration) {
     await swipeLeftGesture(durationMs)
   }
 
-  public async swipeRight(durationMs = 800) {
+  public async swipeRight(durationMs = Timeouts.swipeDuration) {
     await swipeRightGesture(durationMs)
   }
 
@@ -212,13 +213,12 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     const el = await this.findByTestId(testId)
-    const textFieldTimeout = 15_000
     try {
-      await el.waitForDisplayed({ timeout: textFieldTimeout })
+      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
     } catch {
-      console.warn(`Element "${testId}" not visible after ${textFieldTimeout}ms; scrolling then retrying`)
+      console.warn(`Element "${testId}" not visible after ${Timeouts.screenTransition}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
-      await el.waitForDisplayed({ timeout: textFieldTimeout })
+      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
     }
 
     if (options?.tapFirst) {

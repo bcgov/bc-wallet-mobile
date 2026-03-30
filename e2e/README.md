@@ -24,11 +24,11 @@ _The_ `yarn setup` _step registers the Appium drivers into Appium's driver regis
 
 _Tests are organized into named suites. Use the_ `--suite` _flag to select which suite to run:_
 
-| _Suite_            | _What it tests_                                                                                  |
-| ------------------ | ------------------------------------------------------------------------------------------------ |
-| `smoke`            | _App launch + initial navigation (fast sanity check)_                                            |
-| `happy-path`       | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
-| `full-regression`  | _Full flow: onboarding with transfer/setup/help detours, non-photo card with additional ID_      |
+| _Suite_           | _What it tests_                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| `smoke`           | _App launch + initial navigation (fast sanity check)_                                            |
+| `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
+| `full-regression` | _Full flow: onboarding with transfer/setup/help detours, non-photo card with additional ID_      |
 
 ```bash
 # Run by suite name
@@ -277,10 +277,10 @@ _Element lookup is cross-platform with no branching:_
 
 _Specs are small, focused files that each test a single action or feature. Suites are composed by importing the relevant specs in order — no runtime conditionals, no test logic duplication._
 
-| _Old (flow-based)_                               | _New (suite-based)_                                        |
-| ------------------------------------------------- | ---------------------------------------------------------- |
-| `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`  | `--suite happy-path`                                       |
-| `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression`                                  |
+| _Old (flow-based)_                                   | _New (suite-based)_       |
+| ---------------------------------------------------- | ------------------------- |
+| `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`   | `--suite happy-path`      |
+| `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression` |
 
 _Each suite's orchestrator imports composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
 

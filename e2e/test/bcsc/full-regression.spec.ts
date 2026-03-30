@@ -15,6 +15,7 @@ import './onboarding/notifications-help.spec.js'
 import './onboarding/notifications.spec.js'
 import './onboarding/secure-app-help.spec.js'
 import './onboarding/pin-auth.spec.js'
+// Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import './verify/card-type/config-non-photo-card.js'
 import './verify/nickname.spec.js'
 import './verify/card-csn.spec.js'

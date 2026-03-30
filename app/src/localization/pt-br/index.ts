@@ -315,7 +315,7 @@ const translation = {
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (PT-BR)",
       "NotListedDescriptionContact": "Contact the service to the link to their website. (PT-BR)",
       "PrivacyPolicy": "Privacy Policy (PT-BR)",
-      "LoginErrorTitle": "Unable to quick login to service (PT-BR)",
+      "LoginErrorTitle": "Problem with Login (PT-BR)",
       "SavedServices": "Saved Services (PT-BR)",
       "NoSavedServices": "No saved services (PT-BR)",
       "Remove": "Remove (PT-BR)",
@@ -483,6 +483,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (PT-BR)",
+      "PairingCodeLabel": "Pairing code (PT-BR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (PT-BR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (PT-BR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",

@@ -14,11 +14,6 @@ const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).ur
 const twoThirds = 0.67
 const maxSerialNumberLength = 15
 
-type ErrorState = {
-  visible: boolean
-  description: string
-}
-
 type ManualSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
@@ -30,10 +25,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const { updateUserInfo } = useSecureActions()
   const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
   const { width } = useWindowDimensions()
-  const [errorState, setErrorState] = useState<ErrorState>({
-    visible: false,
-    description: '',
-  })
+  const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
     image: {
@@ -51,18 +43,12 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   const onContinuePressed = useCallback(async () => {
     if (serial.length < 1) {
-      setErrorState({
-        description: t('BCSC.ManualSerial.EmptySerialError'),
-        visible: true,
-      })
+      setError(t('BCSC.ManualSerial.EmptySerialError'))
       return
     }
 
     if (serial.length > maxSerialNumberLength) {
-      setErrorState({
-        description: t('BCSC.ManualSerial.CharCountError'),
-        visible: true,
-      })
+      setError(t('BCSC.ManualSerial.CharCountError'))
       return
     }
 
@@ -82,7 +68,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   return (
     <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
-      <ThemedText variant={'headingFour'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
+      <ThemedText variant={'headingThree'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
       <ThemedText>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
 
       <InputWithValidation
@@ -90,7 +76,8 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
         label={t('BCSC.ManualSerial.InputLabel')}
         value={serial}
         onChangeText={handleChangeText}
-        error={errorState.visible ? errorState.description : undefined}
+        error={error}
+        onErrorClear={() => setError(null)}
         textInputProps={{
           maxLength: maxSerialNumberLength,
           autoCapitalize: 'characters',

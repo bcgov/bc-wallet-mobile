@@ -141,9 +141,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   // Suppress FCM notifications while in the live call
   useEffect(() => {
-    fcmService.setSuppressed(true)
-    return () => fcmService.setSuppressed(false)
-  }, [fcmService])
+    fcmService.service.setSuppressed(true)
+    return () => fcmService.service.setSuppressed(false)
+  }, [fcmService.service])
 
   // setup volume detection
   useEffect(() => {
