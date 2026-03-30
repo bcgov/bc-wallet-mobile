@@ -1050,7 +1050,7 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: 'Distribute TestFlight - ${{ matrix.variant }}'
-    if: ${{ !cancelled() && github.ref_name == 'main' }}
+    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
     needs: [build-ios, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
@@ -1091,7 +1091,7 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    if: ${{ !cancelled() && github.event.pull_request.head.repo.fork != true }}
+    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
     needs: [build-ios, build-android, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
@@ -1160,7 +1160,7 @@ jobs:
   e2e-tests:
     name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
     needs: [ship-to-saucelabs, compute-variants]
-    if: ${{ !cancelled() && github.event.pull_request.head.repo.fork != true }}
+    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
