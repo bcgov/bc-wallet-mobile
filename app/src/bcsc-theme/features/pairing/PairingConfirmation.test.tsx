@@ -153,6 +153,28 @@ describe('PairingConfirmation', () => {
       expect(queryByTestId('com.ariesbifold:id/Close')).toBeTruthy()
     })
 
+    it('navigates home when the app goes to background', () => {
+      let appStateCallback: (state: AppStateStatus) => void
+      const removeSpy = jest.fn()
+      const addEventSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((_, callback) => {
+        appStateCallback = callback as (state: AppStateStatus) => void
+        return { remove: removeSpy } as any
+      })
+
+      const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
+
+      render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
+        </BasicAppContext>
+      )
+
+      appStateCallback!('background')
+
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
+      addEventSpy.mockRestore()
+    })
+
     it('calls BackHandler.exitApp when Close is pressed', () => {
       const exitAppSpy = jest.spyOn(BackHandler, 'exitApp').mockImplementation(jest.fn())
       const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
@@ -172,6 +194,20 @@ describe('PairingConfirmation', () => {
   })
 
   describe('when without fromAppSwitch', () => {
+    it('does not register an AppState listener', () => {
+      Platform.OS = 'android'
+      const addEventSpy = jest.spyOn(AppState, 'addEventListener')
+
+      render(
+        <BasicAppContext>
+          <PairingConfirmation navigation={mockNavigation as never} route={defaultRoute as never} />
+        </BasicAppContext>
+      )
+
+      expect(addEventSpy).not.toHaveBeenCalled()
+      addEventSpy.mockRestore()
+    })
+
     it('resets navigation to the Tab stack when Close is pressed', () => {
       Platform.OS = 'android'
 
