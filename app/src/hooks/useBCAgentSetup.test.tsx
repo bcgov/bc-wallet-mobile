@@ -90,7 +90,7 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
           state: DidExchangeState.Completed,
           role: DidExchangeRole.Responder,
           theirDid: 'did:example:123',
-        })
+        }),
       }),
     } as any,
     dependencyManager: {
@@ -246,8 +246,9 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agentInstance = createMockAgent()
-    agentInstance.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
-
+    agentInstance.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
     ;(Agent as jest.Mock).mockImplementation(() => agentInstance)
 
     await act(async () => {
@@ -278,7 +279,9 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agent = createMockAgent()
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
+    agent.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
     agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
@@ -353,7 +356,9 @@ describe('useBCAgentSetup', () => {
       }
       return {}
     }) as any
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValue(new Error('Timed out waiting for connection test-connection-id to complete'))
+    agent.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValue(new Error('Timed out waiting for connection test-connection-id to complete'))
     agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
@@ -427,7 +432,9 @@ describe('useBCAgentSetup', () => {
       return {}
     }) as any
 
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValue(new Error('Failed to initiate message pickup'))
+    agent.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValue(new Error('Failed to initiate message pickup'))
     agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
@@ -492,7 +499,9 @@ describe('useBCAgentSetup', () => {
       return {}
     }) as any
 
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
+    agent.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
     agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
@@ -577,7 +586,9 @@ describe('useBCAgentSetup', () => {
       }
       return {}
     }) as any
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValue(new Error('Failed to initiate message pickup'))
+    agent.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValue(new Error('Failed to initiate message pickup'))
     agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
@@ -593,7 +604,6 @@ describe('useBCAgentSetup', () => {
         isReady: false,
       },
     })
-
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
@@ -605,7 +615,9 @@ describe('useBCAgentSetup', () => {
         salt: 'wallet-salt',
       })
       const expectedRejection = (async () => {
-        await expect(initializePromise).rejects.toThrow('Timed out waiting for connection test-connection-id to complete')
+        await expect(initializePromise).rejects.toThrow(
+          'Timed out waiting for connection test-connection-id to complete'
+        )
       })()
 
       await jest.advanceTimersByTimeAsync(30000)

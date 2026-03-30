@@ -274,7 +274,8 @@ const useBCAgentSetup = () => {
       }
 
       const daysSinceLastSeen = moment().diff(moment(lastSeen), 'days')
-      const mediationExpiredThresholdConfig = Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
+      const mediationExpiredThresholdConfig =
+        Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
       let mediationExpiredThresholdDays = Number.parseInt(mediationExpiredThresholdConfig, 10)
       if (Number.isNaN(mediationExpiredThresholdDays)) {
         logger.warn(
