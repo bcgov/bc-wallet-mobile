@@ -18,6 +18,7 @@ export const config: WebdriverIO.Config = {
     smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
     'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
     'full-regression': [resolve(__dirname, `../test/${variant}/full-regression.spec.ts`)],
+    accessibility: [resolve(__dirname, `../test/${variant}/a11y.spec.ts`)],
   },
   exclude: [],
   capabilities: [],
