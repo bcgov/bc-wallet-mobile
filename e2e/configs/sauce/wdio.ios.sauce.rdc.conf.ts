@@ -20,12 +20,10 @@ config.capabilities = [
       name: process.env.TEST_NAME || 'E2E Tests',
       phoneOnly: true,
       allowTouchIdEnroll: true,
-      /** Required with allowTouchIdEnroll for biometric interception on RDC per Sauce docs. */
       resigningEnabled: true,
-      /** Explicit interception flag for automated runs (may differ from app storage default). */
+      sauceLabsImageInjectionEnabled: true,
       // @ts-expect-error — present in Sauce RDC docs; not yet on WebdriverIO SauceLabsCapabilities type
       biometricsInterception: true,
-      sauceLabsImageInjectionEnabled: true,
     },
   },
 ]
