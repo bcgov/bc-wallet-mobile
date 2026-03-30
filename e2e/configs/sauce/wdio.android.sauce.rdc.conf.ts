@@ -20,6 +20,9 @@ config.capabilities = [
       name: process.env.TEST_NAME || 'E2E Tests',
       phoneOnly: true,
       allowTouchIdEnroll: true,
+      resigningEnabled: true,
+      // @ts-expect-error — present in Sauce RDC docs; not yet on WebdriverIO SauceLabsCapabilities type
+      biometricsInterception: true,
       sauceLabsImageInjectionEnabled: true,
     },
   },
