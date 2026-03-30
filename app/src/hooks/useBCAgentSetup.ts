@@ -35,6 +35,7 @@ import { Config } from 'react-native-config'
 import { CachesDirectoryPath } from 'react-native-fs'
 
 const DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS = '90'
+const CONNECTION_COMPLETION_TIMEOUT_MS = 10000
 
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,7 +196,8 @@ const useBCAgentSetup = () => {
     if (connection.state === DidExchangeState.Completed) {
       return connection
     }
-    return new Promise((resolve) => {
+
+    return new Promise<ConnectionRecord>((resolve, reject) => {
       const listener = (event: ConnectionStateChangedEvent) => {
         const { connectionRecord } = event.payload
 
@@ -204,12 +206,22 @@ const useBCAgentSetup = () => {
           connectionRecord.state === DidExchangeState.Completed &&
           connectionRecord.isReady
         ) {
-          agent.events.off(ConnectionEventTypes.ConnectionStateChanged, listener)
+          cleanup()
           resolve(connectionRecord)
         }
       }
 
+      const cleanup = () => {
+        agent.events.off(ConnectionEventTypes.ConnectionStateChanged, listener)
+        clearTimeout(timeoutId)
+      }
+
       agent.events.on(ConnectionEventTypes.ConnectionStateChanged, listener)
+
+      const timeoutId = setTimeout(() => {
+        cleanup()
+        reject(new Error(`Timed out waiting for connection ${connection.id} to complete`))
+      }, CONNECTION_COMPLETION_TIMEOUT_MS)
     })
   }
 
@@ -262,14 +274,20 @@ const useBCAgentSetup = () => {
       }
 
       const daysSinceLastSeen = moment().diff(moment(lastSeen), 'days')
-      const mediationExpiredThresholdDays = Number.parseInt(
-        Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
-      )
+      const mediationExpiredThresholdConfig = Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
+      let mediationExpiredThresholdDays = Number.parseInt(mediationExpiredThresholdConfig, 10)
+      if (Number.isNaN(mediationExpiredThresholdDays)) {
+        logger.warn(
+          `Invalid mediation expired threshold config value: ${mediationExpiredThresholdConfig}. Falling back to default of ${DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS} days.`
+        )
+        mediationExpiredThresholdDays = Number.parseInt(DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS, 10)
+      }
+
       if (daysSinceLastSeen < mediationExpiredThresholdDays) {
         logger.info(
           `Mediation connection last seen ${daysSinceLastSeen} days ago, which is below the expiration threshold. No need to reset mediation.`
         )
-        throw new Error('Mediation connection is not passed the expiration threshold, no need to reset mediation')
+        return
       }
       logger.info(
         `Mediation connection last seen ${daysSinceLastSeen} days ago, which is above the expiration threshold. Proceeding with mediation reset.`
@@ -305,7 +323,7 @@ const useBCAgentSetup = () => {
         logger.info(`New connection created ${connectionRecord?.id}. Waiting for completion...`)
 
         if (!connectionRecord) {
-          return
+          throw new Error('Failed to establish mediation connection: no connection record returned from invitation')
         }
 
         await waitForConnectionCompleted(agent, connectionRecord)
@@ -367,10 +385,10 @@ const useBCAgentSetup = () => {
       logger.info('Migrating agent if required...')
       await migrateIfRequired(newAgent, walletSecret)
 
-      try {
-        logger.info('Initializing agent...')
-        await newAgent.initialize()
+      logger.info('Initializing agent...')
+      await newAgent.initialize()
 
+      try {
         await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
       } catch (error) {
         logger.error(`Error initiating message pickup: ${error}`)
