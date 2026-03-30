@@ -64,6 +64,8 @@ export const BCSC_TestIDs = {
   },
   Nickname: {
     AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
+    /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
+    AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
     Back: 'com.ariesbifold:id/Back',
   },
@@ -85,12 +87,15 @@ export const BCSC_TestIDs = {
   },
   ManualSerial: {
     SerialPressable: 'com.ariesbifold:id/serial-pressable',
+    /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
+    SerialInput: 'com.ariesbifold:id/serial-input',
     Continue: 'com.ariesbifold:id/Continue',
     Help: 'com.ariesbifold:id/Help',
   },
   EnterBirthdate: {
-    BirthdateInput: 'com.ariesbifold:id/birthDate-input',
     BirthdateInputPressable: 'com.ariesbifold:id/birthDate-pressable',
+    /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
+    BirthdateInput: 'com.ariesbifold:id/birthDate-input',
     Done: 'com.ariesbifold:id/Done',
   },
   VerificationCardError: {

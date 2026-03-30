@@ -1,5 +1,8 @@
 export function isSauceLabs(): boolean {
-  return !!browser.options?.['user'] && !!browser.options?.['key']
+  const hostname = String(browser.options?.hostname ?? '')
+  if (hostname.includes('saucelabs.com')) return true
+  const opts = browser.options as { user?: string; key?: string } | undefined
+  return Boolean(opts?.user && opts?.key)
 }
 
 export async function annotate(message: string) {

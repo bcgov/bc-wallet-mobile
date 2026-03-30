@@ -1,14 +1,24 @@
 import { isSauceLabs } from './sauce.js'
 
+function getSessionCapabilities(): Record<string, unknown> {
+  const d = driver.capabilities as Record<string, unknown>
+  const b = (browser.capabilities ?? {}) as Record<string, unknown>
+  return { ...b, ...d }
+}
+
 /**
- * Handles the native iOS "Allow BC Wallet to find devices on local networks?" permission dialog
- * that appears on first install. Safe to call even when no dialog is present (e.g. already granted).
- * Skipped on Sauce Labs — the modal does not appear on their real-device cloud.
- * Skipped on iOS Simulator — the dialog does not appear on emulated devices.
+ * True when the session targets an iOS Simulator (not a physical device).
+ *
+ * - Prefer Appium's `realDevice` when present (some stacks omit it on USB sessions).
+ * - Otherwise use this repo's convention: `wdio.ios.local.device` sets
+ *   `appium:xcodeOrgId` for WDA signing; `wdio.ios.local.sim` does not.
  */
-function isIosSimulator(): boolean {
-  const caps = driver.capabilities as Record<string, unknown>
-  const orgId = caps?.['appium:xcodeOrgId'] ?? caps?.['xcodeOrgId']
+export function isIosSimulatorSession(): boolean {
+  const caps = getSessionCapabilities()
+  if (caps['realDevice'] === true || caps['appium:realDevice'] === true) {
+    return false
+  }
+  const orgId = caps['appium:xcodeOrgId'] ?? caps['xcodeOrgId']
   return typeof orgId !== 'string' || orgId.trim() === ''
 }
 
@@ -42,7 +52,7 @@ async function tryDismissAllowViaSpringboard(): Promise<boolean> {
 export async function acceptLocalNetworkPermissionIfPresent(): Promise<void> {
   if (!driver.isIOS) return
   if (isSauceLabs()) return
-  if (isIosSimulator()) return
+  if (isIosSimulatorSession()) return
 
   // Give the permission dialog time to appear (often shows 1–2s after launch)
   await delay(2_000)
