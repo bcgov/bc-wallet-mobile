@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
-import { LayoutChangeEvent } from 'react-native'
+import { useTheme } from '@bifold/core'
+import { useCallback, useState } from 'react'
+import { LayoutChangeEvent, Platform, Text } from 'react-native'
 import { InputWithValidation } from './InputWithValidation'
 
 interface DateInputProps {
@@ -8,13 +9,11 @@ interface DateInputProps {
   value: string
   onChange: (value: string) => void
   onLayout?: (e: LayoutChangeEvent) => void
-  error?: string
+  error?: string | null
   subtext?: string
 }
 
 const DATE_TEMPLATE = 'YYYY/MM/DD'
-// Expecting 10 characters in the formatted date (8 digits + 2 '/')
-const DATE_DIGIT_POSITIONS = [0, 1, 2, 3, 5, 6, 8, 9]
 
 const getDigits = (text: string): string =>
   text
@@ -23,104 +22,60 @@ const getDigits = (text: string): string =>
     .slice(0, 8)
     .join('')
 
-// Builds the date to display
-const dateToDisplay = (date: string): string => {
-  const digits = getDigits(date)
-
-  const displayCharacters = DATE_TEMPLATE.split('')
-  digits.split('').forEach((digit, index) => {
-    const displayPosition = DATE_DIGIT_POSITIONS[index]
-    if (displayPosition !== undefined) {
-      displayCharacters[displayPosition] = digit
-    }
-  })
-
-  return displayCharacters.join('')
-}
-
-// Placing cursor at the next available digit in the input
-// for example the cursor | : 199|Y/MM/DD
-// so now when the user inputs another digit, it becomes 1999|/MM/DD
-const nextCursorPosition = (date: string): number => {
-  const digitCount = getDigits(date).length
-  const nextPosition = DATE_DIGIT_POSITIONS[digitCount]
-
-  if (nextPosition === undefined) {
-    return DATE_TEMPLATE.length
+// Progressively formats digits with slashes as the user types
+// e.g. "1990" → "1990/", "199001" → "1990/01/", "19900115" → "1990/01/15"
+const formatDigits = (digits: string): string => {
+  if (digits.length < 4) {
+    return digits
   }
-
-  return nextPosition
-}
-
-// Creates a selection range of 1 character so the user replaces each character as they type
-// this fixes a flicker if the cursor is simply positioned in the input
-// for example the cursor | : 199|Y|/MM/DD
-// so now when the user inputs another digit, it becomes 1999/|M|M/DD
-const getSelectionRange = (displayValue: string, cursorPosition: number) => {
-  if (!displayValue || cursorPosition >= DATE_TEMPLATE.length) {
-    return { start: cursorPosition, end: cursorPosition }
+  if (digits.length === 4) {
+    return `${digits}/`
   }
-
-  const nextCharacter = DATE_TEMPLATE[cursorPosition]
-  if (nextCharacter === '/') {
-    return { start: cursorPosition + 1, end: cursorPosition + 1 }
+  if (digits.length < 6) {
+    return `${digits.slice(0, 4)}/${digits.slice(4)}`
   }
-
-  return { start: cursorPosition, end: cursorPosition + 1 }
+  if (digits.length === 6) {
+    return `${digits.slice(0, 4)}/${digits.slice(4)}/`
+  }
+  return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`
 }
 
 const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: DateInputProps) => {
-  // Display date and actual value are held separately to allow date formatting: 199Y/MM/DD
-  // while also allowing the user to delete digits without having to remove the extra format characters
-  const [displayValue, setDisplayValue] = useState(dateToDisplay(value))
-  const [cursorPosition, setCursorPosition] = useState(nextCursorPosition(value))
+  const { Inputs, ColorPalette } = useTheme()
+  const [displayValue, setDisplayValue] = useState(formatDigits(getDigits(value)))
 
-  useEffect(() => {
-    const nextDisplay = dateToDisplay(value)
-    setDisplayValue(nextDisplay)
-    setCursorPosition(nextCursorPosition(value))
-  }, [value])
+  const remainingTemplate = DATE_TEMPLATE.slice(displayValue.length)
 
-  // Masks the input as the user types so they don't have to worry about date format
-  const maskDate = useCallback(
-    (text: string) => {
+  const templateOverlay = (
+    <Text
+      style={{
+        marginBottom: Platform.OS === 'ios' ? Inputs.textInput.margin : 0,
+        fontSize: Inputs.textInput.fontSize,
+        fontFamily: Inputs.textInput.fontFamily,
+      }}
+    >
+      <Text style={{ color: 'transparent' }}>{displayValue}</Text>
+      <Text style={{ color: ColorPalette.grayscale.mediumGrey }}>{remainingTemplate}</Text>
+    </Text>
+  )
+
+  const handleChangeText = useCallback(
+    (rawText: string) => {
       const previousDigits = getDigits(value)
-      const incomingDigits = getDigits(text)
-      const displayValue = dateToDisplay(value)
-      // New text is smaller than old display, we must be deleting something
-      const isDeleting = text.length < displayValue.length
+      const incomingDigits = getDigits(rawText)
+      const isDeleting = rawText.length < formatDigits(previousDigits).length
 
       let nextDigits = incomingDigits
       if (isDeleting && incomingDigits === previousDigits && previousDigits.length > 0) {
         nextDigits = previousDigits.slice(0, -1)
       }
 
-      if (nextDigits.length <= 4) {
-        return nextDigits
-      }
-      // Once the year is auto filled in
-      if (nextDigits.length <= 6) {
-        return `${nextDigits.slice(0, 4)}/${nextDigits.slice(4)}`
-      }
-      // While not expressly needed, keeping the / at this point makes validating the date much easier
-      return `${nextDigits.slice(0, 4)}/${nextDigits.slice(4, 6)}/${nextDigits.slice(6)}`
+      const formatted = formatDigits(nextDigits)
+      setDisplayValue(formatted)
+      onChange(formatted)
     },
-    [value]
+    [onChange, value]
   )
-
-  const handleChangeText = useCallback(
-    (rawText: string) => {
-      const maskedValue = maskDate(rawText) // canonical value for parent
-      const nextDisplay = dateToDisplay(maskedValue)
-
-      setDisplayValue(nextDisplay)
-      setCursorPosition(nextCursorPosition(maskedValue))
-      onChange(maskedValue)
-    },
-    [onChange, maskDate]
-  )
-
-  const selection = getSelectionRange(displayValue, cursorPosition)
 
   return (
     <InputWithValidation
@@ -131,11 +86,9 @@ const DateInput = ({ id, label, value, onChange, error, subtext, onLayout }: Dat
       error={error}
       subtext={subtext}
       onLayout={onLayout}
+      inputOverlay={templateOverlay}
       textInputProps={{
-        placeholder: DATE_TEMPLATE,
-        placeholderTextColor: '#000000', // can be moved to theme if needed
-        keyboardType: 'number-pad', // user will only be entering numbers
-        selection,
+        keyboardType: 'number-pad',
       }}
     />
   )

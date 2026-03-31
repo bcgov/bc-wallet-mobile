@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -19,7 +20,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
@@ -122,8 +122,21 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
       ) : null}
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
-      <EmailTextInput handleChangeEmail={handleChangeEmail} testID={'EmailInput'} />
-      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+      <InputWithValidation
+        id={'email'}
+        label={t('BCSC.EnterEmail.EmailAddress')}
+        value={email}
+        onChangeText={handleChangeEmail}
+        error={error}
+        onErrorClear={() => setError(null)}
+        keyboardType={'email-address'}
+        textInputProps={{
+          maxLength: 50,
+          autoCorrect: false,
+          autoComplete: 'email',
+          textContentType: 'emailAddress',
+        }}
+      />
     </ScreenWrapper>
   )
 }

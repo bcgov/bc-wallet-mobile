@@ -24,7 +24,7 @@ import {
 } from './clientErrorPolicies'
 
 const newError = (code: string): AxiosAppError => {
-  const err = new AppError('test error', 'This is a test error', {
+  const err = new AppError('This is a test error', {
     appEvent: code as AppEventCode,
     category: ErrorCategory.NETWORK,
     statusCode: 5000,
@@ -880,6 +880,7 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
+          expect(error.handled).toBe(true)
         })
 
         it('should emit the problem with account alert', () => {
@@ -890,6 +891,7 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
+          expect(error.handled).toBe(true)
         })
 
         it('should emit the invalid pairing code alert', () => {
@@ -900,6 +902,7 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
+          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered pairing code code alert', () => {
@@ -910,6 +913,7 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
+          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered device invalid pairing code alert', () => {
@@ -920,6 +924,7 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
+          expect(error.handled).toBe(true)
         })
       })
     })

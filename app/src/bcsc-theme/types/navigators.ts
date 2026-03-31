@@ -16,6 +16,7 @@ export enum BCSCModals {
   InternetDisconnected = 'BCSCNoInternet',
   MandatoryUpdate = 'BCSCMandatoryUpdate',
   DeviceInvalidated = 'BCSCDeviceInvalidated',
+  ServiceOutage = 'BCSCServiceOutage',
 }
 
 /**
@@ -151,6 +152,7 @@ export type BCSCOnboardingStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }
 
 export type BCSCVerifyStackParams = {
@@ -206,6 +208,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.VerifyRemoveAccountConfirmation]: undefined
@@ -249,6 +252,7 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
 }
 
@@ -266,4 +270,5 @@ export type BCSCAuthStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }

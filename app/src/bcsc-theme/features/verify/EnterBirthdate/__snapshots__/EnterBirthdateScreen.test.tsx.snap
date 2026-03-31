@@ -145,7 +145,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 "text": undefined,
               }
             }
-            accessible={true}
+            accessible={false}
             collapsable={false}
             focusable={true}
             hitSlop={
@@ -188,36 +188,83 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 undefined,
               ]
             }
+            testID="com.ariesbifold:id/birthDate-pressable"
           >
-            <TextInput
-              accessibilityLabel="BCSC.Birthdate.Label"
-              keyboardType="number-pad"
-              onBlur={[Function]}
-              onChange={[Function]}
-              onChangeText={[Function]}
-              onFocus={[Function]}
-              placeholder="YYYY/MM/DD"
-              placeholderTextColor="#000000"
-              selection={
+            <View
+              style={
                 {
-                  "end": 1,
-                  "start": 0,
+                  "flex": 1,
                 }
               }
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "flex": 1,
-                    "fontSize": 16,
-                    "padding": 0,
-                  },
-                  undefined,
-                ]
-              }
-              testID="com.ariesbifold:id/birthDate-input"
-              value="YYYY/MM/DD"
-            />
+            >
+              <View
+                pointerEvents="none"
+                style={
+                  [
+                    {
+                      "bottom": 0,
+                      "left": 0,
+                      "position": "absolute",
+                      "right": 0,
+                      "top": 0,
+                    },
+                    {
+                      "justifyContent": "center",
+                    },
+                  ]
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 16,
+                      "marginBottom": undefined,
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      {
+                        "color": "transparent",
+                      }
+                    }
+                  />
+                  <Text
+                    style={
+                      {
+                        "color": "#606060",
+                      }
+                    }
+                  >
+                    YYYY/MM/DD
+                  </Text>
+                </Text>
+              </View>
+              <TextInput
+                accessibilityLabel="BCSC.Birthdate.Label"
+                keyboardType="number-pad"
+                onBlur={[Function]}
+                onChange={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                style={
+                  [
+                    {
+                      "backgroundColor": "transparent",
+                      "color": "#313132",
+                      "flex": 1,
+                      "fontSize": 16,
+                      "includeFontPadding": false,
+                      "padding": 0,
+                    },
+                    undefined,
+                  ]
+                }
+                testID="com.ariesbifold:id/birthDate-input"
+                value=""
+              />
+            </View>
             <Text
               allowFontScaling={false}
               selectable={false}

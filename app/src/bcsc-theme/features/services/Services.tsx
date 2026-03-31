@@ -1,4 +1,5 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -8,6 +9,7 @@ import { BCState, Mode } from '@/store'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native'
@@ -26,6 +28,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScree
  * @return {*} {React.ReactElement} The Services screen component.
  */
 const Services: React.FC = () => {
+  const { reportActivity } = useBCSCActivity() ?? {}
   const token = useTokenService()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
@@ -108,6 +111,7 @@ const Services: React.FC = () => {
             // disable autocorrect to prevent completion when clearing search text
             autoCorrect={false}
             onChangeText={(newText) => {
+              reportActivity?.()
               // Dismiss keyboard when clearing search text
               if (search.length > 0 && newText === '') {
                 Keyboard.dismiss()
@@ -132,7 +136,7 @@ const Services: React.FC = () => {
                 })
               }
             }}
-            accessibilityLabel={t('BCSC.Services.CatalogueSearch')}
+            accessibilityLabel={a11yLabel(t('BCSC.Services.CatalogueSearch'))}
             testID={testIdWithKey('search')}
             style={styles.searchText}
           />
@@ -145,7 +149,7 @@ const Services: React.FC = () => {
                 Keyboard.dismiss()
                 setSearch('')
               }}
-              accessibilityLabel={'clearSearch'}
+              accessibilityLabel={a11yLabel(t('Global.Close'))}
               testID={testIdWithKey('clearSearch')}
             />
           ) : null}

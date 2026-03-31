@@ -120,11 +120,13 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                       "paddingHorizontal": 8,
                     }
                   }
+                  testID="com.ariesbifold:id/PINInput"
                   textContentType="password"
                   value=""
                 />
                 <View
-                  accessibilityLabel="Show PIN"
+                  accessibilityLabel="PINCreate.Show"
+                  accessibilityRole="button"
                   accessibilityState={
                     {
                       "busy": undefined,
@@ -160,7 +162,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                       "padding": 8,
                     }
                   }
-                  testID="com.ariesbifold:id/VisibilityButton"
+                  testID="com.ariesbifold:id/PINInputVisibilityButton"
                 >
                   <Text
                     allowFontScaling={false}
@@ -301,7 +303,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
             </View>
           </View>
           <View
-            accessibilityLabel="Get Help"
+            accessibilityLabel="Global.GetHelp"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -374,7 +376,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                   ]
                 }
               >
-                Get Help
+                Global.GetHelp
               </Text>
             </View>
           </View>

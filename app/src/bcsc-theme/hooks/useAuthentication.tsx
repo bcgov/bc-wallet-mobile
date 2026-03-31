@@ -61,9 +61,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHENTICATION_ERROR)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
-      deviceAuthenticationErrorAlert()
+      deviceAuthenticationErrorAlert(appError)
     } finally {
       stopLoading?.()
     }

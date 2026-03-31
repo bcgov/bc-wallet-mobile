@@ -131,7 +131,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "text": undefined,
                 }
               }
-              accessible={true}
+              accessible={false}
               collapsable={false}
               focusable={true}
               hitSlop={
@@ -174,29 +174,41 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/streetAddress1-pressable"
             >
-              <TextInput
-                accessibilityLabel="BCSC.Address.StreetAddressLabel"
-                autoComplete="address-line1"
-                autoCorrect={false}
-                onBlur={[Function]}
-                onChange={[Function]}
-                onFocus={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "flex": 1,
-                      "fontSize": 16,
-                      "padding": 0,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "flex": 1,
+                  }
                 }
-                testID="com.ariesbifold:id/streetAddress1-input"
-                textContentType="streetAddressLine1"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="BCSC.Address.StreetAddressLabel"
+                  autoComplete="address-line1"
+                  autoCorrect={false}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "transparent",
+                        "color": "#313132",
+                        "flex": 1,
+                        "fontSize": 16,
+                        "includeFontPadding": false,
+                        "padding": 0,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/streetAddress1-input"
+                  textContentType="streetAddressLine1"
+                  value=""
+                />
+              </View>
               <Text
                 allowFontScaling={false}
                 selectable={false}
@@ -286,7 +298,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "text": undefined,
                 }
               }
-              accessible={true}
+              accessible={false}
               collapsable={false}
               focusable={true}
               hitSlop={
@@ -329,29 +341,41 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/streetAddress2-pressable"
             >
-              <TextInput
-                accessibilityLabel="BCSC.Address.StreetAddress2Label"
-                autoComplete="address-line2"
-                autoCorrect={false}
-                onBlur={[Function]}
-                onChange={[Function]}
-                onFocus={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "flex": 1,
-                      "fontSize": 16,
-                      "padding": 0,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "flex": 1,
+                  }
                 }
-                testID="com.ariesbifold:id/streetAddress2-input"
-                textContentType="streetAddressLine2"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="BCSC.Address.StreetAddress2Label"
+                  autoComplete="address-line2"
+                  autoCorrect={false}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "transparent",
+                        "color": "#313132",
+                        "flex": 1,
+                        "fontSize": 16,
+                        "includeFontPadding": false,
+                        "padding": 0,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/streetAddress2-input"
+                  textContentType="streetAddressLine2"
+                  value=""
+                />
+              </View>
               <Text
                 allowFontScaling={false}
                 selectable={false}
@@ -441,7 +465,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "text": undefined,
                 }
               }
-              accessible={true}
+              accessible={false}
               collapsable={false}
               focusable={true}
               hitSlop={
@@ -484,29 +508,41 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/city-pressable"
             >
-              <TextInput
-                accessibilityLabel="BCSC.Address.CityLabel"
-                autoComplete="postal-address-locality"
-                autoCorrect={false}
-                onBlur={[Function]}
-                onChange={[Function]}
-                onFocus={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "flex": 1,
-                      "fontSize": 16,
-                      "padding": 0,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "flex": 1,
+                  }
                 }
-                testID="com.ariesbifold:id/city-input"
-                textContentType="addressCity"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="BCSC.Address.CityLabel"
+                  autoComplete="postal-address-locality"
+                  autoCorrect={false}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "transparent",
+                        "color": "#313132",
+                        "flex": 1,
+                        "fontSize": 16,
+                        "includeFontPadding": false,
+                        "padding": 0,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/city-input"
+                  textContentType="addressCity"
+                  value=""
+                />
+              </View>
               <Text
                 allowFontScaling={false}
                 selectable={false}
@@ -579,7 +615,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.ProvinceLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
+              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
               accessibilityRole="combobox"
               accessibilityState={
                 {
@@ -738,7 +774,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "text": undefined,
                 }
               }
-              accessible={true}
+              accessible={false}
               collapsable={false}
               focusable={true}
               hitSlop={
@@ -781,30 +817,42 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   undefined,
                 ]
               }
+              testID="com.ariesbifold:id/postalCode-pressable"
             >
-              <TextInput
-                accessibilityLabel="BCSC.Address.PostalCodeLabel"
-                autoCapitalize="characters"
-                autoComplete="postal-code"
-                autoCorrect={false}
-                onBlur={[Function]}
-                onChange={[Function]}
-                onFocus={[Function]}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "flex": 1,
-                      "fontSize": 16,
-                      "padding": 0,
-                    },
-                    undefined,
-                  ]
+                  {
+                    "flex": 1,
+                  }
                 }
-                testID="com.ariesbifold:id/postalCode-input"
-                textContentType="postalCode"
-                value=""
-              />
+              >
+                <TextInput
+                  accessibilityLabel="BCSC.Address.PostalCodeLabel"
+                  autoCapitalize="characters"
+                  autoComplete="postal-code"
+                  autoCorrect={false}
+                  onBlur={[Function]}
+                  onChange={[Function]}
+                  onChangeText={[Function]}
+                  onFocus={[Function]}
+                  style={
+                    [
+                      {
+                        "backgroundColor": "transparent",
+                        "color": "#313132",
+                        "flex": 1,
+                        "fontSize": 16,
+                        "includeFontPadding": false,
+                        "padding": 0,
+                      },
+                      undefined,
+                    ]
+                  }
+                  testID="com.ariesbifold:id/postalCode-input"
+                  textContentType="postalCode"
+                  value=""
+                />
+              </View>
               <Text
                 allowFontScaling={false}
                 selectable={false}

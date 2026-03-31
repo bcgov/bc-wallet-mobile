@@ -102,6 +102,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         labelTitle: {
           color: theme.ColorPalette.grayscale.white,
+          ...BCSCTextStyles.bold,
         },
         labelSubtitle: {
           color: theme.ColorPalette.grayscale.white,
