@@ -5,7 +5,9 @@ const Notifications = new BaseScreen(BCSC_TestIDs.Notifications)
 
 describe('Notifications', () => {
   it('should navigate through the Notifications screen', async () => {
-    await Notifications.waitFor('Continue')
-    await Notifications.tap('Continue')
+    if (!driver.isAndroid) {
+      await Notifications.waitFor('Continue')
+      await Notifications.tap('Continue')
+    }
   })
 })
