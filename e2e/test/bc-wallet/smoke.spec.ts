@@ -1,5 +1,4 @@
 import { getE2EConfig } from '../../src/e2eConfig.js'
-import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
 import { annotate } from '../../src/helpers/sauce.js'
 import { BaseScreen } from '../../src/screens/BaseScreen.js'
 import { BCWallet_TestIDs } from '../../src/testIDs.js'
@@ -11,7 +10,6 @@ describe('App Launch', () => {
   const { variant } = getE2EConfig()
 
   it('should launch and display the Preface screen', async () => {
-    await acceptLocalNetworkPermissionIfPresent()
     await annotate(`Variant: ${variant}`)
     await Preface.waitFor('IAgree')
   })

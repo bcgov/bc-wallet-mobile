@@ -1,9 +1,4 @@
-import {
-  acceptBiometricPermissionIfPresent,
-  canSimulateBiometric,
-  enrollBiometric,
-  matchBiometric,
-} from '../../../src/helpers/biometrics.js'
+import { canSimulateBiometric, enrollBiometric, matchBiometric } from '../../../src/helpers/biometrics.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -17,7 +12,6 @@ describe('Secure App Authentication', () => {
       await enrollBiometric()
       await SecureApp.waitFor('BiometricAuth')
       await SecureApp.tap('BiometricAuth')
-      await acceptBiometricPermissionIfPresent()
       await matchBiometric()
     } else {
       await SecureApp.waitFor('PinAuth')

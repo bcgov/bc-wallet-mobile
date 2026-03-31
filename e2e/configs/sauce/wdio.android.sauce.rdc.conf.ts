@@ -14,6 +14,7 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
+    'appium:autoGrantPermissions': true,
     'sauce:options': {
       appiumVersion: 'latest',
       build: process.env.BUILD_NAME || `local-${Date.now()}`,

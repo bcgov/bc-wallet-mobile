@@ -1,5 +1,4 @@
 import { recoverAppAfterSauceBiometricInteraction } from './appActivation.js'
-import { isIosSimulatorSession } from './iosPermissions.js'
 import { isSauceLabs } from './sauce.js'
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
@@ -41,7 +40,17 @@ async function waitForNativeBiometricPromptOnSauceRdc(): Promise<void> {
 /** Local iOS Simulator only (not Sauce Labs, not a USB real device). */
 function isLocalIOSSimulator(): boolean {
   if (!driver.isIOS || isSauceLabs()) return false
-  return isIosSimulatorSession()
+
+  const d = driver.capabilities as Record<string, unknown>
+  const b = (browser.capabilities ?? {}) as Record<string, unknown>
+  const caps = { ...b, ...d }
+
+  if (caps['realDevice'] === true || caps['appium:realDevice'] === true) {
+    return false
+  }
+
+  const orgId = caps['appium:xcodeOrgId'] ?? caps['xcodeOrgId']
+  return typeof orgId !== 'string' || orgId.trim() === ''
 }
 
 /**
@@ -72,6 +81,8 @@ export async function enrollBiometric(): Promise<void> {
 
 export async function matchBiometric() {
   if (isSauceLabs()) {
+    await delay(2_000)
+
     bioLog('matchBiometric: Sauce RDC — pass')
     await waitForNativeBiometricPromptOnSauceRdc()
     bioLog('matchBiometric: invoking sauce:biometrics-authenticate=true')
@@ -90,6 +101,8 @@ export async function matchBiometric() {
 
 export async function failBiometric() {
   if (isSauceLabs()) {
+    await delay(2_000)
+
     bioLog('failBiometric: Sauce RDC — fail')
     await waitForNativeBiometricPromptOnSauceRdc()
     bioLog('failBiometric: invoking sauce:biometrics-authenticate=false')
