@@ -22,9 +22,10 @@ config.capabilities = [
       phoneOnly: true,
       allowTouchIdEnroll: true,
       resigningEnabled: true,
-      sauceLabsImageInjectionEnabled: true,
       // @ts-expect-error — present in Sauce RDC docs; not yet on WebdriverIO SauceLabsCapabilities type
       biometricsInterception: true,
+      imageInjection: true,
+      crashReporting: true,
     },
   },
 ]

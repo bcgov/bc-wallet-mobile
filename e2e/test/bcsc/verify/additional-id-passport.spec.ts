@@ -35,11 +35,10 @@ describe('Additional Identification', () => {
 
   it('should navigate through the Evidence Capture screen and take a photo', async () => {
     if (isSauceLabs()) {
-      await injectPhoto('/images/passport.jpg')
-    } else {
-      await EvidenceCapture.waitFor('TakePhoto')
-      await EvidenceCapture.tap('TakePhoto')
+      await injectPhoto('images/passport.jpg')
     }
+    await EvidenceCapture.waitFor('TakePhoto')
+    await EvidenceCapture.tap('TakePhoto')
   })
 
   it('should navigate through the Photo Review screen and tap Use Photo', async () => {

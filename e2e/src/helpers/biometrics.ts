@@ -7,11 +7,12 @@ function bioLog(message: string): void {
 }
 
 /** Subtitle set in bcsc-core `DeviceAuthenticationService` / `BcscCoreModule.performDeviceAuthentication`. */
-const ANDROID_BIOMETRIC_SUBTITLE_SEL = '//android.widget.TextView[contains(@text,"authenticate to continue")]'
+const ANDROID_BIOMETRIC_SUBTITLE_SEL =
+  '//android.widget.TextView[contains(@text,"Sign in with FingerPrint") or contains(@text,"Sign in with FaceID")]'
 
 /** iOS system biometric sheet (en — adjust if running localized Sauce sessions). */
 const IOS_BIOMETRIC_LABEL_SEL =
-  '-ios class chain:**/XCUIElementTypeStaticText[`label CONTAINS[c] "Face ID" OR label CONTAINS[c] "Touch ID"`]'
+  '-ios class chain:**/XCUIElementTypeStaticText[`label CONTAINS "Touch ID Verification" OR label CONTAINS "Face ID Verification"`]'
 
 const NATIVE_BIOMETRIC_WAIT_MS = 25_000
 
@@ -22,18 +23,11 @@ const NATIVE_BIOMETRIC_WAIT_MS = 25_000
 async function waitForNativeBiometricPromptOnSauceRdc(): Promise<void> {
   if (!isSauceLabs()) return
 
-  if (driver.isAndroid) {
-    bioLog(`Sauce RDC: waiting for Android BiometricPrompt (subtitle), timeout ${NATIVE_BIOMETRIC_WAIT_MS}ms`)
-    await $(ANDROID_BIOMETRIC_SUBTITLE_SEL).waitForDisplayed({ timeout: NATIVE_BIOMETRIC_WAIT_MS })
-    bioLog('Sauce RDC: Android BiometricPrompt is visible')
-    return
-  }
+  await $(driver.isIOS ? IOS_BIOMETRIC_LABEL_SEL : ANDROID_BIOMETRIC_SUBTITLE_SEL).waitForDisplayed({
+    timeout: NATIVE_BIOMETRIC_WAIT_MS,
+  })
 
-  if (driver.isIOS) {
-    bioLog(`Sauce RDC: waiting for iOS biometric sheet, timeout ${NATIVE_BIOMETRIC_WAIT_MS}ms`)
-    await $(IOS_BIOMETRIC_LABEL_SEL).waitForDisplayed({ timeout: NATIVE_BIOMETRIC_WAIT_MS })
-    bioLog('Sauce RDC: iOS biometric sheet is visible')
-  }
+  bioLog('Sauce RDC: biometric prompt is visible')
 }
 
 export async function matchBiometric() {
