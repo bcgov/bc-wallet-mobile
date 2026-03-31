@@ -37,8 +37,6 @@ export const useFactoryReset = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteSecureData } = useSecureActions()
 
-  // TODO (MD): Consider adding a loading / status state to indicate progress of the factory reset operation
-
   /**
    * Removes all artifacts associated with the current BCSC account.
    *
