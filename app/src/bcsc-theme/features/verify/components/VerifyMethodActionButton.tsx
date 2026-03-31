@@ -1,4 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -65,7 +66,7 @@ const VerifyMethodActionButton = ({
       }}
       testID={testIdWithKey(title)}
       accessibilityRole="button"
-      accessibilityLabel={`${title} verification method`}
+      accessibilityLabel={a11yLabel(title)}
     >
       <View style={{ flex: 1 }}>
         <View style={styles.titleContainer}>

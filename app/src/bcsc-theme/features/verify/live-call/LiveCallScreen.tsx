@@ -8,9 +8,10 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
@@ -140,9 +141,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   // Suppress FCM notifications while in the live call
   useEffect(() => {
-    fcmService.setSuppressed(true)
-    return () => fcmService.setSuppressed(false)
-  }, [fcmService])
+    fcmService.service.setSuppressed(true)
+    return () => fcmService.service.setSuppressed(false)
+  }, [fcmService.service])
 
   // setup volume detection
   useEffect(() => {
@@ -394,7 +395,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               </View>
             )}
 
-            <TouchableOpacity onPress={handleHavingTrouble} style={styles.hasTroubleContainer}>
+            <TouchableOpacity
+              onPress={handleHavingTrouble}
+              style={styles.hasTroubleContainer}
+              accessibilityLabel={a11yLabel(t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble'))}
+              accessibilityRole="button"
+              testID={testIdWithKey('HavingTrouble')}
+            >
               <ThemedText>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
             </TouchableOpacity>
           </View>

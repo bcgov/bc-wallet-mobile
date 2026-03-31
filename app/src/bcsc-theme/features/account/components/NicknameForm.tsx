@@ -1,10 +1,10 @@
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  LimitedTextInput,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -12,6 +12,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -69,7 +70,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
       title={t('BCSC.NicknameAccount.SaveAndContinue')}
       buttonType={ButtonType.Primary}
       testID={testIdWithKey('SaveAndContinue')}
-      accessibilityLabel={t('BCSC.NicknameAccount.SaveAndContinue')}
+      accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
       onPress={handleButtonPress}
       disabled={loading}
     >
@@ -92,17 +93,18 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
       </View>
 
-      <LimitedTextInput
-        showLimitCounter={false}
-        defaultValue={accountNickname}
+      <InputWithValidation
+        id={'accountNickname'}
         label={t('BCSC.NicknameAccount.AccountName')}
-        limit={formStringLengths.maximumLength}
-        handleChangeText={handleChangeText}
-        accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
-        autoCorrect={false}
-        testID={testIdWithKey('NameInput')}
+        value={accountNickname}
+        onChangeText={handleChangeText}
+        error={error}
+        onErrorClear={() => setError(null)}
+        textInputProps={{
+          maxLength: formStringLengths.maximumLength,
+          autoCorrect: false,
+        }}
       />
-      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
     </ScreenWrapper>
   )
 }

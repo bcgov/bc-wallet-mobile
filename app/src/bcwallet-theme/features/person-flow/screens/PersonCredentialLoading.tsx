@@ -107,7 +107,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     const connect = async () => {
       try {
-        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
+        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl)
         setRemoteAgentDetails(remoteAgentDetails)
         setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
@@ -190,7 +190,13 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       store.developer.enableAppToAppPersonFlow &&
       ['Development', 'Test'].includes(store.developer.environment.name)
     ) {
-      initiateAppToAppFlow(store.developer.environment.appToAppUrl, emitErrorModal, logger)
+      initiateAppToAppFlow(
+        store.developer.environment.appToAppUrl,
+        (error) => {
+          emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), error)
+        },
+        logger
+      )
         .then(() => {
           setStep(5)
           logger.info('Initiated app-to-app flow')
@@ -218,6 +224,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.enableAppToAppPersonFlow,
     setStep,
     emitErrorModal,
+    t,
   ])
 
   useEffect(() => {

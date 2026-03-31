@@ -1,17 +1,9 @@
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import {
-  Button,
-  ButtonType,
-  LimitedTextInput,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -22,26 +14,18 @@ const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).ur
 const twoThirds = 0.67
 const maxSerialNumberLength = 15
 
-type ErrorState = {
-  visible: boolean
-  description: string
-}
-
 type ManualSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { updateUserInfo } = useSecureActions()
   const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
   const { width } = useWindowDimensions()
-  const [errorState, setErrorState] = useState<ErrorState>({
-    visible: false,
-    description: '',
-  })
+  const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
     image: {
@@ -51,9 +35,6 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       alignSelf: 'center',
       marginVertical: Spacing.lg,
     },
-    error: {
-      color: ColorPalette.semantic.error,
-    },
   })
 
   const handleChangeText = useCallback((text: string) => {
@@ -62,18 +43,12 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   const onContinuePressed = useCallback(async () => {
     if (serial.length < 1) {
-      setErrorState({
-        description: t('BCSC.ManualSerial.EmptySerialError'),
-        visible: true,
-      })
+      setError(t('BCSC.ManualSerial.EmptySerialError'))
       return
     }
 
     if (serial.length > maxSerialNumberLength) {
-      setErrorState({
-        description: t('BCSC.ManualSerial.CharCountError'),
-        visible: true,
-      })
+      setError(t('BCSC.ManualSerial.CharCountError'))
       return
     }
 
@@ -93,26 +68,23 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   return (
     <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
-      <ThemedText variant={'headingFour'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
+      <ThemedText variant={'headingThree'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
       <ThemedText>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
 
-      <LimitedTextInput
-        defaultValue={serial}
+      <InputWithValidation
+        id={'serial'}
         label={t('BCSC.ManualSerial.InputLabel')}
-        limit={maxSerialNumberLength}
-        handleChangeText={handleChangeText}
-        accessibilityLabel={t('BCSC.ManualSerial.InputLabel')}
-        testID={testIdWithKey('SerialInput')}
-        autoCapitalize={'characters'}
-        autoCorrect={false}
-        autoComplete={'off'}
-        showLimitCounter={false}
+        value={serial}
+        onChangeText={handleChangeText}
+        error={error}
+        onErrorClear={() => setError(null)}
+        textInputProps={{
+          maxLength: maxSerialNumberLength,
+          autoCapitalize: 'characters',
+          autoCorrect: false,
+          autoComplete: 'off',
+        }}
       />
-      {errorState.visible ? (
-        <ThemedText variant={'labelSubtitle'} style={styles.error}>
-          {errorState.description}
-        </ThemedText>
-      ) : null}
       <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
     </ScreenWrapper>
   )

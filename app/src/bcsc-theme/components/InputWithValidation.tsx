@@ -1,5 +1,8 @@
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { hitSlop } from '@/constants'
+import { a11yLabel } from '@/utils/accessibility'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import type { ReactNode } from 'react'
 import { useRef, useState } from 'react'
 import {
   LayoutChangeEvent,
@@ -23,13 +26,15 @@ type InputWithValidationProps = {
   onFocus?: () => void
   onPressIn?: () => void
   subtext?: string
-  error?: string
+  error?: string | null
+  onErrorClear?: () => void
   labelProps?: StyleProp<TextStyle>
   inputProps?: StyleProp<TextStyle>
   subtextProps?: StyleProp<TextStyle>
   errorProps?: StyleProp<TextStyle>
   textInputProps?: TextInputProps
   keyboardType?: TextInputProps['keyboardType']
+  inputOverlay?: ReactNode
 }
 
 /**
@@ -42,6 +47,7 @@ type InputWithValidationProps = {
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { reportActivity } = useBCSCActivity() ?? {}
   const inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
 
@@ -62,6 +68,8 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
     input: {
       flex: 1,
       padding: 0,
+      includeFontPadding: false,
+      backgroundColor: 'transparent',
       color: props.error ? ColorPalette.semantic.error : Inputs.textInput.color,
       fontSize: Inputs.textInput.fontSize,
     },
@@ -99,28 +107,45 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           inputRef.current?.focus()
         }}
         hitSlop={hitSlop}
+        testID={testIdWithKey(`${props.id}-pressable`)}
+        accessible={false}
       >
-        <TextInput
-          ref={inputRef}
-          style={[styles.input, props.inputProps]}
-          value={props.value}
-          onChangeText={props.onChangeText}
-          onChange={(e) => props.onChange?.(e.nativeEvent.text)}
-          onPressIn={props.onPressIn}
-          accessibilityLabel={props.label}
-          testID={testIdWithKey(`${props.id}-input`)}
-          keyboardType={props.keyboardType}
-          {...props.textInputProps}
-          onFocus={(event) => {
-            setIsFocused(true)
-            props.onFocus?.()
-            props.textInputProps?.onFocus?.(event)
-          }}
-          onBlur={(event) => {
-            setIsFocused(false)
-            props.textInputProps?.onBlur?.(event)
-          }}
-        />
+        <View style={{ flex: 1 }}>
+          {props.inputOverlay && (
+            <View style={[StyleSheet.absoluteFill, { justifyContent: 'center' }]} pointerEvents="none">
+              {props.inputOverlay}
+            </View>
+          )}
+          <TextInput
+            ref={inputRef}
+            style={[styles.input, props.inputProps]}
+            value={props.value}
+            onChangeText={(text) => {
+              reportActivity?.()
+              if (props.error) {
+                props.onErrorClear?.()
+              }
+              props.onChangeText?.(text)
+            }}
+            onChange={(e) => {
+              props.onChange?.(e.nativeEvent.text)
+            }}
+            onPressIn={props.onPressIn}
+            accessibilityLabel={a11yLabel(props.label)}
+            testID={testIdWithKey(`${props.id}-input`)}
+            keyboardType={props.keyboardType}
+            {...props.textInputProps}
+            onFocus={(event) => {
+              setIsFocused(true)
+              props.onFocus?.()
+              props.textInputProps?.onFocus?.(event)
+            }}
+            onBlur={(event) => {
+              setIsFocused(false)
+              props.textInputProps?.onBlur?.(event)
+            }}
+          />
+        </View>
 
         <Icon
           name={'alert-circle'}

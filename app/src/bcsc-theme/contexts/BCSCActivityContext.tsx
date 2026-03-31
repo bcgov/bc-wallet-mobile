@@ -12,11 +12,12 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { AppState, AppStateStatus, PanResponder, View } from 'react-native'
+import { AppState, AppStateStatus, Keyboard, PanResponder, View } from 'react-native'
 
 export interface BCSCActivityContext {
   appStateStatus: AppStateStatus
   pauseActivityTracking: () => void
+  reportActivity: () => void
   resumeActivityTracking: () => void
 }
 
@@ -94,6 +95,12 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
     resetInactivityTimeout(timeoutInMilliseconds.current)
   }, [logger, resetInactivityTimeout])
 
+  const reportActivity = useCallback(() => {
+    if (!isPausedRef.current) {
+      resetInactivityTimeout(timeoutInMilliseconds.current)
+    }
+  }, [resetInactivityTimeout])
+
   useEffect(() => {
     // listener for backgrounding / foregrounding
     const eventSubscription = AppState.addEventListener('change', async (nextAppState) => {
@@ -124,14 +131,20 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
       setAppStateStatus(nextAppState)
     })
 
+    // keyboard activity resets the inactivity timeout
+    const keyboardDidShowSubscription = Keyboard.addListener('keyboardDidShow', reportActivity)
+    const keyboardDidHideSubscription = Keyboard.addListener('keyboardDidHide', reportActivity)
+
     // initial timeout setup
     resetInactivityTimeout(timeoutInMilliseconds.current)
 
     return () => {
       clearInactivityTimeoutIfExists()
       eventSubscription.remove()
+      keyboardDidShowSubscription.remove()
+      keyboardDidHideSubscription.remove()
     }
-  }, [clearInactivityTimeoutIfExists, handleInactivityTimeout, resetInactivityTimeout, logger])
+  }, [clearInactivityTimeoutIfExists, handleInactivityTimeout, resetInactivityTimeout, reportActivity, logger])
 
   useEffect(() => {
     // user has updated settings for auto lock time
@@ -148,20 +161,16 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   const panResponder = useMemo(() => {
     return PanResponder.create({
       onStartShouldSetPanResponderCapture: () => {
-        // some user interaction detected, reset timeout (unless paused)
-        if (!isPausedRef.current) {
-          resetInactivityTimeout(timeoutInMilliseconds.current)
-        }
-
+        reportActivity()
         // returns false so the PanResponder doesn't consume the touch event
         return false
       },
     })
-  }, [resetInactivityTimeout])
+  }, [reportActivity])
 
   const contextValue = useMemo(
-    () => ({ appStateStatus, pauseActivityTracking, resumeActivityTracking }),
-    [appStateStatus, pauseActivityTracking, resumeActivityTracking]
+    () => ({ appStateStatus, pauseActivityTracking, reportActivity, resumeActivityTracking }),
+    [appStateStatus, pauseActivityTracking, reportActivity, resumeActivityTracking]
   )
 
   return (

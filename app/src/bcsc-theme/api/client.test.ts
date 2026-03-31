@@ -84,8 +84,8 @@ describe('BCSC Client', () => {
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        '[BCSCApiClient] Server Error: An unknown server error occurred. Please try again later.',
-        expect.objectContaining({ name: expect.any(String) })
+        expect.stringContaining('[BCSCApiClient]'),
+        expect.objectContaining({ code: expect.any(String) })
       )
     }
   })

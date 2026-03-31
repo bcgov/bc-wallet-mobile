@@ -3,6 +3,8 @@ import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { a11yLabel } from '@utils/accessibility'
+
 export enum BCSCBanner {
   IAS_SERVER_UNAVAILABLE = 'IASServerUnavailableBanner',
   IAS_SERVER_NOTIFICATION = 'IASServerNotificationBanner',
@@ -120,6 +122,8 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     <TouchableOpacity
       style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
       testID={testIdWithKey(`button-${type}`)}
+      accessibilityLabel={a11yLabel(title || description || '')}
+      accessibilityRole="button"
       onPress={() => {
         if (dismissible) {
           setShowBanner(false)
