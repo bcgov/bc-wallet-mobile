@@ -149,9 +149,7 @@ describe('formatServiceHours', () => {
   it('throws when a service period has a malformed time string', () => {
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' }],
       service_unavailable_periods: [],
     }
     expect(() => formatServiceHours(serviceHours)).toThrow()
@@ -362,9 +360,7 @@ describe('isCurrentTimeWithinServiceHours', () => {
 
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' }],
       service_unavailable_periods: [],
     }
     expect(() => isCurrentTimeWithinServiceHours(serviceHours)).toThrow()
@@ -375,9 +371,7 @@ describe('isCurrentTimeWithinServiceHours', () => {
 
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: 'bad' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: 'bad' }],
       service_unavailable_periods: [],
     }
     expect(() => isCurrentTimeWithinServiceHours(serviceHours)).toThrow()
@@ -438,9 +432,7 @@ describe('isLiveCallAvailable', () => {
 
     const serviceHours: ServiceHours = {
       time_zone: 'America/Vancouver',
-      regular_service_periods: [
-        { start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'not:valid', end_time: '17:00' },
-      ],
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'not:valid', end_time: '17:00' }],
       service_unavailable_periods: [],
     }
     expect(() => isLiveCallAvailable(serviceHours)).toThrow()
