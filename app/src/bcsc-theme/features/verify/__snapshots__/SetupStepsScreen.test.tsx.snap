@@ -31,7 +31,9 @@ exports[`SetupSteps renders correctly 1`] = `
   >
     <View>
       <View
+        accessibilityHint="BCSC.NicknameAccount.AccountName"
         accessibilityLabel="BCSC.Steps.Step1"
+        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -70,59 +72,63 @@ exports[`SetupSteps renders correctly 1`] = `
         testID="com.ariesbifold:id/BCSC.Steps.Step1"
       >
         <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
         >
-          <Text
-            accessibilityLabel="BCSC.Steps.Step1"
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#FFFFFF",
-                  "marginRight": 16,
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+              }
             }
           >
-            BCSC.Steps.Step1
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "marginTop": 8,
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#FFFFFF",
+                    "marginRight": 16,
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.Step1
+            </Text>
+          </View>
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "color": "#FFFFFF",
-                },
-              ]
+              {
+                "marginTop": 8,
+              }
             }
           >
-            BCSC.NicknameAccount.AccountName
-          </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#FFFFFF",
+                  },
+                ]
+              }
+            >
+              BCSC.NicknameAccount.AccountName
+            </Text>
+          </View>
         </View>
       </View>
       <View
@@ -135,7 +141,9 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.ScanOrTakePhotos"
         accessibilityLabel="BCSC.Steps.Step2"
+        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -174,59 +182,63 @@ exports[`SetupSteps renders correctly 1`] = `
         testID="com.ariesbifold:id/BCSC.Steps.Step2"
       >
         <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
         >
-          <Text
-            accessibilityLabel="BCSC.Steps.Step2"
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#313132",
-                  "marginRight": 16,
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+              }
             }
           >
-            BCSC.Steps.Step2
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "marginTop": 8,
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#313132",
+                    "marginRight": 16,
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.Step2
+            </Text>
+          </View>
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "color": "#313132",
-                },
-              ]
+              {
+                "marginTop": 8,
+              }
             }
           >
-            BCSC.Steps.ScanOrTakePhotos
-          </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#313132",
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.ScanOrTakePhotos
+            </Text>
+          </View>
         </View>
       </View>
       <View
@@ -239,7 +251,9 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.GetVerificationStep3Subtext3"
         accessibilityLabel="BCSC.Steps.Step3"
+        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -278,59 +292,63 @@ exports[`SetupSteps renders correctly 1`] = `
         testID="com.ariesbifold:id/BCSC.Steps.Step3"
       >
         <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
         >
-          <Text
-            accessibilityLabel="BCSC.Steps.Step3"
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#313132",
-                  "marginRight": 16,
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+              }
             }
           >
-            BCSC.Steps.Step3
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "marginTop": 8,
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#313132",
+                    "marginRight": 16,
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.Step3
+            </Text>
+          </View>
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "color": "#313132",
-                },
-              ]
+              {
+                "marginTop": 8,
+              }
             }
           >
-            BCSC.Steps.GetVerificationStep3Subtext3
-          </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#313132",
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.GetVerificationStep3Subtext3
+            </Text>
+          </View>
         </View>
       </View>
       <View
@@ -343,7 +361,9 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint=""
         accessibilityLabel="BCSC.Steps.Step4"
+        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -382,46 +402,14 @@ exports[`SetupSteps renders correctly 1`] = `
         testID="com.ariesbifold:id/BCSC.Steps.Step4"
       >
         <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            accessibilityLabel="BCSC.Steps.Step4"
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#313132",
-                  "marginRight": 16,
-                },
-              ]
-            }
-          >
-            BCSC.Steps.Step4
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "marginTop": 8,
-            }
-          }
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
         >
           <View
             style={
               {
+                "alignItems": "center",
                 "flexDirection": "row",
-                "justifyContent": "space-between",
               }
             }
           >
@@ -432,17 +420,53 @@ exports[`SetupSteps renders correctly 1`] = `
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
                   },
                   {
                     "color": "#313132",
+                    "marginRight": 16,
                   },
                 ]
               }
             >
-              BCSC.Steps.EmailAddress
+              BCSC.Steps.Step4
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "marginTop": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#313132",
+                    },
+                  ]
+                }
+              >
+                BCSC.Steps.EmailAddress
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -456,7 +480,9 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
+        accessibilityHint="BCSC.Steps.GetVerificationStep5Subtext3"
         accessibilityLabel="BCSC.Steps.Step5"
+        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -495,59 +521,63 @@ exports[`SetupSteps renders correctly 1`] = `
         testID="com.ariesbifold:id/BCSC.Steps.Step5"
       >
         <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
+          accessibilityElementsHidden={true}
+          importantForAccessibility="no-hide-descendants"
         >
-          <Text
-            accessibilityLabel="BCSC.Steps.Step5"
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#313132",
-                  "marginRight": 16,
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+              }
             }
           >
-            BCSC.Steps.Step5
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "marginTop": 8,
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 21,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "color": "#313132",
+                    "marginRight": 16,
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.Step5
+            </Text>
+          </View>
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "color": "#313132",
-                },
-              ]
+              {
+                "marginTop": 8,
+              }
             }
           >
-            BCSC.Steps.GetVerificationStep5Subtext3
-          </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#313132",
+                  },
+                ]
+              }
+            >
+              BCSC.Steps.GetVerificationStep5Subtext3
+            </Text>
+          </View>
         </View>
       </View>
     </View>

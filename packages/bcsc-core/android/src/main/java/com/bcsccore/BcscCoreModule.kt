@@ -839,13 +839,20 @@ class BcscCoreModule(
                 // Native app stores accounts as a list (for multi-account support)
                 val accounts = listOf(nativeAccount)
 
-                if (nativeStorage.saveAccounts(accounts, issuerName)) {
-                    Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
-                    promise.resolve(null)
-                } else {
+                if (!nativeStorage.saveAccounts(accounts, issuerName)) {
                     Log.e(NAME, "setAccount - Failed to save account to native-compatible storage")
                     promise.reject("E_STORAGE_ERROR", "Failed to save account to native-compatible storage")
+                    return
                 }
+
+                if (!nativeStorage.saveIssuerToFile(issuer)) {
+                    Log.e(NAME, "setAccount - Failed to save issuer to file")
+                    promise.reject("E_STORAGE_ERROR", "Failed to save issuer to file")
+                    return
+                }
+
+                Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
+                promise.resolve(null)
             } catch (e: Exception) {
                 Log.e(NAME, "setAccount - Exception occurred while saving account: ${e.message}", e)
                 promise.reject("E_FILE_ACCESS_ERROR", "Failed to save account: ${e.message}")
@@ -3075,6 +3082,13 @@ class BcscCoreModule(
                 )
             }
 
+            if (globalPrefs.contains("max_devices_banner_last_time_displayed")) {
+                result.putDouble(
+                    "maxDevicesBannerLastTimeDisplayed",
+                    globalPrefs.getLong("max_devices_banner_last_time_displayed", 0L).toDouble(),
+                )
+            }
+
             Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
             promise.resolve(result)
         } catch (e: Exception) {
@@ -3106,6 +3120,13 @@ class BcscCoreModule(
                 editor.putBoolean(
                     "device_auth_never_show_again",
                     flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
+                )
+            }
+
+            if (flags.hasKey("maxDevicesBannerLastTimeDisplayed")) {
+                editor.putLong(
+                    "max_devices_banner_last_time_displayed",
+                    flags.getDouble("maxDevicesBannerLastTimeDisplayed").toLong(),
                 )
             }
 

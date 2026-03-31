@@ -29,6 +29,7 @@ export class FcmViewModel {
   private lastJwkBaseUrl: string | null = null
   private initialized = false
   private onError?: (error: AppError) => void
+  private pendingChallenges: ChallengeNotification[] = []
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -118,6 +119,15 @@ export class FcmViewModel {
     try {
       // Check if environment changed or JWK not yet available
       const apiClient = getBCSCApiClient()
+
+      if (!apiClient) {
+        this.logger.info(
+          `[FcmViewModel] API client not ready, save for later. (Current count: ${this.pendingChallenges.length})`
+        )
+        this.pendingChallenges.push(data)
+        return
+      }
+
       const envChanged = apiClient && this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL
 
       if (!this.serverJwk || envChanged) {
@@ -228,6 +238,21 @@ export class FcmViewModel {
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)
+    }
+  }
+
+  /**
+   * Processes any pending challenge notifications that were received before the API client was ready.
+   *
+   */
+  public async processPendingChallenges(): Promise<void> {
+    this.logger.info(`[FcmViewModel] Processing ${this.pendingChallenges.length} pending challenge(s)`)
+
+    const challengesToProcess = [...this.pendingChallenges]
+    this.pendingChallenges = []
+
+    for (const challenge of challengesToProcess) {
+      await this.handleChallengeRequest(challenge)
     }
   }
 }

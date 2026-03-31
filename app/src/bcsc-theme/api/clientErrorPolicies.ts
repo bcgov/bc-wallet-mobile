@@ -107,7 +107,7 @@ export const iasErrorPolicy: ErrorHandlingPolicy = {
       return
     }
 
-    alert()
+    alert(error)
   },
 }
 
@@ -124,7 +124,7 @@ export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
       return
     }
 
-    alert()
+    alert(error)
   },
 }
 
@@ -230,8 +230,8 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return context.statusCode === 500 || context.statusCode === 503
   },
-  handle: (_error, context) => {
-    context.alerts.serverErrorAlert()
+  handle: (error, context) => {
+    context.alerts.serverErrorAlert(error)
   },
 }
 
@@ -302,7 +302,8 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
       return
     }
 
-    alert()
+    alert(error)
+    error.handled = true
   },
 }
 
@@ -328,8 +329,8 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.ALREADY_VERIFIED && context.endpoint === context.apiEndpoints.token
   },
-  handle: (_error, context) => {
-    context.alerts.alreadyVerifiedAlert()
+  handle: (error, context) => {
+    context.alerts.alreadyVerifiedAlert(error)
   },
 }
 
@@ -376,7 +377,7 @@ export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.ERR_500_INVALID_URL
   },
   handle: (error, context) => {
-    context.alerts.invalidUrlAlert()
+    context.alerts.invalidUrlAlert(error)
     error.handled = true
   },
 }
@@ -387,7 +388,7 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST
   },
   handle: (error, context) => {
-    context.alerts.invalidRegistrationRequestAlert()
+    context.alerts.invalidRegistrationRequestAlert(error)
     error.handled = true
   },
 }

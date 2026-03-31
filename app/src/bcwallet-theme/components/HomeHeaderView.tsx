@@ -2,6 +2,7 @@ import { Screens, Stacks, testIdWithKey, useTheme } from '@bifold/core'
 import { useAgent } from '@bifold/react-hooks'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
+import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -32,7 +33,12 @@ const HomeHeaderView = () => {
   }
 
   return logger?.remoteLoggingEnabled ? (
-    <Pressable onPress={onPressBanner} testID={testIdWithKey('SessionIdBanner')}>
+    <Pressable
+      onPress={onPressBanner}
+      testID={testIdWithKey('SessionIdBanner')}
+      accessibilityLabel={a11yLabel(t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() }))}
+      accessibilityRole="button"
+    >
       <View style={styles.banner}>
         <Text style={styles.bannerText}>{t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() })}</Text>
       </View>

@@ -1,4 +1,5 @@
 import { AppError, ErrorRegistry } from '@/errors'
+import { toBifoldError } from '@/errors/errorHandler'
 import { BCState } from '@/store'
 import {
   InfoBox,
@@ -75,7 +76,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(initError.toBifoldError())
+      logger.report(toBifoldError('Wallet Error', 'Failed to initialize wallet', initError))
     }
 
     setReported(true)

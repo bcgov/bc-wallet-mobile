@@ -109,7 +109,7 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('Get Help')).toBeTruthy()
+        expect(tree.getByText('Global.GetHelp')).toBeTruthy()
       })
     })
 
@@ -121,7 +121,7 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('Get Help')).toBeTruthy()
+        expect(tree.getByText('Global.GetHelp')).toBeTruthy()
       })
 
       fireEvent.press(tree.getByTestId(testIdWithKey('GetHelp')))

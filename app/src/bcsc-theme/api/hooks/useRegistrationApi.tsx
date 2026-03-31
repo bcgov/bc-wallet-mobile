@@ -199,6 +199,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         nickname: store.bcsc.selectedNickname,
       })
 
+      logger.info(`Account set with clientID: ${data.client_id}`)
+
       await updateTokens({
         registrationAccessToken: data.registration_access_token,
       })

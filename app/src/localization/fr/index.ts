@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (FR)",
     "ShowDetails": "Afficher les détails",
     "Dismiss": "Fermer",
+    "GetHelp": "Get help (FR)",
+    "ContinueSetup": "Continue setup (FR)",
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",
@@ -208,6 +210,7 @@ const translation = {
     },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
+      "CreatePINShort": "Create PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
       "RememberPIN": "Remember your PIN (FR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",
@@ -305,14 +308,14 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (FR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (FR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (FR)",
-      "Goto": "Go to (FR)",
+      "Goto": "On that device, go to: (FR)",
       "GotoService": "Go to {{- service}} (FR)",
       "GotoUrl": "Go to: {{- url}} (FR)",
       "NotListed": "Services not listed? (FR)",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
       "NotListedDescriptionContact": "Contact the service to the link to their website. (FR)",
       "PrivacyPolicy": "Privacy Policy (FR)",
-      "LoginErrorTitle": "Unable to quick login to service (FR)",
+      "LoginErrorTitle": "Problem with Login (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
       "Remove": "Remove (FR)",
@@ -341,12 +344,19 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (FR)",
+        "CheckAgainButton": "Check again (FR)",
+        "LearnMore": "Learn more (FR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
+      "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from a computer (FR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (FR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
       "ViewMessages": "View new messages (FR)",
     },
@@ -381,7 +391,8 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached (FR)",
         "ManageDevicesButton": "Manage devices (FR)",
         "CloseButton": "Close (FR)",
-        "ReviewDevicesTitle": "Review your devices",
+        "DeleteButton": "Delete Message (FR)",
+        "ReviewDevicesTitle": "Review your devices (FR)",
         "ReviewDevicesContentA1": "You can have this account on a maximum of (FR)",
         "ReviewDevicesContentA2": "devices. (FR)",
         "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (FR)",
@@ -439,10 +450,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
-      "SuccessTitle": "Success (FR)",
-      "SuccessMessage": "Successfully unpaired your device (FR)",
-      "ErrorTitle": "Error (FR)",
-      "ErrorMessage": "Failed to unpair device (FR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",
@@ -476,6 +483,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "PairingCodeLabel": "Pairing code (FR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
@@ -572,6 +580,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (FR)",
       "ErrorDetails": "Error details (FR)",
       "Dismiss": "Dismiss (FR)",
+      "SaveScanZones": "Save Scan Zones (FR)",
+      "ContinueScanning": "Continue Scanning (FR)",
+      "Confirm": "Confirm (FR)",
+      "TryAgain": "Try Again (FR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",
@@ -714,6 +726,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (FR)",
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter your email address (FR)",
+      "EmailAddress": "Email address (FR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (FR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (FR)",
     },
@@ -849,6 +862,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
       "TakePhoto": "Take Photo of Face (FR)",
+      "TakePhotoAccessibilityLabel": "Take photo (FR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (FR)",
@@ -1045,7 +1059,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
       "RemoveAccountLoading": "Removing account... (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
+      "TransferAccountAccessibilityLabel": "Transfer (FR)",
       "AccountDetails": "All account details (FR)",
+      "AccountDetailsAccessibilityLabel": "Details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (FR)",
@@ -1217,16 +1233,6 @@ const translation = {
       "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
-  "BCWalletError": {
-    // TODO (MD): Fill in translations once all english errors are completed
-    "Device": {
-      "KeypairGenerationError": "(FR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
-      "KeypairGenerationTitle": "(FR) Problem with App",
-    },
-    "General": {
-      "AccountNotFound": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (FR)",
-    },
-  },
 }
 
 export default translation
