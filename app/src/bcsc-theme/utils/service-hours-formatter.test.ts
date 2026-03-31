@@ -9,6 +9,10 @@ import {
   isLiveCallAvailable,
 } from './service-hours-formatter'
 
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: { trackErrorEvent: jest.fn() },
+}))
+
 // 2024-01-15 (Monday) 4:00 PM Pacific = 2024-01-16T00:00:00Z
 const JAN_15_2024_4PM_PACIFIC_EPOCH = 1705363200
 // 2024-01-15 (Monday) 6:00 PM Pacific = 2024-01-16T02:00:00Z
@@ -45,6 +49,30 @@ describe('formatTime12Hour', () => {
 
   it('returns empty string unchanged', () => {
     expect(formatTime12Hour('')).toBe('')
+  })
+
+  it('throws on non-numeric time string', () => {
+    expect(() => formatTime12Hour('abc')).toThrow()
+  })
+
+  it('throws on time string without colon separator', () => {
+    expect(() => formatTime12Hour('1234')).toThrow()
+  })
+
+  it('throws on partially valid time string', () => {
+    expect(() => formatTime12Hour('12:xx')).toThrow()
+  })
+
+  it('throws on extra colon segments', () => {
+    expect(() => formatTime12Hour('12:34:56')).toThrow()
+  })
+
+  it('throws on out-of-range hours', () => {
+    expect(() => formatTime12Hour('25:00')).toThrow()
+  })
+
+  it('throws on out-of-range minutes', () => {
+    expect(() => formatTime12Hour('12:60')).toThrow()
   })
 })
 
@@ -116,6 +144,15 @@ describe('formatServiceHours', () => {
     const result = formatServiceHours(serviceHours)
 
     expect(result[0].hours).toContain('America/Toronto')
+  })
+
+  it('throws when a service period has a malformed time string', () => {
+    const serviceHours: ServiceHours = {
+      time_zone: 'America/Vancouver',
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' }],
+      service_unavailable_periods: [],
+    }
+    expect(() => formatServiceHours(serviceHours)).toThrow()
   })
 })
 
@@ -316,6 +353,29 @@ describe('isCurrentTimeWithinServiceHours', () => {
     }
     expect(isCurrentTimeWithinServiceHours(serviceHours)).toBe(false)
   })
+
+  it('throws when a service period has a malformed start_time', () => {
+    // Monday 8am Pacific — day check passes, then hits malformed time
+    jest.setSystemTime(new Date('2024-01-15T16:00:00.000Z'))
+
+    const serviceHours: ServiceHours = {
+      time_zone: 'America/Vancouver',
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'invalid', end_time: '17:00' }],
+      service_unavailable_periods: [],
+    }
+    expect(() => isCurrentTimeWithinServiceHours(serviceHours)).toThrow()
+  })
+
+  it('throws when a service period has a malformed end_time', () => {
+    jest.setSystemTime(new Date('2024-01-15T16:00:00.000Z'))
+
+    const serviceHours: ServiceHours = {
+      time_zone: 'America/Vancouver',
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: '07:30', end_time: 'bad' }],
+      service_unavailable_periods: [],
+    }
+    expect(() => isCurrentTimeWithinServiceHours(serviceHours)).toThrow()
+  })
 })
 
 describe('isLiveCallAvailable', () => {
@@ -364,5 +424,17 @@ describe('isLiveCallAvailable', () => {
       service_unavailable_periods: [],
     }
     expect(isLiveCallAvailable(serviceHours)).toBe(true)
+  })
+
+  it('throws when service period contains malformed time', () => {
+    // Monday 8am Pacific
+    jest.setSystemTime(new Date('2024-01-15T16:00:00.000Z'))
+
+    const serviceHours: ServiceHours = {
+      time_zone: 'America/Vancouver',
+      regular_service_periods: [{ start_day: 'MONDAY', end_day: 'MONDAY', start_time: 'not:valid', end_time: '17:00' }],
+      service_unavailable_periods: [],
+    }
+    expect(() => isLiveCallAvailable(serviceHours)).toThrow()
   })
 })
