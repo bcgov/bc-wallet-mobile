@@ -5,7 +5,6 @@ const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 
 describe('Step: AccountSetup → SetupTypes', () => {
   it('should tap Add Account', async () => {
-    BCSC_TestIDs
     await AccountSetup.waitFor('AddAccount')
     await AccountSetup.tap('AddAccount')
   })
