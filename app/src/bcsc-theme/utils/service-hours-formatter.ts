@@ -1,4 +1,6 @@
 import { DaysOfTheWeek, LIVE_CALL_UNAVAILABLE_REASONS } from '@/constants'
+import { AppError } from '@/errors'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { ServiceHours, ServicePeriod, ServiceUnavailablePeriod } from '../api/hooks/useVideoCallApi'
 
 export interface FormattedServicePeriod {
@@ -145,6 +147,13 @@ export const formatTime12Hour = (time24: string): string => {
   }
 
   const [hours, minutes] = time24.split(':').map(Number)
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
+      cause: new Error(`Failed to parse time string for display: "${time24}"`),
+    })
+  }
+
   const period = hours >= 12 ? 'pm' : 'am'
 
   let hours12: number
@@ -184,11 +193,12 @@ const getCurrentTimeInTimezone = (timezone: string): Date => {
   return now
 }
 
-const parseTimeToMinutes = (timeStr: string): number | null => {
+const parseTimeToMinutes = (timeStr: string): number => {
   const [hour, minute] = timeStr.split(':').map(Number)
   if (Number.isNaN(hour) || Number.isNaN(minute)) {
-    // TODO: this needs to throw an error or be handled upstream, the api response is malformed if this fails
-    return null
+    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
+      cause: new Error(`Failed to parse time string: "${timeStr}"`),
+    })
   }
   return hour * 60 + minute
 }
@@ -235,10 +245,6 @@ export const isCurrentTimeWithinServiceHours = (serviceHours: ServiceHours): boo
 
     const startTimeMinutes = parseTimeToMinutes(period.start_time)
     const endTimeMinutes = parseTimeToMinutes(period.end_time)
-
-    if (startTimeMinutes === null || endTimeMinutes === null) {
-      continue
-    } // Skip invalid times
 
     if (isCurrentTimeInRange(currentTimeInMinutes, startTimeMinutes, endTimeMinutes)) {
       return true
