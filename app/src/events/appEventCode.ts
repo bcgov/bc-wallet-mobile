@@ -81,6 +81,7 @@ export enum AppEventCode {
   ERR_113_UNABLE_TO_VERIFY_JOSE_EXCEPTION = 'err_113_unable_to_verify_jose_exception',
   ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY = 'err_114_failed_to_get_claims_set_after_decrypt_and_verify',
   ERR_115_VIDEO_SERVICE_HOURS_UNEXPECTEDLY_NULL = 'err_115_video_service_hours_unexpectedly_null', //being tracked
+  VIDEO_SERVICE_HOURS_MALFORMED_TIME = 'video_service_hours_malformed_time',
   ERR_115_FAILED_TO_SERIALIZE_JSON = 'err_115_failed_to_serialize_json',
   ERR_116_VIDEO_CAPTURE_ERROR = 'err_116_video_capture_error',
   ERR_116_PROVIDER_UNEXPECTEDLY_NULL = 'err_116_provider_unexpectedly_null',
