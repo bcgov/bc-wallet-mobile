@@ -3,7 +3,6 @@ import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
 const SecureApp = new BaseScreen(BCSC_TestIDs.SecureApp)
-const CreatePIN = new BaseScreen(BCSC_TestIDs.CreatePIN)
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Secure App Authentication', () => {
