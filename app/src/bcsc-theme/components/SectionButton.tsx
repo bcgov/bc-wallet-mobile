@@ -2,15 +2,25 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
 
+import { a11yLabel } from '@utils/accessibility'
+
 interface SectionButtonProps {
   title: string
   description?: string
+  accessibilityLabel?: string
   style?: ViewStyle
   onPress?: () => void
   testID?: string
 }
 
-const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style, onPress, testID }) => {
+const SectionButton: React.FC<SectionButtonProps> = ({
+  title,
+  description,
+  accessibilityLabel,
+  style,
+  onPress,
+  testID,
+}) => {
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
@@ -34,7 +44,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={onPress}
-      accessibilityLabel={title}
+      accessibilityLabel={a11yLabel(accessibilityLabel ?? title)}
       accessibilityRole="button"
       testID={testID ?? testIdWithKey(`SectionButton-${title.replaceAll(/\s+/g, '')}`)}
     >

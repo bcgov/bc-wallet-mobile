@@ -1,6 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -26,7 +26,7 @@ const TransferQRInformationScreen: React.FC = () => {
         onPress={() => {
           navigation.navigate(BCSCScreens.TransferAccountQRDisplay)
         }}
-        testID="GetQRCodeButton"
+        testID={testIdWithKey('GetQRCodeButton')}
       />
       <Button
         buttonType={ButtonType.Secondary}
@@ -37,7 +37,7 @@ const TransferQRInformationScreen: React.FC = () => {
             title: t('HelpCentre.Title'),
           })
         }}
-        testID="LearnMoreButton"
+        testID={testIdWithKey('LearnMoreButton')}
       />
     </>
   )

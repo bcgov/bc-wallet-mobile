@@ -1,8 +1,8 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { createWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
+import { getUserAgentString } from '@utils/user-agent'
 import React, { useCallback } from 'react'
-import { ActivityIndicator, Platform, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
@@ -29,7 +29,7 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
 }
 
 /**
- * A WebView component that loads a given URL with injected JavaScript
+ * A WebView component that loads a given URL or renders HTML content.
  * Automatically applies accessibility font scaling based on device settings.
  *
  * @param {WebViewContentProps} props - The component props.
@@ -111,13 +111,8 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
       mixedContentMode="compatibility"
       sharedCookiesEnabled={true}
       thirdPartyCookiesEnabled={true}
-      userAgent="Single App"
-      // Accessibility: Apply font scaling for dynamic text sizing
-      textZoom={Platform.OS === 'android' ? Math.round(fontScale * 100) : undefined}
-      injectedJavaScriptBeforeContentLoaded={
-        html ? undefined : createWebViewJavascriptInjection(ColorPalette, fontScale)
-      }
-      onMessage={() => {}} // Required for injectedJavaScript to work
+      userAgent={getUserAgentString()}
+      textZoom={Math.round(fontScale * 100)}
       onLoad={onLoaded}
     />
   )

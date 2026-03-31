@@ -3,6 +3,7 @@ import { AccountSetupType, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -32,7 +33,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
-
   const { steps, stepActions, isCheckingStatus, handleCheckStatus, handleCancelVerification } =
     useSetupStepsModel(navigation)
 
@@ -138,7 +138,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               <TouchableOpacity
                 onPress={stepActions.email}
                 testID={testIdWithKey('EditEmail')}
-                accessibilityLabel={t('BCSC.Steps.EditEmail')}
+                accessibilityLabel={a11yLabel(t('BCSC.Steps.EditEmail'))}
                 hitSlop={hitSlop}
               >
                 <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
@@ -210,7 +210,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
       {accountType === AccountSetupType.AddAccount ? renderAddAccountSteps() : renderTransferAccountSteps()}
 
-      {store.bcscSecure.userSubmittedVerificationVideo || store.bcscSecure.verificationRequestId ? (
+      {store.bcscSecure.userSubmittedVerificationVideo ? (
         <>
           <View style={styles.itemSeparator} />
           <TouchableOpacity
@@ -225,12 +225,15 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCheckStatus}
+            accessibilityLabel={a11yLabel(t('BCSC.Steps.CheckStatus'))}
+            accessibilityRole="button"
+            testID={testIdWithKey('CheckStatus')}
           >
             <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               {t('BCSC.Steps.CheckStatus')}
             </ThemedText>
             {isCheckingStatus ? (
-              <ActivityIndicator color={ColorPalette.brand.text} />
+              <ActivityIndicator color={ColorPalette.brand.text} size={32} />
             ) : (
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             )}
@@ -249,6 +252,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               },
             ]}
             onPress={handleCancelVerification}
+            accessibilityLabel={a11yLabel(t('BCSC.Steps.ChooseAnotherWayToVerify'))}
+            accessibilityRole="button"
+            testID={testIdWithKey('ChooseAnotherWayToVerify')}
           >
             <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               {t('BCSC.Steps.ChooseAnotherWayToVerify')}

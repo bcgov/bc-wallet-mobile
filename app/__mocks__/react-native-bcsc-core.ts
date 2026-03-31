@@ -144,11 +144,20 @@ export const deleteAuthorizationRequest = jest.fn().mockResolvedValue(true)
 export const getAccountFlags = jest.fn().mockResolvedValue({})
 export const setAccountFlags = jest.fn().mockResolvedValue(true)
 export const deleteAccountFlags = jest.fn().mockResolvedValue(true)
+export const getMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(null)
+export const getHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(false)
+// Evidence Storage
+export const getEvidence = jest.fn().mockResolvedValue([])
+export const setEvidence = jest.fn().mockResolvedValue(true)
+export const deleteEvidence = jest.fn().mockResolvedValue(true)
+export const saveEvidencePhoto = jest.fn().mockResolvedValue('/mock/path/to/photo.jpg')
 
-// Evidence Metadata Storage
-export const getEvidenceMetadata = jest.fn().mockResolvedValue([])
-export const setEvidenceMetadata = jest.fn().mockResolvedValue(true)
-export const deleteEvidenceMetadata = jest.fn().mockResolvedValue(true)
+// Saved Services Storage
+export const getSavedServices = jest.fn().mockResolvedValue([])
+export const setSavedServices = jest.fn().mockResolvedValue(true)
+export const deleteSavedServices = jest.fn().mockResolvedValue(true)
 
 // Credential Management
 export const setCredential = jest.fn().mockResolvedValue(undefined)

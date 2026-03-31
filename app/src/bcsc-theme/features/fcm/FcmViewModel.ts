@@ -1,16 +1,11 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { toAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
-import {
-  BcscNativeErrorCodes,
-  decodeLoginChallenge,
-  isBcscNativeError,
-  JWK,
-  showLocalNotification,
-} from 'react-native-bcsc-core'
+import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
@@ -34,6 +29,7 @@ export class FcmViewModel {
   private lastJwkBaseUrl: string | null = null
   private initialized = false
   private onError?: (error: AppError) => void
+  private pendingChallenges: ChallengeNotification[] = []
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -123,6 +119,15 @@ export class FcmViewModel {
     try {
       // Check if environment changed or JWK not yet available
       const apiClient = getBCSCApiClient()
+
+      if (!apiClient) {
+        this.logger.info(
+          `[FcmViewModel] API client not ready, save for later. (Current count: ${this.pendingChallenges.length})`
+        )
+        this.pendingChallenges.push(data)
+        return
+      }
+
       const envChanged = apiClient && this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL
 
       if (!this.serverJwk || envChanged) {
@@ -166,13 +171,7 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      if (isBcscNativeError(error) && error.code === BcscNativeErrorCodes.FAILED_TO_PARSE_JWS) {
-        const appError = AppError.fromErrorDefinition(ErrorRegistry.PARSE_JWS_ERROR, { cause: error })
-        this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to parse JWS in challenge request`)
-        return
-      }
-
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.CLAIMS_SET_ERROR, { cause: error })
+      const appError = toAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
       appError.handled = true
       const causeMessage = error instanceof Error ? error.message : String(error)
       this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
@@ -239,6 +238,21 @@ export class FcmViewModel {
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)
+    }
+  }
+
+  /**
+   * Processes any pending challenge notifications that were received before the API client was ready.
+   *
+   */
+  public async processPendingChallenges(): Promise<void> {
+    this.logger.info(`[FcmViewModel] Processing ${this.pendingChallenges.length} pending challenge(s)`)
+
+    const challengesToProcess = [...this.pendingChallenges]
+    this.pendingChallenges = []
+
+    for (const challenge of challengesToProcess) {
+      await this.handleChallengeRequest(challenge)
     }
   }
 }

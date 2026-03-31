@@ -1,3 +1,4 @@
+import { getBaseScreenName, getCurrentStateScreenName } from '@/bcsc-theme/navigators/stack-utils'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native'
@@ -20,7 +21,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
   const screenTransitionKeyRef = useRef<string>('')
-  const routeNameRef = useRef<string | undefined>(undefined)
+  const previousScreenRef = useRef<string | undefined>(undefined)
 
   const navigationContext = useMemo(
     () => ({
@@ -35,23 +36,26 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
-          routeNameRef.current = navigationRef.current?.getCurrentRoute()?.name
           setNavigationReady(true)
         }}
-        onStateChange={async () => {
-          const previousRouteName = routeNameRef.current
-          const currentRouteName = navigationRef.current?.getCurrentRoute()?.name
+        onStateChange={async (state) => {
+          if (!state) {
+            return
+          }
 
-          const screenTransitionKey = `${previousRouteName}->${currentRouteName}`
+          const previousScreenName = previousScreenRef.current
+          const currentScreenName = getBaseScreenName(getCurrentStateScreenName(state))
 
-          // Track the screen view event only if the route has changed
-          if (currentRouteName && screenTransitionKeyRef.current !== screenTransitionKey) {
-            Analytics.trackScreenEvent(currentRouteName, previousRouteName)
+          const screenTransitionKey = `${previousScreenName}->${currentScreenName}`
+
+          // Track the screen view event only if the screen has changed
+          if (currentScreenName && screenTransitionKeyRef.current !== screenTransitionKey) {
+            Analytics.trackScreenEvent(currentScreenName, previousScreenName)
 
             screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          routeNameRef.current = currentRouteName
+          previousScreenRef.current = currentScreenName
         }}
       >
         {children}

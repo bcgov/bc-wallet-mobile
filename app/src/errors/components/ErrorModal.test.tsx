@@ -1,15 +1,9 @@
+import { appLogger } from '@/utils/logger'
+import { BifoldError } from '@bifold/core'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCSCErrorModal, BCSCErrorModalProps, ErrorModalPayload } from './ErrorModal'
-
-const mockTrackErrorInAnalytics = jest.fn()
-const mockGetErrorDefinitionFromAppEventCode = jest.fn()
-
-jest.mock('@/errors/errorHandler', () => ({
-  trackErrorInAnalytics: (...args: any[]) => mockTrackErrorInAnalytics(...args),
-  getErrorDefinitionFromAppEventCode: (...args: any[]) => mockGetErrorDefinitionFromAppEventCode(...args),
-}))
 
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: {
@@ -34,8 +28,15 @@ jest.mock('react-native-safe-area-context', () => {
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
+jest.mock('@/utils/logger', () => ({
+  appLogger: {
+    report: jest.fn(),
+  },
+}))
+
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
+  BifoldError: jest.requireActual('@bifold/core').BifoldError,
   useTheme: () => ({
     ColorPalette: {
       grayscale: {
@@ -74,7 +75,6 @@ const validPayload: ErrorModalPayload = {
 
 const defaultProps: BCSCErrorModalProps = {
   error: null,
-  visible: false,
   errorKey: 0,
   onDismiss: jest.fn(),
   enableReport: true,
@@ -96,20 +96,20 @@ describe('BCSCErrorModal', () => {
     })
 
     it('should not render when error is null', () => {
-      const { queryByTestId } = renderModal({ visible: true, error: null })
+      const { queryByTestId } = renderModal({ error: null })
 
       expect(queryByTestId('com.aries.bifold:id/HeaderText')).toBeNull()
     })
 
     it('should render when visible is true and error is provided', () => {
-      const { queryByTestId } = renderModal({ visible: true, error: validPayload })
+      const { queryByTestId } = renderModal({ error: validPayload })
 
       expect(queryByTestId('com.aries.bifold:id/HeaderText')).not.toBeNull()
     })
 
     it('should call onDismiss when Okay button is pressed', () => {
       const onDismiss = jest.fn()
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, onDismiss })
+      const { getByTestId } = renderModal({ error: validPayload, onDismiss })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/Okay'))
 
@@ -119,32 +119,32 @@ describe('BCSCErrorModal', () => {
 
   describe('content rendering', () => {
     it('should display error title and description', () => {
-      const { getByText } = renderModal({ visible: true, error: validPayload })
+      const { getByText } = renderModal({ error: validPayload })
 
       expect(getByText('Test Error Title')).toBeTruthy()
       expect(getByText('Something went wrong.')).toBeTruthy()
     })
 
     it('should display version number', () => {
-      const { getByText } = renderModal({ visible: true, error: validPayload })
+      const { getByText } = renderModal({ error: validPayload })
 
       expect(getByText('Settings.Version 1.0.0 (42)')).toBeTruthy()
     })
 
     it('should show details toggle when message is present', () => {
-      const { getByTestId } = renderModal({ visible: true, error: validPayload })
+      const { getByTestId } = renderModal({ error: validPayload })
 
       expect(getByTestId('com.aries.bifold:id/ShowDetails')).toBeTruthy()
     })
 
     it('should not show details toggle when message is empty', () => {
-      const { queryByTestId } = renderModal({ visible: true, error: { ...validPayload, message: '' } })
+      const { queryByTestId } = renderModal({ error: { ...validPayload, message: '' } })
 
       expect(queryByTestId('com.aries.bifold:id/ShowDetails')).toBeNull()
     })
 
     it('should reveal technical details when Show Details is pressed', () => {
-      const { getByTestId, queryByTestId } = renderModal({ visible: true, error: validPayload })
+      const { getByTestId, queryByTestId } = renderModal({ error: validPayload })
 
       expect(queryByTestId('com.aries.bifold:id/DetailsText')).toBeNull()
 
@@ -156,61 +156,37 @@ describe('BCSCErrorModal', () => {
 
   describe('report button', () => {
     it('should show Report button when enableReport is true', () => {
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
       expect(getByTestId('com.aries.bifold:id/ReportThisProblem')).toBeTruthy()
     })
 
     it('should hide Report button when enableReport is false', () => {
-      const { queryByTestId } = renderModal({ visible: true, error: validPayload, enableReport: false })
+      const { queryByTestId } = renderModal({ error: validPayload, enableReport: false })
 
       expect(queryByTestId('com.aries.bifold:id/ReportThisProblem')).toBeNull()
     })
 
-    it('should track analytics via trackErrorInAnalytics when appEvent has a definition', () => {
-      const mockDefinition = { statusCode: 2800, appEvent: 'general' }
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(mockDefinition)
-
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
+    it('should track analytics via trackAlertActionEvent when report is pressed', () => {
+      const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(mockGetErrorDefinitionFromAppEventCode).toHaveBeenCalledWith('general')
-      expect(mockTrackErrorInAnalytics).toHaveBeenCalledWith(mockDefinition, 'alert_action', 'Error.ReportThisProblem')
+      expect(Analytics.trackAlertActionEvent).toHaveBeenCalledWith('general', 'Report this problem')
     })
 
-    it('should fall back to Analytics.trackErrorEvent when appEvent has no definition', () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
+    it('should report error via logger when report is pressed', () => {
+      const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(validPayload.code),
-        message: validPayload.message,
-      })
-    })
-
-    it('should fall back to Analytics.trackErrorEvent when appEvent is absent', () => {
-      const { getByTestId } = renderModal({
-        visible: true,
-        error: { ...validPayload, appEvent: undefined },
-        enableReport: true,
-      })
-
-      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
-
-      expect(Analytics.trackErrorEvent).toHaveBeenCalledWith({
-        code: String(validPayload.code),
-        message: validPayload.message,
-      })
+      expect(appLogger.report).toHaveBeenCalledWith(
+        new BifoldError(validPayload.title, validPayload.description, validPayload.message, validPayload.code)
+      )
     })
 
     it('should disable the Report button after being pressed', async () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
-      const { getByTestId } = renderModal({ visible: true, error: validPayload, enableReport: true })
+      const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
       const reportBtn = getByTestId('com.aries.bifold:id/ReportThisProblem')
       fireEvent.press(reportBtn)
@@ -223,10 +199,7 @@ describe('BCSCErrorModal', () => {
 
   describe('errorKey reset', () => {
     it('should reset showDetails and reported state when errorKey changes', () => {
-      mockGetErrorDefinitionFromAppEventCode.mockReturnValue(null)
-
       const { getByTestId, queryByTestId, rerender } = renderModal({
-        visible: true,
         error: validPayload,
         errorKey: 1,
         enableReport: true,
@@ -238,7 +211,6 @@ describe('BCSCErrorModal', () => {
       rerender(
         <BCSCErrorModal
           {...defaultProps}
-          visible
           error={{ ...validPayload, title: 'Second Error', message: 'second technical message' }}
           errorKey={2}
           enableReport

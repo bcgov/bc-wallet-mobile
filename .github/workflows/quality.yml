@@ -9,26 +9,23 @@ on:
   merge_group:
 
 jobs:
-  quality:
+  typecheck-test:
     runs-on: macos-26
-    name: Lint, Format, Typecheck, Test, and Coverage
+    name: Build, Typecheck, Test & Coverage
+    permissions:
+      contents: read
     steps:
-      - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
-
-      - name: Install formatting and linting tools
-        run: |
-          brew install swiftformat clang-format ktlint
+      - uses: ./.github/workflows/actions/setup-node
 
       - name: Cache node_modules
-        uses: actions/cache@v3
+        id: cache-node
+        uses: actions/cache@v5
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -38,7 +35,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Cache bcsc-core build output
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: packages/bcsc-core/lib
           key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
@@ -48,13 +45,102 @@ jobs:
       - name: Build packages
         run: yarn build
 
-      - name: Run all checks
-        run: yarn check
+      - name: Typecheck
+        run: yarn typecheck
 
-      - name: Generate coverage report
+      - name: Run tests and generate coverage report
         run: yarn coverage
 
-      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
+      - uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad #V5 (v5.5.1) pinning for SonarQube
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
         if: always()
+
+  lint-format:
+    runs-on: macos-26
+    name: Lint & Format
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v5
+        with:
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Install formatting and linting tools
+        run: brew install swiftformat clang-format ktlint
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Format check
+        run: yarn format:check
+
+  test-ios:
+    runs-on: macos-26
+    name: Native Tests (iOS)
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Resolve iOS Simulator destination
+        id: sim
+        run: |
+          SIM_NAME=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          for runtime in sorted(devices.keys(), reverse=True):
+            if 'iOS' in runtime:
+              for d in devices[runtime]:
+                if 'iPhone' in d['name']:
+                  print(d['name']); sys.exit(0)
+          sys.exit(1)")
+          echo "destination=platform=iOS Simulator,name=$SIM_NAME,OS=latest" >> "$GITHUB_OUTPUT"
+
+      - name: Run iOS tests
+        working-directory: packages/bcsc-core
+        run: |
+          xcodebuild test \
+            -scheme BcscCoreTests-Package \
+            -destination '${{ steps.sim.outputs.destination }}' \
+            -skipPackagePluginValidation
+
+  test-android:
+    runs-on: macos-26
+    name: Native Tests (Android)
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('packages/bcsc-core/android/**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Run Android tests
+        working-directory: packages/bcsc-core/android
+        run: ./gradlew test

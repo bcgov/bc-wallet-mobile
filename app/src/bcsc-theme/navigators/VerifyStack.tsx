@@ -1,7 +1,6 @@
 import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import { createVerifyHelpHeaderButton } from '@/bcsc-theme/components/HelpHeaderButton'
 import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
-import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -21,9 +20,10 @@ import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
+import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
@@ -61,7 +61,7 @@ import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
-import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { isUserVerified } from '../utils/bcsc-credential'
 
 const VerifyStack = () => {
@@ -86,6 +86,8 @@ const VerifyStack = () => {
         headerShadowVisible: false,
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
+        headerBackTestID: testIdWithKey('Back'),
+        headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
       }}
     >
@@ -98,18 +100,11 @@ const VerifyStack = () => {
           headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.NicknameAccount}
-        component={NicknameAccountScreen}
-        options={{
-          headerShown: true,
-          headerBackTestID: testIdWithKey('Back'),
-        }}
-      />
+      <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen
         name={BCSCScreens.VerifyPrivacyPolicy}
-        component={SettingsPrivacyPolicyScreen}
+        component={VerifyPrivacyPolicyScreen}
         options={{ title: t('BCSC.Screens.PrivacyInformation') }}
       />
       <Stack.Screen
@@ -231,12 +226,9 @@ const VerifyStack = () => {
       />
       <Stack.Screen
         name={BCSCScreens.VerifyWebView}
-        component={VerifyWebViewScreen}
+        component={WebViewScreen}
         options={({ route }) => ({
-          headerShown: true,
           title: route.params.title,
-          headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createVerifyWebviewHeaderBackButton(),
         })}
       />
       <Stack.Screen
@@ -265,17 +257,13 @@ const VerifyStack = () => {
         name={BCSCScreens.VerifySettings}
         component={VerifySettingsScreen}
         options={{
-          headerShown: true,
           title: t('BCSC.Screens.Settings'),
-          headerBackTestID: testIdWithKey('Back'),
-          headerShadowVisible: false,
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyAutoLock}
         component={AutoLockScreen}
         options={{
-          headerShown: true,
           title: t('BCSC.Settings.AutoLockTime'),
         }}
       />
@@ -283,20 +271,16 @@ const VerifyStack = () => {
         name={BCSCScreens.VerifyAppSecurity}
         component={VerifyChangeSecurityScreen}
         options={{
-          headerShown: true,
           title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-          headerBackTestID: testIdWithKey('Back'),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyChangePIN}
         component={VerifyChangePINScreen}
         options={({ route }) => ({
-          headerShown: true,
           title: route.params?.isChangingExistingPIN
             ? t('BCSC.ChangePIN.ScreenTitle')
             : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-          headerBackTestID: testIdWithKey('Back'),
         })}
       />
 
@@ -305,7 +289,6 @@ const VerifyStack = () => {
         component={TransferInstructionsScreen}
         options={{
           title: t('BCSC.Screens.TransferAccountInstructions'),
-          headerShown: true,
         }}
       />
       <Stack.Screen
@@ -313,16 +296,11 @@ const VerifyStack = () => {
         component={TransferQRScannerScreen}
         options={{
           title: t('BCSC.Screens.TransferAccountScan'),
-          headerShown: true,
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}
         component={VerifyRemoveAccountConfirmationScreen}
-        options={() => ({
-          headerShown: true,
-          headerBackTitleVisible: false,
-        })}
       />
 
       {/* React navigation docs suggest modals at bottom of stack */}
@@ -338,6 +316,15 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.ServiceOutage}
+        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

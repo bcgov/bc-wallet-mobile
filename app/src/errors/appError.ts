@@ -1,7 +1,5 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { BifoldError } from '@bifold/core'
-import i18next from 'i18next'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
 type AppErrorOptions = ErrorOptions & {
@@ -24,27 +22,24 @@ export type ErrorIdentity = {
  * @class
  */
 export class AppError extends Error {
-  private readonly identity: ErrorIdentity
+  private tracked: boolean // Whether this error has been tracked in analytics
 
   code: string // ie: network.err_no_internet.2100
-  title: string // ie: No Internet
   appEvent: AppEventCode // ie: no_internet
-  description: string // ie: Please check your network connection and try again.
+  statusCode: number // ie: 2100
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
 
-  constructor(title: string, description: string, identity: ErrorIdentity, options?: AppErrorOptions) {
-    super(`${title}: ${description}`, options)
+  constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
+    super(message, options)
     this.name = this.constructor.name
 
-    this.identity = identity
-
     this.code = `${identity.category}.${identity.appEvent}.${identity.statusCode}` // ie: network.err_no_internet.2100
-    this.title = title
     this.appEvent = identity.appEvent
-    this.description = description
+    this.statusCode = identity.statusCode
     this.timestamp = new Date().toISOString()
     this.handled = false
+    this.tracked = false
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -58,7 +53,29 @@ export class AppError extends Error {
    * @returns The technical message or null if not available.
    */
   get technicalMessage(): string | null {
+    // QUESTION (MD): Should we have a max length? Or detect HTML strings or other non-user-friendly content and truncate/remove it?
     return this.cause instanceof Error ? this.cause.message : null
+  }
+
+  /**
+   * Get the full error message, including technical details if available.
+   *
+   * @example
+   * `No internet connection
+   * Debug: [network.err_no_internet.2100] Failed to fetch resource`
+   *
+   * @returns The full error message string.
+   */
+  get fullMessage(): string {
+    let formattedMessage = this.message
+
+    formattedMessage += `\nDebug: [${this.code}]`
+
+    if (this.technicalMessage) {
+      formattedMessage += ` ${this.technicalMessage}`
+    }
+
+    return formattedMessage
   }
 
   /**
@@ -67,7 +84,24 @@ export class AppError extends Error {
    * @returns void
    */
   track() {
-    Analytics.trackErrorEvent(this)
+    if (this.tracked) {
+      return
+    }
+
+    Analytics.trackErrorEvent({
+      /**
+       * NOTE: We use AppEventCode as the error code for backwards compatibility with V3 and the
+       * existing analytics dashboard. The AppError `code` property (which includes category and
+       * status code) would provide better insights — worth considering for a future update.
+       */
+      code: this.appEvent,
+      /**
+       * TEMP: Inject the error code into the message to provide additional context.
+       */
+      message: `[${this.code}] ${this.message}`,
+    })
+
+    this.tracked = true
   }
 
   /**
@@ -79,28 +113,13 @@ export class AppError extends Error {
    */
   static fromErrorDefinition(definition: ErrorDefinition, options?: AppErrorOptions): AppError {
     return new AppError(
-      i18next.t(definition.titleKey) ?? definition.titleKey,
-      i18next.t(definition.descriptionKey) ?? definition.descriptionKey,
+      definition.message,
       {
         category: definition.category,
         appEvent: definition.appEvent,
         statusCode: definition.statusCode,
       },
       options
-    )
-  }
-
-  /**
-   * Convert the AppError to a BifoldError instance.
-   *
-   * @returns A BifoldError representing the AppError.
-   */
-  toBifoldError(): BifoldError {
-    return new BifoldError(
-      this.title,
-      this.description,
-      this.technicalMessage ?? this.message,
-      this.identity.statusCode
     )
   }
 

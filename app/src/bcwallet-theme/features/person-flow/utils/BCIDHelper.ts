@@ -1,4 +1,5 @@
-import { ErrorRegistryKey, getErrorDefinition } from '@/errors'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { AppError, ErrorRegistry } from '@/errors'
 import {
   Agent,
   BifoldError,
@@ -7,12 +8,11 @@ import {
   removeExistingInvitationsById,
 } from '@bifold/core'
 import { DidRepository } from '@credo-ts/core'
-import { TFunction } from 'i18next'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 /** Error handler callback type for utility functions */
-export type ErrorHandler = (key: ErrorRegistryKey, options?: { error?: unknown }) => void
+export type ErrorHandler = (error: AppError) => void
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -45,18 +45,13 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
   return !credentialDefinitionIDs.some((i) => trustedPersonCredentialIssuerRe.test(i))
 }
 
-export const connectToIASAgent = async (
-  agent: Agent,
-  iasAgentInviteUrl: string,
-  t: TFunction
-): Promise<WellKnownAgentDetails> => {
+export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
   const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
-    const errorDef = getErrorDefinition('PARSE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_INVITATION_ERROR)
   }
 
   await removeExistingInvitationsById(agent, invite.id)
@@ -64,8 +59,7 @@ export const connectToIASAgent = async (
   const record = await agent.oob.receiveInvitation(invite)
 
   if (!record) {
-    const errorDef = getErrorDefinition('RECEIVE_INVITATION_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.RECEIVE_INVITATION_ERROR)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
@@ -74,24 +68,21 @@ export const connectToIASAgent = async (
   const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   const dids = await didRepository.getAll(agent.context)
   const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
   if (!didRecord) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
   if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
-    const errorDef = getErrorDefinition('LEGACY_DID_ERROR')
-    throw new BifoldError(t(errorDef.titleKey), t(errorDef.descriptionKey), t('Error.NoMessage'), errorDef.statusCode)
+    throw AppError.fromErrorDefinition(ErrorRegistry.LEGACY_DID_ERROR)
   }
 
   return {
@@ -119,7 +110,7 @@ export const initiateAppToAppFlow = async (url: string, onError?: ErrorHandler, 
     }
   } catch (err: unknown) {
     logger?.error(`Error opening URL ${(err as Error).message}`)
-    onError?.('APP_TO_APP_URL_ERROR', { error: err })
+    onError?.(toAppError(err, ErrorRegistry.APP_TO_APP_URL_ERROR))
   }
 }
 

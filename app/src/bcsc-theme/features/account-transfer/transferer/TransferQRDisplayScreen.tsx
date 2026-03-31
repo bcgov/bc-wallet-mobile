@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import {
   Button,
@@ -8,6 +9,8 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
+  TOKENS,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
@@ -33,6 +36,8 @@ const TransferQRDisplayScreen: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { accountNotFoundAlert } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     qrCodeContainer: {
@@ -45,12 +50,14 @@ const TransferQRDisplayScreen: React.FC = () => {
     },
   })
 
-  const createToken = useCallback(async () => {
+  const createToken = useCallback(async (): Promise<boolean> => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
-      // TODO: (Alfred) What needs to happen here? The account should be created when they download the app, do they need to reinstall?
-      return
+      logger.error('[TransferQRDisplayScreen] Account not found in native storage')
+      accountNotFoundAlert()
+      setIsLoading(false)
+      return false
     }
 
     const newJti = uuid.v4().toString()
@@ -68,7 +75,8 @@ const TransferQRDisplayScreen: React.FC = () => {
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
-  }, [store.developer.environment.iasApiBaseUrl])
+    return true
+  }, [store.developer.environment.iasApiBaseUrl, logger, accountNotFoundAlert])
 
   const checkAttestation = useCallback(
     async (id: string) => {
@@ -92,13 +100,15 @@ const TransferQRDisplayScreen: React.FC = () => {
     }, qrCodeRefreshInterval)
   }, [createToken])
 
-  const refreshToken = useCallback(() => {
+  const refreshToken = useCallback(async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
     }
 
-    createToken()
-    startInterval()
+    const success = await createToken()
+    if (success) {
+      startInterval()
+    }
   }, [createToken, startInterval])
 
   useEffect(() => {

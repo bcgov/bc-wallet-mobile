@@ -110,6 +110,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/Help"
               >
                 <View
                   style={
@@ -177,6 +178,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/Privacy"
               >
                 <View
                   style={
@@ -244,6 +246,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/ContactUs"
               >
                 <View
                   style={
@@ -311,6 +314,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/Feedback"
               >
                 <View
                   style={
@@ -378,6 +382,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/Accessibility"
               >
                 <View
                   style={
@@ -445,6 +450,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/TermsOfUse"
               >
                 <View
                   style={
@@ -512,6 +518,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
+                testID="com.ariesbifold:id/Analytics"
               >
                 <View
                   style={
@@ -559,7 +566,7 @@ exports[`MainSettings renders correctly 1`] = `
                     "selected": undefined,
                   }
                 }
-                accessible={true}
+                accessible={false}
                 focusable={true}
                 onClick={[Function]}
                 onResponderGrant={[Function]}
@@ -604,7 +611,7 @@ exports[`MainSettings renders correctly 1`] = `
                     ]
                   }
                 >
-                  Version 1 (1)
+                  Version 4.0.0 (142)
                 </Text>
               </View>
             </View>

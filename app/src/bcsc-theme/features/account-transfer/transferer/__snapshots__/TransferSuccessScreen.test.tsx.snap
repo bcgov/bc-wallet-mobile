@@ -167,7 +167,7 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
           "padding": 16,
         }
       }
-      testID="com.ariesbifold:id/BCSC.TransferSuccess.ButtonText"
+      testID="com.ariesbifold:id/TransferSuccessButton"
     >
       <View
         style={
@@ -196,7 +196,6 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],
@@ -244,7 +243,7 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
           "padding": 16,
         }
       }
-      testID="com.ariesbifold:id/BCSC.Account.RemoveAccount"
+      testID="com.ariesbifold:id/RemoveAccountButton"
     >
       <View
         style={
@@ -273,7 +272,6 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

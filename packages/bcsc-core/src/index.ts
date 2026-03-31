@@ -6,6 +6,7 @@ import NativeBcscCoreSpec, {
   type NativeAccount,
   type NativeAuthorizationRequest,
   type NativeFilesScan,
+  type NativeSavedService,
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
@@ -16,6 +17,7 @@ export type {
   NativeAddress,
   NativeAuthorizationRequest,
   NativeFilesScan,
+  NativeSavedService,
 } from './NativeBcscCore';
 
 /**
@@ -24,6 +26,7 @@ export type {
  * Access via `error.code` on caught native module errors.
  */
 export const BcscNativeErrorCodes = {
+  // --- DCR error codes (E_120_* series) ---
   /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
   TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
   /** toJSONString method failed while serializing device info JWT (error 120-2) */
@@ -36,6 +39,48 @@ export const BcscNativeErrorCodes = {
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+
+  // --- Native error codes (see per-entry docs for platform availability) ---
+
+  // Account / Token
+  /** Account not found in native storage */
+  ACCOUNT_NOT_FOUND: 'E_ACCOUNT_NOT_FOUND',
+  /** Invalid token type passed to native module */
+  INVALID_TOKEN_TYPE: 'E_INVALID_TOKEN_TYPE',
+  /** Error deleting a token from native storage */
+  TOKEN_DELETE_ERROR: 'E_TOKEN_DELETE_ERROR',
+
+  // Key operations
+  /** Key pair not found for the given label */
+  KEY_NOT_FOUND: 'E_KEY_NOT_FOUND',
+  /** Failed to export or retrieve key material */
+  KEY_EXPORT_FAILED: 'E_KEY_EXPORT_FAILED',
+  /** Unexpected error during key operations */
+  KEY_ERROR: 'E_KEY_ERROR',
+  /** Android KeyStore is not available on this device (Android-only) */
+  KEYSTORE_UNAVAILABLE: 'E_KEYSTORE_UNAVAILABLE',
+  /** Error accessing the platform keystore */
+  KEYSTORE_ERROR: 'E_KEYSTORE_ERROR',
+
+  // JWT / Signing
+  /** Device UUID not available (iOS-only) */
+  UUID_NOT_FOUND: 'E_UUID_NOT_FOUND',
+  /** No signing keys available */
+  NO_KEYS_FOUND: 'E_NO_KEYS_FOUND',
+  /** Key pair exists but could not be loaded */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JWT signing or serialization failed */
+  JWT_SIGN_FAILED: 'E_JWT_SIGN_FAILED',
+
+  // PIN
+  /** Invalid parameters passed to a PIN operation */
+  INVALID_PARAMETERS: 'E_INVALID_PARAMETERS',
+  /** Failed to set PIN */
+  SET_PIN_FAILED: 'E_SET_PIN_FAILED',
+  /** Failed to delete PIN */
+  DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
+
+  // Parsing
   /** JSON serialization failed in the native module */
   JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
   /** JWS token could not be parsed (malformed or invalid format) */
@@ -746,7 +791,82 @@ export interface AccountFlags {
   temporaryEmailId?: string;
   /** Whether user has submitted a verification video */
   userSubmittedVerificationVideo?: boolean;
+  /** Whether user has dismissed the device auth confirmation screen ("Do not show me this again") */
+  notShowDeviceAuthenticationPrepAgain?: boolean;
+  /** Epoch ms timestamp of when the user last closed the max devices banner */
+  userClosedMaxDevicesBannerDate?: number;
 }
+
+/**
+ * Android-only global flags that are not tied to any account.
+ * On Android these are stored in global SharedPreferences (v3 compatible).
+ */
+interface AndroidGlobalFlags {
+  notShowDeviceAuthenticationPrepAgain?: boolean;
+  /** Epoch ms timestamp of when the user last closed the max devices banner */
+  maxDevicesBannerLastTimeDisplayed?: number;
+}
+
+/**
+ * Returns whether the user has dismissed the device auth preparation screen.
+ *
+ * Platform-aware: on iOS reads from account flags (account_flag file),
+ * on Android reads from global SharedPreferences (no account required).
+ */
+export const getHideDeviceAuthPrepFlag = async (): Promise<boolean | undefined> => {
+  if (Platform.OS === 'ios') {
+    const { notShowDeviceAuthenticationPrepAgain } = (await BcscCore.getAccountFlags()) as AccountFlags;
+    return notShowDeviceAuthenticationPrepAgain;
+  } else {
+    const { notShowDeviceAuthenticationPrepAgain } = (await BcscCore.getAndroidGlobalFlags()) as AndroidGlobalFlags;
+    return notShowDeviceAuthenticationPrepAgain;
+  }
+};
+
+/**
+ * Sets the "do not show device auth prep screen again" flag.
+ *
+ * Platform-aware: on iOS writes to account flags (account_flag file),
+ * on Android writes to global SharedPreferences (no account required).
+ */
+export const setHideDeviceAuthPrepFlag = async (value: boolean): Promise<boolean> => {
+  if (Platform.OS === 'ios') {
+    return BcscCore.setAccountFlags({ notShowDeviceAuthenticationPrepAgain: value });
+  } else {
+    return BcscCore.setAndroidGlobalFlags({ notShowDeviceAuthenticationPrepAgain: value });
+  }
+};
+
+/**
+ * Returns the epoch ms timestamp of when the user last closed the max devices banner,
+ * or undefined if it has never been closed.
+ *
+ * Platform-aware: on iOS reads from account flags (account_flag file),
+ * on Android reads from global SharedPreferences (no account required).
+ */
+export const getMaxDevicesBannerLastDisplayedDate = async (): Promise<number | undefined> => {
+  if (Platform.OS === 'ios') {
+    const { userClosedMaxDevicesBannerDate } = (await BcscCore.getAccountFlags()) as AccountFlags;
+    return userClosedMaxDevicesBannerDate;
+  } else {
+    const { maxDevicesBannerLastTimeDisplayed } = (await BcscCore.getAndroidGlobalFlags()) as AndroidGlobalFlags;
+    return maxDevicesBannerLastTimeDisplayed;
+  }
+};
+
+/**
+ * Sets the epoch ms timestamp for when the user last closed the max devices banner.
+ *
+ * Platform-aware: on iOS writes to account flags (account_flag file),
+ * on Android writes to global SharedPreferences (no account required).
+ */
+export const setMaxDevicesBannerLastDisplayedDate = async (value: number): Promise<boolean> => {
+  if (Platform.OS === 'ios') {
+    return BcscCore.setAccountFlags({ userClosedMaxDevicesBannerDate: value });
+  } else {
+    return BcscCore.setAndroidGlobalFlags({ maxDevicesBannerLastTimeDisplayed: value });
+  }
+};
 
 /**
  * Gets account flags from native storage.
@@ -832,7 +952,7 @@ export interface EvidenceType {
 }
 
 /**
- * Matches v3 storage structure as well as additionalEvidenceData field in React Native store
+ * Matches additionalEvidenceData field in React Native store
  */
 export interface EvidenceMetadata {
   /** Evidence type information - full EvidenceType object */
@@ -854,7 +974,7 @@ export interface BarcodeAddressPayload {
   country: string;
 }
 
-/** A single barcode entry in the evidence upload payload (matches v3 iOS structure). */
+/** A single barcode entry in the evidence upload payload (matches iOS structure). */
 export type BarcodePayload =
   | {
       type: 'PDF_417';
@@ -878,41 +998,42 @@ export type BarcodePayload =
 /**
  * Gets evidence metadata from native storage.
  *
- * These are stored in v3-compatible locations:
- * - iOS: evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
- * - Android: EvidenceRepository SharedPreferences storage
- *
- * This enables rollback to v3 while preserving user's evidence collection progress.
- *
  * @returns A promise that resolves to the evidence metadata array
  */
-export const getEvidenceMetadata = async (): Promise<EvidenceMetadata[]> => {
-  return BcscCore.getEvidenceMetadata() as Promise<EvidenceMetadata[]>;
+export const getEvidence = async (): Promise<EvidenceMetadata[]> => {
+  return BcscCore.getEvidence() as Promise<EvidenceMetadata[]>;
 };
 
 /**
  * Sets evidence metadata in native storage.
  *
- * These are stored in v3-compatible locations:
- * - iOS: evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
- * - Android: EvidenceRepository SharedPreferences storage
- *
- * This enables rollback to v3 while preserving user's evidence collection progress.
- *
  * @param evidence The evidence metadata array to save
  * @returns A promise that resolves to true if saved successfully
  */
-export const setEvidenceMetadata = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
-  return BcscCore.setEvidenceMetadata(evidence);
+export const setEvidence = async (evidence: EvidenceMetadata[]): Promise<boolean> => {
+  return BcscCore.setEvidence(evidence);
 };
 
 /**
- * Deletes all evidence metadata from native storage.
+ * Deletes all evidence data from native storage, including photo files.
  *
  * @returns A promise that resolves to true if deleted successfully
  */
-export const deleteEvidenceMetadata = async (): Promise<boolean> => {
-  return BcscCore.deleteEvidenceMetadata();
+export const deleteEvidence = async (): Promise<boolean> => {
+  return BcscCore.deleteEvidence();
+};
+
+/**
+ * Saves a photo to permanent storage.
+ * Android: Writes JPEG to {filesDir}/documents/{filename}
+ * iOS: Writes JPEG to Application Support/documents/{filename}
+ *
+ * @param base64Data Base64-encoded photo data
+ * @param filename Target filename
+ * @returns The absolute path to the saved file
+ */
+export const saveEvidencePhoto = async (base64Data: string, filename: string): Promise<string> => {
+  return BcscCore.saveEvidencePhoto(base64Data, filename);
 };
 
 /**
@@ -991,4 +1112,46 @@ export const isThirdPartyKeyboardActive = async (): Promise<boolean> => {
  */
 export const openAndroidKeyboardSelector = async (): Promise<void> => {
   return BcscCore.openKeyboardSelector();
+};
+
+// ============================================================================
+// Saved Services (Client Metadata) Storage Methods
+// ============================================================================
+
+/**
+ * Gets saved services from native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * On v3→v4 migration, this reads the bookmarked services the user had saved in v3.
+ *
+ * @returns A promise that resolves to the array of saved service metadata
+ */
+export const getSavedServices = async (): Promise<NativeSavedService[]> => {
+  return BcscCore.getSavedServices();
+};
+
+/**
+ * Saves services to native storage.
+ *
+ * These are stored in v3-compatible locations:
+ * - iOS: client_metadata file in Application Support (NSKeyedArchiver)
+ * - Android: Encrypted clientmetadata file
+ *
+ * @param services The saved service metadata array to write
+ * @returns A promise that resolves to true if saved successfully
+ */
+export const setSavedServices = async (services: NativeSavedService[]): Promise<boolean> => {
+  return BcscCore.setSavedServices(services);
+};
+
+/**
+ * Deletes all saved services from native storage.
+ *
+ * @returns A promise that resolves to true if deleted successfully
+ */
+export const deleteSavedServices = async (): Promise<boolean> => {
+  return BcscCore.deleteSavedServices();
 };

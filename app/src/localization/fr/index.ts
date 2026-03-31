@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (FR)",
     "ShowDetails": "Afficher les détails",
     "Dismiss": "Fermer",
+    "GetHelp": "Get help (FR)",
+    "ContinueSetup": "Continue setup (FR)",
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",
@@ -38,6 +40,7 @@ const translation = {
     "Reported": "Signalé",
     "Unknown": "Inconnu",
     "Problem": "Un problème est survenu",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (FR)"
   },
   "Screens": {
     "Preface": "BC Wallet (FR)",
@@ -191,8 +194,23 @@ const translation = {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
       "AuthenticateToSecure": "Authenticate to secure your app (FR)"
     },
+    "AppReset": {
+      "Title": "App reset for security (FR)",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone. (FR)",
+      "Body2": "It looks like you may have turned off the passcode on this device. (FR)",
+      "Body3": "When you do this, your app is reset and you need to set it up again. (FR)",
+      "SetUpApp": "Set Up App (FR)",
+      "LearnMore": "Learn More (FR)"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device (FR)",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it. (FR)",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app. (FR)",
+      "CheckboxLabel": "Do not show me this again (FR)",
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (FR)",
+      "CreatePINShort": "Create PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
       "RememberPIN": "Remember your PIN (FR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",
@@ -290,14 +308,14 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (FR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (FR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (FR)",
-      "Goto": "Go to (FR)",
+      "Goto": "On that device, go to: (FR)",
       "GotoService": "Go to {{- service}} (FR)",
       "GotoUrl": "Go to: {{- url}} (FR)",
       "NotListed": "Services not listed? (FR)",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
       "NotListedDescriptionContact": "Contact the service to the link to their website. (FR)",
       "PrivacyPolicy": "Privacy Policy (FR)",
-      "LoginErrorTitle": "Unable to quick login to service (FR)",
+      "LoginErrorTitle": "Problem with Login (FR)",
       "SavedServices": "Saved Services (FR)",
       "NoSavedServices": "No saved services (FR)",
       "Remove": "Remove (FR)",
@@ -326,12 +344,19 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (FR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (FR)",
+        "CheckAgainButton": "Check again (FR)",
+        "LearnMore": "Learn more (FR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
+      "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
       "LogInFromComputerTitle": "Log in from a computer (FR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (FR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
       "ViewMessages": "View new messages (FR)",
     },
@@ -366,7 +391,8 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached (FR)",
         "ManageDevicesButton": "Manage devices (FR)",
         "CloseButton": "Close (FR)",
-        "ReviewDevicesTitle": "Review your devices",
+        "DeleteButton": "Delete Message (FR)",
+        "ReviewDevicesTitle": "Review your devices (FR)",
         "ReviewDevicesContentA1": "You can have this account on a maximum of (FR)",
         "ReviewDevicesContentA2": "devices. (FR)",
         "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (FR)",
@@ -424,10 +450,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
-      "SuccessTitle": "Success (FR)",
-      "SuccessMessage": "Successfully unpaired your device (FR)",
-      "ErrorTitle": "Error (FR)",
-      "ErrorMessage": "Failed to unpair device (FR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",
@@ -461,6 +483,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "PairingCodeLabel": "Pairing code (FR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
@@ -497,6 +520,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup (FR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (FR)",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act. (FR)",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy (FR)",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (FR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (FR)",
       "TermsOfUseTitle": "Terms of Use (FR)",
@@ -517,7 +541,8 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (FR)",
       "AnalyticsTitle": "Enable Analytics? (FR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (FR)",
+      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (FR)",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously (FR)",
       "AcceptAnalytics": "Enable Analytics (FR)",
       "DenyAnalytics":  "Skip (FR)",
     },
@@ -555,6 +580,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (FR)",
       "ErrorDetails": "Error details (FR)",
       "Dismiss": "Dismiss (FR)",
+      "SaveScanZones": "Save Scan Zones (FR)",
+      "ContinueScanning": "Continue Scanning (FR)",
+      "Confirm": "Confirm (FR)",
+      "TryAgain": "Try Again (FR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",
@@ -697,6 +726,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (FR)",
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter your email address (FR)",
+      "EmailAddress": "Email address (FR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (FR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (FR)",
     },
@@ -832,6 +862,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
       "TakePhoto": "Take Photo of Face (FR)",
+      "TakePhotoAccessibilityLabel": "Take photo (FR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (FR)",
@@ -1028,7 +1059,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
       "RemoveAccountLoading": "Removing account... (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
+      "TransferAccountAccessibilityLabel": "Transfer (FR)",
       "AccountDetails": "All account details (FR)",
+      "AccountDetailsAccessibilityLabel": "Details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (FR)",
@@ -1194,15 +1227,12 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
       "Action1": "Reset App (FR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (FR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
 	},
-  "BCWalletError": {
-    // TODO (MD): Fill in translations once all english errors are completed
-    "Device": {
-      "KeypairGenerationError": "(FR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
-      "KeypairGenerationTitle": "(FR) Problem with App",
-    },
-  },
 }
 
 export default translation

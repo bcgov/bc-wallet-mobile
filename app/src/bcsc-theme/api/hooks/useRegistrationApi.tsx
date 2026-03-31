@@ -187,7 +187,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       logger.info('Generated dynamic client registration body')
 
       const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
-        headers: { 'Content-Type': 'application/json' },
         skipBearerAuth: true,
       })
 
@@ -199,6 +198,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         securityMethod,
         nickname: store.bcsc.selectedNickname,
       })
+
+      logger.info(`Account set with clientID: ${data.client_id}`)
 
       await updateTokens({
         registrationAccessToken: data.registration_access_token,
@@ -307,7 +308,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             {
               skipBearerAuth: true,
               headers: {
-                'Content-Type': 'application/json',
                 Authorization: `Bearer ${registrationAccessToken}`,
               },
             }

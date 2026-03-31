@@ -1,49 +1,62 @@
 import { PIN_LENGTH } from '@/constants'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+import { a11yLabel } from '@utils/accessibility'
 
 interface PINInputProps {
   onPINChange?: (pin: string) => void
   onPINComplete?: (pin: string) => void
   errorMessage?: string
   autoFocus?: boolean
+  /** Accessibility label for the PIN input field */
+  accessibilityLabel?: string
+  /** Test ID key for e2e (e.g. 'PINInput1'). Used for input and VisibilityButton (key + 'VisibilityButton'). */
+  testIDKey?: string
   ref?: React.Ref<TextInput>
 }
 
-export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus = false, ref }: PINInputProps) => {
+export const PINInput = ({
+  onPINChange,
+  onPINComplete,
+  errorMessage,
+  autoFocus = false,
+  testIDKey,
+  ref,
+  accessibilityLabel,
+}: PINInputProps) => {
+  const { t } = useTranslation()
   const [pin, setPin] = useState('')
-  const { ColorPalette, Spacing, TextTheme, PINInputTheme } = useTheme()
+  const { ColorPalette, Spacing, PINInputTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const styles = StyleSheet.create({
+    pinInputContainer: {
+      gap: Spacing.sm,
+    },
     inputContainer: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: isFocused ? ColorPalette.brand.primary : PINInputTheme.cell.backgroundColor,
+      borderWidth: 2,
+      borderColor: isFocused ? PINInputTheme.focussedCell.borderColor : PINInputTheme.cell.backgroundColor,
       borderRadius: Spacing.xs,
       backgroundColor: PINInputTheme.cell.backgroundColor,
-      padding: Spacing.sm,
-      marginTop: Spacing.md,
-      marginBottom: Spacing.sm,
     },
     input: {
-      height: PINInputTheme.cell.height,
-      ...TextTheme.headingThree,
       ...PINInputTheme.cellText,
       flex: 1,
+      paddingHorizontal: Spacing.sm,
+      minHeight: 50,
+      fontSize: 24,
+      fontWeight: 'bold',
       letterSpacing: Spacing.sm,
-      textAlignVertical: 'center',
     },
-    eyeIcon: {
-      padding: 5,
-    },
-    errorContainer: {
-      minHeight: 20,
-      justifyContent: 'flex-start',
+    visibilityButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: Spacing.sm,
     },
   })
 
@@ -63,10 +76,11 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
   }
 
   return (
-    <>
+    <View style={styles.pinInputContainer}>
       <View style={styles.inputContainer}>
         <TextInput
           ref={ref}
+          testID={testIDKey ? testIdWithKey(testIDKey) : undefined}
           style={styles.input}
           value={pin}
           onChangeText={handlePINChange}
@@ -79,22 +93,21 @@ export const PINInput = ({ onPINChange, onPINComplete, errorMessage, autoFocus =
           maxFontSizeMultiplier={1}
           cursorColor={ColorPalette.grayscale.darkGrey}
           textContentType={'password'}
-          accessibilityLabel={pin.split('').join(' ')}
+          accessibilityLabel={a11yLabel(accessibilityLabel ?? pin.split('').join(' '))}
           accessibilityHint="Enter your 6-digit PIN"
         />
         <TouchableOpacity
-          style={styles.eyeIcon}
+          style={styles.visibilityButton}
           onPress={toggleVisibility}
-          testID={testIdWithKey('VisibilityButton')}
-          accessibilityLabel={isVisible ? 'Hide PIN' : 'Show PIN'}
+          testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
+          accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
+          accessibilityRole="button"
         >
           <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
         </TouchableOpacity>
       </View>
-      <View style={styles.errorContainer}>
-        {errorMessage && <ThemedText variant={'inlineErrorText'}>{errorMessage}</ThemedText>}
-      </View>
-    </>
+      {errorMessage && <ThemedText variant={'inlineErrorText'}>{errorMessage}</ThemedText>}
+    </View>
   )
 }
 

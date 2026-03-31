@@ -10,7 +10,6 @@ import Developer from '../../screens/Developer'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
-import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
@@ -27,6 +26,7 @@ import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScr
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -34,9 +34,9 @@ import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
+import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
@@ -52,7 +52,7 @@ const MainStack: React.FC = () => {
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const account = useAccount()
+  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -107,6 +107,7 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+          headerBackTitleVisible: false,
           headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createHeaderBackButton,
           header: createHeaderWithoutBanner,
@@ -124,8 +125,6 @@ const MainStack: React.FC = () => {
           component={EditNicknameScreen}
           options={{
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createMainWebviewHeaderBackButton(),
           }}
         />
         <Stack.Screen
@@ -134,7 +133,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Screens.Settings'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -143,7 +141,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AutoLockTime'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -152,7 +149,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -163,7 +159,6 @@ const MainStack: React.FC = () => {
             title: route.params?.isChangingExistingPIN
               ? t('BCSC.ChangePIN.ScreenTitle')
               : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -171,18 +166,15 @@ const MainStack: React.FC = () => {
           component={ManualPairingCode}
           options={() => ({
             headerShown: true,
-            headerBackTitleVisible: false,
             headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           })}
         />
         <Stack.Screen
           name={BCSCScreens.MainWebView}
-          component={MainWebViewScreen}
+          component={WebViewScreen}
           options={({ route }) => ({
             headerShown: true,
             title: route.params.title,
-            headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createMainWebviewHeaderBackButton(),
           })}
         />
         <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
@@ -191,7 +183,6 @@ const MainStack: React.FC = () => {
           component={MainRemoveAccountConfirmationScreen}
           options={() => ({
             headerShown: true,
-            headerBackTitleVisible: false,
           })}
         />
         <Stack.Screen
@@ -230,16 +221,14 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.ContactUs'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
           name={BCSCScreens.MainPrivacyPolicy}
-          component={SettingsPrivacyPolicyScreen}
+          component={MainPrivacyPolicyScreen}
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.PrivacyInformation'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -247,7 +236,6 @@ const MainStack: React.FC = () => {
           component={ForgetAllPairingsScreen}
           options={() => ({
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -314,6 +302,15 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCModals.DeviceInvalidated}
           component={DeviceInvalidated}
+          options={{
+            ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name={BCSCModals.ServiceOutage}
+          component={ServiceOutage}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false,

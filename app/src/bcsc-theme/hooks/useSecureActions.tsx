@@ -1,4 +1,6 @@
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
+import { throwAppError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import {
@@ -10,7 +12,8 @@ import {
   deleteAccountFlags,
   deleteAuthorizationRequest,
   deleteCredential,
-  deleteEvidenceMetadata,
+  deleteEvidence,
+  deleteSavedServices,
   deleteToken,
   EvidenceMetadata,
   EvidenceType,
@@ -18,14 +21,17 @@ import {
   getAccountFlags,
   getAuthorizationRequest,
   getCredential,
-  getEvidenceMetadata,
+  getEvidence,
+  getSavedServices,
   getToken,
   NativeAuthorizationRequest,
+  NativeSavedService,
   PhotoMetadata,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
-  setEvidenceMetadata,
+  setEvidence,
+  setSavedServices,
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
@@ -108,7 +114,7 @@ export const useSecureActions = () => {
         logger.info(`Tokens persisted to native storage successfully`)
       } catch (error) {
         logger.error('Failed to persist tokens:', error as Error)
-        throw error
+        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
       }
     },
     [logger]
@@ -128,7 +134,7 @@ export const useSecureActions = () => {
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist authorization request:', error as Error)
-        throw error
+        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
       }
     },
     [logger]
@@ -148,7 +154,7 @@ export const useSecureActions = () => {
         logger.info('Account flags persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist account flags:', error as Error)
-        throw error
+        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
       }
     },
     [logger]
@@ -161,11 +167,11 @@ export const useSecureActions = () => {
   const persistEvidenceData = useCallback(
     async (evidenceData: EvidenceMetadata[]) => {
       try {
-        await setEvidenceMetadata(evidenceData)
-        logger.info('Evidence metadata persisted to native storage')
+        await setEvidence(evidenceData)
+        logger.info('Evidence persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist evidence metadata:', error as Error)
-        throw error
+        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
       }
     },
     [logger]
@@ -614,20 +620,32 @@ export const useSecureActions = () => {
 
   /**
    * Remove incomplete evidence entries and persist to native storage
+   *
+   * @param evidence Array of evidence metadata to filter and persist
+   * @returns An updated list of evidence metadata with incomplete entries removed
    */
-  const removeIncompleteEvidence = useCallback(async () => {
-    // Filter out incomplete evidence (those without photo metadata)
-    const updatedEvidence = store.bcscSecure.additionalEvidenceData.filter(
-      (evidence) => evidence.metadata && evidence.metadata.length > 0
-    )
+  const removeIncompleteEvidence = useCallback(
+    async (evidence: EvidenceMetadata[]) => {
+      if (!evidence.length) {
+        return []
+      }
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
-      payload: [updatedEvidence],
-    })
+      // Filter out incomplete evidence (those without photo metadata)
+      const updatedEvidence = evidence.filter(
+        (item) => item.metadata && item.metadata.length > 0 && item.documentNumber
+      )
 
-    await persistEvidenceData(updatedEvidence)
-  }, [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData])
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+
+      return updatedEvidence
+    },
+    [dispatch, persistEvidenceData]
+  )
 
   /**
    * Clear all additional evidence data and persist to native storage
@@ -639,9 +657,63 @@ export const useSecureActions = () => {
       payload: [[]],
     })
 
-    // Persist empty evidence data
     await persistEvidenceData([])
   }, [dispatch, persistEvidenceData])
+
+  /**
+   * Update a saved service bookmark status and persist to native storage.
+   * Updates the in-memory store immediately, then writes through to native storage
+   * to maintain v3 compatibility.
+   *
+   * @param clientRefId The service client_ref_id
+   * @param bookmarked Whether to bookmark (true) or unbookmark (false)
+   * @param metadata Optional additional metadata about the service (clientName, etc.)
+   */
+  const updateSavedService = useCallback(
+    async (clientRefId: string, bookmarked: boolean, metadata?: Partial<NativeSavedService>) => {
+      // Update in-memory store immediately
+      if (bookmarked) {
+        dispatch({ type: BCDispatchAction.ADD_SAVED_SERVICE, payload: [clientRefId] })
+      } else {
+        dispatch({ type: BCDispatchAction.REMOVE_SAVED_SERVICE, payload: [clientRefId] })
+      }
+
+      // Write through to native storage for v3 compatibility
+      try {
+        const existingServices = await getSavedServices()
+        const existingIndex = existingServices.findIndex((s: NativeSavedService) => s.clientRefId === clientRefId)
+
+        let updatedServices: NativeSavedService[]
+        if (existingIndex >= 0) {
+          // Update existing entry
+          updatedServices = existingServices.map((s: NativeSavedService) =>
+            s.clientRefId === clientRefId ? { ...s, ...metadata, bookmarked, lastUsed: Date.now() / 1000 } : s
+          )
+        } else if (bookmarked) {
+          // Add new entry
+          updatedServices = [
+            ...existingServices,
+            {
+              clientRefId,
+              bookmarked: true,
+              dateAdded: Date.now() / 1000,
+              lastUsed: Date.now() / 1000,
+              ...metadata,
+            },
+          ]
+        } else {
+          // Removing a service that doesn't exist in native storage — no-op
+          updatedServices = existingServices
+        }
+
+        await setSavedServices(updatedServices)
+        logger.info(`Saved service ${clientRefId} ${bookmarked ? 'bookmarked' : 'unbookmarked'}`)
+      } catch (error) {
+        logger.error('Failed to persist saved service update:', error as Error)
+      }
+    },
+    [dispatch, logger]
+  )
 
   // ============================================================================
   // HYDRATION & CLEARING - Loading and clearing secure state
@@ -664,14 +736,16 @@ export const useSecureActions = () => {
         accountFlags,
         evidenceData,
         credential,
+        nativeSavedServices,
       ] = await Promise.all([
         getAuthorizationRequest(),
         getToken(TokenType.Refresh),
         getToken(TokenType.Registration),
         getToken(TokenType.Access),
         getAccountFlags(),
-        getEvidenceMetadata(),
+        getEvidence(),
         getCredential(),
+        getSavedServices(),
       ])
 
       const refreshToken = refreshTokenObj?.token
@@ -729,12 +803,25 @@ export const useSecureActions = () => {
 
       const verificationStatus = getCredentialVerificationStatus(credential)
 
+      // Extract bookmarked service IDs from native client metadata
+      const savedServices = (nativeSavedServices ?? [])
+        .filter((s: NativeSavedService) => s.bookmarked)
+        .map((s: NativeSavedService) => s.clientRefId)
+
+      let cleanedEvidence = evidenceData
+      try {
+        cleanedEvidence = await removeIncompleteEvidence(evidenceData)
+      } catch (error) {
+        // If removing incomplete evidence fails, log the error but continue hydration
+        logger.error('Error removing incomplete evidence during hydration:', error as Error)
+      }
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
         birthdate: authRequest?.birthdate ? new Date(authRequest.birthdate * 1000) : undefined,
         serial: authRequest?.csn,
-        isEmailVerified: accountFlags.isEmailVerified ?? !!authRequest?.verifiedEmail,
+        isEmailVerified: accountFlags.isEmailVerified || !!authRequest?.verifiedEmail,
         deviceCode: authRequest?.deviceCode,
         userCode: authRequest?.userCode,
         deviceCodeExpiresAt: authRequest?.expiry ? new Date(authRequest.expiry * 1000) : undefined,
@@ -758,8 +845,9 @@ export const useSecureActions = () => {
           : undefined,
 
         verificationRequestId: authRequest?.backCheckVerificationId,
-        additionalEvidenceData: evidenceData,
+        additionalEvidenceData: cleanedEvidence,
         userMetadata,
+        savedServices,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)
@@ -772,9 +860,9 @@ export const useSecureActions = () => {
       logger.info('Secure state hydrated successfully')
     } catch (error) {
       logger.error('Failed to hydrate secure state:', error as Error)
-      throw error
+      throwAppError(error, ErrorRegistry.STORAGE_READ_ERROR)
     }
-  }, [logger, updateTokens, dispatch, apiClient, isClientReady])
+  }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
@@ -814,17 +902,18 @@ export const useSecureActions = () => {
     try {
       await Promise.all([
         deleteAuthorizationRequest(),
+        deleteAccountFlags(),
+        deleteEvidence(),
+        deleteSavedServices(),
+        deleteCredential(),
         deleteToken(TokenType.Refresh),
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
-        deleteAccountFlags(),
-        deleteEvidenceMetadata(),
-        deleteCredential(),
       ])
       logger.info('Secure data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
-      throw error
+      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
     }
   }, [logger])
 
@@ -834,16 +923,11 @@ export const useSecureActions = () => {
    */
   const deleteVerificationData = useCallback(async () => {
     try {
-      await Promise.all([
-        deleteAuthorizationRequest(),
-        deleteAccountFlags(),
-        deleteEvidenceMetadata(),
-        deleteCredential(),
-      ])
+      await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
       logger.info('Verification data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete verification data:', error as Error)
-      throw error
+      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
     }
   }, [logger])
 
@@ -880,6 +964,7 @@ export const useSecureActions = () => {
     removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,
+    updateSavedService,
     handleSuccessfulAuth,
     // Hydration & clearing
     hydrateSecureState,

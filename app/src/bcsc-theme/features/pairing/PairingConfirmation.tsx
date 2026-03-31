@@ -3,34 +3,28 @@ import ArrowUp from '@assets/img/arrowup.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, BackHandler, Platform } from 'react-native'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 const ARROW_SIZE = 80
 
-type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
+type PairingConfirmationProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
 
-const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
+const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, route }) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const { serviceName, serviceId, fromAppSwitch } = route.params
-  const showAppSwitchGuidance = Platform.OS === 'ios' && fromAppSwitch
-  const appStateRef = useRef(AppState.currentState)
+  const showIOSAppSwitchGuide = Platform.OS === 'ios' && fromAppSwitch
 
   useEffect(() => {
-    if (!showAppSwitchGuidance) {
+    if (!fromAppSwitch) {
       return
     }
 
-    // On iOS, when coming from an app switch, we want to automatically navigate the user back
-    // to the home screen when they return to the app (since they've completed the action in
-    // the other app)
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      const prev = appStateRef.current
-      appStateRef.current = nextAppState
-      if (prev === 'background' && nextAppState === 'active') {
+      if (nextAppState === 'background' && fromAppSwitch) {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
@@ -41,7 +35,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     })
 
     return subscription.remove
-  }, [showAppSwitchGuidance, navigation])
+  }, [navigation, fromAppSwitch])
 
   const onClose = () => {
     if (fromAppSwitch && Platform.OS === 'android') {
@@ -56,7 +50,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     }
   }
 
-  const controls = !showAppSwitchGuidance ? (
+  const controls = !showIOSAppSwitchGuide ? (
     <Button
       title={t('Global.Close')}
       buttonType={ButtonType.Primary}
@@ -72,7 +66,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
       edges={['bottom', 'left', 'right', 'top']}
       scrollViewContainerStyle={{ gap: Spacing.md }}
     >
-      {showAppSwitchGuidance && (
+      {showIOSAppSwitchGuide && (
         <ArrowUp
           height={ARROW_SIZE}
           width={ARROW_SIZE}
@@ -84,13 +78,13 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
         />
       )}
       {fromAppSwitch ? (
-        <ThemedText style={{ marginTop: showAppSwitchGuidance ? undefined : Spacing.md }} variant={'headingThree'}>
+        <ThemedText style={{ marginTop: showIOSAppSwitchGuide ? undefined : Spacing.md }} variant={'headingThree'}>
           {t('BCSC.ManualPairing.FromAppSwitchCompletionTitle', { serviceName })}
         </ThemedText>
       ) : (
         <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
       )}
-      {showAppSwitchGuidance && (
+      {showIOSAppSwitchGuide && (
         <ThemedText style={{ color: ColorPalette.brand.primary }}>
           {t('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')}
         </ThemedText>
@@ -109,4 +103,4 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   )
 }
 
-export default ManualPairing
+export default PairingConfirmation

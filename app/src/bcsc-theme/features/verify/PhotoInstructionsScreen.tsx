@@ -3,6 +3,7 @@ import SelfieImage from '@assets/img/selfie_example.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
 
@@ -46,7 +47,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
         })
       }}
       testID={'TakePhotoButton'}
-      accessibilityLabel={t('BCSC.PhotoInstructions.TakePhoto')}
+      accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
     />
   )
 

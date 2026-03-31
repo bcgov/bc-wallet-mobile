@@ -4,12 +4,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum AccountSecurityMethod: String {
-  case pinNoDeviceAuth = "app_pin_no_device_authn"
-  case pinWithDeviceAuth = "app_pin_has_device_authn"
-  case deviceAuth = "device_authentication"
-}
-
 enum ChallengeSource: String {
   case local_app_switch
   case push_notification
@@ -175,7 +169,7 @@ class BcscCore: NSObject {
       return try jwt.serialize()
     } catch {
       reject(
-        "E_JWT_SIGN_SERIALIZE_FAILED",
+        "E_JWT_SIGN_FAILED",
         "Failed to sign or serialize JWT: \(error.localizedDescription)", error
       )
       return nil
@@ -215,7 +209,7 @@ class BcscCore: NSObject {
         "keyType": keyInfo.keyType.name,
         "keySize": keyInfo.keySize,
         "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970, // Convert Date to timestamp
+        "created": keyInfo.created.timeIntervalSince1970,
       ]
     }
 
@@ -236,7 +230,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export public key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export public key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -247,7 +241,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export private key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export private key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -256,21 +250,21 @@ class BcscCore: NSObject {
       let result: [String: Any] = [
         "public": publicKeyData.base64EncodedString(),
         "private": privateKeyData.base64EncodedString(),
-        "id:": label,
+        "id": label,
       ]
 
       resolve(result)
     } catch KeychainError.keyNotExists {
       reject("E_KEY_NOT_FOUND", "Key pair with label '\(label)' not found.", nil)
     } catch {
-      reject("E_UNKNOWN", "An unexpected error occurred: \(error.localizedDescription)", error)
+      reject("E_KEY_ERROR", "An unexpected error occurred: \(error.localizedDescription)", error)
     }
   }
 
   private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
-    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
+    let initialKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       let existingTag = latestKeyInfo.tag
@@ -298,7 +292,7 @@ class BcscCore: NSObject {
         logger.warning(
           "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
-        let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
+        let freshGeneratedKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
         logger.log(
           "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
@@ -447,7 +441,8 @@ class BcscCore: NSObject {
     )
 
     guard let currentAccount = account else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
+      // No account means no tokens to delete — treat as success (idempotent)
+      resolve(true)
       return
     }
 
@@ -548,7 +543,7 @@ class BcscCore: NSObject {
   ///   - reject: Called with an error if reading fails.
   func getIssuer(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
     let issuer = storage.issuer
@@ -576,8 +571,7 @@ class BcscCore: NSObject {
           return
         }
       } catch {
-        // If we can't check, return nil
-        resolve(nil)
+        reject("E_STORAGE_ERROR", "Failed to check issuer file: \(error.localizedDescription)", error as NSError)
         return
       }
     }
@@ -1914,7 +1908,7 @@ class BcscCore: NSObject {
   ///   - reject: Returns error on failure
   func getAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
       let storage = StorageService()
@@ -1959,6 +1953,15 @@ class BcscCore: NSObject {
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      // Empty dictionary = no authorization request (v3 writes empty dict after removing a request)
+      // return nil, don't throw an error since this is an expected scenario
+      if let dict = rootObject as? [AnyHashable: Any], dict.isEmpty {
+        logger.log("getAuthorizationRequest: Empty dictionary - no authorization request")
+        resolve(nil)
+        return
+      }
+
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
          let authRequest = requestsDict.values.first
@@ -1978,10 +1981,10 @@ class BcscCore: NSObject {
       }
 
       logger.log("getAuthorizationRequest: Failed to decode")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to decode authorization request", nil)
     } catch {
       logger.log("getAuthorizationRequest: Exception - \(error.localizedDescription)")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to read authorization request: \(error.localizedDescription)", error as NSError)
     }
   }
 
@@ -2136,6 +2139,25 @@ class BcscCore: NSObject {
     resolve(isAutoGenerated)
   }
 
+  // MARK: - Android Global Flags Storage Methods (stubs)
+
+  /// No-op stub on iOS. Platform branching in TypeScript routes iOS to getAccountFlags instead.
+  func getAndroidGlobalFlags(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve([:])
+  }
+
+  /// No-op stub on iOS. Platform branching in TypeScript routes iOS to setAccountFlags instead.
+  func setAndroidGlobalFlags(
+    _: NSDictionary,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve(true)
+  }
+
   // MARK: - Account Flags Storage Methods
 
   /// Gets account flags from storage.
@@ -2272,79 +2294,188 @@ class BcscCore: NSObject {
 
   /// Gets evidence metadata from storage.
   /// Evidence metadata contains user's collected evidence during verification flow.
-  /// Stored as JSON array in evidence_metadata file, per-account.
+  /// Gets evidence metadata from the documents file.
   ///
   /// - Parameters:
   ///   - resolve: Returns array of evidence metadata dictionaries
   ///   - reject: Returns error on failure
-  func getEvidenceMetadata(
+  func getEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
-    // Try v4 format (NSArray) first
-    if let evidenceArray: NSArray = storage.readData(
-      file: AccountFiles.evidenceMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    ) {
-      logger.log("getEvidenceMetadata: Successfully read as NSArray (v4 format)")
-      resolve(evidenceArray)
+    if let evidence = readDocumentsAsMetadataArray(storage: storage) {
+      resolve(evidence)
       return
     }
 
-    // Try v3 format (dictionary) - just return empty array for now as v3 evidence structure is complex
-    // and likely not needed for migration (evidence is temporary during verification flow)
-    logger.log("getEvidenceMetadata: Could not read evidence, returning empty array")
+    logger.log("getEvidence: No evidence found, returning empty array")
     resolve([])
   }
 
-  /// Sets evidence metadata in storage.
-  /// Stores user's collected evidence during verification flow.
-  /// Stored as JSON array in evidence_metadata file, per-account.
+  /// Saves evidence metadata to the documents file.
   ///
   /// - Parameters:
   ///   - evidence: Array of evidence metadata dictionaries
   ///   - resolve: Returns true if saved successfully
   ///   - reject: Returns error on failure
-  func setEvidenceMetadata(
+  func setEvidence(
     _ evidence: NSArray,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
-    let success = storage.writeData(
-      data: evidence,
-      file: AccountFiles.evidenceMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard let accountID = storage.currentAccountID else {
+      reject("E_NO_ACCOUNT", "No account ID available", nil)
+      return
+    }
 
-    if success {
-      logger.log("setEvidenceMetadata: Successfully saved evidence metadata")
+    do {
+      let documentsModel = convertEvidenceToDocumentsModel(evidence)
+      let issuer = storage.issuer
+      let documentsDict: [String: DocumentsDataModel] = [issuer: documentsModel]
+
+      let archiver = DocumentsArchiver()
+      guard let encodedData = archiver.encode(documentsDict) else {
+        reject("E_ENCODE_FAILED", "Failed to encode documents data", nil)
+        return
+      }
+
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(AccountFiles.documents.rawValue)
+
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      try encodedData.write(to: fileUrl, options: [.atomic])
+      logger.log("setEvidence: Successfully saved evidence to documents file")
       resolve(true)
-    } else {
-      reject("E_SAVE_FAILED", "Failed to save evidence metadata", nil)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save evidence: \(error.localizedDescription)", error)
     }
   }
 
-  /// Deletes all evidence metadata from storage.
-  /// Clears user's collected evidence (used on verification completion or reset).
+  /// Deletes all evidence data from the documents file.
   ///
   /// - Parameters:
   ///   - resolve: Returns true if deleted successfully
   ///   - reject: Returns error on failure
-  func deleteEvidenceMetadata(
+  func deleteEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
     guard let accountID = storage.currentAccountID else {
-      // No account, so no evidence metadata to delete
       resolve(true)
       return
     }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let accountDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+
+      let documentsUrl = accountDir.appendingPathComponent(AccountFiles.documents.rawValue)
+      if FileManager.default.fileExists(atPath: documentsUrl.path) {
+        try FileManager.default.removeItem(at: documentsUrl)
+        logger.log("deleteEvidence: Deleted documents file")
+      }
+
+      // Also remove extracted JPEG photos from the documents directory
+      let photosDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+      if FileManager.default.fileExists(atPath: photosDir.path) {
+        try FileManager.default.removeItem(at: photosDir)
+        logger.log("deleteEvidence: Deleted documents photo directory")
+      }
+
+      resolve(true)
+    } catch {
+      reject(
+        "E_DELETE_FAILED", "Failed to delete evidence: \(error.localizedDescription)",
+        error
+      )
+    }
+  }
+
+  /// Saves a photo to permanent storage.
+  /// On iOS, photos are embedded as base64 in the documents file, but this method
+  /// also saves the raw JPEG for cross-platform consistency and file_path references.
+  ///
+  /// - Parameters:
+  ///   - base64Data: Base64-encoded photo data
+  ///   - filename: Target filename for the photo
+  ///   - resolve: Returns the absolute path to the saved file
+  ///   - reject: Returns error on failure
+  func saveEvidencePhoto(
+    _ base64Data: String,
+    filename: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    guard let photoData = Data(base64Encoded: base64Data) else {
+      reject("E_INVALID_BASE64", "Invalid base64 data", nil)
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let storage = StorageService()
+      let documentsDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+
+      if !FileManager.default.fileExists(atPath: documentsDir.path) {
+        try FileManager.default.createDirectory(
+          at: documentsDir,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      let fileUrl = documentsDir.appendingPathComponent(filename)
+      try photoData.write(to: fileUrl, options: [.atomic])
+
+      logger.log("saveEvidencePhoto: Saved photo to \(fileUrl.path)")
+      resolve(fileUrl.path)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save evidence photo: \(error.localizedDescription)", error)
+    }
+  }
+
+  // MARK: - Documents Conversion Helpers
+
+  /// Reads the `documents` file and returns an array of evidence metadata dictionaries.
+  private func readDocumentsAsMetadataArray(storage: StorageService) -> [[String: Any]]? {
+    guard let accountID = storage.currentAccountID else { return nil }
 
     do {
       let rootDirectoryURL = try FileManager.default.url(
@@ -2357,22 +2488,185 @@ class BcscCore: NSObject {
         rootDirectoryURL
           .appendingPathComponent(storage.basePath)
           .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
+          .appendingPathComponent(AccountFiles.documents.rawValue)
 
-      if FileManager.default.fileExists(atPath: fileUrl.path) {
-        try FileManager.default.removeItem(at: fileUrl)
-        logger.log("deleteEvidenceMetadata: Successfully deleted evidence metadata file")
-      } else {
-        logger.log("deleteEvidenceMetadata: Evidence metadata file did not exist")
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else { return nil }
+
+      let data = try Data(contentsOf: fileUrl)
+      let archiver = DocumentsArchiver()
+
+      guard let documentsDict = archiver.decode(from: data) else { return nil }
+
+      // Try current issuer key, then try all keys
+      let issuer = storage.issuer
+      let documentsModel = documentsDict[issuer] ?? documentsDict.values.first
+
+      guard let model = documentsModel else { return nil }
+
+      return convertDocumentsModelToMetadata(model)
+    } catch {
+      logger.error("readDocumentsAsMetadataArray: Error reading documents file: \(error)")
+      return nil
+    }
+  }
+
+  /// Converts a DocumentsDataModel to an array of evidence metadata dictionaries.
+  private func convertDocumentsModelToMetadata(_ model: DocumentsDataModel) -> [[String: Any]] {
+    var result = [[String: Any]]()
+
+    if let firstId = model.firstId {
+      result.append(convertEvidenceModelToMetadata(firstId, prefix: "first"))
+    }
+    if let secondId = model.secondId {
+      result.append(convertEvidenceModelToMetadata(secondId, prefix: "second"))
+    }
+
+    return result
+  }
+
+  /// Converts an EvidenceModel to an evidence metadata dictionary.
+  private func convertEvidenceModelToMetadata(_ evidence: EvidenceModel, prefix: String = "evidence") -> [String: Any] {
+    var dict = [String: Any]()
+
+    // Evidence type
+    if let evidenceType = evidence.evidenceType {
+      dict["evidenceType"] = evidenceType.toDictionary()
+    }
+
+    // Document number
+    if let docNumber = evidence.evidenceDetails?.documentNumber {
+      dict["documentNumber"] = docNumber
+    }
+
+    // Photos → PhotoMetadata array
+    let imageSides = evidence.evidenceType?.imageSides ?? []
+    var metadataArray = [[String: Any]]()
+    if let photos = evidence.evidencePhotos {
+      for (index, photo) in photos.enumerated() {
+        var photoDict = [String: Any]()
+        photoDict["content_type"] = "image/jpeg"
+        photoDict["date"] = photo.timestamp ?? 0
+
+        // Use imageSideName from evidenceType (matches v3 native behavior)
+        if index < imageSides.count {
+          photoDict["label"] = imageSides[index].imageSideName
+        } else {
+          photoDict["label"] = index == 0 ? "FRONT_SIDE" : "BACK_SIDE"
+        }
+
+        // Compute sha256 and content_length from base64 photo data,
+        // and save the photo to disk so the JS side can read it for upload.
+        if let base64 = photo.photoBase64String,
+           let photoData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
+        {
+          photoDict["sha256"] = DocumentsArchiver.sha256Hex(photoData)
+          photoDict["content_length"] = photoData.count
+
+          let filename = "\(prefix)_\(index).jpg"
+          if let filePath = savePhotoDataToDisk(photoData, filename: filename) {
+            photoDict["file_path"] = filePath
+          } else {
+            photoDict["file_path"] = ""
+          }
+          photoDict["filename"] = filename
+        } else {
+          photoDict["sha256"] = ""
+          photoDict["content_length"] = 0
+          photoDict["file_path"] = ""
+          photoDict["filename"] = ""
+        }
+
+        metadataArray.append(photoDict)
+      }
+    }
+    dict["metadata"] = metadataArray
+
+    // Barcodes
+    if !evidence.barcodeData.isEmpty {
+      dict["barcodes"] = evidence.barcodeData.map { $0.toPayloadDictionary() }
+    }
+
+    return dict
+  }
+
+  /// Saves photo data to the evidence documents directory, returning the absolute path on success.
+  private func savePhotoDataToDisk(_ photoData: Data, filename: String) -> String? {
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let storage = StorageService()
+      let documentsDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+
+      if !FileManager.default.fileExists(atPath: documentsDir.path) {
+        try FileManager.default.createDirectory(
+          at: documentsDir,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
       }
 
-      resolve(true)
+      let fileUrl = documentsDir.appendingPathComponent(filename)
+      try photoData.write(to: fileUrl, options: [.atomic])
+      logger.log("savePhotoDataToDisk: Saved evidence photo to \(fileUrl.path)")
+      return fileUrl.path
     } catch {
-      reject(
-        "E_DELETE_FAILED", "Failed to delete evidence metadata: \(error.localizedDescription)",
-        error
-      )
+      logger.error("savePhotoDataToDisk: Failed to save evidence photo: \(error.localizedDescription)")
+      return nil
     }
+  }
+
+  /// Converts evidence NSArray to a DocumentsDataModel.
+  private func convertEvidenceToDocumentsModel(_ evidence: NSArray) -> DocumentsDataModel {
+    let items = evidence as? [[String: Any]] ?? []
+
+    let firstId = items.count > 0 ? convertMetadataToEvidenceModel(items[0]) : nil
+    let secondId = items.count > 1 ? convertMetadataToEvidenceModel(items[1]) : nil
+
+    return DocumentsDataModel(firstId: firstId, secondId: secondId)
+  }
+
+  /// Converts an evidence metadata dictionary to an EvidenceModel.
+  private func convertMetadataToEvidenceModel(_ dict: [String: Any]) -> EvidenceModel {
+    // Evidence type
+    var evidenceType: EvidenceType?
+    if let etDict = dict["evidenceType"] as? [String: Any] {
+      evidenceType = EvidenceType(fromDictionary: etDict)
+    }
+
+    // Document number → EvidenceDetails
+    var evidenceDetails: EvidenceDetails?
+    if let docNumber = dict["documentNumber"] as? String {
+      evidenceDetails = EvidenceDetails(documentNumber: docNumber)
+    }
+
+    // PhotoMetadata array → EvidencePhoto array (with base64 data)
+    var evidencePhotos = [EvidencePhoto]()
+    if let metadataArray = dict["metadata"] as? [[String: Any]] {
+      for photoDict in metadataArray {
+        let timestamp = photoDict["date"] as? Double ?? Date().timeIntervalSince1970
+        let base64 = photoDict["photoBase64String"] as? String ?? ""
+        evidencePhotos.append(EvidencePhoto(timestamp: timestamp, photoBase64String: base64))
+      }
+    }
+
+    // Barcodes
+    var barcodes = [BarcodeData]()
+    if let barcodesArray = dict["barcodes"] as? [[String: Any]] {
+      barcodes = barcodesArray.map { BarcodeData(fromPayload: $0) }
+    }
+
+    return EvidenceModel(
+      evidenceDetails: evidenceDetails,
+      evidencePhotos: evidencePhotos.isEmpty ? nil : evidencePhotos,
+      evidenceType: evidenceType,
+      barcodeData: barcodes
+    )
   }
 
   // ============================================================================
@@ -2438,7 +2732,7 @@ class BcscCore: NSObject {
       // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
       guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
         logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
-        resolve(nil)
+        reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
         return
       }
 
@@ -2766,7 +3060,7 @@ class BcscCore: NSObject {
       )
       else {
         logger.log("hasCredential: Could not decode ClientRegistration")
-        resolve(false)
+        reject("E_CHECK_FAILED", "Failed to decode ClientRegistration", nil)
         return
       }
 
@@ -2844,6 +3138,145 @@ class BcscCore: NSObject {
       resolve(result)
     } catch {
       reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
+    }
+  }
+
+  // MARK: - Saved Services (Client Metadata) Storage
+
+  /// Gets saved services (client metadata) from native storage.
+  /// Reads the client_metadata file using ClientMetadataArchiver for v3-compatible decoding.
+  func getSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      logger.log("getSavedServices: No account ID, returning empty array")
+      resolve([])
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        logger.log("getSavedServices: client_metadata file not found, returning empty array")
+        resolve([])
+        return
+      }
+
+      let data = try Data(contentsOf: fileUrl)
+      let archiver = ClientMetadataArchiver()
+
+      guard let model = archiver.decode(from: data) else {
+        logger.log("getSavedServices: Failed to decode client_metadata, returning empty array")
+        resolve([])
+        return
+      }
+
+      let services = (model.clients ?? []).map { $0.toDictionary() }
+      logger.log("getSavedServices: Read \(services.count) services from client_metadata")
+      resolve(services)
+    } catch {
+      logger.error("getSavedServices: Error reading client_metadata: \(error)")
+      resolve([])
+    }
+  }
+
+  /// Saves services (client metadata) to native storage using v3-compatible NSKeyedArchiver format.
+  func setSavedServices(
+    _ services: NSArray,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      reject("E_NO_ACCOUNT", "No account ID available", nil)
+      return
+    }
+
+    do {
+      let clients: [MetadataClients] = (services as? [[String: Any]] ?? []).map {
+        MetadataClients.fromDictionary($0)
+      }
+      let model = ClientMetadataResponseModel(clients: clients)
+      let archiver = ClientMetadataArchiver()
+
+      guard let encodedData = archiver.encode(model) else {
+        reject("E_ENCODE_FAILED", "Failed to encode client metadata", nil)
+        return
+      }
+
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      try encodedData.write(to: fileUrl, options: [.atomic])
+      logger.log("setSavedServices: Successfully saved \(clients.count) services to client_metadata")
+      resolve(true)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save client metadata: \(error.localizedDescription)", error)
+    }
+  }
+
+  /// Deletes the client_metadata file from native storage.
+  func deleteSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      resolve(true)
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if FileManager.default.fileExists(atPath: fileUrl.path) {
+        try FileManager.default.removeItem(at: fileUrl)
+        logger.log("deleteSavedServices: Deleted client_metadata file")
+      }
+
+      resolve(true)
+    } catch {
+      reject("E_DELETE_FAILED", "Failed to delete client metadata: \(error.localizedDescription)", error)
     }
   }
 

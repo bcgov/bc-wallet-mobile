@@ -7,6 +7,7 @@ import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
@@ -68,12 +69,13 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
-  // Clean up any incomplete evidence entries when the screen focuses
-  // This handles the case where user selected a card but backed out before completing
+  // Clean up any incomplete evidence entries when the screen focuses.
+  // This handles the case where user selected a card but backed out before completing.
+  // Intentionally empty deps — run only once per focus, not when evidence changes,
+  // because removeIncompleteEvidence itself updates the evidence array.
   useFocusEffect(
     useCallback(() => {
-      removeIncompleteEvidence()
-      // prevent infinite loop
+      removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   )
@@ -230,6 +232,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
+            accessibilityLabel={a11yShortLabel(data.item.evidence_type_label)}
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.cardSection,
               pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
@@ -255,6 +259,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                   })
                 }}
                 testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+                accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.cardSection,
                   pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },

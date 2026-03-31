@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useAlerts } from '@/hooks/useAlerts'
 import {
   Button,
   ButtonType,
@@ -15,7 +16,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import Toast from 'react-native-toast-message'
 
 interface ForgetAllPairingsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ForgetAllPairings>
@@ -33,6 +33,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   const [isLoading, setIsLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { forgetPairingsAlert, unknownErrorModal } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -46,26 +47,16 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
 
       await pairing.forgetAllPairings()
 
-      Toast.show({
-        type: 'success',
-        text1: t('BCSC.ForgetAllPairings.SuccessTitle'),
-        text2: t('BCSC.ForgetAllPairings.SuccessMessage'),
-        position: 'bottom',
-      })
+      forgetPairingsAlert()
 
       navigation.goBack()
     } catch (error) {
       logger.error('Error forgetting all pairings', error instanceof Error ? error : new Error(String(error)))
-      Toast.show({
-        type: 'error',
-        text1: t('BCSC.ForgetAllPairings.ErrorTitle'),
-        text2: t('BCSC.ForgetAllPairings.ErrorMessage'),
-        position: 'bottom',
-      })
+      unknownErrorModal(error)
     } finally {
       setIsLoading(false)
     }
-  }, [navigation, pairing, t, logger])
+  }, [pairing, forgetPairingsAlert, navigation, logger, unknownErrorModal])
 
   const controls = (
     <Button

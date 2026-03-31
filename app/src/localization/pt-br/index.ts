@@ -11,6 +11,8 @@ const translation = {
     "Close": "Close (PT-BR)",
     "ShowDetails": "Mostrar detalhes",
     "Dismiss": "Dispensar",
+    "GetHelp": "Get help (PT-BR)",
+    "ContinueSetup": "Continue setup (PT-BR)",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential (PT-BR)",
@@ -38,6 +40,7 @@ const translation = {
     "Reported": "Reportado",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"
   },
   "Screens": {
     "Preface": "BC Wallet (PT-BR)",
@@ -191,8 +194,23 @@ const translation = {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
       "AuthenticateToSecure": "Authenticate to secure your app (PT-BR)"
     },
+    "AppReset": {
+      "Title": "App reset for security (PT-BR)",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone. (PT-BR)",
+      "Body2": "It looks like you may have turned off the passcode on this device. (PT-BR)",
+      "Body3": "When you do this, your app is reset and you need to set it up again. (PT-BR)",
+      "SetUpApp": "Set Up App (PT-BR)",
+      "LearnMore": "Learn More (PT-BR)"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device (PT-BR)",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it. (PT-BR)",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app. (PT-BR)",
+      "CheckboxLabel": "Do not show me this again (PT-BR)",
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN (PT-BR)",
+      "CreatePINShort": "Create PIN (PT-BR)",
       "ConfirmPIN": "Confirm PIN (PT-BR)",
       "RememberPIN": "Remember your PIN (PT-BR)",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (PT-BR)",
@@ -290,14 +308,14 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (PT-BR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-      "Goto": "Go to (PT-BR)",
+      "Goto": "On that device, go to: (PT-BR)",
       "GotoService": "Go to {{- service}} (PT-BR)",
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (PT-BR)",
       "NotListedDescriptionContact": "Contact the service to the link to their website. (PT-BR)",
       "PrivacyPolicy": "Privacy Policy (PT-BR)",
-      "LoginErrorTitle": "Unable to quick login to service (PT-BR)",
+      "LoginErrorTitle": "Problem with Login (PT-BR)",
       "SavedServices": "Saved Services (PT-BR)",
       "NoSavedServices": "No saved services (PT-BR)",
       "Remove": "Remove (PT-BR)",
@@ -326,12 +344,19 @@ const translation = {
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (PT-BR)",
         "ContentA": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
         "OKButton": "OK (PT-BR)",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable (PT-BR)",
+        "CheckAgainButton": "Check again (PT-BR)",
+        "LearnMore": "Learn more (PT-BR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
+      "WhereToUseAccessibilityLabel": "Find services (PT-BR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
       "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
+      "LogInFromComputerAccessibilityLabel": "Computer login (PT-BR)",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
@@ -366,7 +391,8 @@ const translation = {
         "DeviceLimitReachedBannerTitle": "Device limit reached (PT-BR)",
         "ManageDevicesButton": "Manage devices (PT-BR)",
         "CloseButton": "Close (PT-BR)",
-        "ReviewDevicesTitle": "Review your devices",
+        "DeleteButton": "Delete Message (PT-BR)",
+        "ReviewDevicesTitle": "Review your devices (PT-BR)",
         "ReviewDevicesContentA1": "You can have this account on a maximum of (PT-BR)",
         "ReviewDevicesContentA2": "devices. (PT-BR)",
         "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (PT-BR)",
@@ -424,10 +450,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (PT-BR)",
       "ButtonTitle": "Forget all pairings (PT-BR)",
-      "SuccessTitle": "Success (PT-BR)",
-      "SuccessMessage": "Successfully unpaired your device (PT-BR)",
-      "ErrorTitle": "Error (PT-BR)",
-      "ErrorMessage": "Failed to unpair device (PT-BR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (PT-BR)",
@@ -461,6 +483,7 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code (PT-BR)",
+      "PairingCodeLabel": "Pairing code (PT-BR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (PT-BR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (PT-BR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",
@@ -497,6 +520,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup (PT-BR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (PT-BR)",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act. (PT-BR)",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy (PT-BR)",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (PT-BR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (PT-BR)",
       "TermsOfUseTitle": "Terms of Use (PT-BR)",
@@ -517,7 +541,8 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (PT-BR)",
       "AnalyticsTitle": "Enable Analytics? (PT-BR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PT-BR)",
+      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (PT-BR)",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously (PT-BR)",
       "AcceptAnalytics": "Enable Analytics (PT-BR)",
       "DenyAnalytics":  "Skip (PT-BR)",
     },
@@ -555,6 +580,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically (PT-BR)",
       "ErrorDetails": "Error details (PT-BR)",
       "Dismiss": "Dismiss (PT-BR)",
+      "SaveScanZones": "Save Scan Zones (PT-BR)",
+      "ContinueScanning": "Continue Scanning (PT-BR)",
+      "Confirm": "Confirm (PT-BR)",
+      "TryAgain": "Try Again (PT-BR)",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (PT-BR)",
@@ -697,6 +726,7 @@ const translation = {
       "EmailSkipButton": "Provide email address (PT-BR)",
       "EmailSkipButton2": "Skip (PT-BR)",
       "EnterEmailAddress": "Enter your email address (PT-BR)",
+      "EmailAddress": "Email address (PT-BR)",
       "EmailDescription1": "It is recommended that you provide one for security purposes. (PT-BR)",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card. (PT-BR)",
     },
@@ -832,6 +862,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
       "TakePhoto": "Take Photo of Face (PT-BR)",
+      "TakePhotoAccessibilityLabel": "Take photo (PT-BR)",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required (PT-BR)",
@@ -1028,7 +1059,9 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
       "RemoveAccountLoading": "Removing account... (PT-BR)",
       "TransferAccount": "Transfer account to another device (PT-BR)",
+      "TransferAccountAccessibilityLabel": "Transfer (PT-BR)",
       "AccountDetails": "All account details (PT-BR)",
+      "AccountDetailsAccessibilityLabel": "Details (PT-BR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (PT-BR)",
@@ -1194,15 +1227,12 @@ const translation = {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (PT-BR)",
       "Action1": "Reset App (PT-BR)"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed (PT-BR)",
+      "Description": "Unable to authenticate using the device's built-in authentication. (PT-BR)"
     }
 	},
-  "BCWalletError": {
-    // TODO (MD): Fill in translations once all english errors are completed
-    "Device": {
-      "KeypairGenerationError": "(PT-BR) The app does not appear to be installed correctly. Please remove the app from your device and add it again.",
-      "KeypairGenerationTitle": "(PT-BR) Problem with App",
-    },
-  },
 }
 
 export default translation

@@ -108,6 +108,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
             BCSC.EvidenceIDCollection.Heading3
           </Text>
           <View
+            onLayout={[Function]}
             style={
               {
                 "gap": 18,
@@ -116,7 +117,9 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               }
             }
           >
-            <View>
+            <View
+              onLayout={[Function]}
+            >
               <Text
                 maxFontSizeMultiplier={2}
                 style={
@@ -139,28 +142,125 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               >
                 Passport Number
               </Text>
-              <TextInput
-                accessibilityLabel="Passport Number"
-                autoCorrect={false}
-                onChange={[Function]}
+              <View
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={false}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 44,
+                    "left": 44,
+                    "right": 44,
+                    "top": 44,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
                 style={
                   [
                     {
+                      "alignItems": "center",
                       "backgroundColor": "#D3D3D3",
                       "borderColor": "#D3D3D3",
                       "borderRadius": 4,
                       "borderWidth": 1,
                       "color": "#313132",
+                      "elevation": 0,
+                      "flexDirection": "row",
                       "fontFamily": "BCSans-Regular",
                       "fontSize": 16,
                       "padding": 10,
+                      "shadowColor": undefined,
+                      "shadowOffset": undefined,
+                      "shadowOpacity": 0,
+                      "shadowRadius": undefined,
                     },
+                    false,
                     undefined,
                   ]
                 }
-                testID="com.ariesbifold:id/documentNumber-input"
-                value=""
-              />
+                testID="com.ariesbifold:id/documentNumber-pressable"
+              >
+                <View
+                  style={
+                    {
+                      "flex": 1,
+                    }
+                  }
+                >
+                  <TextInput
+                    accessibilityLabel="Passport Number"
+                    autoCorrect={false}
+                    onBlur={[Function]}
+                    onChange={[Function]}
+                    onChangeText={[Function]}
+                    onFocus={[Function]}
+                    style={
+                      [
+                        {
+                          "backgroundColor": "transparent",
+                          "color": "#313132",
+                          "flex": 1,
+                          "fontSize": 16,
+                          "includeFontPadding": false,
+                          "padding": 0,
+                        },
+                        undefined,
+                      ]
+                    }
+                    testID="com.ariesbifold:id/documentNumber-input"
+                    value=""
+                  />
+                </View>
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#D8292F",
+                        "fontSize": 24,
+                      },
+                      {
+                        "marginRight": 8,
+                        "opacity": 0,
+                      },
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  󰀨
+                </Text>
+              </View>
               <Text
                 maxFontSizeMultiplier={2}
                 style={
@@ -206,7 +306,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
           }
         >
           <View
-            accessibilityLabel="Continue"
+            accessibilityLabel="Global.Continue"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -274,7 +374,6 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                       },
                       false,
                       false,
-                      false,
                     ],
                   ]
                 }
@@ -284,7 +383,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
             </View>
           </View>
           <View
-            accessibilityLabel="Cancel"
+            accessibilityLabel="Global.Cancel"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -351,7 +450,6 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                         "fontWeight": "bold",
                         "textAlign": "center",
                       },
-                      false,
                       false,
                       false,
                     ],

@@ -1,6 +1,15 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { upperFirst } from 'lodash'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -165,14 +174,14 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         title={t('BCSC.Onboarding.SecureAppPINTitle')}
         accessibilityLabel={t('BCSC.Onboarding.SecureAppPINTitle')}
         onPress={onPINPress}
-        testID={'ChoosePINButton'}
+        testID={testIdWithKey('ChoosePINButton')}
       />
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.Onboarding.LearnMore')}
         accessibilityLabel={t('BCSC.Onboarding.LearnMore')}
         onPress={onLearnMorePress}
-        testID={'LearnMoreButton'}
+        testID={testIdWithKey('LearnMoreButton')}
       />
     </>
   )
@@ -190,6 +199,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* Device Auth Option */}
         <CardButton
           title={t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })}
+          testID={testIdWithKey('ChooseDeviceAuthButton')}
           subtext={deviceAuthSubtext}
           onPress={handleDeviceAuthentication}
           disabled={isSettingsContext && isCurrentMethodDeviceAuth}
@@ -198,13 +208,19 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         {/* PIN Option */}
         <CardButton
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
+          testID={testIdWithKey('ChoosePINButton')}
           subtext={pinSubtext}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />
 
         {/* Learn More */}
-        <CardButton title={t('BCSC.Onboarding.LearnMore')} endIcon="open-in-new" onPress={onLearnMorePress} />
+        <CardButton
+          title={t('BCSC.Onboarding.LearnMore')}
+          testID={testIdWithKey('LearnMoreButton')}
+          endIcon="open-in-new"
+          onPress={onLearnMorePress}
+        />
       </ScreenWrapper>
     )
   }

@@ -11,12 +11,14 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { InteractionManager } from 'react-native'
+import { InteractionManager, View } from 'react-native'
 import { verifyPIN } from 'react-native-bcsc-core'
 
 interface EnterPINScreenProps {
@@ -31,6 +33,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
+
+  const { Spacing } = useTheme()
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
@@ -118,8 +122,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
-        title={'Get Help'}
-        accessibilityLabel={'Get Help'}
+        title={t('Global.GetHelp')}
+        accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />
@@ -128,9 +132,16 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
 
   return (
     <ScreenWrapper keyboardActive controls={controls}>
-      <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
-      <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
-      <PINInput onPINChange={handlePINChange} onPINComplete={handlePINComplete} errorMessage={errorMessage} />
+      <View style={{ gap: Spacing.sm }}>
+        <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
+        <PINInput
+          testIDKey="PINInput"
+          onPINChange={handlePINChange}
+          onPINComplete={handlePINComplete}
+          errorMessage={errorMessage}
+        />
+        <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }

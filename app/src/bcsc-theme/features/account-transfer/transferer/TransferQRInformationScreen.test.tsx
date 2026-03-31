@@ -1,3 +1,4 @@
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
@@ -37,7 +38,7 @@ describe('TransferQRInformationScreen', () => {
           <TransferQRInformationScreen />
         </BasicAppContext>
       )
-      const getQRCodeButton = getByTestId('GetQRCodeButton')
+      const getQRCodeButton = getByTestId(testIdWithKey('GetQRCodeButton'))
       act(() => {
         fireEvent.press(getQRCodeButton)
       })
@@ -50,7 +51,7 @@ describe('TransferQRInformationScreen', () => {
           <TransferQRInformationScreen />
         </BasicAppContext>
       )
-      const learnMoreButton = getByTestId('LearnMoreButton')
+      const learnMoreButton = getByTestId(testIdWithKey('LearnMoreButton'))
       act(() => {
         fireEvent.press(learnMoreButton)
       })

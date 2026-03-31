@@ -18,7 +18,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Linking, StyleSheet, View } from 'react-native'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
@@ -98,12 +98,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       <Link
         linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
         testID={testIdWithKey('ServiceBCLink')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.VerifyWebView, {
-            title: t('BCSC.Screens.HelpCentre'),
-            url: BC_SERVICE_LOCATION_URL,
-          })
-        }}
+        onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
         style={{ marginBottom: Spacing.md }}
       />
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
@@ -116,7 +111,11 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
       </View>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
-      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
+      <ThemedText
+        testID={testIdWithKey('ConfirmationCode')}
+        variant={'headingTwo'}
+        style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}
+      >
         {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
         {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
       </ThemedText>

@@ -10,6 +10,7 @@ import EnterEmailScreen from './EnterEmailScreen'
 
 const mockCreateEmailVerification = jest.fn()
 const mockUpdateUserInfo = jest.fn().mockResolvedValue(undefined)
+const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
   return {
@@ -26,6 +27,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateUserInfo: mockUpdateUserInfo,
+    updateAccountFlags: mockUpdateAccountFlags,
   })),
 }))
 
@@ -60,25 +62,12 @@ describe('EnterEmailScreen', () => {
       )
 
       expect(getByText('BCSC.EnterEmail.EnterEmailAddress')).toBeTruthy()
+      expect(getByText('BCSC.EnterEmail.EmailAddress')).toBeTruthy()
+      expect(getByText('BCSC.EnterEmail.EmailDescription1')).toBeTruthy()
       expect(getByText('BCSC.EnterEmail.EmailDescription2')).toBeTruthy()
     })
 
-    it('should display description for non-Other card types i.e BCSCPhoto', () => {
-      const { getByText } = render(
-        <BasicAppContext>
-          <ErrorAlertProvider>
-            <EnterEmailScreen
-              navigation={mockNavigation}
-              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
-            />
-          </ErrorAlertProvider>
-        </BasicAppContext>
-      )
-
-      expect(getByText('BCSC.EnterEmail.EmailDescription1')).toBeTruthy()
-    })
-
-    it('should not display description for Other card type', () => {
+    it('should not display description 1 for Other card type', () => {
       const { queryByText } = render(
         <BasicAppContext>
           <ErrorAlertProvider>
@@ -159,7 +148,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'invalidemail')
       })
@@ -199,7 +188,7 @@ describe('EnterEmailScreen', () => {
       })
 
       // Enter valid email
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
@@ -230,7 +219,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
@@ -262,7 +251,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'user@test.com')
       })
@@ -298,7 +287,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
@@ -327,7 +316,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const emailInput = getByTestId('EmailInput')
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
       act(() => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })

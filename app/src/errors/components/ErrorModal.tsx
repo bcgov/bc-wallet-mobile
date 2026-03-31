@@ -1,19 +1,22 @@
-import { getErrorDefinitionFromAppEventCode, trackErrorInAnalytics } from '@/errors/errorHandler'
-import { AlertInteractionEvent } from '@/events/appEventCode'
+import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { useTheme } from '@bifold/core'
+import { appLogger } from '@/utils/logger'
+import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
+
+const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
 
 export interface ErrorModalPayload {
   title: string
   description: string
   message: string
   code: number
-  appEvent?: string
+  appEvent: string
+  cause?: unknown
+  stack?: string
 }
 
 const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette']): ErrorInfoCardColors => ({
@@ -36,7 +39,6 @@ const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette
 
 export interface BCSCErrorModalProps {
   error: ErrorModalPayload | null
-  visible: boolean
   errorKey: number
   onDismiss: () => void
   enableReport?: boolean
@@ -49,32 +51,28 @@ export interface BCSCErrorModalProps {
  * Rendered by ErrorAlertProvider and driven by its state — no event
  * emitters or listeners involved.
  */
-export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
-  error,
-  visible,
-  errorKey,
-  onDismiss,
-  enableReport = true,
-}) => {
-  const { t } = useTranslation()
+export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ error, errorKey, onDismiss, enableReport = true }) => {
   const { ColorPalette } = useTheme()
 
+  /**
+   * Handler for "Report this problem" action in the error modal.
+   * Tracks the event in analytics and sends a report to the logger (Loki Grafana) with error details.
+   *
+   * @returns void
+   */
   const handleReport = useCallback(() => {
     if (!error) {
       return
     }
 
-    if (error.appEvent) {
-      const definition = getErrorDefinitionFromAppEventCode(error.appEvent)
-      if (definition) {
-        trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_ACTION, t('Error.ReportThisProblem'))
-      } else {
-        Analytics.trackErrorEvent({ code: String(error.code), message: error.message })
-      }
-    } else {
-      Analytics.trackErrorEvent({ code: String(error.code), message: error.message })
-    }
-  }, [error, t])
+    Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
+
+    const reportError = new BifoldError(error.title, error.description, error.message, error.code)
+    reportError.cause = error.cause
+    reportError.stack = error.stack
+
+    appLogger.report(reportError)
+  }, [error])
 
   const cardColors = useMemo(() => mapThemeToCardColors(ColorPalette), [ColorPalette])
 
@@ -91,12 +89,12 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     [ColorPalette]
   )
 
-  if (!visible || !error) {
+  if (!error) {
     return null
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal visible={Boolean(error)} transparent animationType="fade" onRequestClose={onDismiss}>
       <SafeAreaView style={overlayStyle.overlay}>
         <ErrorInfoCard
           key={errorKey}
