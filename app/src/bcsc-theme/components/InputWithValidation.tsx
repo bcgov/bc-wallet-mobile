@@ -1,3 +1,4 @@
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { hitSlop } from '@/constants'
 import { a11yLabel } from '@/utils/accessibility'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -46,6 +47,7 @@ type InputWithValidationProps = {
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { reportActivity } = useBCSCActivity() ?? {}
   const inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
 
@@ -119,6 +121,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             style={[styles.input, props.inputProps]}
             value={props.value}
             onChangeText={(text) => {
+              reportActivity?.()
               if (props.error) {
                 props.onErrorClear?.()
               }

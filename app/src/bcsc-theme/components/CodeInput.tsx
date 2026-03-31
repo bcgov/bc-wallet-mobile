@@ -1,3 +1,4 @@
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { PAIRING_CODE_LENGTH as CELL_COUNT } from '@/constants'
 import { ThemedText, useTheme } from '@bifold/core'
 import React, { Fragment, useCallback } from 'react'
@@ -19,13 +20,15 @@ interface CodeInputProps {
 
 const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputProps }: CodeInputProps) => {
   const { ColorPalette, Spacing, Inputs } = useTheme()
+  const { reportActivity } = useBCSCActivity() ?? {}
 
   const onChangeText = useCallback(
     (text: string) => {
+      reportActivity?.()
       onErrorClear?.()
       onChange(text)
     },
-    [onChange, onErrorClear]
+    [onChange, onErrorClear, reportActivity]
   )
 
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
