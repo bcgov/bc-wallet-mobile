@@ -141,19 +141,31 @@ export const formatServiceHours = (serviceHours: ServiceHours): FormattedService
   return finalMessage
 }
 
+const parseHHMM = (timeStr: string): [number, number] => {
+  const parts = timeStr.split(':')
+  if (parts.length !== 2) {
+    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
+      cause: new Error(`Expected HH:MM format: "${timeStr}"`),
+    })
+  }
+
+  const [hours, minutes] = parts.map(Number)
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
+      cause: new Error(`Expected HH:MM with valid ranges: "${timeStr}"`),
+    })
+  }
+
+  return [hours, minutes]
+}
+
 export const formatTime12Hour = (time24: string): string => {
   if (!time24) {
     return time24
   }
 
-  const [hours, minutes] = time24.split(':').map(Number)
-
-  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
-      cause: new Error(`Failed to parse time string for display: "${time24}"`),
-    })
-  }
-
+  const [hours, minutes] = parseHHMM(time24)
   const period = hours >= 12 ? 'pm' : 'am'
 
   let hours12: number
@@ -194,12 +206,7 @@ const getCurrentTimeInTimezone = (timezone: string): Date => {
 }
 
 const parseTimeToMinutes = (timeStr: string): number => {
-  const [hour, minute] = timeStr.split(':').map(Number)
-  if (Number.isNaN(hour) || Number.isNaN(minute)) {
-    throw AppError.fromErrorDefinition(ErrorRegistry.VIDEO_SERVICE_HOURS_MALFORMED_TIME, {
-      cause: new Error(`Failed to parse time string: "${timeStr}"`),
-    })
-  }
+  const [hour, minute] = parseHHMM(timeStr)
   return hour * 60 + minute
 }
 

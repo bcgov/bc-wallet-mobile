@@ -62,6 +62,18 @@ describe('formatTime12Hour', () => {
   it('throws on partially valid time string', () => {
     expect(() => formatTime12Hour('12:xx')).toThrow()
   })
+
+  it('throws on extra colon segments', () => {
+    expect(() => formatTime12Hour('12:34:56')).toThrow()
+  })
+
+  it('throws on out-of-range hours', () => {
+    expect(() => formatTime12Hour('25:00')).toThrow()
+  })
+
+  it('throws on out-of-range minutes', () => {
+    expect(() => formatTime12Hour('12:60')).toThrow()
+  })
 })
 
 describe('formatServiceHours', () => {
