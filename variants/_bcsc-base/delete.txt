@@ -15,3 +15,6 @@ app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
 app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
 app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+app/android/app/src/main/res/drawable/ic_launcher_mono.png
+app/android/app/src/main/res/drawable/ic_launcher_play_store.png
+app/android/app/src/main/res/drawable/ic_launcher_round.png
