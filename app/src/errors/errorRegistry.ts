@@ -773,6 +773,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.GENERAL,
     message: 'No account found for the current user — state may be corrupted or missing',
   },
+  VIDEO_SERVICE_HOURS_MALFORMED_TIME: {
+    statusCode: 2823,
+    appEvent: AppEventCode.VIDEO_SERVICE_HOURS_MALFORMED_TIME,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Service hours API returned a malformed time string — expected HH:MM format',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)

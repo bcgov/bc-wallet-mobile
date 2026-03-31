@@ -776,6 +776,7 @@ jobs:
       needs.early-exit-check.outputs.should_skip_build != 'true' &&
       needs.prepare-android.result == 'success'
     strategy:
+      fail-fast: false
       matrix:
         variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     runs-on: ubuntu-22.04
@@ -1049,8 +1050,8 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: 'Distribute TestFlight - ${{ matrix.variant }}'
-    if: success() && github.ref_name == 'main'
-    needs: [build-ios, build-summary, compute-variants]
+    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
+    needs: [build-ios, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -1059,14 +1060,25 @@ jobs:
       matrix:
         variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
+      - name: Check iOS build artifact exists
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/probe
+
       - uses: actions/checkout@v6
+        if: steps.probe.outcome == 'success'
 
       - name: Load variant config
+        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Distribute to TestFlight
+        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-testflight
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -1079,26 +1091,36 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    if: >-
-      success() &&
-      github.event.pull_request.head.repo.fork != true
-    needs: [build-ios, build-android, build-summary, compute-variants]
+    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
+    needs: [build-ios, build-android, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         platform: [ios, android]
         variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
+      - name: Check build artifact exists
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.platform }}-${{ matrix.variant }}.${{ matrix.platform == 'ios' && 'ipa' || 'aab' }}
+          path: ${{ runner.temp }}/probe
+
       - uses: actions/checkout@v6
+        if: steps.probe.outcome == 'success'
 
       - name: Load variant config
+        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Derive platform artifact names
+        if: steps.probe.outcome == 'success'
         run: |
           if [ "${{ matrix.platform }}" = "ios" ]; then
             EXT="ipa"
@@ -1115,6 +1137,7 @@ jobs:
           EOF
 
       - name: Ship Artifact to SauceLabs
+        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
           sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
@@ -1137,9 +1160,7 @@ jobs:
   e2e-tests:
     name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
     needs: [ship-to-saucelabs, compute-variants]
-    if: >-
-      success() &&
-      github.event.pull_request.head.repo.fork != true
+    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -1151,14 +1172,25 @@ jobs:
         platform: [iOS, Android]
         variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
     steps:
+      - name: Check build artifact exists
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ matrix.platform == 'iOS' && 'ios' || 'android' }}-${{ matrix.variant }}.${{ matrix.platform == 'iOS' && 'ipa' || 'aab' }}
+          path: ${{ runner.temp }}/probe
+
       - uses: actions/checkout@v6
+        if: steps.probe.outcome == 'success'
 
       - name: Load variant config
+        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Determine test suite
+        if: steps.probe.outcome == 'success'
         id: mode
         shell: bash
         run: |
@@ -1171,11 +1203,11 @@ jobs:
           fi
 
       - name: Setup NodeJS
-        if: steps.mode.outputs.skip != 'true'
+        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache E2E dependencies
-        if: steps.mode.outputs.skip != 'true'
+        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
         uses: actions/cache@v5
         with:
           path: |
@@ -1185,12 +1217,12 @@ jobs:
           restore-keys: e2e-deps-
 
       - name: Install E2E dependencies
-        if: steps.mode.outputs.skip != 'true'
+        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
         working-directory: e2e
         run: yarn install --immutable
 
       - name: Run WDIO tests
-        if: steps.mode.outputs.skip != 'true'
+        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
         working-directory: e2e
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
