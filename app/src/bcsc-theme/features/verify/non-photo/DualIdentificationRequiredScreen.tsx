@@ -66,6 +66,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
             onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}
             accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
             accessibilityRole="link"
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
             testID={testIdWithKey('OpenAccountServices')}
           >
             <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
