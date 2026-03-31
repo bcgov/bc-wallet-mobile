@@ -1,9 +1,8 @@
+import TileButton from '@bcsc-theme/components/TileButton'
 import { testIdWithKey } from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-
-import TileButton from '@bcsc-theme/components/TileButton'
-import { BasicAppContext } from '@mocks/helpers/app'
 
 describe('TileButton Component', () => {
   const onPress = jest.fn()

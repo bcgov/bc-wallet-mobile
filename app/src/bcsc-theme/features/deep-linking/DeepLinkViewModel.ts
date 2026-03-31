@@ -1,7 +1,5 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-
 import { PairingService } from '../pairing'
-
 import { DeepLinkPayload, DeepLinkService } from './services/deep-linking'
 
 /**

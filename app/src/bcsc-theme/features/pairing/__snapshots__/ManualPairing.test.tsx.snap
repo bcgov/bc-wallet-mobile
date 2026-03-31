@@ -1,0 +1,457 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManualPairing Rendering renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "flexGrow": 1,
+          },
+          undefined,
+        ]
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "padding": 16,
+              },
+              undefined,
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                {
+                  "marginBottom": 16,
+                },
+              ]
+            }
+          >
+            BCSC.ManualPairing.EnterPairingCodeTitle
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "marginBottom": 16,
+                },
+              ]
+            }
+          >
+            BCSC.ManualPairing.EnterPairingCodeMessage
+          </Text>
+          <View>
+            <View
+              style={
+                [
+                  {
+                    "flexDirection": "row",
+                    "justifyContent": "space-between",
+                  },
+                  {
+                    "flexDirection": "row",
+                    "justifyContent": "space-between",
+                  },
+                ]
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 32,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                    },
+                  ]
+                }
+              >
+                –
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <TextInput
+                accessibilityLabel="Pairing-Code-Input"
+                autoCapitalize="characters"
+                autoComplete="off"
+                autoCorrect={false}
+                blurOnSubmit={false}
+                caretHidden={true}
+                clearButtonMode="never"
+                disableFullscreenUI={true}
+                maxLength={6}
+                onBlur={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                onPressOut={[Function]}
+                spellCheck={false}
+                style={
+                  {
+                    "bottom": 0,
+                    "fontSize": 1,
+                    "left": 0,
+                    "opacity": 0.015,
+                    "position": "absolute",
+                    "right": 0,
+                    "top": 0,
+                  }
+                }
+                testID="com.ariesbifold:id/ManualPairingCodeInput"
+                underlineColorAndroid="transparent"
+                value=""
+              />
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            [
+              [
+                {
+                  "gap": 16,
+                },
+                {
+                  "paddingBottom": 16,
+                  "paddingHorizontal": 16,
+                },
+                undefined,
+              ],
+              {
+                "marginTop": "auto",
+              },
+            ]
+          }
+        >
+          <View
+            accessibilityLabel="Global.Submit"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/Submit"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "textAlign": "center",
+                      },
+                      false,
+                      false,
+                    ],
+                  ]
+                }
+              >
+                Global.Submit
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</RNCSafeAreaView>
+`;

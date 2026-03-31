@@ -10,11 +10,10 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { openLink } from '@utils/links'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
-
-import { openLink } from '@utils/links'
 
 const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
 const bcWalletHomeUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet'

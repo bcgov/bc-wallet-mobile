@@ -1,8 +1,7 @@
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { PIN_LENGTH } from '@/constants'
+import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
 import {
   Button,
   ButtonType,
@@ -12,20 +11,15 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useTheme,
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useState } from 'react'
+import { a11yLabel } from '@utils/accessibility'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { InteractionManager } from 'react-native'
-import {
-  AccountSecurityMethod,
-  canPerformDeviceAuthentication,
-  getAccountSecurityMethod,
-  isAccountLocked,
-  unlockWithDeviceSecurity,
-  verifyPIN,
-} from 'react-native-bcsc-core'
+import { InteractionManager, View } from 'react-native'
+import { verifyPIN } from 'react-native-bcsc-core'
 
 interface EnterPINScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.EnterPIN>
@@ -34,62 +28,13 @@ interface EnterPINScreenProps {
 export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [currentPIN, setCurrentPIN] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { handleSuccessfulAuth } = useSecureActions()
 
-  useEffect(() => {
-    const initializeAuthentication = async () => {
-      try {
-        startLoading()
-
-        const accountSecurityMethod = await getAccountSecurityMethod()
-
-        // Only attempt device authentication if that is the configured method
-        if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
-          // If PIN is the method, check if account is locked and immediately show
-          // lockout screen if so
-          const { locked } = await isAccountLocked()
-          if (locked) {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: BCSCScreens.Lockout }],
-              })
-            )
-          }
-          return
-        }
-
-        // Check if they have changed their device auth settings
-        const deviceAuthAvailable = await canPerformDeviceAuthentication()
-
-        if (deviceAuthAvailable) {
-          const { success, walletKey } = await unlockWithDeviceSecurity('Unlock your app')
-          if (success) {
-            await handleSuccessfulAuth(walletKey)
-            logger.info('Device authentication successful')
-          } else {
-            logger.info('Device authentication failed - user cancelled or auth failed')
-            navigation.goBack()
-          }
-        } else {
-          navigation.navigate(BCSCScreens.DeviceAuthAppReset)
-        }
-      } catch (error) {
-        const errMessage = error instanceof Error ? error.message : String(error)
-        logger.error(`Device authentication error: ${errMessage}`)
-        navigation.goBack()
-      } finally {
-        stopLoading()
-      }
-    }
-
-    initializeAuthentication()
-  }, [startLoading, stopLoading, logger, navigation, handleSuccessfulAuth])
+  const { Spacing } = useTheme()
 
   const verifyPINAndContinue = useCallback(
     async (pin: string) => {
@@ -138,9 +83,16 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
     await verifyPINAndContinue(currentPIN)
   }, [currentPIN, verifyPINAndContinue])
 
+  const navigateToWebView = useCallback(
+    (url: string, title: string) => {
+      navigation.navigate(BCSCScreens.AuthWebView, { url, title })
+    },
+    [navigation]
+  )
+
   const onPressGetHelp = useCallback(() => {
-    // TODO: implement Get Help action
-  }, [])
+    navigateToWebView(HelpCentreUrl.FORGOT_PIN, t('HelpCentre.Title'))
+  }, [navigateToWebView, t])
 
   const handlePINChange = useCallback((pin: string) => {
     setErrorMessage(undefined)
@@ -170,8 +122,8 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
-        title={'Get Help'}
-        accessibilityLabel={'Get Help'}
+        title={t('Global.GetHelp')}
+        accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />
@@ -180,9 +132,16 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
 
   return (
     <ScreenWrapper keyboardActive controls={controls}>
-      <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
-      <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
-      <PINInput onPINChange={handlePINChange} onPINComplete={handlePINComplete} errorMessage={errorMessage} />
+      <View style={{ gap: Spacing.sm }}>
+        <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
+        <PINInput
+          testIDKey="PINInput"
+          onPINChange={handlePINChange}
+          onPINComplete={handlePINComplete}
+          errorMessage={errorMessage}
+        />
+        <ThemedText variant={'caption'}>{`The one you chose to secure this app`}</ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }

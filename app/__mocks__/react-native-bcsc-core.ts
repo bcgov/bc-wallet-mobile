@@ -43,6 +43,33 @@ export enum BCSCAccountType {
   NoBcscCard = 'Other - no BC Services Card',
 }
 
+export const BcscNativeErrorCodes = {
+  /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
+  TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
+  /** toJSONString method failed while serializing device info JWT (error 120-2) */
+  TOJSONSTRING_METHOD_FAILURE: 'E_120_TOJSONSTRING_METHOD_FAILURE',
+  /** Keychain key already exists during key pair generation (error 120-3) */
+  KEYCHAIN_KEY_EXISTS: 'E_120_KEYCHAIN_KEY_EXISTS_ERROR',
+  /** Keychain key does not exist when retrieving key pair (error 120-4) */
+  KEYCHAIN_KEY_DOESNT_EXIST: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+  /** Keychain key generation error during key pair generation (error 120-5) */
+  KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
+  /** Error creating device info JWT during client registration (error 120-6) */
+  JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+  /** JSON serialization failed for a native request or payload */
+  JSON_SERIALIZATION_FAILED: 'E_120_JSON_SERIALIZATION_FAILED',
+  /** Secure hardware / keystore could not generate a new keypair */
+  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
+  /** Keypair exists but could not be retrieved from secure storage */
+  KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
+  /** JWS token could not be parsed (malformed or invalid format) */
+  FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
+} as const
+
+export const isBcscNativeError = jest.fn((error: unknown): boolean => {
+  return error instanceof Error && 'code' in error
+})
+
 // Issuer Management
 export const setIssuer = jest.fn().mockResolvedValue(true)
 export const getIssuer = jest.fn().mockResolvedValue(null)
@@ -117,11 +144,20 @@ export const deleteAuthorizationRequest = jest.fn().mockResolvedValue(true)
 export const getAccountFlags = jest.fn().mockResolvedValue({})
 export const setAccountFlags = jest.fn().mockResolvedValue(true)
 export const deleteAccountFlags = jest.fn().mockResolvedValue(true)
+export const getMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(null)
+export const getHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setHideDeviceAuthPrepFlag = jest.fn().mockResolvedValue(false)
+export const setMaxDevicesBannerLastDisplayedDate = jest.fn().mockResolvedValue(false)
+// Evidence Storage
+export const getEvidence = jest.fn().mockResolvedValue([])
+export const setEvidence = jest.fn().mockResolvedValue(true)
+export const deleteEvidence = jest.fn().mockResolvedValue(true)
+export const saveEvidencePhoto = jest.fn().mockResolvedValue('/mock/path/to/photo.jpg')
 
-// Evidence Metadata Storage
-export const getEvidenceMetadata = jest.fn().mockResolvedValue([])
-export const setEvidenceMetadata = jest.fn().mockResolvedValue(true)
-export const deleteEvidenceMetadata = jest.fn().mockResolvedValue(true)
+// Saved Services Storage
+export const getSavedServices = jest.fn().mockResolvedValue([])
+export const setSavedServices = jest.fn().mockResolvedValue(true)
+export const deleteSavedServices = jest.fn().mockResolvedValue(true)
 
 // Credential Management
 export const setCredential = jest.fn().mockResolvedValue(undefined)

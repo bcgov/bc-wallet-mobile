@@ -13,6 +13,7 @@ import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizatio
 import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { ANALYTICS_APP_ID_PREFIX } from './constants'
 
 export interface IASEnvironment {
   name: string
@@ -20,6 +21,7 @@ export interface IASEnvironment {
   iasPortalUrl: string
   appToAppUrl: string
   iasApiBaseUrl: string
+  analyticsAppId: string
 }
 
 export type RemoteDebuggingState = {
@@ -38,6 +40,21 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
+// This is a misnomer, it's actually just account data that is used to determine if an account has been updated outside of the app (agent, websites, etc.)
+export interface CredentialMetadata {
+  fullName: string
+  bcscReason: string
+  deviceCount: number
+  deviceLimit: number
+  cardType: string
+  lastUpdated: number // THIS IS THE bcsc_status_date from the token response
+}
+
+export interface BCSCAlertEvent {
+  event: string
+  reason: string
+}
+
 /**
  * Collection of metadata needed when a user is registering for the application
  * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
@@ -51,6 +68,7 @@ export interface NonBCSCUserMetadata {
   }
   address?: {
     streetAddress: string
+    streetAddress2?: string
     postalCode: string
     city: string
     province: ProvinceCode
@@ -60,6 +78,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   appVersion: string
+  hasAccount: boolean
   nicknames: string[]
   selectedNickname?: string
   prompts?: VerificationPrompt[]
@@ -68,11 +87,20 @@ export interface BCSCState {
   photoPath?: string
   videoPath?: string
   videoThumbnailPath?: string
-  bookmarks: string[]
   bannerMessages: BCSCBannerMessage[]
   analyticsOptIn: boolean
   accountSetupType?: AccountSetupType
   hasDismissedExpiryAlert?: boolean
+  hasDismissedThirdPartyKeyboardAlert?: boolean
+  hasDismissedDeviceAuthInfo?: boolean
+  deviceLimitBannerDismissedAt?: string
+  credentialMetadata?: CredentialMetadata
+}
+
+export enum VerificationStatus {
+  VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
+  UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
+  DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
 }
 
 /**
@@ -87,11 +115,10 @@ export interface BCSCSecureState {
   /** Whether secure state has been loaded from native storage */
   isHydrated: boolean
 
-  /** Whether an account exists (not persisted, checked and set at app startup and on registration) */
-  hasAccount?: boolean
-
   /** Account verification status - determined from presence of valid credential */
   verified?: boolean
+  /** Account verification status value (VERIFIED, UNVERIFIED, DEACTIVATED) */
+  verifiedStatus: VerificationStatus
 
   // === from Tokens ===
   /** OAuth refresh token for API authentication */
@@ -114,8 +141,6 @@ export interface BCSCSecureState {
   birthdate?: Date
   /** BC Services Card serial number */
   serial?: string
-  /** User's email address */
-  email?: string
   /** Whether user's email has been verified */
   isEmailVerified?: boolean
   /** Verification request ID for evidence upload */
@@ -143,6 +168,10 @@ export interface BCSCSecureState {
   /** Additional evidence data for non-BCSC verification */
   additionalEvidenceData: EvidenceMetadata[] // initialized as an empty array to prevent ?.length usage
 
+  // === Saved Services ===
+  /** Array of bookmarked/saved service client_ref_id strings */
+  savedServices: string[]
+
   // === Security ===
   /** PBKDF2 hash of PIN used for Askar wallet encryption */
   walletKey?: string
@@ -154,6 +183,8 @@ export interface BCSCSecureState {
 export const initialBCSCSecureState: BCSCSecureState = {
   isHydrated: false,
   additionalEvidenceData: [], // initialized as an empty array to prevent ?.length usage
+  savedServices: [],
+  verifiedStatus: VerificationStatus.UNVERIFIED,
 }
 
 export enum Mode {
@@ -197,14 +228,14 @@ enum BCSCDispatchAction {
   SAVE_PHOTO = 'bcsc/savePhoto',
   SAVE_VIDEO = 'bcsc/saveVideo',
   SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
-  ADD_BOOKMARK = 'bcsc/addBookmark',
-  REMOVE_BOOKMARK = 'bcsc/removeBookmark',
+  ADD_SAVED_SERVICE = 'bcsc/addSavedService',
+  REMOVE_SAVED_SERVICE = 'bcsc/removeSavedService',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
-  HIDE_DEVICE_AUTH_CONFIRMATION = 'bcsc/hideDeviceAuthConfirmation',
+  UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
   CLEAR_SECURE_STATE = 'bcsc/clearSecureState',
@@ -234,6 +265,8 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
+  DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
+  DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
 }
 
 enum ModeDispatchAction {
@@ -255,7 +288,18 @@ export const BCDispatchAction = {
   ...ModeDispatchAction,
 }
 
+// TODO (MD): Move environment / analytic related utils to a separate file
+const getAnalyticsAppId = (domain: string): string => {
+  return `${ANALYTICS_APP_ID_PREFIX}${domain}`
+}
+
 export const getInitialEnvironment = (): IASEnvironment => {
+  const envName = Config.DEFAULT_ENVIRONMENT?.toUpperCase()
+  if (envName && envName in IASEnvironment) {
+    return IASEnvironment[envName as keyof typeof IASEnvironment]
+  }
+
+  // Fallback: local dev builds for BCSC use SIT
   if (__DEV__ && Config.BUILD_TARGET === Mode.BCSC) {
     return IASEnvironment.SIT
   }
@@ -269,11 +313,12 @@ const createIASEnvironment = (config: {
   agentInviteUrl: string | null
 }): IASEnvironment => {
   return {
-    name: `${config.name} (${config.subdomain})`,
+    name: `${config.name}`,
     iasAgentInviteUrl: config.agentInviteUrl ?? '',
-    iasPortalUrl: `https://${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
-    appToAppUrl: `ca.bc.gov.${config.subdomain}.servicescard.v2://credentials/person/v1`,
-    iasApiBaseUrl: `https://${config.subdomain}.gov.bc.ca`,
+    iasPortalUrl: `https://id${config.subdomain}.gov.bc.ca/issuer/v1/dids`,
+    appToAppUrl: `ca.bc.gov.id${config.subdomain}.servicescard.v2://credentials/person/v1`,
+    iasApiBaseUrl: `https://id${config.subdomain}.gov.bc.ca`,
+    analyticsAppId: getAnalyticsAppId(config.subdomain || 'prod'),
   }
 }
 
@@ -281,40 +326,40 @@ const createIASEnvironment = (config: {
 export const IASEnvironment = {
   PROD: createIASEnvironment({
     name: 'Prod',
-    subdomain: 'id',
+    subdomain: '', // no subdomain for prod environment
     agentInviteUrl:
       'https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiNWY2NTYzYWItNzEzYi00YjM5LWI5MTUtNjY2YjJjNDc4M2U2IiwgImxhYmVsIjogIlNlcnZpY2UgQkMiLCAicmVjaXBpZW50S2V5cyI6IFsiN2l2WVNuN3NocW8xSkZyYm1FRnVNQThMNDhaVnh2TnpwVkN6cERSTHE4UmoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwczovL2lkLmdvdi5iYy5jYS9zdGF0aWMvR292LTIuMC9pbWFnZXMvZmF2aWNvbi5pY28ifQ==',
   }),
   PREPROD: createIASEnvironment({
     name: 'Preprod',
-    subdomain: 'idpreprod',
+    subdomain: 'preprod',
     agentInviteUrl: null,
   }),
   QA: createIASEnvironment({
     name: 'QA',
-    subdomain: 'idqa',
+    subdomain: 'qa',
     agentInviteUrl: null,
   }),
   TEST: createIASEnvironment({
     name: 'Test',
-    subdomain: 'idtest',
+    subdomain: 'test',
     agentInviteUrl: null,
   }),
   SIT: createIASEnvironment({
     name: 'Sit',
-    subdomain: 'idsit',
+    subdomain: 'sit',
     agentInviteUrl:
       'https://idim-sit-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZDFkMDk5MDQtN2ZlOC00YzlkLTk4YjUtZmNmYmEwODkzZTAzIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKFNJVCkiLCAicmVjaXBpZW50S2V5cyI6IFsiNVgzblBoZkVIOU4zb05kcHdqdUdjM0ZhVzNQbmhiY05QemRGbzFzS010dEoiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tc2l0LWFnZW50LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyJ9',
   }),
   DEV: createIASEnvironment({
     name: 'Dev',
-    subdomain: 'iddev',
+    subdomain: 'dev',
     agentInviteUrl:
       'https://idim-agent-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiY2U1NWFiZDctNWRmYy00YjQ5LWExODYtOWUzMzQ1ZjEyZThkIiwgImxhYmVsIjogIlNlcnZpY2UgQkMgKERldikiLCAicmVjaXBpZW50S2V5cyI6IFsiM0I0bnlDMVg4R1E0M0NLczR4clVXOFdnbWE5MUpMem50cVVYdlo0UjQ4TXQiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL2lkaW0tYWdlbnQtZGV2LmFwcHMuc2lsdmVyLmRldm9wcy5nb3YuYmMuY2EiLCAiaW1hZ2VVcmwiOiAiaHR0cHM6Ly9pZC5nb3YuYmMuY2Evc3RhdGljL0dvdi0yLjAvaW1hZ2VzL2Zhdmljb24uaWNvIn0=',
   }),
   DEV2: createIASEnvironment({
     name: 'Dev2',
-    subdomain: 'iddev2',
+    subdomain: 'dev2',
     agentInviteUrl: null,
   }),
 }
@@ -337,9 +382,9 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 export const initialBCSCState: BCSCState = {
   appVersion: getVersion(),
+  hasAccount: false,
   nicknames: [],
   selectedNickname: undefined,
-  bookmarks: [],
   bannerMessages: [],
   analyticsOptIn: false,
 }
@@ -436,6 +481,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCDispatchAction.SET_HAS_ACCOUNT: {
+      const hasAccount = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, hasAccount }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_APP_VERSION: {
       const bcsc = { ...state.bcsc, appVersion: getVersion() }
       const newState = { ...state, bcsc }
@@ -466,7 +518,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
-      const prompts: VerificationPrompt[] = (action?.payload || []).pop()
+      const prompts: VerificationPrompt[] = (action?.payload || []).pop() ?? []
       const bcsc = { ...state.bcsc, prompts }
       const newState = { ...state, bcsc }
       return newState
@@ -497,28 +549,30 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         videoPath: undefined,
         videoDuration: undefined,
         videoThumbnailPath: undefined,
-        prompts: undefined,
       }
       const newState = { ...state, bcsc }
       return newState
     }
-    case BCSCDispatchAction.ADD_BOOKMARK: {
-      const bookmark = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, bookmarks: [...new Set([...state.bcsc.bookmarks, bookmark])] }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
-      return newState
+    case BCSCDispatchAction.ADD_SAVED_SERVICE: {
+      const serviceId = (action.payload ?? []).pop()
+      const savedServices = [...new Set([...state.bcscSecure.savedServices, serviceId])]
+      const bcscSecure = { ...state.bcscSecure, savedServices }
+      return { ...state, bcscSecure }
     }
-    case BCSCDispatchAction.REMOVE_BOOKMARK: {
-      const bookmark = (action.payload ?? []).pop()
-      const bookmarks = state.bcsc.bookmarks.filter((b) => b !== bookmark)
-      const bcsc = { ...state.bcsc, bookmarks }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
+    case BCSCDispatchAction.REMOVE_SAVED_SERVICE: {
+      const serviceId = (action.payload ?? []).pop()
+      const savedServices = state.bcscSecure.savedServices.filter((s) => s !== serviceId)
+      const bcscSecure = { ...state.bcscSecure, savedServices }
+      return { ...state, bcscSecure }
     }
 
+    // batched state update to prevent re-renders
+    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
+      const authentication = { ...state.authentication, didAuthenticate: true }
+      const bcsc = { ...state.bcsc, hasAccount: true }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return { ...state, bcsc, authentication }
+    }
     // Secure state management - not persisted to AsyncStorage
     case BCSCDispatchAction.HYDRATE_SECURE_STATE: {
       const partialSecureState: Partial<BCSCSecureState> = (action?.payload || []).pop() ?? {}
@@ -531,17 +585,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...initialBCSCSecureState, ...partialSecureState }
       return { ...state, bcscSecure }
     }
-    // batched state update to prevent re-renders
-    case BCSCDispatchAction.SUCCESSFUL_AUTH: {
-      const bcscSecure = { ...state.bcscSecure, hasAccount: true }
-      const authentication = { ...state.authentication, didAuthenticate: true }
-      return { ...state, bcscSecure, authentication }
-    }
-    case BCSCDispatchAction.SET_HAS_ACCOUNT: {
-      const hasAccount = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, hasAccount }
-      return { ...state, bcscSecure }
-    }
     case BCSCDispatchAction.UPDATE_SECURE_SERIAL: {
       const serial = (action?.payload || []).pop() ?? ''
       const bcscSecure = { ...state.bcscSecure, serial }
@@ -550,11 +593,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_BIRTHDATE: {
       const birthdate = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, birthdate }
-      return { ...state, bcscSecure }
-    }
-    case BCSCDispatchAction.UPDATE_SECURE_EMAIL: {
-      const email = (action?.payload || []).pop() ?? undefined
-      const bcscSecure = { ...state.bcscSecure, email }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_DEVICE_CODE: {
@@ -639,7 +677,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFIED: {
       const verified = (action?.payload || []).pop() ?? false
-      const bcscSecure = { ...state.bcscSecure, verified }
+      const bcscSecure = {
+        ...state.bcscSecure,
+        verified,
+        // QUESTION (MD): Should we handle DEACTIVATED here?
+        verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
+      }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
@@ -709,6 +752,29 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // this should use the date as a key, so this variable is always up to date...
       const hasDismissed = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, hasDismissedExpiryAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.DISMISSED_THIRD_PARTY_KEYBOARD_ALERT: {
+      // this should use the date as a key, so this variable is always up to date...
+      const hasDismissed = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, hasDismissedThirdPartyKeyboardAlert: hasDismissed }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
+      const dismissedAt = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
+      const credentialMetadata = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, credentialMetadata }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

@@ -56,7 +56,6 @@ describe('errorRegistry', () => {
 
       // Credential errors
       expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE).toBeDefined()
-      expect(ErrorRegistry.CREDENTIAL_NULL).toBeDefined()
 
       // Verification errors
       expect(ErrorRegistry.VERIFY_NOT_COMPLETE).toBeDefined()
@@ -104,26 +103,15 @@ describe('errorRegistry', () => {
         expect(definition.appEvent).toBeDefined()
         expect(typeof definition.appEvent).toBe('string')
 
-        expect(definition.titleKey).toBeDefined()
-        expect(typeof definition.titleKey).toBe('string')
-
-        expect(definition.descriptionKey).toBeDefined()
-        expect(typeof definition.descriptionKey).toBe('string')
-
         expect(definition.severity).toBeDefined()
         expect(Object.values(ErrorSeverity)).toContain(definition.severity)
 
         expect(definition.category).toBeDefined()
         expect(Object.values(ErrorCategory)).toContain(definition.category)
+
+        expect(definition.message).toBeDefined()
+        expect(typeof definition.message).toBe('string')
       })
-    })
-
-    it('should have unique error codes', () => {
-      const errorKeys = Object.keys(ErrorRegistry) as ErrorRegistryKey[]
-      const codes = errorKeys.map((key) => ErrorRegistry[key].statusCode)
-      const uniqueCodes = new Set(codes)
-
-      expect(uniqueCodes.size).toBe(codes.length)
     })
 
     it('should have error codes in correct ranges', () => {
@@ -174,20 +162,6 @@ describe('errorRegistry', () => {
       // Attestation Errors (3100-3199)
       expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeGreaterThanOrEqual(3100)
       expect(ErrorRegistry.ATTESTATION_BAD_INVITATION.statusCode).toBeLessThan(3200)
-    })
-
-    it('should have proper i18n key formats', () => {
-      const errorKeys = Object.keys(ErrorRegistry) as ErrorRegistryKey[]
-
-      errorKeys.forEach((key) => {
-        const definition = ErrorRegistry[key]
-
-        // Title keys should be in format 'BCWalletError.Category.Title' or 'Error.Title...'
-        expect(definition.titleKey).toMatch(/^(BCWalletError\..+Title|Error\.Title)$/)
-
-        // Description keys should be in format 'BCWalletError.Category.Something'
-        expect(definition.descriptionKey).toMatch(/^(BCWalletError\..+\..+|Error\.Message\d+)$/)
-      })
     })
   })
 

@@ -170,6 +170,14 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun deleteAuthorizationRequest(promise: Promise)
 
+    // Android Global Flags Storage Methods
+    abstract fun getAndroidGlobalFlags(promise: Promise)
+
+    abstract fun setAndroidGlobalFlags(
+        flags: com.facebook.react.bridge.ReadableMap,
+        promise: Promise,
+    )
+
     // Account Flags Storage Methods
     abstract fun getAccountFlags(promise: Promise)
 
@@ -180,15 +188,21 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun deleteAccountFlags(promise: Promise)
 
-    // Evidence Metadata Storage Methods
-    abstract fun getEvidenceMetadata(promise: Promise)
+    // Evidence Storage Methods
+    abstract fun getEvidence(promise: Promise)
 
-    abstract fun setEvidenceMetadata(
+    abstract fun setEvidence(
         evidence: com.facebook.react.bridge.ReadableArray,
         promise: Promise,
     )
 
-    abstract fun deleteEvidenceMetadata(promise: Promise)
+    abstract fun deleteEvidence(promise: Promise)
+
+    abstract fun saveEvidencePhoto(
+        base64Data: String,
+        filename: String,
+        promise: Promise,
+    )
 
     // Credential Storage Methods
     abstract fun getCredential(promise: Promise)
@@ -213,4 +227,18 @@ abstract class BcscCoreSpec internal constructor(
         key: com.facebook.react.bridge.ReadableMap?,
         promise: Promise,
     )
+
+    abstract fun isThirdPartyKeyboardActive(promise: Promise)
+
+    abstract fun openKeyboardSelector()
+
+    // Saved Services (Client Metadata) Storage Methods
+    abstract fun getSavedServices(promise: Promise)
+
+    abstract fun setSavedServices(
+        services: com.facebook.react.bridge.ReadableArray,
+        promise: Promise,
+    )
+
+    abstract fun deleteSavedServices(promise: Promise)
 }

@@ -1,11 +1,10 @@
+import { surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
+import WebDisplay from '@screens/WebDisplay'
 import React, { PropsWithChildren, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
-import WebDisplay from '@screens/WebDisplay'
 
 interface HomeFooterViewProps extends PropsWithChildren {}
 

@@ -19,10 +19,12 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   var country: String?
   var region: String?
 
+  /// Raw values match the keys used by v3 (snake_case via Codable CodingKeys).
+  /// "locality", "country", and "region" are identical in both versions.
   enum CodingKeys: String {
-    case streetAddress
+    case streetAddress = "street_address"
     case locality
-    case postalCode
+    case postalCode = "postal_code"
     case country
     case region
   }
@@ -100,7 +102,7 @@ class Address: NSObject, NSCoding, NSSecureCoding {
   case backCheck = 4
   case selfVerify = 5
 
-  // V3 compatibility: Store as String to match v3's enum AuthorizationMethod: String
+  /// V3 compatibility: Store as String to match v3's enum AuthorizationMethod: String
   var stringValue: String {
     switch self {
     case .counter: return "counter"
@@ -157,7 +159,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
   var expiry: Date?
   var authorizationExpiry: Date?
 
-  // Token hint
+  /// Token hint
   var idTokenHint: String?
 
   // Verification options
@@ -168,13 +170,13 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
   var backCheckSubmittedDate: Date?
   var backCheckVerificationId: String?
 
-  // Evidence upload
+  /// Evidence upload
   var evidenceUploadURI: String?
 
-  // Identification process type
+  /// Identification process type
   var cardProcess: String?
 
-  // Coding keys matching v3's encoding
+  /// Coding keys matching v3's encoding
   private enum CodingKeys: String {
     case process
     case status
@@ -191,7 +193,7 @@ class AuthorizationRequest: NSObject, NSCoding, NSSecureCoding {
     case deviceCode
     case verified_email
     case verificationOptions
-    case verificationURIVideo
+    case verificationURIVideo = "verificationVideoURI" // v3 stored as "verificationVideoURI"
     case backCheckVerificationId
     case backCheckSubmittedDate
     case firstName

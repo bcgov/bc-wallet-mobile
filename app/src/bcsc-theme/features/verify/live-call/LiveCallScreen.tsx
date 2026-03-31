@@ -1,15 +1,20 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
+import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { CROP_DELAY_MS } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { VolumeManager } from 'react-native-volume-manager'
@@ -18,9 +23,6 @@ import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
 import CallProcessingView from './components/CallProcessingView'
-
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { CROP_DELAY_MS } from '@/constants'
 import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
 
@@ -31,6 +33,7 @@ type LiveCallScreenProps = {
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
   const [store] = useStore<BCState>()
+  const fcmService = useFcmService()
   const { ColorPalette, Spacing, NavigationTheme } = useTheme()
   const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
@@ -42,8 +45,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
-  const { updateTokens } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { liveCallHavingTroubleAlert } = useAlerts(navigation)
+  const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -52,14 +56,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
-
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
-      }
+      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
 
       navigation.dispatch(
         CommonActions.reset({
@@ -83,7 +81,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, updateTokens, navigation, logger, t])
+  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
@@ -140,6 +138,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       clearIntervalIfExists(timerIntervalRef)
     }
   }, [])
+
+  // Suppress FCM notifications while in the live call
+  useEffect(() => {
+    fcmService.service.setSuppressed(true)
+    return () => fcmService.service.setSuppressed(false)
+  }, [fcmService.service])
 
   // setup volume detection
   useEffect(() => {
@@ -213,13 +217,33 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
+      // Clear the forced-speaker override before start() so that start()
+      // does not force audio to the speaker on Android. This allows audio
+      // to route to Bluetooth/wired headsets
+      InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }
   }, [flowState, startVideoCall])
 
+  // disconnect any active call when unmounting
+  useEffect(() => {
+    return () => {
+      InCallManager.stop()
+    }
+  }, [])
+
+  useEffect(() => {
+    pauseActivityTracking()
+    return () => {
+      resumeActivityTracking()
+    }
+  }, [pauseActivityTracking, resumeActivityTracking])
+
   // loading / error user-facing state message
   const stateMessage = useMemo(() => {
     switch (flowState) {
+      case VideoCallFlowState.UPLOADING_DOCUMENTS:
+        return t('BCSC.VideoCall.CallStates.UploadingDocuments')
       case VideoCallFlowState.CREATING_SESSION:
         return t('BCSC.VideoCall.CallStates.CreatingSession')
       case VideoCallFlowState.CONNECTING_WEBRTC:
@@ -247,9 +271,81 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [setCallEnded, cleanup, leaveCall, logger])
 
+  const handleHavingTrouble = useCallback(() => {
+    liveCallHavingTroubleAlert(handleEndCall)
+  }, [handleEndCall, liveCallHavingTroubleAlert])
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: 'black',
+        },
+        agentVideo: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '15%',
+          flex: 1,
+          transform: [{ scale: 1.5 }], // zoom
+        },
+        // just helpful labels, no properties needed
+        upperContainer: {},
+        lowerContainer: {},
+        timeAndLabelContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          padding: Spacing.md,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+        },
+        controlsContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          padding: Spacing.md,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+        },
+        lowerContentContainer: {
+          flexDirection: 'row',
+          height: (width / 4) * 1.5,
+        },
+        hasTroubleContainer: {
+          marginLeft: 'auto',
+          marginRight: Spacing.xs,
+        },
+        selfieVideoContainer: {
+          width: width / 4,
+          height: '100%',
+          overflow: 'hidden',
+        },
+        selfieVideo: {
+          flex: 1,
+        },
+        cropOverlay: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: '15%',
+          backgroundColor: 'black',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: Spacing.xl,
+        },
+        cropOverlayText: {
+          color: ColorPalette.grayscale.white,
+          textAlign: 'center',
+        },
+      }),
+    [width, Spacing, ColorPalette]
+  )
+
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
+        title={videoCallError?.title}
         message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
@@ -265,49 +361,15 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     return <CallLoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
   }
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'black',
-    },
-    agentVideo: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: '15%',
-      flex: 1,
-      transform: [{ scale: 1.5 }], // zoom
-    },
-    // just helpful labels, no properties needed
-    upperContainer: {},
-    lowerContainer: {},
-    timeAndLabelContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    controlsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    selfieVideoContainer: {
-      width: width / 4,
-      height: (width / 4) * 1.5,
-      overflow: 'hidden',
-    },
-    selfieVideo: {
-      flex: 1,
-    },
-  })
-
   return (
     <View style={styles.container}>
       {remoteStream && <RTCView style={styles.agentVideo} objectFit={'contain'} streamURL={remoteStream.toURL()} />}
+
+      {!callStartTime && (
+        <View style={styles.cropOverlay}>
+          <ThemedText style={styles.cropOverlayText}>{t('BCSC.VideoCall.CallingAgent')}</ThemedText>
+        </View>
+      )}
 
       <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: NavigationTheme.colors.primary }} />
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
@@ -326,11 +388,23 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           ) : null}
         </View>
         <View style={styles.lowerContainer}>
-          {localStream && !videoHidden && (
-            <View style={styles.selfieVideoContainer}>
-              <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
-            </View>
-          )}
+          <View style={styles.lowerContentContainer}>
+            {localStream && !videoHidden && (
+              <View style={styles.selfieVideoContainer}>
+                <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
+              </View>
+            )}
+
+            <TouchableOpacity
+              onPress={handleHavingTrouble}
+              style={styles.hasTroubleContainer}
+              accessibilityLabel={a11yLabel(t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble'))}
+              accessibilityRole="button"
+              testID={testIdWithKey('HavingTrouble')}
+            >
+              <ThemedText>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.controlsContainer}>
             <CallIconButton

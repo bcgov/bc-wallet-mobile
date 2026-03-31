@@ -1,3 +1,5 @@
+import { AttestationRestrictions } from '@/constants'
+import { getErrorDefinition } from '@/errors'
 import {
   AbstractBifoldLogger,
   AttestationEventTypes,
@@ -24,13 +26,10 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@credo-ts/core'
-import { DeviceEventEmitter, Platform } from 'react-native'
-import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
-
-import { AttestationRestrictions } from '@/constants'
-import { getErrorDefinition } from '@/errors'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
+import { DeviceEventEmitter, Platform } from 'react-native'
+import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 

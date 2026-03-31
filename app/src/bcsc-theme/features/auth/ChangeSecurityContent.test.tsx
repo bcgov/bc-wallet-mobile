@@ -1,4 +1,7 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { testIdWithKey } from '@bifold/core'
+import { useNavigation } from '@mocks/custom/@react-navigation/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import {
@@ -12,9 +15,6 @@ import {
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
 import Toast from 'react-native-toast-message'
-
-import { useNavigation } from '@mocks/custom/@react-navigation/core'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { ChangeSecurityContent } from './ChangeSecurityContent'
 
 jest.mock('react-native-bcsc-core', () => ({
@@ -43,12 +43,16 @@ jest.mock('react-native-toast-message', () => ({
 
 const mockAlert = jest.fn()
 
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: () => ({
-    emitAlert: mockAlert,
-    clearError: jest.fn(),
-  }),
-}))
+jest.mock('@/contexts/ErrorAlertContext', () => {
+  const actual = jest.requireActual('@/contexts/ErrorAlertContext')
+  return {
+    ...actual,
+    useErrorAlert: () => ({
+      emitAlert: mockAlert,
+      clearError: jest.fn(),
+    }),
+  }
+})
 
 const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
 const mockGetAvailableBiometricType = jest.mocked(getAvailableBiometricType)
@@ -195,7 +199,7 @@ describe('ChangeSecurityContent', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
       })
 
-      const pinButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppPINTitle')
+      const pinButton = tree.getByTestId(testIdWithKey('ChoosePINButton'))
       fireEvent.press(pinButton)
 
       expect(onPINPress).toHaveBeenCalled()
@@ -286,9 +290,7 @@ describe('ChangeSecurityContent', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId(
-        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
-      )
+      const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -332,9 +334,7 @@ describe('ChangeSecurityContent', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId(
-        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
-      )
+      const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -368,9 +368,7 @@ describe('ChangeSecurityContent', () => {
         expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
       })
 
-      const deviceAuthButton = tree.getByTestId(
-        'com.ariesbifold:id/CardButton-BCSC.Onboarding.SecureAppDeviceAuthTitle'
-      )
+      const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
       fireEvent.press(deviceAuthButton)
 
       await waitFor(() => {
@@ -406,7 +404,7 @@ describe('ChangeSecurityContent', () => {
         expect(tree.getByText('BCSC.Onboarding.LearnMore')).toBeTruthy()
       })
 
-      const learnMoreButton = tree.getByTestId('com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore')
+      const learnMoreButton = tree.getByTestId(testIdWithKey('LearnMoreButton'))
       fireEvent.press(learnMoreButton)
 
       expect(onLearnMorePressed).toHaveBeenCalled()

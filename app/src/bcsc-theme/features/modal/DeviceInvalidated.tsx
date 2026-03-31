@@ -38,6 +38,9 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
         selectedNickname: store.bcsc.selectedNickname,
       },
       [BCSCReason.CanceledByUser]: {}, // Empty for a 'new install state'
+      [BCSCReason.CanceledByAdditionalCard]: {},
+      [BCSCReason.CanceledByCardTypeChange]: {},
+      [BCSCReason.CanceledDueToInactivity]: {},
     }
 
     const result = await factoryReset(factoryResetParams[invalidationReason])
@@ -52,13 +55,19 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     [BCSCReason.Cancel]: t('BCSC.Modals.DeviceInvalidated.CancelledByCardCancel'),
     [BCSCReason.CanceledByAgent]: t('BCSC.Modals.DeviceInvalidated.CancelledByAgent'),
     [BCSCReason.CanceledByUser]: t('BCSC.Modals.DeviceInvalidated.CancelledByUser'),
+    [BCSCReason.CanceledByAdditionalCard]: t('BCSC.Modals.DeviceInvalidated.CanceledByAdditionalCard'),
+    [BCSCReason.CanceledByCardTypeChange]: t('BCSC.Modals.DeviceInvalidated.CanceledByCardTypeChange'),
+    [BCSCReason.CanceledDueToInactivity]: t('BCSC.Modals.DeviceInvalidated.CanceledDueToInactivity'),
   }
 
   return (
     <SystemModal
       iconName="phonelink-erase"
       headerText={t('BCSC.Modals.DeviceInvalidated.Header')}
-      contentText={[contentTextMap[invalidationReason]!, t('BCSC.Modals.DeviceInvalidated.ContentA')]}
+      contentText={[
+        contentTextMap[invalidationReason] ?? t('BCSC.Modals.DeviceInvalidated.CancelledByCardCancel'),
+        t('BCSC.Modals.DeviceInvalidated.ContentA'),
+      ]}
       buttonText={t('BCSC.Modals.DeviceInvalidated.OKButton')}
       onButtonPress={handleFactoryReset}
     />

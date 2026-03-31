@@ -4,12 +4,6 @@ import LocalAuthentication
 import React
 import UserNotifications
 
-enum AccountSecurityMethod: String {
-  case pinNoDeviceAuth = "app_pin_no_device_authn"
-  case pinWithDeviceAuth = "app_pin_has_device_authn"
-  case deviceAuth = "device_authentication"
-}
-
 enum ChallengeSource: String {
   case local_app_switch
   case push_notification
@@ -41,6 +35,8 @@ class BcscCore: NSObject {
   static let generalizedOsName = "iOS"
   static let provider = "https://idsit.gov.bc.ca/device/"
   static let clientName = "BC Services Wallet"
+  /// JWS compact serialization: header.payload.signature
+  static let jwsCompactSegmentCount = 3
 
   static func requiresMainQueueSetup() -> Bool {
     return false
@@ -58,6 +54,40 @@ class BcscCore: NSObject {
       return UUID().uuidString
     }
     return deviceId
+  }
+
+  /**
+   * Returns the current account synchronously.
+   * Eliminates repeated StorageService().readData(file: .accountMetadata, ...) boilerplate.
+   */
+  private func getAccountSync() -> Account? {
+    let storage = StorageService()
+    return storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+  }
+
+  /**
+   * Reads a named file from the current account's directory using StorageService.
+   * Analogous to Android's readFirstAccountEncryptedFile — reduces per-function boilerplate
+   * for reading account-scoped NSCoding-archived data.
+   *
+   * @param file The AccountFiles case identifying which file to read
+   * @returns The decoded object, or nil if no account is found or the read fails
+   */
+  private func readFirstAccountFile<T: NSObject & NSCoding & NSSecureCoding>(
+    _ file: AccountFiles
+  ) -> T? {
+    let storage = StorageService()
+    guard storage.currentAccountID != nil else {
+      logger.log("readFirstAccountFile: no account found, cannot read \(file.rawValue)")
+      return nil
+    }
+    return storage.readData(
+      file: file,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
   }
 
   /**
@@ -85,7 +115,8 @@ class BcscCore: NSObject {
     let seconds = Int(Date().timeIntervalSince1970)
     let expireSeconds = Int(
       Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds))
-        .timeIntervalSince1970)
+        .timeIntervalSince1970
+    )
 
     // Add standard claims
     builder
@@ -125,7 +156,7 @@ class BcscCore: NSObject {
       signer = RSASigner(privateKey: keyPair.private)
     } catch {
       reject(
-        "E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
+        "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
       )
       return nil
     }
@@ -138,7 +169,7 @@ class BcscCore: NSObject {
       return try jwt.serialize()
     } catch {
       reject(
-        "E_JWT_SIGN_SERIALIZE_FAILED",
+        "E_JWT_SIGN_FAILED",
         "Failed to sign or serialize JWT: \(error.localizedDescription)", error
       )
       return nil
@@ -178,7 +209,7 @@ class BcscCore: NSObject {
         "keyType": keyInfo.keyType.name,
         "keySize": keyInfo.keySize,
         "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970, // Convert Date to timestamp
+        "created": keyInfo.created.timeIntervalSince1970,
       ]
     }
 
@@ -199,7 +230,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export public key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export public key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -210,7 +241,7 @@ class BcscCore: NSObject {
         // Handle error, maybe reject the promise
         let nsError = error!.takeRetainedValue() as Error
         reject(
-          "E_KEY_EXPORT", "Failed to export private key: \(nsError.localizedDescription)", nsError
+          "E_KEY_EXPORT_FAILED", "Failed to export private key: \(nsError.localizedDescription)", nsError
         )
 
         return
@@ -219,21 +250,21 @@ class BcscCore: NSObject {
       let result: [String: Any] = [
         "public": publicKeyData.base64EncodedString(),
         "private": privateKeyData.base64EncodedString(),
-        "id:": label,
+        "id": label,
       ]
 
       resolve(result)
     } catch KeychainError.keyNotExists {
       reject("E_KEY_NOT_FOUND", "Key pair with label '\(label)' not found.", nil)
     } catch {
-      reject("E_UNKNOWN", "An unexpected error occurred: \(error.localizedDescription)", error)
+      reject("E_KEY_ERROR", "An unexpected error occurred: \(error.localizedDescription)", error)
     }
   }
 
-  private func generateKeyPair() -> String? {
+  private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
-    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
+    let initialKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       let existingTag = latestKeyInfo.tag
@@ -250,63 +281,37 @@ class BcscCore: NSObject {
         logger.log(
           "generateKeyPair - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)"
         )
-        do {
-          // Assuming default keyType and keySize are handled by KeyPairManager.generateKeyPair or are acceptable.
-          _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
-          )
-          return newKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
-          )
-          return nil // Failed to generate the specifically requested incremented key.
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
+        )
+        return newKeyId
       } else {
         // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
         // Fallback: generate a completely new key using a fresh initial ID pattern.
         logger.warning(
           "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
-        // Use the same pattern for the new key ID as in the 'no keys found' case for consistency, but with a new UUID.
-        let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
+        let freshGeneratedKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
         logger.log(
           "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
-        do {
-          _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
-          logger.log(
-            "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
-          )
-          return freshGeneratedKeyId
-        } catch {
-          logger.error(
-            "generateKeyPair - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
-          )
-          return nil
-        }
+        _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
+        logger.log(
+          "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
+        )
+        return freshGeneratedKeyId
       }
     } else {
       // No keys found, attempt to generate a new one
       logger.log(
         "generateKeyPair - No keys found. Attempting to generate a new key with ID: \(initialKeyId)"
       )
-      do {
-        _ =
-          try keyPairManager
-            .generateKeyPair(withLabel: initialKeyId) // Assuming default keyType and keySize are handled by this method
-        // or are acceptable.
-        logger.log(
-          "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
-        )
-        return initialKeyId
-      } catch {
-        logger.error(
-          "generateKeyPair - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
-        )
-        return nil
-      }
+      _ = try keyPairManager.generateKeyPair(withLabel: initialKeyId)
+      logger.log(
+        "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
+      )
+      return initialKeyId
     }
   }
 
@@ -365,7 +370,6 @@ class BcscCore: NSObject {
   ///   - expiry: Optional expiry timestamp in seconds since epoch
   ///   - resolve: Returns true if saved successfully
   ///   - reject: Returns error on failure
-
   func setToken(
     _ tokenTypeNumber: NSNumber, tokenString: String, expiry: NSNumber,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -423,7 +427,6 @@ class BcscCore: NSObject {
   ///   - tokenTypeNumber: The token type (0=Access, 1=Refresh, 2=Registration)
   ///   - resolve: Returns true if deleted successfully
   ///   - reject: Returns error on failure
-
   func deleteToken(
     _ tokenTypeNumber: NSNumber,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -438,7 +441,8 @@ class BcscCore: NSObject {
     )
 
     guard let currentAccount = account else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
+      // No account means no tokens to delete — treat as success (idempotent)
+      resolve(true)
       return
     }
 
@@ -468,7 +472,6 @@ class BcscCore: NSObject {
   ///   - clientID: The client ID to include in the JWT.
   /// - Resolves: The hashed string in hexadecimal format.
   /// - Rejects: An error if the input is not valid base64 or if hashing fails.
-
   func createPreVerificationJWT(
     _ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -495,7 +498,6 @@ class BcscCore: NSObject {
   ///   - claims: The raw claims as a dictionary
   /// - Resolves: The hashed string in hexadecimal format.
   /// - Rejects: An error if the input is not valid base64 or if hashing fails.
-
   func createSignedJWT(
     _ claims: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -541,7 +543,7 @@ class BcscCore: NSObject {
   ///   - reject: Called with an error if reading fails.
   func getIssuer(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
     let issuer = storage.issuer
@@ -569,8 +571,7 @@ class BcscCore: NSObject {
           return
         }
       } catch {
-        // If we can't check, return nil
-        resolve(nil)
+        reject("E_STORAGE_ERROR", "Failed to check issuer file: \(error.localizedDescription)", error as NSError)
         return
       }
     }
@@ -724,7 +725,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Called when the account is successfully removed (returns nil).
   ///   - reject: Called with an error if the account ID is missing/invalid or if account file removal fails.
-
   func removeAccount(
     _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
@@ -875,17 +875,40 @@ class BcscCore: NSObject {
         keyId = latestKeyInfo.tag
       } catch {
         reject(
-          "E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
-          error
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "Failed to retrieve key pair: \(error.localizedDescription)", error
         )
         return
       }
     } else {
       // No keys found, generate a new one
-      guard let newKeyId = generateKeyPair() else {
+      let newKeyId: String
+      do {
+        newKeyId = try generateKeyPair()
+      } catch let error as KeychainError {
+        switch error {
+        case .keyAlreadyExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+            "Keychain key already exists: \(error.localizedDescription)", error
+          )
+        case .keyNotExists:
+          reject(
+            "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+            "Keychain key does not exist: \(error.localizedDescription)", error
+          )
+        case .keyGenError:
+          reject(
+            "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+            "Failed to generate key pair: \(error.localizedDescription)", error
+          )
+        }
+        return
+      } catch {
         reject(
-          "E_KEY_GENERATION_FAILED",
-          "Failed to generate or retrieve key pair for client registration", nil
+          "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
+          error
         )
         return
       }
@@ -895,7 +918,7 @@ class BcscCore: NSObject {
         keyId = newKeyId
       } catch {
         reject(
-          "E_GET_KEYPAIR_FAILED",
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
           "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
         )
         return
@@ -938,11 +961,14 @@ class BcscCore: NSObject {
       header: JWSHeader(alg: JWSAlgorithm("none"), kid: ""), payload: deviceInfoClaims
     )
 
-    // Convert device info JWT to JSON string
-    guard let deviceInfoJWTAsString = try? deviceInfoJWT.serialize() else {
+    // Convert device info JWT to JSON string (toJSONString)
+    let deviceInfoJWTAsString: String
+    do {
+      deviceInfoJWTAsString = try deviceInfoJWT.serialize()
+    } catch {
       reject(
-        "E_DEVICE_INFO_JWT_CONVERSION_FAILED", "Failed to convert device info JWT to JSON string",
-        nil
+        "E_120_TOJSONSTRING_METHOD_FAILURE",
+        "Failed to convert device info JWT to JSON string: \(error.localizedDescription)", error
       )
       return
     }
@@ -988,7 +1014,7 @@ class BcscCore: NSObject {
       resolve(jsonString)
     } catch {
       reject(
-        "E_JSON_SERIALIZATION_FAILED",
+        "E_120_TOJSON_METHOD_FAILURE",
         "Failed to serialize client registration data: \(error.localizedDescription)", error
       )
     }
@@ -1034,7 +1060,6 @@ class BcscCore: NSObject {
   ///   - jweString: A string representing the JWE to decode.
   ///   - resolve: The decoded JWT payload as a base64 encoded string.
   ///   - reject: An error if the JWE cannot be parsed or the payload cannot be decoded.
-
   func decodePayload(
     _ jweString: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1056,6 +1081,10 @@ class BcscCore: NSObject {
 
       // Break down and decode JWT
       let segments = payload.components(separatedBy: ".")
+      guard segments.count == BcscCore.jwsCompactSegmentCount else {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        return
+      }
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1065,14 +1094,12 @@ class BcscCore: NSObject {
       }
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
-      let decodedData = Data(
-        base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0))
-      )
-
-      let base64Decoded = String(
-        data: decodedData! as Data,
-        encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue)
-      )!
+      guard let decodedData = Data(base64Encoded: base64String),
+            let base64Decoded = String(data: decodedData, encoding: .utf8)
+      else {
+        reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
+        return
+      }
       resolve(base64Decoded)
     } catch {
       reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
@@ -1086,7 +1113,6 @@ class BcscCore: NSObject {
   ///   - key: Optional JWK public key for signature verification.
   ///   - resolve: Returns LoginChallengeResult with verified status and decoded claims.
   ///   - reject: An error if the JWT cannot be parsed.
-
   func decodeLoginChallenge(
     _ jwt: String, key: NSDictionary?,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -1101,10 +1127,19 @@ class BcscCore: NSObject {
       return
     }
 
+    // 1. Parse the JWT
+    let jws: JWS
     do {
-      // 1. Parse the JWT
-      let jws = try JWS.parse(s: jwt)
+      jws = try JWS.parse(s: jwt)
+    } catch {
+      reject(
+        "E_FAILED_TO_PARSE_JWS",
+        "Failed to parse JWS: \(error.localizedDescription)", error
+      )
+      return
+    }
 
+    do {
       // 2. Extract claims
       guard let claimsSet = try jws.getJwtClaimsSet() else {
         reject("E_INVALID_JWT", "Unable to parse JWT claims", nil)
@@ -1158,7 +1193,6 @@ class BcscCore: NSObject {
   ///   - deviceToken: The device token (APNS token on iOS, optional)
   ///   - resolve: The signed and encrypted JWT string
   ///   - reject: An error if the JWT creation or encryption fails
-
   func createQuickLoginJWT(
     _ accessToken: String, clientId: String, issuer: String, clientRefId: String,
     key: NSDictionary, fcmDeviceToken: String, deviceToken: String?,
@@ -1372,7 +1406,6 @@ class BcscCore: NSObject {
   ///   - base64: The base64 encoded string to hash.
   ///   - resolve: The hashed string in hexadecimal format.
   ///   - reject: An error if the input is not valid base64 or if hashing fails.
-
   func hashBase64(
     _ base64: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1398,7 +1431,6 @@ class BcscCore: NSObject {
   ///   - pin: The PIN to set (should be validated on JS side)
   ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated
   ///   - reject: Returns error on failure
-
   func setPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1443,7 +1475,6 @@ class BcscCore: NSObject {
   ///   - pin: The PIN to verify
   ///   - resolve: Returns verification result object with walletKey on success
   ///   - reject: Returns error on failure
-
   func verifyPIN(
     _ pin: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1513,7 +1544,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - resolve: Returns true on success
   ///   - reject: Returns error on failure
-
   func deletePIN(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1543,7 +1573,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - resolve: Returns true if PIN is set, false otherwise
   ///   - reject: Returns error on failure
-
   func hasPINSet(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1569,7 +1598,6 @@ class BcscCore: NSObject {
   ///   - reason: Optional reason string for the authentication prompt
   ///   - resolve: Returns true on successful authentication
   ///   - reject: Returns error on failure
-
   func performDeviceAuthentication(
     _ reason: String?, resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -1590,7 +1618,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns true if device authentication is available
   ///   - reject: Returns error on failure
-
   func canPerformDeviceAuthentication(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -1604,7 +1631,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns biometric type: 'none', 'touchID', 'faceID', or 'opticID'
   ///   - reject: Returns error on failure
-
   func getAvailableBiometricType(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -1618,7 +1644,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns true if biometric authentication is available
   ///   - reject: Returns error on failure
-
   func canPerformBiometricAuthentication(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -1637,7 +1662,6 @@ class BcscCore: NSObject {
   /// 'app_pin_has_device_authn')
   ///   - resolve: Returns true on success
   ///   - reject: Returns error on failure
-
   func setAccountSecurityMethod(
     _ securityMethod: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1682,7 +1706,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - resolve: Returns the security method string
   ///   - reject: Returns error on failure
-
   func getAccountSecurityMethod(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1706,7 +1729,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - resolve: Returns lock status object with locked boolean and remaining time
   ///   - reject: Returns error on failure
-
   func isAccountLocked(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1745,7 +1767,6 @@ class BcscCore: NSObject {
   ///   - accountID: The account identifier
   ///   - resolve: Returns PINSetupResult with success, walletKey, and isAutoGenerated=true
   ///   - reject: Returns error on failure
-
   func setupDeviceSecurity(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1793,7 +1814,6 @@ class BcscCore: NSObject {
   ///   - reason: Optional reason string for the biometric prompt
   ///   - resolve: Returns DeviceSecurityUnlockResult with success and walletKey
   ///   - reject: Returns error on failure
-
   func unlockWithDeviceSecurity(
     _ reason: String?, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -1880,12 +1900,15 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Retrieves the pending authorization request from storage, this value is cleared once a user is verified.
+  ///  Expect this to be empty when migrating a verified v3 user since the v3 app clears this value immediately after
+  ///  verification, but it will be populated for users who were pending verification during migration and for all new
+  ///  users. This reads from the same location used by the v3 native app, so it can be set by either version.
   ///   - resolve: Returns the authorization request as a dictionary, or null if not found
   ///   - reject: Returns error on failure
-
   func getAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
-    reject _: @escaping RCTPromiseRejectBlock
+    reject: @escaping RCTPromiseRejectBlock
   ) {
     do {
       let storage = StorageService()
@@ -1929,8 +1952,15 @@ class BcscCore: NSObject {
       )
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card.Address")
       NSKeyedUnarchiver.setClass(Address.self, forClassName: "bc_services_card_dev.Address")
-
       let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      // Empty dictionary = no authorization request (v3 writes empty dict after removing a request)
+      // return nil, don't throw an error since this is an expected scenario
+      if let dict = rootObject as? [AnyHashable: Any], dict.isEmpty {
+        logger.log("getAuthorizationRequest: Empty dictionary - no authorization request")
+        resolve(nil)
+        return
+      }
 
       // Read dictionary [String: AuthorizationRequest] - just get the first value regardless of key
       if let requestsDict = rootObject as? [String: AuthorizationRequest],
@@ -1951,10 +1981,10 @@ class BcscCore: NSObject {
       }
 
       logger.log("getAuthorizationRequest: Failed to decode")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to decode authorization request", nil)
     } catch {
       logger.log("getAuthorizationRequest: Exception - \(error.localizedDescription)")
-      resolve(nil)
+      reject("E_STORAGE_ERROR", "Failed to read authorization request: \(error.localizedDescription)", error as NSError)
     }
   }
 
@@ -1966,7 +1996,6 @@ class BcscCore: NSObject {
   ///   - data: Dictionary containing the authorization request fields
   ///   - resolve: Returns true if saved successfully
   ///   - reject: Returns error on failure
-
   func setAuthorizationRequest(
     _ data: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2044,7 +2073,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns true if deleted successfully (or if it didn't exist)
   ///   - reject: Returns error on failure
-
   func deleteAuthorizationRequest(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2090,7 +2118,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns true if PIN was auto-generated, false if user-created
   ///   - reject: Returns error on failure
-
   func isPINAutoGenerated(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2112,6 +2139,25 @@ class BcscCore: NSObject {
     resolve(isAutoGenerated)
   }
 
+  // MARK: - Android Global Flags Storage Methods (stubs)
+
+  /// No-op stub on iOS. Platform branching in TypeScript routes iOS to getAccountFlags instead.
+  func getAndroidGlobalFlags(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve([:])
+  }
+
+  /// No-op stub on iOS. Platform branching in TypeScript routes iOS to setAccountFlags instead.
+  func setAndroidGlobalFlags(
+    _: NSDictionary,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    resolve(true)
+  }
+
   // MARK: - Account Flags Storage Methods
 
   /// Gets account flags from storage.
@@ -2121,7 +2167,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns the flags dictionary, or empty dictionary if not found
   ///   - reject: Returns error on failure
-
   func getAccountFlags(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
@@ -2157,7 +2202,6 @@ class BcscCore: NSObject {
   ///   - flags: Dictionary of flags to store (merges with existing)
   ///   - resolve: Returns true if saved successfully
   ///   - reject: Returns error on failure
-
   func setAccountFlags(
     _ flags: NSDictionary,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2206,7 +2250,6 @@ class BcscCore: NSObject {
   /// - Parameters:
   ///   - resolve: Returns true if deleted successfully
   ///   - reject: Returns error on failure
-
   func deleteAccountFlags(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
@@ -2251,82 +2294,188 @@ class BcscCore: NSObject {
 
   /// Gets evidence metadata from storage.
   /// Evidence metadata contains user's collected evidence during verification flow.
-  /// Stored as JSON array in evidence_metadata file, per-account.
+  /// Gets evidence metadata from the documents file.
   ///
   /// - Parameters:
   ///   - resolve: Returns array of evidence metadata dictionaries
   ///   - reject: Returns error on failure
-
-  func getEvidenceMetadata(
+  func getEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject _: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
-    // Try v4 format (NSArray) first
-    if let evidenceArray: NSArray = storage.readData(
-      file: AccountFiles.evidenceMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    ) {
-      logger.log("getEvidenceMetadata: Successfully read as NSArray (v4 format)")
-      resolve(evidenceArray)
+    if let evidence = readDocumentsAsMetadataArray(storage: storage) {
+      resolve(evidence)
       return
     }
 
-    // Try v3 format (dictionary) - just return empty array for now as v3 evidence structure is complex
-    // and likely not needed for migration (evidence is temporary during verification flow)
-    logger.log("getEvidenceMetadata: Could not read evidence, returning empty array")
+    logger.log("getEvidence: No evidence found, returning empty array")
     resolve([])
   }
 
-  /// Sets evidence metadata in storage.
-  /// Stores user's collected evidence during verification flow.
-  /// Stored as JSON array in evidence_metadata file, per-account.
+  /// Saves evidence metadata to the documents file.
   ///
   /// - Parameters:
   ///   - evidence: Array of evidence metadata dictionaries
   ///   - resolve: Returns true if saved successfully
   ///   - reject: Returns error on failure
-
-  func setEvidenceMetadata(
+  func setEvidence(
     _ evidence: NSArray,
     resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
-    let success = storage.writeData(
-      data: evidence,
-      file: AccountFiles.evidenceMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
+    guard let accountID = storage.currentAccountID else {
+      reject("E_NO_ACCOUNT", "No account ID available", nil)
+      return
+    }
 
-    if success {
-      logger.log("setEvidenceMetadata: Successfully saved evidence metadata")
+    do {
+      let documentsModel = convertEvidenceToDocumentsModel(evidence)
+      let issuer = storage.issuer
+      let documentsDict: [String: DocumentsDataModel] = [issuer: documentsModel]
+
+      let archiver = DocumentsArchiver()
+      guard let encodedData = archiver.encode(documentsDict) else {
+        reject("E_ENCODE_FAILED", "Failed to encode documents data", nil)
+        return
+      }
+
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(AccountFiles.documents.rawValue)
+
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      try encodedData.write(to: fileUrl, options: [.atomic])
+      logger.log("setEvidence: Successfully saved evidence to documents file")
       resolve(true)
-    } else {
-      reject("E_SAVE_FAILED", "Failed to save evidence metadata", nil)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save evidence: \(error.localizedDescription)", error)
     }
   }
 
-  /// Deletes all evidence metadata from storage.
-  /// Clears user's collected evidence (used on verification completion or reset).
+  /// Deletes all evidence data from the documents file.
   ///
   /// - Parameters:
   ///   - resolve: Returns true if deleted successfully
   ///   - reject: Returns error on failure
-
-  func deleteEvidenceMetadata(
+  func deleteEvidence(
     _ resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
 
     guard let accountID = storage.currentAccountID else {
-      // No account, so no evidence metadata to delete
       resolve(true)
       return
     }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let accountDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+
+      let documentsUrl = accountDir.appendingPathComponent(AccountFiles.documents.rawValue)
+      if FileManager.default.fileExists(atPath: documentsUrl.path) {
+        try FileManager.default.removeItem(at: documentsUrl)
+        logger.log("deleteEvidence: Deleted documents file")
+      }
+
+      // Also remove extracted JPEG photos from the documents directory
+      let photosDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+      if FileManager.default.fileExists(atPath: photosDir.path) {
+        try FileManager.default.removeItem(at: photosDir)
+        logger.log("deleteEvidence: Deleted documents photo directory")
+      }
+
+      resolve(true)
+    } catch {
+      reject(
+        "E_DELETE_FAILED", "Failed to delete evidence: \(error.localizedDescription)",
+        error
+      )
+    }
+  }
+
+  /// Saves a photo to permanent storage.
+  /// On iOS, photos are embedded as base64 in the documents file, but this method
+  /// also saves the raw JPEG for cross-platform consistency and file_path references.
+  ///
+  /// - Parameters:
+  ///   - base64Data: Base64-encoded photo data
+  ///   - filename: Target filename for the photo
+  ///   - resolve: Returns the absolute path to the saved file
+  ///   - reject: Returns error on failure
+  func saveEvidencePhoto(
+    _ base64Data: String,
+    filename: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    guard let photoData = Data(base64Encoded: base64Data) else {
+      reject("E_INVALID_BASE64", "Invalid base64 data", nil)
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let storage = StorageService()
+      let documentsDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+
+      if !FileManager.default.fileExists(atPath: documentsDir.path) {
+        try FileManager.default.createDirectory(
+          at: documentsDir,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      let fileUrl = documentsDir.appendingPathComponent(filename)
+      try photoData.write(to: fileUrl, options: [.atomic])
+
+      logger.log("saveEvidencePhoto: Saved photo to \(fileUrl.path)")
+      resolve(fileUrl.path)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save evidence photo: \(error.localizedDescription)", error)
+    }
+  }
+
+  // MARK: - Documents Conversion Helpers
+
+  /// Reads the `documents` file and returns an array of evidence metadata dictionaries.
+  private func readDocumentsAsMetadataArray(storage: StorageService) -> [[String: Any]]? {
+    guard let accountID = storage.currentAccountID else { return nil }
 
     do {
       let rootDirectoryURL = try FileManager.default.url(
@@ -2339,22 +2488,185 @@ class BcscCore: NSObject {
         rootDirectoryURL
           .appendingPathComponent(storage.basePath)
           .appendingPathComponent(accountID)
-          .appendingPathComponent(AccountFiles.evidenceMetadata.rawValue)
+          .appendingPathComponent(AccountFiles.documents.rawValue)
 
-      if FileManager.default.fileExists(atPath: fileUrl.path) {
-        try FileManager.default.removeItem(at: fileUrl)
-        logger.log("deleteEvidenceMetadata: Successfully deleted evidence metadata file")
-      } else {
-        logger.log("deleteEvidenceMetadata: Evidence metadata file did not exist")
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else { return nil }
+
+      let data = try Data(contentsOf: fileUrl)
+      let archiver = DocumentsArchiver()
+
+      guard let documentsDict = archiver.decode(from: data) else { return nil }
+
+      // Try current issuer key, then try all keys
+      let issuer = storage.issuer
+      let documentsModel = documentsDict[issuer] ?? documentsDict.values.first
+
+      guard let model = documentsModel else { return nil }
+
+      return convertDocumentsModelToMetadata(model)
+    } catch {
+      logger.error("readDocumentsAsMetadataArray: Error reading documents file: \(error)")
+      return nil
+    }
+  }
+
+  /// Converts a DocumentsDataModel to an array of evidence metadata dictionaries.
+  private func convertDocumentsModelToMetadata(_ model: DocumentsDataModel) -> [[String: Any]] {
+    var result = [[String: Any]]()
+
+    if let firstId = model.firstId {
+      result.append(convertEvidenceModelToMetadata(firstId, prefix: "first"))
+    }
+    if let secondId = model.secondId {
+      result.append(convertEvidenceModelToMetadata(secondId, prefix: "second"))
+    }
+
+    return result
+  }
+
+  /// Converts an EvidenceModel to an evidence metadata dictionary.
+  private func convertEvidenceModelToMetadata(_ evidence: EvidenceModel, prefix: String = "evidence") -> [String: Any] {
+    var dict = [String: Any]()
+
+    // Evidence type
+    if let evidenceType = evidence.evidenceType {
+      dict["evidenceType"] = evidenceType.toDictionary()
+    }
+
+    // Document number
+    if let docNumber = evidence.evidenceDetails?.documentNumber {
+      dict["documentNumber"] = docNumber
+    }
+
+    // Photos → PhotoMetadata array
+    let imageSides = evidence.evidenceType?.imageSides ?? []
+    var metadataArray = [[String: Any]]()
+    if let photos = evidence.evidencePhotos {
+      for (index, photo) in photos.enumerated() {
+        var photoDict = [String: Any]()
+        photoDict["content_type"] = "image/jpeg"
+        photoDict["date"] = photo.timestamp ?? 0
+
+        // Use imageSideName from evidenceType (matches v3 native behavior)
+        if index < imageSides.count {
+          photoDict["label"] = imageSides[index].imageSideName
+        } else {
+          photoDict["label"] = index == 0 ? "FRONT_SIDE" : "BACK_SIDE"
+        }
+
+        // Compute sha256 and content_length from base64 photo data,
+        // and save the photo to disk so the JS side can read it for upload.
+        if let base64 = photo.photoBase64String,
+           let photoData = Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
+        {
+          photoDict["sha256"] = DocumentsArchiver.sha256Hex(photoData)
+          photoDict["content_length"] = photoData.count
+
+          let filename = "\(prefix)_\(index).jpg"
+          if let filePath = savePhotoDataToDisk(photoData, filename: filename) {
+            photoDict["file_path"] = filePath
+          } else {
+            photoDict["file_path"] = ""
+          }
+          photoDict["filename"] = filename
+        } else {
+          photoDict["sha256"] = ""
+          photoDict["content_length"] = 0
+          photoDict["file_path"] = ""
+          photoDict["filename"] = ""
+        }
+
+        metadataArray.append(photoDict)
+      }
+    }
+    dict["metadata"] = metadataArray
+
+    // Barcodes
+    if !evidence.barcodeData.isEmpty {
+      dict["barcodes"] = evidence.barcodeData.map { $0.toPayloadDictionary() }
+    }
+
+    return dict
+  }
+
+  /// Saves photo data to the evidence documents directory, returning the absolute path on success.
+  private func savePhotoDataToDisk(_ photoData: Data, filename: String) -> String? {
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: FileManager.SearchPathDirectory.applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: true
+      )
+      let storage = StorageService()
+      let documentsDir = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent("documents")
+
+      if !FileManager.default.fileExists(atPath: documentsDir.path) {
+        try FileManager.default.createDirectory(
+          at: documentsDir,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
       }
 
-      resolve(true)
+      let fileUrl = documentsDir.appendingPathComponent(filename)
+      try photoData.write(to: fileUrl, options: [.atomic])
+      logger.log("savePhotoDataToDisk: Saved evidence photo to \(fileUrl.path)")
+      return fileUrl.path
     } catch {
-      reject(
-        "E_DELETE_FAILED", "Failed to delete evidence metadata: \(error.localizedDescription)",
-        error
-      )
+      logger.error("savePhotoDataToDisk: Failed to save evidence photo: \(error.localizedDescription)")
+      return nil
     }
+  }
+
+  /// Converts evidence NSArray to a DocumentsDataModel.
+  private func convertEvidenceToDocumentsModel(_ evidence: NSArray) -> DocumentsDataModel {
+    let items = evidence as? [[String: Any]] ?? []
+
+    let firstId = items.count > 0 ? convertMetadataToEvidenceModel(items[0]) : nil
+    let secondId = items.count > 1 ? convertMetadataToEvidenceModel(items[1]) : nil
+
+    return DocumentsDataModel(firstId: firstId, secondId: secondId)
+  }
+
+  /// Converts an evidence metadata dictionary to an EvidenceModel.
+  private func convertMetadataToEvidenceModel(_ dict: [String: Any]) -> EvidenceModel {
+    // Evidence type
+    var evidenceType: EvidenceType?
+    if let etDict = dict["evidenceType"] as? [String: Any] {
+      evidenceType = EvidenceType(fromDictionary: etDict)
+    }
+
+    // Document number → EvidenceDetails
+    var evidenceDetails: EvidenceDetails?
+    if let docNumber = dict["documentNumber"] as? String {
+      evidenceDetails = EvidenceDetails(documentNumber: docNumber)
+    }
+
+    // PhotoMetadata array → EvidencePhoto array (with base64 data)
+    var evidencePhotos = [EvidencePhoto]()
+    if let metadataArray = dict["metadata"] as? [[String: Any]] {
+      for photoDict in metadataArray {
+        let timestamp = photoDict["date"] as? Double ?? Date().timeIntervalSince1970
+        let base64 = photoDict["photoBase64String"] as? String ?? ""
+        evidencePhotos.append(EvidencePhoto(timestamp: timestamp, photoBase64String: base64))
+      }
+    }
+
+    // Barcodes
+    var barcodes = [BarcodeData]()
+    if let barcodesArray = dict["barcodes"] as? [[String: Any]] {
+      barcodes = barcodesArray.map { BarcodeData(fromPayload: $0) }
+    }
+
+    return EvidenceModel(
+      evidenceDetails: evidenceDetails,
+      evidencePhotos: evidencePhotos.isEmpty ? nil : evidencePhotos,
+      evidenceType: evidenceType,
+      barcodeData: barcodes
+    )
   }
 
   // ============================================================================
@@ -2420,7 +2732,7 @@ class BcscCore: NSObject {
       // Read dictionary [String: ClientRegistration] keyed by issuer (v3 format maintained for compatibility)
       guard let clientRegistrationsDict = rootObject as? [String: ClientRegistration] else {
         logger.log("getCredential: Failed to cast root object to [String: ClientRegistration]")
-        resolve(nil)
+        reject("E_READ_FAILED", "Failed to decode credential data: unexpected format", nil)
         return
       }
 
@@ -2447,7 +2759,8 @@ class BcscCore: NSObject {
       }
 
       logger.log(
-        "getCredential: Successfully decoded credential from ClientRegistration dictionary")
+        "getCredential: Successfully decoded credential from ClientRegistration dictionary"
+      )
 
       // Convert credential to dictionary for React Native
       let credentialDict: [String: Any] = [
@@ -2747,7 +3060,7 @@ class BcscCore: NSObject {
       )
       else {
         logger.log("hasCredential: Could not decode ClientRegistration")
-        resolve(false)
+        reject("E_CHECK_FAILED", "Failed to decode ClientRegistration", nil)
         return
       }
 
@@ -2762,6 +3075,211 @@ class BcscCore: NSObject {
     }
   }
 
+  // MARK: - Native File Scan (Diagnostics)
+
+  private func recursiveFileScan(at base: URL, relativeTo: URL) throws -> [String] {
+    var results: [String] = []
+    let enumerator = FileManager.default.enumerator(
+      at: base,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+
+    while let fileURL = enumerator?.nextObject() as? URL {
+      let relativePath = fileURL.path.replacingOccurrences(of: relativeTo.path + "/", with: "")
+      let resourceValues = try fileURL.resourceValues(forKeys: [.isDirectoryKey])
+      let isDirectory = resourceValues.isDirectory ?? false
+      results.append(isDirectory ? "\(relativePath)/" : relativePath)
+    }
+
+    return results.sorted()
+  }
+
+  /// Scans the app's Application Support bundle directory and logs all files.
+  /// Useful for diagnosing v3 vs v4 migration and file systems
+  func getNativeFilesScan(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    do {
+      let bundleID = Bundle.main.bundleIdentifier ?? "ca.bc.gov.iddev.servicescard"
+      let rootDirectory = try FileManager.default.url(
+        for: .applicationSupportDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let bundleDirectory = rootDirectory.appendingPathComponent(bundleID)
+
+      var result: [String: Any] = [:]
+      result["bundleID"] = bundleID
+      result["bundleDirectory"] = bundleDirectory.path
+      let bundleExists = FileManager.default.fileExists(atPath: bundleDirectory.path)
+      result["bundleDirectoryExists"] = bundleExists
+
+      if bundleExists {
+        let allFiles = try recursiveFileScan(at: bundleDirectory, relativeTo: bundleDirectory)
+        result["files"] = allFiles
+        result["fileCount"] = allFiles.count
+        logger.log("[Native File Scan] Found \(allFiles.count) files/directories")
+        #if DEBUG
+          // Log each file/directory only in debug builds to avoid leaking sensitive paths
+          // and to reduce logging overhead in production.
+          for file in allFiles {
+            logger.log("[Native File Scan] \(file)")
+          }
+        #endif
+      } else {
+        result["files"] = []
+        result["fileCount"] = 0
+        logger.log("[Native File Scan] Bundle directory does not exist")
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_NATIVE_FILE_SCAN_FAILED", "Failed to scan native files: \(error.localizedDescription)", error)
+    }
+  }
+
+  // MARK: - Saved Services (Client Metadata) Storage
+
+  /// Gets saved services (client metadata) from native storage.
+  /// Reads the client_metadata file using ClientMetadataArchiver for v3-compatible decoding.
+  func getSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      logger.log("getSavedServices: No account ID, returning empty array")
+      resolve([])
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        logger.log("getSavedServices: client_metadata file not found, returning empty array")
+        resolve([])
+        return
+      }
+
+      let data = try Data(contentsOf: fileUrl)
+      let archiver = ClientMetadataArchiver()
+
+      guard let model = archiver.decode(from: data) else {
+        logger.log("getSavedServices: Failed to decode client_metadata, returning empty array")
+        resolve([])
+        return
+      }
+
+      let services = (model.clients ?? []).map { $0.toDictionary() }
+      logger.log("getSavedServices: Read \(services.count) services from client_metadata")
+      resolve(services)
+    } catch {
+      logger.error("getSavedServices: Error reading client_metadata: \(error)")
+      resolve([])
+    }
+  }
+
+  /// Saves services (client metadata) to native storage using v3-compatible NSKeyedArchiver format.
+  func setSavedServices(
+    _ services: NSArray,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      reject("E_NO_ACCOUNT", "No account ID available", nil)
+      return
+    }
+
+    do {
+      let clients: [MetadataClients] = (services as? [[String: Any]] ?? []).map {
+        MetadataClients.fromDictionary($0)
+      }
+      let model = ClientMetadataResponseModel(clients: clients)
+      let archiver = ClientMetadataArchiver()
+
+      guard let encodedData = archiver.encode(model) else {
+        reject("E_ENCODE_FAILED", "Failed to encode client metadata", nil)
+        return
+      }
+
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let directoryUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+      let fileUrl = directoryUrl.appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if !FileManager.default.fileExists(atPath: directoryUrl.path) {
+        try FileManager.default.createDirectory(
+          at: directoryUrl,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
+      }
+
+      try encodedData.write(to: fileUrl, options: [.atomic])
+      logger.log("setSavedServices: Successfully saved \(clients.count) services to client_metadata")
+      resolve(true)
+    } catch {
+      reject("E_SAVE_FAILED", "Failed to save client metadata: \(error.localizedDescription)", error)
+    }
+  }
+
+  /// Deletes the client_metadata file from native storage.
+  func deleteSavedServices(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      resolve(true)
+      return
+    }
+
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: defaultSearchPathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl = rootDirectoryURL
+        .appendingPathComponent(storage.basePath)
+        .appendingPathComponent(accountID)
+        .appendingPathComponent(AccountFiles.clientMetadata.rawValue)
+
+      if FileManager.default.fileExists(atPath: fileUrl.path) {
+        try FileManager.default.removeItem(at: fileUrl)
+        logger.log("deleteSavedServices: Deleted client_metadata file")
+      }
+
+      resolve(true)
+    } catch {
+      reject("E_DELETE_FAILED", "Failed to delete client metadata: \(error.localizedDescription)", error)
+    }
+  }
+
   /// Displays a local notification with the given title and message.
   /// Used to show foreground push notifications since they are not auto-displayed.
   /// - Parameters:
@@ -2769,7 +3287,6 @@ class BcscCore: NSObject {
   ///   - message: The notification body message
   ///   - resolve: Resolves when the notification is scheduled
   ///   - reject: Rejects if there's an error scheduling the notification
-
   func showLocalNotification(
     _ title: String, message: String,
     resolve: @escaping RCTPromiseResolveBlock,
@@ -2798,6 +3315,22 @@ class BcscCore: NSObject {
         resolve(nil)
       }
     }
+  }
+
+  func isThirdPartyKeyboardActive(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    // iOS doesn't provide a public API to reliably detect third party keyboards
+    // returning false to not interrupt the user
+    resolve(false)
+  }
+
+  func openKeyboardSelector(resolve: @escaping RCTPromiseResolveBlock, _: @escaping RCTPromiseRejectBlock) {
+    // iOS doesn't provide a public API to open the keyboard selector
+    // resolve immediately
+    logger.log("openKeyboardSelector: Unsupported on iOS")
+    resolve(nil)
   }
 
   // Support for the new architecture (Fabric)

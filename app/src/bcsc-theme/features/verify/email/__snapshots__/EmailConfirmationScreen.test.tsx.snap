@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EmailConfirmation renders correctly 1`] = `
+exports[`EmailConfirmation Rendering renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -52,7 +52,9 @@ exports[`EmailConfirmation renders correctly 1`] = `
               {
                 "padding": 16,
               },
-              undefined,
+              {
+                "gap": 24,
+              },
             ]
           }
         >
@@ -66,9 +68,7 @@ exports[`EmailConfirmation renders correctly 1`] = `
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                {
-                  "marginBottom": 16,
-                },
+                undefined,
               ]
             }
           >
@@ -105,224 +105,246 @@ exports[`EmailConfirmation renders correctly 1`] = `
               }
             />
           </Text>
-          <View
-            style={
-              [
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                },
-                {
-                  "marginBottom": 16,
-                  "marginTop": 24,
-                },
-              ]
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
+          <View>
+            <View
               style={
                 [
                   {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between",
                   },
-                  [
-                    {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
-                    },
-                    false,
-                  ],
-                ]
-              }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
-              style={
-                [
                   {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between",
                   },
-                  [
-                    {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
-                    },
-                    false,
-                  ],
                 ]
               }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
                   [
                     {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
                     },
-                    false,
-                  ],
-                ]
-              }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
-                    },
-                    false,
-                  ],
-                ]
-              }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
-                    },
-                    false,
-                  ],
-                ]
-              }
-            />
-            <Text
-              maxFontSizeMultiplier={2}
-              onLayout={[Function]}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "alignSelf": "center",
-                      "backgroundColor": "#FFFFFF",
-                      "borderRadius": 8,
-                      "color": "#FFFFFF",
-                      "fontSize": 32,
-                      "height": 60,
-                      "lineHeight": 60,
-                      "textAlign": "center",
-                      "textAlignVertical": "center",
-                      "width": 50,
-                    },
-                    false,
-                  ],
-                ]
-              }
-            />
-            <TextInput
-              autoCapitalize="characters"
-              autoComplete="sms-otp"
-              autoCorrect={false}
-              blurOnSubmit={false}
-              caretHidden={true}
-              clearButtonMode="never"
-              disableFullscreenUI={true}
-              keyboardType="number-pad"
-              maxLength={6}
-              onBlur={[Function]}
-              onChangeText={[Function]}
-              onFocus={[Function]}
-              onPressOut={[Function]}
-              spellCheck={false}
-              style={
-                {
-                  "bottom": 0,
-                  "fontSize": 1,
-                  "left": 0,
-                  "opacity": 0.015,
-                  "position": "absolute",
-                  "right": 0,
-                  "top": 0,
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
                 }
-              }
-              textContentType="oneTimeCode"
-              underlineColorAndroid="transparent"
-              value=""
-            />
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderColor": "transparent",
+                        "borderRadius": 8,
+                        "borderWidth": 2,
+                        "color": "#FFFFFF",
+                        "fontSize": 32,
+                        "height": 60,
+                        "includeFontPadding": false,
+                        "lineHeight": 56,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 50,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <TextInput
+                accessibilityLabel="Confirmation-Code-Input"
+                autoCapitalize="characters"
+                autoComplete="sms-otp"
+                autoCorrect={false}
+                blurOnSubmit={false}
+                caretHidden={true}
+                clearButtonMode="never"
+                disableFullscreenUI={true}
+                keyboardType="number-pad"
+                maxLength={6}
+                onBlur={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                onPressOut={[Function]}
+                spellCheck={false}
+                style={
+                  {
+                    "bottom": 0,
+                    "fontSize": 1,
+                    "left": 0,
+                    "opacity": 0.015,
+                    "position": "absolute",
+                    "right": 0,
+                    "top": 0,
+                  }
+                }
+                testID="com.ariesbifold:id/EmailConfirmationCodeInput"
+                textContentType="oneTimeCode"
+                underlineColorAndroid="transparent"
+                value=""
+              />
+            </View>
           </View>
         </View>
         <View
@@ -413,7 +435,6 @@ exports[`EmailConfirmation renders correctly 1`] = `
                       },
                       false,
                       false,
-                      false,
                     ],
                   ]
                 }
@@ -492,7 +513,6 @@ exports[`EmailConfirmation renders correctly 1`] = `
                       },
                       false,
                       false,
-                      false,
                     ],
                   ]
                 }
@@ -569,7 +589,6 @@ exports[`EmailConfirmation renders correctly 1`] = `
                         "fontWeight": "bold",
                         "textAlign": "center",
                       },
-                      false,
                       false,
                       false,
                     ],

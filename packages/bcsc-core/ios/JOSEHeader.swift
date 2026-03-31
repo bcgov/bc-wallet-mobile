@@ -204,8 +204,8 @@ class JWSAlgorithm {
   }
 }
 
-// JWEHeader
-// See https://tools.ietf.org/html/rfc7516#page-11
+/// JWEHeader
+/// See https://tools.ietf.org/html/rfc7516#page-11
 class JWEHeader: JOSEHeader {
   let alg: JWEAlgorithm
   let enc: EncryptionMethod

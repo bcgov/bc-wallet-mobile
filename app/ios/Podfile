@@ -33,7 +33,7 @@ setup_permissions([
   # 'LocationAlways',
   # 'LocationWhenInUse',
   # 'MediaLibrary',
-  # 'Microphone',
+  'Microphone',
   # 'Motion',
   'Notifications'
   # 'PhotoLibrary',
@@ -50,19 +50,13 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'AriesBifold' do
+target 'BCWallet' do
   config = use_native_modules!
 
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
-  pod 'CatCrypto', :modular_headers => true
-
-  #permissions_path = '../node_modules/react-native-permissions/ios'
-  #pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-  #pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
-  # use reactNativePermissionsIOS.json for permissions instead!!!
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -78,13 +72,16 @@ target 'AriesBifold' do
       :mac_catalyst_enabled => false
     )
 
-    # Fix CatCrypto module paths for RNArgon2 (this is a bit ugly but we will be removing this package soon anyway)
-    installer.pods_project.targets.each do |target|
-      if target.name == 'RNArgon2'
-        target.build_configurations.each do |config|
-          catcrypto_path = "#{installer.sandbox.root}/CatCrypto/Sources/ModuleMaps"
-          current_paths = config.build_settings['SWIFT_INCLUDE_PATHS'] || '$(inherited)'
-          config.build_settings['SWIFT_INCLUDE_PATHS'] = "#{current_paths} \"#{catcrypto_path}/Argon2\" \"#{catcrypto_path}/MD6\" \"#{catcrypto_path}/SHA3\""
+    # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
+    # The wrapper scripts fall through to plain clang when ccache is not installed,
+    # so this is safe for both local dev and CI.
+    ccache_clang   = File.join(__dir__, 'scripts', 'ccache-clang.sh')
+    ccache_clangpp = File.join(__dir__, 'scripts', 'ccache-clang++.sh')
+    if File.exist?(ccache_clang)
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |build_config|
+          build_config.build_settings['CC']  = ccache_clang
+          build_config.build_settings['CXX'] = ccache_clangpp
         end
       end
     end

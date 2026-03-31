@@ -1,0 +1,386 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { AppError, ErrorRegistry } from '@/errors'
+import { getRegistryAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
+import { getBCSCAppStoreUrl } from '@/utils/links'
+import { TOKENS, useServices } from '@bifold/core'
+import { CommonActions, NavigationProp } from '@react-navigation/native'
+import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Linking, Platform } from 'react-native'
+
+export type AppAlerts = ReturnType<typeof useAlerts>
+type AlertOnPressAction = () => void | Promise<void>
+
+/**
+ * Hook that centralizes alert handling for all {@link AppEventCode} values.
+ *
+ * This hook acts as the alert policy layer for the application. It maps
+ * domain-level {@link AppEventCode} values to their corresponding
+ * user-facing alert behavior and executes the appropriate alert when requested.
+ *
+ * Alerts are categorized as:
+ * - Basic alerts: Display a localized title and description with a default close action.
+ * - Complex alerts: Include additional actions such as navigation, factory reset,
+ *   external linking, or other side effects.
+ *
+ * @example
+ * const alerts = useAlerts(navigation)
+ * alerts.unsecuredNetworkAlert() // Shows the unsecured network alert
+ *
+ * @param navigation - React Navigation prop used for alert-driven navigation actions.
+ * @returns An object containing:
+ * - Predefined alert functions for each AppEventCode that can be directly invoked to show the corresponding alert.
+ */
+export const useAlerts = (navigation: NavigationProp<any>) => {
+  const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitAlert, emitErrorModal } = useErrorAlert()
+  const factoryReset = useFactoryReset()
+  const { stack } = useBCSCStack()
+
+  // HELPER FUNCTIONS
+
+  const _createBasicErrorModal = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return (error?: AppError | unknown) => {
+        // If an error is provided and it's an AppError, use it.
+        // Otherwise, attempt to get a registry app error based on the event code and inject the cause
+        const appError = error instanceof AppError ? error : getRegistryAppError(event, error)
+        emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
+      }
+    },
+    [emitErrorModal, t]
+  )
+
+  // _createBasicAlert is a factory function that generates simple alerts for a given AppEventCode and localization key.
+  const _createBasicAlert = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return () => {
+        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
+          event,
+          actions: [
+            {
+              text: t('Global.OK'),
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, t]
+  )
+
+  // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
+  const _createProblemWithAccountAlert = useCallback(
+    (event: AppEventCode, errorCode: string) => {
+      return () => {
+        emitAlert(t(`Alerts.ProblemWithAccount.Title`), t(`Alerts.ProblemWithAccount.Description`, { errorCode }), {
+          event,
+          actions: [
+            {
+              text: t('Global.Close'),
+              style: 'cancel',
+            },
+            {
+              text: t('Alerts.ProblemWithAccount.Action1'),
+              style: 'destructive',
+              onPress: () => {
+                // QUESTION (MD): Should we disable the "Remove Account" action to hope the underlying issue is fixed before user needs to remove their account?
+                // Trying to prevent unnecessary account verifications whenever possible.
+                switch (stack) {
+                  case BCSCStacks.Main:
+                    return navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
+                  case BCSCStacks.Onboarding:
+                    return navigation.navigate(BCSCScreens.OnboardingRemoveAccountConfirmation)
+                  case BCSCStacks.Verify:
+                    return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
+                }
+
+                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', { stack })
+              },
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, logger, navigation, stack, t]
+  )
+
+  const unknownErrorModal = useCallback(
+    (error?: AppError | unknown) => {
+      const appError = error instanceof AppError ? error : toAppError(error, ErrorRegistry.UNKNOWN_ERROR)
+      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
+    },
+    [emitErrorModal, t]
+  )
+
+  // COMPLEX ALERTS - These alerts require additional actions beyond just displaying a message.
+
+  const appUpdateRequiredAlert = useCallback(() => {
+    emitAlert(t('Alerts.AppUpdateRequired.Title'), t('Alerts.AppUpdateRequired.Description'), {
+      event: Platform.OS === 'ios' ? AppEventCode.IOS_APP_UPDATE_REQUIRED : AppEventCode.ANDROID_APP_UPDATE_REQUIRED,
+      actions: [
+        {
+          text: t('Alerts.AppUpdateRequired.Action1'),
+          onPress: async () => {
+            try {
+              const appStoreUrl = getBCSCAppStoreUrl()
+              await Linking.openURL(appStoreUrl)
+            } catch (error) {
+              logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
+            }
+          },
+        },
+      ],
+    })
+  }, [emitAlert, logger, t])
+
+  // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
+  const factoryResetAlert = useCallback(() => {
+    emitAlert(t('Alerts.FactoryReset.Title'), t('Alerts.FactoryReset.Description'), {
+      event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
+      actions: [
+        {
+          text: t('Alerts.FactoryReset.Action1'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await factoryReset()
+
+              if (!result.success) {
+                throw result.error
+              }
+            } catch (error) {
+              logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
+            }
+          },
+        },
+      ],
+    })
+  }, [emitAlert, logger, t, factoryReset])
+
+  const setupExpiredAlert = useCallback(() => {
+    emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
+      event: AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST,
+      actions: [
+        {
+          text: t('Global.OK'),
+          onPress: async () => {
+            try {
+              await factoryReset()
+            } catch (error) {
+              logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
+            }
+          },
+        },
+      ],
+    })
+  }, [emitAlert, logger, t, factoryReset])
+
+  // IAS error 202, 203, 204 — OK closes alert and returns to Start Setup
+  const _createProblemWithServiceReturnToSetupAlert = useCallback(
+    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
+      return () => {
+        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
+          event,
+          actions: [
+            {
+              text: t('Global.OK'),
+              onPress: () => {
+                // FIXME: This won't reset the state of the application. We would need a partial `factory reset` to happen here instead
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: BCSCScreens.SetupSteps }],
+                  })
+                )
+              },
+            },
+          ],
+        })
+      }
+    },
+    [emitAlert, navigation, t]
+  )
+
+  const liveCallFileUploadAlert = useCallback(() => {
+    emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
+      event: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
+      /**
+       * Note: Documentation states 'OK' just closes the alert, but also states:
+       * "On 'Call Now' if the photos could not be uploaded the video call will not be created."
+       *  So we navigate back to the verification method selection screen to restart the flow.
+       */
+      actions: [
+        {
+          text: t('Global.OK'),
+          onPress: () => {
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 1,
+                routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+              })
+            )
+          },
+        },
+      ],
+    })
+  }, [emitAlert, navigation, t])
+
+  const dataUseWarningAlert = useCallback(() => {
+    emitAlert(t('Alerts.DataUseWarning.Title'), t('Alerts.DataUseWarning.Description'), {
+      event: AppEventCode.DATA_USE_WARNING,
+      actions: [
+        {
+          text: t('Global.Continue'),
+          style: 'cancel',
+        },
+        {
+          text: t('Alerts.DataUseWarning.Action1'),
+          onPress: () => {
+            navigation.navigate(BCSCScreens.TakePhoto, {
+              forLiveCall: true,
+              deviceSide: 'front',
+              cameraInstructions: '',
+              cameraLabel: '',
+            })
+          },
+          style: 'destructive',
+        },
+      ],
+    })
+  }, [emitAlert, navigation, t])
+
+  // INTERACTION DRIVEN ALERTS - These alerts require an additional context-specific action to be passed in when triggered.
+
+  const liveCallHavingTroubleAlert = useCallback(
+    (onAction: AlertOnPressAction) => {
+      emitAlert(t('Alerts.LiveCallHavingTrouble.Title'), t('Alerts.LiveCallHavingTrouble.Description'), {
+        event: AppEventCode.IN_CALL_HAVING_TROUBLE,
+        actions: [
+          {
+            text: t('Global.Close'),
+          },
+          {
+            text: t('Alerts.LiveCallHavingTrouble.Action1'),
+            style: 'destructive',
+            onPress: onAction,
+          },
+        ],
+      })
+    },
+    [emitAlert, t]
+  )
+
+  const cancelVerificationRequestAlert = useCallback(
+    (onAction: AlertOnPressAction) => {
+      emitAlert(t('Alerts.CancelVerificationRequest.Title'), t('Alerts.CancelVerificationRequest.Description'), {
+        event: AppEventCode.CANCEL_VERIFICATION_REQUEST,
+        actions: [
+          {
+            text: t('Alerts.CancelVerificationRequest.Action1'),
+            style: 'destructive',
+            onPress: onAction,
+          },
+          {
+            text: t('Global.Cancel'),
+            style: 'cancel',
+          },
+        ],
+      })
+    },
+    [emitAlert, t]
+  )
+
+  return useMemo(
+    () =>
+      // prettier-ignore
+      ({
+      // ALERTS
+      appUpdateRequiredAlert,
+      setupExpiredAlert,
+      liveCallFileUploadAlert,
+      dataUseWarningAlert,
+      liveCallHavingTroubleAlert,
+      cancelVerificationRequestAlert,
+      factoryResetAlert,
+      forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
+      // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
+      unknownErrorModal,
+      problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
+      accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
+      deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
+      unsecuredNetworkAlert: _createBasicErrorModal(AppEventCode.UNSECURED_NETWORK, 'UnsecuredNetwork'),
+      serverTimeoutAlert: _createBasicErrorModal(AppEventCode.SERVER_TIMEOUT, 'ServerTimeout'),
+      serverErrorAlert: _createBasicErrorModal(AppEventCode.SERVER_ERROR, 'ServerError'),
+      tooManyAttemptsAlert: _createBasicErrorModal(AppEventCode.TOO_MANY_ATTEMPTS, 'TooManyAttempts'),
+      verificationNotCompleteAlert: _createBasicErrorModal(AppEventCode.VERIFY_NOT_COMPLETE, 'VerificationNotComplete'),
+      invalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode'),
+      alreadyVerifiedAlert: _createBasicErrorModal(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
+      fileUploadErrorAlert: _createBasicErrorModal(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
+      loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
+      failedToWriteToLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '100' }),
+      failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '101' }),
+      clientRegistrationNullAlert: _createBasicErrorModal(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '102' }),
+      unableToDecryptIdTokenAlert: _createBasicErrorModal(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: '105' }),
+      failedToDeserializeJsonAlert: _createBasicErrorModal(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON, 'ProblemWithApp', { errorCode: '109' }),
+      unableToDecryptJweAlert: _createBasicErrorModal(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'ProblemWithApp', { errorCode: '110' }),
+      toJsonMethodFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_TOJSON_METHOD_FAILURE, 'ProblemWithApp', { errorCode: '120-1' }),
+      toJsonStringMethodFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE, 'ProblemWithApp', { errorCode: '120-2' }),
+      keychainKeyExistsAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR, 'ProblemWithApp', { errorCode: '120-3' }),
+      keychainKeyDoesntExistAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, 'ProblemWithApp', { errorCode: '120-4' }),
+      keychainKeyGenerationAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR, 'ProblemWithApp', { errorCode: '120-5' }),
+      jwtDeviceInfoAlert: _createBasicErrorModal(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR, 'ProblemWithApp', { errorCode: '120-6' }),
+      clientRegistrationFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'ProblemWithApp', { errorCode: '120' }),
+      missingJwkAlert: _createBasicErrorModal(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'ProblemWithApp', { errorCode: '111' }),
+      jwsVerificationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED, 'ProblemWithApp', { errorCode: '112' }),
+      failedToGetClaimsSetAlert: _createBasicErrorModal(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY, 'ProblemWithApp', { errorCode: '114' }),
+      failedToSerializeJsonAlert: _createBasicErrorModal(AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON, 'ProblemWithApp', { errorCode: '115' }),
+      failedToParseJwsAlert: _createBasicErrorModal(AppEventCode.ERR_117_FAILED_TO_PARSE_JWS, 'ProblemWithApp', { errorCode: '117' }),
+      tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '119' }),
+      loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
+      problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
+      loginRejected401Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401'),
+      loginRejected403Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403'),
+      loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
+      noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
+      invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
+      serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
+      dynamicRegistrationErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError'),
+      termsOfUseErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
+      incorrectOsAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_INCORRECT_OS, 'ProblemWithService', { errorCode: '204' }),
+      addCardNotAvailableAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_PROVIDER, 'AddCardNotAvailable'),
+      missingJsonValuesAlert: _createBasicErrorModal(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, 'ProblemWithApp', { errorCode: '206' }),
+      signClaimsErrorAlert: _createBasicErrorModal(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, 'ProblemWithApp', { errorCode: '207' }),
+      unexpectedNetworkCallAlert: _createBasicErrorModal(AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, 'ProblemWithApp', { errorCode: '208' }),
+      badRequestAlert: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'ProblemWithApp', { errorCode: '209' }),
+      unauthorizedAlert: _createBasicErrorModal(AppEventCode.ERR_210_UNAUTHORIZED, 'ProblemWithApp', { errorCode: '210' }),
+      serverOutageAlert: _createBasicErrorModal(AppEventCode.ERR_211_SERVER_OUTAGE, 'ProblemWithApp', { errorCode: '211' }),
+      retryLaterAlert: _createBasicErrorModal(AppEventCode.ERR_212_RETRY_LATER, 'ProblemWithApp', { errorCode: '212' }),
+      creatingClientRegistrationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'ProblemWithApp', { errorCode: '213' }),
+      keysOutOfSyncAlert: _createBasicErrorModal(AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, 'ProblemWithApp', { errorCode: '299' }),
+      emptyResponseAlert: _createBasicErrorModal(AppEventCode.ERR_300_EMPTY_RESPONSE, 'ProblemWithApp', { errorCode: '300' }),
+      failedToRetrieveStringResourceAlert: _createBasicErrorModal(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'ProblemWithApp', { errorCode: '400' }),
+      invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'ProblemWithApp', { errorCode: '500' }),
+      invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'ProblemWithApp', { errorCode: '501' }),
+    }),
+    [
+      appUpdateRequiredAlert,
+      setupExpiredAlert,
+      liveCallFileUploadAlert,
+      dataUseWarningAlert,
+      liveCallHavingTroubleAlert,
+      cancelVerificationRequestAlert,
+      factoryResetAlert,
+      _createBasicAlert,
+      unknownErrorModal,
+      _createBasicErrorModal,
+      _createProblemWithAccountAlert,
+      _createProblemWithServiceReturnToSetupAlert,
+    ]
+  )
+}

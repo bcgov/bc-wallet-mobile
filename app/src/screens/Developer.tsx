@@ -1,3 +1,5 @@
+import { BCThemeNames } from '@/constants'
+import { BCDispatchAction, BCState, Mode } from '@/store'
 import {
   DispatchAction,
   LockoutReason,
@@ -17,9 +19,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
-import { BCThemeNames } from '@/constants'
-import { BCDispatchAction, BCState, Mode } from '@/store'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
@@ -357,6 +356,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleSwitch}
             value={devMode}
+            accessibilityLabel={t('Developer.DeveloperMode')}
           />
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
@@ -389,6 +389,7 @@ const Developer: React.FC = () => {
                 onValueChange={toggleShareableLinkSwitch}
                 value={enableShareableLink}
                 disabled={!store.authentication.didAuthenticate}
+                accessibilityLabel={t('PasteUrl.UseShareableLink')}
               />
             </SectionRow>
             <SectionRow
@@ -403,6 +404,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={toggleVerifierCapabilitySwitch}
                 value={useVerifierCapability}
+                accessibilityLabel={t('Verifier.UseVerifierCapability')}
               />
             </SectionRow>
             <SectionRow
@@ -417,6 +419,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={toggleAcceptDevCredentialsSwitch}
                 value={acceptDevCredentials}
+                accessibilityLabel={t('Verifier.AcceptDevCredentials')}
               />
             </SectionRow>
             <SectionRow
@@ -431,6 +434,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={toggleConnectionInviterCapabilitySwitch}
                 value={useConnectionInviterCapability}
+                accessibilityLabel={t('Connection.UseConnectionInviterCapability')}
               />
             </SectionRow>
             <SectionRow
@@ -445,6 +449,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={toggleDevVerifierTemplatesSwitch}
                 value={useDevVerifierTemplates}
+                accessibilityLabel={t('Verifier.UseDevVerifierTemplates')}
               />
             </SectionRow>
             {!store.onboarding.didCreatePIN && (
@@ -460,6 +465,7 @@ const Developer: React.FC = () => {
                   ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                   onValueChange={toggleWalletNamingSwitch}
                   value={enableWalletNaming}
+                  accessibilityLabel={t('NameWallet.EnableWalletNaming')}
                 />
               </SectionRow>
             )}
@@ -475,6 +481,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={togglePreventAutoLockSwitch}
                 value={preventAutoLock}
+                accessibilityLabel={t('Settings.PreventAutoLock')}
               />
             </SectionRow>
             <SectionRow
@@ -488,6 +495,7 @@ const Developer: React.FC = () => {
                 ios_backgroundColor={ColorPalette.grayscale.lightGrey}
                 onValueChange={toggleEnableAppToAppPersonFlowSwitch}
                 value={enableAppToAppPersonFlow}
+                accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
               />
             </SectionRow>
           </View>
@@ -513,6 +521,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingSwitch}
             value={remoteLoggingEnabled}
+            accessibilityLabel={t('RemoteLogging.ScreenTitle')}
           />
         </SectionRow>
 
@@ -527,6 +536,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleEnableProxySwitch}
             value={enableProxy}
+            accessibilityLabel={t('Developer.EnableProxy')}
           />
         </SectionRow>
 
@@ -541,6 +551,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleTheme}
             value={themeName === BCThemeNames.BCSC}
+            accessibilityLabel={t('Developer.SwitchTheme')}
           />
         </SectionRow>
 
@@ -555,6 +566,7 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleMode}
             value={BCSCMode}
+            accessibilityLabel={t('Developer.SwitchMode')}
           />
         </SectionRow>
 

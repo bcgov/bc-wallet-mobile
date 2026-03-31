@@ -1,9 +1,9 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ContentGradient, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { View } from 'react-native'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -15,11 +15,9 @@ interface OnboardingPrivacyPolicyScreenProps {
  *
  * @returns {*} {React.ReactElement} The OnboardingPrivacyPolicyScreen component.
  */
-export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScreenProps> = ({
-  navigation,
-}: OnboardingPrivacyPolicyScreenProps): React.ReactElement => {
+export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { ColorPalette } = useTheme()
 
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
@@ -28,28 +26,22 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
       title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }
 
   const controls = (
-    <Button
-      title={t('Global.Continue')}
-      buttonType={ButtonType.Primary}
-      onPress={onPress}
-      testID={testIdWithKey('Continue')}
-      accessibilityLabel={t('Global.Continue')}
-    />
+    <View style={{ width: '100%' }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={onPress}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+      />
+    </View>
   )
 
-  const scrollContentStyle = {
-    gap: theme.Spacing.lg,
-  }
-
-  return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={scrollContentStyle}>
-      <PrivacyPolicyContent onLearnMore={handleLearnMore} />
-    </ScreenWrapper>
-  )
+  return <PrivacyPolicyContent onLearnMore={handleLearnMore} controls={controls} />
 }

@@ -1,10 +1,10 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
@@ -22,9 +22,8 @@ interface SecureAppScreenProps {
  */
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const { client, isClientReady } = useBCSCApiClientState()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { register } = useRegistrationApi(client, isClientReady)
+  const { register } = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleDeviceAuthPress = useCallback(async () => {
@@ -43,10 +42,10 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
         logger.error('Device security setup failed')
       }
     } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error)
-      logger.error(`Error completing device security setup: ${errMessage}`)
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`Error completing device security setup: ${appError.technicalMessage ?? appError.message}`)
     }
-  }, [handleSuccessfulAuth, logger, register])
+  }, [register, handleSuccessfulAuth, logger])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)
@@ -55,7 +54,6 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
   const handleLearnMorePress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
       title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }, [navigation, t])

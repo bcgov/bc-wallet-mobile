@@ -1,9 +1,10 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import notifications from '@assets/img/notifications.png'
+import { ONBOARDING_ICON_IMAGE_SIZE } from '@/constants'
 import {
   Button,
   ButtonType,
+  ContentGradient,
   DispatchAction,
   ScreenWrapper,
   testIdWithKey,
@@ -16,7 +17,8 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AppState, Image, StyleSheet, View } from 'react-native'
+import { AppState, StyleSheet, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import BulletPoint from '../../components/BulletPoint'
 
@@ -32,7 +34,7 @@ interface NotificationsScreenProps {
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [deniedPermission, setDeniedPermission] = useState(false)
 
@@ -44,8 +46,9 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
       gap: Spacing.sm,
       paddingLeft: Spacing.sm,
     },
-    imageContainer: {
+    iconContainer: {
       alignItems: 'center',
+      marginVertical: Spacing.md,
     },
   })
 
@@ -113,16 +116,19 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   }
 
   const controls = (
-    <Button
-      title={t('Global.Continue')}
-      buttonType={ButtonType.Primary}
-      onPress={async () => {
-        await activatePushNotifications()
-        navigation.navigate(BCSCScreens.OnboardingSecureApp)
-      }}
-      testID={testIdWithKey('Continue')}
-      accessibilityLabel={t('Global.Continue')}
-    />
+    <View style={{ width: '100%' }}>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          await activatePushNotifications()
+          navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+      />
+    </View>
   )
 
   if (deniedPermission) {
@@ -136,8 +142,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
-      <View style={styles.imageContainer}>
-        <Image source={notifications} />
+      <View style={styles.iconContainer}>
+        <Icon name={'bell-ring-outline'} size={ONBOARDING_ICON_IMAGE_SIZE} color={ColorPalette.grayscale.white} />
       </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>

@@ -1,6 +1,5 @@
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { useCallback } from 'react'
+import usePreventGestureBack from '@/hooks/usePreventGestureBack'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -9,7 +8,7 @@ export interface SystemModalProps {
   /**
    * Name of the MaterialIcons icon to display
    */
-  iconName: string
+  iconName?: string
   /**
    * Size of the icon (default: 200)
    */
@@ -30,6 +29,14 @@ export interface SystemModalProps {
    * Callback function when the button is pressed
    */
   onButtonPress: () => void | Promise<void>
+  /**
+   * Whether the button is disabled
+   */
+  buttonDisabled?: boolean
+  /**
+   * Optional testID for the button
+   */
+  testID?: string
 }
 
 /**
@@ -45,9 +52,12 @@ export const SystemModal = ({
   contentText,
   buttonText,
   onButtonPress,
+  buttonDisabled,
+  testID,
 }: SystemModalProps): React.ReactElement => {
   const { Spacing, ColorPalette } = useTheme()
-  const navigation = useNavigation()
+
+  usePreventGestureBack()
 
   const styles = StyleSheet.create({
     container: {
@@ -72,29 +82,10 @@ export const SystemModal = ({
     },
   })
 
-  /**
-   * Prevents the user from navigating back to the previous screen on Android,
-   * but allows programmatic navigation (e.g., when button is pressed).
-   * Note: gestureEnabled: false works for iOS, but Android requires this listener.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      const beforeRemove = navigation.addListener('beforeRemove', (event) => {
-        if (!event.data.action.source) {
-          // gesture navigation has no action source so we prevent it
-          event.preventDefault()
-        }
-      })
-      return () => {
-        beforeRemove()
-      }
-    }, [navigation])
-  )
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
-        <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} />
+        {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
         <View style={styles.textContainer}>
           <ThemedText variant="headingThree">{headerText}</ThemedText>
           {contentText.filter(Boolean).map((text) => (
@@ -106,7 +97,14 @@ export const SystemModal = ({
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Button title={buttonText} buttonType={ButtonType.Primary} onPress={onButtonPress} />
+        <Button
+          title={buttonText}
+          buttonType={ButtonType.Primary}
+          onPress={onButtonPress}
+          disabled={buttonDisabled}
+          accessibilityLabel={buttonText}
+          testID={testID ?? testIdWithKey('SystemModalButton')}
+        />
       </View>
     </SafeAreaView>
   )

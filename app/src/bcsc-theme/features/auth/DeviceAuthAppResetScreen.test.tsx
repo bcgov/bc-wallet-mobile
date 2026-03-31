@@ -1,9 +1,8 @@
+import { DeviceAuthAppResetScreen } from '@/bcsc-theme/features/auth/DeviceAuthAppResetScreen'
+import { useNavigation } from '@mocks/@react-navigation/native'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-import { DeviceAuthAppResetScreen } from '@/bcsc-theme/features/auth/DeviceAuthAppResetScreen'
-import { useNavigation } from '@mocks/custom/@react-navigation/core'
-import { BasicAppContext } from '@mocks/helpers/app'
 
 const mockFactoryReset = jest.fn()
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
@@ -26,7 +25,7 @@ describe('DeviceAuthAppResetScreen', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
@@ -36,20 +35,20 @@ describe('DeviceAuthAppResetScreen', () => {
   it('shows security reset information', () => {
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
-    expect(tree.getByText('App reset for security')).toBeTruthy()
-    expect(tree.getByText('For security reasons, you must set and keep a passcode on your phone.')).toBeTruthy()
-    expect(tree.getByText('It looks like you may have turned off the passcode on this device.')).toBeTruthy()
-    expect(tree.getByText('When you do this, your app is reset and you need to set it up again.')).toBeTruthy()
+    expect(tree.getByText('BCSC.AppReset.Title')).toBeTruthy()
+    expect(tree.getByText('BCSC.AppReset.Body1')).toBeTruthy()
+    expect(tree.getByText('BCSC.AppReset.Body2')).toBeTruthy()
+    expect(tree.getByText('BCSC.AppReset.Body3')).toBeTruthy()
   })
 
   it('shows Set Up App and Learn More buttons', () => {
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
@@ -62,7 +61,7 @@ describe('DeviceAuthAppResetScreen', () => {
 
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
@@ -79,7 +78,7 @@ describe('DeviceAuthAppResetScreen', () => {
 
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
@@ -93,17 +92,19 @@ describe('DeviceAuthAppResetScreen', () => {
     // Should not throw - error is caught and logged
   })
 
-  it('handles Learn More press', () => {
+  it('navigates to AuthWebView when Learn More is pressed', () => {
     const tree = render(
       <BasicAppContext>
-        <DeviceAuthAppResetScreen navigation={mockNavigation as never} />
+        <DeviceAuthAppResetScreen />
       </BasicAppContext>
     )
 
     const learnMoreButton = tree.getByTestId('com.ariesbifold:id/LearnMore')
     fireEvent.press(learnMoreButton)
 
-    // Currently a no-op (TODO in code), but should not throw
-    expect(learnMoreButton).toBeTruthy()
+    expect(mockNavigation.navigate).toHaveBeenCalledWith(
+      expect.stringContaining('Web view'),
+      expect.objectContaining({ url: expect.stringContaining('secure_app.html') })
+    )
   })
 })

@@ -1,7 +1,11 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
-import { FlatList, Modal, Pressable, SafeAreaView, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+
+import { a11yLabel } from '@utils/accessibility'
 
 export type DropdownOption<T> = {
   label: string
@@ -43,6 +47,7 @@ export const DropdownWithValidation = <T extends string | number>({
   errorProps,
 }: DropdownWithValidationProps<T>) => {
   const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const selectedOption = options.find((opt) => opt.value === value)
@@ -132,6 +137,7 @@ export const DropdownWithValidation = <T extends string | number>({
         style={[styles.optionItem, isSelected && styles.optionItemSelected, isLastItem && { borderBottomWidth: 0 }]}
         onPress={() => handleSelect(item.value)}
         testID={testIdWithKey(`${id}-option-${item.value}`)}
+        accessibilityLabel={a11yLabel(item.label)}
         accessibilityRole="menuitem"
         accessibilityState={{ selected: isSelected }}
       >
@@ -157,7 +163,7 @@ export const DropdownWithValidation = <T extends string | number>({
         testID={testIdWithKey(`${id}-input`)}
         accessibilityRole="combobox"
         accessibilityState={{ expanded: isOpen }}
-        accessibilityLabel={`${label}, ${selectedOption?.label || placeholder}`}
+        accessibilityLabel={a11yLabel(`${label}, ${selectedOption?.label || placeholder}`)}
       >
         <ThemedText
           style={[styles.dropdownText, selectedOption ? styles.dropdownTextSelected : styles.dropdownTextPlaceholder]}
@@ -187,7 +193,13 @@ export const DropdownWithValidation = <T extends string | number>({
       ) : null}
 
       <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
-        <Pressable style={styles.modalOverlay} onPress={handleClose}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={handleClose}
+          accessibilityLabel={a11yLabel(t('BCSC.Components.CloseDropdown'))}
+          accessibilityRole="button"
+          testID={testIdWithKey(`${id}-modal-overlay`)}
+        >
           <SafeAreaView>
             <Pressable
               style={styles.modalContent}
@@ -201,7 +213,7 @@ export const DropdownWithValidation = <T extends string | number>({
                   style={styles.closeButton}
                   onPress={handleClose}
                   testID={testIdWithKey(`${id}-close`)}
-                  accessibilityLabel="Close"
+                  accessibilityLabel={a11yLabel(t('Global.Close'))}
                   accessibilityRole="button"
                 >
                   <Icon name="close" size={24} color={ColorPalette.brand.secondary} />

@@ -1,6 +1,7 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,7 +10,8 @@ import Developer from '../../screens/Developer'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
-import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { useAccount } from '../contexts/BCSCAccountContext'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
@@ -18,12 +20,13 @@ import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
-import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -31,10 +34,9 @@ import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
+import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { MainLoadingScreen } from '../features/splash-loading/MainLoadingScreen'
-import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
@@ -50,6 +52,7 @@ const MainStack: React.FC = () => {
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -73,8 +76,9 @@ const MainStack: React.FC = () => {
       pairingCode,
     }
   }, [logger, pendingPairing])
-  const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
+  const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
   useSystemChecks(SystemCheckScope.MAIN_STACK)
+  useBCSCStack(BCSCStacks.Main)
 
   useEffect(() => {
     const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {
@@ -86,6 +90,13 @@ const MainStack: React.FC = () => {
     return unsubscribe
   }, [pairingService, navigation])
 
+  useEffect(() => {
+    if (account && isAccountExpired(account.account_expiration_date)) {
+      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
+    }
+  }, [account, navigation])
+
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
@@ -96,12 +107,12 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+          headerBackTitleVisible: false,
           headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createHeaderBackButton,
           header: createHeaderWithoutBanner,
         }}
       >
-        <Stack.Screen name={BCSCScreens.MainLoading} component={MainLoadingScreen} />
         <Stack.Screen
           name={BCSCStacks.Tab}
           component={BCSCTabStack}
@@ -114,8 +125,6 @@ const MainStack: React.FC = () => {
           component={EditNicknameScreen}
           options={{
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createMainWebviewHeaderBackButton(),
           }}
         />
         <Stack.Screen
@@ -124,7 +133,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Screens.Settings'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -133,7 +141,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AutoLockTime'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -142,7 +149,6 @@ const MainStack: React.FC = () => {
           options={{
             headerShown: true,
             title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           }}
         />
         <Stack.Screen
@@ -153,7 +159,6 @@ const MainStack: React.FC = () => {
             title: route.params?.isChangingExistingPIN
               ? t('BCSC.ChangePIN.ScreenTitle')
               : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -161,34 +166,23 @@ const MainStack: React.FC = () => {
           component={ManualPairingCode}
           options={() => ({
             headerShown: true,
-            headerBackTitleVisible: false,
             headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           })}
         />
         <Stack.Screen
           name={BCSCScreens.MainWebView}
-          component={MainWebViewScreen}
+          component={WebViewScreen}
           options={({ route }) => ({
             headerShown: true,
             title: route.params.title,
-            headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createMainWebviewHeaderBackButton(),
           })}
         />
+        <Stack.Screen name={BCSCScreens.PairingConfirmation} component={PairingConfirmation} />
         <Stack.Screen
-          name={BCSCScreens.PairingConfirmation}
-          component={PairingConfirmation}
+          name={BCSCScreens.MainRemoveAccountConfirmation}
+          component={MainRemoveAccountConfirmationScreen}
           options={() => ({
             headerShown: true,
-            headerLeft: () => null,
-          })}
-        />
-        <Stack.Screen
-          name={BCSCScreens.RemoveAccountConfirmation}
-          component={RemoveAccountConfirmationScreen}
-          options={() => ({
-            headerShown: true,
-            headerBackTitleVisible: false,
           })}
         />
         <Stack.Screen
@@ -227,16 +221,14 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.ContactUs'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
           name={BCSCScreens.MainPrivacyPolicy}
-          component={SettingsPrivacyPolicyScreen}
+          component={MainPrivacyPolicyScreen}
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.PrivacyInformation'),
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -244,7 +236,6 @@ const MainStack: React.FC = () => {
           component={ForgetAllPairingsScreen}
           options={() => ({
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
         <Stack.Screen
@@ -311,6 +302,15 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCModals.DeviceInvalidated}
           component={DeviceInvalidated}
+          options={{
+            ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name={BCSCModals.ServiceOutage}
+          component={ServiceOutage}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false,

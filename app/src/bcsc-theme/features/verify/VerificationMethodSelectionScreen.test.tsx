@@ -1,9 +1,8 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
 import useVerificationMethodModel from './_models/useVerificationMethodModel'
 import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
 

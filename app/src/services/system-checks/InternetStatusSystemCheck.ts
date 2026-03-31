@@ -1,6 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
-import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
 /**
@@ -16,12 +15,19 @@ import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
  * @implements {SystemCheckStrategy}
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
-  private readonly netInfo: NetInfoState
+  private readonly isConnected: boolean | null
+  private readonly isInternetReachable: boolean | null
   private readonly navigation: SystemCheckNavigation
   private readonly logger: BifoldLogger
 
-  constructor(netInfo: NetInfoState, navigation: SystemCheckNavigation, logger: BifoldLogger) {
-    this.netInfo = netInfo
+  constructor(
+    isConnected: boolean | null,
+    isInternetReachable: boolean | null,
+    navigation: SystemCheckNavigation,
+    logger: BifoldLogger
+  ) {
+    this.isConnected = isConnected
+    this.isInternetReachable = isInternetReachable
     this.navigation = navigation
     this.logger = logger
   }
@@ -40,14 +46,10 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   /**
    * Runs the internet connectivity check.
    *
-   * @returns {boolean} True if the device is connected to the internet, false otherwise.
+   * @returns {boolean} True if the device is connected to the internet and internet is reachable or unknown, false otherwise.
    */
   runCheck() {
-    return (
-      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable) ||
-      // Treat connected but unknown reachability as connected (ie: while pinging)
-      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable === null)
-    )
+    return Boolean(this.isConnected && (this.isInternetReachable === true || this.isInternetReachable === null))
   }
 
   /**

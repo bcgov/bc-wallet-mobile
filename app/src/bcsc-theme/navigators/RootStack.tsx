@@ -1,27 +1,43 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { BCDispatchAction, BCState } from '@/store'
+import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
+import { ErrorRegistry } from '@/errors'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
-import { getAccount } from 'react-native-bcsc-core'
+import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
+import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
-import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
+import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
+  const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const { isClientReady } = useBCSCApiClientState()
-  const [loading, setLoading] = useState(true)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitError } = useErrorAlert()
+  const fcmService = useFcmService()
+  const { emitErrorModal } = useErrorAlert()
+  const { isNavigationReady } = useNavigationContainer()
+  const { initializingAccount } = useInitializeAccountStatus()
   useSystemChecks(SystemCheckScope.STARTUP)
+  useThirdPartyKeyboardWarning()
+
+  // Wait until the apiClient is ready and process any pending FCM Challenges
+  useEffect(() => {
+    if (isClientReady) {
+      fcmService.viewModel.processPendingChallenges()
+    }
+  }, [isClientReady, fcmService.viewModel])
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
@@ -32,52 +48,24 @@ const BCSCRootStack: React.FC = () => {
     try {
       loadState(dispatch)
     } catch (err) {
-      emitError('STATE_LOAD_ERROR', { error: err })
+      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), toAppError(err, ErrorRegistry.STATE_LOAD_ERROR))
     }
-  }, [dispatch, loadState, emitError, store.stateLoaded])
+  }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
-  // Check for existing account on initial load - only runs after state is loaded
-  useEffect(() => {
-    if (!store.stateLoaded || !loading) {
-      return
-    }
-
-    const asyncEffect = async () => {
-      try {
-        const account = await getAccount()
-        if (account) {
-          // adds nickname to store if migrating from v3 and isn't already present
-          if (account.nickname && !store.bcsc.nicknames.includes(account.nickname)) {
-            dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [account.nickname] })
-          }
-          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-        } else {
-          dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
-        }
-      } catch (error) {
-        logger.error('Error checking for existing account:', error as Error)
-        dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [false] })
-      } finally {
-        setLoading(false)
-      }
-    }
-    asyncEffect()
-  }, [logger, dispatch, store.bcsc.nicknames, store.stateLoaded, loading])
-
-  // Show loading screen if state or API client or account status not ready yet
-  if (!store.stateLoaded || !isClientReady || loading) {
-    return <LoadingScreenContent />
+  // Show loading screen if state, API client or navigation is not ready
+  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
+    return <LoadingScreen />
   }
 
-  if (!store.bcscSecure.hasAccount) {
+  if (store.bcsc.hasAccount === false) {
     return <OnboardingStack />
   }
 
-  if (!store.authentication.didAuthenticate) {
+  if (store.authentication.didAuthenticate === false) {
     return <AuthStack />
   }
 
-  if (!store.bcscSecure.verified) {
+  if (store.bcscSecure.verified === false) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />
@@ -85,15 +73,20 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
-  return (
-    <BCSCActivityProvider>
-      <BCSCAccountProvider>
-        <BCSCIdTokenProvider>
-          <BCSCMainStack />
-        </BCSCIdTokenProvider>
-      </BCSCAccountProvider>
-    </BCSCActivityProvider>
-  )
+  if (store.bcscSecure.verified === true) {
+    return (
+      <BCSCActivityProvider>
+        <BCSCAccountProvider>
+          <BCSCIdTokenProvider>
+            <BCSCMainStack />
+          </BCSCIdTokenProvider>
+        </BCSCAccountProvider>
+      </BCSCActivityProvider>
+    )
+  }
+
+  // Fallback to AuthStack if verification state is somehow lost
+  return <AuthStack />
 }
 
 export default BCSCRootStack

@@ -99,6 +99,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleDeveloper"
           >
             <RCTSwitch
+              accessibilityLabel="Developer.DeveloperMode"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
@@ -271,7 +272,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 ]
               }
             >
-              Prod (id)
+              Prod
             </Text>
           </View>
         </View>
@@ -354,6 +355,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleUseShareableLink"
             >
               <RCTSwitch
+                accessibilityLabel="PasteUrl.UseShareableLink"
                 accessibilityRole="switch"
                 disabled={true}
                 onChange={[Function]}
@@ -448,6 +450,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleVerifierCapability"
             >
               <RCTSwitch
+                accessibilityLabel="Verifier.UseVerifierCapability"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -558,6 +561,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleAcceptDevCredentials"
             >
               <RCTSwitch
+                accessibilityLabel="Verifier.AcceptDevCredentials"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -668,6 +672,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleConnectionInviterCapabilitySwitch"
             >
               <RCTSwitch
+                accessibilityLabel="Connection.UseConnectionInviterCapability"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -778,6 +783,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleDevVerifierTemplatesSwitch"
             >
               <RCTSwitch
+                accessibilityLabel="Verifier.UseDevVerifierTemplates"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -888,6 +894,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleWalletNamingSwitch"
             >
               <RCTSwitch
+                accessibilityLabel="NameWallet.EnableWalletNaming"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -998,6 +1005,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/TogglePreventAutoLockSwitch"
             >
               <RCTSwitch
+                accessibilityLabel="Settings.PreventAutoLock"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -1108,6 +1116,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               testID="com.ariesbifold:id/ToggleEnableAppToAppPersonFlow"
             >
               <RCTSwitch
+                accessibilityLabel="Developer.EnableAppToAppPersonFlow"
                 accessibilityRole="switch"
                 onChange={[Function]}
                 onResponderTerminationRequest={[Function]}
@@ -1202,6 +1211,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleRemoteLoggingSwitch"
           >
             <RCTSwitch
+              accessibilityLabel="RemoteLogging.ScreenTitle"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
@@ -1295,6 +1305,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleEnableProxy"
           >
             <RCTSwitch
+              accessibilityLabel="Developer.EnableProxy"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
@@ -1388,6 +1399,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleTheme"
           >
             <RCTSwitch
+              accessibilityLabel="Developer.SwitchTheme"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
@@ -1481,6 +1493,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             testID="com.ariesbifold:id/ToggleMode"
           >
             <RCTSwitch
+              accessibilityLabel="Developer.SwitchMode"
               accessibilityRole="switch"
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}

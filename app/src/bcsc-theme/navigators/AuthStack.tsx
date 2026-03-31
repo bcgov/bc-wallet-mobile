@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
+import { useBCSCStack } from '../contexts/BCSCStackContext'
 import AccountSelector from '../features/auth/AccountSelectorScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
@@ -11,11 +12,12 @@ import { EnterPINScreen } from '../features/auth/EnterPINScreen'
 import { LockoutScreen } from '../features/auth/LockoutScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { AuthWebViewScreen } from '../features/webview/AuthWebViewScreen'
-import { BCSCAuthStackParams, BCSCModals, BCSCScreens } from '../types/navigators'
+import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -28,6 +30,7 @@ const AuthStack = (): React.ReactElement => {
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCAuthStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  useBCSCStack(BCSCStacks.Auth)
 
   return (
     <Stack.Navigator
@@ -85,7 +88,7 @@ const AuthStack = (): React.ReactElement => {
       />
       <Stack.Screen
         name={BCSCScreens.AuthWebView}
-        component={AuthWebViewScreen}
+        component={WebViewScreen}
         options={({ route }) => ({
           title: route.params.title,
         })}
@@ -99,7 +102,7 @@ const AuthStack = (): React.ReactElement => {
       />
       <Stack.Screen
         name={BCSCScreens.AuthPrivacyPolicy}
-        component={SettingsPrivacyPolicyScreen}
+        component={AuthPrivacyPolicyScreen}
         options={{
           title: t('BCSC.Screens.PrivacyInformation'),
         }}
@@ -124,6 +127,14 @@ const AuthStack = (): React.ReactElement => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCModals.ServiceOutage}
+        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

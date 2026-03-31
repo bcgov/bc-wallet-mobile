@@ -1,3 +1,6 @@
+import { BCThemeNames } from '@/constants'
+import Logo from '@assets/img/logo-with-text.svg'
+import SecurePIN from '@assets/img/secure-pin.svg'
 import {
   bifoldTheme,
   DeepPartial,
@@ -11,10 +14,6 @@ import {
   ThemeBuilder,
 } from '@bifold/core'
 import React from 'react'
-
-import { BCThemeNames } from '@/constants'
-import Logo from '@assets/img/logo-with-text.svg'
-import SecurePIN from '@assets/img/secure-pin.svg'
 
 export const maxFontSizeMultiplier = 2
 export const borderRadius = 4

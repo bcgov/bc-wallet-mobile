@@ -186,8 +186,7 @@ class RSAUtil {
   }
 
   class func combineData(exponent: Data, modulus: Data) -> Data {
-    let combinedData = Data(modulus: modulus, exponent: exponent)
-    return combinedData
+    return Data(modulus: modulus, exponent: exponent)
   }
 
   class func insertPublicKey(

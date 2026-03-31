@@ -1,4 +1,6 @@
+import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { WHERE_TO_USE_URL } from '@/constants'
 import FirstTutorial from '@assets/img/FirstTutorial.jpg'
 import SecondTutorial from '@assets/img/SecondTutorial.jpg'
 import ThirdTutorial from '@assets/img/ThirdTutorial.jpg'
@@ -10,6 +12,7 @@ import {
   Animated,
   Image,
   ImageSourcePropType,
+  Linking,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -131,6 +134,15 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
       <ThemedText variant={'headingThree'}>{t(pageData.headerContent)}</ThemedText>
       <ThemedText>{t(pageData.bodyContentA)}</ThemedText>
       {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
+      {pageData.key === 'access' ? (
+        <View style={{ marginTop: Spacing.md }}>
+          <CardButton
+            title={t('BCSC.Home.WhereToUseTitle')}
+            onPress={() => Linking.openURL(WHERE_TO_USE_URL)}
+            endIcon="open-in-new"
+          />
+        </View>
+      ) : null}
     </View>
   )
 

@@ -1,5 +1,6 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
+import { toBifoldError } from '@/errors/errorHandler'
+import { BCState } from '@/store'
 import {
   InfoBox,
   InfoBoxType,
@@ -12,15 +13,13 @@ import {
   useTheme,
 } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
+import ProgressBar from '@components/ProgressBar'
+import TipCarousel from '@components/TipCarousel'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { BCState } from '@/store'
-import ProgressBar from '@components/ProgressBar'
-import TipCarousel from '@components/TipCarousel'
 
 /*
   To customize this splash screen set the background color of the
@@ -30,7 +29,6 @@ import TipCarousel from '@components/TipCarousel'
 const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
-  const { emitError } = useErrorAlert()
   const { walletSecret } = useAuth()
   const { ColorPalette, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
@@ -78,7 +76,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const report = useCallback(() => {
     if (initError) {
-      logger.report(initError.toBifoldError())
+      logger.report(toBifoldError('Wallet Error', 'Failed to initialize wallet', initError))
     }
 
     setReported(true)
@@ -139,7 +137,6 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
     t,
     store.authentication.didAuthenticate,
     walletSecret,
-    emitError,
   ])
 
   const handleErrorCallToActionPressed = useCallback(() => {

@@ -10,13 +10,18 @@ import { MockLogger } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useContext } from 'react'
-import * as VerificationReset from '../api/hooks/useVerificationReset'
+import * as FactoryReset from '../api/hooks/useFactoryReset'
+import { BCSCStackProvider } from './BCSCStackContext'
 
 jest.mock('@/bcsc-theme/api/client')
 
+jest.mock('@/errors/components/ErrorModal', () => ({
+  BCSCErrorModal: () => null,
+}))
+
 jest.mock('@bifold/core')
 
-jest.mock('../api/hooks/useVerificationReset')
+jest.mock('../api/hooks/useFactoryReset')
 
 describe('BCSCApiClientProvider', () => {
   beforeEach(() => {
@@ -27,7 +32,7 @@ describe('BCSCApiClientProvider', () => {
   it('should initialize the client', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -44,7 +49,7 @@ describe('BCSCApiClientProvider', () => {
     const mockLogger = new MockLogger()
     const dispatchMock = jest.fn()
 
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -52,7 +57,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -70,7 +77,7 @@ describe('BCSCApiClientProvider', () => {
   it('should not initialize if store.stateLoaded is false', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: false,
@@ -81,7 +88,7 @@ describe('BCSCApiClientProvider', () => {
     }
 
     const dispatchMock = jest.fn()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -89,7 +96,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -105,7 +114,7 @@ describe('BCSCApiClientProvider', () => {
   it('should not initialize if iasApiBaseUrl is missing', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -115,7 +124,7 @@ describe('BCSCApiClientProvider', () => {
       },
     }
     const dispatchMock = jest.fn()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([{}])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -123,7 +132,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -138,7 +149,7 @@ describe('BCSCApiClientProvider', () => {
   it('should use the singleton instance', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -150,7 +161,7 @@ describe('BCSCApiClientProvider', () => {
 
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -158,7 +169,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -187,7 +200,7 @@ describe('BCSCApiClientProvider', () => {
   it('should handle initialization errors', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -198,7 +211,7 @@ describe('BCSCApiClientProvider', () => {
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -208,7 +221,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -226,7 +241,7 @@ describe('BCSCApiClientProvider', () => {
   it('should handle network errors gracefully during initialization', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
 
     const mockStore: any = {
       stateLoaded: true,
@@ -237,7 +252,7 @@ describe('BCSCApiClientProvider', () => {
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
@@ -248,7 +263,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 
@@ -265,7 +282,7 @@ describe('BCSCApiClientProvider', () => {
   it('should re-attempt initialization if iasApiBaseUrl changes', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
-    const verificationResetMock = jest.mocked(VerificationReset)
+    const factoryResetMock = jest.mocked(FactoryReset)
     const fetchMock = jest.fn()
 
     let store: any = {
@@ -277,7 +294,7 @@ describe('BCSCApiClientProvider', () => {
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
-    verificationResetMock.useVerificationReset.mockReturnValue(jest.fn())
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
     bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockImplementation(() => [store, dispatchMock])
 
@@ -292,7 +309,9 @@ describe('BCSCApiClientProvider', () => {
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <ErrorAlertProvider>
-        <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
       </ErrorAlertProvider>
     )
 

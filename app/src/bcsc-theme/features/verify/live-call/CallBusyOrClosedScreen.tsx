@@ -4,6 +4,8 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { View } from 'react-native'
+import ServicePeriodList from './components/ServicePeriodList'
 
 type CallBusyOrClosedScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CallBusyOrClosed>
@@ -15,7 +17,6 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
-  const serviceHours = formattedHours || t('BCSC.VideoCall.DefaultHours')
 
   const onPressSendVideo = () => {
     navigation.dispatch(
@@ -38,7 +39,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
 
   return (
     <ScreenWrapper controls={controls}>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
+      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }} testID={testIdWithKey('CallStatusTitle')}>
         {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
       </ThemedText>
 
@@ -48,12 +49,18 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
           : t('BCSC.VideoCall.CallBusyOrClosed.CurrentlyClosedMessage')}
       </ThemedText>
 
-      <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.sm }}>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginBottom: Spacing.sm }}
+        testID={testIdWithKey('HoursOfServiceTitle')}
+      >
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{serviceHours}</ThemedText>
+      <View style={{ marginBottom: Spacing.md }}>
+        <ServicePeriodList items={formattedHours} />
+      </View>
 
-      <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
+      <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }} testID={testIdWithKey('ReminderTitle')}>
         {t('BCSC.VideoCall.CallBusyOrClosed.Reminder')}
       </ThemedText>
       <ThemedText>

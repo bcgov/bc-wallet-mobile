@@ -1,4 +1,6 @@
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { AppError, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
@@ -22,19 +24,51 @@ describe('ID Token Utils', () => {
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
 
+    it('should wrap native E_FAILED_TO_PARSE_JWS as DECRYPT_VERIFY_ID_TOKEN_ERROR', async () => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+
+      const mockLogger = new MockLogger()
+      const nativeError = Object.assign(new Error('Invalid JWS format'), { code: 'E_FAILED_TO_PARSE_JWS' })
+
+      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(nativeError)
+
+      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+        AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: nativeError })
+      )
+
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[getIdTokenMetadata] Failed to decode ID token payload',
+        nativeError
+      )
+    })
+
     it('should throw an error when unable to decode the ID token', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockLogger = new MockLogger()
+      const mockError = new Error('Decoding error')
 
-      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(new Error('Decoding error'))
+      bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(mockError)
 
-      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow('Decoding error')
+      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+        AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: mockError })
+      )
 
       expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'getIdTokenMetadata -> Failed to decode ID token payload',
-        expect.any(Error)
+      expect(mockLogger.error).toHaveBeenCalledWith('[getIdTokenMetadata] Failed to decode ID token payload', mockError)
+    })
+
+    it('should throw ERR_114 when decoded payload is null', async () => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+      const mockLogger = new MockLogger()
+
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue('null')
+
+      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+        expect.objectContaining({
+          appEvent: AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY,
+        })
       )
     })
 

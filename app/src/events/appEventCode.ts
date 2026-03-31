@@ -13,6 +13,7 @@ export enum AlertInteractionEvent {
  */
 export enum AppEventCode {
   GENERAL = 'general',
+  UNKNOWN_APP_ERROR = 'unknown_app_error', // Non-IAS error code
   ADD_CARD_CAMERA_BROKEN = 'add_card_camera_broken',
   ADD_CARD_DYNAMIC_REGISTRATION = 'add_card_dynamic_registration', //being tracked
   ADD_CARD_INCORRECT_OS = 'add_card_incorrect_os',
@@ -27,6 +28,7 @@ export enum AppEventCode {
   ANDROID_DEVICE_PROTECTION_REQUIRED = 'android_device_protection_required',
   CARD_EXPIRED_WILL_REMOVE = 'card_expired_will_remove',
   CARD_STATUS_ADDITIONAL_CARD = 'card_status_additional_card',
+  CARD_CANCELLED_DUE_TO_INACTIVITY = 'card_cancelled_due_to_inactivity',
   CARD_STATUS_CANCELLED = 'card_status_cancelled',
   CARD_STATUS_CANCELLED_BY_USER = 'card_status_cancelled_by_user',
   CARD_STATUS_EXPIRED = 'card_status_expired',
@@ -35,8 +37,6 @@ export enum AppEventCode {
   CARD_TYPE_CHANGED = 'card_type_changed',
   CLOCK_SKEW_ERROR = 'clock_skew_error',
   DATA_USE_WARNING = 'data_use_warning',
-  EVIDENCE_UPLOAD_SERVER_ERROR = 'evidence_upload_server_error',
-  EVIDENCE_UPLOAD_UNKNOWN_ERROR = 'evidence_upload_unknown_error',
   INVALID_PAIRING_CODE = 'invalid_pairing_code',
   INVALID_TOKEN = 'invalid_token',
   IN_CALL_HAVING_TROUBLE = 'in_call_having_trouble',
@@ -54,7 +54,7 @@ export enum AppEventCode {
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
   SERVER_ERROR = 'server_error',
-  UNKNOWN_SERVER_ERROR = 'unknown_server_error', // fallback value - no IAS mapping
+  UNKNOWN_SERVER_ERROR = 'unknown_server_error', // Non-IAS error code
   SERVER_TIMEOUT = 'server_timeout',
   UNSECURED_NETWORK = 'unsecured_network',
   USER_INPUT_BIRTHDATE_EMPTY = 'user_input_birthdate_empty',
@@ -68,8 +68,8 @@ export enum AppEventCode {
   ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE = 'err_100_failed_to_write_local_storage',
   ERR_101_FAILED_TO_READ_LOCAL_STORAGE = 'err_101_failed_to_read_local_storage',
   ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL = 'err_102_client_registration_unexpectedly_null',
-  ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL = 'err_103_authorization_request_unexpectedly_null',
-  ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL = 'err_104_credential_unexpectedly_null',
+  // ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL deprecated in V4
+  // ERR_104_CREDENTIAL_UNEXPECTEDLY_NULL deprecated in V4
   ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN = 'err_105_unable_to_decrypt_and_verify_id_token',
   ERR_106_UNABLE_TO_DESERIALIZE_ID_TOKEN = 'err_106_unable_to_deserialize_id_token',
   ERR_107_UNABLE_TO_PARSE_JWT_TOKENS = 'err_107_unable_to_parse_jwt_tokens',
@@ -128,6 +128,8 @@ export enum AppEventCode {
   EMAIL_VERIFICATION_CODE_INVALID = 'email_verification_code_invalid',
   EMAIL_ADDRESS_INVALID = 'email_address_invalid',
   CONFIRM_SKIP_EMAIL_ADDRESS = 'confirm_skip_email_address',
+  FORGET_ALL_PAIRINGS = 'forget_all_pairings',
+  LIVE_CALL_FILE_UPLOAD_ERROR = 'live_call_file_upload_error', // Non-IAS error code
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
@@ -142,25 +144,42 @@ export enum AppEventCode {
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
+  DEVICE_AUTHENTICATION_ERROR = 'device_authentication_error', // Non-IAS error code
+  FATAL_UNRECOVERABLE_ERROR = 'fatal_unrecoverable_error', // Non-IAS error code
+  UNKNOWN_ERROR_BOUNDARY_ERROR = 'unknown_error_boundary_error', // Non-IAS error code
   // Wallet/Agent Errors
-  STATE_LOAD_ERROR = 'state_load_error',
-  AGENT_INITIALIZATION_ERROR = 'agent_initialization_error',
-  WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found',
+  STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
+  AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
+  WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found', // Non-IAS error code
   // BCID/Connection Errors
-  PARSE_INVITATION_ERROR = 'parse_invitation_error',
-  RECEIVE_INVITATION_ERROR = 'receive_invitation_error',
-  LEGACY_DID_ERROR = 'legacy_did_error',
-  APP_TO_APP_URL_ERROR = 'app_to_app_url_error',
-  SERVICE_CARD_AUTH_ERROR = 'service_card_auth_error',
+  PARSE_INVITATION_ERROR = 'parse_invitation_error', // Non-IAS error code
+  RECEIVE_INVITATION_ERROR = 'receive_invitation_error', // Non-IAS error code
+  LEGACY_DID_ERROR = 'legacy_did_error', // Non-IAS error code
+  APP_TO_APP_URL_ERROR = 'app_to_app_url_error', // Non-IAS error code
+  SERVICE_CARD_AUTH_ERROR = 'service_card_auth_error', // Non-IAS error code
   // Attestation Errors
-  ATTESTATION_BAD_INVITATION = 'attestation_bad_invitation',
-  ATTESTATION_CONNECTION_ERROR = 'attestation_connection_error',
-  ATTESTATION_NONCE_ERROR = 'attestation_nonce_error',
-  ATTESTATION_GENERATION_ERROR = 'attestation_generation_error',
-  ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error',
-  ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined',
-  ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable',
-  ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error',
-  ATTESTATION_REQUEST_ERROR = 'attestation_request_error',
-  ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform',
+  ATTESTATION_BAD_INVITATION = 'attestation_bad_invitation', // Non-IAS error code
+  ATTESTATION_CONNECTION_ERROR = 'attestation_connection_error', // Non-IAS error code
+  ATTESTATION_NONCE_ERROR = 'attestation_nonce_error', // Non-IAS error code
+  ATTESTATION_GENERATION_ERROR = 'attestation_generation_error', // Non-IAS error code
+  ATTESTATION_VALIDATION_ERROR = 'attestation_validation_error', // Non-IAS error code
+  ATTESTATION_AGENT_UNDEFINED = 'attestation_agent_undefined', // Non-IAS error code
+  ATTESTATION_INTEGRITY_UNAVAILABLE = 'attestation_integrity_unavailable', // Non-IAS error code
+  ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error', // Non-IAS error code
+  ATTESTATION_REQUEST_ERROR = 'attestation_request_error', // Non-IAS error code
+  ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
+  // Account Errors
+  ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
+}
+
+const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))
+
+/**
+ * Type guard to check if a given value is a valid AppEventCode.
+ *
+ * @param value - The string value to check.
+ * @returns True if the value is a valid AppEventCode, false otherwise.
+ */
+export const isAppEventCode = (value: unknown): value is AppEventCode => {
+  return typeof value === 'string' && AppEventCodeSet.has(value)
 }

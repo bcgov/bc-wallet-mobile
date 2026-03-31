@@ -1,8 +1,10 @@
-import i18next from 'i18next'
-import { AlertInteractionEvent, AppEventCode } from '../events/appEventCode'
-import { Analytics } from '../utils/analytics/analytics-singleton'
-import { appLogger } from '../utils/logger'
+import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import { BifoldError } from '@bifold/core'
+import { AppEventCode } from '../events/appEventCode'
+import { AppError } from './appError'
 import { ErrorDefinition, ErrorRegistry, ErrorRegistryAppEventMap, ErrorRegistryKey } from './errorRegistry'
+
+// TODO (MD): Rename file to errorUtils or something similar
 
 /**
  * Extract a meaningful message from an unknown error value
@@ -29,53 +31,10 @@ export function extractErrorMessage(error: unknown): string {
 }
 
 /**
- * Track error in Snowplow analytics
- */
-export function trackErrorInAnalytics(definition: ErrorDefinition, interactionType: AlertInteractionEvent): void {
-  // Track the error event
-  Analytics.trackErrorEvent({
-    code: String(definition.statusCode),
-    message: definition.appEvent,
-  })
-
-  // Track the alert display event
-  if (interactionType === AlertInteractionEvent.ALERT_DISPLAY) {
-    Analytics.trackAlertDisplayEvent(definition.appEvent)
-  }
-
-  appLogger.debug(`Analytics: ${interactionType} - ${definition.appEvent}`, {
-    code: definition.statusCode,
-    category: definition.category,
-    severity: definition.severity,
-  })
-}
-
-/**
  * Get error definition by key (useful for custom error handling)
  */
 export function getErrorDefinition(errorKey: ErrorRegistryKey): ErrorDefinition {
   return ErrorRegistry[errorKey]
-}
-
-/**
- * Log error details for debugging
- */
-export function logError(
-  errorKey: string,
-  definition: ErrorDefinition,
-  technicalMessage: string,
-  context?: Record<string, unknown>
-): void {
-  const title = i18next.t(definition.titleKey)
-  const description = i18next.t(definition.descriptionKey)
-
-  appLogger.error(`[${errorKey}] ${title}: ${description}`, {
-    code: definition.statusCode,
-    category: definition.category,
-    severity: definition.severity,
-    technicalMessage,
-    ...context,
-  })
 }
 
 /**
@@ -86,4 +45,40 @@ export function logError(
  */
 export const getErrorDefinitionFromAppEventCode = (appEvent?: string): ErrorDefinition | null => {
   return ErrorRegistryAppEventMap.get(appEvent as AppEventCode) ?? null
+}
+
+/**
+ * Gets an AppError from the ErrorRegistry or fallback to `UNKNOWN_ERROR`
+ *
+ * @param event - The app event code to create the error for
+ * @param cause - An optional cause (e.g., an underlying error) that provides additional context for the AppError
+ * @returns An instance of AppError corresponding to the provided app event code and cause
+ */
+export const getRegistryAppError = (event: AppEventCode, cause?: unknown): AppError => {
+  const errorDefinition = getErrorDefinitionFromAppEventCode(event) ?? ErrorRegistry.UNKNOWN_ERROR
+  return AppError.fromErrorDefinition(errorDefinition, { cause })
+}
+
+/**
+ * Converts an Error or AppError into a BifoldError, preserving as much information as possible for display in the UI.
+ *
+ * @param title - The title to display for the error
+ * @param description - A user-friendly description of the error
+ * @param error - The original error object to convert
+ * @returns A BifoldError containing the provided title, description, and details from the original error
+ */
+export const toBifoldError = (title: string, description: string, error: Error | AppError): BifoldError => {
+  let bifoldError: BifoldError
+
+  if (error instanceof AppError) {
+    bifoldError = new BifoldError(title, description, error.fullMessage, error.statusCode)
+  } else {
+    bifoldError = new BifoldError(title, description, error.message, UNKNOWN_APP_ERROR_STATUS_CODE)
+  }
+
+  // Attach the cause and stack trace for debugging purposes
+  bifoldError.cause = error.cause
+  bifoldError.stack = error.stack
+
+  return bifoldError
 }

@@ -2,7 +2,7 @@ import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 
 describe('Analytics Tracker', () => {
-  it('should contstruct properly', () => {
+  it('should construct properly', () => {
     const analytics = new AnalyticsTracker('namespace', 'endpoint')
 
     expect(analytics).toBeInstanceOf(AnalyticsTracker)
@@ -18,7 +18,7 @@ describe('Analytics Tracker', () => {
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
       // First initialization
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
       expect(mockNewTracker).toHaveBeenCalledTimes(1)
     })
   })
@@ -31,7 +31,7 @@ describe('Analytics Tracker', () => {
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       expect(analytics.hasTracker()).toBe(true)
     })
@@ -50,6 +50,38 @@ describe('Analytics Tracker', () => {
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
       expect(analytics.hasTracker()).toBe(false)
+    })
+  })
+
+  describe('setAppId', () => {
+    it('should set app ID when tracker exists', async () => {
+      const mockSetAppId = jest.fn()
+      const mockAnalyticsClient = {
+        newTracker: jest.fn().mockResolvedValue({
+          setAppId: mockSetAppId,
+        }),
+      }
+
+      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+
+      await analytics.initializeTracker('testAppId')
+
+      analytics.setAppId('newAppId')
+
+      expect(mockSetAppId).toHaveBeenCalledWith('newAppId')
+    })
+
+    it('should not set app ID when tracker does not exist', () => {
+      const mockSetAppId = jest.fn()
+      const mockAnalyticsClient = {
+        newTracker: jest.fn(),
+      }
+
+      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+
+      analytics.setAppId('newAppId')
+
+      expect(mockSetAppId).not.toHaveBeenCalled()
     })
   })
 
@@ -90,7 +122,7 @@ describe('Analytics Tracker', () => {
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackScreenEvent('HomeScreen', 'NewScreen')
 
@@ -125,7 +157,7 @@ describe('Analytics Tracker', () => {
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
@@ -162,7 +194,7 @@ describe('Analytics Tracker', () => {
 
         const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-        await analytics.initializeTracker()
+        await analytics.initializeTracker('testAppId')
 
         analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
@@ -201,7 +233,7 @@ describe('Analytics Tracker', () => {
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
-      await analytics.initializeTracker()
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 

@@ -253,7 +253,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
     }
   >
     <View
-      accessibilityLabel="BCSC.PhotoInstructions.TakePhoto"
+      accessibilityLabel="BCSC.PhotoInstructions.TakePhotoAccessibilityLabel"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -319,7 +319,6 @@ exports[`PhotoInstructions renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

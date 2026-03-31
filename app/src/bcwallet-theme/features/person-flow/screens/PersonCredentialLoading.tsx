@@ -1,4 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { BCState } from '@/store'
 import {
   AttestationEventTypes,
   BifoldError,
@@ -15,17 +16,15 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { useAgent, useCredentialByState } from '@bifold/react-hooks'
+import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
+import ProgressBar from '@components/ProgressBar'
 import { CredentialState } from '@credo-ts/core'
-import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-import { BCState } from '@/store'
-import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
-import ProgressBar from '@components/ProgressBar'
 import {
   WellKnownAgentDetails,
   authenticateWithServiceCard,
@@ -49,7 +48,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
-  const { emitError } = useErrorAlert()
+  const { emitErrorModal } = useErrorAlert()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const steps: string[] = useMemo(
@@ -108,7 +107,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     const connect = async () => {
       try {
-        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
+        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl)
         setRemoteAgentDetails(remoteAgentDetails)
         setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
@@ -191,7 +190,13 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       store.developer.enableAppToAppPersonFlow &&
       ['Development', 'Test'].includes(store.developer.environment.name)
     ) {
-      initiateAppToAppFlow(store.developer.environment.appToAppUrl, emitError, logger)
+      initiateAppToAppFlow(
+        store.developer.environment.appToAppUrl,
+        (error) => {
+          emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), error)
+        },
+        logger
+      )
         .then(() => {
           setStep(5)
           logger.info('Initiated app-to-app flow')
@@ -218,7 +223,8 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
     setStep,
-    emitError,
+    emitErrorModal,
+    t,
   ])
 
   useEffect(() => {

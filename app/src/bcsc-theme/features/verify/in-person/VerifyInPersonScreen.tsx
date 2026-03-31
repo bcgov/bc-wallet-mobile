@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -19,7 +18,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Linking, StyleSheet, View } from 'react-native'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
@@ -28,7 +27,6 @@ type VerifyInPersonScreenProps = {
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { updateTokens } = useSecureActions()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
   const { token } = useApi()
@@ -54,18 +52,10 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(
-        store.bcscSecure.deviceCode,
-        store.bcscSecure.userCode
-      )
-      if (refresh_token) {
-        await updateTokens({ refreshToken: refresh_token })
+      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
+      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
 
-        navigation.navigate(BCSCScreens.VerificationSuccess)
-      } else {
-        setError(true)
-        logger.error('Device verification failed, no refresh token received.')
-      }
+      navigation.navigate(BCSCScreens.VerificationSuccess)
     } catch (e) {
       logger.error(`Error completing device verification: ${e}`)
       setError(true)
@@ -108,12 +98,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       <Link
         linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
         testID={testIdWithKey('ServiceBCLink')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.VerifyWebView, {
-            title: t('BCSC.Screens.HelpCentre'),
-            url: BC_SERVICE_LOCATION_URL,
-          })
-        }}
+        onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
         style={{ marginBottom: Spacing.md }}
       />
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
@@ -126,7 +111,11 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
       </View>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
-      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
+      <ThemedText
+        testID={testIdWithKey('ConfirmationCode')}
+        variant={'headingTwo'}
+        style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}
+      >
         {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
         {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
       </ThemedText>

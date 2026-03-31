@@ -1,5 +1,4 @@
 import { BaseTourID, TourStep } from '@bifold/core'
-
 import { credentialOfferTourSteps } from './CredentialOfferTourSteps'
 import { credentialsTourSteps } from './CredentialsTourSteps'
 import { homeTourSteps } from './HomeTourSteps'

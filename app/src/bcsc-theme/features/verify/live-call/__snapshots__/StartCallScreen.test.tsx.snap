@@ -33,6 +33,7 @@ exports[`StartCall renders correctly 1`] = `
   >
     <View>
       <Image
+        onError={[Function]}
         resizeMode="contain"
         source={
           {
@@ -352,7 +353,6 @@ exports[`StartCall renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

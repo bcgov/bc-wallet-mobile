@@ -25,7 +25,7 @@ class Credential: NSObject, NSSecureCoding {
   var cardType: String?
   var accountType: String?
 
-  // Security and authentication
+  /// Security and authentication
   var acr: Int? // Authentication Context Reference / LOA level
 
   // Card expiry
@@ -41,7 +41,7 @@ class Credential: NSObject, NSSecureCoding {
   var accessTokenIDs: [String]?
   var refreshTokenIDs: [String]?
 
-  // Client registration reference
+  /// Client registration reference
   var clientID: String?
 
   init(

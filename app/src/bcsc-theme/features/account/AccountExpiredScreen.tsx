@@ -3,7 +3,7 @@ import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ScreenWrapper, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -58,12 +58,14 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
             onPress={() => {
               navigation.navigate(BCSCScreens.AccountRenewalInformation)
             }}
+            testID={testIdWithKey('Renew')}
           />
           <CardButton
             title={t('BCSC.AccountExpired.RemoveButton')}
             onPress={async () => {
-              navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+              navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
             }}
+            testID={testIdWithKey('RemoveAccount')}
           />
         </View>
       </ScrollView>

@@ -14,7 +14,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View } from 'react-native'
 import { SvgProps } from 'react-native-svg'
-
 import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'

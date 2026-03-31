@@ -2,7 +2,6 @@ import { RenderProps, TourBox, TourStep, useTheme } from '@bifold/core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Text } from 'react-native'
-
 import useTourImageDimensions from './hooks/tour-image-dimensions'
 
 export const credentialOfferTourSteps: TourStep[] = [

@@ -1,15 +1,32 @@
+import { AppError } from '@/errors/appError'
+import { AppEventCode } from '@/events/appEventCode'
 import { DeviceEventEmitter } from 'react-native'
-
+import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
+import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
+import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 import { PairingService } from '../pairing'
+import { VerificationResponseService } from '../verification-response'
 import { FcmViewModel } from './FcmViewModel'
 import { FcmMessage, FcmService } from './services/fcm-service'
+
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    trackErrorEvent: jest.fn(),
+  },
+}))
 
 // Mock dependencies
 jest.mock('react-native-bcsc-core', () => ({
   decodeLoginChallenge: jest.fn(),
   showLocalNotification: jest.fn(),
+  isBcscNativeError: (error: unknown): boolean => {
+    return error instanceof Error && 'code' in error
+  },
+  BcscNativeErrorCodes: {
+    FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
+  },
 }))
 
 // Mock the API client getter
@@ -28,14 +45,12 @@ jest.mock('../../contexts/BCSCApiClientContext', () => ({
   getBCSCApiClient: jest.fn(() => mockApiClient),
 }))
 
-import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
-import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
-
 describe('FcmViewModel', () => {
   let viewModel: FcmViewModel
   let mockFcmService: jest.Mocked<FcmService>
-  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
+  let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock; debug: jest.Mock }
   let mockPairingService: jest.Mocked<PairingService>
+  let mockVerificationResponseService: jest.Mocked<VerificationResponseService>
   let capturedMessageHandler: ((message: FcmMessage) => void) | null = null
 
   beforeEach(() => {
@@ -63,16 +78,27 @@ describe('FcmViewModel', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
+      debug: jest.fn(),
     }
 
     mockPairingService = {
       handlePairing: jest.fn(),
     } as unknown as jest.Mocked<PairingService>
 
+    mockVerificationResponseService = {
+      handleRequestReviewed: jest.fn(),
+    } as unknown as jest.Mocked<VerificationResponseService>
+
     // Mock fetchJwk to return a test JWK
     mockFetchJwk.mockResolvedValue({ kty: 'RSA', n: 'test', e: 'AQAB' })
 
-    viewModel = new FcmViewModel(mockFcmService, mockLogger as any, mockPairingService, Mode.BCSC)
+    viewModel = new FcmViewModel(
+      mockFcmService,
+      mockLogger as any,
+      mockPairingService,
+      mockVerificationResponseService,
+      Mode.BCSC
+    )
   })
 
   describe('initialize', () => {
@@ -142,11 +168,33 @@ describe('FcmViewModel', () => {
       const message = {
         type: 'status',
         data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        rawMessage: { data: {}, notification: undefined },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(showLocalNotification).toHaveBeenCalledWith('Status Update', 'Approved!')
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
+      expect(showLocalNotification).not.toHaveBeenCalled()
+    })
+
+    it('does not show local notification for status when FCM payload has notification block', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'approved',
+          title: 'App Setup Complete',
+          message: 'Identity verified and the app is ready to use.',
+        },
+        rawMessage: {
+          data: {},
+          notification: { title: 'App Setup Complete', body: 'Identity verified and the app is ready to use.' },
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Status notification received'))
+      expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
     it('routes notification messages to handleGenericNotification', async () => {
@@ -221,7 +269,7 @@ describe('FcmViewModel', () => {
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
 
-    it('logs error when decodeLoginChallenge throws', async () => {
+    it('logs error with ERR_114 event code when decodeLoginChallenge throws', async () => {
       const mockDecode = decodeLoginChallenge as jest.Mock
       mockDecode.mockRejectedValue(new Error('Invalid JWT'))
 
@@ -232,7 +280,135 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to decode challenge'))
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify'),
+        expect.objectContaining({ appEvent: 'err_114_failed_to_get_claims_set_after_decrypt_and_verify' })
+      )
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+    })
+
+    it('emits ERR_111 when verified is false and server JWK is unavailable', async () => {
+      // Create a fresh viewModel where JWK fetch returns null
+      mockFetchJwk.mockResolvedValue(null)
+      // eslint-disable-next-line prefer-const
+      let localHandler: ((message: FcmMessage) => void) | undefined
+      const localFcmService = {
+        init: jest.fn(),
+        destroy: jest.fn(),
+        subscribe: jest.fn((h: (message: FcmMessage) => void) => {
+          localHandler = h
+          return jest.fn()
+        }),
+      } as unknown as jest.Mocked<FcmService>
+
+      const noJwkViewModel = new FcmViewModel(
+        localFcmService,
+        mockLogger as any,
+        mockPairingService,
+        mockVerificationResponseService,
+        Mode.BCSC
+      )
+
+      const mockErrorHandler = jest.fn()
+      noJwkViewModel.setErrorHandler(mockErrorHandler)
+      noJwkViewModel.initialize()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      const mockResult = {
+        verified: false,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'unverified-jwt' },
+      } as FcmMessage
+
+      await localHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('JWK unavailable'))
+    })
+
+    it('calls error handler and does not process pairing when verified is false', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+
+      const mockResult = {
+        verified: false,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'unverified-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('JWS verification failed'))
+    })
+
+    it('processes pairing normally when verified is true', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+
+      const mockResult = {
+        verified: true,
+        claims: {
+          bcsc_client_name: 'My Service',
+          bcsc_challenge: 'code456',
+        },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'verified-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).not.toHaveBeenCalled()
+      expect(mockPairingService.handlePairing).toHaveBeenCalledWith({
+        serviceTitle: 'My Service',
+        pairingCode: 'code456',
+        source: 'fcm',
+      })
+    })
+
+    it('wraps decodeLoginChallenge errors as AppError with claims set fallback', async () => {
+      const nativeError = Object.assign(new Error('Invalid JWS format'), { code: 'E_FAILED_TO_PARSE_JWS' })
+      ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(nativeError)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'malformed-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('err_114_failed_to_get_claims_set_after_decrypt_and_verify'),
+        expect.anything()
+      )
       expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
   })
@@ -275,7 +451,7 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No keys found in JWKS response'))
     })
 
     it('logs error when fetch fails', async () => {
@@ -331,7 +507,7 @@ describe('FcmViewModel', () => {
     })
   })
 
-  describe('refreshTokens (via handleStatusNotification)', () => {
+  describe('status notification (non-request-reviewed)', () => {
     let emitSpy: jest.SpyInstance
 
     beforeEach(() => {
@@ -343,93 +519,235 @@ describe('FcmViewModel', () => {
       emitSpy.mockRestore()
     })
 
-    it('refreshes tokens when a status notification is received', async () => {
-      mockGetTokensForRefreshToken.mockResolvedValue({})
+    it('does not call VerificationResponseService for non-Authorization events', async () => {
+      const statusClaims = {
+        bcsc_event: BCSCEvent.Renewal,
+        bcsc_reason: BCSCReason.Renew,
+        aud: 'test',
+        iss: 'test',
+        exp: 12345,
+        iat: 12345,
+        jti: 'test-jti',
+      }
 
       const message = {
         type: 'status',
-        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        data: {
+          bcsc_status_notification: JSON.stringify(statusClaims),
+          title: 'Renewal',
+          message: 'Your account has been renewed',
+        },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
-    it('emits TOKENS_REFRESHED event after successful token refresh', async () => {
-      mockGetTokensForRefreshToken.mockResolvedValue({})
+    it('does not call VerificationResponseService for Authorization with non-approval reason', async () => {
+      const statusClaims = {
+        bcsc_event: BCSCEvent.Authorization,
+        bcsc_reason: BCSCReason.CanceledByAgent,
+        aud: 'test',
+        iss: 'test',
+        exp: 12345,
+        iat: 12345,
+        jti: 'test-jti',
+      }
 
       const message = {
         type: 'status',
-        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        data: {
+          bcsc_status_notification: JSON.stringify(statusClaims),
+          title: 'Status Update',
+          message: 'Your account status has changed',
+        },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
     })
 
-    it('logs warning when no refresh token is available', async () => {
-      mockApiClient.tokens = null as any
-
+    it('handles missing bcsc_status_notification gracefully', async () => {
       const message = {
         type: 'status',
-        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        data: {
+          bcsc_status_notification: '',
+          title: 'Status Update',
+          message: 'Some message',
+        },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot refresh tokens - no API client or refresh token available')
-      )
-      expect(mockGetTokensForRefreshToken).not.toHaveBeenCalled()
+      // With empty notification, parseStatusNotificationClaims returns null silently
+      // and no verification response is triggered
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
+    })
+
+    it('handles JSON parse failure gracefully', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: 'invalid-json{',
+          title: 'Status Update',
+          message: 'Some message',
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      // With invalid JSON, parseStatusNotificationClaims returns null silently
+      // and no verification response is triggered
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('verification request reviewed detection (send-video)', () => {
+    let emitSpy: jest.SpyInstance
+
+    beforeEach(() => {
+      viewModel.initialize()
+      emitSpy = jest.spyOn(DeviceEventEmitter, 'emit')
+      mockGetTokensForRefreshToken.mockResolvedValue({})
+    })
+
+    afterEach(() => {
+      emitSpy.mockRestore()
+    })
+
+    it('calls handleRequestReviewed when title is "Verification Request Reviewed"', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: '',
+          title: 'Verification Request Reviewed',
+          message: 'Your verification request has been reviewed.',
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockVerificationResponseService.handleRequestReviewed).toHaveBeenCalled()
+    })
+
+    it('does not refresh tokens when verification request reviewed is detected', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: '',
+          title: 'Verification Request Reviewed',
+          message: 'Your verification request has been reviewed.',
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockVerificationResponseService.handleRequestReviewed).toHaveBeenCalled()
       expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
     })
 
-    it('logs warning when API client is not available', async () => {
-      const mockGetBCSCApiClient = getBCSCApiClient as jest.Mock
+    it('does not call handleRequestReviewed for other titles', async () => {
+      const message = {
+        type: 'status',
+        data: {
+          bcsc_status_notification: '',
+          title: 'Some Other Title',
+          message: 'Some message',
+        },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockVerificationResponseService.handleRequestReviewed).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('processPendingChallenges', () => {
+    const mockGetBCSCApiClient = getBCSCApiClient as jest.Mock
+
+    beforeEach(() => {
+      viewModel.initialize()
+    })
+
+    it('buffers challenge when API client is not ready', async () => {
       mockGetBCSCApiClient.mockReturnValue(null)
 
       const message = {
-        type: 'status',
-        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+        type: 'challenge',
+        data: { jwt: 'test-jwt' },
       } as FcmMessage
 
       await capturedMessageHandler?.(message)
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot refresh tokens - no API client or refresh token available')
-      )
-      expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('API client not ready'))
     })
 
-    it('logs error when token refresh fails', async () => {
-      mockGetTokensForRefreshToken.mockRejectedValue(new Error('Token refresh failed'))
+    it('processes buffered challenge once API client is ready', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
 
-      const message = {
-        type: 'status',
-        data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
-      } as FcmMessage
+      const mockResult = {
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'challenge123' },
+      }
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue(mockResult)
 
-      await capturedMessageHandler?.(message)
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'test-jwt' } } as FcmMessage)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
 
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to refresh tokens'))
-      expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).toHaveBeenCalledWith({
+        serviceTitle: 'Test Service',
+        pairingCode: 'challenge123',
+        source: 'fcm',
+      })
     })
 
-    it('refreshes tokens even when status notification has no title/message', async () => {
-      mockGetTokensForRefreshToken.mockResolvedValue({})
+    it('processes multiple buffered challenges', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
+      })
 
-      const message = {
-        type: 'status',
-        data: { bcsc_status_notification: 'approved', title: '', message: '' },
-      } as FcmMessage
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'jwt-1' } } as FcmMessage)
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'jwt-2' } } as FcmMessage)
 
-      await capturedMessageHandler?.(message)
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
 
-      expect(showLocalNotification).not.toHaveBeenCalled()
-      expect(mockGetTokensForRefreshToken).toHaveBeenCalledWith('mock-refresh-token')
-      expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).toHaveBeenCalledTimes(2)
+    })
+
+    it('does nothing when queue is empty', async () => {
+      await viewModel.processPendingChallenges()
+
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('0 pending challenge(s)'))
+    })
+
+    it('clears the queue so a second call does not reprocess', async () => {
+      mockGetBCSCApiClient.mockReturnValue(null)
+      ;(decodeLoginChallenge as jest.Mock).mockResolvedValue({
+        verified: true,
+        claims: { bcsc_client_name: 'Test Service', bcsc_challenge: 'code' },
+      })
+
+      await capturedMessageHandler?.({ type: 'challenge', data: { jwt: 'test-jwt' } } as FcmMessage)
+
+      mockGetBCSCApiClient.mockReturnValue(mockApiClient)
+      await viewModel.processPendingChallenges()
+      expect(mockPairingService.handlePairing).toHaveBeenCalledTimes(1)
+
+      mockPairingService.handlePairing.mockClear()
+      await viewModel.processPendingChallenges()
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     })
   })
 
@@ -450,6 +768,7 @@ describe('FcmViewModel', () => {
         bcWalletFcmService,
         mockLogger as any,
         mockPairingService,
+        mockVerificationResponseService,
         Mode.BCWallet
       )
 
@@ -467,6 +786,7 @@ describe('FcmViewModel', () => {
         bcWalletFcmService,
         mockLogger as any,
         mockPairingService,
+        mockVerificationResponseService,
         Mode.BCWallet
       )
 

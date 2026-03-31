@@ -55,10 +55,17 @@ export interface ServicePeriod {
   end_time: string // e.g. "23:59"
 }
 
+export interface ServiceUnavailablePeriod {
+  start_date: number // seconds from epoch
+  end_date: number // seconds from epoch
+  reason: string // "MAINTENANCE" or "HOLIDAY"
+  reason_description: string // e.g. Thanksgiving closure, Scheduled maintenance etc.
+}
+
 export interface ServiceHours {
-  time_zone: string
+  time_zone: string // e.g. "America/Vancouver"
   regular_service_periods: ServicePeriod[]
-  service_unavailable_periods: ServicePeriod[]
+  service_unavailable_periods: ServiceUnavailablePeriod[]
 }
 
 const useVideoCallApi = (apiClient: BCSCApiClient) => {
@@ -77,7 +84,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
       const deviceCode = _getDeviceCode()
       const body = { client_id: account.clientID, device_code: deviceCode }
       const token = await createPreVerificationJWT(deviceCode, account.clientID)
-      const { data } = await apiClient.post<VideoSession>(`${apiClient.endpoints.video}/v2/sessions/`, body, {
+      const { data } = await apiClient.post<VideoSession>(`${apiClient.endpoints.video}/v2/sessions`, body, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -119,7 +126,7 @@ const useVideoCallApi = (apiClient: BCSCApiClient) => {
 
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<VideoCall>(
-          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls`,
           body,
           {
             headers: {

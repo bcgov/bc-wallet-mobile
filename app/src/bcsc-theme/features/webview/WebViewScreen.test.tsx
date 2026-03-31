@@ -1,0 +1,26 @@
+import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import React from 'react'
+import { WebViewScreen } from './WebViewScreen'
+
+describe('WebViewScreen', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('renders correctly', () => {
+    const route = { params: { url: 'https://example.com', title: 'Test' } }
+    const tree = render(
+      <BasicAppContext>
+        <WebViewScreen route={route as never} />
+      </BasicAppContext>
+    )
+
+    expect(tree).toMatchSnapshot()
+  })
+})

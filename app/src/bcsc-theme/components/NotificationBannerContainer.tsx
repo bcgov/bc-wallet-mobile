@@ -1,12 +1,14 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { SafeAreaModal, useStore } from '@bifold/core'
+import { openLink } from '@/utils/links'
+import { SafeAreaModal, TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
+import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
-import { AppBanner, BCSCBanner } from './AppBanner'
+import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
@@ -20,19 +22,32 @@ interface NotificationBannerContainerProps {
  */
 export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
-  const handleBannerPress = (bannerId: BCSCBanner): void => {
+  const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
+    const bannerId = banner.id
     // Handle other banner types as needed
 
-    if (bannerId === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
+    if (banner.id === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
       return setDevicesModalVisible(true)
     }
 
-    if (bannerId === BCSCBanner.ACCOUNT_EXPIRING_SOON) {
+    if (banner.id === BCSCBanner.ACCOUNT_EXPIRING_SOON) {
       navigation.navigate(BCSCScreens.AccountRenewalInformation)
+    }
+
+    if (
+      (banner.id === BCSCBanner.IAS_SERVER_NOTIFICATION || banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE) &&
+      typeof banner.metadata?.contactLink === 'string'
+    ) {
+      try {
+        await openLink(banner.metadata.contactLink)
+      } catch (error) {
+        logger.error('Failed to open URL from banner:', error as Error)
+      }
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)
@@ -48,6 +63,12 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
     setDevicesModalVisible(false)
   }, [])
 
+  const handleDeleteDeviceCountMessage = useCallback(() => {
+    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
+    setMaxDevicesBannerLastDisplayedDate(Date.now())
+    handleCloseDevicesModal({ shouldAnimate: true })
+  }, [dispatch, handleCloseDevicesModal])
+
   return (
     <View>
       <SafeAreaModal
@@ -57,9 +78,9 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
         animationType={devicesModalShouldAnimate.current ? 'slide' : 'none'}
       >
         <ReviewDevices
-          bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+          handleDelete={handleDeleteDeviceCountMessage}
           onManageDevices={onManageDevices}
         />
       </SafeAreaModal>
@@ -71,7 +92,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
           description: banner.description,
           type: banner.type,
           dismissible: banner.dismissible,
-          onPress: () => handleBannerPress(banner.id),
+          onPress: () => handleBannerPress(banner),
         }))}
       />
     </View>

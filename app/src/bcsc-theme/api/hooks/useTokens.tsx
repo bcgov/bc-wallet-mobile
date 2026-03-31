@@ -1,5 +1,8 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -22,6 +25,8 @@ export interface TokenResponse {
   scope: string
   token_type: string
 }
+
+export type TokenApi = ReturnType<typeof useTokenApi>
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
   const { updateTokens } = useSecureActions()
@@ -57,10 +62,15 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           skipBearerAuth: true,
         })
 
-        await updateTokens({ refreshToken: data.refresh_token })
-        apiClient.tokens = data
+        try {
+          apiClient.tokens = data
+          await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
+        } catch (error) {
+          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens`, error as Error)
+          throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        }
 
-        return apiClient.tokens
+        return apiClient.tokens!
       })
     },
     [apiClient, updateTokens]
@@ -78,7 +88,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
       if (!apiClient.tokens) {
-        throw new Error('No tokens available')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+          cause: new Error('apiClient.tokens is null in getCachedIdTokenMetadata'),
+        })
       }
 
       if (config.refreshCache) {

@@ -47,6 +47,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/CallStatusTitle"
       >
         BCSC.VideoCall.CallBusyOrClosed.CallUsLater
       </Text>
@@ -83,27 +84,67 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/HoursOfServiceTitle"
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
-      <Text
-        maxFontSizeMultiplier={2}
+      <View
         style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            {
-              "marginBottom": 16,
-            },
-          ]
+          {
+            "marginBottom": 16,
+          }
         }
       >
-        BCSC.VideoCall.DefaultHours
-      </Text>
+        <View
+          testID="com.ariesbifold:id/ServicePeriodList"
+        >
+          <View
+            style={
+              {
+                "flex": 1,
+                "marginBottom": 16,
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "fontWeight": "normal",
+                  },
+                ]
+              }
+              testID="com.ariesbifold:id/ServicePeriodTitle_Monday to Friday"
+            >
+              Monday to Friday
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  undefined,
+                ]
+              }
+              testID="com.ariesbifold:id/ServicePeriodHours_8:00 AM - 5:00 PM Pacific Time"
+            >
+              8:00 AM - 5:00 PM Pacific Time
+            </Text>
+          </View>
+        </View>
+      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -119,6 +160,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
             },
           ]
         }
+        testID="com.ariesbifold:id/ReminderTitle"
       >
         BCSC.VideoCall.CallBusyOrClosed.Reminder
       </Text>
@@ -221,7 +263,6 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

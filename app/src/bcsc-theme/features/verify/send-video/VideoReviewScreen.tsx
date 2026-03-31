@@ -1,6 +1,8 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
+import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
 import {
   Button,
@@ -45,6 +47,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
+  const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
@@ -55,7 +58,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       position: 'relative',
       flexGrow: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-      marginTop: Spacing.xl,
     },
     videoContainer: {
       flexGrow: 1,
@@ -80,12 +82,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       marginTop: Spacing.lg,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    controlsContainer: {
-      padding: Spacing.md,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
     },
   })
 
@@ -127,7 +123,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       // Clear the previously cached video
       VerificationVideoCache.clearCache()
 
-      const videoFilePromise = readFileInChunks(videoPath, logger)
+      // Wrap the file reader with alert
+      const readFileInChunksWithAlert = withAlert(readFileInChunks, failedToReadFromLocalStorageAlert)
+      const videoFilePromise = readFileInChunksWithAlert(videoPath, logger)
 
       // Set cache to a promise to be resolved by whoever needs it first
       VerificationVideoCache.setCache(videoFilePromise)
@@ -151,25 +149,18 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
       />
-      <View style={styles.secondButton}>
-        <Button
-          buttonType={ButtonType.Tertiary}
-          onPress={onPressRetake}
-          testID={testIdWithKey('RetakeVideo')}
-          title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-          accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
-        />
-      </View>
+      <Button
+        buttonType={ButtonType.Tertiary}
+        onPress={onPressRetake}
+        testID={testIdWithKey('RetakeVideo')}
+        title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+      />
     </>
   )
 
   return (
-    <ScreenWrapper
-      padded={false}
-      style={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper edges={['top', 'bottom', 'left', 'right']} style={styles.pageContainer} controls={controls}>
       <View style={styles.videoContainer}>
         <ThemedText variant={'headingFour'} style={styles.heading}>
           {t('BCSC.SendVideo.VideoReview.Heading')}
@@ -185,7 +176,13 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
           onLoad={(data) => onVideoLoad(data)}
           disableAudioSessionManagement
         />
-        <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
+        <TouchableOpacity
+          style={styles.pauseButton}
+          onPress={onTogglePause}
+          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
+          accessibilityRole="button"
+          testID={testIdWithKey('TogglePlayPause')}
+        >
           <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
         </TouchableOpacity>
       </View>

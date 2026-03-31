@@ -1,9 +1,8 @@
+import EmptyWallet from '@assets/img/emptyWallet.svg'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Text, View } from 'react-native'
-
-import EmptyWallet from '@assets/img/emptyWallet.svg'
 import { BCWalletEventTypes } from '../../events/eventTypes'
 export interface EmptyListProps {
   message?: string

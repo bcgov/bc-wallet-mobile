@@ -1,36 +1,19 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
+import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, waitFor } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import {
-  AccountSecurityMethod,
-  canPerformDeviceAuthentication,
-  getAccountSecurityMethod,
-  isAccountLocked,
-  unlockWithDeviceSecurity,
-} from 'react-native-bcsc-core'
+import { verifyPIN } from 'react-native-bcsc-core'
 import { EnterPINScreen } from './EnterPINScreen'
 
 jest.mock('react-native-bcsc-core', () => ({
-  canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
-  getAccountSecurityMethod: jest.fn().mockResolvedValue('app_pin_no_device_authn'),
-  isAccountLocked: jest.fn().mockResolvedValue({ locked: false, remainingTime: 0 }),
-  unlockWithDeviceSecurity: jest.fn().mockResolvedValue({ success: false, walletKey: '' }),
-  verifyPIN: jest.fn().mockResolvedValue({ success: false, walletKey: '', locked: false, message: 'Incorrect PIN' }),
-  AccountSecurityMethod: {
-    PinNoDeviceAuth: 'app_pin_no_device_authn',
-    PinWithDeviceAuth: 'app_pin_has_device_authn',
-    DeviceAuth: 'device_authentication',
-  },
+  verifyPIN: jest
+    .fn()
+    .mockResolvedValue({ success: false, walletKey: '', locked: false, message: 'Incorrect PIN', remainingTime: 0 }),
 }))
 
 const mockHandleSuccessfulAuth = jest.fn()
-
-jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
-  useBCSCApiClientState: () => ({
-    client: {},
-    isClientReady: true,
-  }),
-}))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
@@ -39,17 +22,7 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   }),
 }))
 
-jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
-  useLoadingScreen: () => ({
-    startLoading: jest.fn(),
-    stopLoading: jest.fn(),
-  }),
-}))
-
-const mockGetAccountSecurityMethod = jest.mocked(getAccountSecurityMethod)
-const mockIsAccountLocked = jest.mocked(isAccountLocked)
-const mockCanPerformDeviceAuthentication = jest.mocked(canPerformDeviceAuthentication)
-const mockUnlockWithDeviceSecurity = jest.mocked(unlockWithDeviceSecurity)
+const mockVerifyPIN = jest.mocked(verifyPIN)
 
 const mockNavigation = {
   navigate: jest.fn(),
@@ -67,10 +40,13 @@ describe('EnterPINScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    // Default to PIN mode, not locked
-    mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
-    mockIsAccountLocked.mockResolvedValue({ locked: false, remainingTime: 0 })
-    mockCanPerformDeviceAuthentication.mockResolvedValue(false)
+    mockVerifyPIN.mockResolvedValue({
+      success: false,
+      walletKey: '',
+      locked: false,
+      message: 'Incorrect PIN',
+      remainingTime: 0,
+    })
   })
 
   afterEach(() => {
@@ -93,93 +69,33 @@ describe('EnterPINScreen', () => {
     })
   })
 
-  describe('initialization - locked account', () => {
-    it('navigates to Lockout screen when account is locked', async () => {
-      mockIsAccountLocked.mockResolvedValue({ locked: true, remainingTime: 60 })
+  describe('PIN verification - locked account', () => {
+    it('navigates to Lockout screen when PIN verification returns locked', async () => {
+      mockVerifyPIN.mockResolvedValue({ success: false, walletKey: '', locked: true, message: '', remainingTime: 60 })
 
-      render(
+      const tree = render(
         <BasicAppContext>
           <EnterPINScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
+
+      await waitFor(() => {
+        expect(tree.getByText('Enter your 6-digit PIN')).toBeTruthy()
+      })
+
+      // Simulate entering a 6-digit PIN and pressing Continue
+      fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+      fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(mockNavigation.dispatch).toHaveBeenCalledWith(
           expect.objectContaining({
             type: 'RESET',
             payload: expect.objectContaining({
-              routes: [{ name: 'BCSCLockout' }],
+              routes: [{ name: BCSCScreens.Lockout }],
             }),
           })
         )
-      })
-    })
-  })
-
-  describe('initialization - device auth mode', () => {
-    it('attempts device authentication when method is DeviceAuth and auth succeeds', async () => {
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.DeviceAuth)
-      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockUnlockWithDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'test-key' })
-
-      render(
-        <BasicAppContext>
-          <EnterPINScreen navigation={mockNavigation} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockUnlockWithDeviceSecurity).toHaveBeenCalledWith('Unlock your app')
-      })
-
-      await waitFor(() => {
-        expect(mockHandleSuccessfulAuth).toHaveBeenCalledWith('test-key')
-      })
-    })
-
-    it('goes back when device authentication fails or is cancelled', async () => {
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.DeviceAuth)
-      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockUnlockWithDeviceSecurity.mockResolvedValue({ success: false, walletKey: '' })
-
-      render(
-        <BasicAppContext>
-          <EnterPINScreen navigation={mockNavigation} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockNavigation.goBack).toHaveBeenCalled()
-      })
-    })
-
-    it('navigates to DeviceAuthAppReset when device auth is not available', async () => {
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.DeviceAuth)
-      mockCanPerformDeviceAuthentication.mockResolvedValue(false)
-
-      render(
-        <BasicAppContext>
-          <EnterPINScreen navigation={mockNavigation} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockNavigation.navigate).toHaveBeenCalledWith('BCSCDeviceAuthAppReset')
-      })
-    })
-
-    it('goes back when device authentication throws an error', async () => {
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.DeviceAuth)
-      mockCanPerformDeviceAuthentication.mockRejectedValue(new Error('Device auth error'))
-
-      render(
-        <BasicAppContext>
-          <EnterPINScreen navigation={mockNavigation} />
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(mockNavigation.goBack).toHaveBeenCalled()
       })
     })
   })
@@ -193,7 +109,26 @@ describe('EnterPINScreen', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('Get Help')).toBeTruthy()
+        expect(tree.getByText('Global.GetHelp')).toBeTruthy()
+      })
+    })
+
+    it('navigates to AuthWebView with forgot PIN help when Get Help is pressed', async () => {
+      const tree = render(
+        <BasicAppContext>
+          <EnterPINScreen navigation={mockNavigation} />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(tree.getByText('Global.GetHelp')).toBeTruthy()
+      })
+
+      fireEvent.press(tree.getByTestId(testIdWithKey('GetHelp')))
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AuthWebView, {
+        url: HelpCentreUrl.FORGOT_PIN,
+        title: expect.any(String),
       })
     })
 

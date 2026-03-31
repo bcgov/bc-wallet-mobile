@@ -38,3 +38,24 @@ export const showAlert = (title: string, body: string, actions?: AlertAction[], 
     Analytics.trackAlertDisplayEvent(event)
   }
 }
+
+/**
+ * Wrap an async function with an alert callback.
+ *
+ * @param fn - The function to wrap
+ * @param alert - The alert function to call if an error is thrown
+ * @returns A new function that wraps the original function with an alert on error
+ */
+export const withAlert = <TArgs extends unknown[], TResult>(
+  fn: (...args: TArgs) => Promise<TResult>,
+  alert: () => void
+) => {
+  return async (...args: TArgs): Promise<TResult> => {
+    try {
+      return await fn(...args)
+    } catch (error) {
+      alert() // NOTE (MD): Pass error details to alert if needed
+      throw error
+    }
+  }
+}

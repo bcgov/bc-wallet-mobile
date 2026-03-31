@@ -1,6 +1,7 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { hitSlop } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -13,13 +14,15 @@ type ServiceBookmarkButtonProps = {
 
 const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButtonProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { t } = useTranslation()
+  const { updateSavedService } = useSecureActions()
 
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.secondaryBackground,
       padding: Spacing.md,
+      gap: Spacing.md,
     },
     row: {
       flexDirection: 'row',
@@ -29,16 +32,12 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   })
 
   const bookmarked = useMemo(() => {
-    return store.bcsc.bookmarks.includes(serviceId)
-  }, [store.bcsc.bookmarks, serviceId])
+    return store.bcscSecure.savedServices.includes(serviceId)
+  }, [store.bcscSecure.savedServices, serviceId])
 
   const handleBookmarkPress = useCallback(() => {
-    if (bookmarked) {
-      dispatch({ type: BCDispatchAction.REMOVE_BOOKMARK, payload: [serviceId] })
-    } else {
-      dispatch({ type: BCDispatchAction.ADD_BOOKMARK, payload: [serviceId] })
-    }
-  }, [dispatch, serviceId, bookmarked])
+    updateSavedService(serviceId, !bookmarked, { clientName: serviceName })
+  }, [serviceId, bookmarked, serviceName, updateSavedService])
 
   return (
     <View style={styles.container}>
@@ -47,10 +46,17 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
           <ThemedText variant={'bold'}>{t('BCSC.ManualPairing.BookmarkService')}</ThemedText>
           <ThemedText variant={'bold'}>{serviceName}</ThemedText>
         </View>
-        <TouchableOpacity hitSlop={hitSlop} onPress={handleBookmarkPress}>
+        <TouchableOpacity
+          hitSlop={hitSlop}
+          onPress={handleBookmarkPress}
+          accessibilityLabel={t('BCSC.ManualPairing.ToggleBookmark')}
+          accessibilityRole="button"
+          testID={testIdWithKey('ToggleBookmark')}
+        >
           <Icon size={32} color={ColorPalette.brand.icon} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />
         </TouchableOpacity>
       </View>
+      <ThemedText variant={'caption'}>{t('BCSC.ManualPairing.BookmarkDescription')}</ThemedText>
     </View>
   )
 }

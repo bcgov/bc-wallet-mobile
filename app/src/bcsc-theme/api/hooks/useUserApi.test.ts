@@ -1,9 +1,36 @@
 import useUserApi from '@/bcsc-theme/api/hooks/useUserApi'
+import { AppError, ErrorRegistry } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
 describe('useUserApi', () => {
   describe('getUserInfo', () => {
+    it('should wrap native E_FAILED_TO_PARSE_JWS as DECRYPT_JWE_ERROR', async () => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      const nativeError = Object.assign(new Error('Invalid JWS'), { code: 'E_FAILED_TO_PARSE_JWS' })
+      decodePayloadMock.mockRejectedValue(nativeError)
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
+        await expect(hook.result.current.getUserInfo()).rejects.toThrow(
+          AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: nativeError })
+        )
+      })
+    })
+
     it('should fetch user info successfully', async () => {
       const decodePayloadMock = jest.mocked(BcscCore).decodePayload
       const getAccountMock = jest.mocked(BcscCore).getAccount
@@ -27,6 +54,32 @@ describe('useUserApi', () => {
         expect(user.given_name).toBe('steve brule')
       })
     })
+
+    it('should throw ERR_114 when decoded payload is null', async () => {
+      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
+      const getAccountMock = jest.mocked(BcscCore).getAccount
+
+      const mockApiClient = {
+        get: jest.fn(),
+        endpoints: {
+          userInfo: '/user/info',
+        },
+      }
+
+      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
+      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' })
+      decodePayloadMock.mockResolvedValue('null')
+
+      const hook = renderHook(() => useUserApi(mockApiClient as any))
+
+      await act(async () => {
+        await expect(hook.result.current.getUserInfo()).rejects.toThrow(
+          expect.objectContaining({
+            appEvent: AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY,
+          })
+        )
+      })
+    })
   })
 
   describe('getPicture', () => {
@@ -48,57 +101,6 @@ describe('useUserApi', () => {
       await act(async () => {
         const pictureUri = await hook.result.current.getPicture('http://example.com/pic.jpg')
         expect(pictureUri).toBe('data:image/jpeg;base64,SGVsbG8=')
-      })
-    })
-  })
-
-  describe('getUserMetadata', () => {
-    it('should return both the user and the picture', async () => {
-      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
-
-      const mockApiClient = {
-        get: jest.fn(),
-        endpoints: {
-          userInfo: '/user/info',
-        },
-      }
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
-      const binaryData = new Uint8Array([72, 101, 108, 108, 111]) // "Hello" in ASCII
-      mockApiClient.get
-        .mockResolvedValueOnce({ data: 'encoded-data' }) // first call for user info
-        .mockResolvedValueOnce({ data: binaryData.buffer }) // second call for picture
-      decodePayloadMock.mockResolvedValue(
-        JSON.stringify({ given_name: 'steve brule', picture: 'http://example.com/pic.jpg' })
-      )
-      const hook = renderHook(() => useUserApi(mockApiClient as any))
-
-      await act(async () => {
-        const { user, picture } = await hook.result.current.getUserMetadata()
-        expect(user.given_name).toBe('steve brule')
-        expect(picture).toBe('data:image/jpeg;base64,SGVsbG8=')
-      })
-    })
-
-    it('should return just the user when no picture exists', async () => {
-      const decodePayloadMock = jest.mocked(BcscCore).decodePayload
-      const getAccountMock = jest.mocked(BcscCore).getAccount
-
-      const mockApiClient = {
-        get: jest.fn(),
-        endpoints: {
-          userInfo: '/user/info',
-        },
-      }
-      getAccountMock.mockResolvedValue({ clientID: 'test' } as any)
-      mockApiClient.get.mockResolvedValue({ data: 'encoded-data' }) // call for user info
-      decodePayloadMock.mockResolvedValue(JSON.stringify({ given_name: 'steve brule' })) // no picture field
-      const hook = renderHook(() => useUserApi(mockApiClient as any))
-
-      await act(async () => {
-        const { user, picture } = await hook.result.current.getUserMetadata()
-        expect(user.given_name).toBe('steve brule')
-        expect(picture).toBeUndefined()
       })
     })
   })

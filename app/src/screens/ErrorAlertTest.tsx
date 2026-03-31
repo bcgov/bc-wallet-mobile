@@ -4,7 +4,9 @@ import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
+import { useAlerts } from '@/hooks/useAlerts'
 import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { AxiosError } from 'axios'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,12 +17,23 @@ interface ErrorAlertTestProps {
   onBack: () => void
 }
 
+const ERROR_BOUNDARY_TEST_MESSAGE =
+  'Unhandled render error (ErrorBoundaryWrapper test). This error is not caught by error modals or alerts.'
+
 const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
   const { t } = useTranslation()
   const { TextTheme, ColorPalette, SettingsTheme } = useTheme()
   const client = useBCSCApiClient()
-  const { emitError, emitErrorAlert, emitAlert, dismiss } = useErrorAlert()
+  const { emitErrorModal, emitAlert } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation()
+  const alerts = useAlerts(navigation as any)
+  const [throwInRender, setThrowInRender] = React.useState(false)
+
+  // Throw during render so only ErrorBoundaryWrapper catches it (not modals/alerts).
+  if (throwInRender) {
+    throw new Error(ERROR_BOUNDARY_TEST_MESSAGE)
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -147,6 +160,58 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
         'login_same_device_invalid_pairing_code',
         `${client.endpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
       ),
+    already_verified: () => injectErrorCodeIntoAxiosResponse(client, 'already_verified', client.endpoints.token),
+    client_login_rejected_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.clientMetadata}`)
+    },
+    client_login_rejected_401: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.clientMetadata}`)
+    },
+    client_login_rejected_403: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.clientMetadata}`)
+    },
+    device_login_rejected_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_400', `${client.endpoints.deviceAuthorization}`)
+    },
+    device_login_rejected_401: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_401', `${client.endpoints.deviceAuthorization}`)
+    },
+    device_login_rejected_403: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'login_rejected_403', `${client.endpoints.deviceAuthorization}`)
+    },
+    invalid_token: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
+    },
+    // IAS errors 201–300
+    add_card_server_configuration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_server_configuration'),
+    add_card_dynamic_registration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_dynamic_registration'),
+    add_card_terms_of_use: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_terms_of_use'),
+    add_card_incorrect_os: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_incorrect_os'),
+    add_card_provider: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_provider'),
+    err_206_missing_or_null: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_206_missing_or_null_values_in_json_response'),
+    err_207_sign_claims: () => injectErrorCodeIntoAxiosResponse(client, 'err_207_unable_to_sign_claims_set'),
+    err_208_network_call: () => injectErrorCodeIntoAxiosResponse(client, 'err_208_unexpected_network_call_exception'),
+    err_209_bad_request: () => injectErrorCodeIntoAxiosResponse(client, 'err_209_bad_request'),
+    err_210_unauthorized: () => injectErrorCodeIntoAxiosResponse(client, 'err_210_unauthorized'),
+    err_211_server_outage: () => injectErrorCodeIntoAxiosResponse(client, 'err_211_server_outage'),
+    err_212_retry_later: () => injectErrorCodeIntoAxiosResponse(client, 'err_212_retry_later'),
+    err_213_client_reg: () => injectErrorCodeIntoAxiosResponse(client, 'err_213_failed_creating_client_registration'),
+    err_299_keys_out_of_sync: () => injectErrorCodeIntoAxiosResponse(client, 'err_299_keys_out_of_sync'),
+    err_300_empty_response: () => injectErrorCodeIntoAxiosResponse(client, 'err_300_empty_response'),
+    // IAS errors 400–501
+    err_400_failed_to_retrieve_string_resource: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_400_failed_to_retrieve_string_resource'),
+    err_500_invalid_url: () => injectErrorCodeIntoAxiosResponse(client, 'err_500_invalid_url'),
+    err_501_invalid_registration_request: () =>
+      injectErrorCodeIntoAxiosResponse(client, 'err_501_invalid_registration_request'),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -163,21 +228,18 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       [ErrorCategory.STORAGE]: 'storage',
       [ErrorCategory.TOKEN]: 'vpn-key',
       [ErrorCategory.GENERAL]: 'error',
+      [ErrorCategory.UNKNOWN]: 'help-outline',
     }
     return icons[category] || 'error'
   }
 
-  const triggerError = (key: ErrorRegistryKey) => {
-    emitError(key, {
-      error: new Error(`Test error triggered for: ${key}`),
-      context: { source: 'ErrorAlertTest', timestamp: new Date().toISOString() },
-    })
+  const triggerError = (key: ErrorRegistryKey, description: string) => {
+    onBack()
+    emitErrorModal('Error Modal Triggered', description, AppError.fromErrorDefinition(ErrorRegistry[key]))
   }
 
-  const triggerErrorAsAlert = (key: ErrorRegistryKey) => {
-    const definition = ErrorRegistry[key]
-    const error = AppError.fromErrorDefinition(definition)
-    emitErrorAlert(error, {
+  const triggerErrorAsAlert = (key: ErrorRegistryKey, description: string) => {
+    emitAlert('Native alert triggered', description, {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
         { text: t('Global.Okay'), style: 'default' },
@@ -205,7 +267,10 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     try {
       await client.get(endpoint ?? '/any-endpoint')
     } catch (error) {
-      logger.debug(`Injected error code ${errorCode} into Axios response`)
+      // In Axios 1.x, a thrown request interceptor error still flows through the response
+      // interceptor chain, so client.onError has already been invoked. Avoid re-processing
+      // the error here; just log that the injected error was triggered for QA verification.
+      logger.debug(`Injected error code ${errorCode} into Axios response`, { error })
     }
   }
 
@@ -246,9 +311,28 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                   accessibilityLabel={`Trigger ${key} error`}
                   testID={`error-${key}`}
                   buttonType={ButtonType.Secondary}
-                  onPress={() => triggerError(key)}
+                  onPress={() => triggerError(key, description)}
                 />
                 <Text style={[styles.description, { marginTop: 4, marginBottom: 0 }]}>{description}</Text>
+              </View>
+            )
+          })}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'useAlerts Hook'}</Text>
+          <Text style={styles.description}>{'useAlerts callbacks'}</Text>
+          {Object.keys(alerts).map((alertCallback) => {
+            const showAlert = alerts[alertCallback as keyof typeof alerts]
+            return (
+              <View key={alertCallback} style={styles.buttonRow}>
+                <Button
+                  title={alertCallback}
+                  accessibilityLabel={`Trigger useAlerts ${alertCallback}`}
+                  testID={`api-error-${alertCallback}`}
+                  buttonType={ButtonType.Secondary}
+                  onPress={showAlert}
+                />
               </View>
             )
           })}
@@ -275,14 +359,14 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           <Text style={styles.sectionHeader}>{t('Developer.ErrorAsNativeAlert')}</Text>
           <Text style={styles.description}>{t('Developer.ErrorAsNativeAlertDescription')}</Text>
 
-          {sampleErrors.slice(0, 4).map(({ key }) => (
+          {sampleErrors.slice(0, 4).map(({ key, description }) => (
             <View key={`alert-${key}`} style={styles.buttonRow}>
               <Button
                 title={`${key} (Native Alert)`}
                 accessibilityLabel={`Trigger ${key} as native alert`}
                 testID={`error-alert-${key}`}
                 buttonType={ButtonType.Secondary}
-                onPress={() => triggerErrorAsAlert(key)}
+                onPress={() => triggerErrorAsAlert(key, description)}
               />
             </View>
           ))}
@@ -306,18 +390,20 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           ))}
         </View>
 
-        {/* Dismiss Error Modal */}
+        {/* Error Boundary (unhandled render error) */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{t('Developer.DismissErrorModal')}</Text>
-          <Text style={styles.description}>{t('Developer.DismissErrorModalDescription')}</Text>
-
+          <Text style={styles.sectionHeader}>{'Error Boundary (unhandled)'}</Text>
+          <Text style={styles.description}>
+            Throws during render. Only the ErrorBoundaryWrapper catches this — not error modals or alerts. The app will
+            show the boundary fallback UI.
+          </Text>
           <View style={styles.buttonRow}>
             <Button
-              title={t('Developer.DismissCurrentError')}
-              accessibilityLabel={t('Developer.DismissCurrentError')}
-              testID="dismiss-error"
+              title="Trigger Error Boundary"
+              accessibilityLabel="Trigger unhandled error for Error Boundary"
+              testID="error-boundary-trigger"
               buttonType={ButtonType.Primary}
-              onPress={dismiss}
+              onPress={() => setThrowInRender(true)}
             />
           </View>
         </View>

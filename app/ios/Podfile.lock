@@ -3,7 +3,7 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
-  - askar (0.4.3):
+  - askar (0.5.0-alpha-20260121132554):
     - React
     - React-callinvoker
     - React-Core
@@ -36,7 +36,6 @@ PODS:
     - SocketRocket
     - Yoga
   - boost (1.84.0)
-  - CatCrypto (0.3.2)
   - CocoaAsyncSocket (7.6.5)
   - DoubleConversion (1.1.6)
   - fast_float (8.0.0)
@@ -166,7 +165,7 @@ PODS:
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
-  - indy-vdr (0.2.3):
+  - indy-vdr (0.2.4):
     - React
     - React-callinvoker
     - React-Core
@@ -1918,7 +1917,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (2.12.4):
+  - react-native-attestation (2.12.11):
     - boost
     - DoubleConversion
     - fast_float
@@ -1946,38 +1945,10 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-config (1.5.5):
-    - react-native-config/App (= 1.5.5)
-  - react-native-config/App (1.5.5):
+  - react-native-config (1.5.10):
+    - react-native-config/App (= 1.5.10)
+  - react-native-config/App (1.5.10):
     - React-Core
-  - react-native-date-picker (5.0.13):
-    - boost
-    - DoubleConversion
-    - fast_float
-    - fmt
-    - glog
-    - hermes-engine
-    - RCT-Folly
-    - RCT-Folly/Fabric
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - SocketRocket
-    - Yoga
   - react-native-get-random-values (1.11.0):
     - React-Core
   - react-native-keyboard-controller (1.18.6):
@@ -2128,7 +2099,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-screenguard (1.1.0):
+  - react-native-screenguard (1.1.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2251,10 +2222,10 @@ PODS:
   - react-native-volume-manager (1.10.0):
     - Mute
     - React-Core
-  - react-native-webrtc (124.0.6):
+  - react-native-webrtc (124.0.7):
     - JitsiWebRTC (~> 124.0.0)
     - React-Core
-  - react-native-webview (13.16.0):
+  - react-native-webview (13.16.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2789,9 +2760,6 @@ PODS:
     - SocketRocket
   - ReactNativeIncallManager (4.2.1):
     - React-Core
-  - RNArgon2 (2.0.1):
-    - CatCrypto
-    - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -2940,13 +2908,39 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNInAppBrowser (3.7.0):
+  - RNInAppBrowser (3.7.1):
     - React-Core
-  - RNKeychain (8.1.3):
+  - RNKeychain (10.0.0):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
     - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
   - RNLocalize (2.2.6):
     - React-Core
-  - RNPermissions (5.4.2):
+  - RNPermissions (5.4.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -3267,9 +3261,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - SDWebImage (5.21.5):
-    - SDWebImage/Core (= 5.21.5)
-  - SDWebImage/Core (5.21.5)
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
   - SocketRocket (0.7.1)
   - VisionCamera (4.7.3):
     - VisionCamera/Core (= 4.7.3)
@@ -3284,7 +3278,6 @@ DEPENDENCIES:
   - "askar (from `../node_modules/@openwallet-foundation/askar-react-native`)"
   - BcscCore (from `../node_modules/react-native-bcsc-core`)
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
-  - CatCrypto
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -3332,7 +3325,6 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - "react-native-attestation (from `../node_modules/@bifold/react-native-attestation`)"
   - react-native-config (from `../node_modules/react-native-config`)
-  - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
@@ -3376,7 +3368,6 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeIncallManager (from `../node_modules/react-native-incall-manager`)
-  - RNArgon2 (from `../node_modules/react-native-argon2`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
@@ -3398,7 +3389,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - CatCrypto
     - CocoaAsyncSocket
     - Firebase
     - FirebaseAnalytics
@@ -3512,8 +3502,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@bifold/react-native-attestation"
   react-native-config:
     :path: "../node_modules/react-native-config"
-  react-native-date-picker:
-    :path: "../node_modules/react-native-date-picker"
   react-native-get-random-values:
     :path: "../node_modules/react-native-get-random-values"
   react-native-keyboard-controller:
@@ -3600,8 +3588,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeIncallManager:
     :path: "../node_modules/react-native-incall-manager"
-  RNArgon2:
-    :path: "../node_modules/react-native-argon2"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
@@ -3639,10 +3625,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   anoncreds: d48fc0f3bde44f97aef5bb907f6821bf9191d758
-  askar: 2bbf4b40a242b330d7995cd73ed99b177b489ff9
-  BcscCore: bca6318f371f8a7849e197fa5493aa0d953f581b
+  askar: e4600f17f3067e57dca7324b5baaa1b66c3efd23
+  BcscCore: 83341206fa4d218a2466554102595c5b93eefff4
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
@@ -3661,7 +3646,7 @@ SPEC CHECKSUMS:
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
-  indy-vdr: e84efdd7d3030da22354116cc3935f18727a02e3
+  indy-vdr: 3606e7be9ed3b5fc67a80b198982015adfdadc7f
   JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   Mute: 20135a96076f140cc82bfc8b810e2d6150d8ec7e
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
@@ -3699,21 +3684,20 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: 1f15ceecab609d1229a534117e448d85d157bd0e
-  react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
-  react-native-date-picker: 4f4f40f6e65798038bb4b1bff47890c2be69c2e6
+  react-native-attestation: 42885b3cd94cfc79ee11bcbbc5d7ee6610b24379
+  react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-orientation-locker: ee8bb2177365ca74f51dc1e11218fe544634d523
   react-native-safe-area-context: c00143b4823773bba23f2f19f85663ae89ceb460
-  react-native-screenguard: 4cdef4ef526bba6728917e4d188b1e8083081953
+  react-native-screenguard: a2528290cd6592ee0bd8971a13eb75f3c5b35d30
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
   react-native-video: 7b821291837d8ba7b9d7574bfeb0cd651e910141
   react-native-volume-manager: d9d2863a2374420af89c89662333ea6adf506988
-  react-native-webrtc: 96fdff9e3a942ed88cafe01898da1c93fd628957
-  react-native-webview: 654f794a7686b47491cf43aa67f7f428bea00eed
+  react-native-webrtc: e8f0ce746353adc2744a2b933645e1aeb41eaa74
+  react-native-webview: 8407aaaf6b539b1e38b72fabb55d6885de03beaf
   React-NativeModulesApple: ebf2ce72b35870036900d6498b33724386540a71
   React-oscompat: eb0626e8ba1a2c61673c991bf9dc21834898475d
   React-perflogger: 509e1f9a3ee28df71b0a66de806ac515ce951246
@@ -3745,7 +3729,6 @@ SPEC CHECKSUMS:
   ReactCodegen: 6c26f8c25d0b5ae66f86a1cce1777076ac8bcbd8
   ReactCommon: 5f0e5c09a64a2717215dd84380e1a747810406f2
   ReactNativeIncallManager: dccd3e7499caa3bb73d3acfedf4fb0360f1a87d5
-  RNArgon2: 708e188b7a4d4ec8baf62463927c47abef453a94
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6
@@ -3753,19 +3736,19 @@ SPEC CHECKSUMS:
   RNFBMessaging: 853b4e8f0a07240e25fea4acc53b600967925b8a
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 3a73f098d74712952870e948b3d9cf7b6cae9961
-  RNInAppBrowser: 6d3eb68d471b9834335c664704719b8be1bfdb20
-  RNKeychain: c497f7844b24577523bb84a6e8af9d217957972f
+  RNInAppBrowser: 904d24dc75e8e6c6c98a3160329192608946f9df
+  RNKeychain: a2c134ab796272c3d605e035ab727591000b30f3
   RNLocalize: 8bf466de4c92d4721b254aabe1ff0a1456e7b9f4
-  RNPermissions: b07b9c6c05a5842a1d5d1e7025d95d9903b2ab51
+  RNPermissions: 67cd7a38d4c1bbe8f87f8a1bbcaa26cf4eac529c
   RNReanimated: 9af1b9f7d221d1cc2f99d935bab08419cae7c1ce
   RNScreens: 0bbf16c074ae6bb1058a7bf2d1ae017f4306797c
   RNSVG: 6f39605a4c4d200b11435c35bd077553c6b5963a
   RNVectorIcons: 791f13226ec4a3fd13062eda9e892159f0981fae
-  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   VisionCamera: b51af005669c6642dd1b4fca434eda4c1778de87
   Yoga: 728df40394d49f3f471688747cf558158b3a3bd1
 
-PODFILE CHECKSUM: e7547e3c17fc2d1e455800ba695eb08a9e5d9aba
+PODFILE CHECKSUM: 568280a40c1318c44012de0e99325f3a1abfb9f1
 
 COCOAPODS: 1.14.3

@@ -1,37 +1,15 @@
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
-import { AppError, ErrorRegistry } from '@/errors'
+import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
-import { AlertAction } from '@/utils/alert'
-import { getBCSCAppStoreUrl } from '@/utils/links'
+import { AppAlerts } from '@/hooks/useAlerts'
 import { BifoldLogger } from '@bifold/core'
-import { NavigationProp, ParamListBase } from '@react-navigation/native'
+import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/native'
+import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
+import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
-
-/**
- * Set of event codes that should trigger alerts in the BCSC client
- * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
- */
-const GLOBAL_ALERT_EVENT_CODES = new Set([
-  //AppEventCode.NO_INTERNET, // Handled by the InternetDisconnected modal
-  AppEventCode.UNSECURED_NETWORK,
-  AppEventCode.SERVER_TIMEOUT,
-  AppEventCode.SERVER_ERROR,
-  AppEventCode.TOO_MANY_ATTEMPTS,
-])
-
-/**
- * Set of event codes for verify device assertion endpoint
- */
-const VERIFY_DEVICE_ASSERTION_EVENT_CODES = new Set([
-  AppEventCode.LOGIN_SERVER_ERROR,
-  AppEventCode.LOGIN_PARSE_URI,
-  AppEventCode.INVALID_PAIRING_CODE,
-  AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE,
-  AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
-])
 
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
@@ -41,28 +19,155 @@ export type ErrorMatcherContext = {
 
 type ErrorHandlerContext = {
   translate: TFunction
-  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
   navigation: NavigationProp<ParamListBase>
   linking: typeof Linking
   logger: BifoldLogger
+  alerts: AppAlerts
+}
+
+export interface AxiosAppError extends AppError {
+  cause: AxiosError
 }
 
 type ErrorHandlingPolicy = {
-  matches: (error: AppError, context: ErrorMatcherContext) => boolean
-  handle: (error: AppError, context: ErrorHandlerContext) => void
+  matches: (error: AxiosAppError, context: ErrorMatcherContext) => boolean
+  handle: (error: AxiosAppError, context: ErrorHandlerContext) => void
+}
+
+// ----------------------------------------
+// Helper Functions + Alert Maps
+// ----------------------------------------
+
+// Global alert map for app events that can occur across multiple endpoints (e.g. network errors, server errors)
+const _getGlobalAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
+    [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
+    [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],
+    [AppEventCode.TOO_MANY_ATTEMPTS, alerts?.tooManyAttemptsAlert],
+  ])
+}
+
+// Alert map for LOGIN_REJECTED events that can occur on multiple endpoints (client metadata fetch, device authorization)
+const _getLoginRejectedAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.LOGIN_REJECTED_400, alerts?.loginRejected400Alert],
+    [AppEventCode.LOGIN_REJECTED_401, alerts?.loginRejected401Alert],
+    [AppEventCode.LOGIN_REJECTED_403, alerts?.loginRejected403Alert],
+  ])
+}
+
+// Alert map for device verification assertion errors
+const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.LOGIN_SERVER_ERROR, alerts?.loginServerErrorAlert],
+    [AppEventCode.LOGIN_PARSE_URI, alerts?.problemWithLoginAlert],
+    [AppEventCode.INVALID_PAIRING_CODE, alerts?.invalidPairingCodeAlert],
+    [AppEventCode.LOGIN_REMEMBERED_DEVICE_INVALID_PAIRING_CODE, alerts?.invalidPairingCodeAlert],
+    [AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, alerts?.loginSameDeviceInvalidPairingCodeAlert],
+  ])
+}
+
+// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300)
+const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
+  return new Map([
+    [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
+    [AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, alerts?.dynamicRegistrationErrorAlert],
+    [AppEventCode.ADD_CARD_TERMS_OF_USE, alerts?.termsOfUseErrorAlert],
+    [AppEventCode.ADD_CARD_INCORRECT_OS, alerts?.incorrectOsAlert],
+    [AppEventCode.ADD_CARD_PROVIDER, alerts?.addCardNotAvailableAlert],
+    [AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, alerts?.missingJsonValuesAlert],
+    [AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, alerts?.signClaimsErrorAlert],
+    [AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, alerts?.unexpectedNetworkCallAlert],
+    [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestAlert],
+    [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
+    [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
+    [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
+    [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
+    [AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, alerts?.keysOutOfSyncAlert],
+    [AppEventCode.ERR_300_EMPTY_RESPONSE, alerts?.emptyResponseAlert],
+  ])
 }
 
 // ----------------------------------------
 // Error Handling Policies
+// https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
 // ----------------------------------------
+
+// IAS errors 201–300 — server configuration, registration, terms of use, provider, JSON, network, auth, etc.
+export const iasErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return _getIasErrorAlertMap().has(error.appEvent)
+  },
+  handle: (error, context) => {
+    const alert = _getIasErrorAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[IasErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    alert(error)
+  },
+}
 
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
-    return GLOBAL_ALERT_EVENT_CODES.has(error.appEvent)
+    return _getGlobalAlertMap().has(error.appEvent)
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error)
+    const alert = _getGlobalAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    alert(error)
+  },
+}
+
+// Error policy LOGIN_REJECT events that appear on client metadata fetch failures
+export const loginRejectedOnClientMetadataErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      _getLoginRejectedAlertMap().has(error.appEvent) && context.endpoint.includes(context.apiEndpoints.clientMetadata)
+    )
+  },
+  handle: (error, context) => {
+    const alert = _getLoginRejectedAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(
+        `[LoginRejectedOnClientMetadataErrorPolicy] No alert defined for app event: ${error.appEvent}`
+      )
+      return
+    }
+
+    alert()
+  },
+}
+
+// Error policy LOGIN_REJECTED events that appear on device verification
+export const loginRejectedOnDeviceAuthorizationErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      _getLoginRejectedAlertMap().has(error.appEvent) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (error, context) => {
+    const alert = _getLoginRejectedAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(
+        `[LoginRejectedOnDeviceAuthorizationErrorPolicy] No alert defined for app event: ${error.appEvent}`
+      )
+      return
+    }
+
+    alert()
   },
 }
 
@@ -71,25 +176,17 @@ export const noTokensReturnedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.NO_TOKENS_RETURNED && context.endpoint.includes(context.apiEndpoints.token)
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          text: context.translate('Alerts.Actions.Close'),
-          style: 'cancel',
-          onPress: () => {
-            // noop
-          },
-        },
-        {
-          text: context.translate('Alerts.Actions.RemoveAccount'),
-          style: 'destructive',
-          onPress: () => {
-            context.navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
-          },
-        },
-      ],
-    })
+  handle: (_error, context) => {
+    context.alerts.noTokensReturnedAlert()
+  },
+}
+// Error policy for INVALID_TOKEN event on token endpoint
+export const invalidTokenReturnedPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.INVALID_TOKEN && context.endpoint.includes(context.apiEndpoints.token)
+  },
+  handle: (_error, context) => {
+    context.alerts.invalidTokenAlert()
   },
 }
 
@@ -98,8 +195,33 @@ export const verifyNotCompletedErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return error.appEvent === AppEventCode.VERIFY_NOT_COMPLETE && context.endpoint === context.apiEndpoints.token
   },
-  handle: (error, context) => {
-    context.emitErrorAlert(error)
+  handle: (_error, context) => {
+    context.alerts.verificationNotCompleteAlert()
+  },
+}
+
+// Error policy for video session endpoint failures (e.g. 503 service unavailable).
+// Suppresses the global error popup so the video call screen can show its own error UI.
+export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return (
+      (context.statusCode === 500 || context.statusCode === 503) &&
+      context.endpoint.includes(context.apiEndpoints.video)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[VideoSessionErrorPolicy] Suppressing global alert — video call screen will handle this error')
+  },
+}
+
+// Error policy for attestation status polling — 404 is expected while the attestation
+// has not yet been created or consumed by another device's verifyAttestation call.
+export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 404 && context.endpoint.includes(context.apiEndpoints.attestation)
+  },
+  handle: (_error, context) => {
+    context.logger.info('[AttestationPollingErrorPolicy] 404 expected during polling — attestation not yet consumed')
   },
 }
 
@@ -109,8 +231,7 @@ export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
     return context.statusCode === 500 || context.statusCode === 503
   },
   handle: (error, context) => {
-    const appError = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: error })
-    context.emitErrorAlert(appError)
+    context.alerts.serverErrorAlert(error)
   },
 }
 
@@ -123,23 +244,45 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
       context.endpoint.includes(context.apiEndpoints.evidence)
     )
   },
+  handle: (_error, context) => {
+    context.alerts.appUpdateRequiredAlert()
+  },
+}
+
+// Error policy for already registered device on device authorization endpoint
+export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST &&
+      Boolean(error.technicalMessage?.includes('client is in invalid')) &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[AlreadyRegisteredErrorPolicy] Device already registered, navigating to SetupSteps screen')
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
+      })
+    )
+  },
+}
+
+// Error policy for device authorization endpoint (too many birthdate + serial attempts)
+// Handles 503 errors from deviceAuthorization endpoint, with or without retry-after header
+export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.cause.response?.status === 503 && context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+  },
   handle: (error, context) => {
-    context.emitErrorAlert(error, {
-      actions: [
-        {
-          // QUESTION (MD): The docs suggest using "Update" for android, do we want to differentiate here?
-          text: context.translate('Alerts.Actions.GoToAppStore'),
-          onPress: async () => {
-            try {
-              const appStoreUrl = getBCSCAppStoreUrl()
-              await context.linking.openURL(appStoreUrl)
-            } catch (error) {
-              context.logger.info('[UpdateRequiredErrorPolicy] Failed to open app store URL', { error })
-            }
-          },
-        },
-      ],
-    })
+    context.logger.info(`[BirthdateLockoutErrorPolicy] Lockout with error:`, { error })
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.BirthdateLockout }],
+      })
+    )
   },
 }
 
@@ -147,12 +290,106 @@ export const updateRequiredErrorPolicy: ErrorHandlingPolicy = {
 export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     return (
-      VERIFY_DEVICE_ASSERTION_EVENT_CODES.has(error.appEvent) &&
+      _getVerifyDeviceAssertionAlertMap().has(error.appEvent) &&
       context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}`
     )
   },
   handle: (error, context) => {
-    context.emitErrorAlert(error)
+    const alert = _getVerifyDeviceAssertionAlertMap(context.alerts).get(error.appEvent)
+
+    if (!alert) {
+      context.logger.warn(`[VerifyDeviceAssertionErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    alert(error)
+    error.handled = true
+  },
+}
+
+/**
+ * Error policy for expired verify request during app setup (user input error)
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const expiredAppSetupErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST &&
+      context.endpoint === context.apiEndpoints.token
+    )
+  },
+  handle: (_error, context) => {
+    context.alerts.setupExpiredAlert()
+  },
+}
+
+// Error policy for already verified event on token endpoint
+export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return error.appEvent === AppEventCode.ALREADY_VERIFIED && context.endpoint === context.apiEndpoints.token
+  },
+  handle: (error, context) => {
+    context.alerts.alreadyVerifiedAlert(error)
+  },
+}
+
+// Error policy for expired physical card on device authorization endpoint
+export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.appEvent === AppEventCode.UNKNOWN_SERVER_ERROR &&
+      error.technicalMessage === 'card_expired' &&
+      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[CardExpiredErrorPolicy] Card expired, navigating to VerificationCardError screen')
+    context.navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.SetupSteps },
+          {
+            name: BCSCScreens.VerificationCardError,
+            params: { errorType: VerificationCardError.CardExpired },
+          },
+        ],
+      })
+    )
+  },
+}
+
+// Error policy for ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE — bad request due to malformed or misconfigured client
+export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE
+  },
+  handle: (error, context) => {
+    context.alerts.failedToRetrieveStringResourceAlert()
+    error.handled = true
+  },
+}
+
+// Error policy for ERR_500_INVALID_URL — server-side URL validation failure
+export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_500_INVALID_URL
+  },
+  handle: (error, context) => {
+    context.alerts.invalidUrlAlert(error)
+    error.handled = true
+  },
+}
+
+// Fallback error policy for ERR_501_INVALID_REGISTRATION_REQUEST cases not handled by alreadyRegisteredErrorPolicy
+export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST
+  },
+  handle: (error, context) => {
+    context.alerts.invalidRegistrationRequestAlert(error)
+    error.handled = true
   },
 }
 
@@ -160,45 +397,27 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
 // Error Handling Policy Factories
 // ----------------------------------------
 
-/**
- * Error policy factory for expired app setup during token exchange
- *
- * @param resetApplication - Function to reset the application state to "Setup Steps"
- * @returns ErrorHandlingPolicy
- */
-export const createExpiredAppSetupErrorPolicy = (resetApplication: () => Promise<void>): ErrorHandlingPolicy => {
-  return {
-    matches: (error, context) => {
-      return (
-        error.appEvent === AppEventCode.USER_INPUT_EXPIRED_VERIFY_REQUEST &&
-        context.endpoint === context.apiEndpoints.token
-      )
-    },
-    handle: (error, context) => {
-      context.emitErrorAlert(error, {
-        actions: [
-          {
-            text: context.translate('Alerts.Actions.DefaultOK'),
-            onPress: async () => {
-              try {
-                await resetApplication()
-              } catch (error) {
-                context.logger.error('[ExpiredAppSetupErrorPolicy] Failed resetting application', error as Error)
-              }
-            },
-          },
-        ],
-      })
-    },
-  }
-}
-
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
-  globalAlertErrorPolicy,
-  unexpectedServerErrorPolicy,
+  alreadyRegisteredErrorPolicy,
+  cardExpiredErrorPolicy,
+  birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
+  expiredAppSetupErrorPolicy,
+  loginRejectedOnClientMetadataErrorPolicy,
+  loginRejectedOnDeviceAuthorizationErrorPolicy,
+  alreadyVerifiedErrorPolicy,
+  invalidTokenReturnedPolicy,
+  failedToRetrieveStringResourceErrorPolicy,
+  invalidUrlErrorPolicy,
+  invalidRegistrationRequestErrorPolicy,
+  videoSessionErrorPolicy,
+  attestationPollingErrorPolicy,
+  iasErrorPolicy,
+  // Specific polices listed above, followed by global policies
+  globalAlertErrorPolicy,
+  unexpectedServerErrorPolicy,
 ]

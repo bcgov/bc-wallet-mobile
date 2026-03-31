@@ -1,18 +1,20 @@
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
-import { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Image, Pressable, StyleSheet, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { HelpCentreUrl } from '@/constants'
+import { BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 import PhotoCardImage from '@assets/img/photo_card.png'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Image, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
@@ -28,13 +30,30 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const [store] = useStore<BCState>()
   const { updateCardProcess } = useSecureActions()
-
+  const verificationReset = useVerificationReset()
   const styles = StyleSheet.create({
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
   })
+
+  // Reset the card registration process when the user navigates back
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', async (event) => {
+      if (
+        (event.data.action.type === 'GO_BACK' || event.data.action.type === 'POP') &&
+        store.bcscSecure.deviceCode &&
+        store.bcscSecure.userCode
+      ) {
+        // If the user has registered and backs out, reset the card registration process
+        await verificationReset()
+      }
+    })
+
+    return unsubscribe
+  }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
 
   /**
    * This fixes an issue where the user has selected Non-BCSC ID,
@@ -111,7 +130,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
       <View style={{ gap: Spacing.md }}>
         <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
         <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
-        <Pressable
+        <PressableOpacity
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
           accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
@@ -120,7 +139,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
             {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
             <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
           </ThemedText>
-        </Pressable>
+        </PressableOpacity>
         <TileButton
           onPress={onPressOtherID}
           testIDKey={'OtherID'}

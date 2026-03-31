@@ -25,7 +25,6 @@ enum AccountFiles: String {
   case clientRegistration = "client_registration"
   case deviceInfo = "device_info"
   case documents
-  case evidenceMetadata = "evidence_metadata"
 }
 
 class StorageService {
@@ -41,6 +40,18 @@ class StorageService {
     return "https://id.gov.bc.ca"
   }
 
+  /// Maps environment directory names (as produced by getIssuerNameFromIssuer) to issuer URLs.
+  /// Priority order matters: prod is checked first, then non-prod environments.
+  private let issuerDirectoryToURL: [(name: String, url: String)] = [
+    ("prod", "https://id.gov.bc.ca"),
+    ("SIT", "https://idsit.gov.bc.ca"),
+    ("QA", "https://idqa.gov.bc.ca"),
+    ("DEV", "https://iddev.gov.bc.ca"),
+    ("DEV2", "https://iddev2.gov.bc.ca"),
+    ("PREPROD", "https://idpreprod.gov.bc.ca"),
+    ("TEST", "https://idtest.gov.bc.ca"),
+  ]
+
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
   var nativeModuleName: String {
@@ -54,10 +65,10 @@ class StorageService {
     }
   }
 
-  // NOTE: While the system reads an 'accounts' array from the account_list file,
-  // and could theoretically support multiple accounts, the current implementation
-  // only uses the *first* account ID found. For current practical purposes,
-  // there should only be one account ID present in the 'accounts' array.
+  /// NOTE: While the system reads an 'accounts' array from the account_list file,
+  /// and could theoretically support multiple accounts, the current implementation
+  /// only uses the *first* account ID found. For current practical purposes,
+  /// there should only be one account ID present in the 'accounts' array.
   var currentAccountID: String? {
     let pathDirectory = defaultSearchPathDirectory
 
@@ -88,7 +99,8 @@ class StorageService {
         return firstAccountID
       } else {
         logger.error(
-          "Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
+          "Failed to parse account_list JSON or accounts array is empty/first ID is empty."
+        )
         return nil
       }
     } catch {
@@ -113,12 +125,16 @@ class StorageService {
           .appendingPathComponent("\(currentBundleID)/data")
           .appendingPathComponent(issuerURLComponent)
 
-      let issuerData = try String(contentsOf: issuerFileURL, encoding: .utf8)
+      return try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-
-      return issuerData
     } catch {
-      logger.error("currentIssuer: Could not access account_list to read issuer: \(error).")
+      logger.error("currentIssuer: Could not read issuer file: \(error).")
+      // Fallback: infer issuer from directory structure (v3 migration path)
+      if let inferred = findIssuerFromAccountDirectories() {
+        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred)")
+        return inferred
+      }
+      logger.log("currentIssuer: Defaulting to production issuer")
       return productionIssuer
     }
   }
@@ -127,7 +143,9 @@ class StorageService {
     return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
   }
 
-  var provider: String { "\(issuer)/device/" }
+  var provider: String {
+    "\(issuer)/device/"
+  }
 
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
@@ -246,7 +264,8 @@ class StorageService {
       if fileManager.fileExists(atPath: accountDirectoryUrl.path) {
         try fileManager.removeItem(atPath: accountDirectoryUrl.path)
         logger.log(
-          "StorageService: Successfully removed account files for account: \(accountID)")
+          "StorageService: Successfully removed account files for account: \(accountID)"
+        )
       } else {
         logger.log("StorageService: Account files for account: \(accountID) not found")
       }
@@ -281,7 +300,8 @@ class StorageService {
       // Write issuer file with atomic option
       try issuer.write(to: issuerFileURL, atomically: true, encoding: .utf8)
       logger.log(
-        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path) (fileExists: \(FileManager.default.fileExists(atPath: issuerFileURL.path)))")
+        "StorageService: Successfully saved issuer: \(issuer) to file at \(issuerFileURL.path) (fileExists: \(FileManager.default.fileExists(atPath: issuerFileURL.path)))"
+      )
       return true
     } catch {
       logger.log("StorageService: Error saving issuer to file: \(error)")
@@ -390,20 +410,75 @@ class StorageService {
 
     let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
-    // For custom types, unwrap from provider dictionary
-    // For Foundation collection types, return directly
+    // For custom types, unwrap from provider dictionary.
+    // For Foundation collection types, return directly — but first unwrap v3's
+    // "storable_source_default_id" wrapper if present (used by AccountFlagSource in v3).
     if !isFoundationCollectionType {
       if let decodedDict = decoded as? [String: T] {
         return decodedDict[provider]
       }
       return nil
     } else {
-      return decoded as? T
+      guard let result = decoded as? T else { return nil }
+
+      // V3 compatibility: AccountFlagSource archived data as
+      // {"storable_source_default_id": {actualFlags}} — unwrap the inner dict if present.
+      if T.self == NSDictionary.self,
+         let wrapper = result as? NSDictionary,
+         let inner = wrapper["storable_source_default_id"] as? NSDictionary
+      {
+        logger.log("decodeArchivedObject: Unwrapping v3 'storable_source_default_id' wrapper")
+        return inner as? T
+      }
+
+      return result
     }
   }
 
-  // https://id.gov.bc.ca -> "prod"
-  // https://iddev.gov.bc.ca -> "dev"
+  /// Scans the accounts_dir for known environment subdirectories containing UUID-format account
+  /// directories. Returns the issuer URL for the first match in priority order.
+  /// Used as a fallback when the issuer file is missing (e.g. V3 migrated users).
+  private func findIssuerFromAccountDirectories() -> String? {
+    guard let rootURL = try? FileManager.default.url(
+      for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+    ) else { return nil }
+
+    let accountsDirURL = rootURL
+      .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
+
+    guard let uuidRegex = try? NSRegularExpression(
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      options: .caseInsensitive
+    ) else { return nil }
+
+    for entry in issuerDirectoryToURL {
+      let envDirURL = accountsDirURL.appendingPathComponent(entry.name)
+      guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
+      ) else { continue }
+
+      let hasUUIDSubdir = contents.contains { url in
+        guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+        else { return false }
+        let name = url.lastPathComponent
+        return uuidRegex.firstMatch(
+          in: name, range: NSRange(name.startIndex..., in: name)
+        ) != nil
+      }
+
+      if hasUUIDSubdir {
+        logger.log(
+          "findIssuerFromAccountDirectories: Found accounts in '\(entry.name)', using issuer \(entry.url)"
+        )
+        return entry.url
+      }
+    }
+
+    return nil
+  }
+
+  /// https://id.gov.bc.ca -> "prod"
+  /// https://iddev.gov.bc.ca -> "dev"
   private func getIssuerNameFromIssuer(issuer: String) -> String {
     guard let host = URLComponents(string: issuer)?.host else {
       return "prod"
@@ -413,7 +488,7 @@ class StorageService {
       let remainder = host.dropFirst(2) // remove "id"
 
       if let env = remainder.split(separator: ".").first, !env.isEmpty {
-        return String(env) // "dev", "test"
+        return String(env).uppercased() // "DEV", "TEST"
       }
     }
 

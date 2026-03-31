@@ -105,7 +105,7 @@ exports[`AccountRenewalInformation renders correctly 1`] = `
               ],
             ]
           }
-          testID="BCSC.AccountRenewal.InformationGetNewCardA"
+          testID="com.ariesbifold:id/InformationGetNewCard"
         >
           BCSC.AccountRenewal.InformationGetNewCardA
         </Text>
@@ -191,7 +191,7 @@ exports[`AccountRenewalInformation renders correctly 1`] = `
             ],
           ]
         }
-        testID="BCSC.AccountRenewal.InformationTypesOfAcceptedId"
+        testID="com.ariesbifold:id/InformationTypesOfAcceptedId"
       >
         BCSC.AccountRenewal.InformationTypesOfAcceptedId
       </Text>
@@ -272,7 +272,6 @@ exports[`AccountRenewalInformation renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                false,
                 false,
                 false,
               ],

@@ -3,6 +3,7 @@ import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
+import type { BarcodePayload } from 'react-native-bcsc-core'
 import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -66,12 +67,10 @@ export interface EvidenceMetadataResponseData {
   }[]
 }
 export interface EvidenceMetadataPayload {
-  type: string
+  type?: string
   number?: string
   images: VerificationPhotoUploadPayload[]
-  barcodes?: {
-    type: string
-  }[]
+  barcodes?: BarcodePayload[]
 }
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {

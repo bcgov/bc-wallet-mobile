@@ -154,6 +154,23 @@ export const useServiceLoginState = ({
     })
   }, [serviceClientId, logger, state.pairingCode, state.serviceTitle, pairingService])
 
+  // Listen for live pairing events while the screen is mounted.
+  // This handles the case where the user opens an external browser, logs in,
+  // and a deep link arrives while they're still on ServiceLoginScreen.
+  useEffect(() => {
+    const unsubscribe = pairingService.onNavigationRequest((event) => {
+      const { serviceTitle, pairingCode } = event.params
+      logger.info(`ServiceLoginScreen: Received live pairing event for ${serviceTitle}`)
+
+      dispatch({
+        serviceTitle,
+        pairingCode,
+      })
+    })
+
+    return unsubscribe
+  }, [pairingService, logger])
+
   return {
     state,
     isLoading,

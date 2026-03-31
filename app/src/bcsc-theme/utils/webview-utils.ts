@@ -1,90 +1,99 @@
 import { IColorPalette } from '@bifold/core'
+import { Platform } from 'react-native'
+import { TermsOfUseResponseData } from '../api/hooks/useConfigApi'
 
 /**
- * Creates "Terms of Use" webview javascript injection to modify the HTML content.
- *
- * This includes setting the background color, text color, and link colors to match the app theme.
- * It also removes nav sections from the page.
- *
- * @param {IColorPalette} colorPalette - The color palette object containing brand colors
- * @returns {*} {string} JavaScript string to be injected into the WebView
+ * Formats a date string (yyyy-MM-dd) to a long date format (e.g. "June 6, 2025").
  */
-export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
-  return `
-    document.addEventListener('DOMContentLoaded', function() {
-      const style = document.createElement('style');
-
-      document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
-      document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
-      document.body.style.color = '${colorPalette.brand.secondary}';
-
-      style.textContent = \`
-        a, a:visited, a:hover, a:active {
-          color: ${colorPalette.brand.link};
-          text-decoration: ${colorPalette.brand.link};
-        }
-      \`;
-
-      document.head.appendChild(style);
-    });
-  `
+const formatLongDate = (dateStr: string): string => {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const date = new Date(year, month - 1, day)
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 /**
- * The "Securing this App" webview javascript injection to modify the HTML content.
- *
- * This is to remove the navigation sections from the page.
- *
- * @returns {*} {string} JavaScript string to be injected into the WebView
+ * Strips outer document tags (<html>, <head>, <body> and their closing tags) from HTML content,
+ * leaving only the inner body content. This prevents invalid nested HTML when wrapping
+ * API-returned HTML in our own document structure.
  */
-export const createSecuringAppWebViewJavascriptInjection = (): string => {
-  return `
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
-    });
-  `
+const stripOuterDocumentTags = (html: string): string => {
+  return html
+    .replace(/<\/?html[^>]*>/gi, '')
+    .replace(/<\/?head[^>]*>/gi, '')
+    .replace(/<\/?body[^>]*>/gi, '')
+    .replace(/<!DOCTYPE[^>]*>/gi, '')
+    .trim()
 }
 
 /**
- * Creates JavaScript to apply accessibility font scaling on iOS.
- * This ensures web content respects the device's text size accessibility settings.
- *
- * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
- * @returns JavaScript string to inject into the WebView
+ * Creates a CSS font-size value based on the device font scale.
+ * iOS uses the fontScale, Android uses a fixed value of 1.
+ * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns {number} The CSS font-size value in pixels
  */
-export const createAccessibilityFontScalingScript = (fontScale: number): string => {
-  return `
-    (function() {
-      const fontScale = ${fontScale};
-      document.documentElement.style.fontSize = (16 * fontScale) + 'px';
-      document.body.style.fontSize = (16 * fontScale) + 'px';
-    })();
-  `
+const createFontScalingCss = (fontScale: number): number => {
+  const scale = Platform.OS === 'ios' ? fontScale : 1
+  return Math.round(16 * scale)
 }
 
-interface WebViewAccessibilityProps {
-  injectedJavaScript: string
-  textZoom: number | undefined
+export interface TermsOfUseHtmlOptions {
+  termsOfUse: TermsOfUseResponseData
+  colorPalette: IColorPalette
+  headerText: string
+  subtitlePrefix: string
+  versionLabel: string
 }
 
 /**
- * Returns platform-specific accessibility props for WebView text scaling.
- * - iOS: Uses JavaScript injection to scale fonts
- * - Android: Uses the native textZoom prop
+ * Creates a well-formed HTML document for the Terms of Use, matching v3 (ias-ios) layout.
+ * Embeds all styling directly in the HTML so it works reliably on both iOS and Android
+ * without relying on JS injection timing.
  *
- * @param platform - The current platform ('ios' or 'android')
- * @param fontScale - The device's current font scale multiplier from useWindowDimensions()
- * @param injectedJavascript - Optional custom JavaScript to inject (will be combined with accessibility script)
- * @returns WebView props for accessibility text scaling
+ * Header includes:
+ * - Bold header text (from i18n)
+ * - Subtitle with version and formatted date (from i18n)
+ *
+ * @param {TermsOfUseHtmlOptions} options - The terms data, color palette, and i18n strings
+ * @param {number} fontScale - The device font scale (e.g. from useWindowDimensions().fontScale)
+ * @returns {string} A complete HTML document string
  */
-export const getWebViewAccessibilityProps = (
-  platform: string,
-  fontScale: number,
-  injectedJavascript?: string
-): WebViewAccessibilityProps => {
-  const accessibilityScript = platform === 'ios' ? createAccessibilityFontScalingScript(fontScale) : ''
-  return {
-    injectedJavaScript: injectedJavascript ? `${accessibilityScript}${injectedJavascript}` : accessibilityScript,
-    textZoom: platform === 'android' ? Math.round(fontScale * 100) : undefined,
+export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: number): string => {
+  const { termsOfUse, colorPalette, headerText, subtitlePrefix, versionLabel } = options
+  const formattedDate = formatLongDate(termsOfUse.date)
+  const bodyContent = stripOuterDocumentTags(termsOfUse.html)
+  const fontSizeCss = createFontScalingCss(fontScale)
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">  
+<style>
+  body {
+    background-color: ${colorPalette.brand.primaryBackground};
+    color: ${colorPalette.brand.secondary};
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: ${fontSizeCss}px !important;
+    padding: 0 16px 16px 16px;
+    line-height: 1.6;
+    margin: 0;
   }
+  body, body * {
+    background-color: ${colorPalette.brand.primaryBackground} !important;
+    color: ${colorPalette.brand.secondary} !important;
+  }
+  p, li, dd, dt {
+    margin-bottom: 0.75em;
+  }
+  a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
+    color: ${colorPalette.brand.link} !important;
+    text-decoration-color: ${colorPalette.brand.link} !important;
+    border-color: ${colorPalette.brand.link} !important;
+  }
+</style>
+</head>
+<body>
+<h4>${headerText}</h4>
+<p>${subtitlePrefix}<br/>${versionLabel} ${termsOfUse.version}, ${formattedDate}</p>
+${bodyContent}
+</body>
+</html>`
 }

@@ -1,7 +1,9 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -10,6 +12,7 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -17,7 +20,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
@@ -31,8 +33,9 @@ type EnterEmailScreenProps = {
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { Spacing } = useTheme()
   const { evidence } = useApi()
-  const { updateUserInfo } = useSecureActions()
-  const [email, setEmail] = useState('')
+  const { updateUserInfo, updateAccountFlags } = useSecureActions()
+  const [store] = useStore<BCState>()
+  const [email, setEmail] = useState(store.bcscSecure.emailAddress || '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { cardProcess } = route.params
@@ -55,6 +58,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     try {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
+      await updateAccountFlags({ userSkippedEmailVerification: false })
       await updateUserInfo({ email, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
@@ -79,6 +83,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             email: BCSC_EMAIL_NOT_PROVIDED,
             isEmailVerified: true,
           })
+          await updateAccountFlags({ userSkippedEmailVerification: true })
           navigation.goBack()
         },
       },
@@ -117,8 +122,21 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
       ) : null}
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
-      <EmailTextInput handleChangeEmail={handleChangeEmail} testID={'EmailInput'} />
-      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+      <InputWithValidation
+        id={'email'}
+        label={t('BCSC.EnterEmail.EmailAddress')}
+        value={email}
+        onChangeText={handleChangeEmail}
+        error={error}
+        onErrorClear={() => setError(null)}
+        keyboardType={'email-address'}
+        textInputProps={{
+          maxLength: 50,
+          autoCorrect: false,
+          autoComplete: 'email',
+          textContentType: 'emailAddress',
+        }}
+      />
     </ScreenWrapper>
   )
 }

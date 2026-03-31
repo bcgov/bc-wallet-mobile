@@ -17,6 +17,9 @@ api*.json
 !PINSecret.swift
 *secrets*
 .env
+google-services.json
+GoogleService-Info.plist
+ExportOptions.dev.plist
 .idea/
 
 # Other
@@ -26,6 +29,10 @@ lib
 local.properties
 .jest
 .npmrc
+
+# Swift Package Manager
+.build/
+.swiftpm/
 
 # yarn
 .yarn/*
@@ -65,6 +72,15 @@ xcuserdata/
 # gem
 app/vendor/bundle/**
 
+# e2e (separate Yarn project with its own node_modules)
+e2e/node_modules
+e2e/.yarn/*
+!e2e/.yarn/patches
+!e2e/.yarn/plugins
+!e2e/.yarn/releases
+!e2e/.yarn/sdks
+!e2e/.yarn/versions
+
 # child packages
 bifold/
 aries-oca-bundles/
@@ -75,3 +91,4 @@ app/vendor/
 
 coverage/
 .settings/
+tmp/

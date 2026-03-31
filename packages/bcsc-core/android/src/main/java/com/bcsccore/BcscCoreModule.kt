@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import androidx.core.app.NotificationCompat
 import androidx.fragment.app.FragmentActivity
 
@@ -26,8 +27,10 @@ import com.facebook.react.module.annotations.ReactModule
 
 // Java/Kotlin standard library imports
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileWriter
 import java.io.IOException
 import java.security.KeyPair
@@ -64,6 +67,9 @@ import com.nimbusds.jwt.SignedJWT
 
 // BCSC KeyPair package imports
 import com.bcsccore.keypair.core.exceptions.BcscException
+import com.bcsccore.keypair.core.exceptions.KeyAlreadyExistsException
+import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
+import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
 import com.bcsccore.keypair.core.models.BcscKeyPair
@@ -98,6 +104,25 @@ import com.bcsccore.storage.NativeAuthorizationRequest
 import com.bcsccore.storage.NativeAddress
 import com.bcsccore.storage.NativeRequestStatus
 import com.bcsccore.storage.NativeAuthorizationMethod
+import com.bcsccore.storage.NativeClientMetadata
+
+// TODO: (al) - refactor to use readFirstAccountEncryptedFile function
+// TODO: (al) - refactor to remove file names and use AccountFileName enum
+// TODO: (al) - refactor to create a similar function to readFirstAccountEncryptedFile for the sharedpreferences
+
+private enum class AccountFileName(
+    val value: String,
+) {
+    KEYPAIR_INFO("keypairinfo"),
+    PROVIDERS("providers"),
+    DEVICE_INFO("device_info"),
+    ATTESTATION_INFO("attestation_info"),
+    EVIDENCE_CONFIG("evidence_config"),
+    EVIDENCE_UPLOAD("evidence_upload"),
+    ADD_CARD_INFO("add_card_info"),
+    TOKENS("tokens"),
+    AUTHORIZATION_REQUEST("authorization_request"),
+}
 
 /**
  * BC Services Card React Native Module
@@ -119,6 +144,9 @@ class BcscCoreModule(
 
         // JWT expiration in seconds
         private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
+
+        // JWS compact serialization: header.payload.signature
+        private const val JWS_COMPACT_SEGMENT_COUNT = 3
 
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
@@ -179,7 +207,7 @@ class BcscCoreModule(
 
             promise.resolve(keyPair)
         } catch (e: BcscException) {
-            promise.reject("E_BCSC_KEY_ERROR", "Error retrieving key pair using bcsc-keypair-port: ${e.devMessage}", e)
+            promise.reject("E_KEY_EXPORT_FAILED", "Error retrieving key pair: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEY_ERROR", "Unexpected error retrieving key pair: ${e.message}", e)
         }
@@ -211,7 +239,7 @@ class BcscCoreModule(
 
             promise.resolve(privateKeys)
         } catch (e: BcscException) {
-            promise.reject("E_BCSC_KEYSTORE_ERROR", "Error accessing bcsc keystore: ${e.devMessage}", e)
+            promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error accessing keystore: ${e.message}", e)
         }
@@ -227,15 +255,13 @@ class BcscCoreModule(
         // First, get the account to obtain the account ID
         val account = getAccountSync()
         if (account == null) {
-            Log.w(NAME, "getToken - Cannot get account, returning null")
-            promise.resolve(null)
+            promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found")
             return
         }
 
         val accountId = account.getString("id")
         if (accountId == null || accountId.isEmpty()) {
-            Log.w(NAME, "getToken - Account ID is null or empty, returning null")
-            promise.resolve(null)
+            promise.reject("E_ACCOUNT_NOT_FOUND", "Account ID is null or empty")
             return
         }
 
@@ -260,8 +286,7 @@ class BcscCoreModule(
 
             val issuer = account.getString("issuer")
             if (issuer.isNullOrEmpty()) {
-                Log.w(NAME, "getToken - Account issuer is null or empty, cannot determine environment")
-                promise.resolve(null)
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account issuer is null or empty")
                 return
             }
 
@@ -270,7 +295,6 @@ class BcscCoreModule(
             val issuerName = nativeStorage.getDefaultIssuerName()
             val relativePath = "$issuerName/$accountId/tokens"
             val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
-            Log.d(NAME, "Full token file path: $tokenFilePath")
 
             try {
                 val decryptedFileData: DecryptedFileData? = decryptedFileReader.readDecryptedFile(relativePath)
@@ -286,7 +310,6 @@ class BcscCoreModule(
                     if (decryptedFileData.isJson()) {
                         try {
                             val jsonObject = JSONObject(decryptedFileData.decryptedContent)
-
                             when (tokenType) {
                                 TOKEN_TYPE_ACCESS -> { // Access Token
                                     if (jsonObject.has("accessToken")) {
@@ -314,38 +337,81 @@ class BcscCoreModule(
                                 TOKEN_TYPE_REGISTRATION -> { // Registration Token (idToken)
                                     if (jsonObject.has("idToken")) {
                                         val idTokenObj = jsonObject.getJSONObject("idToken")
-                                        val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
-                                        Log.d(NAME, "Returning registration token (idToken)")
+                                        val idTokenKeys = idTokenObj.keys().asSequence().toList()
+                                        Log.d(NAME, "getToken: Found idToken in tokens file, keys: $idTokenKeys")
+                                        if (idTokenObj.has("rawToken")) {
+                                            // V4 format: registration_access_token stored as rawToken
+                                            val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
+                                            Log.d(
+                                                NAME,
+                                                "getToken: Returning V4 registration token, id=${token.getString(
+                                                    "id",
+                                                )}",
+                                            )
+                                            promise.resolve(token)
+                                            return
+                                        }
+                                        Log.d(
+                                            NAME,
+                                            "getToken: idToken has no rawToken (V3 identity token), falling back to providers file",
+                                        )
+                                    }
+
+                                    Log.d(NAME, "getToken : trying V3 providers fallback")
+                                    val v3RegistrationToken =
+                                        nativeStorage.readRegistrationTokenFromV3Provider(
+                                            issuerName,
+                                            accountId,
+                                        )
+                                    if (v3RegistrationToken != null) {
+                                        Log.d(
+                                            NAME,
+                                            "getToken : V3 registration token found, migrating to V4 tokens file",
+                                        )
+                                        val existingTokensForMigration = nativeStorage.readTokens(issuerName, accountId)
+                                        val migratedIdToken = NativeIdToken(rawToken = v3RegistrationToken)
+                                        val migratedTokens =
+                                            existingTokensForMigration?.copy(idToken = migratedIdToken)
+                                                ?: NativeTokens(issuer = issuer, idToken = migratedIdToken)
+                                        nativeStorage.saveTokens(migratedTokens, issuerName, accountId)
+                                        Log.d(NAME, "getToken : V3 token migrated and saved to V4 tokens file")
+                                        val token: WritableMap = Arguments.createMap()
+                                        token.putString("id", "registration-token")
+                                        token.putInt("type", tokenType)
+                                        token.putString("token", v3RegistrationToken)
                                         promise.resolve(token)
                                         return
                                     }
+                                    Log.w(
+                                        NAME,
+                                        "getToken : No registration token found in V4 tokens file or V3 providers file",
+                                    )
                                 }
                             }
 
-                            Log.d(NAME, "Token type $tokenType not found in decrypted JSON")
                             promise.resolve(null)
                         } catch (e: Exception) {
                             Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
-                            promise.resolve(null)
+                            promise.reject("E_STORAGE_ERROR", "Failed to parse decrypted token data: ${e.message}", e)
                         }
                     } else {
-                        Log.d(NAME, "Decrypted content is not valid JSON")
-                        promise.resolve(null)
+                        Log.e(NAME, "Decrypted content is not valid JSON")
+                        promise.reject("E_STORAGE_ERROR", "Decrypted token content is not valid JSON")
                     }
                 } else {
-                    Log.d(
+                    Log.w(
                         NAME,
-                        "Failed to read token file using bcsc-file-port from path: $tokenFilePath - file not found or empty",
+                        "getToken: token file not found or empty at $tokenFilePath — returning null for type $tokenType",
                     )
                     promise.resolve(null)
                 }
             } catch (e: DecryptionException) {
                 Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
-                promise.resolve(null)
+                promise.reject("E_STORAGE_ERROR", "Failed to decrypt token file: ${e.message}", e)
             }
         } catch (e: Exception) {
             Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Failed to read token file: ${e.message}", e)
         }
     }
 
@@ -578,7 +644,7 @@ class BcscCoreModule(
             // Get the account to obtain issuer and account ID
             val account = getAccountSync()
             if (account == null) {
-                // No account means no tokens to delete
+                // No account means no tokens to delete — treat as success (idempotent)
                 promise.resolve(true)
                 return
             }
@@ -587,7 +653,7 @@ class BcscCoreModule(
             val issuer = account.getString("issuer")
 
             if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                // No valid account, nothing to delete
+                // No valid account, nothing to delete — treat as success (idempotent)
                 promise.resolve(true)
                 return
             }
@@ -656,7 +722,7 @@ class BcscCoreModule(
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "setIssuer: Error saving issuer to file: ${e.message}", e)
-            promise.resolve(false)
+            promise.reject("E_STORAGE_ERROR", "Error saving issuer to file: ${e.message}", e)
         }
     }
 
@@ -666,16 +732,24 @@ class BcscCoreModule(
         try {
             val issuerFile = File(reactApplicationContext.filesDir, "issuer")
             if (!issuerFile.exists()) {
-                // No issuer file exists, return null
+                Log.d(NAME, "getIssuer: Issuer file does not exist at path: ${issuerFile.absolutePath}")
+                val fallbackIssuer = nativeStorage.getIssuerWithFallback()
+                if (fallbackIssuer != null) {
+                    Log.d(NAME, "getIssuer: Resolved fallback issuer from account directories: $fallbackIssuer")
+                    promise.resolve(fallbackIssuer)
+                    return
+                }
+
+                // No issuer file exists and no fallback issuer could be derived
                 promise.resolve(null)
                 return
             }
-
             val issuer = nativeStorage.readEncryptedFile(issuerFile)
+            Log.d(NAME, "getIssuer: Successfully read issuer from file: $issuer")
             promise.resolve(issuer)
         } catch (e: Exception) {
             Log.e(NAME, "getIssuer: Error reading issuer from file: ${e.message}", e)
-            promise.resolve(null)
+            promise.reject("E_STORAGE_ERROR", "Error reading issuer from file: ${e.message}", e)
         }
     }
 
@@ -765,13 +839,20 @@ class BcscCoreModule(
                 // Native app stores accounts as a list (for multi-account support)
                 val accounts = listOf(nativeAccount)
 
-                if (nativeStorage.saveAccounts(accounts, issuerName)) {
-                    Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
-                    promise.resolve(null)
-                } else {
+                if (!nativeStorage.saveAccounts(accounts, issuerName)) {
                     Log.e(NAME, "setAccount - Failed to save account to native-compatible storage")
                     promise.reject("E_STORAGE_ERROR", "Failed to save account to native-compatible storage")
+                    return
                 }
+
+                if (!nativeStorage.saveIssuerToFile(issuer)) {
+                    Log.e(NAME, "setAccount - Failed to save issuer to file")
+                    promise.reject("E_STORAGE_ERROR", "Failed to save issuer to file")
+                    return
+                }
+
+                Log.d(NAME, "setAccount - Successfully saved account to native-compatible storage")
+                promise.resolve(null)
             } catch (e: Exception) {
                 Log.e(NAME, "setAccount - Exception occurred while saving account: ${e.message}", e)
                 promise.reject("E_FILE_ACCESS_ERROR", "Failed to save account: ${e.message}")
@@ -1030,9 +1111,6 @@ class BcscCoreModule(
         }
 
         try {
-            // Get the current key pair for signing
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
-
             // Create JWT assertion for OAuth2 client credentials
             val now = Date()
             val expiration = Date(now.time + JWT_EXPIRATION_SECONDS * 1000)
@@ -1068,13 +1146,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "getRefreshTokenRequestBody: BCSC error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_REFRESH_TOKEN_ERROR",
-                "Error creating refresh token request with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error creating refresh token request: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "getRefreshTokenRequestBody: Unexpected error: ${e.message}", e)
-            promise.reject("E_REFRESH_TOKEN_ERROR", "Unexpected error creating refresh token request: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating refresh token request: ${e.message}", e)
         }
     }
 
@@ -1091,6 +1169,7 @@ class BcscCoreModule(
             // Use empty string if deviceToken is not provided
             val actualDeviceToken = deviceToken ?: ""
 
+            // FIXME: Do we need this currentKeyPair? is the call doing something important but we don't need the ouput?
             // Get the current (newest) key pair for signing
             val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
 
@@ -1128,13 +1207,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "signPairingCode: BCSC signing error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_SIGNING_ERROR",
-                "Error signing pairing code with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error signing pairing code: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "signPairingCode: Unexpected error: ${e.message}", e)
-            promise.reject("E_SIGNING_ERROR", "Unexpected error signing pairing code: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error signing pairing code: ${e.message}", e)
         }
     }
 
@@ -1180,7 +1259,26 @@ class BcscCoreModule(
             val deviceInfoClaims = deviceInfoClaimsBuilder.build()
 
             // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
-            val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
+            val deviceInfoJWTAsString =
+                try {
+                    createUnsignedJWT(deviceInfoClaims)
+                } catch (e: JSONException) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: toJSONString method failure: ${e.message}", e)
+                    promise.reject(
+                        "E_120_TOJSONSTRING_METHOD_FAILURE",
+                        "Failed to convert device info JWT to JSON string: ${e.message}",
+                        e,
+                    )
+                    return
+                } catch (e: Exception) {
+                    Log.e(NAME, "getDynamicClientRegistrationBody: JWT device info error: ${e.message}", e)
+                    promise.reject(
+                        "E_120_JWT_DEVICE_INFO_ERROR",
+                        "Error creating device info JWT: ${e.message}",
+                        e,
+                    )
+                    return
+                }
 
             // Use nickname if provided, otherwise fall back to device name
             val clientName = if (!nickname.isNullOrEmpty()) nickname else getDeviceName()
@@ -1235,11 +1333,46 @@ class BcscCoreModule(
 
             Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
             promise.resolve(registrationBodyAsString)
+        } catch (e: KeyAlreadyExistsException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key already exists: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
+                "Key pair already exists: ${e.devMessage}",
+                e,
+            )
+        } catch (e: KeyNotFoundException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Key not found: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+                "Key pair not found: ${e.devMessage}",
+                e,
+            )
+        } catch (e: KeypairGenerationException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: Keypair generation error: ${e.devMessage}", e)
+            promise.reject(
+                "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+                "Failed to generate or retrieve key pair for client registration: ${e.devMessage}",
+                e,
+            )
+        } catch (e: JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: toJSON method failure: ${e.message}", e)
+            promise.reject(
+                "E_120_TOJSON_METHOD_FAILURE",
+                "Failed to serialize client registration data: ${e.message}",
+                e,
+            )
         } catch (e: BcscException) {
             Log.e(NAME, "getDynamicClientRegistrationBody: BCSC error: ${e.devMessage}", e)
             promise.reject(
                 "E_BCSC_DCR_ERROR",
                 "Error creating dynamic client registration with bcsc-keypair-port: ${e.devMessage}",
+                e,
+            )
+        } catch (e: org.json.JSONException) {
+            Log.e(NAME, "getDynamicClientRegistrationBody: JSON serialization error: ${e.message}", e)
+            promise.reject(
+                "E_JSON_SERIALIZATION_FAILED",
+                "Failed to serialize client registration data: ${e.message}",
                 e,
             )
         } catch (e: Exception) {
@@ -1333,13 +1466,13 @@ class BcscCoreModule(
         } catch (e: BcscException) {
             Log.e(NAME, "createPreVerificationJWT: BCSC signing error: ${e.devMessage}", e)
             promise.reject(
-                "E_BCSC_EVIDENCE_JWT_ERROR",
-                "Error creating pre-verification JWT with bcsc-keypair-port: ${e.devMessage}",
+                "E_JWT_SIGN_FAILED",
+                "Error creating pre-verification JWT: ${e.devMessage}",
                 e,
             )
         } catch (e: Exception) {
             Log.e(NAME, "createPreVerificationJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating pre-verification JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating pre-verification JWT: ${e.message}", e)
         }
     }
 
@@ -1369,10 +1502,10 @@ class BcscCoreModule(
             promise.resolve(signedJWT)
         } catch (e: BcscException) {
             Log.e(NAME, "createSignedJWT: BCSC signing error: ${e.devMessage}", e)
-            promise.reject("E_BCSC_CREATE_JWT_ERROR", "Error creating JWT with bcsc-keypair-port: ${e.devMessage}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Error creating signed JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
             Log.e(NAME, "createSignedJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_BCSC_CREATE_JWT_ERROR", "Unexpected error creating JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating signed JWT: ${e.message}", e)
         }
     }
 
@@ -1432,8 +1565,8 @@ class BcscCoreModule(
 
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
-            if (jwtSegments.size < 2) {
-                promise.reject("E_INVALID_JWT", "Invalid JWT format in decrypted payload")
+            if (jwtSegments.size != JWS_COMPACT_SEGMENT_COUNT) {
+                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
                 return
             }
 
@@ -1467,7 +1600,7 @@ class BcscCoreModule(
             promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE", e)
         } catch (e: IllegalArgumentException) {
             Log.e(NAME, "decodePayload: Base64 decode error: ${e.message}", e)
-            promise.reject("E_BASE64_DECODE_ERROR", "Failed to decode base64 payload", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
             promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
@@ -1554,10 +1687,10 @@ class BcscCoreModule(
             promise.resolve(encryptedJWT)
         } catch (e: BcscException) {
             Log.e(NAME, "createQuickLoginJWT: BCSC error: ${e.devMessage}", e)
-            promise.reject("E_BCSC_QUICK_LOGIN_ERROR", "Error creating quick login JWT: ${e.devMessage}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Error creating quick login JWT: ${e.devMessage}", e)
         } catch (e: Exception) {
             Log.e(NAME, "createQuickLoginJWT: Unexpected error: ${e.message}", e)
-            promise.reject("E_QUICK_LOGIN_ERROR", "Unexpected error creating quick login JWT: ${e.message}", e)
+            promise.reject("E_JWT_SIGN_FAILED", "Unexpected error creating quick login JWT: ${e.message}", e)
         }
     }
 
@@ -2013,7 +2146,7 @@ class BcscCoreModule(
             promise.resolve(result)
         } catch (e: Exception) {
             Log.e(NAME, "setPIN error: ${e.message}", e)
-            promise.reject("E_SET_PIN_ERROR", "Error setting PIN: ${e.message}", e)
+            promise.reject("E_SET_PIN_FAILED", "Error setting PIN: ${e.message}", e)
         }
     }
 
@@ -2138,7 +2271,7 @@ class BcscCoreModule(
             promise.resolve(true)
         } catch (e: Exception) {
             Log.e(NAME, "deletePIN error: ${e.message}", e)
-            promise.reject("E_DELETE_PIN_ERROR", "Error deleting PIN: ${e.message}", e)
+            promise.reject("E_DELETE_PIN_FAILED", "Error deleting PIN: ${e.message}", e)
         }
     }
 
@@ -2204,9 +2337,13 @@ class BcscCoreModule(
                         promise.reject("E_DEVICE_AUTH_CANCELLED", "Device authentication was cancelled by user")
                     }
 
-                    DeviceAuthenticationResult.FAILED,
-                    DeviceAuthenticationResult.ERROR,
-                    -> {
+                    DeviceAuthenticationResult.FAILED -> {
+                        // Intermediate biometric failure (e.g. wrong finger) — prompt is
+                        // still open so do not settle the promise.
+                        Log.d(NAME, "performDeviceAuthentication: intermediate biometric failure, awaiting retry")
+                    }
+
+                    DeviceAuthenticationResult.ERROR -> {
                         Log.e(NAME, "performDeviceAuthentication: failed")
                         promise.reject("E_DEVICE_AUTH_ERROR", "Device authentication failed")
                     }
@@ -2560,9 +2697,13 @@ class BcscCoreModule(
                         promise.resolve(result)
                     }
 
-                    DeviceAuthenticationResult.FAILED,
-                    DeviceAuthenticationResult.ERROR,
-                    -> {
+                    DeviceAuthenticationResult.FAILED -> {
+                        // Intermediate biometric failure (e.g. wrong finger) — prompt is
+                        // still open so do not settle the promise.
+                        Log.d(NAME, "unlockWithDeviceSecurity: intermediate biometric failure, awaiting retry")
+                    }
+
+                    DeviceAuthenticationResult.ERROR -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
                         promise.resolve(result)
@@ -2618,6 +2759,7 @@ class BcscCoreModule(
             val account = getAccountSync()
             if (account == null) {
                 // No account yet - return null (not an error)
+                Log.d(NAME, "getAuthorizationRequest: No account")
                 promise.resolve(null)
                 return
             }
@@ -2626,6 +2768,7 @@ class BcscCoreModule(
             val issuer = account.getString("issuer")
 
             if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                Log.d(NAME, "getAuthorizationRequest: No issuer")
                 promise.resolve(null)
                 return
             }
@@ -2633,7 +2776,7 @@ class BcscCoreModule(
             val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
 
             // First try to read from our v4 storage location
-            var authRequest = nativeStorage.readAuthorizationRequest(issuerName, accountId)
+            var authRequest: NativeAuthorizationRequest? = nativeStorage.readAuthorizationRequest(issuerName, accountId)
 
             // If not found, try to read from v3 Provider file for migration
             if (authRequest == null) {
@@ -2648,6 +2791,7 @@ class BcscCoreModule(
             }
 
             if (authRequest == null) {
+                Log.d(NAME, "getAuthorizationRequest: No authorization request found")
                 promise.resolve(null)
                 return
             }
@@ -2912,6 +3056,90 @@ class BcscCoreModule(
         }
     }
 
+    // MARK: - Android Global Flags Storage Methods
+
+    /**
+     * Gets global (non-account-scoped) flags from SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun getAndroidGlobalFlags(promise: Promise) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also hardcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+
+            val result = Arguments.createMap()
+
+            if (globalPrefs.contains("device_auth_never_show_again")) {
+                result.putBoolean(
+                    "notShowDeviceAuthenticationPrepAgain",
+                    globalPrefs.getBoolean("device_auth_never_show_again", false),
+                )
+            }
+
+            if (globalPrefs.contains("max_devices_banner_last_time_displayed")) {
+                result.putDouble(
+                    "maxDevicesBannerLastTimeDisplayed",
+                    globalPrefs.getLong("max_devices_banner_last_time_displayed", 0L).toDouble(),
+                )
+            }
+
+            Log.d(NAME, "getAndroidGlobalFlags: Successfully read global flags")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_GET_GLOBAL_FLAGS_ERROR", "Error getting global flags: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Sets global (non-account-scoped) flags in SharedPreferences.
+     * These flags are stored in the v3 global prefs location and don't require an account.
+     */
+    @ReactMethod
+    override fun setAndroidGlobalFlags(
+        flags: ReadableMap,
+        promise: Promise,
+    ) {
+        try {
+            val globalPrefs =
+                reactApplicationContext.getSharedPreferences(
+                    // this is hardcoded intentionally as it is also harcoded to this value in v3 regardless of
+                    // the actual package name, so we need to read from the same location for migration to work
+                    "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY",
+                    Context.MODE_PRIVATE,
+                )
+            val editor = globalPrefs.edit()
+
+            if (flags.hasKey("notShowDeviceAuthenticationPrepAgain")) {
+                editor.putBoolean(
+                    "device_auth_never_show_again",
+                    flags.getBoolean("notShowDeviceAuthenticationPrepAgain"),
+                )
+            }
+
+            if (flags.hasKey("maxDevicesBannerLastTimeDisplayed")) {
+                editor.putLong(
+                    "max_devices_banner_last_time_displayed",
+                    flags.getDouble("maxDevicesBannerLastTimeDisplayed").toLong(),
+                )
+            }
+
+            editor.apply()
+
+            Log.d(NAME, "setAndroidGlobalFlags: Successfully saved global flags")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(NAME, "setAndroidGlobalFlags error: ${e.message}", e)
+            promise.reject("E_SET_GLOBAL_FLAGS_ERROR", "Error setting global flags: ${e.message}", e)
+        }
+    }
+
     // MARK: - Account Flags Storage Methods
 
     /**
@@ -2935,9 +3163,19 @@ class BcscCoreModule(
                 return
             }
 
-            // Read from account-specific SharedPreferences (v3 compatible)
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
+            // Read from SharedPreferences
+            // v3 hardcoded "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY" as the prefs name prefix,
+            // while v4 uses the current packageName. Fall back to the v3 name if the v4 location is empty.
+            val v4PrefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
+            val v4Prefs = reactApplicationContext.getSharedPreferences(v4PrefsName, Context.MODE_PRIVATE)
+            val prefs =
+                if (v4Prefs.all.isNotEmpty()) {
+                    v4Prefs
+                } else {
+                    val v3PrefsName = "ca.bc.gov.id.servicescard.PREFERENCE_FILE_KEY_$accountId"
+                    Log.d(NAME, "getAccountFlags: v4 prefs empty, trying v3 location: $v3PrefsName")
+                    reactApplicationContext.getSharedPreferences(v3PrefsName, Context.MODE_PRIVATE)
+                }
 
             val result = Arguments.createMap()
 
@@ -2952,7 +3190,16 @@ class BcscCoreModule(
                 )
             }
             if (prefs.contains("email_address")) {
-                result.putString("emailAddress", prefs.getString("email_address", null))
+                val emailAddress = prefs.getString("email_address", null)
+                if (!emailAddress.isNullOrEmpty()) {
+                    result.putString("emailAddress", emailAddress)
+                }
+            }
+            if (prefs.contains("user_submitted_verification_video")) {
+                result.putBoolean(
+                    "userSubmittedVerificationVideo",
+                    prefs.getBoolean("user_submitted_verification_video", false),
+                )
             }
 
             Log.d(NAME, "getAccountFlags: Successfully read account flags")
@@ -3012,6 +3259,10 @@ class BcscCoreModule(
                             editor.remove("email_address")
                         }
                     }
+
+                    "userSubmittedVerificationVideo" -> {
+                        editor.putBoolean("user_submitted_verification_video", flags.getBoolean(key))
+                    }
                     // Add more flag mappings as needed
                 }
             }
@@ -3060,21 +3311,18 @@ class BcscCoreModule(
     }
 
     // ============================================================================
-    // MARK: - Evidence Metadata Storage Methods
+    // MARK: - Evidence Storage Methods
     // ============================================================================
 
     /**
      * Gets evidence metadata from storage.
-     * Evidence metadata contains user's collected evidence during verification flow.
-     * Stored as JSON array in SharedPreferences, per-account.
-     * Matches TypeScript: getEvidenceMetadata(): Promise<EvidenceMetadata[]>
+     * Reads from the encrypted evidence_upload file first, falls back to legacy SharedPreferences.
      */
     @ReactMethod
-    override fun getEvidenceMetadata(promise: Promise) {
+    override fun getEvidence(promise: Promise) {
         try {
             val account = getAccountSync()
             if (account == null) {
-                // No account, return empty array
                 promise.resolve(Arguments.createArray())
                 return
             }
@@ -3085,57 +3333,132 @@ class BcscCoreModule(
                 return
             }
 
-            // Read from account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            val evidenceJson = prefs.getString("evidence_metadata", null)
+            // Read from encrypted evidence_upload file
+            val evidenceJson = readFirstAccountEncryptedFile(AccountFileName.EVIDENCE_UPLOAD)
 
-            if (evidenceJson == null) {
-                // No evidence metadata stored yet - return empty array
-                Log.d(NAME, "getEvidenceMetadata: No evidence metadata found")
+            if (evidenceJson.isNullOrBlank()) {
+                Log.d(NAME, "getEvidence: No evidence found")
                 promise.resolve(Arguments.createArray())
                 return
             }
 
-            // Parse JSON array and convert to WritableArray
-            val jsonArray = JSONArray(evidenceJson)
             val result = Arguments.createArray()
 
-            for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.getJSONObject(i)
-                val map = Arguments.createMap()
-
-                // Convert each evidence metadata object
-                item.keys().forEach { key ->
-                    when (val value = item.get(key)) {
-                        is String -> map.putString(key, value)
-                        is Int -> map.putInt(key, value)
-                        is Double -> map.putDouble(key, value)
-                        is Boolean -> map.putBoolean(key, value)
-                        is JSONObject -> map.putMap(key, convertJsonToMap(value))
-                        is JSONArray -> map.putArray(key, convertJsonToArray(value))
-                        JSONObject.NULL -> map.putNull(key)
-                    }
-                }
-                result.pushMap(map)
+            val trimmedEvidenceJson = evidenceJson.trim()
+            if (trimmedEvidenceJson.startsWith("[")) {
+                addEvidenceMetadataFromArrayJson(trimmedEvidenceJson, result)
+            } else {
+                addEvidenceMetadataFromObjectJson(trimmedEvidenceJson, result)
             }
 
-            Log.d(NAME, "getEvidenceMetadata: Successfully read evidence metadata")
+            Log.d(NAME, "getEvidence: Successfully read evidence metadata")
             promise.resolve(result)
         } catch (e: Exception) {
-            Log.e(NAME, "getEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_GET_EVIDENCE_METADATA_ERROR", "Error getting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "getEvidence error: ${e.message}", e)
+            promise.reject("E_GET_EVIDENCE_ERROR", "Error getting evidence: ${e.message}", e)
+        }
+    }
+
+    private fun addEvidenceMetadataFromArrayJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val jsonArray = JSONArray(trimmedEvidenceJson)
+        for (i in 0 until jsonArray.length()) {
+            val item = jsonArray.getJSONObject(i)
+            val map = Arguments.createMap()
+
+            item.keys().forEach { key ->
+                when (val value = item.get(key)) {
+                    is String -> map.putString(key, value)
+                    is Int -> map.putInt(key, value)
+                    is Double -> map.putDouble(key, value)
+                    is Boolean -> map.putBoolean(key, value)
+                    is JSONObject -> map.putMap(key, convertJsonToMap(value))
+                    is JSONArray -> map.putArray(key, convertJsonToArray(value))
+                    is Long -> map.putDouble(key, value.toDouble())
+                    JSONObject.NULL -> map.putNull(key)
+                }
+            }
+
+            result.pushMap(map)
+        }
+    }
+
+    private fun addEvidenceMetadataFromObjectJson(
+        trimmedEvidenceJson: String,
+        result: WritableArray,
+    ) {
+        val evidenceUploadObject = JSONObject(trimmedEvidenceJson)
+        evidenceUploadObject.keys().forEach { key ->
+            val evidenceEntry = evidenceUploadObject.optJSONObject(key) ?: return@forEach
+            val metadataEntry = Arguments.createMap()
+
+            evidenceEntry.optJSONObject("evidencetype")?.let { evidenceType ->
+                metadataEntry.putMap("evidenceType", convertJsonToMap(evidenceType))
+            }
+
+            evidenceEntry
+                .optJSONObject("evidencedetails")
+                ?.optString("document_number")
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { metadataEntry.putString("documentNumber", it) }
+
+            val metadataArray = Arguments.createArray()
+            val evidencePhotos = evidenceEntry.optJSONObject("images")?.optJSONArray("evidencePhotos")
+            if (evidencePhotos != null) {
+                for (i in 0 until evidencePhotos.length()) {
+                    val photo = evidencePhotos.optJSONObject(i) ?: continue
+                    val photoMetadata = Arguments.createMap()
+                    val filePath = photo.optString("filepath", "")
+                    val filePathLower = filePath.lowercase(Locale.US)
+                    val contentType =
+                        when {
+                            filePathLower.endsWith(".jpeg") || filePathLower.endsWith(".jpg") -> "image/jpeg"
+                            filePathLower.endsWith(".png") -> "image/png"
+                            else -> ""
+                        }
+
+                    photoMetadata.putString("label", photo.optString("label", ""))
+                    photoMetadata.putString("content_type", contentType)
+                    // v3 Android stores timestamp in milliseconds; convert to seconds for the API
+                    photoMetadata.putDouble("date", (photo.optLong("timestamp", 0L) / 1000L).toDouble())
+                    photoMetadata.putString("file_path", filePath)
+
+                    // Compute sha256 and content_length from file on disk
+                    if (filePath.isNotEmpty()) {
+                        photoMetadata.putString("filename", File(filePath).name)
+                        val file = File(filePath)
+                        if (file.exists()) {
+                            val fileBytes = file.readBytes()
+                            photoMetadata.putInt("content_length", fileBytes.size)
+                            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                            val hashBytes = digest.digest(fileBytes)
+                            val hexString = hashBytes.joinToString("") { "%02x".format(it) }
+                            photoMetadata.putString("sha256", hexString)
+                        } else {
+                            photoMetadata.putInt("content_length", 0)
+                            photoMetadata.putString("sha256", "")
+                        }
+                    } else {
+                        photoMetadata.putInt("content_length", 0)
+                        photoMetadata.putString("sha256", "")
+                    }
+
+                    metadataArray.pushMap(photoMetadata)
+                }
+            }
+
+            metadataEntry.putArray("metadata", metadataArray)
+            result.pushMap(metadataEntry)
         }
     }
 
     /**
-     * Sets evidence metadata in storage.
-     * Stores user's collected evidence during verification flow.
-     * Stored as JSON array in SharedPreferences, per-account.
-     * Matches TypeScript: setEvidenceMetadata(evidence: EvidenceMetadata[]): Promise<boolean>
+     * Saves evidence metadata to the encrypted evidence_upload file.
      */
     @ReactMethod
-    override fun setEvidenceMetadata(
+    override fun setEvidence(
         evidence: ReadableArray,
         promise: Promise,
     ) {
@@ -3147,65 +3470,166 @@ class BcscCoreModule(
             }
 
             val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.reject("E_ACCOUNT_INVALID", "Account ID is null or empty")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.reject("E_ACCOUNT_INVALID", "Account ID or issuer is null or empty")
                 return
             }
 
-            // Convert ReadableArray to JSON string
-            val jsonArray = JSONArray()
+            // Convert evidence array to evidence_upload JSON object format
+            val evidenceUpload = JSONObject()
             for (i in 0 until evidence.size()) {
-                val item = evidence.getMap(i)
-                if (item != null) {
-                    jsonArray.put(convertMapToJson(item))
-                }
+                val item = evidence.getMap(i) ?: continue
+                val key = if (i == 0) "evidence1" else "evidence2"
+                evidenceUpload.put(key, convertToEvidenceUploadEntry(item))
             }
 
-            // Write to account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            prefs.edit().putString("evidence_metadata", jsonArray.toString()).apply()
+            // Write to encrypted file
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val targetFile =
+                File(
+                    reactApplicationContext.filesDir,
+                    "$issuerName${File.separator}$accountId${File.separator}${AccountFileName.EVIDENCE_UPLOAD.value}",
+                )
 
-            Log.d(NAME, "setEvidenceMetadata: Successfully saved evidence metadata")
-            promise.resolve(true)
+            val success = nativeStorage.writeEncryptedFile(targetFile, evidenceUpload.toString())
+            if (success) {
+                Log.d(NAME, "setEvidence: Successfully saved evidence")
+                promise.resolve(true)
+            } else {
+                promise.reject("E_SAVE_FAILED", "Failed to write evidence_upload file")
+            }
         } catch (e: Exception) {
-            Log.e(NAME, "setEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_SET_EVIDENCE_METADATA_ERROR", "Error setting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "setEvidence error: ${e.message}", e)
+            promise.reject("E_SET_EVIDENCE_ERROR", "Error setting evidence: ${e.message}", e)
         }
     }
 
     /**
-     * Deletes all evidence metadata from storage.
-     * Clears user's collected evidence (used on verification completion or reset).
-     * Matches TypeScript: deleteEvidenceMetadata(): Promise<boolean>
+     * Deletes all evidence data from storage.
+     * Removes the encrypted evidence_upload file and photo files.
      */
     @ReactMethod
-    override fun deleteEvidenceMetadata(promise: Promise) {
+    override fun deleteEvidence(promise: Promise) {
         try {
             val account = getAccountSync()
             if (account == null) {
-                // No account, so nothing to delete
                 promise.resolve(true)
                 return
             }
 
             val accountId = account.getString("id")
-            if (accountId.isNullOrEmpty()) {
-                promise.resolve(true)
-                return
+            val issuer = account.getString("issuer")
+
+            // Delete encrypted evidence_upload file
+            if (!accountId.isNullOrEmpty() && !issuer.isNullOrEmpty()) {
+                val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+                val evidenceFile =
+                    File(
+                        reactApplicationContext.filesDir,
+                        "$issuerName${File.separator}$accountId${File.separator}${AccountFileName.EVIDENCE_UPLOAD.value}",
+                    )
+                if (evidenceFile.exists()) {
+                    evidenceFile.delete()
+                    Log.d(NAME, "deleteEvidence: Deleted evidence_upload file")
+                }
             }
 
-            // Remove from account-specific SharedPreferences
-            val prefsName = "${reactApplicationContext.packageName}.PREFERENCE_FILE_KEY_$accountId"
-            val prefs = reactApplicationContext.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
-            prefs.edit().remove("evidence_metadata").apply()
+            // Delete documents photo directory
+            val documentsDir = File(reactApplicationContext.filesDir, "documents")
+            if (documentsDir.exists() && documentsDir.isDirectory) {
+                documentsDir.deleteRecursively()
+                Log.d(NAME, "deleteEvidence: Deleted documents photo directory")
+            }
 
-            Log.d(NAME, "deleteEvidenceMetadata: Successfully deleted evidence metadata")
             promise.resolve(true)
         } catch (e: Exception) {
-            Log.e(NAME, "deleteEvidenceMetadata error: ${e.message}", e)
-            promise.reject("E_DELETE_EVIDENCE_METADATA_ERROR", "Error deleting evidence metadata: ${e.message}", e)
+            Log.e(NAME, "deleteEvidence error: ${e.message}", e)
+            promise.reject("E_DELETE_EVIDENCE_ERROR", "Error deleting evidence: ${e.message}", e)
         }
+    }
+
+    /**
+     * Saves a photo to the documents directory.
+     * Photos are stored as JPEG files in {filesDir}/documents/{filename}.
+     *
+     * @param base64Data Base64-encoded photo data
+     * @param filename Target filename for the photo
+     * @return The absolute path to the saved file
+     */
+    @ReactMethod
+    override fun saveEvidencePhoto(
+        base64Data: String,
+        filename: String,
+        promise: Promise,
+    ) {
+        try {
+            val photoBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+            val documentsDir = File(reactApplicationContext.filesDir, "documents")
+            if (!documentsDir.exists()) {
+                documentsDir.mkdirs()
+            }
+
+            val photoFile = File(documentsDir, filename)
+            FileOutputStream(photoFile).use { fos ->
+                fos.write(photoBytes)
+            }
+
+            Log.d(NAME, "saveEvidencePhoto: Saved photo to ${photoFile.absolutePath}")
+            promise.resolve(photoFile.absolutePath)
+        } catch (e: Exception) {
+            Log.e(NAME, "saveEvidencePhoto error: ${e.message}", e)
+            promise.reject("E_SAVE_PHOTO_ERROR", "Error saving evidence photo: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Converts an evidence metadata entry to evidence_upload JSON format.
+     */
+    private fun convertToEvidenceUploadEntry(item: ReadableMap): JSONObject {
+        val entry = JSONObject()
+
+        // Evidence type
+        if (item.hasKey("evidenceType")) {
+            item.getMap("evidenceType")?.let { et ->
+                entry.put("evidencetype", convertMapToJson(et))
+            }
+        }
+
+        // Evidence details
+        val details = JSONObject()
+        if (item.hasKey("documentNumber")) {
+            details.put("document_number", item.getString("documentNumber"))
+        }
+        entry.put("evidencedetails", details)
+
+        // Photos/images
+        val images = JSONObject()
+        val photosArray = JSONArray()
+        if (item.hasKey("metadata")) {
+            val metadataArray = item.getArray("metadata")
+            if (metadataArray != null) {
+                for (i in 0 until metadataArray.size()) {
+                    val photoMeta = metadataArray.getMap(i) ?: continue
+                    val photo = JSONObject()
+                    photo.put("filepath", photoMeta.getString("file_path") ?: "")
+                    photo.put("label", photoMeta.getString("label") ?: "")
+                    photo.put("timestamp", photoMeta.getDouble("date").toLong())
+                    photosArray.put(photo)
+                }
+            }
+        }
+        images.put("evidencePhotos", photosArray)
+        entry.put("images", images)
+
+        // Barcodes
+        if (item.hasKey("barcodes")) {
+            item.getArray("barcodes")?.let { barcodesArray ->
+                entry.put("barcodes", convertArrayToJson(barcodesArray))
+            }
+        }
+
+        return entry
     }
 
     // ============================================================================
@@ -3215,23 +3639,30 @@ class BcscCoreModule(
     /**
      * Gets credential information from native storage.
      * Android: Stored within Provider → ClientRegistration in secure storage
+     * As a fallback this will also search ~/issuer/account_uuid/providers file for stored credentials
      * Compatible with v3 native app storage for verification state detection.
      * Matches TypeScript: getCredential(): Promise<Record<string, unknown> | null>
      */
     @ReactMethod
     override fun getCredential(promise: Promise) {
         try {
+            val prefsName = reactApplicationContext.packageName
             val sharedPreferences =
                 reactApplicationContext.getSharedPreferences(
-                    reactApplicationContext.packageName,
+                    prefsName,
                     Context.MODE_PRIVATE,
                 )
 
-            val providerJson = sharedPreferences.getString("provider", null)
+            var providerJson = sharedPreferences.getString("provider", null)
             if (providerJson == null) {
-                Log.d(NAME, "getCredential: No provider data found")
-                promise.resolve(null)
-                return
+                Log.d(NAME, "getCredential: No provider data found in SharedPreferences, checking file fallback")
+                providerJson = searchAccountsForProviders()
+
+                if (providerJson == null) {
+                    Log.d(NAME, "getCredential: No provider data found in SharedPreferences or fallback files")
+                    promise.resolve(null)
+                    return
+                }
             }
 
             val providerData = JSONObject(providerJson)
@@ -3271,6 +3702,35 @@ class BcscCoreModule(
             Log.e(NAME, "getCredential error: \${e.message}", e)
             promise.reject("E_GET_CREDENTIAL_ERROR", "Error getting credential: \${e.message}", e)
         }
+    }
+
+    private fun searchAccountsForProviders(): String? {
+        val account = getAccountSync()
+        val accountId = account?.getString("id")
+        val issuer = account?.getString("issuer")
+
+        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+            return null
+        }
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+        val providersFile =
+            File(
+                reactApplicationContext.filesDir,
+                "$issuerName${File.separator}$accountId${File.separator}providers",
+            )
+
+        if (!providersFile.exists()) {
+            Log.d(
+                NAME,
+                "getCredential: No fallback providers file found under ${reactApplicationContext.filesDir.absolutePath}${File.separator}$issuerName${File.separator}$accountId",
+            )
+            return null
+        }
+
+        val providersFileContents = nativeStorage.readEncryptedFile(providersFile)
+
+        return providersFileContents?.takeIf { it.isNotBlank() }
     }
 
     /**
@@ -3446,7 +3906,7 @@ class BcscCoreModule(
     }
 
     private val pinService: PinService by lazy {
-        PinService(reactApplicationContext)
+        PinService(reactApplicationContext, nativeStorage)
     }
 
     // MARK: - JSON Conversion Helpers
@@ -3577,6 +4037,250 @@ class BcscCoreModule(
         return jsonArray
     }
 
+    // MARK: - Saved Services (Client Metadata) Storage
+
+    /**
+     * Gets saved services (client metadata) from native encrypted storage.
+     * Returns a WritableArray of service objects matching the NativeSavedService TS type.
+     */
+    @ReactMethod
+    override fun getSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                Log.d(NAME, "getSavedServices: No account found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                Log.d(NAME, "getSavedServices: No account ID or issuer")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadata = nativeStorage.readClientMetadata(issuerName, accountId)
+
+            if (clientMetadata == null) {
+                Log.d(NAME, "getSavedServices: No client metadata found")
+                promise.resolve(Arguments.createArray())
+                return
+            }
+
+            val result = Arguments.createArray()
+            for (metadata in clientMetadata) {
+                val serviceMap =
+                    Arguments.createMap().apply {
+                        putString("clientRefId", metadata.clientRefId ?: "")
+                        putBoolean("bookmarked", metadata.isBookmarked)
+                        metadata.clientName?.let { putString("clientName", it) }
+                        if (metadata.dateAdded > 0) putDouble("dateAdded", metadata.dateAdded / 1000.0)
+                        if (metadata.lastUsed > 0) putDouble("lastUsed", metadata.lastUsed / 1000.0)
+                        metadata.clientUri?.let { putString("clientUri", it) }
+                        metadata.initiateLoginUri?.let { putString("initiateLoginUri", it) }
+                        metadata.clientDescription?.let { putString("clientDescription", it) }
+                        metadata.policyUri?.let { putString("policyUri", it) }
+                        metadata.serviceListingSortOrder?.let { putInt("serviceListingSortOrder", it) }
+                        metadata.claimsDescription?.let { putString("claimsDescription", it) }
+                        putBoolean("suppressConfirmationInfo", metadata.suppressConfirmationInfo)
+                        putBoolean("suppressBookmarkPrompt", metadata.suppressBookmarkPrompt)
+                    }
+                result.pushMap(serviceMap)
+            }
+
+            Log.d(NAME, "getSavedServices: Read ${clientMetadata.size} services")
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getSavedServices: Error", e)
+            promise.resolve(Arguments.createArray())
+        }
+    }
+
+    /**
+     * Saves services (client metadata) to native encrypted storage.
+     */
+    @ReactMethod
+    override fun setSavedServices(
+        services: ReadableArray,
+        promise: Promise,
+    ) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.reject("E_NO_ACCOUNT", "No account found")
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.reject("E_NO_ACCOUNT", "No account ID or issuer")
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val clientMetadataList = mutableListOf<NativeClientMetadata>()
+
+            for (i in 0 until services.size()) {
+                val serviceMap = services.getMap(i) ?: continue
+                clientMetadataList.add(
+                    NativeClientMetadata(
+                        clientRefId =
+                            if (serviceMap.hasKey(
+                                    "clientRefId",
+                                )
+                            ) {
+                                serviceMap.getString("clientRefId")
+                            } else {
+                                null
+                            },
+                        clientName =
+                            if (serviceMap.hasKey(
+                                    "clientName",
+                                )
+                            ) {
+                                serviceMap.getString("clientName")
+                            } else {
+                                null
+                            },
+                        clientUri = if (serviceMap.hasKey("clientUri")) serviceMap.getString("clientUri") else null,
+                        initiateLoginUri =
+                            if (serviceMap.hasKey(
+                                    "initiateLoginUri",
+                                )
+                            ) {
+                                serviceMap.getString("initiateLoginUri")
+                            } else {
+                                null
+                            },
+                        clientDescription =
+                            if (serviceMap.hasKey(
+                                    "clientDescription",
+                                )
+                            ) {
+                                serviceMap.getString("clientDescription")
+                            } else {
+                                null
+                            },
+                        policyUri =
+                            if (serviceMap.hasKey(
+                                    "policyUri",
+                                )
+                            ) {
+                                serviceMap.getString("policyUri")
+                            } else {
+                                null
+                            },
+                        claimsDescription =
+                            if (serviceMap.hasKey(
+                                    "claimsDescription",
+                                )
+                            ) {
+                                serviceMap.getString("claimsDescription")
+                            } else {
+                                null
+                            },
+                        serviceListingSortOrder =
+                            if (serviceMap.hasKey(
+                                    "serviceListingSortOrder",
+                                )
+                            ) {
+                                serviceMap.getInt("serviceListingSortOrder")
+                            } else {
+                                null
+                            },
+                        suppressConfirmationInfo =
+                            if (serviceMap.hasKey(
+                                    "suppressConfirmationInfo",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressConfirmationInfo")
+                            } else {
+                                false
+                            },
+                        suppressBookmarkPrompt =
+                            if (serviceMap.hasKey(
+                                    "suppressBookmarkPrompt",
+                                )
+                            ) {
+                                serviceMap.getBoolean("suppressBookmarkPrompt")
+                            } else {
+                                false
+                            },
+                        isBookmarked =
+                            if (serviceMap.hasKey(
+                                    "bookmarked",
+                                )
+                            ) {
+                                serviceMap.getBoolean("bookmarked")
+                            } else {
+                                false
+                            },
+                        dateAdded =
+                            if (serviceMap.hasKey(
+                                    "dateAdded",
+                                )
+                            ) {
+                                (serviceMap.getDouble("dateAdded") * 1000).toLong()
+                            } else {
+                                0
+                            },
+                        lastUsed =
+                            if (serviceMap.hasKey(
+                                    "lastUsed",
+                                )
+                            ) {
+                                (serviceMap.getDouble("lastUsed") * 1000).toLong()
+                            } else {
+                                0
+                            },
+                    ),
+                )
+            }
+
+            val success = nativeStorage.saveClientMetadata(clientMetadataList.toTypedArray(), issuerName, accountId)
+            if (success) {
+                Log.d(NAME, "setSavedServices: Saved ${clientMetadataList.size} services")
+                promise.resolve(true)
+            } else {
+                promise.reject("E_SAVE_FAILED", "Failed to save client metadata")
+            }
+        } catch (e: Exception) {
+            promise.reject("E_SET_SAVED_SERVICES_ERROR", "Error saving services: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Deletes all saved services (client metadata) from native storage.
+     */
+    @ReactMethod
+    override fun deleteSavedServices(promise: Promise) {
+        try {
+            val account = getAccountSync()
+            if (account == null) {
+                promise.resolve(true)
+                return
+            }
+
+            val accountId = account.getString("id")
+            val issuer = account.getString("issuer")
+            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+                promise.resolve(true)
+                return
+            }
+
+            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            val success = nativeStorage.deleteClientMetadata(issuerName, accountId)
+            Log.d(NAME, "deleteSavedServices: ${if (success) "success" else "failed"}")
+            promise.resolve(success)
+        } catch (e: Exception) {
+            promise.reject("E_DELETE_SAVED_SERVICES_ERROR", "Error deleting services: ${e.message}", e)
+        }
+    }
+
     /**
      * Displays a local notification on the device.
      * @param title The notification title
@@ -3637,6 +4341,34 @@ class BcscCoreModule(
             Log.e(NAME, "showLocalNotification - Error displaying notification: ${e.message}", e)
             promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
         }
+    }
+
+    /**
+     * A helper function to read user account files for migration
+     */
+    private fun readFirstAccountEncryptedFile(accountFileName: AccountFileName): String? {
+        val account = getAccountSync()
+        val accountId = account?.getString("id")
+        val issuer = account?.getString("issuer")
+
+        if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
+            Log.d(NAME, "readFirstAccountEncryptedFile: no account/issuer found")
+            return null
+        }
+
+        val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+        val targetFile =
+            File(
+                reactApplicationContext.filesDir,
+                "$issuerName${File.separator}$accountId${File.separator}${accountFileName.value}",
+            )
+
+        if (!targetFile.exists() || !targetFile.isFile) {
+            Log.d(NAME, "readFirstAccountEncryptedFile: file not found at ${targetFile.absolutePath}")
+            return null
+        }
+
+        return nativeStorage.readEncryptedFile(targetFile)
     }
 
     // MARK: - PIN Penalty Helper Methods
@@ -3789,10 +4521,50 @@ class BcscCoreModule(
                 }
 
             promise.resolve(result)
+        } catch (e: java.text.ParseException) {
+            Log.e(NAME, "decodeLoginChallenge: JWS parse error: ${e.message}", e)
+            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to parse JWS: ${e.message}", e)
         } catch (e: Exception) {
             Log.e(NAME, "decodeLoginChallenge: Unexpected error: ${e.message}", e)
             promise.reject("E_DECODE_LOGIN_CHALLENGE_ERROR", "Unable to decode login challenge", e)
         }
+    }
+
+    @ReactMethod
+    override fun isThirdPartyKeyboardActive(promise: Promise) {
+        try {
+            val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            if (imm == null) {
+                promise.resolve(false)
+                return
+            }
+
+            val defaultInputMethod =
+                android.provider.Settings.Secure.getString(
+                    reactApplicationContext.contentResolver,
+                    android.provider.Settings.Secure.DEFAULT_INPUT_METHOD,
+                )
+
+            for (imi in imm.enabledInputMethodList) {
+                if (imi.id == defaultInputMethod) {
+                    val appFlags = imi.serviceInfo.applicationInfo.flags
+                    val isThirdParty = (appFlags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) == 0
+                    promise.resolve(isThirdParty)
+                    return
+                }
+            }
+
+            promise.resolve(false)
+        } catch (e: Exception) {
+            Log.e(NAME, "3rdPartyKeyboardCheck: ${e.message}", e)
+            promise.resolve(false) // Default to false if any error occurs, to avoid blocking user input
+        }
+    }
+
+    @ReactMethod
+    override fun openKeyboardSelector() {
+        val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.showInputMethodPicker()
     }
 
     /**
@@ -3834,4 +4606,153 @@ class BcscCoreModule(
             false
         }
     }
+
+    /**
+     * Performs a recursive scan of all files in the app's private storage directory.
+     *
+     * This method scans the filesDir (context.filesDir) and logs all files and directories
+     * to help diagnose storage layout, migration issues, and file organization.
+     * Mirrors the iOS getNativeFilesScan functionality.
+     *
+     * @param promise Resolves with a map containing:
+     *   - packageName: The app's package name
+     *   - filesDirectory: Path to the app's files directory
+     *   - filesDirExists: Whether the files directory exists
+     *   - files: Array of relative paths to all files/directories found
+     *   - fileCount: Total count of files/directories
+     */
+    @ReactMethod
+    fun getNativeFilesScan(promise: Promise) {
+        try {
+            val packageName = reactApplicationContext.packageName
+            val filesDir = reactApplicationContext.filesDir
+            val filesDirExists = filesDir.exists()
+
+            val result =
+                Arguments.createMap().apply {
+                    putString("bundleID", packageName)
+                    putString("bundleDirectory", filesDir.absolutePath)
+                    putBoolean("bundleDirectoryExists", filesDirExists)
+
+                    if (filesDirExists) {
+                        // Recursively scan all files starting from filesDir
+                        val allFiles = mutableListOf<String>()
+                        recursiveFileScan(filesDir, filesDir, allFiles)
+
+                        val filesArray = Arguments.createArray()
+                        allFiles.forEach { filePath ->
+                            filesArray.pushString(filePath)
+                        }
+
+                        putArray("files", filesArray)
+                        putInt("fileCount", allFiles.size)
+
+                        Log.i(
+                            NAME,
+                            "[Native File Scan] Found ${allFiles.size} files/directories in Android storage",
+                        )
+                        if (Log.isLoggable(NAME, Log.DEBUG)) {
+                            allFiles.forEach { file ->
+                                Log.d(NAME, "[Native File Scan] $file")
+                            }
+                        }
+
+                        // logEvidenceFileContents(filesDir, allFiles)
+                    } else {
+                        putArray("files", Arguments.createArray())
+                        putInt("fileCount", 0)
+                        Log.i(NAME, "[Native File Scan] Files directory does not exist")
+                    }
+                }
+
+            promise.resolve(result)
+        } catch (e: Exception) {
+            Log.e(NAME, "getNativeFilesScan: Failed to scan files: ${e.message}", e)
+            promise.reject(
+                "E_NATIVE_FILE_SCAN_FAILED",
+                "Failed to scan native files: ${e.localizedMessage}",
+                e,
+            )
+        }
+    }
+
+    /**
+     * Recursively scans a directory and collects all file/directory paths relative to the base directory.
+     *
+     * @param directory The current directory to scan
+     * @param baseDirectory The root directory (used to compute relative paths)
+     * @param results Mutable list to collect file paths
+     */
+    private fun recursiveFileScan(
+        directory: File,
+        baseDirectory: File,
+        results: MutableList<String>,
+    ) {
+        try {
+            val files = directory.listFiles() ?: return
+
+            for (file in files) {
+                // Compute relative path from base directory
+                val relativePath =
+                    file.absolutePath
+                        .removePrefix(baseDirectory.absolutePath)
+                        .removePrefix(File.separator)
+
+                results.add(relativePath)
+
+                // Recursively scan subdirectories
+                if (file.isDirectory) {
+                    Log.i(NAME, "[Native File Scan] Directory (full path): ${file.absolutePath}")
+                    recursiveFileScan(file, baseDirectory, results)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(NAME, "recursiveFileScan: Error scanning directory: ${e.message}", e)
+        }
+    }
+
+    // private fun logEvidenceFileContents(
+    //     baseDirectory: File,
+    //     scannedRelativePaths: List<String>,
+    // ) {
+    //     val evidenceFileNames = setOf("evidence_config", "evidence_upload")
+
+    //     scannedRelativePaths.forEach { relativePath ->
+    //         val segments = relativePath.split(File.separator).filter { it.isNotBlank() }
+    //         if (segments.size < 2) {
+    //             return@forEach
+    //         }
+
+    //         val fileName = segments.last()
+    //         if (fileName !in evidenceFileNames) {
+    //             return@forEach
+    //         }
+
+    //         val file = File(baseDirectory, relativePath)
+    //         if (!file.exists() || !file.isFile) {
+    //             return@forEach
+    //         }
+
+    //         try {
+    //             val content = nativeStorage.readEncryptedFile(file)
+    //             if (content != null) {
+    //                 Log.i(
+    //                     NAME,
+    //                     "[Native File Scan] ${file.absolutePath} contents:\n$content",
+    //                 )
+    //             } else {
+    //                 Log.w(
+    //                     NAME,
+    //                     "[Native File Scan] ${file.absolutePath} could not be decrypted/read as text",
+    //                 )
+    //             }
+    //         } catch (e: Exception) {
+    //             Log.w(
+    //                 NAME,
+    //                 "[Native File Scan] Failed to read ${file.absolutePath}: ${e.message}",
+    //                 e,
+    //             )
+    //         }
+    //     }
+    // }
 }

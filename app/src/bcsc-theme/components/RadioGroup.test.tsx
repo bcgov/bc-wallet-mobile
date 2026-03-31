@@ -1,7 +1,6 @@
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-import { BasicAppContext } from '@mocks/helpers/app'
 import { RadioGroup } from './RadioGroup'
 
 describe('RadioGroup Component', () => {

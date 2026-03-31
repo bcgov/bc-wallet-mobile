@@ -1,21 +1,10 @@
-import { extractErrorMessage } from '@/errors'
-import { AppError } from '@/errors/appError'
-import { logError, trackErrorInAnalytics } from '@/errors/errorHandler'
-import { ErrorRegistry, ErrorRegistryKey } from '@/errors/errorRegistry'
-import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
+import { AppError } from '@/errors'
+import { BCSCErrorModal, ErrorModalPayload } from '@/errors/components/ErrorModal'
+import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
-import { BifoldError, EventTypes } from '@bifold/core'
-import i18next from 'i18next'
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo } from 'react'
-import { DeviceEventEmitter } from 'react-native'
-
-export interface ErrorOptions {
-  /** Original error for technical details */
-  error?: unknown
-  /** Additional context for logging */
-  context?: Record<string, unknown>
-}
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 
 export interface AlertOptions {
   /** Custom actions/buttons for the native alert */
@@ -28,17 +17,12 @@ export interface ErrorAlertContextType {
   /**
    * Show error via ErrorModal (default display)
    */
-  emitError: (key: ErrorRegistryKey, options?: ErrorOptions) => void
+  emitErrorModal: (title: string, description: string, error: AppError) => void
 
   /**
-   * Show native alert with title and body
+   * Show native alert with title and description
    */
-  emitAlert: (title: string, body: string, options?: AlertOptions) => void
-
-  /**
-   * Show error as native alert from an AppError instance
-   */
-  emitErrorAlert: (error: AppError, options?: { actions?: AlertAction[] }) => void
+  emitAlert: (title: string, description: string, options?: AlertOptions) => void
 
   /**
    * Dismiss the currently displayed error modal
@@ -48,88 +32,94 @@ export interface ErrorAlertContextType {
 
 export const ErrorAlertContext = createContext<ErrorAlertContextType | null>(null)
 
+interface ErrorAlertProviderProps extends PropsWithChildren {
+  enableReport?: boolean
+}
+
 /**
  * ErrorAlertProvider - Unified error and alert handling for BC Wallet
  *
- * TODO (MD): Provide state to prevent multiple modals/alerts from stacking
+ * Owns the error modal state and renders BCSCErrorModal directly,
+ * eliminating the DeviceEventEmitter indirection.
  *
  * Provides a single entry point for:
- * - Error modals (via BifoldError/ErrorModal)
+ * - Error modals (via BCSCErrorModal, rendered internally)
  * - Native alerts (via React Native Alert)
  * - Analytics tracking
  * - Error logging
  *
  */
-export const ErrorAlertProvider = ({ children }: PropsWithChildren) => {
+export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlertProviderProps) => {
+  const [error, setError] = useState<ErrorModalPayload | null>(null)
+  const [errorKey, setErrorKey] = useState(0)
+
   /**
    * Show error via ErrorModal
-   * Uses i18next.t() directly to avoid stale closure issues with useCallback
    *
-   * TODO (MD): Rename to emitErrorModal to clarify usage
+   * @param title - The title to display in the error modal
+   * @param description - The description/message to display in the error modal
+   * @param error - The AppError instance containing error details and analytics info
+   * @returns void
    */
-  const emitError = useCallback((key: ErrorRegistryKey, options: ErrorOptions = {}): void => {
-    const definition = ErrorRegistry[key]
+  const emitErrorModal = useCallback((title: string, description: string, error: AppError): void => {
+    // Track alert display and error events in analytics
+    Analytics.trackAlertDisplayEvent(error.appEvent)
+    error.track()
 
-    if (!definition) {
-      appLogger.warn(`Unknown error key: ${key}`)
-      emitError('GENERAL_ERROR', options)
-      return
-    }
+    appLogger.error(`[${error.code}] Error modal emitted`, {
+      title,
+      description,
+      ...error.toJSON(),
+    })
 
-    const { error: originalError, context } = options
-    const technicalMessage = extractErrorMessage(originalError)
-
-    logError(key, definition, technicalMessage, context)
-
-    // Use i18next.t() directly to ensure translations are always current
-    const title = i18next.t(definition.titleKey)
-    const description = i18next.t(definition.descriptionKey)
-
-    const bifoldError = new BifoldError(title, description, technicalMessage, definition.statusCode)
-    trackErrorInAnalytics(definition, AlertInteractionEvent.ALERT_DISPLAY)
-    DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+    setError({
+      title,
+      description,
+      message: error.fullMessage,
+      code: error.statusCode,
+      appEvent: error.appEvent,
+      stack: error.stack,
+      cause: error.cause,
+    })
+    setErrorKey((prev) => prev + 1)
   }, [])
 
   /**
    * Show native alert with title and description
    */
-  const emitAlert = useCallback((title: string, body: string, options?: AlertOptions): void => {
-    showAlert(title, body, options?.actions, options?.event)
-  }, [])
-
-  /**
-   * Show error as native alert from an AppError instance
-   */
-  const emitErrorAlert = useCallback((error: AppError, options?: { actions?: AlertAction[] }) => {
-    showAlert(error.title, error.description, options?.actions, error.appEvent)
+  const emitAlert = useCallback((title: string, description: string, options?: AlertOptions): void => {
+    showAlert(title, description, options?.actions, options?.event)
   }, [])
 
   /**
    * Dismiss the currently displayed error modal
    */
   const dismiss = useCallback((): void => {
-    DeviceEventEmitter.emit(EventTypes.ERROR_REMOVED)
+    setError(null)
   }, [])
 
   const value: ErrorAlertContextType = useMemo(
     () => ({
-      emitError,
+      emitErrorModal,
       emitAlert,
-      emitErrorAlert,
       dismiss,
     }),
-    [emitError, emitAlert, emitErrorAlert, dismiss]
+    [emitErrorModal, emitAlert, dismiss]
   )
 
-  return <ErrorAlertContext.Provider value={value}>{children}</ErrorAlertContext.Provider>
+  return (
+    <ErrorAlertContext.Provider value={value}>
+      {children}
+      <BCSCErrorModal error={error} errorKey={errorKey} onDismiss={dismiss} enableReport={enableReport} />
+    </ErrorAlertContext.Provider>
+  )
 }
 
 /**
  * Hook to access error and alert functionality
  *
- * @returns Error alert context with methods: error, errorAsAlert, alert, dismiss
+ * @returns Error alert context with methods: emitErrorModal, emitAlert, dismiss
  * @throws Error if used outside of ErrorAlertProvider
- *
  */
 export const useErrorAlert = (): ErrorAlertContextType => {
   const context = useContext(ErrorAlertContext)

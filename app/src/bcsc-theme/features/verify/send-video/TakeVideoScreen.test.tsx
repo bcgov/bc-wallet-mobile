@@ -1,9 +1,8 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-
-import { BasicAppContext } from '@mocks/helpers/app'
-
 import { useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 import TakeVideoScreen from './TakeVideoScreen'
 
@@ -15,6 +14,15 @@ jest.mock('react-native-vision-camera', () => ({
   useCameraFormat: jest.fn().mockReturnValue({ videoWidth: 640, videoHeight: 480, fps: 24 }),
   CameraRuntimeError: class extends Error {},
 }))
+
+const storeWithPrompts = {
+  bcsc: {
+    prompts: [
+      { id: 1, prompt: 'Say your name' },
+      { id: 2, prompt: 'Show your face' },
+    ],
+  },
+} as any
 
 describe('TakeVideoScreen', () => {
   beforeEach(() => {
@@ -29,7 +37,7 @@ describe('TakeVideoScreen', () => {
   test('renders correctly', () => {
     const navigation = useNavigation()
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
         <TakeVideoScreen navigation={navigation as never} />
       </BasicAppContext>
     )
@@ -43,7 +51,7 @@ describe('TakeVideoScreen', () => {
 
     const navigation = useNavigation()
     const { getByText } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
         <TakeVideoScreen navigation={navigation as never} />
       </BasicAppContext>
     )
@@ -62,8 +70,10 @@ describe('TakeVideoScreen', () => {
 
     const navigation = useNavigation()
     const { getByText } = render(
-      <BasicAppContext>
-        <TakeVideoScreen navigation={navigation as never} />
+      <BasicAppContext initialStateOverride={storeWithPrompts}>
+        <BCSCLoadingProvider>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 

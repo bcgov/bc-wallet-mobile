@@ -1,3 +1,4 @@
+import { KEEP_ALIVE_INTERVAL_MS, RECONNECTION_GRACE_PERIOD_MS } from '@/constants'
 import { BifoldLogger } from '@bifold/core'
 import {
   callsWebrtcParticipant,
@@ -8,11 +9,13 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
+import type { Result as PexipTokenResult, Stun, Turn } from '@pexip/infinity-api/dist/token/types'
+import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
-
-import { KEEP_ALIVE_INTERVAL_MS, RECONNECTION_GRACE_PERIOD_MS } from '@/constants'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
+
+type IceServer = Stun | Turn
 
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
@@ -41,11 +44,12 @@ export const connect = async (
     throw new Error('Cannot establish the connection. Pexip unavailable (1):', response.status)
   }
 
-  const participantUuid = response.data.result.participant_uuid
-  let currentToken = response.data.result.token
+  const tokenResult: PexipTokenResult = response.data.result
+  const participantUuid = tokenResult.participant_uuid
+  let currentToken = tokenResult.token
 
   logger.info('Creating WebRTC peer connection...')
-  const peerConnection: RTCPeerConnection = await createPeerConnection(localStream)
+  const peerConnection: RTCPeerConnection = await createPeerConnection(localStream, tokenResult, logger)
 
   let connectionEstablished = false
   let remoteStreamReceived = false
@@ -204,9 +208,11 @@ export const connect = async (
         currentToken = response.data.result.token
         logger.info('Pexip token refreshed successfully')
       } else {
-        logger.warn('Token refresh returned unexpected response', { status: response.status })
+        logger.warn('Token refresh returned non-200 response, conference likely ended', { status: response.status })
+        handleDisconnect()
       }
     } catch (err) {
+      // Network errors may be transient — WebRTC state changes will catch persistent issues
       logger.error('Pexip token refresh failed:', err as Error)
     }
   }, KEEP_ALIVE_INTERVAL_MS)
@@ -224,6 +230,36 @@ export const connect = async (
     callUuid,
     participantUuid,
   })
+
+  // Subscribe to Pexip server-sent events for real-time disconnect detection.
+  // This provides near-instant notification when the agent ends the call or the
+  // conference is terminated, rather than waiting for WebRTC state changes.
+  const pexipEventsUrl = `${req.nodeUrl}/api/client/v2/conferences/${req.conferenceAlias}/events?token=${currentToken}`
+  logger.info('Subscribing to Pexip server-sent events...')
+  const eventSource = new EventSource<'disconnect'>(pexipEventsUrl)
+
+  eventSource.addEventListener('disconnect', (event) => {
+    let reason = 'unknown'
+    try {
+      reason = event.data ? (JSON.parse(event.data)?.reason ?? reason) : reason
+    } catch (error) {
+      // Malformed JSON in SSE payload — proceed with disconnect regardless
+      logger.warn('Failed to parse Pexip disconnect event data', { data: event.data, error: error as Error })
+    }
+    logger.info('Pexip SSE disconnect event received', { reason })
+    handleDisconnect()
+  })
+
+  eventSource.addEventListener('error', (event) => {
+    // SSE errors are not fatal — WebRTC state changes and token refresh
+    // serve as backup disconnect detection mechanisms
+    logger.warn('Pexip SSE error', { error: event })
+  })
+
+  const closePexipEventSource = () => {
+    logger.info('Closing Pexip event source...')
+    eventSource.close()
+  }
 
   const closePeerConnection = () => {
     logger.info('Closing peer connection...')
@@ -258,6 +294,7 @@ export const connect = async (
     peerConnection,
     disconnectPexip,
     stopPexipKeepAlive,
+    closePexipEventSource,
     setAppInitiatedDisconnect,
     closePeerConnection,
     releaseLocalStream,
@@ -281,14 +318,40 @@ const requestInfinityToken = async (request: ConnectionRequest): Promise<any> =>
   return response
 }
 
-const createPeerConnection = async (localStream: MediaStream) => {
+export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLogger): IceServer[] => {
+  const iceServers: IceServer[] = []
+
+  // Use STUN servers from Pexip token response
+  if (tokenResult.stun?.length) {
+    for (const entry of tokenResult.stun) {
+      iceServers.push({ url: entry.url })
+    }
+  }
+
+  // Use TURN servers from Pexip token response
+  if (tokenResult.turn?.length) {
+    for (const entry of tokenResult.turn) {
+      iceServers.push({
+        urls: entry.urls,
+        username: entry.username,
+        credential: entry.credential,
+      })
+    }
+  }
+
+  // Fallback to Google public STUN if Pexip provided nothing
+  if (iceServers.length === 0) {
+    logger.warn('No ICE servers from Pexip, falling back to Google public STUN')
+    iceServers.push({ url: 'stun:stun.l.google.com:19302' })
+  }
+
+  logger.info('ICE servers configured:', { count: iceServers.length })
+  return iceServers
+}
+
+const createPeerConnection = async (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
   const peerConstraints = {
-    iceServers: [
-      {
-        // TODO (bm): determine which STUN/TURN servers to use in which environments
-        urls: 'stun:stun.l.google.com:19302',
-      },
-    ],
+    iceServers: buildIceServers(tokenResult, logger),
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)

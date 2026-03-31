@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native'
 import React from 'react'
-
 import { PairingService } from './PairingService'
 import { PairingServiceProvider } from './PairingServiceContext'
 import { usePendingPairing } from './usePendingPairing'

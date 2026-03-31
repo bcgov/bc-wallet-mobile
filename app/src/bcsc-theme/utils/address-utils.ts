@@ -72,6 +72,7 @@ const ProvinceCodeMap = {
 
 type ResidentialAddress = {
   streetAddress: string
+  streetAddress2?: string
   city: string
   province: string
   postalCode: string
@@ -111,5 +112,8 @@ export function isCanadianPostalCode(postalCode: string): boolean {
  * @returns {*} {string} - The formatted address string in uppercase.
  */
 export function formatAddressForDisplay(address: ResidentialAddress): string {
-  return `${address.streetAddress}, ${address.city}, ${address.province} ${address.postalCode}`.toUpperCase()
+  const streetLine = address.streetAddress2
+    ? `${address.streetAddress}, ${address.streetAddress2}`
+    : address.streetAddress
+  return `${streetLine}, ${address.city}, ${address.province} ${address.postalCode}`.toUpperCase()
 }

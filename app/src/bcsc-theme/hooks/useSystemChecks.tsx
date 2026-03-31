@@ -1,35 +1,27 @@
-import { navigationRef } from '@/contexts/NavigationContainerContext'
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { SERVER_STATUS_RECHECK_INTERVAL_MS } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { useEventListener } from '@/hooks/useEventListener'
-import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
-import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
-import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
-import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
+import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/services/system-checks/system-checks'
-import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
-import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import { runSystemChecks } from '@/services/system-checks/system-checks'
 import { BCState } from '@/store'
-import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { useContext, useEffect, useRef } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
-import { getBundleId } from 'react-native-device-info'
-import BCSCApiClient from '../api/client'
-import useConfigApi from '../api/hooks/useConfigApi'
-import useRegistrationApi from '../api/hooks/useRegistrationApi'
-import useTokenApi from '../api/hooks/useTokens'
-import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
+import { AppState, DeviceEventEmitter } from 'react-native'
+import { useTokenService } from '../services/hooks/useTokenService'
 import { useBCSCApiClientState } from './useBCSCApiClient'
-
-const BCSC_BUILD_SUFFIX = '.servicescard'
+import { useCreateSystemChecks } from './useCreateSystemChecks'
 
 export enum SystemCheckScope {
-  STARTUP = 'startup',
-  MAIN_STACK = 'mainStack',
+  STARTUP = 'STARTUP',
+  MAIN_STACK = 'MAIN_STACK',
 }
 
 /**
@@ -47,21 +39,95 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
-  const tokenApi = useTokenApi(client as BCSCApiClient)
-  const registrationApi = useRegistrationApi(client, isClientReady)
+  const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
-  const accountContext = useContext(BCSCAccountContext)
+  const systemChecks = useCreateSystemChecks()
+  const appStateRef = useRef(AppState.currentState)
+  const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
+  const { emitAlert } = useErrorAlert()
 
-  const accountExpirationDate = accountContext?.account?.account_expiration_date
-  // Internet connectivity event listener
-  useEventListener(() => {
-    return NetInfo.addEventListener(async (netInfo) => {
-      const navigation = await getSystemCheckNavigation()
+  const hasServerOutage = store.bcsc.bannerMessages.some((b) => b.id === BCSCBanner.IAS_SERVER_UNAVAILABLE)
+  const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, t, logger])
 
-      await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+  // Updated credential metadata ref
+  useEffect(() => {
+    credentialMetadataRef.current = store.bcsc.credentialMetadata
+  }, [store.bcsc.credentialMetadata])
+
+  // Get system checks for the specified scope (useGetSystemChecks)
+  const scopeSystemCheck = systemChecks[scope]
+
+  /**
+   * Re-checks server status on demand (foreground return, interval timer).
+   * Creates a ServerStatusSystemCheck inline and runs it — on success the
+   * modal is dismissed and banners are cleared, on failure the modal is
+   * shown and banners are re-added.
+   */
+  const recheckServerStatus = useCallback(async () => {
+    if (!isClientReady) {
+      return
+    }
+
+    try {
+      const serverStatus = await configApi.getServerStatus()
+      const check = new ServerStatusSystemCheck(serverStatus, utils, navigation)
+
+      if (check.runCheck()) {
+        check.onSuccess()
+      } else {
+        check.onFail()
+      }
+    } catch (error) {
+      logger.error('[useSystemChecks]: Failed to re-check server status', error as Error)
+    }
+  }, [isClientReady, configApi, utils, navigation, logger])
+
+  // Internet connectivity and foreground listener
+  useEffect(() => {
+    if (scope !== SystemCheckScope.STARTUP) {
+      return
+    }
+
+    const unsubscribeNetInfo = NetInfo.addEventListener(async ({ isConnected, isInternetReachable }) => {
+      // false negatives on iOS happen when app is in background/suspended state
+      if (appStateRef.current !== 'active') {
+        return
+      }
+
+      await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
     })
-  }, scope === SystemCheckScope.STARTUP)
+
+    const appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
+      appStateRef.current = nextAppState
+
+      // When app becomes active, refresh network state and server status to ensure accurate status
+      if (nextAppState === 'active') {
+        const { isConnected, isInternetReachable } = await NetInfo.refresh()
+        await runSystemChecks([new InternetStatusSystemCheck(isConnected, isInternetReachable, navigation, logger)])
+        await recheckServerStatus()
+      }
+    })
+
+    return () => {
+      unsubscribeNetInfo()
+      appStateSubscription.remove()
+    }
+  }, [scope, logger, navigation, recheckServerStatus])
+
+  // Periodic server status re-check during active outage (matches v3 60-second interval)
+  useEffect(() => {
+    if (scope !== SystemCheckScope.STARTUP || !hasServerOutage) {
+      return
+    }
+
+    const intervalId = setInterval(() => {
+      recheckServerStatus()
+    }, SERVER_STATUS_RECHECK_INTERVAL_MS)
+
+    return () => clearInterval(intervalId)
+  }, [scope, hasServerOutage, recheckServerStatus])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and run device invalidation check
   useEffect(() => {
@@ -70,159 +136,51 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, async () => {
-      logger.info('useSystemChecks: Tokens refreshed, running device invalidation check')
+      logger.info('useSystemChecks: Tokens refreshed, running event reason alerts system check')
 
       try {
-        const navigation = await getSystemCheckNavigation()
-        const utils = { dispatch, translation: t, logger }
+        const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
-        // Tokens have already been refreshed before this event; use refreshCache: false
-        // to reuse the freshly updated ID token from cache without forcing another refresh.
-        const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-
-        await runSystemChecks([new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils)])
+        await runSystemChecks([
+          new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
+        ])
       } catch (error) {
         logger.error(`Device invalidation check failed after token refresh: ${(error as Error).message}`)
       }
     })
 
     return () => subscription.remove()
-  }, [scope, isClientReady, client, tokenApi, dispatch, t, logger])
+  }, [scope, isClientReady, client, utils, logger, navigation, emitAlert, tokenService])
 
-  /**
-   * Checks to run on app startup to ensure system is operational.
-   */
   useEffect(() => {
-    const runChecksByScope = async () => {
-      const navigation = await getSystemCheckNavigation()
-
-      if (ranSystemChecksRef.current || !isClientReady || !client || !navigation) {
+    const runSystemChecksByScope = async () => {
+      if (ranSystemChecksRef.current || !scopeSystemCheck.isReady) {
+        // Only run if not already run and system checks for the scope are ready
         return
       }
 
-      const utils = { dispatch, translation: t, logger }
-      const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
+      ranSystemChecksRef.current = true
 
       try {
-        // Checks to run once on app startup (root stack)
-        if (scope === SystemCheckScope.STARTUP) {
-          ranSystemChecksRef.current = true
+        const systemCheckStrategies = await scopeSystemCheck.getSystemChecks()
 
-          const serverStatus = await configApi.getServerStatus()
+        const results = await runSystemChecks(systemCheckStrategies)
 
-          const startupChecks: SystemCheckStrategy[] = [
-            new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics, logger),
-            new ServerStatusSystemCheck(serverStatus, utils),
-          ]
+        const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
+          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningBannerSystemCheck: false }
+          acc[check.constructor.name] = results[index]
+          return acc
+        }, {})
 
-          // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
-          if (isBCServicesCardBundle) {
-            startupChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
-          }
-
-          await runSystemChecks(startupChecks)
-        }
-
-        // Checks to run once on main stack (verified users)
-        if (scope === SystemCheckScope.MAIN_STACK && accountExpirationDate) {
-          ranSystemChecksRef.current = true
-
-          const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-          const updateRegistration = () =>
-            registrationApi.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
-          const startupChecks: SystemCheckStrategy[] = [
-            new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
-            new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
-            // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-            // new AccountExpiryWarningAlertSystemCheck(
-            //   accountExpirationDate,
-            //   Boolean(store.bcsc.hasDismissedExpiryAlert),
-            //   utils,
-            //   navigation
-            // ),
-            // new AccountExpiryAlertSystemCheck(accountExpirationDate, navigation),
-          ]
-
-          // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
-          if (isBCServicesCardBundle) {
-            startupChecks.push(
-              new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils)
-            )
-          }
-
-          await runSystemChecks(startupChecks)
-        }
+        logger.info(
+          `[useSystemChecks]: Ran ${systemCheckStrategies.length} system checks on scope: ${scope}`,
+          systemCheckResults
+        )
       } catch (error) {
-        logger.error(`System checks failed: ${(error as Error).message}`)
+        logger.error(`[useSystemChecks]: Error running system checks for scope: ${scope}:`, error as Error)
       }
     }
 
-    runChecksByScope()
-  }, [
-    accountExpirationDate,
-    client,
-    configApi,
-    dispatch,
-    isClientReady,
-    logger,
-    registrationApi,
-    registrationApi.updateRegistration,
-    scope,
-    store.bcsc.appVersion,
-    store.bcsc.selectedNickname,
-    store.bcsc.analyticsOptIn,
-    store.bcscSecure.registrationAccessToken,
-    t,
-    tokenApi,
-  ])
-}
-
-/**
- * Waits for the navigation to be mounted and ready.
- *
- * Note: This will time out after MAX_WAIT_MS to prevent hanging indefinitely.
- *
- * @throws {Error} If navigation does not become ready within the maximum wait time.
- * @returns {Promise<true>} A promise that resolves to true when navigation is ready.
- */
-const _waitForNavigationToBeReady = (): Promise<true> => {
-  const MAX_WAIT_MS = 5000 // Question: Is this timeout reasonable?
-
-  return new Promise((resolve, reject) => {
-    if (navigationRef.isReady() && navigationRef.getRootState()) {
-      resolve(true)
-    }
-
-    const startTime = Date.now()
-
-    const interval = setInterval(() => {
-      if (navigationRef.isReady() && navigationRef.getRootState()) {
-        clearInterval(interval)
-        resolve(true)
-      }
-
-      // Prevent waiting indefinitely, timeout after MAX_WAIT_MS
-      if (Date.now() - startTime >= MAX_WAIT_MS) {
-        clearInterval(interval)
-        return reject(new Error('Navigation did not become ready...'))
-      }
-    }, 10)
-  })
-}
-
-/**
- * Waits for navigation to be ready and returns the navigation interface stub for system checks.
- *
- * @returns {Promise<SystemCheckNavigation>} A promise that resolves to the system check navigation interface.
- */
-const getSystemCheckNavigation = async (): Promise<SystemCheckNavigation> => {
-  await _waitForNavigationToBeReady()
-
-  return {
-    navigate: navigationRef.navigate,
-    canGoBack: navigationRef.canGoBack,
-    goBack: navigationRef.goBack,
-    getState: navigationRef.getState,
-  }
+    runSystemChecksByScope()
+  }, [logger, scope, scopeSystemCheck])
 }

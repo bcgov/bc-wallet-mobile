@@ -1,16 +1,20 @@
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { toAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
-import messaging from '@react-native-firebase/messaging'
-import { DeviceEventEmitter } from 'react-native'
+import { getApp } from '@react-native-firebase/app'
+import { getMessaging, getToken } from '@react-native-firebase/messaging'
+import { Platform } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
-
-import { BCSCEventTypes } from '../../../events/eventTypes'
 import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
+import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
-
+import { VerificationResponseService } from '../verification-response'
 import {
   BasicNotification,
   ChallengeNotification,
+  FcmDeliveryContext,
   FcmMessage,
   FcmService,
   StatusNotification,
@@ -24,19 +28,31 @@ export class FcmViewModel {
   private serverJwk: JWK | null = null
   private lastJwkBaseUrl: string | null = null
   private initialized = false
+  private onError?: (error: AppError) => void
+  private pendingChallenges: ChallengeNotification[] = []
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
    * @param logger - Logger instance
    * @param pairingService - Service for handling pairing requests
+   * @param verificationResponseService - Service for handling verification response notifications
    * @param mode - App mode (BCSC or BCWallet). Local notifications are only shown in BCSC mode.
    */
   constructor(
     private readonly fcmService: FcmService,
     private readonly logger: AbstractBifoldLogger,
     private readonly pairingService: PairingService,
+    private readonly verificationResponseService: VerificationResponseService,
     private readonly mode: Mode = Mode.BCSC
   ) {}
+
+  /**
+   * Sets a callback for handling errors that need to be surfaced to the user.
+   * This bridges the non-React ViewModel to the React alert system.
+   */
+  public setErrorHandler(handler: (error: AppError) => void) {
+    this.onError = handler
+  }
 
   public initialize() {
     if (this.initialized) {
@@ -53,6 +69,7 @@ export class FcmViewModel {
     }
 
     this.logger.info('[FcmViewModel] Initializing...')
+
     // Subscribe BEFORE init so we don't miss any messages
     this.fcmService.subscribe(this.handleMessage.bind(this))
     this.logger.info('[FcmViewModel] Subscribed to FCM service')
@@ -66,7 +83,8 @@ export class FcmViewModel {
 
   private async logFcmToken(): Promise<void> {
     try {
-      const token = await messaging().getToken()
+      const messagingInstance = getMessaging(getApp())
+      const token = await getToken(messagingInstance)
       this.logger.debug(`[FcmViewModel] FCM Token: ${token}`)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -74,7 +92,7 @@ export class FcmViewModel {
     }
   }
 
-  private async handleMessage(message: FcmMessage) {
+  private async handleMessage(message: FcmMessage, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Received FCM message: type=${message.type}`)
 
     switch (message.type) {
@@ -82,7 +100,8 @@ export class FcmViewModel {
         await this.handleChallengeRequest(message.data)
         break
       case 'status':
-        await this.handleStatusNotification(message.data)
+        this.logger.info(`[FcmViewModel] Message: ${JSON.stringify(message)}`)
+        await this.handleStatusNotification(message.data, delivery)
         break
       case 'notification':
         this.logger.info(`[FcmViewModel] Handling generic notification`)
@@ -100,6 +119,15 @@ export class FcmViewModel {
     try {
       // Check if environment changed or JWK not yet available
       const apiClient = getBCSCApiClient()
+
+      if (!apiClient) {
+        this.logger.info(
+          `[FcmViewModel] API client not ready, save for later. (Current count: ${this.pendingChallenges.length})`
+        )
+        this.pendingChallenges.push(data)
+        return
+      }
+
       const envChanged = apiClient && this.lastJwkBaseUrl && this.lastJwkBaseUrl !== apiClient.baseURL
 
       if (!this.serverJwk || envChanged) {
@@ -113,6 +141,19 @@ export class FcmViewModel {
       this.logger.info(
         `[FcmViewModel] Challenge decoded: verified=${result.verified}, client=${result.claims.bcsc_client_name}`
       )
+
+      if (!result.verified) {
+        if (!this.serverJwk) {
+          const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+          this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWK unavailable, cannot verify JWS`)
+          this.onError?.(appError)
+          return
+        }
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
+        this.logger.warn(`[FcmViewModel] [${appError.appEvent}] JWS verification failed`)
+        this.onError?.(appError)
+        return
+      }
 
       // Extract pairing data and inject into deep link flow
       const serviceTitle = result.claims.bcsc_client_name
@@ -130,51 +171,28 @@ export class FcmViewModel {
         source: 'fcm',
       })
     } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to decode challenge: ${error}`)
+      const appError = toAppError(error, ErrorRegistry.CLAIMS_SET_ERROR)
+      appError.handled = true
+      const causeMessage = error instanceof Error ? error.message : String(error)
+      this.logger.error(`[FcmViewModel] [${appError.appEvent}] Failed to decode challenge: ${causeMessage}`, appError)
     }
   }
 
-  private async handleStatusNotification(data: StatusNotification) {
+  private async handleStatusNotification(data: StatusNotification, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    const { title, message } = data
-
-    // Show local notification if we have title and message
-    if (title && message) {
+    if (Platform.OS === 'android' && delivery?.source === 'foreground' && data.title && data.message) {
       try {
-        await showLocalNotification(title, message)
+        await showLocalNotification(data.title, data.message)
       } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show status notification: ${error}`)
+        this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
       }
-    } else {
-      this.logger.warn('[FcmViewModel] Status notification missing title or message - skipping local notification')
     }
 
-    // Always refresh tokens when we receive a status notification
-    // This ensures account data is updated regardless of notification display
-    await this.refreshTokens()
-  }
-
-  /**
-   * Refreshes OAuth tokens using the current refresh token.
-   * Emits a TOKENS_REFRESHED event so React components can update their state.
-   */
-  private async refreshTokens(): Promise<void> {
-    try {
-      const apiClient = getBCSCApiClient()
-
-      if (!apiClient?.tokens?.refresh_token) {
-        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
-        return
-      }
-
-      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
-
-      // Emit event so React components (e.g., BCSCAccountProvider) can refresh their data
-      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
-    } catch (error) {
-      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
+    // Check if this is a verification request reviewed notification (send-video)
+    if (isVerificationRequestReviewed(data)) {
+      this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
+      this.verificationResponseService.handleRequestReviewed()
     }
   }
 
@@ -212,10 +230,29 @@ export class FcmViewModel {
         this.lastJwkBaseUrl = apiClient.baseURL
         this.logger.info(`[FcmViewModel] Server JWK fetched successfully from ${apiClient.baseURL}`)
       } else {
-        this.logger.warn(`[FcmViewModel] No keys found in JWKS response`)
+        // Construct AppError for analytics tracking (auto-tracked on creation); not thrown, so no `handled` flag needed
+        const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+        this.logger.warn(
+          `[FcmViewModel] [${appError.appEvent}] No keys found in JWKS response - JWT verification will be skipped`
+        )
       }
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to fetch server JWK: ${error}`)
+    }
+  }
+
+  /**
+   * Processes any pending challenge notifications that were received before the API client was ready.
+   *
+   */
+  public async processPendingChallenges(): Promise<void> {
+    this.logger.info(`[FcmViewModel] Processing ${this.pendingChallenges.length} pending challenge(s)`)
+
+    const challengesToProcess = [...this.pendingChallenges]
+    this.pendingChallenges = []
+
+    for (const challenge of challengesToProcess) {
+      await this.handleChallengeRequest(challenge)
     }
   }
 }

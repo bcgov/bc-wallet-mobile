@@ -1,13 +1,14 @@
+import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
+import useEvidenceUpload from '@bcsc-theme/hooks/useEvidenceUpload'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
-
-import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
 import {
   ConnectionRequest,
   ConnectResult,
@@ -19,6 +20,17 @@ import {
 import { clearIntervalIfExists } from '../utils/clearTimeoutIfExists'
 import { connect } from '../utils/connect'
 import createVideoCallError from '../utils/createVideoCallError'
+
+// Maps v4 error types to v3-compatible Snowplow error codes
+// so analytics are consistent across both platforms
+const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
+  [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
+  [VideoCallErrorType.SESSION_FAILED]: 'server_error',
+  [VideoCallErrorType.CONNECTION_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
+  [VideoCallErrorType.NETWORK_ERROR]: 'no_internet',
+  [VideoCallErrorType.PERMISSION_DENIED]: 'permission_denied',
+}
 
 export interface VideoCallFlow {
   flowState: VideoCallFlowState
@@ -42,13 +54,16 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [isInBackground, setIsInBackground] = useState(false)
-  const [connection, setConnection] = useState<ConnectResult | null>(null)
   const backendKeepAliveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const prevIsInBackgroundRef = useRef(false)
-  const cleanupCompletedRef = useRef(false)
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
+  const abortedRef = useRef(false)
+  const connectionRef = useRef<ConnectResult | null>(null)
+  const sessionRef = useRef<VideoSession | null>(null)
+  const clientCallIdRef = useRef<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
+  const { uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries } = useEvidenceUpload()
   const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
@@ -61,7 +76,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       flowState === VideoCallFlowState.WAITING_FOR_AGENT ||
       flowState === VideoCallFlowState.IN_CALL ||
       flowState === VideoCallFlowState.CONNECTING_WEBRTC ||
-      flowState === VideoCallFlowState.CREATING_SESSION
+      flowState === VideoCallFlowState.CREATING_SESSION ||
+      flowState === VideoCallFlowState.UPLOADING_DOCUMENTS
     ) {
       return VideoCallBackgroundMode.AUDIO_ONLY
     }
@@ -74,53 +90,49 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
 
-  // immediately stops all video and audio
-  const stopAllMedia = useCallback(() => {
-    if (localStream) {
-      logger.info('Stopping local stream tracks...')
-      localStream.getTracks().forEach((track) => track.stop())
-    }
-
-    if (remoteStream) {
-      logger.info('Stopping remote stream tracks...')
-      remoteStream.getTracks().forEach((track) => track.stop())
-    }
-
-    logger.info('Media stopped successfully')
-  }, [localStream, remoteStream, logger])
-
-  // stops media
   // stops keep-alives
   // disconnects from pexip conference
   // updates call and session via API
   // clears state
+  //
+  // This function is idempotent: refs are captured and cleared synchronously
+  // at the top so concurrent or repeated calls are safe no-ops.
   const cleanup = useCallback(async () => {
-    if (cleanupCompletedRef.current) {
-      logger.info('Cleanup already completed, skipping...')
-      return
-    }
-    cleanupCompletedRef.current = true
-    connection?.setAppInitiatedDisconnect(true)
-    connection?.stopPexipKeepAlive()
+    abortedRef.current = true
+
+    // Capture and clear refs synchronously to prevent concurrent cleanup
+    // calls from double-releasing resources
+    const conn = connectionRef.current
+    connectionRef.current = null
+    const sid = sessionRef.current?.session_id ?? null
+    sessionRef.current = null
+    const cid = clientCallIdRef.current
+    clientCallIdRef.current = null
+
+    conn?.setAppInitiatedDisconnect(true)
+    conn?.stopPexipKeepAlive()
+    conn?.closePexipEventSource()
     clearIntervalIfExists(backendKeepAliveTimerRef)
 
-    try {
-      logger.info('Disconnecting from Pexip...')
-      await connection?.disconnectPexip()
-    } catch (error) {
-      logger.error('Error disconnecting from Pexip:', error as Error)
-    }
+    if (conn) {
+      try {
+        logger.info('Disconnecting from Pexip...')
+        await conn.disconnectPexip()
+      } catch (error) {
+        logger.error('Error disconnecting from Pexip:', error as Error)
+      }
 
-    try {
-      connection?.releaseLocalStream()
-    } catch (error) {
-      logger.error('Error releasing local stream:', error as Error)
-    }
+      try {
+        conn.releaseLocalStream()
+      } catch (error) {
+        logger.error('Error releasing local stream:', error as Error)
+      }
 
-    try {
-      connection?.closePeerConnection()
-    } catch (error) {
-      logger.error('Error closing peer connection:', error as Error)
+      try {
+        conn.closePeerConnection()
+      } catch (error) {
+        logger.error('Error closing peer connection:', error as Error)
+      }
     }
 
     // Clear stream state after releasing local streams and closing peer connections
@@ -128,31 +140,25 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setLocalStream(null)
     setRemoteStream(null)
 
-    try {
-      if (!session || !clientCallId) {
-        throw new Error('Missing required parameters to end call')
+    if (sid && cid) {
+      try {
+        await video.updateVideoCallStatus(sid, cid, 'call_ended')
+      } catch (error) {
+        logger.error('Failed to update video call status:', error as Error)
       }
-
-      await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_ended')
-    } catch (error) {
-      logger.error('Failed to update video call status:', error as Error)
     }
 
-    try {
-      if (!session) {
-        throw new Error(t('BCSC.VideoCall.MissingSession'))
+    if (sid) {
+      try {
+        await video.endVideoSession(sid)
+      } catch (error) {
+        logger.error('Failed to end video session:', error as Error)
       }
-
-      await video.endVideoSession(session.session_id)
-    } catch (error) {
-      logger.error('Failed to end video session:', error as Error)
     }
 
     setSession(null)
     setClientCallId(null)
-    setConnection(null)
-    setVideoCallError(null)
-  }, [video, clientCallId, session, connection, logger, t])
+  }, [video, logger])
 
   const startBackendKeepAlive = useCallback(() => {
     clearIntervalIfExists(backendKeepAliveTimerRef)
@@ -194,28 +200,56 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     (type: VideoCallErrorType, error: Error) => {
       logger.error(`Video call error [${type}]:`, error)
       const videoCallError = createVideoCallError(type, error?.toString())
+
+      Analytics.trackErrorEvent({
+        code: AnalyticsErrorCodeMap[type],
+        message: error?.toString() ?? type,
+      })
+
       setVideoCallError(videoCallError)
       setFlowState(VideoCallFlowState.ERROR)
-
-      stopAllMedia()
-      setSession(null)
-      setClientCallId(null)
-      setConnection(null)
+      cleanup().catch((cleanupError) => {
+        logger.error('Error during cleanup after video call error:', cleanupError)
+      })
     },
-    [stopAllMedia, logger]
+    [cleanup, logger]
   )
 
-  // 1. a session must be created before anything else
+  // 0. upload any required evidence before attempting to connect to the call, since it must be present in IDCheck
+  const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
+    try {
+      await uploadSelfiePhoto()
+      const additionalEvidence = await processAdditionalEvidence()
+      await uploadEvidenceBinaries(additionalEvidence)
+    } catch (error) {
+      handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
+      return false
+    }
+    return true
+  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError])
+
+  // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
+
+      // If aborted while the request was in-flight, end the session
+      // immediately so it doesn't leak on the backend
+      if (abortedRef.current) {
+        video.endVideoSession(newSession.session_id).catch((e) => {
+          logger.error('Failed to end orphaned video session:', e as Error)
+        })
+        return null
+      }
+
+      sessionRef.current = newSession
       setSession(newSession)
       return newSession
     } catch (error) {
       handleError(VideoCallErrorType.SESSION_FAILED, error as Error)
       return null
     }
-  }, [video, handleError])
+  }, [video, handleError, logger])
 
   // 2. with the session and the gateway URL, we can initiate the WebRTC connection
   const establishWebRTCConnection = useCallback(
@@ -239,8 +273,21 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         }
 
         const conn = await connect(connectionRequest, logger)
+
+        // If aborted while connect was in-flight, tear down the
+        // just-created connection immediately without storing it
+        if (abortedRef.current) {
+          conn.setAppInitiatedDisconnect(true)
+          conn.stopPexipKeepAlive()
+          conn.closePexipEventSource()
+          conn.disconnectPexip().catch((e) => logger.error('Error disconnecting orphaned Pexip:', e as Error))
+          conn.releaseLocalStream()
+          conn.closePeerConnection()
+          return false
+        }
+
         conn.setAppInitiatedDisconnect(false)
-        setConnection(conn)
+        connectionRef.current = conn
         setLocalStream(conn.localStream)
 
         setFlowState(VideoCallFlowState.WAITING_FOR_AGENT)
@@ -259,41 +306,62 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     async (sessionId: string): Promise<VideoCall | null> => {
       try {
         const id = uuid.v4().toString()
-        setClientCallId(id)
         const call = await video.createVideoCall(sessionId, id, 'call_ringing')
+
+        // If aborted while the API call was in-flight, mark the call as
+        // ended immediately and don't store the id in refs/state
+        if (abortedRef.current) {
+          video.updateVideoCallStatus(sessionId, id, 'call_ended').catch((e) => {
+            logger.error('Failed to end orphaned video call:', e as Error)
+          })
+          return null
+        }
+
+        clientCallIdRef.current = id
+        setClientCallId(id)
         return call
       } catch (error) {
         handleError(VideoCallErrorType.CALL_FAILED, error as Error)
         return null
       }
     },
-    [video, handleError]
+    [video, handleError, logger]
   )
 
   // three step process with the steps above
   // all of the functions within catch their own errors
+  // each step checks abortedRef after its await and self-cleans any
+  // resources it just allocated, so the between-step checks here are
+  // simply early-outs to avoid starting the next step unnecessarily
   const startVideoCall = useCallback(async () => {
-    cleanupCompletedRef.current = false
+    abortedRef.current = false
+    setFlowState(VideoCallFlowState.UPLOADING_DOCUMENTS)
+    const uploaded = await uploadPreCallEvidence()
+    if (!uploaded || abortedRef.current) {
+      return
+    }
+
     setFlowState(VideoCallFlowState.CREATING_SESSION)
     const newSession = await createSession()
-    if (!newSession) {
+    if (!newSession || abortedRef.current) {
       return
     }
 
     setFlowState(VideoCallFlowState.CONNECTING_WEBRTC)
     const connected = await establishWebRTCConnection(newSession)
-    if (!connected) {
+    if (!connected || abortedRef.current) {
       return
     }
 
     const newCall = await createCall(newSession.session_id)
-    if (!newCall) {
+    if (!newCall || abortedRef.current) {
       return
     }
-  }, [createSession, establishWebRTCConnection, createCall])
+  }, [createSession, uploadPreCallEvidence, establishWebRTCConnection, createCall])
 
   // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
+    setVideoCallError(null)
     await cleanup()
     await startVideoCall()
   }, [cleanup, startVideoCall])

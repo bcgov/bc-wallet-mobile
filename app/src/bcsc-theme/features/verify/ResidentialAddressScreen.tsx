@@ -14,7 +14,6 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
-
 import useResidentialAddressModel from './_models/useResidentialAddressModel'
 
 type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
@@ -44,7 +43,17 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('streetAddress', value)}
         error={formErrors.streetAddress}
         subtext={t('BCSC.Address.StreetAddressSubtext')}
-        textInputProps={{ autoCorrect: false }}
+        textInputProps={{ autoCorrect: false, autoComplete: 'address-line1', textContentType: 'streetAddressLine1' }}
+      />
+
+      <InputWithValidation
+        id={'streetAddress2'}
+        label={t('BCSC.Address.StreetAddress2Label')}
+        value={formState.streetAddress2}
+        onChange={(value) => handleChange('streetAddress2', value)}
+        error={formErrors.streetAddress2}
+        subtext={t('BCSC.Address.StreetAddress2Subtext')}
+        textInputProps={{ autoCorrect: false, autoComplete: 'address-line2', textContentType: 'streetAddressLine2' }}
       />
 
       <InputWithValidation
@@ -54,7 +63,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('city', value)}
         error={formErrors.city}
         subtext={t('BCSC.Address.CitySubtext')}
-        textInputProps={{ autoCorrect: false }}
+        textInputProps={{ autoCorrect: false, autoComplete: 'postal-address-locality', textContentType: 'addressCity' }}
       />
 
       <DropdownWithValidation
@@ -75,7 +84,12 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         onChange={(value) => handleChange('postalCode', value)}
         error={formErrors.postalCode}
         subtext={t('BCSC.Address.PostalCodeSubtext')}
-        textInputProps={{ autoCorrect: false, autoCapitalize: 'characters' }}
+        textInputProps={{
+          autoCorrect: false,
+          autoCapitalize: 'characters',
+          autoComplete: 'postal-code',
+          textContentType: 'postalCode',
+        }}
       />
 
       <View style={{ marginTop: 48, width: '100%' }}>

@@ -1,5 +1,7 @@
 import { ViewStyle } from 'react-native'
 
+// TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
@@ -47,7 +49,9 @@ export const ACCESSIBILITY_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
 // appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
 export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
-export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html'
+export const BC_LOGIN_PRIVACY_URL = 'https://id.gov.bc.ca/static/privacy.html'
+export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
+export const WHERE_TO_USE_URL = ACCOUNT_SERVICES_URL
 export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
 export const GET_BCSC_CARD_URL =
@@ -64,8 +68,12 @@ export enum HelpCentreUrl {
   ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
+  VERIFY_CALL = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-call',
   QUICK_SETUP_OF_ADDITIONAL_DEVICES = 'https://id.gov.bc.ca/static/help/setup_qrcode.html?fromapp=1',
   HELP_CHECK_BCSC = 'https://id.gov.bc.ca/static/help/cardhelp.html?fromapp=1',
+  AUDIO_VIDEO_TROUBLESHOOTING = 'https://id.gov.bc.ca/static/help/audio_video_tips.html?fromapp=1',
+  FORGOT_PIN = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1#section-forgotpin',
+  INFO_SHARED = 'https://id.gov.bc.ca/static/help/info_shared.html?fromapp=1',
 }
 
 export const formStringLengths = {
@@ -78,10 +86,22 @@ export const PAIRING_CODE_LENGTH = 6
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000
 export const CROP_DELAY_MS = 11000
+export const ONBOARDING_ICON_IMAGE_SIZE = 125
 
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
+export const FIVE_MINUTES_IN_SECONDS = 5 * 60
+export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
+export const enum DaysOfTheWeek {
+  MONDAY = 'MONDAY',
+  TUESDAY = 'TUESDAY',
+  WEDNESDAY = 'WEDNESDAY',
+  THURSDAY = 'THURSDAY',
+  FRIDAY = 'FRIDAY',
+  SATURDAY = 'SATURDAY',
+  SUNDAY = 'SUNDAY',
+}
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
@@ -91,6 +111,10 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
 export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 export const MIN_PROMPT_DURATION_SECONDS = 2
+export const enum LIVE_CALL_UNAVAILABLE_REASONS {
+  MAINTENANCE = 'MAINTENANCE',
+  HOLIDAY = 'HOLIDAY',
+}
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
@@ -105,3 +129,16 @@ export const DRIVERS_LICENSE_BARCODE = 'pdf-417'
 
 // Endpoint path constants
 export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'
+
+// Error constants
+export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999
+
+// Validation constants
+export const MINIMUM_VERIFICATION_AGE = 12
+
+// Analytics constants
+export const ANALYTICS_APP_ID_PREFIX = 'Snowplow_standalone_IDIMapp_'
+
+// Device Count Banner cooldown period
+export const DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV = 30 * 60 * 1000 // DEV: Banner will not be shown for 30 minutes after user 'deletes' the banner
+export const DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD = 30 * 24 * 60 * 60 * 1000 // PROD: Banner will not be shown for 30 days after user 'deletes' the banner

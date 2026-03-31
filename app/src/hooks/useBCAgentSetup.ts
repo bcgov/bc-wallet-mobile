@@ -1,7 +1,6 @@
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
-import { batchPickup } from '@/utils/mediator'
 import {
   createLinkSecretIfRequired,
   DispatchAction,
@@ -27,14 +26,6 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
   if (cachedTransactions) {
     const { timestamp, transactions } = cachedTransactions
     return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
-  }
-}
-
-const checkMediatorType = async (agent: Agent, mediatorUrl: string): Promise<void> => {
-  if (mediatorUrl.startsWith('https://mediator-credo-dev.apps.silver.devops.gov.bc.ca/')) {
-    await agent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
-  } else {
-    batchPickup(agent)
   }
 }
 
@@ -192,7 +183,7 @@ const useBCAgentSetup = () => {
         const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
         if (restartedAgent) {
           logger.info('Successfully restarted existing agent...')
-          await checkMediatorType(restartedAgent, mediatorUrl)
+          restartedAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
           refreshAttestationMonitor(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
@@ -214,7 +205,7 @@ const useBCAgentSetup = () => {
       await newAgent.initialize()
 
       logger.info(`checking mediator type for ${mediatorUrl}`)
-      await checkMediatorType(newAgent, mediatorUrl)
+      await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
 
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)

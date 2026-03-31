@@ -1,15 +1,22 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import React from 'react'
-
 import { LockoutScreen } from '@/bcsc-theme/features/auth/LockoutScreen'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import React from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
 
 const mockFactoryReset = jest.fn()
 
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
   useFactoryReset: () => mockFactoryReset,
+}))
+
+const mockUnlockApp = jest.fn()
+
+jest.mock('@/bcsc-theme/hooks/useAuthentication', () => ({
+  useAuthentication: () => ({
+    unlockApp: mockUnlockApp,
+  }),
 }))
 
 describe('LockoutScreen', () => {
@@ -119,7 +126,7 @@ describe('LockoutScreen', () => {
   })
 
   describe('navigation', () => {
-    it('navigates to EnterPIN when account is not locked', async () => {
+    it('calls unlockApp when account is not locked', async () => {
       mockIsAccountLocked.mockResolvedValue({
         locked: false,
         remainingTime: 0,
@@ -132,18 +139,11 @@ describe('LockoutScreen', () => {
       )
 
       await waitFor(() => {
-        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'RESET',
-            payload: expect.objectContaining({
-              routes: [{ name: 'BCSCEnterPIN' }],
-            }),
-          })
-        )
+        expect(mockUnlockApp).toHaveBeenCalled()
       })
     })
 
-    it('navigates to EnterPIN when remaining time is 0', async () => {
+    it('calls unlockApp when remaining time is 0', async () => {
       mockIsAccountLocked.mockResolvedValue({
         locked: true,
         remainingTime: 0,
@@ -156,14 +156,7 @@ describe('LockoutScreen', () => {
       )
 
       await waitFor(() => {
-        expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'RESET',
-            payload: expect.objectContaining({
-              routes: [{ name: 'BCSCEnterPIN' }],
-            }),
-          })
-        )
+        expect(mockUnlockApp).toHaveBeenCalled()
       })
     })
   })
@@ -227,6 +220,28 @@ describe('LockoutScreen', () => {
       await waitFor(() => {
         expect(mockFactoryReset).toHaveBeenCalled()
       })
+    })
+  })
+
+  describe('when unlockApp throws', () => {
+    it('renders gracefully when unlockApp rejects on initial load (not locked)', async () => {
+      mockUnlockApp.mockRejectedValue(new Error('auth error'))
+      mockIsAccountLocked.mockResolvedValue({
+        locked: false,
+        remainingTime: 0,
+      })
+
+      const tree = render(
+        <BasicAppContext>
+          <LockoutScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockUnlockApp).toHaveBeenCalled()
+      })
+
+      expect(tree.getByText('Too many PIN attempts')).toBeTruthy()
     })
   })
 

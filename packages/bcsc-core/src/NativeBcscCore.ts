@@ -121,6 +121,14 @@ export type DeviceSecurityUnlockResult = {
   migrated?: boolean; // true if this was a v3 user migration (PIN was just created)
 };
 
+export type NativeFilesScan = {
+  bundleID: string;
+  bundleDirectory: string;
+  bundleDirectoryExists: boolean;
+  files: string[];
+  fileCount: number;
+};
+
 export type NativeAddress = {
   streetAddress?: string;
   locality?: string;
@@ -201,6 +209,35 @@ export type NativeAccountWithoutId = {
   failedAttemptCount?: number;
 };
 
+export type NativeSavedService = {
+  /** Service client reference ID (== client_ref_id in API, clientId in v3) */
+  clientRefId: string;
+  /** Display name of the service */
+  clientName?: string;
+  /** Whether this service is bookmarked / saved */
+  bookmarked: boolean;
+  /** Unix timestamp when the service was first added */
+  dateAdded?: number;
+  /** Unix timestamp when the service was last used */
+  lastUsed?: number;
+  /** Service website URL */
+  clientUri?: string;
+  /** Login initiation URL */
+  initiateLoginUri?: string;
+  /** Service description */
+  clientDescription?: string;
+  /** Privacy policy URL */
+  policyUri?: string;
+  /** Sort order in service listing */
+  serviceListingSortOrder?: number;
+  /** Description of claims requested */
+  claimsDescription?: string;
+  /** Whether to suppress confirmation info after pairing */
+  suppressConfirmationInfo?: boolean;
+  /** Whether to suppress post-pair bookmark prompt */
+  suppressBookmarkPrompt?: boolean;
+};
+
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
   getKeyPair(label: string): Promise<KeyPair>;
@@ -223,6 +260,7 @@ export interface Spec extends TurboModule {
   deleteToken(tokenType: number): Promise<boolean>;
   setIssuer(issuer: string): Promise<boolean>;
   getIssuer(): Promise<string | null>;
+  getNativeFilesScan(): Promise<NativeFilesScan>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: NativeAccountWithoutId): Promise<void>;
   getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
@@ -308,6 +346,24 @@ export interface Spec extends TurboModule {
    */
   deleteAuthorizationRequest(): Promise<boolean>;
 
+  // Android Global Flags Storage Methods
+  /**
+   * Gets global (non-account-scoped) flags from Android SharedPreferences.
+   * On iOS this is a no-op stub (returns empty object); use getAccountFlags instead.
+   * @returns Object containing global flags
+   * @platform Android only (no-op on iOS)
+   */
+  getAndroidGlobalFlags(): Promise<Object>;
+
+  /**
+   * Sets global (non-account-scoped) flags in Android SharedPreferences.
+   * On iOS this is a no-op stub (returns true); use setAccountFlags instead.
+   * @param flags Object containing flags to set (merges with existing)
+   * @returns true if saved successfully
+   * @platform Android only (no-op on iOS)
+   */
+  setAndroidGlobalFlags(flags: Object): Promise<boolean>;
+
   // Account Flags Storage Methods
   /**
    * Gets account flags from native storage.
@@ -334,31 +390,35 @@ export interface Spec extends TurboModule {
    */
   deleteAccountFlags(): Promise<boolean>;
 
-  // Evidence Metadata Storage Methods
+  // Evidence Storage Methods
   /**
    * Gets evidence metadata from native storage.
-   * iOS: Reads from evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
-   * Android: Reads from EvidenceRepository SharedPreferences storage
-   * Compatible with v3 native app storage for rollback support.
    * @returns Array of evidence metadata objects
    */
-  getEvidenceMetadata(): Promise<Object[]>;
+  getEvidence(): Promise<Object[]>;
 
   /**
-   * Sets evidence metadata in native storage.
-   * iOS: Writes to evidence_metadata file in Application Support (matches EvidenceMetadataRequestStorageSource)
-   * Android: Writes to EvidenceRepository SharedPreferences storage
-   * Compatible with v3 native app storage for rollback support.
+   * Writes evidence metadata to native storage.
    * @param evidence Array of evidence metadata objects to save
    * @returns true if saved successfully
    */
-  setEvidenceMetadata(evidence: Object[]): Promise<boolean>;
+  setEvidence(evidence: Object[]): Promise<boolean>;
 
   /**
-   * Deletes all evidence metadata from native storage.
-   * @returns true if deleted successfully (or if they didn't exist)
+   * Deletes all evidence data from native storage, including photo files.
+   * @returns true if deleted successfully
    */
-  deleteEvidenceMetadata(): Promise<boolean>;
+  deleteEvidence(): Promise<boolean>;
+
+  /**
+   * Saves a photo to permanent v3-compatible storage.
+   * Android: Writes JPEG to {filesDir}/documents/{filename}
+   * iOS: Writes JPEG to Application Support (v3-compatible evidence storage)
+   * @param base64Data Base64-encoded photo data
+   * @param filename Target filename for the photo
+   * @returns The absolute path to the saved file
+   */
+  saveEvidencePhoto(base64Data: string, filename: string): Promise<string>;
 
   // Credential Storage Methods
   /**
@@ -394,6 +454,46 @@ export interface Spec extends TurboModule {
    */
   hasCredential(): Promise<boolean>;
   showLocalNotification(title: string, message: string): Promise<void>;
+
+  // Saved Services / Client Metadata Storage Methods
+  /**
+   * Gets saved services (client metadata) from native storage.
+   * iOS: Reads from client_metadata file in Application Support (NSKeyedArchiver)
+   * Android: Reads from encrypted clientmetadata file
+   * Compatible with v3 native app storage for migration and rollback.
+   * @returns Array of saved service objects, or empty array if none found
+   */
+  getSavedServices(): Promise<NativeSavedService[]>;
+
+  /**
+   * Saves services (client metadata) to native storage.
+   * iOS: Writes to client_metadata file in Application Support (NSKeyedArchiver)
+   * Android: Writes to encrypted clientmetadata file
+   * Compatible with v3 native app storage for rollback support.
+   * @param services Array of saved service objects to write
+   * @returns true if saved successfully
+   */
+  setSavedServices(services: NativeSavedService[]): Promise<boolean>;
+
+  /**
+   * Deletes all saved services (client metadata) from native storage.
+   * @returns true if deleted successfully (or if they didn't exist)
+   */
+  deleteSavedServices(): Promise<boolean>;
+
+  /**
+   * Checks if a third party keyboard is currently active on android.
+   * iOS will always return false as keyboard detection isn't reliable
+   *
+   * @returns true if a third party keyboard is active, otherwise this returns false
+   */
+  isThirdPartyKeyboardActive(): Promise<boolean>;
+
+  /**
+   * Opens the native keyboard selector on Android.
+   * iOS does not support programmatically opening the keyboard selector.
+   */
+  openKeyboardSelector(): Promise<void>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

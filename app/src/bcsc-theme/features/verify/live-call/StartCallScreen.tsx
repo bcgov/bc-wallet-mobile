@@ -1,12 +1,13 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet } from 'react-native'
+import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 
 type StartCallScreenProps = {
@@ -20,7 +21,9 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
+  const { liveCallFileUploadAlert } = useAlerts(navigation)
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -42,8 +45,23 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     },
   })
 
+  const requestBluetoothPermission = async () => {
+    // On Android 12+, BLUETOOTH_CONNECT must be requested at runtime.
+    // Without it, InCallManager's BluetoothManager silently fails to start
+    // and call audio always routes to the speaker instead of BT headsets.
+    try {
+      if (Platform.OS === 'android' && Platform.Version >= 31) {
+        await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT)
+      }
+    } catch (error) {
+      // Not a blocker — the call still works without Bluetooth
+      logger.warn('Failed to request Bluetooth permission', { error: error as Error })
+    }
+  }
+
   const onPressStart = async () => {
     if (hasMicrophonePermission) {
+      await requestBluetoothPermission()
       navigation.navigate(BCSCScreens.LiveCall)
       return
     }
@@ -52,11 +70,18 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       hasRequestedPermission.current = true
       const granted = await requestMicrophonePermission()
       if (granted) {
+        await requestBluetoothPermission()
         navigation.navigate(BCSCScreens.LiveCall)
         return
       }
     }
     setShowPermissionDisabled(true)
+  }
+
+  const handleImageError = (error: ImageErrorEvent) => {
+    logger.error('[StartCallScreen] Error loading user photo for live call', { error })
+
+    liveCallFileUploadAlert()
   }
 
   if (showPermissionDisabled) {
@@ -74,7 +99,12 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
   return (
     <ScreenWrapper controls={controls}>
-      <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
+      <Image
+        source={{ uri: `file://${store.bcsc.photoPath}` }}
+        resizeMode={'contain'}
+        style={styles.image}
+        onError={handleImageError}
+      />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}
       </ThemedText>

@@ -1,9 +1,21 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import {
+  ACCESSIBILITY_URL,
+  ANALYTICS_URL,
+  DEFAULT_AUTO_LOCK_TIME_MIN,
+  FEEDBACK_URL,
+  TERMS_OF_USE_URL,
+} from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import { ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -46,6 +58,9 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
+  const factoryReset = useFactoryReset()
+  const { emitAlert } = useErrorAlert()
+  const loadingScreen = useLoadingScreen()
 
   const styles = StyleSheet.create({
     container: {
@@ -85,7 +100,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           const method = await getAccountSecurityMethod()
           setAccountSecurityMethod(method)
         } catch (error) {
-          logger.error('Error fetching app security method', error instanceof Error ? error : new Error(String(error)))
+          const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+          logger.error(`Error fetching app security method [${appError.appEvent}]`, appError)
         }
       }
       fetchAccountSecurityMethod()
@@ -132,8 +148,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
 
     try {
+      await Analytics.initializeTracker(store.developer.environment.analyticsAppId)
       dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
-      await Analytics.initializeTracker()
     } catch (error) {
       logger.error(
         'Failed to initialize analytics tracker on opt-in',
@@ -145,12 +161,44 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
+  const onPressRemoveAccount = () => {
+    emitAlert(t('Alerts.CancelMobileCardSetup.Title'), t('Alerts.CancelMobileCardSetup.Description'), {
+      event: AppEventCode.CANCEL_MOBILE_CARD_SETUP,
+      actions: [
+        {
+          text: t('Global.Cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('Alerts.CancelMobileCardSetup.Action1'),
+          style: 'destructive',
+          onPress: async () => {
+            const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
+            try {
+              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
+
+              const result = await factoryReset()
+
+              if (!result.success) {
+                logger.error('[RemoveAccount] Failed to remove account', result.error)
+              }
+            } catch (error) {
+              logger.error('[RemoveAccount] Error during account removal', error as Error)
+            } finally {
+              stopLoading()
+            }
+          },
+        },
+      ],
+    })
+  }
+
   // Pre-compute conditional values
   const isAuthenticated = store.authentication.didAuthenticate
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
   const showEditNickname = store.bcscSecure.verified && onEditNickname
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
-  const autoLockTimeText = `${store.preferences.autoLockTime} min`
+  const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
 
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
@@ -164,6 +212,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 onPress={() => {
                   logout()
                 }}
+                testID={testIdWithKey('SignOut')}
               />
             </View>
 
@@ -172,30 +221,55 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </ThemedText>
             <View style={styles.sectionContainer}>
               {onAppSecurity ? (
-                <SettingsActionCard onPress={onAppSecurity} title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')} />
+                <SettingsActionCard
+                  onPress={onAppSecurity}
+                  title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
+                  testID={testIdWithKey('AppSecurity')}
+                />
               ) : null}
               {showChangePIN ? (
-                <SettingsActionCard title={t('BCSC.Settings.ChangePIN.ButtonTitle')} onPress={onChangePIN} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.ChangePIN.ButtonTitle')}
+                  onPress={onChangePIN}
+                  testID={testIdWithKey('ChangePIN')}
+                />
               ) : null}
               {showEditNickname ? (
-                <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.EditNickname')}
+                  onPress={onEditNickname}
+                  testID={testIdWithKey('EditNickname')}
+                />
               ) : null}
               {onAutoLock ? (
                 <SettingsActionCard
                   title={t('BCSC.Settings.AutoLockTime')}
                   onPress={onAutoLock}
                   endAdornmentText={autoLockTimeText}
+                  testID={testIdWithKey('AutoLock')}
                 />
               ) : null}
               {/* TODO: (AR) Keeping this hidden for phase 1 */}
               {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
               {onForgetAllPairings ? (
-                <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
+                <SettingsActionCard
+                  title={t('BCSC.Settings.ForgetPairings')}
+                  onPress={onForgetAllPairings}
+                  testID={testIdWithKey('ForgetPairings')}
+                />
               ) : null}
               <SettingsActionCard
                 title={t('BCSC.Settings.AnalyticsOptIn')}
                 onPress={onPressOptInAnalytics}
                 endAdornmentText={analyticsOptInText}
+                testID={testIdWithKey('AnalyticsOptIn')}
+              />
+
+              <SettingsActionCard
+                title={t('BCSC.Settings.RemoveAccount')}
+                onPress={onPressRemoveAccount}
+                textStyle={{ color: ColorPalette.semantic.error }}
+                testID={testIdWithKey('RemoveAccount')}
               />
             </View>
           </>
@@ -205,15 +279,43 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           {t('BCSC.Settings.HeaderB')}
         </ThemedText>
         <View style={styles.sectionContainer}>
-          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} />
-          <SettingsActionCard title={t('BCSC.Settings.Privacy')} onPress={onPrivacy} />
-          <SettingsActionCard title={t('BCSC.Settings.ContactUs')} onPress={onContactUs} />
-          <SettingsActionCard title={t('BCSC.Settings.Feedback')} onPress={onPressFeedback} />
-          <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
-          <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
-          <SettingsActionCard title={t('BCSC.Settings.Analytics')} onPress={onPressAnalytics} />
+          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} testID={testIdWithKey('Help')} />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Privacy')}
+            onPress={onPrivacy}
+            testID={testIdWithKey('Privacy')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.ContactUs')}
+            onPress={onContactUs}
+            testID={testIdWithKey('ContactUs')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Feedback')}
+            onPress={onPressFeedback}
+            testID={testIdWithKey('Feedback')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Accessibility')}
+            onPress={onPressAccessibility}
+            testID={testIdWithKey('Accessibility')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.TermsOfUse')}
+            onPress={onPressTermsOfUse}
+            testID={testIdWithKey('TermsOfUse')}
+          />
+          <SettingsActionCard
+            title={t('BCSC.Settings.Analytics')}
+            onPress={onPressAnalytics}
+            testID={testIdWithKey('Analytics')}
+          />
           {store.preferences.developerModeEnabled ? (
-            <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
+            <SettingsActionCard
+              title={t('Developer.DeveloperMode')}
+              onPress={onPressDeveloperMode}
+              testID={testIdWithKey('DeveloperMode')}
+            />
           ) : null}
         </View>
 
@@ -221,6 +323,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <TouchableWithoutFeedback
             onPress={incrementDeveloperMenuCounter}
             disabled={store.preferences.developerModeEnabled}
+            accessible={false}
           >
             <View style={{ alignItems: 'center' }}>
               <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>

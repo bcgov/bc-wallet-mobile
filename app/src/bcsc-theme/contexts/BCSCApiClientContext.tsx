@@ -1,5 +1,4 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError } from '@/errors'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -8,12 +7,7 @@ import React, { createContext, useCallback, useEffect, useMemo, useState } from 
 import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
-import {
-  ClientErrorHandlingPolicies,
-  ErrorMatcherContext,
-  createExpiredAppSetupErrorPolicy,
-} from '../api/clientErrorPolicies'
-import { useVerificationReset } from '../api/hooks/useVerificationReset'
+import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
 import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
@@ -45,22 +39,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [client, setClient] = useState<BCSCApiClient | null>(BCSC_API_CLIENT_SINGLETON)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { emitErrorAlert } = useErrorAlert()
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const verificationReset = useVerificationReset()
-
-  // Combine client error handling policies with policy factories
-  const allErrorHandlingPolicies = useMemo(() => {
-    return [
-      ...ClientErrorHandlingPolicies,
-      createExpiredAppSetupErrorPolicy(async () => {
-        const result = await verificationReset()
-        if (!result.success) {
-          logger.error('[VerificationReset] Error while resetting', result.error)
-        }
-      }),
-    ]
-  }, [logger, verificationReset])
+  const alerts = useAlerts(navigation)
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -78,11 +58,10 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
    *
    * @param error - The error object to handle.
    * @param context - The context providing additional information for error handling.
-   * @returns void
    */
   const handleApiClientError = useCallback(
-    (error: AppError, context: ErrorMatcherContext) => {
-      const policy = allErrorHandlingPolicies.find((policy) => policy.matches(error, context))
+    (error: AxiosAppError, context: ErrorMatcherContext) => {
+      const policy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context))
 
       if (!policy) {
         logger.info('[BCSCApiClient] No error handling policy for:', {
@@ -97,15 +76,19 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         appEvent: error.appEvent,
       })
 
-      policy.handle(error, {
-        linking: Linking,
-        emitErrorAlert,
-        navigation,
-        translate: t,
-        logger,
-      })
+      try {
+        policy.handle(error, {
+          linking: Linking,
+          navigation,
+          translate: t,
+          logger,
+          alerts,
+        })
+      } finally {
+        error.handled = true
+      }
     },
-    [allErrorHandlingPolicies, emitErrorAlert, logger, navigation, t]
+    [alerts, logger, navigation, t]
   )
 
   useEffect(() => {
@@ -158,28 +141,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     client.setErrorHandler(handleApiClientError)
     setClientAndSingleton(client)
   }, [client, handleApiClientError])
-
-  useEffect(() => {
-    // When a new refresh token is updated, refresh the client tokens
-    const refreshEffect = async () => {
-      if (
-        store.stateLoaded &&
-        client &&
-        store.bcscSecure.refreshToken &&
-        client.tokens?.refresh_token !== store.bcscSecure.refreshToken
-      ) {
-        try {
-          logger.info('[BCSCApiClient] Refreshing BCSC API client tokens using updated refresh token')
-          await client.getTokensForRefreshToken(store.bcscSecure.refreshToken)
-          setClientAndSingleton(client)
-        } catch (error) {
-          logger.error('[BCSCApiClient] Error refreshing BCSC API client tokens:', { error })
-        }
-      }
-    }
-
-    refreshEffect()
-  }, [store.bcscSecure.refreshToken, store.stateLoaded, client, logger])
 
   const contextValue = useMemo(
     () => ({

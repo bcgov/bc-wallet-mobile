@@ -10,11 +10,12 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "12.0" } # Or your min_ios_version_supported
+  s.platforms    = { :ios => "15.1" } # Or your min_ios_version_supported
 
   s.source       = { :git => "https://github.com/bcgov/bc-wallet-mobile.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,cpp,swift}"
+  s.exclude_files = "ios/BcscCoreTests/**"
   s.public_header_files = "ios/**/*.h"
 
   s.swift_version = '5.0'

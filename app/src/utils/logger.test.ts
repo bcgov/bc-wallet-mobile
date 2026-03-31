@@ -1,7 +1,6 @@
 import { RemoteLogger } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
-
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { appLogger, createAppLogger } from './logger'
 

@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   hitSlop,
@@ -7,6 +8,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -24,7 +26,6 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -62,6 +63,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
+  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -69,6 +71,11 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     const currentIndex = prompts.indexOf(prompt)
     return currentIndex >= prompts.length - 1
   }, [prompts, prompt])
+
+  if (!prompts.length) {
+    // Developer error - prompts must be persisted before reaching this screen.
+    throw new Error('[TakeVideoScreen] No prompts found in store')
+  }
 
   const styles = useMemo(
     () =>
@@ -190,7 +197,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
     cameraRef.current.startRecording({
       fileType: 'mp4',
-      videoCodec: 'h265',
+      videoCodec: 'h264',
       onRecordingError: (error) => {
         stopTimer() // Stop timer on error
 
@@ -201,6 +208,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         }
 
         logger.debug(`Recording error (${error.code}): ${error.message}`)
+
+        // Handle file I/O errors separately to provide a specific alert
+        if (error.code === 'capture/file-io-error') {
+          failedToWriteToLocalStorageAlert(error)
+          return
+        }
+
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
           t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
@@ -218,7 +232,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-  }, [prompts, startTimer, logger, stopTimer, t, navigation])
+  }, [prompts, startTimer, logger, stopTimer, t, failedToWriteToLocalStorageAlert, navigation])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
@@ -274,7 +288,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   if (isCameraLoading || isMicrophoneLoading) {
-    return <LoadingScreenContent loading={isCameraLoading || isMicrophoneLoading} onLoaded={() => {}} />
+    return <LoadingScreen />
   }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {

@@ -2,14 +2,21 @@
 const translation = {
   "Global": {
     "OK": "OK",
+    "Okay": "Okay",
     "Cancel": "Cancel",
     "Continue": "Continue",
     "Back": "Back",
     "GoBack": "Go Back",
-    "Loading": "Loading..."
+    "Loading": "Loading...",
+    "Close": "Close",
+    "ShowDetails": "Show Details",
+    "Dismiss": "Dismiss",
+    "GetHelp": "Get help",
+    "ContinueSetup": "Continue setup",
   },
   "BCID": {
     "GetDigitalID": "Get your Person credential",
+    "DismissMenu": "Dismiss menu",
   },
   "Error": {
     "Title2020": "Unable to parse invitation",
@@ -28,6 +35,12 @@ const translation = {
     "Message2033": "There was a problem while loading the services. Please try again later.",
     "OK": "OK",
     "NoMessage": "No Message",
+    "ErrorCode": "Error Code",
+    "ReportThisProblem": "Report this problem",
+    "Reported": "Reported",
+    "Unknown": "Unknown",
+    "Problem": "Something went wrong",
+    "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
   },
   "Screens": {
     "Preface": "BC Wallet",
@@ -106,6 +119,7 @@ const translation = {
     "Done": "Done",
   },
   "Settings": {
+    "Version": "Version",
     "Help": "Help",
     "MoreInformation": "More Information",
     "PlayWithBCWallet": "Play with BC Wallet",
@@ -154,6 +168,9 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "Components": {
+      "CloseDropdown": "Close dropdown menu",
+    },
     "Title": "BC Services Card",
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
@@ -177,8 +194,23 @@ const translation = {
       "AuthenticatePrompt": "Authenticate to secure your app",
       "AuthenticateToSecure": "Authenticate to secure your app"
     },
+    "AppReset": {
+      "Title": "App reset for security",
+      "Body1": "For security reasons, you must set and keep a passcode on your phone.",
+      "Body2": "It looks like you may have turned off the passcode on this device.",
+      "Body3": "When you do this, your app is reset and you need to set it up again.",
+      "SetUpApp": "Set Up App",
+      "LearnMore": "Learn More"
+    },
+    "ConfirmDeviceAuth": {
+      "Title": "Confirm it's your device",
+      "Description1": "Each time you open this app you'll be asked for the passcode you regularly use to unlock your device. Or for Touch ID or Face ID if you use it.",
+      "Description2": "Your passcode, Touch ID, or Face ID never leaves this device. It's never shared with this app.",
+      "CheckboxLabel": "Do not show me this again",
+    },
     "PIN": {
       "CreatePIN": "Create a 6-digit PIN",
+      "CreatePINShort": "Create PIN",
       "ConfirmPIN": "Confirm PIN",
       "RememberPIN": "Remember your PIN",
       "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
@@ -223,9 +255,10 @@ const translation = {
       "ContactUs": "Contact us",
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
-      "AnalyticsOptIn": "Analytics Opt-In Placeholder",
+      "AnalyticsOptIn": "Analytics Opt-In",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
+      "RemoveAccount": "Remove account",
       "AppSecurity": {
         "ScreenTitle": "App Security",
         "ChangeAppSecurity": "Change App Security",
@@ -270,16 +303,23 @@ const translation = {
       "PrivacyNotice": "Privacy notice",
       "ReportSuspiciousPrefix": "Not you?",
       "ReportSuspicious": "Report Suspicious Activity",
+      "PreferOtherDevice": "Prefer to use on another device?",
+      "OpenUrlErrorTitle": "Unable to open URL",
+      "OpenUrlErrorMessage": "Could not open the service URL. Please try again later.",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
       "NoLoginProof": "You will use this app to prove who you are when you log in.",
-      "Goto": "Go to",
+      "Goto": "On that device, go to:",
+      "GotoService": "Go to {{- service}}",
+      "GotoUrl": "Go to: {{- url}}",
       "NotListed": "Services not listed?",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above.",
       "NotListedDescriptionContact": "Contact the service to the link to their website.",
       "PrivacyPolicy": "Privacy Policy",
-      "LoginErrorTitle": "Unable to quick login to service",
+      "LoginErrorTitle": "Problem with Login",
       "SavedServices": "Saved Services",
       "NoSavedServices": "No saved services",
+      "Remove": "Remove",
+      "Open": "Open",
     },
     "Modals": {
       "InternetDisconnected": {
@@ -296,18 +336,29 @@ const translation = {
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
-        "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue.",
-        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue.",
-        "CancelledByUser": "This device has been removed from your account by a user action.",
+        "CancelledByCardCancel": "Your account will be removed from this app.",
+        "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service.",
+        "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device.",
+        "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card.",
+        "CanceledByCardTypeChange": "Your card type was changed. Your account will be removed from this app.",
+        "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app.",
         "ContentA": "Tap OK to clear local data and restart setup on this device.",
         "OKButton": "OK",
-      }
+      },
+      "ServiceOutage": {
+        "Header": "Service unavailable",
+        "CheckAgainButton": "Check again",
+        "LearnMore": "Learn more",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
+      "WhereToUseAccessibilityLabel": "Find services",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
       "LogInFromComputerTitle": "Log in from a computer",
+      "LogInFromComputerAccessibilityLabel": "Computer login",
       "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
+      "ViewMessages": "View new messages",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -318,9 +369,6 @@ const translation = {
       "Step5": "Step 5",
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
-      "AreYouSure": "Are you sure?",
-      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
-      "DeleteVerifyRequest": "Delete Verify Request",
       "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }})",
       "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }})",
       "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used",
@@ -337,13 +385,13 @@ const translation = {
       "EditEmail": "Edit",
       "CheckStatus": "Check status",
       "ChooseAnotherWayToVerify": "Choose another way to verify",
-      "ResetData": "Reset data",
     },
     "SystemChecks": {
       "Devices": {
         "DeviceLimitReachedBannerTitle": "Device limit reached",
         "ManageDevicesButton": "Manage devices",
         "CloseButton": "Close",
+        "DeleteButton": "Delete Message",
         "ReviewDevicesTitle": "Review your devices",
         "ReviewDevicesContentA1": "You can have this account on a maximum of",
         "ReviewDevicesContentA2": "devices.",
@@ -402,10 +450,6 @@ const translation = {
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
       "ButtonTitle": "Forget all pairings",
-      "SuccessTitle": "Success",
-      "SuccessMessage": "Successfully unpaired your device",
-      "ErrorTitle": "Error",
-      "ErrorMessage": "Failed to unpair device",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk",
@@ -439,19 +483,31 @@ const translation = {
     },
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter pairing code",
+      "PairingCodeLabel": "Pairing code",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device.",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
       "CompletionTitle": "You're done in this app",
+      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }}",
+      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc.",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
+      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app.",
+      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app.",
+      "AppSwitchArrowLabel": "Arrow pointing to browser navigation",
       "BookmarkService": "Save link to:",
+      "ToggleBookmark": "Toggle bookmark",
+      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
       "CarouselNext": "Next",
       "CarouselBack": "Back",
       "AcceptAndContinueButton": "Accept and continue",
+      "TermsOfUseLoadError": "Terms of use failed to load, please retry",
+      "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
+      "TermsOfUseSubtitle": "BC Login Service Terms of Use",
+      "TermsOfUseVersion": "Version",
       "CarouselServicesHeader": "Access services online",
       "CarouselProveHeader": "Prove who you are online",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
@@ -464,6 +520,7 @@ const translation = {
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
+      "PrivacyPolicyBCLoginLink": "BC Login Service Privacy",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
       "TermsOfUseTitle": "Terms of Use",
@@ -484,9 +541,10 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.",
       "AnalyticsTitle": "Enable Analytics?",
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
-      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",
+      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app.",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously",
       "AcceptAnalytics": "Enable Analytics",
-      "DenyAnalytics":  "Skip",
+      "DenyAnalytics": "Skip",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
@@ -522,6 +580,10 @@ const translation = {
       "WillScanAutomatically": "Will scan automatically",
       "ErrorDetails": "Error details",
       "Dismiss": "Dismiss",
+      "SaveScanZones": "Save Scan Zones",
+      "ContinueScanning": "Continue Scanning",
+      "Confirm": "Confirm",
+      "TryAgain": "Try Again",
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number",
@@ -534,6 +596,9 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
+      "Label": "Birthdate",
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
+      "ExampleDate": "The birthdate format is: YYYY/MM/DD",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
@@ -545,6 +610,7 @@ const translation = {
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
       "ChooseID": "Choose ID",
+      "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {
       "Title": "BC Services Card Account",
@@ -581,6 +647,9 @@ const translation = {
       "ErrorMessage": "An error occurred while using the camera. Please try again.",
       "ErrorTakingPhoto": "Failed to take photo. Please try again.",
       "OK": "OK",
+      "CancelCamera": "Cancel camera",
+      "TakePhoto": "Take photo",
+      "ToggleFlash": "Toggle flash",
     },
     "PermissionDisabled": {
       "OpenSettings": "Open Settings",
@@ -659,6 +728,7 @@ const translation = {
       "EmailSkipButton": "Provide email address",
       "EmailSkipButton2": "Skip",
       "EnterEmailAddress": "Enter your email address",
+      "EmailAddress": "Email address",
       "EmailDescription1": "It is recommended that you provide one for security purposes.",
       "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card.",
     },
@@ -698,7 +768,7 @@ const translation = {
         "ActionLabel2": "Record Video",
         "ButtonText": "Send to Service BC Now",
       },
-      "PendingReview":{
+      "PendingReview": {
         "Heading": "Request pending review",
         "Description1": "We review requests:",
         "Bullet1": "Monday to Friday, 9am to 5pm",
@@ -749,10 +819,11 @@ const translation = {
         "StartRecordingButton": "Start Recording Video",
       },
       "VideoReview": {
-        "VideoErrorPath":"Video path and thumbnail path are required",
+        "VideoErrorPath": "Video path and thumbnail path are required",
         "Heading": "Can you see and hear yourself clearly in the video?",
         "UseVideo": "Use this video",
         "RetakeVideo": "Retake video",
+        "TogglePlayPause": "Toggle play pause",
       },
       "VideoTooLong": {
         "Heading": "Sorry, your video is too long.",
@@ -775,6 +846,17 @@ const translation = {
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
     },
+    "VerificationCardError": {
+      "CardExpired": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card is no longer valid. It has expired.",
+        "ButtonText": "Get a BC Services Card"
+      }
+    },
+    "BirthdateLockout": {
+      "Heading": "Sorry, you've tried too many times",
+      "Message": "Please try again later.",
+    },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",
       "Bullet1": "Hold your phone in front of you",
@@ -782,6 +864,7 @@ const translation = {
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
       "TakePhoto": "Take Photo of Face",
+      "TakePhotoAccessibilityLabel": "Take photo",
     },
     "PhotoReview": {
       "PathRequired": "Photo path is required",
@@ -791,7 +874,7 @@ const translation = {
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
-      "Warning" : "Do not scan with the camera app.",
+      "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
       "LearnMore": "Learn more"
     },
@@ -823,6 +906,12 @@ const translation = {
       "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID.",
       "ButtonText": "Ok"
     },
+    "CancelledVerification": {
+      "Title": "Your identity couldn't be verified",
+      "Label": "Details from Service BC agent: \n {{reason}}",
+      "Button": "Ok",
+      "NoReason": "No reason provided"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs",
       "Description": "It's needed to verify your identity.",
@@ -850,6 +939,7 @@ const translation = {
       "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
       "DeviceCodeError": "Missing device or user code",
       "ServiceBC": "Service BC",
+      "CallingAgent": "Calling agent to verify your identity...",
       "BeforeYouCallTitle": "Before you call",
       "WiFiRecommended": "Wi-Fi Recommended",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network.",
@@ -867,6 +957,7 @@ const translation = {
       "StartVideoCall": "Start video call",
       "CallStates": {
         "CreatingSession": "Creating video session...",
+        "UploadingDocuments": "Uploading your photo...",
         "ConnectingWebRTC": "Connecting to video service...",
         "WaitingForAgent": "Waiting for an agent to join...",
         "Initializing": "Initializing...",
@@ -913,7 +1004,11 @@ const translation = {
       "Description": "Use an ID that has the same name as on your BC Services Card.",
       "NonBCSCDescription": "Use an ID that has the same name as your first ID.",
       "FirstID": "Choose your first ID",
-      "SecondID": "Choose your second ID"
+      "SecondID": "Choose your second ID",
+      "OtherOptions": "Other Options",
+      "ShowMoreOptions": "Show more options",
+      "OtherIDOptionsHeading": "Other ID options",
+      "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID."
     },
     "EvidenceIDCollection": {
       "Heading1": "Enter the information",
@@ -929,7 +1024,8 @@ const translation = {
       "LastNameSubtext": "Also known as surname or family name",
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date",
-      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD)",
+      "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card",
       "BirthDatePickerLabel": "Select birth date",
       "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
@@ -942,6 +1038,8 @@ const translation = {
       "StreetAddressLabel": "Street Line 1",
       "StreetAddressSubtext": "Your residential street address",
       "StreetAddressRequired": "Please enter a street address",
+      "StreetAddress2Label": "Street Line 2 (Optional)",
+      "StreetAddress2Subtext": "Apartment, suite, unit, building, floor, etc.",
       "CityLabel": "City",
       "CitySubtext": "The city of your current address",
       "CityRequired": "Please enter a city",
@@ -961,10 +1059,13 @@ const translation = {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
+      "RemoveAccountLoading": "Removing account...",
       "TransferAccount": "Transfer account to another device",
+      "TransferAccountAccessibilityLabel": "Transfer",
       "AccountDetails": "All account details",
+      "AccountDetailsAccessibilityLabel": "Details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
-      "AccountInfo" : {
+      "AccountInfo": {
         "ManageDevices": "Manage Devices",
         "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
         "AppExpiryDate": "App expiry date",
@@ -1006,170 +1107,133 @@ const translation = {
   "HelpCentre": {
     "Title": "Help Centre"
   },
-	"Alerts": {
-		"Actions": {
-			"DefaultOK": "OK",
+  "Alerts": {
+    "Actions": {
+      "DefaultOK": "OK",
       "Close": "Close",
-      "GoToAppStore": "Go to App Store",
-      "RemoveAccount": "Remove Account",
-		}
-	},
-  "BCWalletError": {
-    "Camera": {
-      "Title": "Camera Error",
-      "Broken": "Unable to access the camera. Please check your device settings.",
-      "InvalidQRCode": "The QR code could not be recognized. Please try again.",
     },
-    "Network": {
-      "Title": "Server Error",
-      "UnknownServerErrorDescription": "An unknown server error occurred. Please try again later.",
-      "NoInternetTitle": "No Internet Connection",
-      "NoInternetDescription": "No internet connection. Please check your network settings and try again.",
-      "ServerErrorDescription": "There is a problem with the service. Please try again later. (error 302)",
-      "TimeoutTitle": "Connection Error",
-      "TimeoutDescription": "Please try again later.",
-      "UnsecuredTitle": "Unsecured Network",
-      "UnsecuredDescription": "A secure internet connection is required. Please check your network and try again.",
-      "ConnectionProblem": "There was a problem with the connection. Please try again.",
-      "EmptyResponse": "The server returned an empty response. Please try again.",
-      "BadRequest": "The request was invalid. Please try again.",
-      "ServerOutage": "The service is currently unavailable. Please try again later.",
-      "RetryLater": "The service is busy. Please try again later.",
-      "InvalidURL": "The URL is invalid. Please check and try again.",
-      "TooManyAttemptsTitle": "Sorry, You've Tried Too Many Times",
-      "TooManyAttemptsDescription": "Please try again later.",
+    "UnsecuredNetwork": {
+      "Title": "Unsecured Network",
+      "Description": "A secure internet connection is required. Please check your network or try another network."
     },
-    "Login": {
-      "Title": "Login Error",
-      "ProblemWithLoginTitle": "Problem with Login",
-      "ParseErrorDescription": "Please try again later. (error 304)",
-      "Rejected": "Your login request was rejected. Please try again.",
-      "Unauthorized": "You are not authorized to access this service.",
-      "Forbidden": "Access to this service is forbidden.",
-      "ServerErrorDescription": "Please try again later. (error 303)",
-      "InvalidPairingCodeTitle": "Invalid Pairing Code",
-      "InvalidPairingCodeDescription": "You've entered an invalid pairing code. Please re-enter your pairing code and try again.",
-      "SameDeviceInvalidPairingCodeTitle": "Invalid Login",
-      "SameDeviceInvalidPairingCodeDescription": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
-    },
-    "Card": {
-      "Title": "Card Error",
-      "ExpiredWillRemove": "Your card has expired and will be removed.",
-      "Cancelled": "Your card has been cancelled.",
-      "Expired": "Your card has expired.",
-      "Removed": "Your card has been removed.",
-      "TypeChanged": "Your card type has changed.",
-      "NotFound": "The card could not be found.",
-      "WillExpire": "Your physical card will expire soon. Please renew it.",
-    },
-    "Verification": {
-      "Title": "Verification Error",
-      "NotCompleteTitle": "Verify Not Complete",
-      "NotCompleteDescription": "Go to a Service BC location to verify your identity.",
-      "StepsIncomplete": "Some verification steps are incomplete. Please complete all required steps.",
-      "UploadServerError": "Failed to upload verification data. Please try again.",
-      "UploadUnknownError": "An unknown error occurred during upload. Please try again.",
-      "FileUploadError": "Failed to upload the file. Please try again.",
-      "VideoNotComplete": "Video verification is not complete. Please try again.",
-      "VideoCaptureError": "An error occurred while capturing video. Please try again.",
-      "RemoteIncomplete": "Remote verification is incomplete. Please complete the process.",
-      "DeleteRequestError": "Failed to delete the verification request. Please try again.",
-      "VideoServiceHoursNull": "Video service hours could not be retrieved. Please try again later.",
-      "VerifyRequestExpiredTitle": "Setup Expired",
-      "VerifyRequestExpiredDescription": "You must start set up again.",
-    },
-    "Token": {
-      "Title": "Authentication Error",
-      "Invalid": "The authentication token is invalid. Please sign in again.",
-      "NoTokensReturnedTitle": "Problem with Account",
-      "NoTokensReturnedDescription": "No authentication tokens were returned. Please try again.",
-      "Null": "Authentication token is missing. Please sign in again.",
-      "ExpiryError": "Failed to retrieve token expiry. Please sign in again.",
-      "DecryptVerifyError": "Failed to verify authentication. Please sign in again.",
-      "DeserializeError": "Failed to process authentication. Please sign in again.",
-      "ParseJWTError": "Failed to parse authentication token. Please sign in again.",
-      "DecryptJWEError": "Failed to decrypt authentication data. Please sign in again.",
-      "MissingJWK": "Authentication key is missing. Please sign in again.",
-      "JWSVerificationFailed": "Authentication verification failed. Please sign in again.",
-      "JOSEException": "An authentication error occurred. Please sign in again.",
-      "ClaimsSetError": "Failed to process authentication claims. Please sign in again.",
-      "SignClaimsError": "Failed to sign authentication claims. Please try again.",
-      "ParseJWSError": "Failed to parse authentication signature. Please sign in again.",
-      "JWTDeviceInfoError": "Failed to process device authentication info. Please try again.",
-    },
-    "Storage": {
-      "Title": "Storage Error",
-      "WriteError": "Failed to save data. Please try again.",
-      "ReadError": "Failed to read data. Please try again.",
-      "KeychainKeyExists": "A security key already exists. Please contact support.",
-      "KeychainKeyNotFound": "Security key not found. Please sign in again.",
-      "KeychainGenerationError": "Failed to generate security key. Please try again.",
-      "DeleteKeyPairError": "Failed to delete security key. Please try again.",
-      "KeysOutOfSync": "Your security keys are out of sync. Please sign in again.",
-      "ToJSONFailure": "Failed to convert data to JSON format. Please try again.",
-      "ToJSONStringFailure": "Failed to serialize data. Please try again.",
-    },
-    "Device": {
-      "Title": "Device Error",
-      "AppUpdateRequiredTitle": "App Update Required",
-      "AppUpdateRequiredDescription": "You must update this app to continue.",
-      "ProtectionRequired": "Device protection is required. Please enable a passcode or biometrics.",
-      "ClockSkew": "Your device clock is not synchronized. Please check your date and time settings.",
-      "AuthorizationError": "Device authorization failed. Please try again.",
-      "IncorrectOS": "This app is not supported on your current operating system.",
-      "KeypairGenerationError": "Failed to generate device keys. Please try again.",
-    },
-    "General": {
-      "Title": "Something Went Wrong",
-      "Unknown": "An unexpected error occurred. Please try again.",
-      "RegistrationError": "Registration failed. Please try again.",
-      "AppVersionNotSupported": "This app version is no longer supported. Please update.",
-      "RegistrationNull": "Registration data is missing. Please try again.",
-      "AuthorizationNull": "Authorization data is missing. Please try again.",
-      "DeserializeError": "Failed to process data. Please try again.",
-      "SerializeError": "Failed to prepare data. Please try again.",
-      "ProviderNull": "Service provider data is missing. Please try again.",
-      "RegistrationFailure": "Client registration failed. Please try again.",
-      "CreateRegistrationFailed": "Failed to create registration. Please try again.",
-      "InvalidRegistration": "The registration request is invalid. Please try again.",
-      "MissingJSONValues": "Required data is missing from the response. Please try again.",
-      "ServerConfiguration": "Server configuration error. Please try again later.",
-      "AddCardServerError": "Failed to add card due to a server error. Please try again.",
-      "PINStoreError": "Failed to store PIN. Please try again.",
-      "ProviderError": "Service provider error. Please try again.",
-      "FetchedProviderNull": "Failed to fetch service provider. Please try again.",
-      "TermsOfUseError": "Failed to load terms of use. Please try again.",
-      "EmptyKeychain": "Security credentials are empty. Please sign in again.",
-      "SetupNotComplete": "App setup is not complete. Please complete the setup process.",
-      "StringResourceError": "Failed to retrieve required text resource. Please try again.",
-    },
-    "Wallet": {
-      "Title": "Wallet Error",
-      "StateLoadError": "Failed to load wallet state. Please restart the app.",
-      "AgentInitError": "Failed to initialize wallet agent. Please restart the app.",
-      "SecretNotFound": "Wallet credentials not found. Please sign in again.",
-    },
-    "Connection": {
+    "ServerTimeout": {
       "Title": "Connection Error",
-      "ParseInvitationError": "There was a problem parsing the connection invitation.",
-      "ReceiveInvitationError": "There was a problem receiving the invitation to connect.",
-      "LegacyDIDError": "There was a problem extracting the connection identifier.",
-      "AppToAppURLError": "There was a problem opening the app-to-app URL.",
-      "ServiceCardAuthError": "There was a problem authenticating with the service card.",
+      "Description": "Please try again later."
     },
-    "Attestation": {
-      "Title": "Attestation Error",
-      "BadInvitation": "Unable to parse attestation agent invitation.",
-      "ConnectionError": "Unable to connect to the attestation service.",
-      "NonceError": "There was a problem with the attestation service.",
-      "GenerationError": "There was a problem generating attestation.",
-      "ValidationError": "There was a problem validating attestation.",
-      "AgentUndefined": "The agent cannot be undefined for attestation.",
-      "IntegrityUnavailable": "Device integrity service is not available.",
-      "GeneralProofError": "There was a problem with the attestation proof.",
-      "RequestError": "There was a problem with the attestation request.",
-      "UnsupportedPlatform": "Attestation is not supported on this platform.",
+    "ServerError": {
+      "Title": "Server Error",
+      "Description": "There is a problem with the service. Please try again later. (error 302)"
     },
+    "AppUpdateRequired": {
+      "Title": "App Update Required",
+      "Description": "You must update this app to continue.",
+      "Action1": "Go To App Store"
+    },
+    "ProblemWithAccount": {
+      "Title": "Problem with Account",
+      "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }})",
+      "Action1": "Remove Account",
+    },
+    "ProblemWithApp": {
+      "Title": "Problem with App",
+      "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
+    },
+    "ProblemWithService": {
+      "Title": "Problem with Service",
+      "Description": "Please try again later. (error {{ errorCode }})"
+    },
+    "DynamicRegistrationError": {
+      "Title": "Problem with Service",
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202)"
+    },
+    "AddCardNotAvailable": {
+      "Title": "Add Card Not Available",
+      "Description": "Please try again later. (error 205)"
+    },
+    "ForgetPairings": {
+      "Title": "Success",
+      "Description": "You have successfully unpaired your device."
+    },
+    "ProblemWithLogin": {
+      "Title": "Problem with Login",
+      "Description": "Please try again later. (error {{ errorCode }})"
+    },
+    "TooManyAttempts": {
+      "Title": "Sorry, You've Tried Too Many Times",
+      "Description": "Please try again later."
+    },
+    "SetupExpired": {
+      "Title": "Setup Expired",
+      "Description": "You must start set up again."
+    },
+    "VerificationNotComplete": {
+      "Title": "Verify Not Complete",
+      "Description": "Go to a Service BC location to verify your identity."
+    },
+    "InvalidPairingCode": {
+      "Title": "Invalid Pairing Code",
+      "Description": "You've entered an invalid pairing code. Please re-enter your pairing code and try again."
+    },
+    "InvalidPairingCodeSameDevice": {
+      "Title": "Invalid Login",
+      "Description": "Please try again later. If the problem continues, contact the BC Services Card Help Desk."
+    },
+    "LiveCallFileUploadError": {
+      "Title": "Problem Calling Agent",
+      "Description": "Please try again later.",
+    },
+    "CancelMobileCardSetup": {
+      "Title": "Are you sure?",
+      "Description": "This will delete all information you entered to set up the app. You will have to start again.",
+      "Action1": "Reset App"
+    },
+    "CancelVerificationRequest": {
+      "Title": "Are you sure?",
+      "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
+      "Action1": "Delete Verify Request",
+    },
+    "DataUseWarning": {
+      "Title": "Data Use",
+      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
+      "Action1": "Use Data",
+    },
+    "ThirdPartyKeyboard": {
+      "Title": "Warning",
+      "Description": "This device is using a non-standard keyboard. It may be able to collect everything you type. Do you want to continue using the third party keyboard?",
+      "Action1": "Continue",
+      "Action2": "Change Keyboard"
+    },
+    "AccountUpdated": {
+      "Title": "Account Updated",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card.",
+    },
+    "LiveCallHavingTrouble": {
+      "Title": "Having trouble?",
+      "Description": "Please end your call to get additional help and troubleshooting tips.",
+      "Action1": "End Call",
+    },
+    "ClockSkewError": {
+      "Title": "Date and Time on This Device Is Incorrect",
+      "Description": "You must correct it before you can use this app. Go to your Settings to update the date and time, or change it to be set automatically.",
+      "Action1": "Open Settings",
+    },
+    "AlreadyVerified": {
+      "Title": "Problem Checking Status",
+      "Description": "Please close the app and try again.",
+    },
+    "FileUploadError": {
+      "Title": "Problem with Connection",
+      "Description": "Please try again."
+    },
+    "FactoryReset": {
+      "Title": "Problem with App",
+      "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again.",
+      "Action1": "Reset App"
+    },
+    "DeviceAuthenticationError": {
+      "Title": "Device Authentication Failed",
+      "Description": "Unable to authenticate using the device's built-in authentication."
+    }
   },
 }
 

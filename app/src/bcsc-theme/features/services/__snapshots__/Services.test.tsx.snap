@@ -1,0 +1,403 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Services renders loading indicator when services are loading 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "off",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    {
+      "backgroundColor": "#F2F2F2",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "flexGrow": 1,
+      }
+    }
+    keyboardShouldPersistTaps="handled"
+    stickyHeaderIndices={
+      [
+        1,
+      ]
+    }
+  >
+    <View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 32,
+              "fontWeight": "bold",
+            },
+            {
+              "paddingHorizontal": 16,
+              "paddingVertical": 24,
+            },
+          ]
+        }
+      >
+        BCSC.Services.CatalogueTitle
+      </Text>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "paddingBottom": 16,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D8D8D8",
+              "borderRadius": 8,
+              "borderWidth": 1,
+              "flexDirection": "row",
+              "height": 64,
+              "paddingHorizontal": 16,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#606060",
+                  "fontSize": 24,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            
+          </Text>
+          <TextInput
+            accessibilityLabel="BCSC.Services.CatalogueSearch"
+            autoCorrect={false}
+            onBlur={[Function]}
+            onChangeText={[Function]}
+            onFocus={[Function]}
+            placeholder="BCSC.Services.CatalogueSearch"
+            placeholderTextColor="#606060"
+            style={
+              {
+                "color": "#313132",
+                "flex": 1,
+                "fontSize": 20,
+                "marginLeft": 8,
+              }
+            }
+            testID="com.ariesbifold:id/search"
+            value=""
+          />
+        </View>
+      </View>
+      <ActivityIndicator
+        size="large"
+        style={
+          {
+            "alignItems": "center",
+            "flex": 1,
+            "justifyContent": "center",
+          }
+        }
+        testID="com.ariesbifold:id/ServicesLoading"
+      />
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;
+
+exports[`Services renders service list when loading is complete 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "off",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    {
+      "backgroundColor": "#F2F2F2",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "flexGrow": 1,
+      }
+    }
+    keyboardShouldPersistTaps="handled"
+    stickyHeaderIndices={
+      [
+        1,
+      ]
+    }
+  >
+    <View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 32,
+              "fontWeight": "bold",
+            },
+            {
+              "paddingHorizontal": 16,
+              "paddingVertical": 24,
+            },
+          ]
+        }
+      >
+        BCSC.Services.CatalogueTitle
+      </Text>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "paddingBottom": 16,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D8D8D8",
+              "borderRadius": 8,
+              "borderWidth": 1,
+              "flexDirection": "row",
+              "height": 64,
+              "paddingHorizontal": 16,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#606060",
+                  "fontSize": 24,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            
+          </Text>
+          <TextInput
+            accessibilityLabel="BCSC.Services.CatalogueSearch"
+            autoCorrect={false}
+            onBlur={[Function]}
+            onChangeText={[Function]}
+            onFocus={[Function]}
+            placeholder="BCSC.Services.CatalogueSearch"
+            placeholderTextColor="#606060"
+            style={
+              {
+                "color": "#313132",
+                "flex": 1,
+                "fontSize": 20,
+                "marginLeft": 8,
+              }
+            }
+            testID="com.ariesbifold:id/search"
+            value=""
+          />
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 2,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Test Service"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/ServiceButton-TestService"
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#003366",
+                  "marginBottom": 8,
+                },
+              ]
+            }
+          >
+            Test Service
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#606060",
+                },
+              ]
+            }
+          >
+            A test service
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "margin": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.Services.NotListed
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "lineHeight": 30,
+              },
+            ]
+          }
+        >
+          BCSC.Services.NotListedDescription
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "lineHeight": 30,
+                },
+                {
+                  "marginTop": 32,
+                },
+              ],
+            ]
+          }
+        >
+          BCSC.Services.NotListedDescriptionContact
+        </Text>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;

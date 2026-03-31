@@ -1,7 +1,8 @@
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
   Button,
   ButtonType,
@@ -12,10 +13,12 @@ import {
   TOKENS,
   useAnimatedComponents,
   useServices,
+  useTheme,
 } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, TextInput } from 'react-native'
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
 
 export interface PINEntryResult {
@@ -57,7 +60,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 }: PINEntryFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
-  const { startLoading, stopLoading } = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(false)
   const [checkboxError, setCheckboxError] = useState(false)
@@ -66,16 +69,17 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage1, setErrorMessage1] = useState<string | undefined>(undefined)
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { client, isClientReady } = useBCSCApiClientState()
-  const { register } = useRegistrationApi(client, isClientReady)
-
+  const { register } = useRegistrationService()
   const pin2Ref = useRef<TextInput>(null)
+
+  const { Spacing } = useTheme()
 
   // Helper to get translation with prefix
   const tWithPrefix = useCallback((key: string) => t(`${translationPrefix}.${key}`), [t, translationPrefix])
 
   const validateAndContinue = useCallback(
     async (pin1: string, pin2: string) => {
+      let stopLoading: (() => void) | undefined
       try {
         setLoading(true)
         setErrorMessage1(undefined)
@@ -106,7 +110,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         }
 
         // All validations passed, show a full screen loading indicator
-        startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
+        stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
 
         // Register with the appropriate security method
         const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -125,14 +129,15 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           setErrorMessage1(tWithPrefix('FailedToSetPIN'))
         }
       } catch (error) {
+        const appError = toAppError(error, ErrorRegistry.PIN_STORE_ERROR)
         setErrorMessage1(tWithPrefix('ErrorSettingPIN'))
-        logger.error(`PIN setup error: ${error}`)
+        logger.error(`PIN setup error [${appError.appEvent}]: ${appError.technicalMessage ?? appError.message}`)
       } finally {
         setLoading(false)
-        stopLoading()
+        stopLoading?.()
       }
     },
-    [checked, logger, onSuccess, startLoading, stopLoading, loadingMessage, tWithPrefix, register]
+    [checked, startLoading, loadingMessage, tWithPrefix, register, onSuccess, logger]
   )
 
   const onPressContinue = useCallback(async () => {
@@ -161,29 +166,52 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
     [currentPIN1, validateAndContinue]
   )
 
+  const styles = StyleSheet.create({
+    pinEntryContent: {
+      gap: Spacing.lg,
+    },
+    pinFormRow: {
+      gap: Spacing.sm,
+    },
+    pinCheckboxRow: {
+      marginHorizontal: -Spacing.sm,
+    },
+    pinCheckboxError: {
+      marginLeft: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    pinCheckboxTitle: {
+      marginLeft: Spacing.md,
+    },
+    pinReminder: {
+      gap: Spacing.sm,
+    },
+  })
+
   const controls = (
     <>
-      {checkboxError ? (
-        <ThemedText variant={'inlineErrorText'} style={{ textAlign: 'right' }}>
-          {tWithPrefix('MustCheckBox')}
-        </ThemedText>
-      ) : null}
-      <CheckBoxRow
-        title={tWithPrefix('IUnderstand')}
-        accessibilityLabel={tWithPrefix('IUnderstand')}
-        testID={testIdWithKey('IUnderstand')}
-        checked={checked}
-        onPress={() => {
-          setCheckboxError(checked)
-          setChecked(!checked)
-        }}
-        reverse
-        titleStyle={{ textAlign: 'right' }}
-      />
+      <View style={styles.pinCheckboxRow}>
+        <CheckBoxRow
+          title={tWithPrefix('IUnderstand')}
+          accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
+          testID={testIdWithKey('IUnderstand')}
+          checked={checked}
+          onPress={() => {
+            setCheckboxError(checked)
+            setChecked(!checked)
+          }}
+          titleStyle={styles.pinCheckboxTitle}
+        />
+        {checkboxError ? (
+          <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
+            {tWithPrefix('MustCheckBox')}
+          </ThemedText>
+        ) : null}
+      </View>
       <Button
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        accessibilityLabel={a11yLabel(t('Global.Continue'))}
         testID={testIdWithKey('Continue')}
         disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
@@ -195,17 +223,33 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
 
   return (
     <ScreenWrapper padded keyboardActive controls={controls}>
-      <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
-      <PINInput onPINChange={handlePIN1Change} onPINComplete={handlePIN1Complete} errorMessage={errorMessage1} />
-      <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
-      <PINInput
-        ref={pin2Ref}
-        onPINChange={handlePIN2Change}
-        onPINComplete={handlePIN2Complete}
-        errorMessage={errorMessage2}
-      />
-      <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
-      <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
+      <View style={styles.pinEntryContent}>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
+          <PINInput
+            onPINChange={handlePIN1Change}
+            onPINComplete={handlePIN1Complete}
+            errorMessage={errorMessage1}
+            testIDKey="PINInput1"
+            accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
+          />
+        </View>
+        <View style={styles.pinFormRow}>
+          <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
+          <PINInput
+            ref={pin2Ref}
+            onPINChange={handlePIN2Change}
+            onPINComplete={handlePIN2Complete}
+            errorMessage={errorMessage2}
+            testIDKey="PINInput2"
+            accessibilityLabel={a11yLabel(tWithPrefix('ConfirmPIN'))}
+          />
+        </View>
+        <View style={styles.pinReminder}>
+          <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
+          <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
+        </View>
+      </View>
     </ScreenWrapper>
   )
 }

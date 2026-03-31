@@ -21,7 +21,12 @@ describe('useConfigApi', () => {
   describe('getServerStatus', () => {
     it('calls the correct endpoint for android', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: {
+          date: 'Wed, 01 Jan 2025 00:00:00 GMT',
+        },
+      })
       Platform.OS = 'android'
 
       // Call the method we're testing
@@ -34,18 +39,21 @@ describe('useConfigApi', () => {
           skipBearerAuth: true,
         }
       )
-      expect(response).toEqual({ status: 'ok' })
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
     })
 
     it('calls the correct endpoint for ios', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { status: 'ok' },
+        headers: { date: 'Wed, 01 Jan 2025 00:00:00 GMT' },
+      })
       const response = await config.getServerStatus()
 
       expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/status/ios/mobile_card`, {
         skipBearerAuth: true,
       })
-      expect(response).toEqual({ status: 'ok' })
+      expect(response).toEqual({ status: 'ok', serverTimestamp: new Date('Wed, 01 Jan 2025 00:00:00 GMT') })
     })
 
     it('handles API errors gracefully', async () => {
@@ -58,11 +66,15 @@ describe('useConfigApi', () => {
   describe('getTermsOfUse', () => {
     it('calls the correct endpoint', async () => {
       // eslint-disable-next-line no-extra-semi
-      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { terms: 'Sample terms' } })
+      ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({
+        data: { version: '8', date: '2025-06-06', html: '<p>Terms content</p>' },
+      })
       const response = await config.getTermsOfUse()
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`)
-      expect(response).toEqual({ terms: 'Sample terms' })
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`, {
+        skipBearerAuth: true,
+      })
+      expect(response).toEqual({ version: '8', date: '2025-06-06', html: '<p>Terms content</p>' })
     })
 
     it('handles API errors gracefully', async () => {

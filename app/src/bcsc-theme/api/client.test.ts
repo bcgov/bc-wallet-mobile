@@ -1,10 +1,25 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { localization } from '@/localization'
 import { initLanguages } from '@bifold/core'
+import { AxiosError } from 'axios'
 
 describe('BCSC Client', () => {
   beforeAll(() => {
     initLanguages(localization)
+  })
+
+  it('should set Content-Type default header to application/json with charset=utf-8', () => {
+    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.headers['Content-Type']).toBe('application/json; charset=utf-8')
+  })
+
+  it('should set User-Agent default header', () => {
+    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+    expect(client.client.defaults.headers['User-Agent']).toBeDefined()
   })
 
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
@@ -42,10 +57,23 @@ describe('BCSC Client', () => {
 
     const client = new BCSCApiClient(baseURL, mockLogger as any)
 
+    // Mock adapter to produce a proper AxiosError so interceptors run but no real HTTP call is made
+    client.client.defaults.adapter = (config: any) => {
+      return Promise.reject(
+        new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+          status: 500,
+          data: {},
+          statusText: 'Internal Server Error',
+          headers: {} as any,
+          config,
+        })
+      )
+    }
+
     const axiosGetSpy = jest.spyOn(client.client, 'get')
 
     try {
-      await client.get('/endpoint', { suppressStatusCodeLogs: [404] })
+      await client.get('/endpoint', { suppressStatusCodeLogs: [404], skipBearerAuth: true })
       expect(true).toBe(false) // Force fail if no error is thrown
     } catch (error) {
       expect(axiosGetSpy).toHaveBeenCalledWith(
@@ -56,8 +84,8 @@ describe('BCSC Client', () => {
       )
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        '[BCSCApiClient] Server Error: An unknown server error occurred. Please try again later.',
-        expect.objectContaining({ name: expect.any(String) })
+        expect.stringContaining('[BCSCApiClient]'),
+        expect.objectContaining({ code: expect.any(String) })
       )
     }
   })

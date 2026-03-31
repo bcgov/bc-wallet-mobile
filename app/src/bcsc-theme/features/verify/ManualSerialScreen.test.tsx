@@ -1,8 +1,8 @@
-import { render } from '@testing-library/react-native'
-import React from 'react'
-
+import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { render } from '@testing-library/react-native'
+import { default as React } from 'react'
 import ManualSerialScreen from './ManualSerialScreen'
 
 describe('ManualSerial', () => {
@@ -21,7 +21,9 @@ describe('ManualSerial', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <ManualSerialScreen navigation={mockNavigation as never} />
+        <ErrorAlertProvider>
+          <ManualSerialScreen navigation={mockNavigation as never} />
+        </ErrorAlertProvider>
       </BasicAppContext>
     )
 

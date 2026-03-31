@@ -1,12 +1,16 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode } from 'react'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleProp, StyleSheet, TextStyle, TouchableOpacity, View } from 'react-native'
+
+import { a11yLabel } from '@utils/accessibility'
 
 interface SettingsActionCardProps {
   title: string
   onPress: () => void
+  textStyle?: StyleProp<TextStyle>
   startAdornment?: ReactNode
   endAdornmentText?: string
+  testID?: string
 }
 
 /**
@@ -41,11 +45,12 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       style={styles.cardContainer}
       onPress={props.onPress}
       accessibilityRole="button"
-      accessibilityLabel={props.title}
+      accessibilityLabel={a11yLabel(props.title)}
+      testID={props.testID ?? testIdWithKey(`SettingsActionCard-${props.title}`)}
     >
       <View style={styles.textContainer}>
         {props.startAdornment ? props.startAdornment : null}
-        <ThemedText>{props.title}</ThemedText>
+        <ThemedText style={props.textStyle}>{props.title}</ThemedText>
         {props.endAdornmentText ? (
           <ThemedText style={styles.endAdornmentText}>{props.endAdornmentText}</ThemedText>
         ) : null}

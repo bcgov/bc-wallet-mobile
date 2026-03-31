@@ -1,6 +1,6 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { a11yLabel } from '@utils/accessibility'
 import { Image, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface TakeMediaButtonProps {
@@ -62,7 +62,7 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
       style={styles.container}
       onPress={onPress}
       testID={testIdWithKey(actionLabel)}
-      accessibilityLabel={actionLabel}
+      accessibilityLabel={a11yLabel(actionLabel)}
     >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}

@@ -280,15 +280,15 @@ class AESCBC {
 public enum Algorithm {
   /// Advanced Encryption Standard
   case aes
-  case /// Data Encryption Standard
+  case // Data Encryption Standard
     des
-  case /// Triple DES
+  case // Triple DES
     tripleDES
-  case /// CAST
+  case // CAST
     cast
-  case /// RC2
+  case // RC2
     rc2
-  case /// Blowfish
+  case // Blowfish
     blowfish
 
   /// Blocksize, in bytes, of algorithm.
@@ -381,8 +381,8 @@ public enum Mode {
   case CBC
   case CFB
   case CTR
-//    case F8	//		= 5, // Unimplemented for now (not included)
-//    case LRW//		= 6, // Unimplemented for now (not included)
+  ///    case F8	//		= 5, // Unimplemented for now (not included)
+  ///    case LRW//		= 6, // Unimplemented for now (not included)
   case OFB
 //    case XTS
   case RC4
@@ -422,21 +422,21 @@ enum Operation {
 public enum Status: CCCryptorStatus, CustomStringConvertible, Error {
   /// Successful
   case success
-  case /// Parameter Error
+  case // Parameter Error
     paramError
-  case /// Buffer too Small
+  case // Buffer too Small
     bufferTooSmall
-  case /// Memory Failure
+  case // Memory Failure
     memoryFailure
-  case /// Alignment Error
+  case // Alignment Error
     alignmentError
-  case /// Decode Error
+  case // Decode Error
     decodeError
-  case /// Unimplemented
+  case // Unimplemented
     unimplemented
-  case /// Overflow
+  case // Overflow
     overflow
-  case /// Random Number Generator Err
+  case // Random Number Generator Err
     rngFailure
 
   ///
@@ -761,8 +761,7 @@ class RSA1_5 {
       idx += blockSize
     }
 
-    let decryptedData = Data(bytes: UnsafePointer<UInt8>(decryptedDataBytes), count: decryptedDataBytes.count)
-    return decryptedData
+    return Data(bytes: UnsafePointer<UInt8>(decryptedDataBytes), count: decryptedDataBytes.count)
   }
 
   private class func removePadding(_ data: [UInt8]) -> [UInt8] {

@@ -1,9 +1,8 @@
 import { testIdWithKey } from '@bifold/core'
-import { act, fireEvent, render } from '@testing-library/react-native'
-import React from 'react'
-
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { act, fireEvent, render } from '@testing-library/react-native'
+import React from 'react'
 import { BCSCScreens, BCSCStacks } from '../../../types/navigators'
 import TransferSuccessScreen from './TransferSuccessScreen'
 
@@ -13,11 +12,6 @@ describe('TransferSuccess', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
-    jest.useFakeTimers()
-  })
-
-  afterEach(() => {
-    jest.useRealTimers()
   })
 
   describe('Render tests', () => {
@@ -40,7 +34,7 @@ describe('TransferSuccess', () => {
         </BasicAppContext>
       )
 
-      const homeButton = getByTestId(testIdWithKey('BCSC.TransferSuccess.ButtonText'))
+      const homeButton = getByTestId(testIdWithKey('TransferSuccessButton'))
       act(() => {
         fireEvent.press(homeButton)
       })
@@ -55,12 +49,12 @@ describe('TransferSuccess', () => {
         </BasicAppContext>
       )
 
-      const removeAccountButton = getByTestId(testIdWithKey('BCSC.Account.RemoveAccount'))
+      const removeAccountButton = getByTestId(testIdWithKey('RemoveAccountButton'))
       act(() => {
         fireEvent.press(removeAccountButton)
       })
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.RemoveAccountConfirmation)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
   })
 })

@@ -1,19 +1,22 @@
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { AppError, ErrorRegistry } from '@/errors'
+import { ErrorDefinition } from '@/errors/errorRegistry'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
+  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
+  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
-
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -52,6 +55,33 @@ export interface RegistrationResponseData {
 
 export interface NonceResponseData {
   nonce: string
+}
+
+export type RegistrationApi = ReturnType<typeof useRegistrationApi>
+
+/**
+ * Maps native error codes from `getDynamicClientRegistrationBody` to their
+ * corresponding ErrorRegistry definitions. Unmatched codes fall through
+ * to CLIENT_REGISTRATION_FAILURE.
+ */
+const dcrNativeErrorMap = new Map<string, ErrorDefinition>([
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_GENERATION_ERROR, ErrorRegistry.KEYCHAIN_KEY_GENERATION_ERROR],
+  [BcscNativeErrorCodes.TOJSON_METHOD_FAILURE, ErrorRegistry.TOJSON_METHOD_FAILURE],
+  [BcscNativeErrorCodes.TOJSONSTRING_METHOD_FAILURE, ErrorRegistry.TOJSONSTRING_METHOD_FAILURE],
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, ErrorRegistry.KEYCHAIN_KEY_EXISTS],
+  [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
+  [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, ErrorRegistry.JWT_DEVICE_INFO_ERROR],
+  [BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED, ErrorRegistry.SERIALIZE_JSON_ERROR],
+])
+
+function throwDcrNativeError(error: unknown): never {
+  if (isBcscNativeError(error)) {
+    const definition = dcrNativeErrorMap.get(error.code)
+    if (definition) {
+      throw AppError.fromErrorDefinition(definition, { cause: error })
+    }
+  }
+  throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_FAILURE, { cause: error })
 }
 
 // The registration API is a special case because it gets called during initialization,
@@ -113,38 +143,50 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   /**
    * Registers a new BCSC client with dynamic client registration.
    *
-   * Checks for existing account first. If none exists, generates attestation,
-   * fetches notification tokens, creates registration body, and submits to BCSC.
-   * Stores returned client credentials and updates local account storage.
+   * In most cases, you will want to check for an existing account before calling this function to avoid unecessary registrations.
+   * @see {@link register} for a registration function that includes an account existence check.
+   *
+   * Generates attestation, fetches notification tokens, creates registration body,
+   * and submits to BCSC. Stores returned client credentials and updates local account storage.
+   *
+   * @throws Error if BCSC client is not ready or registration fails
+   * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
+   * @throws AppError with code `ERR_120_TOJSONSTRING_METHOD_FAILURE` if device info JWT serialization fails
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_EXISTS_ERROR` if keychain key already exists
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
+   * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
+   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
+   * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
    * @returns Promise resolving to registration response data or void if account exists
-   * @throws Error if BCSC client is not ready or registration fails
    */
-  const register = useCallback(
+  const createRegistration = useCallback(
     async (securityMethod: AccountSecurityMethod) => {
       if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration')
       }
-
-      const account = await getAccount()
-      // If an account already exists, we don't need to register again
-      if (account) {
-        logger.info('Account already exists, skipping registration')
-        return
-      }
-
-      logger.info('No account found, proceeding with registration')
 
       const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
         getAttestation(),
         getNotificationTokens(logger),
       ])
 
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      let body: string | null
+      try {
+        body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      } catch (error) {
+        throwDcrNativeError(error)
+      }
+
+      if (!body) {
+        throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
+      }
+
       logger.info('Generated dynamic client registration body')
 
       const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
-        headers: { 'Content-Type': 'application/json' },
         skipBearerAuth: true,
       })
 
@@ -156,6 +198,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         securityMethod,
         nickname: store.bcsc.selectedNickname,
       })
+
+      logger.info(`Account set with clientID: ${data.client_id}`)
 
       await updateTokens({
         registrationAccessToken: data.registration_access_token,
@@ -169,16 +213,50 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   )
 
   /**
+   * Registers a new BCSC client if no existing account is found, otherwise skips registration.
+   *
+   * FIXME (MD): This might be better in `useRegistrationService` since it includes the account guard.
+   * Putting this here to prevent breaking tests.
+   *
+   * @param securityMethod - The account security method to use for registration
+   * @returns Promise resolving to registration response data or void if account exists
+   */
+  const register = useCallback(
+    async (securityMethod: AccountSecurityMethod) => {
+      const account = await getAccount()
+      // If an account already exists, we don't need to register again
+      if (account) {
+        logger.info('[RegistrationService] Account already exists, skipping registration')
+        return
+      }
+
+      return createRegistration(securityMethod)
+    },
+    [createRegistration, logger]
+  )
+
+  /**
    * Updates an existing BCSC client registration with new nickname and attestation.
    *
    * Requires valid registration access token and nickname. Generates fresh attestation
    * and notification tokens, then submits PUT request to update client registration.
    * Updates local account storage with new credentials.
    *
+   * @throws Error if client not ready, missing parameters, or update fails
+   * @throws AppError with code `ERR_120_TOJSON_METHOD_FAILURE` if JSON serialization of registration body fails
+   * @throws AppError with code `ERR_120_TOJSONSTRING_METHOD_FAILURE` if device info JWT serialization fails
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_EXISTS_ERROR` if keychain key already exists
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
+   * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
+   * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
+   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
+   * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
+   * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
+   * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
+   *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
    * @returns Promise resolving to updated registration response data
-   * @throws Error if client not ready, missing parameters, or update fails
    */
   const updateRegistration = useCallback(
     async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
@@ -200,22 +278,36 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
-
-        let updatedRegistrationData: RegistrationResponseData | null = null
-
+        let body: string | null
         try {
-          const updatePayload = body ? JSON.parse(body) : body
+          body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
+        } catch (error) {
+          throwDcrNativeError(error)
+        }
+
+        if (!body) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
+        }
+
+        // Deserialize the body and add required fields for the update request (client_id and scope)
+        let updatePayload
+        try {
+          updatePayload = body ? JSON.parse(body) : body
           // Add required fields for PUT request: client_id and scope
           updatePayload.client_id = account.clientID
           updatePayload.scope = 'openid profile email address offline_access'
+        } catch (error) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
+        }
+
+        let updatedRegistrationData: RegistrationResponseData | null = null
+        try {
           const { data } = await apiClient.put<RegistrationResponseData>(
             `${apiClient.endpoints.registration}/${account.clientID}`,
             updatePayload,
             {
               skipBearerAuth: true,
               headers: {
-                'Content-Type': 'application/json',
                 Authorization: `Bearer ${registrationAccessToken}`,
               },
             }
@@ -288,10 +380,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   return useMemo(
     () => ({
       register,
+      createRegistration,
       updateRegistration,
       deleteRegistration,
     }),
-    [register, updateRegistration, deleteRegistration]
+    [register, createRegistration, updateRegistration, deleteRegistration]
   )
 }
 

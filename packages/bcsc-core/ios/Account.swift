@@ -13,13 +13,13 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   var clientID: String
   var securityMethod: AccountSecurityMethod
 
-  // User full name
+  /// User full name
   var displayName: String?
 
-  // Indicate if app has posted initial nickname
-  // to server after existing user
-  // has upgraded to v3.6.0 and did not
-  // set their nickname
+  /// Indicate if app has posted initial nickname
+  /// to server after existing user
+  /// has upgraded to v3.6.0 and did not
+  /// set their nickname
   var didPostNicknameToServer: Bool = false
 
   var nickname: String?
@@ -39,7 +39,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     attemptsThreshold: 1 * DAY,
   ]
 
-  // Regular initializer
+  /// Regular initializer
   init(
     id: String,
     clientID: String,
@@ -174,7 +174,7 @@ extension AccountSecurityMethod {
   }
 }
 
-// CodingKeys
+/// CodingKeys
 private extension String {
   static let id = "id"
   static let issuer = "issuer"
