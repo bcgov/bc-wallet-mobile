@@ -27,6 +27,7 @@ const packageDirs = [
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/oca')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/remote-logs')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/core')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/react-hooks')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/verifier')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/react-native-attestation')),
   fs.realpathSync(path.join(__dirname, 'node_modules', 'react-native-bcsc-core')),
@@ -40,6 +41,7 @@ const extraNodeModules = {}
 for (const packageDir of packageDirs) {
   const pak = require(path.join(packageDir, 'package.json'))
   const modules = Object.keys({
+    ...pak.dependencies,
     ...pak.peerDependencies,
     ...pak.devDependencies,
   })
