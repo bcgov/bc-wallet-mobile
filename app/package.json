@@ -52,12 +52,12 @@
     "snowplow:stop": "docker ps -a -q --filter ancestor=snowplow/snowplow-micro:3.0.1 | xargs -r docker rm -f && echo 'Snowplow Micro analytics container stopped and removed'"
   },
   "dependencies": {
-    "@bifold/core": "2.12.11",
-    "@bifold/oca": "2.12.11",
-    "@bifold/react-hooks": "2.12.11",
-    "@bifold/react-native-attestation": "2.12.11",
-    "@bifold/remote-logs": "2.12.11",
-    "@bifold/verifier": "2.12.11",
+    "@bifold/core": "2.12.12",
+    "@bifold/oca": "2.12.12",
+    "@bifold/react-hooks": "2.12.12",
+    "@bifold/react-native-attestation": "2.12.12",
+    "@bifold/remote-logs": "2.12.12",
+    "@bifold/verifier": "2.12.12",
     "@credo-ts/anoncreds": "0.5.19",
     "@credo-ts/askar": "0.5.19",
     "@credo-ts/core": "0.5.19",
