@@ -24,6 +24,16 @@ describe('ServiceOutage', () => {
     jest.clearAllMocks()
   })
 
+  it('should match snapshot', () => {
+    const tree = render(
+      <BasicAppContext>
+        <ServiceOutage />
+      </BasicAppContext>
+    )
+
+    expect(tree.toJSON()).toMatchSnapshot()
+  })
+
   it('renders header, content, and buttons', () => {
     const { getByText } = render(
       <BasicAppContext>
