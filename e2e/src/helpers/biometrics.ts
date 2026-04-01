@@ -2,72 +2,56 @@ import { isSauceLabs } from './sauce.js'
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
-export async function enrollBiometrics() {
-  if (isSauceLabs()) {
-    await driver.execute('sauce:biometrics', { action: 'enroll' })
-  } else if (driver.isIOS) {
-    await driver.execute('mobile: enrollBiometric', { isEnabled: true })
-  } else {
-    await driver.execute('mobile: shell', {
-      command: 'locksettings set-pin 1234',
-    })
-  }
+function bioLog(message: string): void {
+  console.log(`[biometrics] ${message}`)
+}
+
+/** Subtitle set in bcsc-core `DeviceAuthenticationService` / `BcscCoreModule.performDeviceAuthentication`. */
+const ANDROID_BIOMETRIC_SUBTITLE_SEL =
+  '//android.widget.TextView[contains(@text,"Sign in with FingerPrint") or contains(@text,"Sign in with FaceID")]'
+
+/** iOS system biometric sheet (en — adjust if running localized Sauce sessions). */
+const IOS_BIOMETRIC_LABEL_SEL =
+  '-ios class chain:**/XCUIElementTypeStaticText[`label CONTAINS "Touch ID Verification" OR label CONTAINS "Face ID Verification"`]'
+
+const NATIVE_BIOMETRIC_WAIT_MS = 25_000
+
+/**
+ * Sauce RDC only forwards `sauce:biometrics-authenticate` once the native biometric
+ * UI is showing. Without this wait, Android often misses the inject.
+ */
+async function waitForNativeBiometricPromptOnSauceRdc(): Promise<void> {
+  if (!isSauceLabs()) return
+
+  await $(driver.isIOS ? IOS_BIOMETRIC_LABEL_SEL : ANDROID_BIOMETRIC_SUBTITLE_SEL).waitForDisplayed({
+    timeout: NATIVE_BIOMETRIC_WAIT_MS,
+  })
+
+  bioLog('Sauce RDC: biometric prompt is visible')
 }
 
 export async function matchBiometric() {
-  if (isSauceLabs()) {
-    await driver.execute('sauce:biometrics-authenticate=true')
-  } else if (driver.isIOS) {
-    await driver.execute('mobile: sendBiometricMatch', { type: 'faceId', match: true })
-  }
+  if (!isSauceLabs()) return
+  await delay(2_000)
+
+  bioLog('matchBiometric: waiting for native biometric prompt on Sauce RDC')
+  await waitForNativeBiometricPromptOnSauceRdc()
+  bioLog('matchBiometric: invoking sauce:biometrics-authenticate=true')
+  await driver.execute('sauce:biometrics-authenticate=true')
+  bioLog('matchBiometric: Sauce RDC — done')
+
+  await delay(2_000)
 }
 
 export async function failBiometric() {
-  if (isSauceLabs()) {
-    await driver.execute('sauce:biometrics-authenticate=false')
-  } else if (driver.isIOS) {
-    await driver.execute('mobile: sendBiometricMatch', { type: 'faceId', match: false })
-  }
-}
+  if (!isSauceLabs()) return
+  await delay(2_000)
 
-/**
- * Accepts the native iOS "Do you want to allow <App> to use Face ID?" permission dialog.
- * This system alert appears the first time the app calls LAContext.evaluatePolicy().
- * On SauceLabs RDC with biometricsInterception, this dialog does not appear.
- * On Android, biometric enrollment does not trigger a permission dialog.
- */
-export async function acceptBiometricPermissionIfPresent(): Promise<void> {
-  if (!driver.isIOS) return
-  if (isSauceLabs()) return
+  bioLog('failBiometric: Sauce RDC — fail')
+  await waitForNativeBiometricPromptOnSauceRdc()
+  bioLog('failBiometric: invoking sauce:biometrics-authenticate=false')
+  await driver.execute('sauce:biometrics-authenticate=false')
+  bioLog('failBiometric: Sauce RDC — done')
 
-  await delay(1_500)
-
-  const maxAttempts = 5
-  const intervalMs = 1_000
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Try the mobile: alert API first (handles most system dialogs)
-    try {
-      await driver.execute('mobile: alert', { action: 'accept', buttonLabel: 'Allow' })
-      return
-    } catch {
-      // Alert not present via this API — try Springboard
-    }
-
-    // Fallback: biometric permission dialogs are Springboard-managed
-    try {
-      await driver.updateSettings({ defaultActiveApplication: 'com.apple.springboard' })
-      const allowButton = await $('~Allow')
-      if (await allowButton.isDisplayed()) {
-        await allowButton.click()
-        return
-      }
-    } catch {
-      // Allow button not found
-    } finally {
-      await driver.updateSettings({ defaultActiveApplication: 'auto' })
-    }
-
-    if (attempt < maxAttempts - 1) await delay(intervalMs)
-  }
+  await delay(2_000)
 }

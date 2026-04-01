@@ -1,5 +1,4 @@
 import { getE2EConfig } from '../../src/e2eConfig.js'
-import { acceptLocalNetworkPermissionIfPresent } from '../../src/helpers/iosPermissions.js'
 import { annotate } from '../../src/helpers/sauce.js'
 import { BaseScreen } from '../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../src/testIDs.js'
@@ -12,7 +11,6 @@ describe('App Launch', () => {
   const { variant } = getE2EConfig()
 
   it('should launch and display the first screen', async () => {
-    await acceptLocalNetworkPermissionIfPresent()
     await annotate(`Variant: ${variant}`)
     await AccountSetup.waitFor('AddAccount')
   })

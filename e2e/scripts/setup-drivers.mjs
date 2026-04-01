@@ -15,8 +15,8 @@ const e2eRoot = join(__dirname, '..')
 const appiumBin = join(e2eRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'appium.cmd' : 'appium')
 const appiumHome = process.env.APPIUM_HOME || join(e2eRoot, '.appium')
 
-// Pin to Appium 2–compatible versions (latest driver registry defaults to Appium 3)
-const drivers = ['uiautomator2@2.45.1', 'xcuitest@6.0.1']
+// Pin to Appium 2–compatible versions (latest driver registry defaults to Appium 2.13.1)
+const drivers = ['uiautomator2@3.9.6', 'xcuitest@7.35.0']
 const home = process.env.HOME || process.env.USERPROFILE || '/tmp'
 
 let failed = false

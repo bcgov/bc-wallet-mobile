@@ -13,8 +13,14 @@ describe('Nickname', () => {
 
   it('should fill in the Nickname', async () => {
     const { testUser } = getVerifyContext()
-    await Nickname.waitFor('AccountNicknamePressable')
-    await Nickname.type('AccountNicknamePressable', testUser.username)
+    if (driver.isAndroid) {
+      await Nickname.tap('AccountNicknameInput')
+      await Nickname.type('AccountNicknameInput', testUser.username, { tapFirst: true, characterByCharacter: false })
+    } else {
+      await Nickname.tap('AccountNicknamePressable')
+      await Nickname.type('AccountNicknamePressable', testUser.username, { tapFirst: true })
+    }
+    await Nickname.dismissKeyboard()
     await Nickname.tap('SaveAndContinue')
   })
 })
