@@ -1,4 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
@@ -110,9 +111,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     try {
       if (Platform.OS === 'ios') {
         attestation = await getAppStoreReceipt()
-        if (attestation) {
-          logger.debug('Obtained iOS App Store Receipt attestation')
-        }
+        logger.debug('iOS App Store Receipt attestation complete')
       } else if (Platform.OS === 'android') {
         const deviceId = await getDeviceId()
         const {
@@ -127,15 +126,17 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           }
         )
-        logger.debug(`Received nonce for Android Play Integrity attestation`)
+        logger.debug('Received nonce for Android Play Integrity attestation')
         attestation = await googleAttestation(nonce)
-        if (attestation) {
-          logger.debug(`Obtained Android Play Integrity attestation`)
-        }
+        logger.debug('Android Play Integrity attestation complete')
       }
     } catch (err) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
-      logger.warn('Failed to generate attestation', { error: err })
+      const context = getAttestationErrorLogContext(err)
+      logger.warn(
+        `Failed to generate ${Platform.OS} registration attestation [${context.errorCode ?? 'unknown'}]`,
+        context
+      )
     }
     return attestation
   }, [apiClient, isClientReady, logger])
