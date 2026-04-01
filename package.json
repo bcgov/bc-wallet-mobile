@@ -76,5 +76,14 @@
   "devDependencies": {
     "prettier": "~3.4.2",
     "prettier-plugin-organize-imports": "^4.3.0"
+  },
+  "//": "ffi-napi and ref-napi are unused by React Native and incompatible with Node 24, so we skip building them.",
+  "dependenciesMeta": {
+    "@2060.io/ffi-napi": {
+      "built": false
+    },
+    "@2060.io/ref-napi": {
+      "built": false
+    }
   }
 }
