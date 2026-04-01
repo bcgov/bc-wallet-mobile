@@ -1,9 +1,9 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { useFcmService } from '@/bcsc-theme/features/fcm'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
+import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -44,10 +44,11 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const [systemVolume, setSystemVolume] = useState<number>(1)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const { token } = useApi()
+  const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { liveCallHavingTroubleAlert } = useAlerts(navigation)
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
+  const { unknownErrorModal } = useAlerts(navigation)
 
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
@@ -56,8 +57,26 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
-      // checkDeviceCodeStatus already calls updateTokens internally, no need to call it again
-      await token.checkDeviceCodeStatus(store.bcscSecure.deviceCode, store.bcscSecure.userCode)
+      // checkVerificationStatus already calls updateTokens internally, no need to call it again
+      const isVerified = await tokenService.checkVerificationStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode
+      )
+
+      if (!isVerified) {
+        logger.info('[LiveCallScreen.leaveCall] User not verified')
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 2,
+            routes: [
+              { name: BCSCScreens.SetupSteps },
+              { name: BCSCScreens.VerificationMethodSelection },
+              { name: BCSCScreens.VerifyNotComplete },
+            ],
+          })
+        )
+        return
+      }
 
       navigation.dispatch(
         CommonActions.reset({
@@ -65,23 +84,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           routes: [{ name: BCSCScreens.VerificationSuccess }],
         })
       )
-    } catch {
-      // TODO (bm): as of Sept 10th 2025, the API throws if the user is not
-      // verified even though it isn't truly an error. We should check for
-      // this case specifically and only throw if it's some other error
-      logger.info('User not verified')
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 2,
-          routes: [
-            { name: BCSCScreens.SetupSteps },
-            { name: BCSCScreens.VerificationMethodSelection },
-            { name: BCSCScreens.VerifyNotComplete },
-          ],
-        })
-      )
+    } catch (error) {
+      unknownErrorModal(error)
     }
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, navigation, logger, t])
+  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, tokenService, logger, navigation, t, unknownErrorModal])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
