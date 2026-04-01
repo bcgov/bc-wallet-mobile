@@ -75,6 +75,10 @@ export const useTokenService = () => {
           return false
         }
 
+        if (isAppError(error, AppEventCode.ALREADY_VERIFIED)) {
+          return true
+        }
+
         throw error
       }
     },

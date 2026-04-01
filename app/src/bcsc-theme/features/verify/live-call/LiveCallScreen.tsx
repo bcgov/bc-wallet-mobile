@@ -50,7 +50,11 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const { unknownErrorModal } = useAlerts(navigation)
 
-  // check if verified, save token if so, and then navigate accordingly
+  /**
+   * Handles leaving the call by navigating to the appropriate screen based on the verification status.
+   *
+   * @returns A promise that resolves when the navigation action is dispatched.
+   */
   const leaveCall = useCallback(async () => {
     try {
       if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {

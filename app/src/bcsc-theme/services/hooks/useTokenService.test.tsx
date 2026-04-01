@@ -111,6 +111,75 @@ describe('useTokenService', () => {
     })
   })
 
+  describe('checkVerificationStatus', () => {
+    it('should return true when device code status check succeeds', async () => {
+      const tokenApi = {
+        checkDeviceCodeStatus: jest.fn().mockResolvedValue(undefined),
+      } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      const status = await result.current.checkVerificationStatus('device-code', 'confirmation-code')
+
+      expect(tokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('device-code', 'confirmation-code')
+      expect(status).toBe(true)
+    })
+
+    it('should return false when authorization is pending', async () => {
+      const mockError = mockAppError(AppEventCode.AUTHORIZATION_PENDING)
+      const tokenApi = {
+        checkDeviceCodeStatus: jest.fn().mockRejectedValue(mockError),
+      } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      const status = await result.current.checkVerificationStatus('device-code', 'confirmation-code')
+
+      expect(tokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('device-code', 'confirmation-code')
+      expect(status).toBe(false)
+    })
+
+    it('should return true when already verified', async () => {
+      const mockError = mockAppError(AppEventCode.ALREADY_VERIFIED)
+      const tokenApi = {
+        checkDeviceCodeStatus: jest.fn().mockRejectedValue(mockError),
+      } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      const status = await result.current.checkVerificationStatus('device-code', 'confirmation-code')
+
+      expect(tokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('device-code', 'confirmation-code')
+      expect(status).toBe(true)
+    })
+
+    it('should rethrow error when error is not authorization pending', async () => {
+      const mockError = mockAppError('ERR_SOME_OTHER_ERROR')
+      const tokenApi = {
+        checkDeviceCodeStatus: jest.fn().mockRejectedValue(mockError),
+      } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.checkVerificationStatus('device-code', 'confirmation-code')).rejects.toThrow(
+        mockError
+      )
+      expect(tokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('device-code', 'confirmation-code')
+    })
+  })
+
   it('should return memoized functions', () => {
     const tokenApi = {
       getCachedIdTokenMetadata: jest.fn(),
