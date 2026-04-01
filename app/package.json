@@ -6,7 +6,7 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20.19.2 <21.0.0",
+    "node": ">=24.14.1 <25.0.0",
     "yarn": "^4.9.2"
   },
   "installConfig": {
