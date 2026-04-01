@@ -6,7 +6,7 @@
   "private": true,
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=20.19.2 <21.0.0",
+    "node": ">=24.14.1 <25.0.0",
     "yarn": "^4.9.2"
   },
   "packageManager": "yarn@4.9.2",
@@ -77,5 +77,14 @@
   "devDependencies": {
     "prettier": "~3.4.2",
     "prettier-plugin-organize-imports": "^4.3.0"
+  },
+  "//": "ffi-napi and ref-napi are unused by React Native and incompatible with Node 24, so we skip building them.",
+  "dependenciesMeta": {
+    "@2060.io/ffi-napi": {
+      "built": false
+    },
+    "@2060.io/ref-napi": {
+      "built": false
+    }
   }
 }
