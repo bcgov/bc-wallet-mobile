@@ -140,6 +140,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): R
             title={t('BCSC.Home.WhereToUseTitle')}
             onPress={() => Linking.openURL(WHERE_TO_USE_URL)}
             endIcon="open-in-new"
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
           />
         </View>
       ) : null}

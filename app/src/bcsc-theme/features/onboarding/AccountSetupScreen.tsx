@@ -71,6 +71,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       <Pressable
         onPress={incrementDeveloperMenuCounter}
         style={styles.pressableArea}
+        accessible={false}
         accessibilityElementsHidden={true}
         importantForAccessibility="no-hide-descendants"
         testID={testIdWithKey('DeveloperCounter')}
