@@ -1,9 +1,43 @@
 /**
+ * Swipe up (content scrolls down) by a controlled fraction of screen height.
+ * Centered vertically so the swipe origin/destination stay in the safe area.
+ *
+ * @param fraction - portion of screen height to cover (0–1, default 0.25)
+ * @param durationMs - swipe duration; slower = more reliable (default 500)
+ */
+export async function swipeUpBy(fraction = 0.25, durationMs = 500): Promise<void> {
+  const half = fraction / 2
+  const from = { x: 0.5, y: 0.5 + half }
+  const to = { x: 0.5, y: 0.5 - half }
+  if (driver.isIOS) {
+    await swipeIosFromTo(from, to, durationMs)
+  } else {
+    await swipeAndroidFromTo(from, to, durationMs)
+  }
+}
+
+/**
+ * Swipe down (content scrolls up) by a controlled fraction of screen height.
+ *
+ * @param fraction - portion of screen height to cover (0–1, default 0.25)
+ * @param durationMs - swipe duration; slower = more reliable (default 500)
+ */
+export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<void> {
+  const half = fraction / 2
+  const from = { x: 0.5, y: 0.5 - half }
+  const to = { x: 0.5, y: 0.5 + half }
+  if (driver.isIOS) {
+    await swipeIosFromTo(from, to, durationMs)
+  } else {
+    await swipeAndroidFromTo(from, to, durationMs)
+  }
+}
+
+/**
  * Touch gestures for E2E. Android uses W3C actions; iOS uses Appium `mobile:*` helpers
  * to avoid XCUITest quiescence / performActions issues on recent Xcode/iOS SDKs.
  */
-
-async function swipeAndroid(
+async function swipeAndroidFromTo(
   from: { x: number; y: number },
   to: { x: number; y: number },
   durationMs: number
@@ -28,20 +62,9 @@ async function swipeAndroid(
 }
 
 /**
- * Map a desired gesture duration to an iOS swipe velocity (px/s). Shorter duration → higher velocity.
+ * Swipe from one point to another.
+ * Coordinates are percentages of the screen (0–1).
  */
-function iosVelocityForDuration(durationMs: number): number {
-  const clamped = Math.min(Math.max(durationMs, 120), 2000)
-  return Math.round(200_000 / clamped)
-}
-
-async function swipeIosDirection(direction: 'up' | 'down' | 'left' | 'right', durationMs: number): Promise<void> {
-  await driver.execute('mobile: swipe', {
-    direction,
-    velocity: iosVelocityForDuration(durationMs),
-  })
-}
-
 async function swipeIosFromTo(
   from: { x: number; y: number },
   to: { x: number; y: number },
@@ -67,100 +90,4 @@ async function swipeIosFromTo(
     holdDuration: 0.05,
     velocity,
   })
-}
-
-/**
- * Swipe from one point to another.
- * Coordinates are percentages of the screen (0–1).
- */
-export async function swipe(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-  durationMs = 200
-): Promise<void> {
-  if (driver.isIOS) {
-    await swipeIosFromTo(from, to, durationMs)
-  } else {
-    await swipeAndroid(from, to, durationMs)
-  }
-}
-
-export async function swipeUp(durationMs = 200): Promise<void> {
-  if (driver.isIOS) {
-    await swipeIosDirection('up', durationMs)
-  } else {
-    await swipeAndroid({ x: 0.5, y: 0.7 }, { x: 0.5, y: 0.3 }, durationMs)
-  }
-}
-
-export async function swipeDown(durationMs = 200): Promise<void> {
-  if (driver.isIOS) {
-    await swipeIosDirection('down', durationMs)
-  } else {
-    await swipeAndroid({ x: 0.5, y: 0.3 }, { x: 0.5, y: 0.7 }, durationMs)
-  }
-}
-
-/**
- * Swipe up (content scrolls down) by a controlled fraction of screen height.
- * Centered vertically so the swipe origin/destination stay in the safe area.
- *
- * @param fraction - portion of screen height to cover (0–1, default 0.25)
- * @param durationMs - swipe duration; slower = more reliable (default 500)
- */
-export async function swipeUpBy(fraction = 0.25, durationMs = 500): Promise<void> {
-  const half = fraction / 2
-  const from = { x: 0.5, y: 0.5 + half }
-  const to = { x: 0.5, y: 0.5 - half }
-  if (driver.isIOS) {
-    await swipeIosFromTo(from, to, durationMs)
-  } else {
-    await swipeAndroid(from, to, durationMs)
-  }
-}
-
-/**
- * Swipe down (content scrolls up) by a controlled fraction of screen height.
- *
- * @param fraction - portion of screen height to cover (0–1, default 0.25)
- * @param durationMs - swipe duration; slower = more reliable (default 500)
- */
-export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<void> {
-  const half = fraction / 2
-  const from = { x: 0.5, y: 0.5 - half }
-  const to = { x: 0.5, y: 0.5 + half }
-  if (driver.isIOS) {
-    await swipeIosFromTo(from, to, durationMs)
-  } else {
-    await swipeAndroid(from, to, durationMs)
-  }
-}
-
-export async function swipeLeft(durationMs = 200): Promise<void> {
-  if (driver.isIOS) {
-    await swipeIosDirection('left', durationMs)
-  } else {
-    await swipeAndroid({ x: 0.8, y: 0.5 }, { x: 0.2, y: 0.5 }, durationMs)
-  }
-}
-
-export async function swipeRight(durationMs = 200): Promise<void> {
-  if (driver.isIOS) {
-    await swipeIosDirection('right', durationMs)
-  } else {
-    await swipeAndroid({ x: 0.2, y: 0.5 }, { x: 0.8, y: 0.5 }, durationMs)
-  }
-}
-
-/**
- * Scroll down until an element matching the selector is visible,
- * with a maximum number of attempts to prevent infinite loops.
- */
-export async function scrollDownUntilVisible(selector: string, maxScrolls = 5): Promise<void> {
-  for (let i = 0; i < maxScrolls; i++) {
-    const el = await $(selector)
-    if (await el.isDisplayed()) return
-    await swipeUp()
-  }
-  throw new Error(`Element "${selector}" not visible after ${maxScrolls} scroll attempts`)
 }

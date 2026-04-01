@@ -1,5 +1,5 @@
 // sauce/wdio.android.sauce.rdc.conf.ts
-import { config as sauceConfig } from './wdio.shared.sauce.conf.js'
+import { config as sauceConfig, sauceRdcOptions } from './wdio.shared.sauce.conf.js'
 
 const appFilename = process.env.ANDROID_APP_FILENAME || 'BCSC-Dev-latest.aab'
 
@@ -14,14 +14,8 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
-    'sauce:options': {
-      appiumVersion: 'latest',
-      build: process.env.BUILD_NAME || `local-${Date.now()}`,
-      name: process.env.TEST_NAME || 'E2E Tests',
-      phoneOnly: true,
-      allowTouchIdEnroll: true,
-      sauceLabsImageInjectionEnabled: true,
-    },
+    'appium:autoGrantPermissions': true,
+    'sauce:options': sauceRdcOptions,
   },
 ]
 
