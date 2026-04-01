@@ -303,6 +303,7 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     }
 
     alert(error)
+    error.handled = true
   },
 }
 

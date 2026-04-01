@@ -67,8 +67,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
 /**
  * Hook to access the NavigationContainerContext.
  *
- * TODO (MD): Use this hook in `useSystemChecks` to delay system checks until navigation is ready.
- *
  * @returns {*} {NavigationContainerContextType}
  */
 export const useNavigationContainer = () => {
