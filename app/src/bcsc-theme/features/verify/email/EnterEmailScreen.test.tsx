@@ -49,6 +49,21 @@ describe('EnterEmailScreen', () => {
   })
 
   describe('Rendering', () => {
+    it('should match snapshot', () => {
+      const tree = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      expect(tree.toJSON()).toMatchSnapshot()
+    })
+
     it('should render correctly', () => {
       const { getByText } = render(
         <BasicAppContext>
