@@ -11,6 +11,7 @@ interface SectionButtonProps {
   style?: ViewStyle
   onPress?: () => void
   testID?: string
+  disabled?: boolean
 }
 
 const SectionButton: React.FC<SectionButtonProps> = ({
@@ -20,6 +21,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({
   style,
   onPress,
   testID,
+  disabled,
 }) => {
   const { ColorPalette, Spacing } = useTheme()
 
@@ -44,6 +46,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({
     <TouchableOpacity
       style={[styles.container, style]}
       onPress={onPress}
+      disabled={disabled}
       accessibilityLabel={a11yLabel(accessibilityLabel ?? title)}
       accessibilityRole="button"
       testID={testID ?? testIdWithKey(`SectionButton-${title.replaceAll(/\s+/g, '')}`)}
