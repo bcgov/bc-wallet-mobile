@@ -75,6 +75,10 @@ export const useTokenService = () => {
           return false
         }
 
+        if (isAppError(error, AppEventCode.VERIFY_NOT_COMPLETE)) {
+          return false
+        }
+
         if (isAppError(error, AppEventCode.ALREADY_VERIFIED)) {
           return true
         }

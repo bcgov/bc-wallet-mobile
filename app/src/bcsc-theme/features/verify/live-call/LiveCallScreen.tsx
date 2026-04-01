@@ -46,9 +46,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const tokenService = useTokenService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { liveCallHavingTroubleAlert } = useAlerts(navigation)
+  const { liveCallHavingTroubleAlert, unknownErrorModal } = useAlerts(navigation)
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
-  const { unknownErrorModal } = useAlerts(navigation)
 
   /**
    * Handles leaving the call by navigating to the appropriate screen based on the verification status.

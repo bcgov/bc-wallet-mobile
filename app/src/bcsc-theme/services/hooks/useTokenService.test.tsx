@@ -145,6 +145,23 @@ describe('useTokenService', () => {
       expect(status).toBe(false)
     })
 
+    it('should return false when verification is not complete', async () => {
+      const mockError = mockAppError(AppEventCode.VERIFY_NOT_COMPLETE)
+      const tokenApi = {
+        checkDeviceCodeStatus: jest.fn().mockRejectedValue(mockError),
+      } as any
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      const status = await result.current.checkVerificationStatus('device-code', 'confirmation-code')
+
+      expect(tokenApi.checkDeviceCodeStatus).toHaveBeenCalledWith('device-code', 'confirmation-code')
+      expect(status).toBe(false)
+    })
+
     it('should return true when already verified', async () => {
       const mockError = mockAppError(AppEventCode.ALREADY_VERIFIED)
       const tokenApi = {

@@ -392,7 +392,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.AUTHORIZATION_PENDING,
     severity: ErrorSeverity.INFO,
     category: ErrorCategory.VERIFICATION,
-    message: 'Verification request is still pending - agent has yet to verify request',
+    message: 'Verification request is still pending — agent has yet to verify request',
   },
 
   // ============================================
