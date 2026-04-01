@@ -18,9 +18,23 @@ config.maxInstances = 2
 
 config.services = ['sauce']
 
+/** Shared Sauce RDC session options (biometrics, image injection, build metadata). */
+const sauceRdcOptions = {
+  appiumVersion: 'latest',
+  build: process.env.BUILD_NAME || `local-${Date.now()}`,
+  name: process.env.TEST_NAME || 'E2E Tests',
+  phoneOnly: true,
+  allowTouchIdEnroll: true,
+  resigningEnabled: true,
+  /** Sauce RDC; not on WebdriverIO's SauceLabsCapabilities type yet */
+  biometricsInterception: true,
+  imageInjection: true,
+  crashReporting: true,
+}
+
 config.afterTest = async function (test, _context, { passed }) {
   // SauceLabs test status annotation
   await browser.execute(`sauce:job-result=${passed ? 'passed' : 'failed'}`)
 }
 
-export { config }
+export { config, sauceRdcOptions }
