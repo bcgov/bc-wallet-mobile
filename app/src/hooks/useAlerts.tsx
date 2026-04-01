@@ -1,10 +1,9 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AppError, ErrorRegistry } from '@/errors'
-import { getRegistryAppError } from '@/errors/errorHandler'
+import { AppError } from '@/errors'
+import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -48,10 +47,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   const _createBasicErrorModal = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
       return (error?: AppError | unknown) => {
-        // If an error is provided and it's an AppError, use it.
-        // Otherwise, attempt to get a registry app error based on the event code and inject the cause
-        const appError = error instanceof AppError ? error : getRegistryAppError(event, error)
-        emitErrorModal(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), appError)
+        emitErrorModal(
+          t(`Alerts.${alertKey}.Title`, params),
+          t(`Alerts.${alertKey}.Description`, params),
+          ensureAppError(error, event)
+        )
       }
     },
     [emitErrorModal, t]
@@ -75,17 +75,15 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   )
 
   // _createProblemWithAccountAlert generates alerts specific to account-related issues that require user action to resolve (e.g., removing the account).
-  const _createProblemWithAccountAlert = useCallback(
+  const _createProblemWithAccountErrorModal = useCallback(
     (event: AppEventCode, errorCode: string) => {
-      return () => {
-        emitAlert(t(`Alerts.ProblemWithAccount.Title`), t(`Alerts.ProblemWithAccount.Description`, { errorCode }), {
-          event,
-          actions: [
-            {
-              text: t('Global.Close'),
-              style: 'cancel',
-            },
-            {
+      return (error?: AppError | unknown) => {
+        emitErrorModal(
+          t(`Alerts.ProblemWithAccount.Title`),
+          t(`Alerts.ProblemWithAccount.Description`, { errorCode }),
+          ensureAppError(error, event),
+          {
+            action: {
               text: t('Alerts.ProblemWithAccount.Action1'),
               style: 'destructive',
               onPress: () => {
@@ -100,20 +98,25 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
                     return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
                 }
 
-                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', { stack })
+                logger.warn('[ProblemWithAccountAlert] triggered but no matching stack found for navigation', {
+                  stack,
+                })
               },
             },
-          ],
-        })
+          }
+        )
       }
     },
-    [emitAlert, logger, navigation, stack, t]
+    [emitErrorModal, logger, navigation, stack, t]
   )
 
   const unknownErrorModal = useCallback(
     (error?: AppError | unknown) => {
-      const appError = error instanceof AppError ? error : toAppError(error, ErrorRegistry.UNKNOWN_ERROR)
-      emitErrorModal(t('Error.Problem'), t('Error.ProblemDescription'), appError)
+      emitErrorModal(
+        t('Error.Problem'),
+        t('Error.ProblemDescription'),
+        ensureAppError(error, AppEventCode.UNKNOWN_APP_ERROR)
+      )
     },
     [emitErrorModal, t]
   )
@@ -140,28 +143,33 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   }, [emitAlert, logger, t])
 
   // Used when the app encounters a fatal error or invalid state where the only recovery option is to reset the app.
-  const factoryResetAlert = useCallback(() => {
-    emitAlert(t('Alerts.FactoryReset.Title'), t('Alerts.FactoryReset.Description'), {
-      event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
-      actions: [
+  const factoryResetErrorModal = useCallback(
+    (error?: AppError | unknown) => {
+      emitErrorModal(
+        t('Alerts.FactoryReset.Title'),
+        t('Alerts.FactoryReset.Description'),
+        ensureAppError(error, AppEventCode.FATAL_UNRECOVERABLE_ERROR),
         {
-          text: t('Alerts.FactoryReset.Action1'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await factoryReset()
+          action: {
+            text: t('Alerts.FactoryReset.Action1'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const result = await factoryReset()
 
-              if (!result.success) {
-                throw result.error
+                if (!result.success) {
+                  throw result.error
+                }
+              } catch (error) {
+                logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
               }
-            } catch (error) {
-              logger.error('[FactoryResetAlert] Error factory resetting app', error as Error)
-            }
+            },
           },
-        },
-      ],
-    })
-  }, [emitAlert, logger, t, factoryReset])
+        }
+      )
+    },
+    [emitErrorModal, t, factoryReset, logger]
+  )
 
   const setupExpiredAlert = useCallback(() => {
     emitAlert(t('Alerts.SetupExpired.Title'), t('Alerts.SetupExpired.Description'), {
@@ -184,27 +192,30 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   // IAS error 202, 203, 204 — OK closes alert and returns to Start Setup
   const _createProblemWithServiceReturnToSetupAlert = useCallback(
     (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-      return () => {
-        emitAlert(t(`Alerts.${alertKey}.Title`, params), t(`Alerts.${alertKey}.Description`, params), {
-          event,
-          actions: [
-            {
-              text: t('Global.OK'),
-              onPress: () => {
-                // FIXME: This won't reset the state of the application. We would need a partial `factory reset` to happen here instead
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: BCSCScreens.SetupSteps }],
-                  })
-                )
-              },
-            },
-          ],
-        })
+      return (error?: AppError | unknown) => {
+        emitErrorModal(
+          t(`Alerts.${alertKey}.Title`, params),
+          t(`Alerts.${alertKey}.Description`, params),
+          ensureAppError(error, event)
+          // FIXME: This won't reset the state of the application. Will need to use `useVerificationReset` hook.
+          // Additionally, will need to update `useVerificationHook` to remove the `useAlerts` dependency to prevent circular dep issue.
+          // {
+          //   action: {
+          //     text: t('Global.OK'),
+          //     onPress: () => {
+          //       navigation.dispatch(
+          //         CommonActions.reset({
+          //           index: 0,
+          //           routes: [{ name: BCSCScreens.SetupSteps }],
+          //         })
+          //       )
+          //     },
+          //   },
+          // }
+        )
       }
     },
-    [emitAlert, navigation, t]
+    [emitErrorModal, t]
   )
 
   const liveCallFileUploadAlert = useCallback(() => {
@@ -307,10 +318,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      factoryResetAlert,
       forgetPairingsAlert: _createBasicAlert(AppEventCode.FORGET_ALL_PAIRINGS, 'ForgetPairings'), // Informative success alert
-      // ERROR MODALS - FIXME: Not all of these have been fully converted to error modals
+
+      // ERROR MODALS
       unknownErrorModal,
+      factoryResetAlert: factoryResetErrorModal,
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),
@@ -344,11 +356,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '119' }),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
-      loginRejected401Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_401, '401'),
-      loginRejected403Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_403, '403'),
-      loginRejected400Alert: _createProblemWithAccountAlert(AppEventCode.LOGIN_REJECTED_400, '400-1'),
-      noTokensReturnedAlert: _createProblemWithAccountAlert(AppEventCode.NO_TOKENS_RETURNED, '214'),
-      invalidTokenAlert: _createProblemWithAccountAlert(AppEventCode.INVALID_TOKEN, '215'),
+      loginRejected401Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_401, '401'),
+      loginRejected403Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_403, '403'),
+      loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
+      noTokensReturnedAlert: _createProblemWithAccountErrorModal(AppEventCode.NO_TOKENS_RETURNED, '214'),
+      invalidTokenAlert: _createProblemWithAccountErrorModal(AppEventCode.INVALID_TOKEN, '215'),
       serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
       dynamicRegistrationErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError'),
       termsOfUseErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
@@ -375,11 +387,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       dataUseWarningAlert,
       liveCallHavingTroubleAlert,
       cancelVerificationRequestAlert,
-      factoryResetAlert,
       _createBasicAlert,
       unknownErrorModal,
+      factoryResetErrorModal,
       _createBasicErrorModal,
-      _createProblemWithAccountAlert,
+      _createProblemWithAccountErrorModal,
       _createProblemWithServiceReturnToSetupAlert,
     ]
   )

@@ -158,7 +158,7 @@ describe('ErrorBoundaryWrapper', () => {
       expect(getByTestId('com.aries.bifold:id/HeaderText')).toBeTruthy()
 
       shouldThrow = false
-      fireEvent.press(getByTestId('com.aries.bifold:id/Okay'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CloseButton'))
 
       expect(queryByTestId('com.aries.bifold:id/HeaderText')).toBeNull()
       expect(getByText('Child content')).toBeTruthy()

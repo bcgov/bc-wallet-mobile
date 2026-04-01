@@ -107,11 +107,11 @@ describe('BCSCErrorModal', () => {
       expect(queryByTestId('com.aries.bifold:id/HeaderText')).not.toBeNull()
     })
 
-    it('should call onDismiss when Okay button is pressed', () => {
+    it('should call onDismiss when Close button is pressed', () => {
       const onDismiss = jest.fn()
       const { getByTestId } = renderModal({ error: validPayload, onDismiss })
 
-      fireEvent.press(getByTestId('com.aries.bifold:id/Okay'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CloseButton'))
 
       expect(onDismiss).toHaveBeenCalledTimes(1)
     })
