@@ -3,11 +3,16 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
 import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
-import { Modal, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Modal, Pressable, StyleSheet } from 'react-native'
 import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
+
+export interface ErrorModalAction {
+  text: string
+  onPress: () => void
+  style?: 'default' | 'destructive'
+}
 
 export interface ErrorModalPayload {
   title: string
@@ -35,12 +40,15 @@ const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette
   secondaryButtonBackground: palette.grayscale.white,
   secondaryButtonBorder: palette.grayscale.darkGrey,
   secondaryButtonText: palette.grayscale.darkGrey,
+  destructiveButton: palette.semantic.error,
+  destructiveButtonText: palette.grayscale.white,
 })
 
 export interface BCSCErrorModalProps {
   error: ErrorModalPayload | null
   errorKey: number
   onDismiss: () => void
+  action?: ErrorModalAction
   enableReport?: boolean
 }
 
@@ -51,7 +59,13 @@ export interface BCSCErrorModalProps {
  * Rendered by ErrorAlertProvider and driven by its state — no event
  * emitters or listeners involved.
  */
-export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ error, errorKey, onDismiss, enableReport = true }) => {
+export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
+  error,
+  errorKey,
+  onDismiss,
+  action,
+  enableReport = true,
+}) => {
   const { ColorPalette } = useTheme()
 
   /**
@@ -95,19 +109,24 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({ error, errorKey,
 
   return (
     <Modal visible={Boolean(error)} transparent animationType="fade" onRequestClose={onDismiss}>
-      <SafeAreaView style={overlayStyle.overlay}>
-        <ErrorInfoCard
-          key={errorKey}
-          title={error.title}
-          description={error.description}
-          message={error.message}
-          code={error.code}
-          onDismiss={onDismiss}
-          onReport={handleReport}
-          enableReport={enableReport}
-          colors={cardColors}
-        />
-      </SafeAreaView>
+      {/* Allow presses outside of the modal to dismiss it */}
+      <Pressable onPress={onDismiss} style={overlayStyle.overlay} accessible={false} importantForAccessibility="no">
+        {/* Prevent presses inside the modal from propagating to the overlay */}
+        <Pressable onPress={(e) => e.stopPropagation()} accessible={false} importantForAccessibility="no">
+          <ErrorInfoCard
+            key={errorKey}
+            title={error.title}
+            description={error.description}
+            message={error.message}
+            code={error.code}
+            onDismiss={onDismiss}
+            onReport={handleReport}
+            action={action}
+            enableReport={enableReport}
+            colors={cardColors}
+          />
+        </Pressable>
+      </Pressable>
     </Modal>
   )
 }

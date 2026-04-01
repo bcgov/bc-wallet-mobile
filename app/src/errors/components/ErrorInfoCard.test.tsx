@@ -41,10 +41,10 @@ describe('ErrorInfoCard', () => {
       expect(getByText('Settings.Version 1.0.0 (42)')).toBeTruthy()
     })
 
-    it('should always show the Okay button', () => {
+    it('should always show the close button', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
 
-      expect(getByTestId('com.aries.bifold:id/Okay')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/CloseButton')).toBeTruthy()
     })
   })
 
@@ -107,10 +107,10 @@ describe('ErrorInfoCard', () => {
   })
 
   describe('dismiss button', () => {
-    it('should call onDismiss when Okay is pressed', () => {
+    it('should call onDismiss when Close is pressed', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
 
-      fireEvent.press(getByTestId('com.aries.bifold:id/Okay'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CloseButton'))
 
       expect(mockOnDismiss).toHaveBeenCalledTimes(1)
     })
@@ -162,6 +162,62 @@ describe('ErrorInfoCard', () => {
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
       expect(getByText('Error.Reported')).toBeTruthy()
+    })
+  })
+
+  describe('action button', () => {
+    it('should call onDismiss and action.onPress when action button is pressed', () => {
+      const mockActionOnPress = jest.fn()
+      const action = { text: 'Reset', onPress: mockActionOnPress }
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} action={action} />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ActionButton'))
+
+      expect(mockOnDismiss).toHaveBeenCalledTimes(1)
+      expect(mockActionOnPress).toHaveBeenCalledTimes(1)
+    })
+
+    it('should call onDismiss before action.onPress', () => {
+      const callOrder: string[] = []
+      const mockDismiss = jest.fn(() => callOrder.push('dismiss'))
+      const mockAction = jest.fn(() => callOrder.push('action'))
+      const action = { text: 'Reset', onPress: mockAction }
+
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} onDismiss={mockDismiss} action={action} />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ActionButton'))
+
+      expect(callOrder).toEqual(['dismiss', 'action'])
+    })
+
+    it('should apply destructive style when action.style is destructive', () => {
+      const action = { text: 'Delete', onPress: jest.fn(), style: 'destructive' as const }
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} action={action} />)
+
+      const button = getByTestId('com.aries.bifold:id/ActionButton')
+      const buttonStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style
+
+      expect(buttonStyle.backgroundColor).toBe(fallbackColors.destructiveButton)
+    })
+
+    it('should apply secondary style when action.style is not destructive', () => {
+      const action = { text: 'OK', onPress: jest.fn() }
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} action={action} />)
+
+      const button = getByTestId('com.aries.bifold:id/ActionButton')
+      const buttonStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style
+
+      expect(buttonStyle.backgroundColor).toBe(fallbackColors.secondaryButtonBackground)
+    })
+
+    it('should not render action button when action is not provided', () => {
+      const { queryByTestId } = render(<ErrorInfoCard {...defaultProps} />)
+
+      expect(queryByTestId('com.aries.bifold:id/ActionButton')).toBeNull()
     })
   })
 
