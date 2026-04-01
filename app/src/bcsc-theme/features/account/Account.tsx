@@ -176,6 +176,7 @@ const Account: React.FC = () => {
             onPress={handleAllAccountDetailsPress}
             title={t('BCSC.Account.AccountDetails')}
             accessibilityLabel={t('BCSC.Account.AccountDetailsAccessibilityLabel')}
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
             description={t('BCSC.Account.AccountDetailsDescription')}
             testID={testIdWithKey('AllAccountDetails')}
           />

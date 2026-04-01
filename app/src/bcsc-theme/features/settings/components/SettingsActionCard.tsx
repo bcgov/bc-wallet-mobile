@@ -11,6 +11,7 @@ interface SettingsActionCardProps {
   startAdornment?: ReactNode
   endAdornmentText?: string
   testID?: string
+  accessibilityHint?: string
 }
 
 /**
@@ -46,6 +47,7 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       onPress={props.onPress}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel(props.title)}
+      accessibilityHint={props.accessibilityHint}
       testID={props.testID ?? testIdWithKey(`SettingsActionCard-${props.title}`)}
     >
       <View style={styles.textContainer}>

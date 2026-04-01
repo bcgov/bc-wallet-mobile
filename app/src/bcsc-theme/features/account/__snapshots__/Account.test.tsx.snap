@@ -446,6 +446,7 @@ exports[`Account renders full name when both given_name and family_name are pres
             </Text>
           </View>
           <View
+            accessibilityHint="Global.A11y.OpensInBrowser"
             accessibilityLabel="BCSC.Account.AccountDetailsAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
@@ -1039,6 +1040,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
             </Text>
           </View>
           <View
+            accessibilityHint="Global.A11y.OpensInBrowser"
             accessibilityLabel="BCSC.Account.AccountDetailsAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
@@ -1632,6 +1634,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
             </Text>
           </View>
           <View
+            accessibilityHint="Global.A11y.OpensInBrowser"
             accessibilityLabel="BCSC.Account.AccountDetailsAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
@@ -2225,6 +2228,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
             </Text>
           </View>
           <View
+            accessibilityHint="Global.A11y.OpensInBrowser"
             accessibilityLabel="BCSC.Account.AccountDetailsAccessibilityLabel"
             accessibilityRole="button"
             accessibilityState={
