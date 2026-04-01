@@ -15,6 +15,9 @@
     "test:ios:sauce": "wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
+  "resolutions": {
+    "form-data": "^4.0.4"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "~7.18.0",
     "@typescript-eslint/parser": "~7.18.0",
