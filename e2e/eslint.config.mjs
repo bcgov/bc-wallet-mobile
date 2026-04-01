@@ -1,12 +1,21 @@
-import pluginJs from '@eslint/js'
+import tsPlugin from '@typescript-eslint/eslint-plugin'
+import tsParser from '@typescript-eslint/parser'
 import wdioPlugin from 'eslint-plugin-wdio'
-import tseslint from 'typescript-eslint'
 
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
-  { languageOptions: { sourceType: 'module' } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
+  {
+    languageOptions: {
+      parser: tsParser,
+      sourceType: 'module',
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+    },
+  },
   {
     files: ['**/*.{js,mjs,cjs,ts}'],
     plugins: {
