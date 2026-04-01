@@ -13,7 +13,7 @@ import {
 import { upperFirst } from 'lodash'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native'
 import {
   AccountSecurityMethod,
   BiometricType,
@@ -69,6 +69,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const { startLoading } = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  const [isLoading, setIsLoading] = useState(true)
   const [isDeviceAuthAvailable, setIsDeviceAuthAvailable] = useState(false)
   const [deviceAuthMethodName, setDeviceAuthMethodName] = useState('')
 
@@ -105,6 +106,8 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking device auth availability: ${errMessage}`)
         setIsDeviceAuthAvailable(false)
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -185,6 +188,14 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
       />
     </>
   )
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
+      </View>
+    )
+  }
 
   // When device auth is available, show both options
   if (isDeviceAuthAvailable) {
