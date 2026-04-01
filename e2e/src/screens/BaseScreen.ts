@@ -1,5 +1,16 @@
 import { Timeouts } from '../constants.js'
+<<<<<<< HEAD
 import { swipeDownBy, swipeUpBy } from '../helpers/gestures.js'
+=======
+import {
+  swipeDownBy,
+  swipeDown as swipeDownGesture,
+  swipeLeft as swipeLeftGesture,
+  swipeRight as swipeRightGesture,
+  swipeUpBy,
+  swipeUp as swipeUpGesture,
+} from '../helpers/gestures.js'
+>>>>>>> origin/main
 import { isSauceLabs } from '../helpers/sauce.js'
 
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
@@ -179,6 +190,28 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * Full-screen swipe gestures (platform-specific implementation in `gestures` helper).
+   */
+  public async swipeUp(durationMs = Timeouts.swipeDuration) {
+    await swipeUpGesture(durationMs)
+  }
+
+  public async swipeDown(durationMs = Timeouts.swipeDuration) {
+    await swipeDownGesture(durationMs)
+  }
+
+  public async swipeLeft(durationMs = Timeouts.swipeDuration) {
+    await swipeLeftGesture(durationMs)
+  }
+
+  public async swipeRight(durationMs = Timeouts.swipeDuration) {
+    await swipeRightGesture(durationMs)
+  }
+
+  /**
+>>>>>>> origin/main
    * Enter text into an input. Supports options for controlled/secure inputs.
    *
    * @param testId - testID of the input element
