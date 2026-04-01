@@ -357,6 +357,13 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
   })
 
+  /**
+   * Handles navigation to login by pairing code flow
+   * If successful, navigates to the pairing confirmation screen
+   * If unsuccessful, displays an error alert
+   *
+   * @returns boolean returns true if navigation to pairing confirmation starts, false otherwise
+   */
   const onContinueWithPairingCode = useCallback(async (): Promise<boolean> => {
     const code = state.pairingCode
     if (!code) {
@@ -382,6 +389,13 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch])
 
+  /**
+   * Handles quick login and navigation
+   * If successful, opens the quick login URL and navigates to the home screen
+   * If unsuccessful, displays an error alert
+   *
+   * @returns boolean returns true if quick login URL was opened and navigation started, false otherwise
+   */
   const onContinueWithQuickLoginUrl = useCallback(async (): Promise<boolean> => {
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
@@ -415,6 +429,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     return false
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t])
 
+  /**
+   * Handles the continue action
+   * If a pairing code is present, it will attempt to login with that
+   * If no pairing code is present, it will attempt to navigate via a quick login URL
+   * If neither are available and error is displayed
+   *
+   * The boolean here is used by the onPress to determine weather to enable or leave the button disabled
+   * @returns boolean returns true if actions were successful and navigation starts, false otherwise
+   */
   const onContinue = useCallback(async (): Promise<boolean> => {
     if (state.pairingCode) {
       return onContinueWithPairingCode()
