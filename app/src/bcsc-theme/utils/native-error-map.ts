@@ -1,6 +1,8 @@
 import { AppError } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
 
+// TODO (MD): Move to `errorHandler.ts`
+
 /**
  * Wraps any caught error as an AppError using the provided definition.
  * The original error is preserved in the cause chain for debugging.

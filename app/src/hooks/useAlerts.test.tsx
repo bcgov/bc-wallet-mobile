@@ -339,47 +339,44 @@ describe('useAlerts', () => {
   describe('loginRejected401Alert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected401Alert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith(
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.ProblemWithAccount.Title',
         'Alerts.ProblemWithAccount.Description',
+        expect.objectContaining({ appEvent: AppEventCode.LOGIN_REJECTED_401 }),
         {
-          event: AppEventCode.LOGIN_REJECTED_401,
-          actions: [
-            {
-              text: 'Global.Close',
-              style: 'cancel',
-            },
-            {
-              text: 'Alerts.ProblemWithAccount.Action1',
-              style: 'destructive',
-              onPress: expect.any(Function),
-            },
-          ],
+          action: {
+            text: 'Alerts.ProblemWithAccount.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
         }
       )
     })
 
     it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected401Alert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
@@ -388,47 +385,44 @@ describe('useAlerts', () => {
   describe('loginRejected403Alert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected403Alert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith(
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.ProblemWithAccount.Title',
         'Alerts.ProblemWithAccount.Description',
+        expect.objectContaining({ appEvent: AppEventCode.LOGIN_REJECTED_403 }),
         {
-          event: AppEventCode.LOGIN_REJECTED_403,
-          actions: [
-            {
-              text: 'Global.Close',
-              style: 'cancel',
-            },
-            {
-              text: 'Alerts.ProblemWithAccount.Action1',
-              style: 'destructive',
-              onPress: expect.any(Function),
-            },
-          ],
+          action: {
+            text: 'Alerts.ProblemWithAccount.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
         }
       )
     })
 
     it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected403Alert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
@@ -437,47 +431,44 @@ describe('useAlerts', () => {
   describe('loginRejected400Alert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected400Alert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith(
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.ProblemWithAccount.Title',
         'Alerts.ProblemWithAccount.Description',
+        expect.objectContaining({ appEvent: AppEventCode.LOGIN_REJECTED_400 }),
         {
-          event: AppEventCode.LOGIN_REJECTED_400,
-          actions: [
-            {
-              text: 'Global.Close',
-              style: 'cancel',
-            },
-            {
-              text: 'Alerts.ProblemWithAccount.Action1',
-              style: 'destructive',
-              onPress: expect.any(Function),
-            },
-          ],
+          action: {
+            text: 'Alerts.ProblemWithAccount.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
         }
       )
     })
 
     it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.loginRejected400Alert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
@@ -1139,47 +1130,44 @@ describe('useAlerts', () => {
   describe('noTokensReturnedAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.noTokensReturnedAlert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith(
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.ProblemWithAccount.Title',
         'Alerts.ProblemWithAccount.Description',
+        expect.objectContaining({ appEvent: AppEventCode.NO_TOKENS_RETURNED }),
         {
-          event: AppEventCode.NO_TOKENS_RETURNED,
-          actions: [
-            {
-              text: 'Global.Close',
-              style: 'cancel',
-            },
-            {
-              text: 'Alerts.ProblemWithAccount.Action1',
-              style: 'destructive',
-              onPress: expect.any(Function),
-            },
-          ],
+          action: {
+            text: 'Alerts.ProblemWithAccount.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
         }
       )
     })
 
     it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.noTokensReturnedAlert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
@@ -1188,47 +1176,44 @@ describe('useAlerts', () => {
   describe('invalidTokenAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.invalidTokenAlert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith(
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'Alerts.ProblemWithAccount.Title',
         'Alerts.ProblemWithAccount.Description',
+        expect.objectContaining({ appEvent: AppEventCode.INVALID_TOKEN }),
         {
-          event: AppEventCode.INVALID_TOKEN,
-          actions: [
-            {
-              text: 'Global.Close',
-              style: 'cancel',
-            },
-            {
-              text: 'Alerts.ProblemWithAccount.Action1',
-              style: 'destructive',
-              onPress: expect.any(Function),
-            },
-          ],
+          action: {
+            text: 'Alerts.ProblemWithAccount.Action1',
+            style: 'destructive',
+            onPress: expect.any(Function),
+          },
         }
       )
     })
 
     it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.invalidTokenAlert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.ProblemWithAccount.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
     })
@@ -1300,41 +1285,46 @@ describe('useAlerts', () => {
   describe('factoryResetAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.factoryResetAlert()
 
-      expect(mockEmitAlert).toHaveBeenCalledWith('Alerts.FactoryReset.Title', 'Alerts.FactoryReset.Description', {
-        event: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
-        actions: [
-          {
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.FactoryReset.Title',
+        'Alerts.FactoryReset.Description',
+        expect.objectContaining({ appEvent: AppEventCode.FATAL_UNRECOVERABLE_ERROR }),
+        {
+          action: {
             text: 'Alerts.FactoryReset.Action1',
             style: 'destructive',
             onPress: expect.any(Function),
           },
-        ],
-      })
+        }
+      )
     })
 
     it('onPress should factory reset the app', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
+      const mockEmitErrorModal = jest.fn()
       const mockFactoryReset = jest.fn()
-      jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
       jest.spyOn(useFactoryResetModule, 'useFactoryReset').mockReturnValue(mockFactoryReset as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.factoryResetAlert()
 
-      const alertOptions = mockEmitAlert.mock.calls[0][2]
-      const action = alertOptions.actions.find((a: any) => a.text === 'Alerts.FactoryReset.Action1')
-      expect(action).toBeDefined()
+      const options = mockEmitErrorModal.mock.calls[0][3]
+      expect(options.action).toBeDefined()
 
-      action.onPress()
+      options.action.onPress()
 
       expect(mockFactoryReset).toHaveBeenCalled()
     })
@@ -1365,49 +1355,19 @@ describe('useAlerts', () => {
     describe('dynamicRegistrationErrorAlert', () => {
       it('should show an alert with the correct title and message', () => {
         const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+        const mockEmitErrorModal = jest.fn()
+        jest
+          .spyOn(ErrorAlertContext, 'useErrorAlert')
+          .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
         const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
         result.current.dynamicRegistrationErrorAlert()
 
-        expect(mockEmitAlert).toHaveBeenCalledWith(
+        expect(mockEmitErrorModal).toHaveBeenCalledWith(
           'Alerts.DynamicRegistrationError.Title',
           'Alerts.DynamicRegistrationError.Description',
-          {
-            event: AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION,
-            actions: [
-              {
-                text: 'Global.OK',
-                onPress: expect.any(Function),
-              },
-            ],
-          }
-        )
-      })
-
-      it('should reset navigation to SetupSteps when OK is pressed', () => {
-        const mockDispatch = jest.fn()
-        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.dynamicRegistrationErrorAlert()
-
-        const alertOptions = mockEmitAlert.mock.calls[0][2]
-        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
-        expect(action).toBeDefined()
-
-        action.onPress()
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
+          expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION })
         )
       })
     })
@@ -1415,49 +1375,19 @@ describe('useAlerts', () => {
     describe('termsOfUseErrorAlert', () => {
       it('should show an alert with the correct title and message', () => {
         const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+        const mockEmitErrorModal = jest.fn()
+        jest
+          .spyOn(ErrorAlertContext, 'useErrorAlert')
+          .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
         const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
         result.current.termsOfUseErrorAlert()
 
-        expect(mockEmitAlert).toHaveBeenCalledWith(
+        expect(mockEmitErrorModal).toHaveBeenCalledWith(
           'Alerts.ProblemWithService.Title',
           'Alerts.ProblemWithService.Description',
-          {
-            event: AppEventCode.ADD_CARD_TERMS_OF_USE,
-            actions: [
-              {
-                text: 'Global.OK',
-                onPress: expect.any(Function),
-              },
-            ],
-          }
-        )
-      })
-
-      it('should reset navigation to SetupSteps when OK is pressed', () => {
-        const mockDispatch = jest.fn()
-        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.termsOfUseErrorAlert()
-
-        const alertOptions = mockEmitAlert.mock.calls[0][2]
-        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
-        expect(action).toBeDefined()
-
-        action.onPress()
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
+          expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_TERMS_OF_USE })
         )
       })
     })
@@ -1465,49 +1395,19 @@ describe('useAlerts', () => {
     describe('incorrectOsAlert', () => {
       it('should show an alert with the correct title and message', () => {
         const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
+        const mockEmitErrorModal = jest.fn()
+        jest
+          .spyOn(ErrorAlertContext, 'useErrorAlert')
+          .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
         const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
         result.current.incorrectOsAlert()
 
-        expect(mockEmitAlert).toHaveBeenCalledWith(
+        expect(mockEmitErrorModal).toHaveBeenCalledWith(
           'Alerts.ProblemWithService.Title',
           'Alerts.ProblemWithService.Description',
-          {
-            event: AppEventCode.ADD_CARD_INCORRECT_OS,
-            actions: [
-              {
-                text: 'Global.OK',
-                onPress: expect.any(Function),
-              },
-            ],
-          }
-        )
-      })
-
-      it('should reset navigation to SetupSteps when OK is pressed', () => {
-        const mockDispatch = jest.fn()
-        const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
-        const mockEmitAlert = jest.fn()
-        jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitAlert: mockEmitAlert } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.incorrectOsAlert()
-
-        const alertOptions = mockEmitAlert.mock.calls[0][2]
-        const action = alertOptions.actions.find((a: any) => a.text === 'Global.OK')
-        expect(action).toBeDefined()
-
-        action.onPress()
-
-        expect(mockDispatch).toHaveBeenCalledWith(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
+          expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_INCORRECT_OS })
         )
       })
     })

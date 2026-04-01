@@ -1,4 +1,4 @@
-import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
+import { FATAL_UNRECOVERABLE_ERROR_STATUS_CODE, UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
 import { AppEventCode } from '../events/appEventCode'
 
 /**
@@ -67,6 +67,7 @@ export interface ErrorDefinition {
  *
  * Special codes:
  *   9999: Reserved for unknown/unmapped errors
+ *   9998: Reserved for fatal unrecoverable errors
  */
 export const ErrorRegistry = {
   // ============================================
@@ -78,6 +79,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.UNKNOWN,
     message: 'An unknown error occurred',
+  },
+  FATAL_ERROR: {
+    statusCode: FATAL_UNRECOVERABLE_ERROR_STATUS_CODE, // 9998
+    appEvent: AppEventCode.FATAL_UNRECOVERABLE_ERROR,
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.UNKNOWN,
+    message: 'A fatal error occurred — app functionality may be compromised',
   },
 
   // ============================================
@@ -772,6 +780,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.GENERAL,
     message: 'No account found for the current user — state may be corrupted or missing',
+  },
+  VIDEO_SERVICE_HOURS_MALFORMED_TIME: {
+    statusCode: 2823,
+    appEvent: AppEventCode.VIDEO_SERVICE_HOURS_MALFORMED_TIME,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Service hours API returned a malformed time string — expected HH:MM format',
   },
 
   // ============================================

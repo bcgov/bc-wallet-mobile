@@ -16,7 +16,7 @@
  * import { useErrorAlert } from '@/contexts/ErrorAlertContext'
  *
  * const MyComponent = () => {
- *   const { emitErrorModal, emitAlert, dismiss } = useErrorAlert()
+ *   const { emitErrorModal, emitAlert } = useErrorAlert()
  *
  *   // Show error via ErrorModal
  *   emitErrorModal('Error Title', 'Something went wrong', appErrorInstance)

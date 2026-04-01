@@ -1,29 +1,14 @@
+import { PressableOpacity } from '@/components/PressableOpacity'
+import { hitSlop } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { ErrorModalAction } from './ErrorModal'
 
-export interface ErrorInfoCardColors {
-  cardBackground: string
-  cardBorder: string
-  shadow: string
-  icon: string
-  text: string
-  textSecondary: string
-  link: string
-  primaryButton: string
-  primaryButtonDisabled: string
-  primaryButtonText: string
-  primaryButtonTextDisabled: string
-  successIcon: string
-  secondaryButtonBackground: string
-  secondaryButtonBorder: string
-  secondaryButtonText: string
-}
-
-export const fallbackColors: ErrorInfoCardColors = {
+export const fallbackColors = {
   cardBackground: '#FFFFFF',
   cardBorder: '#D3D3D3',
   shadow: '#000000',
@@ -39,7 +24,11 @@ export const fallbackColors: ErrorInfoCardColors = {
   secondaryButtonBackground: '#FFFFFF',
   secondaryButtonBorder: '#313132',
   secondaryButtonText: '#313132',
+  destructiveButton: '#D8292F',
+  destructiveButtonText: '#FFFFFF',
 }
+
+export type ErrorInfoCardColors = typeof fallbackColors
 
 export interface ErrorInfoCardProps {
   title: string
@@ -50,6 +39,7 @@ export interface ErrorInfoCardProps {
   onReport?: () => void
   enableReport?: boolean
   colors?: ErrorInfoCardColors
+  action?: ErrorModalAction
 }
 
 export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
@@ -59,6 +49,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
   code,
   onDismiss,
   onReport,
+  action,
   enableReport = false,
   colors = fallbackColors,
 }) => {
@@ -85,6 +76,15 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               {title}
             </Text>
           </View>
+          <PressableOpacity
+            onPress={onDismiss}
+            hitSlop={hitSlop}
+            testID={testIdWithKey('CloseButton')}
+            accessibilityLabel={t('Global.Close')}
+            accessibilityRole="button"
+          >
+            <Icon name="close" size={24} color={colors.icon} />
+          </PressableOpacity>
         </View>
 
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
@@ -120,7 +120,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
                 accessibilityLabel={reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
                 accessibilityRole="button"
                 testID={testIdWithKey('ReportThisProblem')}
-                style={[styles.primaryButton, reported && styles.primaryButtonDisabled, styles.reportButtonWrapper]}
+                style={[styles.primaryButton, reported && styles.primaryButtonDisabled]}
                 onPress={handleReport}
                 disabled={reported}
                 activeOpacity={0.8}
@@ -136,16 +136,25 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-              accessibilityLabel={t('Global.Okay')}
-              accessibilityRole="button"
-              testID={testIdWithKey('Okay')}
-              style={styles.secondaryButton}
-              onPress={onDismiss}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.secondaryButtonText}>{t('Global.Okay')}</Text>
-            </TouchableOpacity>
+            {action && (
+              <TouchableOpacity
+                accessibilityLabel={action.text}
+                accessibilityRole="button"
+                testID={testIdWithKey('ActionButton')}
+                style={action.style === 'destructive' ? styles.destructiveButton : styles.secondaryButton}
+                onPress={() => {
+                  onDismiss()
+                  action.onPress()
+                }}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={action.style === 'destructive' ? styles.destructiveButtonText : styles.secondaryButtonText}
+                >
+                  {action.text}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <Text style={styles.footer} testID={testIdWithKey('VersionNumber')}>
@@ -226,9 +235,7 @@ const createCardStyles = (width: number, colors: ErrorInfoCardColors) =>
     buttons: {
       paddingTop: 16,
       paddingHorizontal: 4,
-    },
-    reportButtonWrapper: {
-      marginBottom: 12,
+      gap: 8,
     },
     primaryButton: {
       backgroundColor: colors.primaryButton,
@@ -273,6 +280,19 @@ const createCardStyles = (width: number, colors: ErrorInfoCardColors) =>
       fontSize: 16,
       fontWeight: '600',
       color: colors.secondaryButtonText,
+    },
+    destructiveButton: {
+      backgroundColor: colors.destructiveButton,
+      borderRadius: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    destructiveButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.destructiveButtonText,
     },
     footer: {
       marginTop: 16,
