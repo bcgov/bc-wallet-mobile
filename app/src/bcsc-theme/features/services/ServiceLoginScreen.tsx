@@ -137,6 +137,7 @@ const ServiceLoginUnavailableView = ({
           testID={testIdWithKey('GoToServiceClient')}
           accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
           accessibilityRole="link"
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
           hitSlop={hitSlop}
           onPress={async () => {
             if (!state.serviceClientUri) {
@@ -228,6 +229,7 @@ const ServiceLoginDefaultView = ({
               testID={testIdWithKey('ReadPrivacyPolicy')}
               accessibilityLabel={a11yLabel(t('BCSC.Services.PrivacyNotice'))}
               accessibilityRole="link"
+              accessibilityHint={t('Global.A11y.OpensInBrowser')}
               hitSlop={hitSlop}
               onPress={onOpenPrivacyPolicy}
             >

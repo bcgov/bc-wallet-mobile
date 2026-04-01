@@ -3,6 +3,7 @@ import importPlugin from 'eslint-plugin-import'
 import jestPlugin from 'eslint-plugin-jest'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
+import reactNativeA11y from 'eslint-plugin-react-native-a11y'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
@@ -38,9 +39,21 @@ export default [
         ...globals.node,
       },
     },
+    plugins: {
+      ...reactPlugin.configs.flat.recommended.plugins,
+      'react-native-a11y': reactNativeA11y,
+    },
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...reactPlugin.configs.flat.recommended.rules,
+      'react-native-a11y/has-accessibility-props': 'error',
+      'react-native-a11y/has-valid-accessibility-role': 'error',
+      'react-native-a11y/has-valid-accessibility-descriptors': 'error',
+      'react-native-a11y/has-valid-accessibility-actions': 'error',
+      'react-native-a11y/has-valid-accessibility-state': 'error',
+      'react-native-a11y/has-valid-accessibility-value': 'error',
+      'react-native-a11y/has-valid-important-for-accessibility': 'error',
+      'react-native-a11y/no-nested-touchables': 'error',
       'no-console': 'error',
       curly: ['error', 'all'],
       'react/react-in-jsx-scope': 'off',

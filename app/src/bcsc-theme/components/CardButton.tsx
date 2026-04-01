@@ -44,6 +44,12 @@ interface CardProps {
    * @type {string}
    */
   testID?: string
+  /**
+   * Accessibility hint for screen readers, describing what happens when the button is pressed
+   *
+   * @type {string}
+   */
+  accessibilityHint?: string
 }
 
 /**
@@ -93,6 +99,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       accessible={true}
       accessibilityLabel={a11yLabel(props.title)}
       accessibilityRole="button"
+      accessibilityHint={props.accessibilityHint}
       accessibilityState={{ disabled: props.disabled }}
       style={[styles.cardContainer, props.disabled && styles.cardContainerDisabled]}
       onPress={props.disabled ? undefined : props.onPress}

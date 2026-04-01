@@ -133,6 +133,7 @@ exports[`IntroCarouselScreen Rendering should render correctly 1`] = `
                 }
               >
                 <View
+                  accessibilityHint="Global.A11y.OpensInBrowser"
                   accessibilityLabel="BCSC.Home.WhereToUseTitle"
                   accessibilityRole="button"
                   accessibilityState={

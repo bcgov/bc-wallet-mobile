@@ -13,6 +13,9 @@ const translation = {
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
     "ContinueSetup": "Continue setup (FR)",
+    "A11y": {
+      "OpensInBrowser": "This opens in browser (FR)",
+    }
   },
   "BCID": {
     "GetDigitalID": "Obtenez votre Identité personnelle",

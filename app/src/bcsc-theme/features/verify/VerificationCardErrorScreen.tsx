@@ -37,6 +37,7 @@ const VerificationCardErrorScreen = () => {
       <Button
         title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
         accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+        accessibilityHint={t('Global.A11y.OpensInBrowser')}
         testID={testIdWithKey('GetBCSC')}
         buttonType={ButtonType.Primary}
         onPress={() => Linking.openURL(GET_BCSC_URL)}
