@@ -63,7 +63,7 @@ export const useTokenService = () => {
    *
    * @param deviceCode - The device code to check
    * @param confirmationCode - The confirmation code to check
-   * @return Promise resolving to true if verified, false if pending, or throws an error for other issues
+   * @returns Promise resolving to true if verified, false if pending, or throws an error for other issues
    */
   const checkVerificationStatus = useCallback(
     async (deviceCode: string, confirmationCode: string) => {
