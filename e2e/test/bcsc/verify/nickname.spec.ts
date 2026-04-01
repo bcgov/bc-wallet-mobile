@@ -20,6 +20,7 @@ describe('Nickname', () => {
       await Nickname.tap('AccountNicknamePressable')
       await Nickname.type('AccountNicknamePressable', testUser.username, { tapFirst: true })
     }
+    await Nickname.dismissKeyboard()
     await Nickname.tap('SaveAndContinue')
   })
 })

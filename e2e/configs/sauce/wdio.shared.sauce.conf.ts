@@ -27,9 +27,7 @@ const sauceRdcOptions = {
   allowTouchIdEnroll: true,
   resigningEnabled: true,
   /** Sauce RDC; not on WebdriverIO's SauceLabsCapabilities type yet */
-  biometricsInterception: true,
   imageInjection: true,
-  crashReporting: true,
 }
 
 config.afterTest = async function (test, _context, { passed }) {
