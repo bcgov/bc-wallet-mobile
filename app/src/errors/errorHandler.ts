@@ -8,6 +8,9 @@ import { ErrorDefinition, ErrorRegistry, ErrorRegistryAppEventMap, ErrorRegistry
 
 /**
  * Extract a meaningful message from an unknown error value
+ *
+ * @param error - The unknown error value to extract a message from
+ * @returns A string message extracted from the error, or a fallback message if extraction fails
  */
 export function extractErrorMessage(error: unknown): string {
   if (error == null) {
@@ -32,6 +35,9 @@ export function extractErrorMessage(error: unknown): string {
 
 /**
  * Get error definition by key (useful for custom error handling)
+ *
+ * @param errorKey - The key of the error definition to retrieve from the ErrorRegistry.
+ * @returns The ErrorDefinition associated with the provided errorKey.
  */
 export function getErrorDefinition(errorKey: ErrorRegistryKey): ErrorDefinition {
   return ErrorRegistry[errorKey]
@@ -57,6 +63,21 @@ export const getErrorDefinitionFromAppEventCode = (appEvent?: string): ErrorDefi
 export const getRegistryAppError = (event: AppEventCode, cause?: unknown): AppError => {
   const errorDefinition = getErrorDefinitionFromAppEventCode(event) ?? ErrorRegistry.UNKNOWN_ERROR
   return AppError.fromErrorDefinition(errorDefinition, { cause })
+}
+
+/**
+ * Ensures that an unknown error is returned as an instance of AppError, using a fallback app event code if the original error is not already an AppError.
+ *
+ * @param error - The unknown error to ensure as an AppError
+ * @param fallbackEvent - The app event code to use for the new AppError if the provided error is not already an AppError (default: AppEventCode.UNKNOWN_APP_ERROR)
+ * @returns An instance of AppError
+ */
+export const ensureAppError = (error: unknown, fallbackEvent = AppEventCode.UNKNOWN_APP_ERROR): AppError => {
+  if (error instanceof AppError) {
+    return error
+  }
+
+  return getRegistryAppError(fallbackEvent, error)
 }
 
 /**
