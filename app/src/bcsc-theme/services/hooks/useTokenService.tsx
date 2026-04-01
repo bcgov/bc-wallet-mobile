@@ -56,11 +56,45 @@ export const useTokenService = () => {
     [alerts, tokenApi]
   )
 
+  /**
+   * Checks the verification status of a device code and confirmation code.
+   *
+   * @see {@link tokenApi.checkDeviceCodeStatus} for the underlying API call and error handling logic.
+   *
+   * @param deviceCode - The device code to check
+   * @param confirmationCode - The confirmation code to check
+   * @returns Promise resolving to true if verified, false if pending, or throws an error for other issues
+   */
+  const checkVerificationStatus = useCallback(
+    async (deviceCode: string, confirmationCode: string) => {
+      try {
+        await tokenApi.checkDeviceCodeStatus(deviceCode, confirmationCode)
+        return true
+      } catch (error) {
+        if (isAppError(error, AppEventCode.AUTHORIZATION_PENDING)) {
+          return false
+        }
+
+        if (isAppError(error, AppEventCode.VERIFY_NOT_COMPLETE)) {
+          return false
+        }
+
+        if (isAppError(error, AppEventCode.ALREADY_VERIFIED)) {
+          return true
+        }
+
+        throw error
+      }
+    },
+    [tokenApi]
+  )
+
   return useMemo(
     () => ({
       ...tokenApi, // Spread the base token API to include all its methods
       getCachedIdTokenMetadata,
+      checkVerificationStatus,
     }),
-    [getCachedIdTokenMetadata, tokenApi]
+    [checkVerificationStatus, getCachedIdTokenMetadata, tokenApi]
   )
 }

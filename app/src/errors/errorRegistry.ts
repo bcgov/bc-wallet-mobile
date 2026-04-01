@@ -387,6 +387,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Verification request was already completed in a previous session',
   },
+  AUTHORIZATION_PENDING: {
+    statusCode: 2411,
+    appEvent: AppEventCode.AUTHORIZATION_PENDING,
+    severity: ErrorSeverity.INFO,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Verification request is still pending — agent has yet to verify request',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)
