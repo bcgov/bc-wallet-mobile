@@ -1,4 +1,5 @@
-import { CARD_SCAN_PADDING, SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../src/constants.js'
+import { SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../src/constants.js'
+import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { injectPhoto } from '../../../src/helpers/camera.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
@@ -50,10 +51,11 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   it('should navigate through the Serial Instructions screen and tap Scan Barcode', async () => {
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
     await SerialInstructions.tap('ScanBarcode')
+    await acceptSystemAlert()
   })
 
   it('should inject the card image, tap to focus the barcode region, and complete the scan', async function () {
-    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
+    await injectPhoto(cardScanImage)
     await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
     await tapAtWindowPercent(SCAN_SERIAL_TAP_FOCUS_WINDOW.x, SCAN_SERIAL_TAP_FOCUS_WINDOW.y)
     await driver.pause(400)

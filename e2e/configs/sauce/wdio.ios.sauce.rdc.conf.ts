@@ -14,7 +14,7 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
-    'appium:autoAcceptAlerts': true,
+    'appium:autoAcceptAlerts': false,
     'sauce:options': sauceRdcOptions,
   },
 ]

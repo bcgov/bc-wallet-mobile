@@ -1,48 +1,11 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
-import sharp from 'sharp'
-
 import { isSauceLabs } from './sauce.js'
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 const SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png']
-
-export interface ImagePadding {
-  top?: number
-  right?: number
-  bottom?: number
-  left?: number
-}
-
-/**
- * Add whitespace padding around an image so it aligns with a scanner target
- * area after Sauce Labs scales it to fill the camera frame.
- *
- * Padding values are in **pixels**. The background colour defaults to white
- * (`#FFFFFF`) to match the app's "place card on white background" guidance.
- *
- * @returns base64-encoded PNG of the padded image.
- */
-export async function padImage(
-  imagePath: string,
-  padding: ImagePadding,
-  background: sharp.Color = { r: 255, g: 255, b: 255, alpha: 1 }
-): Promise<string> {
-  const buf = await sharp(imagePath)
-    .extend({
-      top: padding.top ?? 0,
-      right: padding.right ?? 0,
-      bottom: padding.bottom ?? 0,
-      left: padding.left ?? 0,
-      background,
-    })
-    .png()
-    .toBuffer()
-
-  return buf.toString('base64')
-}
 
 /**
  * Resolve an image path relative to the `e2e/assets/` directory.
@@ -129,20 +92,10 @@ export async function injectQRCode(imagePathOrName: string): Promise<void> {
 /**
  * Inject a photo (ID card, selfie, evidence) into the device camera.
  *
- * When `padding` is provided the image is extended with whitespace before
- * injection. This repositions the subject within the camera frame so it
- * lines up with the app's scanning target area after Sauce Labs scales the
- * image to the device camera resolution.
- *
  * Convenience wrapper — resolves from `e2e/assets/` and delegates to
  * {@link injectCameraImage}.
  */
-export async function injectPhoto(imagePathOrName: string, padding?: ImagePadding): Promise<void> {
+export async function injectPhoto(imagePathOrName: string): Promise<void> {
   const resolved = resolveAssetPath(imagePathOrName)
-  if (padding) {
-    const base64 = await padImage(resolved, padding)
-    await injectCameraImage(base64)
-  } else {
-    await injectCameraImage(resolved)
-  }
+  await injectCameraImage(resolved)
 }
