@@ -198,5 +198,26 @@ describe('ServiceLogin', () => {
       fireEvent.press(continueButton)
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
     })
+
+    it('should ignore a second press while a call is in-flight', async () => {
+      let resolveLogin!: (value: { client_ref_id: string; client_name: string }) => void
+      const pendingLogin = new Promise<{ client_ref_id: string; client_name: string }>((resolve) => {
+        resolveLogin = resolve
+      })
+      const mockLoginByPairingCode = jest.fn().mockReturnValue(pendingLogin)
+
+      const tree = renderWithPairingCode(mockLoginByPairingCode, {
+        loginServerErrorAlert: jest.fn(),
+      })
+
+      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
+      fireEvent.press(continueButton)
+      fireEvent.press(continueButton) // second tap while in-flight
+
+      resolveLogin({ client_ref_id: 'test-client', client_name: 'Test Service' })
+
+      await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1))
+    })
+
   })
 })
