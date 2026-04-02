@@ -74,6 +74,7 @@ export enum HelpCentreUrl {
   AUDIO_VIDEO_TROUBLESHOOTING = 'https://id.gov.bc.ca/static/help/audio_video_tips.html?fromapp=1',
   FORGOT_PIN = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1#section-forgotpin',
   INFO_SHARED = 'https://id.gov.bc.ca/static/help/info_shared.html?fromapp=1',
+  COMPUTER_LOGIN = 'https://id.gov.bc.ca/static/help/login_fromcomputer.html?fromapp=1',
 }
 
 export const formStringLengths = {
