@@ -11,6 +11,8 @@ import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
+const IAS_UNSUPPORTED_OS_MESSAGE = 'Unsupported OS version'
+
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
   statusCode: number // HTTP status code for context
@@ -73,6 +75,7 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
     [AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, alerts?.dynamicRegistrationErrorAlert],
+    [AppEventCode.INVALID_CLIENT_METADATA, alerts?.invalidClientMetadataAlert],
     [AppEventCode.ADD_CARD_TERMS_OF_USE, alerts?.termsOfUseErrorAlert],
     [AppEventCode.ADD_CARD_INCORRECT_OS, alerts?.incorrectOsAlert],
     [AppEventCode.ADD_CARD_PROVIDER, alerts?.addCardNotAvailableAlert],
@@ -104,6 +107,12 @@ export const iasErrorPolicy: ErrorHandlingPolicy = {
 
     if (!alert) {
       context.logger.warn(`[IasErrorPolicy] No alert defined for app event: ${error.appEvent}`)
+      return
+    }
+
+    if (error.technicalMessage?.includes(IAS_UNSUPPORTED_OS_MESSAGE)) {
+      // Special case for unsupported OS
+      context.alerts.dynamicRegistrationErrorAlert(error)
       return
     }
 
