@@ -199,7 +199,7 @@ describe('ServiceLogin', () => {
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
     })
 
-    it('should ignore a second press within the debounce window', async () => {
+    it('should ignore a second press while a call is in-flight', async () => {
       let resolveLogin!: (value: { client_ref_id: string; client_name: string }) => void
       const pendingLogin = new Promise<{ client_ref_id: string; client_name: string }>((resolve) => {
         resolveLogin = resolve
@@ -212,43 +212,12 @@ describe('ServiceLogin', () => {
 
       const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
       fireEvent.press(continueButton)
-      fireEvent.press(continueButton) // second tap within debounce window
+      fireEvent.press(continueButton) // second tap while in-flight
 
       resolveLogin({ client_ref_id: 'test-client', client_name: 'Test Service' })
 
       await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1))
     })
 
-    it('should accept a press after the debounce window passes following a failure', async () => {
-      const mockLoginServerErrorAlert = jest.fn()
-      const mockLoginByPairingCode = jest.fn().mockRejectedValue(new Error('unexpected failure'))
-      const tree = renderWithPairingCode(mockLoginByPairingCode, {
-        loginServerErrorAlert: mockLoginServerErrorAlert,
-      })
-
-      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
-      fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
-
-      jest.advanceTimersByTime(1000)
-
-      fireEvent.press(continueButton)
-      await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(2))
-    })
-
-    it('should ignore a press within the debounce window after successful navigation', async () => {
-      const mockClient = { client_ref_id: 'test-client', client_name: 'Test Service' }
-      const mockLoginByPairingCode = jest.fn().mockResolvedValue(mockClient)
-      const tree = renderWithPairingCode(mockLoginByPairingCode, {
-        loginServerErrorAlert: jest.fn(),
-      })
-
-      const continueButton = tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue')
-      fireEvent.press(continueButton)
-      await waitFor(() => expect(mockNavigation.navigate).toHaveBeenCalled())
-
-      fireEvent.press(continueButton) // still within debounce window
-      await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1))
-    })
   })
 })
