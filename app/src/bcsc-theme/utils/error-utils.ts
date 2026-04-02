@@ -125,3 +125,7 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   // For all other cases, return a generic unknown server error
   return AppError.fromErrorDefinition(ErrorRegistry.UNKNOWN_SERVER_ERROR, { cause: error })
 }
+
+const testCoverage = () => {
+  return true
+}
