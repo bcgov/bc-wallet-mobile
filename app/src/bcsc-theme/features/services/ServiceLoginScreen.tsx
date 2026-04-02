@@ -18,7 +18,7 @@ import {
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import { useCallback, useRef } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -184,7 +184,7 @@ const ServiceLoginDefaultView = ({
   onOpenInfoShared,
   onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => {
-  const lastPressRef = useRef(0)
+  const [isDisabled, setIsDisabled] = useState(false)
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -250,14 +250,14 @@ const ServiceLoginDefaultView = ({
               accessibilityLabel={a11yLabel('Continue')}
               testID={testIdWithKey('ServiceLoginContinue')}
               buttonType={ButtonType.Primary}
+              disabled={isDisabled}
               onPress={async () => {
-                const now = Date.now()
-                // debounce added to give time for navigation before allowing another button press
-                if (now - lastPressRef.current < 1000) {
-                  return
+                setIsDisabled(true)
+                try {
+                  await onContinue()
+                } catch (error) {
+                  setIsDisabled(false)
                 }
-                lastPressRef.current = now
-                await onContinue()
               }}
             />
           </View>

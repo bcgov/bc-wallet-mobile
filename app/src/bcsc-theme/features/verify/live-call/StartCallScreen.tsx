@@ -10,6 +10,7 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
@@ -25,6 +26,7 @@ type StartCallScreenProps = {
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
+  const { ButtonLoading } = useAnimatedComponents()
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
@@ -109,7 +111,9 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       onPress={onPressStart}
       disabled={isWaitingForPermissions}
       testID={testIdWithKey('StartCall')}
-    />
+    >
+      {isWaitingForPermissions && <ButtonLoading />}
+    </Button>
   )
 
   return (

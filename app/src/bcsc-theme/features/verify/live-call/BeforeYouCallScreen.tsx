@@ -1,6 +1,14 @@
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useTheme,
+} from '@bifold/core'
 import NetInfo, { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -15,6 +23,7 @@ type BeforeYouCallScreenProps = {
 }
 
 const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) => {
+  const { ButtonLoading } = useAnimatedComponents()
   const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
@@ -95,7 +104,9 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
           title={t('Global.Continue')}
           onPress={onPressContinue}
           disabled={isWaitingForPermissions}
-        />
+        >
+          {isWaitingForPermissions && <ButtonLoading />}
+        </Button>
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('Assistance')}
