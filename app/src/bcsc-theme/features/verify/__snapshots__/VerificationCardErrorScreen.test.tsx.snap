@@ -85,6 +85,7 @@ exports[`VerificationCardErrorScreen renders CardExpired variant correctly 1`] =
     }
   >
     <View
+      accessibilityHint="Global.A11y.OpensInBrowser"
       accessibilityLabel="BCSC.VerificationCardError.CardExpired.ButtonText"
       accessibilityRole="button"
       accessibilityState={

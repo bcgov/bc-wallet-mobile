@@ -8,6 +8,7 @@ interface SectionButtonProps {
   title: string
   description?: string
   accessibilityLabel?: string
+  accessibilityHint?: string
   style?: ViewStyle
   onPress?: () => void
   testID?: string
@@ -18,6 +19,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({
   title,
   description,
   accessibilityLabel,
+  accessibilityHint,
   style,
   onPress,
   testID,
@@ -49,6 +51,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({
       disabled={disabled}
       accessibilityLabel={a11yLabel(accessibilityLabel ?? title)}
       accessibilityRole="button"
+      accessibilityHint={accessibilityHint}
       testID={testID ?? testIdWithKey(`SectionButton-${title.replaceAll(/\s+/g, '')}`)}
     >
       <ThemedText variant={'headingFour'} style={styles.title}>

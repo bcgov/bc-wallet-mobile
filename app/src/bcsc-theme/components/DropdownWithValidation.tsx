@@ -205,6 +205,7 @@ export const DropdownWithValidation = <T extends string | number>({
               style={styles.modalContent}
               onPress={(e) => e.stopPropagation()}
               testID={testIdWithKey(`${id}-modal-content`)}
+              accessible={false} // Prevent screen readers from focusing this pressable, the focus should be the flatlist component
             >
               <View style={styles.modalHeader}>
                 <View style={{ width: 32 }} />

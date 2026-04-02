@@ -294,21 +294,25 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             title={t('BCSC.Settings.Feedback')}
             onPress={onPressFeedback}
             testID={testIdWithKey('Feedback')}
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
           />
           <SettingsActionCard
             title={t('BCSC.Settings.Accessibility')}
             onPress={onPressAccessibility}
             testID={testIdWithKey('Accessibility')}
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
           />
           <SettingsActionCard
             title={t('BCSC.Settings.TermsOfUse')}
             onPress={onPressTermsOfUse}
             testID={testIdWithKey('TermsOfUse')}
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
           />
           <SettingsActionCard
             title={t('BCSC.Settings.Analytics')}
             onPress={onPressAnalytics}
             testID={testIdWithKey('Analytics')}
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
           />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard

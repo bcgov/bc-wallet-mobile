@@ -1,5 +1,4 @@
 import { injectPhoto } from '../../../src/helpers/camera.js'
-import { acceptCameraPermissionIfPresent } from '../../../src/helpers/notifications.js'
 import { isSauceLabs } from '../../../src/helpers/sauce.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
@@ -32,16 +31,14 @@ describe('Additional Identification', () => {
   it('should navigate through the ID Photo Information screen and take a photo', async () => {
     await IDPhotoInformation.waitFor('TakePhoto')
     await IDPhotoInformation.tap('TakePhoto')
-    await acceptCameraPermissionIfPresent()
   })
 
   it('should navigate through the Evidence Capture screen and take a photo', async () => {
     if (isSauceLabs()) {
-      await injectPhoto('/images/passport.jpg')
-    } else {
-      await EvidenceCapture.waitFor('TakePhoto')
-      await EvidenceCapture.tap('TakePhoto')
+      await injectPhoto('images/passport.jpg')
     }
+    await EvidenceCapture.waitFor('TakePhoto')
+    await EvidenceCapture.tap('TakePhoto')
   })
 
   it('should navigate through the Photo Review screen and tap Use Photo', async () => {

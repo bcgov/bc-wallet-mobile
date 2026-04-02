@@ -276,6 +276,7 @@ exports[`MainSettings renders correctly 1`] = `
                 </View>
               </View>
               <View
+                accessibilityHint="Global.A11y.OpensInBrowser"
                 accessibilityLabel="BCSC.Settings.Feedback"
                 accessibilityRole="button"
                 accessibilityState={
@@ -344,6 +345,7 @@ exports[`MainSettings renders correctly 1`] = `
                 </View>
               </View>
               <View
+                accessibilityHint="Global.A11y.OpensInBrowser"
                 accessibilityLabel="BCSC.Settings.Accessibility"
                 accessibilityRole="button"
                 accessibilityState={
@@ -412,6 +414,7 @@ exports[`MainSettings renders correctly 1`] = `
                 </View>
               </View>
               <View
+                accessibilityHint="Global.A11y.OpensInBrowser"
                 accessibilityLabel="BCSC.Settings.TermsOfUse"
                 accessibilityRole="button"
                 accessibilityState={
@@ -480,6 +483,7 @@ exports[`MainSettings renders correctly 1`] = `
                 </View>
               </View>
               <View
+                accessibilityHint="Global.A11y.OpensInBrowser"
                 accessibilityLabel="BCSC.Settings.Analytics"
                 accessibilityRole="button"
                 accessibilityState={

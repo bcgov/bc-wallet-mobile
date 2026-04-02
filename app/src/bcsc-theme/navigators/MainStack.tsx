@@ -166,7 +166,7 @@ const MainStack: React.FC = () => {
           component={ManualPairingCode}
           options={() => ({
             headerShown: true,
-            headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+            headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
           })}
         />
         <Stack.Screen

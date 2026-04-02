@@ -50,6 +50,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
             onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}
             accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
             accessibilityRole="link"
+            accessibilityHint={t('Global.A11y.OpensInBrowser')}
             testID={testIdWithKey('OpenAccountServices')}
           >
             <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />

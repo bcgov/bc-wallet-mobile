@@ -368,6 +368,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
             BCSC.AdditionalEvidence.LimitedAccess
           </Text>
           <View
+            accessibilityHint="Global.A11y.OpensInBrowser"
             accessibilityLabel="BCSC.AdditionalEvidence.OpenAccountServices"
             accessibilityRole="link"
             accessibilityState={
