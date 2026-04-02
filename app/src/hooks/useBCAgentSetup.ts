@@ -239,7 +239,7 @@ const useBCAgentSetup = () => {
   }, [])
 
   const recoverMediationIfExpired = useCallback(
-    async (agent: Agent, mediatorUrl: string) => {
+    async (agent: Agent, mediatorUrl: string, originalError: Error) => {
       logger.info('Resetting mediation state and creating a new connection...')
 
       try {
@@ -255,7 +255,7 @@ const useBCAgentSetup = () => {
       const oldMediationRecord = await agent.mediationRecipient.findDefaultMediator()
       if (!oldMediationRecord) {
         logger.warn('No mediation record found to delete')
-        return
+        throw originalError
       }
 
       const mediationConnectionRecord = await connectionRepository.getById(
@@ -264,7 +264,7 @@ const useBCAgentSetup = () => {
       )
       if (!mediationConnectionRecord) {
         logger.warn('No connection record found for mediation record')
-        return
+        throw originalError
       }
 
       let lastSeen = mediationConnectionRecord.getTag('lastSeen')?.toString()
@@ -297,16 +297,12 @@ const useBCAgentSetup = () => {
       // Delete all of the default mediation records.
       logger.info(`Deleting mediation record ${oldMediationRecord.id}...`)
       await mediationRepository.delete(agent.context, oldMediationRecord)
-      const oldMediatorConnectionRecord = await connectionRepository.getById(
-        agent.context,
-        oldMediationRecord.connectionId
-      )
-      logger.info(`Deleting mediator connection record ${oldMediatorConnectionRecord.id}...`)
-      await connectionRepository.delete(agent.context, oldMediatorConnectionRecord)
+      logger.info(`Deleting mediator connection record ${mediationConnectionRecord.id}...`)
+      await connectionRepository.delete(agent.context, mediationConnectionRecord)
       let oldOobRecord = undefined
-      if (oldMediatorConnectionRecord.outOfBandId) {
-        logger.info(`Deleting out-of-band record ${oldMediatorConnectionRecord.outOfBandId}...`)
-        oldOobRecord = await outOfBandRepository.getById(agent.context, oldMediatorConnectionRecord.outOfBandId)
+      if (mediationConnectionRecord.outOfBandId) {
+        logger.info(`Deleting out-of-band record ${mediationConnectionRecord.outOfBandId}...`)
+        oldOobRecord = await outOfBandRepository.getById(agent.context, mediationConnectionRecord.outOfBandId)
         await outOfBandRepository.delete(agent.context, oldOobRecord)
       }
 
@@ -348,7 +344,7 @@ const useBCAgentSetup = () => {
       } catch (error) {
         logger.error(`Error during mediation recovery. Attempting recovery of the deleted mediation records: ${error}`)
         await mediationRepository.save(agent.context, oldMediationRecord)
-        await connectionRepository.save(agent.context, oldMediatorConnectionRecord)
+        await connectionRepository.save(agent.context, mediationConnectionRecord)
         if (oldOobRecord && !newConnectionEstablished) {
           await outOfBandRepository.save(agent.context, oldOobRecord)
         }
@@ -393,7 +389,7 @@ const useBCAgentSetup = () => {
         await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
       } catch (error) {
         logger.error(`Error initiating message pickup: ${error}`)
-        await recoverMediationIfExpired(newAgent, mediatorUrl)
+        await recoverMediationIfExpired(newAgent, mediatorUrl, error as Error)
       }
 
       logger.info('Warming up cache...')
