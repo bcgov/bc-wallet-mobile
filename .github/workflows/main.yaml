@@ -182,8 +182,7 @@ jobs:
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: false
-        # if: github.ref_name == 'fix/v1.0.27'
+        if: github.ref_name == 'fix/v1.0.27'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -316,8 +315,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        # if: github.ref_name == 'fix/v1.0.27'
-        if: false 
+        if: github.ref_name == 'fix/v1.0.27'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -342,7 +340,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
-    if: github.ref_name == 'fix/v1.0.27'
+    #if: github.ref_name == 'fix/v1.0.27'
+    if: false
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
@@ -369,7 +368,8 @@ jobs:
           artifact_name: app-release.aab
 
   run-on-device-tests:
-    if: github.ref_name == 'fix/v1.0.27'
+    # if: github.ref_name == 'fix/v1.0.27'
+    if: false
     needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
