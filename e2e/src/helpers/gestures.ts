@@ -34,6 +34,35 @@ export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<vo
 }
 
 /**
+ * Tap at window-relative coordinates (0–1 fractions of width/height). Uses the same
+ * primitives as dismiss-keyboard taps — good for camera tap-to-focus without a test id.
+ */
+export async function tapAtWindowPercent(xPercent: number, yPercent: number): Promise<void> {
+  const { width, height } = await driver.getWindowSize()
+  const x = Math.round(xPercent * width)
+  const y = Math.round(yPercent * height)
+
+  if (driver.isIOS) {
+    await driver.execute('mobile: tap', { x, y })
+  } else {
+    await driver.performActions([
+      {
+        type: 'pointer',
+        id: 'finger1',
+        parameters: { pointerType: 'touch' },
+        actions: [
+          { type: 'pointerMove', duration: 0, x, y },
+          { type: 'pointerDown', button: 0 },
+          { type: 'pause', duration: 80 },
+          { type: 'pointerUp', button: 0 },
+        ],
+      },
+    ])
+    await driver.releaseActions()
+  }
+}
+
+/**
  * Touch gestures for E2E. Android uses W3C actions; iOS uses Appium `mobile:*` helpers
  * to avoid XCUITest quiescence / performActions issues on recent Xcode/iOS SDKs.
  */

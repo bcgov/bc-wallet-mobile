@@ -55,3 +55,14 @@ export type TestUser = (typeof TestUsers)[keyof typeof TestUsers]
  * Slightly above center matches where the card often sits in the preview; adjust if needed.
  */
 export const SCAN_SERIAL_TAP_FOCUS_WINDOW = { x: 0.5, y: 0.45 } as const
+
+/**
+ * Padding (px) added around the card image before Sauce Labs camera injection.
+ * Sauce scales the injected image linearly to fill the camera frame — adding
+ * asymmetric padding repositions the barcode region into the app's scanning
+ * target box. Increase bottom/right padding to push the barcode up/left.
+ *
+ * Tune these values by inspecting screenshot output until the serial number
+ * barcode consistently lands inside the yellow scanning rectangle.
+ */
+export const CARD_SCAN_PADDING = { top: 100, right: 100, bottom: 700, left: 100 } as const
