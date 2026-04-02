@@ -114,6 +114,11 @@ export async function injectCameraImage(imagePathOrBase64: string): Promise<void
 /**
  * Inject a photo (ID card, selfie, evidence) into the device camera.
  *
+ * When `padding` is provided the image is extended with whitespace before
+ * injection. This repositions the subject within the camera frame so it
+ * lines up with the app's scanning target area after Sauce Labs scales the
+ * image to the device camera resolution.
+ *
  * Convenience wrapper — resolves from `e2e/assets/` and delegates to
  * {@link injectCameraImage}.
  */
