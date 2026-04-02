@@ -54,6 +54,9 @@ jobs:
       - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 #V6 (v6.0.0) pinning for SonarQube
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
         if: always()
 
   lint-format:
