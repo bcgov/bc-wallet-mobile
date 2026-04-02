@@ -18,6 +18,7 @@ coverage:
         paths:
           - app/src
         only_pulls: true
+        if_ci_failed: error
     patch:
       default:
         target: auto # target is the current project coverage
@@ -26,6 +27,7 @@ coverage:
         paths:
           - app/src
         only_pulls: true
+        if_ci_failed: error
 
 comment:
   layout: 'header, files, footer'
