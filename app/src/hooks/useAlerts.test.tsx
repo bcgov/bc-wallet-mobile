@@ -1405,8 +1405,8 @@ describe('useAlerts', () => {
         result.current.incorrectOsAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithService.Title',
-          'Alerts.ProblemWithService.Description',
+          'Alerts.DynamicRegistrationError.Title',
+          'Alerts.DynamicRegistrationError.Description',
           expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_INCORRECT_OS })
         )
       })
