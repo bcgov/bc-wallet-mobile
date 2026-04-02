@@ -252,10 +252,13 @@ describe('useBCAgentSetup', () => {
     ;(Agent as jest.Mock).mockImplementation(() => agentInstance)
 
     await act(async () => {
-      await result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+      await expect(
+        result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
+      ).rejects.toThrow('Failed to initiate message pickup')
     })
 
     expect(mockLogger.error).toHaveBeenCalled()
+    expect(mockLogger.warn).toHaveBeenCalledWith('No mediation record found to delete')
   })
 
   it('should shutdown and clear agent', async () => {
