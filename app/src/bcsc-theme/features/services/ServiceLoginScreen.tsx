@@ -18,7 +18,7 @@ import {
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -34,7 +34,7 @@ type ServiceLoginDefaultViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
-  onContinue: () => Promise<boolean>
+  onContinue: () => Promise<void>
   onCancel: () => void
   onOpenInfoShared: () => void
   onOpenPrivacyPolicy: () => void
@@ -183,7 +183,7 @@ const ServiceLoginDefaultView = ({
   onOpenInfoShared,
   onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => {
-  const [isLoading, setIsLoading] = useState(false)
+  const lastPressRef = useRef(0)
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -248,13 +248,14 @@ const ServiceLoginDefaultView = ({
               accessibilityLabel={a11yLabel('Continue')}
               testID={testIdWithKey('ServiceLoginContinue')}
               buttonType={ButtonType.Primary}
-              disabled={isLoading}
               onPress={async () => {
-                setIsLoading(true)
-                const navigated = await onContinue()
-                if (!navigated) {
-                  setIsLoading(false)
+                const now = Date.now()
+                // debounce added to give time for navigation before allowing another button press
+                if (now - lastPressRef.current < 1000) {
+                  return
                 }
+                lastPressRef.current = now
+                await onContinue()
               }}
             />
           </View>
@@ -362,13 +363,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
    * If successful, navigates to the pairing confirmation screen
    * If unsuccessful, displays an error alert
    *
-   * @returns boolean returns true if navigation to pairing confirmation starts, false otherwise
    */
-  const onContinueWithPairingCode = useCallback(async (): Promise<boolean> => {
+  const onContinueWithPairingCode = useCallback(async () => {
     const code = state.pairingCode
     if (!code) {
       logger.error('ServiceLoginScreen: No pairing code found in state')
-      return false
+      return
     }
 
     try {
@@ -379,13 +379,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         serviceName: client.client_name,
         fromAppSwitch,
       })
-      return true
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
       if (!isHandledAppError(error)) {
         alerts.loginServerErrorAlert()
       }
-      return false
     }
   }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch])
 
@@ -394,13 +392,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
    * If successful, opens the quick login URL and navigates to the home screen
    * If unsuccessful, displays an error alert
    *
-   * @returns boolean returns true if quick login URL was opened and navigation started, false otherwise
    */
-  const onContinueWithQuickLoginUrl = useCallback(async (): Promise<boolean> => {
+  const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
       alerts.loginServerErrorAlert()
-      return false
+      return
     }
 
     const result = await getQuickLoginURL(state.service)
@@ -414,11 +411,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           index: 0,
           routes: [{ name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } }],
         })
-        return true
+        return
       } catch (error) {
         logger.error('ServiceLoginScreen: Failed to open quick login URL', error as Error)
         Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
-        return false
+        return
       }
     }
 
@@ -426,27 +423,16 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
       alerts.loginServerErrorAlert()
     }
-    return false
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t])
 
-  /**
-   * Handles the continue action
-   * If a pairing code is present, it will attempt to login with that
-   * If no pairing code is present, it will attempt to navigate via a quick login URL
-   * If neither are available and error is displayed
-   *
-   * The boolean here is used by the onPress to determine weather to enable or leave the button disabled
-   * @returns boolean returns true if actions were successful and navigation starts, false otherwise
-   */
-  const onContinue = useCallback(async (): Promise<boolean> => {
+  const onContinue = useCallback(async () => {
     if (state.pairingCode) {
-      return onContinueWithPairingCode()
+      await onContinueWithPairingCode()
     } else if (state.service) {
-      return onContinueWithQuickLoginUrl()
+      await onContinueWithQuickLoginUrl()
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
       alerts.loginServerErrorAlert()
-      return false
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, alerts])
 
