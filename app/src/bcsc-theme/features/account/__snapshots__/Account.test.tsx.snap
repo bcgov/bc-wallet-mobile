@@ -452,7 +452,7 @@ exports[`Account renders full name when both given_name and family_name are pres
               {
                 "busy": undefined,
                 "checked": undefined,
-                "disabled": undefined,
+                "disabled": false,
                 "expanded": undefined,
                 "selected": undefined,
               }
@@ -1045,7 +1045,7 @@ exports[`Account renders only family_name when given_name is empty string (monon
               {
                 "busy": undefined,
                 "checked": undefined,
-                "disabled": undefined,
+                "disabled": false,
                 "expanded": undefined,
                 "selected": undefined,
               }
@@ -1638,7 +1638,7 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
               {
                 "busy": undefined,
                 "checked": undefined,
-                "disabled": undefined,
+                "disabled": false,
                 "expanded": undefined,
                 "selected": undefined,
               }
@@ -2231,7 +2231,7 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
               {
                 "busy": undefined,
                 "checked": undefined,
-                "disabled": undefined,
+                "disabled": false,
                 "expanded": undefined,
                 "selected": undefined,
               }

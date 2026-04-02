@@ -4,7 +4,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme 
 import NetInfo, { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import ServicePeriodList from './components/ServicePeriodList'
@@ -20,6 +20,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { t } = useTranslation()
   const { dataUseWarningAlert } = useAlerts(navigation)
   const { formattedHours } = route.params
+  const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
 
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
@@ -31,6 +32,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   })
 
   const onPressContinue = async () => {
+    setIsWaitingForPermissions(true)
     const netInfo = await NetInfo.refresh()
 
     if (netInfo.type === 'cellular') {
@@ -44,6 +46,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
       cameraInstructions: '',
       cameraLabel: '',
     })
+    setIsWaitingForPermissions(false)
   }
 
   const onPressAssistance = () => {
@@ -91,6 +94,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
           accessibilityLabel={t('Global.Continue')}
           title={t('Global.Continue')}
           onPress={onPressContinue}
+          disabled={isWaitingForPermissions}
         />
         <Button
           buttonType={ButtonType.Secondary}
