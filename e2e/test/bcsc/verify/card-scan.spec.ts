@@ -28,10 +28,10 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
 
   it('should navigate to the scan screen and inject the card image', async () => {
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
+    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
     await SerialInstructions.tap('ScanBarcode')
     // Inject while the camera is initializing (before the feed is active).
     // Sauce Labs queues the image so it replaces the placeholder on first frame.
-    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
     await acceptSystemAlert()
   })
 
