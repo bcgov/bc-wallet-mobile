@@ -11,7 +11,7 @@ import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
-const IAS_UNSUPPORTED_OS_MESSAGE = 'Unsupported OS version'
+const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
 
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
@@ -110,7 +110,7 @@ export const iasErrorPolicy: ErrorHandlingPolicy = {
       return
     }
 
-    if (error.technicalMessage?.includes(IAS_UNSUPPORTED_OS_MESSAGE)) {
+    if (error.technicalMessage?.toLowerCase().includes(UNSUPPORTED_OS_TECHNICAL_MESSAGE)) {
       // Special case for unsupported OS
       context.alerts.dynamicRegistrationErrorAlert(error)
       return
