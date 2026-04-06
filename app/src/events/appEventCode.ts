@@ -109,6 +109,7 @@ export enum AppEventCode {
   ERR_300_EMPTY_RESPONSE = 'err_300_empty_response',
   ERR_500_INVALID_URL = 'err_500_invalid_url',
   ERR_501_INVALID_REGISTRATION_REQUEST = 'err_501_invalid_registration_request',
+  AUTHORIZATION_PENDING = 'authorization_pending',
   RATE_IN_APP_STORE = 'rate_in_app_store',
   VOLUME_TOO_LOW = 'volume_too_low',
   CANCEL_PENDING_BACKCHECK_VERIFICATION = 'cancel_pending_backcheck_verification',
