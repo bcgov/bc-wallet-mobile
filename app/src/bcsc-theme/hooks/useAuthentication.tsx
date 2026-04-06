@@ -77,45 +77,59 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
    * @returns Promise that resolves when the unlock process is complete
    */
   const unlockApp = useCallback(async () => {
+    let accountSecurityMethod: AccountSecurityMethod | undefined
     try {
-      const accountSecurityMethod = await getAccountSecurityMethod()
+      accountSecurityMethod = await getAccountSecurityMethod()
+    } catch (error) {
+      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      logger.error(`[Authentication:UnlockApp] Failed to get account security method [${appError.appEvent}]`, appError)
+      return
+    }
 
-      // Only attempt device authentication if that is the configured method
-      if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
-        const { locked } = await isAccountLocked()
-
-        if (!locked) {
-          // If not locked, navigate to PIN entry screen
-          navigation.navigate(BCSCScreens.EnterPIN)
-          return
-        }
-
-        // If locked, reset the navigation stack and show lockout screen
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.Lockout }],
-          })
-        )
-        return
-      }
-
-      // Show auth disclaimer screen until the user has dismissed it
-      let hideDeviceAuthPrep = false
+    // Only attempt device authentication if that is the configured method
+    if (accountSecurityMethod !== AccountSecurityMethod.DeviceAuth) {
+      let locked: boolean
       try {
-        hideDeviceAuthPrep = (await getHideDeviceAuthPrepFlag()) === true
+        locked = (await isAccountLocked()).locked
       } catch (error) {
-        // non-fatal error, just log it - the app can still function without this flag being set,
-        // it just won't hide the prep screen on next auth
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-        logger.error(`Failed to get hide device auth prep flag: ${errorMsg}`)
-      }
-
-      if (!hideDeviceAuthPrep) {
-        navigation.navigate(BCSCScreens.DeviceAuthInfo)
+        const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+        logger.error(`[Authentication:UnlockApp] Failed to check account lock status [${appError.appEvent}]`, appError)
         return
       }
 
+      if (!locked) {
+        // If not locked, navigate to PIN entry screen
+        navigation.navigate(BCSCScreens.EnterPIN)
+        return
+      }
+
+      // If locked, reset the navigation stack and show lockout screen
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.Lockout }],
+        })
+      )
+      return
+    }
+
+    // Show auth disclaimer screen until the user has dismissed it
+    let hideDeviceAuthPrep = false
+    try {
+      hideDeviceAuthPrep = (await getHideDeviceAuthPrepFlag()) === true
+    } catch (error) {
+      // non-fatal error, just log it - the app can still function without this flag being set,
+      // it just won't hide the prep screen on next auth
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      logger.error(`[Authentication:UnlockApp] Failed to get hide device auth prep flag: ${errorMsg}`)
+    }
+
+    if (!hideDeviceAuthPrep) {
+      navigation.navigate(BCSCScreens.DeviceAuthInfo)
+      return
+    }
+
+    try {
       await performDeviceAuth()
     } catch (error) {
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
