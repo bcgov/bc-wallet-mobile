@@ -332,7 +332,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
       noTokensReturnedAlert: _createProblemWithAccountErrorModal(AppEventCode.NO_TOKENS_RETURNED, '214'),
       invalidTokenAlert: _createProblemWithAccountErrorModal(AppEventCode.INVALID_TOKEN, '215'),
-      invalidClientMetadataAlert: _createBasicErrorModal(AppEventCode.INVALID_CLIENT_METADATA, 'ProblemWithApp'),
+      invalidClientMetadataAlert: _createBasicErrorModal(AppEventCode.INVALID_CLIENT_METADATA, 'ProblemWithApp', { errorCode: '222' }), // Note: Using 222 error code as placeholder
       serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
       dynamicRegistrationErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError', { errorCode: '202' }),
       termsOfUseErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),

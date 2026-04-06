@@ -75,7 +75,6 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
     [AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, alerts?.dynamicRegistrationErrorAlert],
-    [AppEventCode.INVALID_CLIENT_METADATA, alerts?.invalidClientMetadataAlert],
     [AppEventCode.ADD_CARD_TERMS_OF_USE, alerts?.termsOfUseErrorAlert],
     [AppEventCode.ADD_CARD_INCORRECT_OS, alerts?.incorrectOsAlert],
     [AppEventCode.ADD_CARD_PROVIDER, alerts?.addCardNotAvailableAlert],
@@ -110,13 +109,21 @@ export const iasErrorPolicy: ErrorHandlingPolicy = {
       return
     }
 
+    alert(error)
+  },
+}
+
+// Error policy for INVALID_CLIENT_METADATA — handles client metadata fetch failures with special case for unsupported OS versions
+export const invalidClientMetadataErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.INVALID_CLIENT_METADATA
+  },
+  handle: (error, context) => {
     if (error.technicalMessage?.toLowerCase().includes(UNSUPPORTED_OS_TECHNICAL_MESSAGE)) {
-      // Special case for unsupported OS
-      context.alerts.dynamicRegistrationErrorAlert(error)
-      return
+      return context.alerts.dynamicRegistrationErrorAlert(error)
     }
 
-    alert(error)
+    context.alerts.invalidClientMetadataAlert(error)
   },
 }
 
@@ -425,6 +432,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  invalidClientMetadataErrorPolicy,
   iasErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,
