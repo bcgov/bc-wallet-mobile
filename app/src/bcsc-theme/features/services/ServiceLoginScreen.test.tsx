@@ -218,6 +218,5 @@ describe('ServiceLogin', () => {
 
       await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1))
     })
-
   })
 })

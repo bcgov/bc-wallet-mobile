@@ -34,6 +34,8 @@ type ServiceLoginDefaultViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
+  isContinueDisabled: boolean
+  setIsContinueDisabled: (disabled: boolean) => void
   onContinue: () => Promise<void>
   onCancel: () => void
   onOpenInfoShared: () => void
@@ -179,12 +181,13 @@ const ServiceLoginDefaultView = ({
   ColorPalette,
   Spacing,
   t,
+  isContinueDisabled,
+  setIsContinueDisabled,
   onContinue,
   onCancel,
   onOpenInfoShared,
   onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => {
-  const [isDisabled, setIsDisabled] = useState(false)
   return (
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -250,14 +253,10 @@ const ServiceLoginDefaultView = ({
               accessibilityLabel={a11yLabel('Continue')}
               testID={testIdWithKey('ServiceLoginContinue')}
               buttonType={ButtonType.Primary}
-              disabled={isDisabled}
-              onPress={async () => {
-                setIsDisabled(true)
-                try {
-                  await onContinue()
-                } catch (error) {
-                  setIsDisabled(false)
-                }
+              disabled={isContinueDisabled}
+              onPress={() => {
+                setIsContinueDisabled(true)
+                onContinue()
               }}
             />
           </View>
@@ -308,6 +307,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     metadata,
     logger,
   })
+  const [isContinueDisabled, setIsContinueDisabled] = useState(false)
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -383,11 +383,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       })
     } catch (error) {
       logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
+      setIsContinueDisabled(false)
       if (!isHandledAppError(error)) {
         alerts.loginServerErrorAlert()
       }
     }
-  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch])
+  }, [state.pairingCode, pairing, navigation, logger, alerts, fromAppSwitch, setIsContinueDisabled])
 
   /**
    * Handles quick login and navigation
@@ -398,6 +399,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const onContinueWithQuickLoginUrl = useCallback(async () => {
     if (!state.service) {
       logger.error('ServiceLoginScreen: No service context available for quick login')
+      setIsContinueDisabled(false)
       alerts.loginServerErrorAlert()
       return
     }
@@ -416,6 +418,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         return
       } catch (error) {
         logger.error('ServiceLoginScreen: Failed to open quick login URL', error as Error)
+        setIsContinueDisabled(false)
         Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
         return
       }
@@ -423,9 +426,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
     if ('error' in result) {
       logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
+      setIsContinueDisabled(false)
       alerts.loginServerErrorAlert()
     }
-  }, [getQuickLoginURL, logger, state.service, navigation, alerts, t])
+  }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
 
   const onContinue = useCallback(async () => {
     if (state.pairingCode) {
@@ -434,9 +438,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       await onContinueWithQuickLoginUrl()
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
+      setIsContinueDisabled(false)
       alerts.loginServerErrorAlert()
     }
-  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, alerts])
+  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, alerts, setIsContinueDisabled])
 
   const onOpenInfoShared = useCallback(() => {
     try {
@@ -511,6 +516,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           ColorPalette={ColorPalette}
           Spacing={Spacing}
           t={t}
+          isContinueDisabled={isContinueDisabled}
+          setIsContinueDisabled={setIsContinueDisabled}
           onContinue={onContinue}
           onCancel={onCancel}
           onOpenInfoShared={onOpenInfoShared}
