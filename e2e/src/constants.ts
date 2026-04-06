@@ -65,4 +65,4 @@ export const SCAN_SERIAL_TAP_FOCUS_WINDOW = { x: 0.5, y: 0.4 } as const
  * Tune these values by inspecting screenshot output until the serial number
  * barcode consistently lands inside the yellow scanning rectangle.
  */
-export const CARD_SCAN_PADDING = { top: 150, right: 40, bottom: 400, left: 40 } as const
+export const CARD_SCAN_PADDING = { top: 0, right: 0, bottom: 450, left: 40 } as const

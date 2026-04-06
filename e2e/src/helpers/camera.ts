@@ -2,7 +2,6 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import sharp from 'sharp'
-import { CARD_SCAN_PADDING } from '../constants.js'
 import { isSauceLabs } from './sauce.js'
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
@@ -110,28 +109,13 @@ export async function injectCameraImage(imagePathOrBase64: string): Promise<void
 }
 
 /**
- * Inject a QR code image into the device camera.
- *
- * Resolves `imagePathOrName` from `e2e/assets/` when a relative name is given
- * (e.g. `'qr-invite.png'` → `e2e/assets/qr-invite.png`).
- *
- * **Tip:** If the app's QR scanner defines a small target area, add padding
- * (whitespace border) around the QR code image so it fits within the scan
- * region after Sauce Labs scales it to the camera resolution.
- */
-export async function injectQRCode(imagePathOrName: string): Promise<void> {
-  const resolved = resolveAssetPath(imagePathOrName)
-  await injectCameraImage(resolved)
-}
-
-/**
  * Inject a photo (ID card, selfie, evidence) into the device camera.
  *
  * Convenience wrapper — resolves from `e2e/assets/` and delegates to
  * {@link injectCameraImage}.
  */
-export async function injectPhoto(imagePathOrName: string): Promise<void> {
+export async function injectPhoto(imagePathOrName: string, padding: ImagePadding): Promise<void> {
   const resolved = resolveAssetPath(imagePathOrName)
-  const padded = await padImage(resolved, CARD_SCAN_PADDING)
+  const padded = await padImage(resolved, padding)
   await injectCameraImage(padded)
 }

@@ -1,4 +1,4 @@
-import { SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../src/constants.js'
+import { CARD_SCAN_PADDING, SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../src/constants.js'
 import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { injectPhoto } from '../../../src/helpers/camera.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
@@ -26,15 +26,25 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
     await IdentitySelection.tap(cardTypeButton)
   })
 
-  it('should navigate through the Serial Instructions screen and tap Scan Barcode', async () => {
+  it('should navigate to the scan screen and inject the card image', async () => {
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
     await SerialInstructions.tap('ScanBarcode')
-    await injectPhoto(cardScanImage)
+    // Inject while the camera is initializing (before the feed is active).
+    // Sauce Labs queues the image so it replaces the placeholder on first frame.
+    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
     await acceptSystemAlert()
   })
 
-  it('should inject the card image repeatedly until the barcode scan completes', async function () {
+  it('should wait for the barcode scan to complete', async function () {
     await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
-    await tapAtWindowPercent(SCAN_SERIAL_TAP_FOCUS_WINDOW.x, SCAN_SERIAL_TAP_FOCUS_WINDOW.y)
+
+    const maxAttempts = 10
+    for (let i = 0; i < maxAttempts; i++) {
+      await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
+      await tapAtWindowPercent(SCAN_SERIAL_TAP_FOCUS_WINDOW.x, SCAN_SERIAL_TAP_FOCUS_WINDOW.y)
+      const stillOnScanScreen = await ScanSerial.isDisplayed('EnterManually')
+      if (!stillOnScanScreen) break
+      await driver.pause(2000)
+    }
   })
 })
