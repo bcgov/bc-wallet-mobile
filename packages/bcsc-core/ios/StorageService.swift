@@ -147,6 +147,29 @@ class StorageService {
     "\(issuer)/device/"
   }
 
+  func fileExists(
+    file: AccountFiles,
+    accountID: String,
+    pathDirectory: FileManager.SearchPathDirectory = .applicationSupportDirectory
+  ) -> Bool {
+    do {
+      let rootDirectoryURL = try FileManager.default.url(
+        for: pathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      let fileUrl =
+        rootDirectoryURL
+          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(accountID)
+          .appendingPathComponent(file.rawValue)
+      return FileManager.default.fileExists(atPath: fileUrl.path)
+    } catch {
+      return false
+    }
+  }
+
   func readData<T: NSObject & NSCoding & NSSecureCoding>(
     file: AccountFiles,
     pathDirectory: FileManager.SearchPathDirectory
@@ -168,7 +191,10 @@ class StorageService {
           .appendingPathComponent(accountID) // Use unwrapped accountID
           .appendingPathComponent(file.rawValue)
 
+      logger.log("readData: attempting \(file.rawValue) at \(fileUrl.path)")
+
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
+        logger.error("readData: \(file.rawValue) not found at \(fileUrl.path)")
         return nil
       }
 

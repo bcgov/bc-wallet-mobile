@@ -2507,10 +2507,25 @@ class BcscCoreModule(
     override fun getAccountSecurityMethod(promise: Promise) {
         try {
             val issuerName = nativeStorage.getDefaultIssuerName()
+            Log.d(NAME, "getAccountSecurityMethod: reading accounts for issuer $issuerName")
+
+            if (!nativeStorage.accountsExist(issuerName)) {
+                Log.e(NAME, "getAccountSecurityMethod: accounts file missing for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts file missing for issuer $issuerName")
+                return
+            }
+
             val existingAccounts = nativeStorage.readAccounts(issuerName)
 
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
-                promise.resolve("device_authentication") // Default
+            if (existingAccounts == null) {
+                Log.e(NAME, "getAccountSecurityMethod: failed to parse accounts for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to parse accounts for issuer $issuerName")
+                return
+            }
+
+            if (existingAccounts.isEmpty()) {
+                Log.e(NAME, "getAccountSecurityMethod: accounts list is empty for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts list is empty for issuer $issuerName")
                 return
             }
 
@@ -2540,14 +2555,25 @@ class BcscCoreModule(
     override fun isAccountLocked(promise: Promise) {
         try {
             val issuerName = nativeStorage.getDefaultIssuerName()
+            Log.d(NAME, "isAccountLocked: reading accounts for issuer $issuerName")
+
+            if (!nativeStorage.accountsExist(issuerName)) {
+                Log.e(NAME, "isAccountLocked: accounts file missing for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts file missing for issuer $issuerName")
+                return
+            }
+
             val existingAccounts = nativeStorage.readAccounts(issuerName)
 
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
-                // No account means no lock
-                val result = Arguments.createMap()
-                result.putBoolean("locked", false)
-                result.putInt("remainingTime", 0)
-                promise.resolve(result)
+            if (existingAccounts == null) {
+                Log.e(NAME, "isAccountLocked: failed to parse accounts for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to parse accounts for issuer $issuerName")
+                return
+            }
+
+            if (existingAccounts.isEmpty()) {
+                Log.e(NAME, "isAccountLocked: accounts list is empty for issuer $issuerName")
+                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts list is empty for issuer $issuerName")
                 return
             }
 
