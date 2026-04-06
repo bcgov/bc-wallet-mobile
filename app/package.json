@@ -86,7 +86,7 @@
     "@react-native-clipboard/clipboard": "~1.16.3",
     "@react-native-community/netinfo": "~11.4.1",
     "@react-native-firebase/app": "23.8.3",
-    "@react-native-firebase/messaging": "23.8.3",
+    "@react-native-firebase/messaging": "23.8.8",
     "@react-navigation/bottom-tabs": "~6.0.9",
     "@react-navigation/devtools": "~6.0.27",
     "@react-navigation/native": "~6.0.16",
