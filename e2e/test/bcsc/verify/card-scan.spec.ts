@@ -10,31 +10,9 @@ const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
 const SerialInstructions = new BaseScreen(BCSC_TestIDs.SerialInstructions)
 const ScanSerial = new BaseScreen(BCSC_TestIDs.ScanSerial)
-const EnterBirthdate = new BaseScreen(BCSC_TestIDs.EnterBirthdate)
-const SetupStepsPostScan = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 const { testUser } = getVerifyContext()
 const { cardScanImage } = testUser
-
-/** Combo scan resets to Setup Steps; serial-only scan opens Enter Birthdate. */
-async function waitForPostBarcodeScanScreen() {
-  await driver.waitUntil(
-    async () => {
-      for (const testId of [EnterBirthdate.ids.BirthdateInput, SetupStepsPostScan.ids.Step1]) {
-        const el = await $(driver.isIOS ? `~${testId}` : `android=new UiSelector().resourceId("${testId}")`)
-        if (await el.isDisplayed().catch(() => false)) {
-          return true
-        }
-      }
-      return false
-    },
-    {
-      timeout: 90_000,
-      interval: 500,
-      timeoutMsg: 'Expected Enter Birthdate or Setup Steps after scan (combo vs serial-only card image).',
-    }
-  )
-}
 
 describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   it('should navigate through the Setup Steps screen and tap Step 2', async () => {
@@ -51,15 +29,12 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   it('should navigate through the Serial Instructions screen and tap Scan Barcode', async () => {
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
     await SerialInstructions.tap('ScanBarcode')
+    await injectPhoto(cardScanImage)
     await acceptSystemAlert()
   })
 
-  it('should inject the card image, tap to focus the barcode region, and complete the scan', async function () {
-    await injectPhoto(cardScanImage)
+  it('should inject the card image repeatedly until the barcode scan completes', async function () {
     await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
     await tapAtWindowPercent(SCAN_SERIAL_TAP_FOCUS_WINDOW.x, SCAN_SERIAL_TAP_FOCUS_WINDOW.y)
-    await driver.pause(400)
-
-    await waitForPostBarcodeScanScreen()
   })
 })

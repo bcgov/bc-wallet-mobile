@@ -24,7 +24,6 @@ const sauceRdcOptions = {
   build: process.env.BUILD_NAME || `local-${Date.now()}`,
   name: process.env.TEST_NAME || 'E2E Tests',
   phoneOnly: true,
-  allowTouchIdEnroll: true,
   resigningEnabled: true,
   /** Sauce RDC; not on WebdriverIO's SauceLabsCapabilities type yet */
   imageInjection: true,

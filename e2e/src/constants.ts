@@ -54,7 +54,7 @@ export type TestUser = (typeof TestUsers)[keyof typeof TestUsers]
  * Window-relative tap for camera tap-to-focus after Sauce image injection (0–1).
  * Slightly above center matches where the card often sits in the preview; adjust if needed.
  */
-export const SCAN_SERIAL_TAP_FOCUS_WINDOW = { x: 0.5, y: 0.45 } as const
+export const SCAN_SERIAL_TAP_FOCUS_WINDOW = { x: 0.5, y: 0.4 } as const
 
 /**
  * Padding (px) added around the card image before Sauce Labs camera injection.
@@ -65,4 +65,4 @@ export const SCAN_SERIAL_TAP_FOCUS_WINDOW = { x: 0.5, y: 0.45 } as const
  * Tune these values by inspecting screenshot output until the serial number
  * barcode consistently lands inside the yellow scanning rectangle.
  */
-export const CARD_SCAN_PADDING = { top: 100, right: 100, bottom: 700, left: 100 } as const
+export const CARD_SCAN_PADDING = { top: 150, right: 40, bottom: 400, left: 40 } as const
