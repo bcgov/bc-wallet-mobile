@@ -441,7 +441,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       setIsContinueDisabled(false)
       alerts.loginServerErrorAlert()
     }
-  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, alerts, setIsContinueDisabled])
+  }, [
+    logger,
+    onContinueWithPairingCode,
+    onContinueWithQuickLoginUrl,
+    state.service,
+    state.pairingCode,
+    alerts,
+    setIsContinueDisabled,
+  ])
 
   const onOpenInfoShared = useCallback(() => {
     try {
