@@ -4,7 +4,7 @@ const POLL_TIMEOUT_MS = 10_000
 const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Trust', 'Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Continue']
 
 function escapeIosSelectorValue(value: string): string {
-  return value.replaceAll(/\\/g, String.raw`\\`).replaceAll(/"/g, String.raw`\"`)
+  return value.replaceAll(/\\/g, '\\\\').replaceAll(/"/g, '\\"')
 }
 
 async function hasNativePopup(): Promise<boolean> {
