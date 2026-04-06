@@ -1711,17 +1711,31 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
-    guard let account: Account = storage.readData(
-      file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
+
+    guard let accountID = storage.currentAccountID else {
+      logger.error("getAccountSecurityMethod: no account ID found in account_list")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: account_list missing or empty", nil)
       return
     }
 
-    let securityMethod = account.securityMethod.rawValue
-    resolve(securityMethod)
+    guard storage.fileExists(file: .accountMetadata, accountID: accountID) else {
+      logger.error("getAccountSecurityMethod: account_metadata file missing for account \(accountID)")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: account_metadata file missing for account \(accountID)", nil)
+      return
+    }
+
+    logger.log("getAccountSecurityMethod: decoding account_metadata for account \(accountID)")
+
+    guard let account: Account = storage.readData(
+      file: AccountFiles.accountMetadata,
+      pathDirectory: .applicationSupportDirectory
+    ) else {
+      logger.error("getAccountSecurityMethod: failed to decode account_metadata for account \(accountID)")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to decode account_metadata for account \(accountID)", nil)
+      return
+    }
+
+    resolve(account.securityMethod.rawValue)
   }
 
   /// Checks if the account is currently locked due to failed PIN attempts
@@ -1734,19 +1748,32 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let storage = StorageService()
+
+    guard let accountID = storage.currentAccountID else {
+      logger.error("isAccountLocked: no account ID found in account_list")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: account_list missing or empty", nil)
+      return
+    }
+
+    guard storage.fileExists(file: .accountMetadata, accountID: accountID) else {
+      logger.error("isAccountLocked: account_metadata file missing for account \(accountID)")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: account_metadata file missing for account \(accountID)", nil)
+      return
+    }
+
+    logger.log("isAccountLocked: decoding account_metadata for account \(accountID)")
+
     guard let account: Account = storage.readData(
       file: AccountFiles.accountMetadata,
-      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
-    )
-    else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found", nil)
+      pathDirectory: .applicationSupportDirectory
+    ) else {
+      logger.error("isAccountLocked: failed to decode account_metadata for account \(accountID)")
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to decode account_metadata for account \(accountID)", nil)
       return
     }
 
     let remainingTime = account.isServingPenalty()
-    let isLocked = remainingTime > 0
-
-    resolve(["locked": isLocked, "remainingTime": max(0, remainingTime)])
+    resolve(["locked": remainingTime > 0, "remainingTime": max(0, remainingTime)])
   }
 
   // MARK: - Device Security Methods
