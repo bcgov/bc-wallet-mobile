@@ -8,6 +8,9 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 const SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png']
 
+/** White (`#FFFFFF`) — matches app guidance for card-on-background scans. */
+const DEFAULT_PAD_IMAGE_BACKGROUND: sharp.Color = { r: 255, g: 255, b: 255, alpha: 1 }
+
 export interface ImagePadding {
   top?: number
   right?: number
@@ -26,7 +29,7 @@ export interface ImagePadding {
 export async function padImage(
   imagePath: string,
   padding: ImagePadding,
-  background: sharp.Color = { r: 255, g: 255, b: 255, alpha: 1 }
+  background: sharp.Color = DEFAULT_PAD_IMAGE_BACKGROUND
 ): Promise<string> {
   const buf = await sharp(imagePath)
     .extend({
