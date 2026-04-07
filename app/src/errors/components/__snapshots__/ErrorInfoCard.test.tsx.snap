@@ -326,7 +326,7 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
               "busy": undefined,
               "checked": undefined,
               "disabled": undefined,
-              "expanded": undefined,
+              "expanded": true,
               "selected": undefined,
             }
           }
@@ -376,27 +376,11 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
               Global.HideDetails
                
             </Text>
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": "#003366",
-                    "fontSize": 30,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              󰅃
-            </Text>
+            <CommunityIcon
+              color="#003366"
+              name="chevron-up"
+              size={30}
+            />
           </View>
         </View>
         <Text

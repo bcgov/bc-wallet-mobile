@@ -102,6 +102,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
             <TouchableOpacity
               accessibilityLabel={showDetails ? t('Global.HideDetails') : t('Global.ShowDetails')}
               accessibilityRole="button"
+              accessibilityState={{ expanded: showDetails }}
               testID={testIdWithKey('ShowDetails')}
               style={styles.showDetailsTouchable}
               onPress={() => setShowDetails((prev) => !prev)}
