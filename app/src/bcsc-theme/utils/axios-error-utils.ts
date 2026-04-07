@@ -1,11 +1,18 @@
-import { UNKNOWN_APP_ERROR_STATUS_CODE } from '@/constants'
-import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
+import { AppError, ErrorDefinition, ErrorRegistry } from '@/errors'
 import { getErrorDefinitionFromAppEventCode } from '@/errors/errorHandler'
-import { isAppEventCode } from '@/events/appEventCode'
+import { AppEventCode, isAppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 
-export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
-export const NETWORK_ERROR_MESSAGE = 'A network error occurred. Please check your internet connection and try again.'
+enum AxiosErrorCode {
+  // Unable to connect to the server (e.g. no internet, CORS issues, DNS errors)
+  NETWORK_ERROR = 'ERR_NETWORK',
+  // The request was made but the server responded with a 4xx status code (client error)
+  BAD_REQUEST = 'ERR_BAD_REQUEST',
+  // The request was made but the server responded with a 5xx status code (server error)
+  BAD_RESPONSE = 'ERR_BAD_RESPONSE',
+  // The request was made but was aborted (e.g. timeout, cancellation)
+  ECONNABORTED = 'ECONNABORTED',
+}
 
 interface LogAxiosErrorOptions {
   /**
@@ -48,7 +55,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     status: options.error.response?.status,
     url: options.error.config?.url,
     baseURL: options.error.config?.baseURL,
-    isTimeout: options.error.code === 'ECONNABORTED',
+    isTimeout: options.error.code === AxiosErrorCode.ECONNABORTED,
     isNetworkError: isNetworkError(options.error),
   }
 
@@ -84,14 +91,35 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
  */
 export const isNetworkError = (error: unknown): boolean => {
   if (error instanceof AxiosError) {
-    return (
-      (error as any)?.isNetworkError === true ||
-      (error.code === NETWORK_ERROR_CODE && error.message === NETWORK_ERROR_MESSAGE) ||
-      (error.code === 'ERR_NETWORK' && error.message === 'Network Error')
-    )
+    return (error as any)?.isNetworkError === true || error.code === AxiosErrorCode.NETWORK_ERROR
+  }
+
+  if (error instanceof AppError) {
+    return error.appEvent === AppEventCode.NO_INTERNET
   }
 
   return false
+}
+
+/**
+ * Resolves an AppError based on the AxiosError code, mapping specific Axios error codes to predefined AppError definitions.
+ *
+ * @param errorCode - The error code from the AxiosError to resolve
+ * @returns An AppError if a mapping exists for the error code, or null if no mapping is found
+ */
+export const getAxiosErrorDefinition = (errorCode?: string): ErrorDefinition | null => {
+  switch (errorCode) {
+    case AxiosErrorCode.ECONNABORTED:
+      return ErrorRegistry.SERVER_TIMEOUT
+    case AxiosErrorCode.NETWORK_ERROR:
+      return ErrorRegistry.NO_INTERNET
+    case AxiosErrorCode.BAD_REQUEST:
+      return ErrorRegistry.BAD_REQUEST
+    case AxiosErrorCode.BAD_RESPONSE:
+      return ErrorRegistry.SERVER_ERROR
+  }
+
+  return null
 }
 
 /**
@@ -102,7 +130,7 @@ export const isNetworkError = (error: unknown): boolean => {
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
-  const errorDefinition = getErrorDefinitionFromAppEventCode(errorCode)
+  const errorDefinition = getAxiosErrorDefinition(errorCode) ?? getErrorDefinitionFromAppEventCode(errorCode)
 
   // If we have a predefined error definition for this app event code, use it to create the AppError
   if (errorDefinition) {
@@ -114,17 +142,14 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
     return new AppError(
       `Server Error: Unregistered error code (${errorCode})`,
       {
-        statusCode: UNKNOWN_APP_ERROR_STATUS_CODE,
+        ...ErrorRegistry.UNKNOWN_SERVER_ERROR,
         appEvent: errorCode,
-        category: ErrorCategory.GENERAL,
       },
       { cause: error }
     )
   }
 
-  return new AppError(
-    `${ErrorRegistry.UNKNOWN_SERVER_ERROR.message} (${errorCode})`,
-    ErrorRegistry.UNKNOWN_SERVER_ERROR,
-    { cause: error }
-  )
+  return new AppError(`Server Error: Unknown error code (${errorCode})`, ErrorRegistry.UNKNOWN_SERVER_ERROR, {
+    cause: error,
+  })
 }

@@ -92,7 +92,7 @@ describe('Error Utils', () => {
     })
   })
 
-  describe('getAxiosErrorDefinition', () => {
+  describe('resolveAppErrorFromAxiosErrorCode', () => {
     it('NETWORK_ERROR should resolve to NO_INTERNET AppError', () => {
       const appError = getAxiosErrorDefinition('ERR_NETWORK')
 

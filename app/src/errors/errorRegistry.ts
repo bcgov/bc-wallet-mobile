@@ -200,20 +200,6 @@ export const ErrorRegistry = {
     category: ErrorCategory.AUTHENTICATION,
     message: 'Maximum retry/attempt count exceeded — request throttled',
   },
-  ERR_BAD_REQUEST: {
-    statusCode: 2113,
-    appEvent: AppEventCode.ERR_BAD_REQUEST,
-    severity: ErrorSeverity.ERROR,
-    category: ErrorCategory.NETWORK,
-    message: 'Invalid request payload or parameters',
-  },
-  ERR_BAD_RESPONSE: {
-    statusCode: 2114,
-    appEvent: AppEventCode.ERR_BAD_RESPONSE,
-    severity: ErrorSeverity.ERROR,
-    category: ErrorCategory.NETWORK,
-    message: 'Malformed or unexpected response from server',
-  },
 
   // ============================================
   // Authentication/Login Errors (2200-2299)

@@ -173,9 +173,6 @@ export enum AppEventCode {
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
-  // Axios / Network Errors
-  ERR_BAD_REQUEST = 'ERR_BAD_REQUEST',
-  ERR_BAD_RESPONSE = 'ERR_BAD_RESPONSE',
 }
 
 const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))
