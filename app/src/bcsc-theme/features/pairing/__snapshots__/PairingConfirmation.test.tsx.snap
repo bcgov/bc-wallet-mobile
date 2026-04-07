@@ -1,0 +1,301 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PairingConfirmation should match snapshot 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        {
+          "padding": 16,
+        },
+        {
+          "gap": 16,
+        },
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.ManualPairing.CompletionTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.ManualPairing.CompletionDescription
+      </Text>
+      <View
+        style={
+          {
+            "backgroundColor": "#FFFFFF",
+            "gap": 16,
+            "padding": 16,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  undefined,
+                ]
+              }
+            >
+              BCSC.ManualPairing.BookmarkService
+            </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  undefined,
+                ]
+              }
+            >
+              Test Service
+            </Text>
+          </View>
+          <View
+            accessibilityLabel="BCSC.ManualPairing.ToggleBookmark"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 44,
+                "left": 44,
+                "right": 44,
+                "top": 44,
+              }
+            }
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "opacity": 1,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleBookmark"
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 32,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰃃
+            </Text>
+          </View>
+        </View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 14,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.ManualPairing.BookmarkDescription
+        </Text>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      accessibilityLabel="Global.Close"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="com.ariesbifold:id/Close"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          Global.Close
+        </Text>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
