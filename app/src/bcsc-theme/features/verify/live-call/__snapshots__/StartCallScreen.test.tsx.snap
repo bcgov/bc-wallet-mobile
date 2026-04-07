@@ -325,6 +325,7 @@ exports[`StartCall renders correctly 1`] = `
           "padding": 16,
         }
       }
+      testID="com.ariesbifold:id/StartCall"
     >
       <View
         style={

@@ -1,10 +1,13 @@
-# Default values for logstack.
+# Production values for logstack.
 # Declare variables to be passed into your templates.
 
-replicaCount: 2
+replicaCount: 3
 
 autoscaling:
-  enabled: false
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
 
 podAnnotations: {}
 podLabels: {}
@@ -41,28 +44,28 @@ env:
 resources:
   loki:
     requests:
-      memory: 192Mi
-      cpu: 10m
+      memory: 230Mi
+      cpu: 12m
     limits:
-      memory: 256Mi
+      memory: 310Mi
   proxy:
     requests:
-      memory: 64Mi
-      cpu: 10m
+      memory: 80Mi
+      cpu: 12m
     limits:
-      memory: 92Mi
+      memory: 112Mi
   memcached:
     limits:
-      memory: 32Mi
+      memory: 40Mi
     requests:
-      cpu: 10m
-      memory: 32Mi
+      cpu: 12m
+      memory: 40Mi
   minio:
     requests:
-      memory: 192Mi
-      cpu: 20m
+      memory: 230Mi
+      cpu: 24m
     limits:
-      memory: 192Mi
+      memory: 230Mi
 
 services:
   loki:
@@ -90,29 +93,11 @@ route:
   annotations:
     haproxy.router.openshift.io/timeout: 60s
 
-# serviceAccount:
-#   # Specifies whether a service account should be created
-#   create: true
-#   # Automatically mount a ServiceAccount's API credentials?
-#   automount: true
-#   # Annotations to add to the service account
-#   annotations: {}
-#   # The name of the service account to use.
-#   # If not set and create is true, a name is generated using the fullname template
-#   name: ""
-
 # Additional volumes on the output Deployment definition.
 volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
 
 #
 # Loki configuration
@@ -121,7 +106,7 @@ volumeMounts: []
 # Loki configuration that is likely to change between
 # deployments
 loki:
-  replicationFactor: 2
+  replicationFactor: 3
   retention:
     retention_period: 3d
 
@@ -130,4 +115,4 @@ loki:
 #
 
 caddy:
-  logLevel: INFO
+  logLevel: WARN
