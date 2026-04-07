@@ -8,7 +8,7 @@ import {
 } from '@bifold/core'
 import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
-import { getVersion } from 'react-native-device-info'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
@@ -78,6 +78,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   appVersion: string
+  appBuildNumber: string
   hasAccount: boolean
   nicknames: string[]
   selectedNickname?: string
@@ -381,7 +382,8 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 export const initialBCSCState: BCSCState = {
-  appVersion: getVersion(),
+  appVersion: '',
+  appBuildNumber: '',
   hasAccount: false,
   nicknames: [],
   selectedNickname: undefined,
@@ -489,7 +491,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.UPDATE_APP_VERSION: {
-      const bcsc = { ...state.bcsc, appVersion: getVersion() }
+      const bcsc = { ...state.bcsc, appVersion: getVersion(), appBuildNumber: getBuildNumber() }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
