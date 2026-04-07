@@ -43,7 +43,9 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
   }
 
   async onFail() {
-    this.utils.logger.info('UpdateDeviceRegistrationSystemCheck: Updating device registration due to version/build change')
+    this.utils.logger.info(
+      'UpdateDeviceRegistrationSystemCheck: Updating device registration due to version/build change'
+    )
 
     try {
       await this.updateRegistration()
