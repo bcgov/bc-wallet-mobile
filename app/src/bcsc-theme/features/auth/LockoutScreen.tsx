@@ -8,6 +8,7 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useTheme,
 } from '@bifold/core'
@@ -34,6 +35,8 @@ interface LockoutScreenProps {
 }
 
 export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
+  const { ButtonLoading } = useAnimatedComponents()
+  const [isLoading, setIsLoading] = useState(false)
   const { TextTheme, Spacing } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -91,11 +94,14 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
   }, [authentication, remainingSeconds])
 
   const onPressRemoveAccount = useCallback(async () => {
+    setIsLoading(true)
     try {
       await factoryReset()
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`Error removing account: ${errMessage}`)
+    } finally {
+      setIsLoading(false)
     }
   }, [logger, factoryReset])
 
@@ -106,7 +112,10 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       accessibilityLabel={t('BCSC.Account.RemoveAccount')}
       testID={testIdWithKey('RemoveAccount')}
       onPress={onPressRemoveAccount}
-    />
+      disabled={isLoading}
+    >
+      {isLoading && <ButtonLoading />}
+    </Button>
   )
 
   return (

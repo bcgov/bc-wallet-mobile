@@ -51,6 +51,16 @@ describe('DeviceInvalidated', () => {
     expect(getByText(translationKey)).toBeTruthy()
   })
 
+  it('should match snapshot', () => {
+    const tree = render(
+      <BasicAppContext>
+        <DeviceInvalidated route={createRoute(BCSCReason.Cancel)} navigation={jest.fn() as any} />
+      </BasicAppContext>
+    )
+
+    expect(tree.toJSON()).toMatchSnapshot()
+  })
+
   it('renders the header and OK button', () => {
     const { getByText } = render(
       <BasicAppContext>
