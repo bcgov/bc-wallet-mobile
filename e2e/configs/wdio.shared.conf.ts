@@ -17,7 +17,8 @@ export const config: WebdriverIO.Config = {
   suites: {
     smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
     'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
-    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression.spec.ts`)],
+    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
+    biometrics: [resolve(__dirname, `../test/${variant}/biometrics.spec.ts`)],
   },
   exclude: [],
   capabilities: [],
