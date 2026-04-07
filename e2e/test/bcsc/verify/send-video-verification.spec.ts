@@ -36,7 +36,7 @@ describe('Send Video Verification', () => {
 
   it('should navigate through the Photo Instructions screen and tap Take Photo', async () => {
     await PhotoInstructions.waitFor('TakePhotoButton')
-    await injectPhoto(selfieImage)
+    await injectPhoto(selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await PhotoInstructions.tap('TakePhotoButton')
     await acceptSystemAlert()
   })
@@ -58,7 +58,7 @@ describe('Send Video Verification', () => {
 
   it('should navigate through the Video Instructions screen and tap Record Video', async () => {
     await VideoInstructions.waitFor('StartRecordingButton')
-    await injectPhoto(selfieImage)
+    await injectPhoto(selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await VideoInstructions.tap('StartRecordingButton')
     await acceptSystemAlert()
   })
