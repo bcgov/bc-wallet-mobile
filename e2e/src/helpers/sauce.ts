@@ -19,17 +19,17 @@ export async function annotate(message: string) {
  * e.g. "full-regression/biometrics.spec.ts" -> "Full Regression / Biometrics"
  */
 export function jobNameFromSpec(specPath: string): string {
-  const match = specPath.match(/test\/[^/]+\/(.+)\.spec\.\w+$/)
+  const match = /test\/[^/]+\/(.+)\.spec\.\w+$/.exec(specPath)
   if (!match)
     return (
       specPath
         .split('/')
         .pop()
-        ?.replace(/\.spec\.\w+$/, '') ?? 'E2E Test'
+        ?.replaceAll(/\.spec\.\w+$/g, '') ?? 'E2E Test'
     )
 
   return match[1]
     .split('/')
-    .map((segment) => segment.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
+    .map((segment) => segment.replaceAll(/-/g, ' ').replaceAll(/\b\w/g, (c) => c.toUpperCase()))
     .join(' / ')
 }
