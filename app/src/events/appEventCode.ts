@@ -146,6 +146,7 @@ export enum AppEventCode {
   NON_BCSC_WAS_DISABLED = 'non_bcsc_was_disabled',
   TOO_MANY_ACTIVE_ACCOUNTS = 'too_many_active_accounts',
   DEVICE_AUTHORIZATION_ERROR = 'device_authorization_error',
+  INVALID_CLIENT_METADATA = 'invalid_client_metadata',
   DEVICE_AUTHENTICATION_ERROR = 'device_authentication_error', // Non-IAS error code
   FATAL_UNRECOVERABLE_ERROR = 'fatal_unrecoverable_error', // Non-IAS error code
   UNKNOWN_ERROR_BOUNDARY_ERROR = 'unknown_error_boundary_error', // Non-IAS error code

@@ -11,6 +11,8 @@ import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
+const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
+
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
   statusCode: number // HTTP status code for context
@@ -112,6 +114,20 @@ export const iasErrorPolicy: ErrorHandlingPolicy = {
     }
 
     alert(error)
+  },
+}
+
+// Error policy for INVALID_CLIENT_METADATA — handles client metadata fetch failures with special case for unsupported OS versions
+export const invalidClientMetadataErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error) => {
+    return error.appEvent === AppEventCode.INVALID_CLIENT_METADATA
+  },
+  handle: (error, context) => {
+    if (error.technicalMessage?.toLowerCase().includes(UNSUPPORTED_OS_TECHNICAL_MESSAGE)) {
+      return context.alerts.dynamicRegistrationErrorAlert(error)
+    }
+
+    context.alerts.invalidClientMetadataAlert(error)
   },
 }
 
@@ -420,6 +436,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  invalidClientMetadataErrorPolicy,
   iasErrorPolicy,
   // Specific polices listed above, followed by global policies
   globalAlertErrorPolicy,

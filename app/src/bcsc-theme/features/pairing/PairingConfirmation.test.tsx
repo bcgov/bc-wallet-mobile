@@ -20,6 +20,19 @@ describe('PairingConfirmation', () => {
     jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({ remove: jest.fn() }) as any)
   })
 
+  it('should match snapshot', () => {
+    Platform.OS = 'ios'
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({ remove: jest.fn() }) as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <PairingConfirmation navigation={mockNavigation as never} route={defaultRoute as never} />
+      </BasicAppContext>
+    )
+
+    expect(tree.toJSON()).toMatchSnapshot()
+  })
+
   describe('when on iOS with fromAppSwitch', () => {
     beforeEach(() => {
       Platform.OS = 'ios'

@@ -809,6 +809,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Service hours API returned a malformed time string — expected HH:MM format',
   },
+  INVALID_CLIENT_METADATA: {
+    statusCode: 2824,
+    appEvent: AppEventCode.INVALID_CLIENT_METADATA,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Client metadata is invalid — missing required fields or contains invalid values',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)

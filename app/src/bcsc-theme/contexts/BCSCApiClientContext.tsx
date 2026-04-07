@@ -67,6 +67,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         logger.info('[BCSCApiClient] No error handling policy for:', {
           endpoint: context.endpoint,
           appEvent: error.appEvent,
+          errorCode: error.cause.code,
         })
         return
       }

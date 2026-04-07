@@ -189,35 +189,6 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     })
   }, [emitAlert, logger, t, factoryReset])
 
-  // IAS error 202, 203, 204 — OK closes alert and returns to Start Setup
-  const _createProblemWithServiceReturnToSetupAlert = useCallback(
-    (event: AppEventCode, alertKey: string, params?: Record<string, unknown>) => {
-      return (error?: AppError | unknown) => {
-        emitErrorModal(
-          t(`Alerts.${alertKey}.Title`, params),
-          t(`Alerts.${alertKey}.Description`, params),
-          ensureAppError(error, event)
-          // FIXME: This won't reset the state of the application. Will need to use `useVerificationReset` hook.
-          // Additionally, will need to update `useVerificationHook` to remove the `useAlerts` dependency to prevent circular dep issue.
-          // {
-          //   action: {
-          //     text: t('Global.OK'),
-          //     onPress: () => {
-          //       navigation.dispatch(
-          //         CommonActions.reset({
-          //           index: 0,
-          //           routes: [{ name: BCSCScreens.SetupSteps }],
-          //         })
-          //       )
-          //     },
-          //   },
-          // }
-        )
-      }
-    },
-    [emitErrorModal, t]
-  )
-
   const liveCallFileUploadAlert = useCallback(() => {
     emitAlert(t('Alerts.LiveCallFileUploadError.Title'), t('Alerts.LiveCallFileUploadError.Description'), {
       event: AppEventCode.LIVE_CALL_FILE_UPLOAD_ERROR,
@@ -363,10 +334,11 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
       noTokensReturnedAlert: _createProblemWithAccountErrorModal(AppEventCode.NO_TOKENS_RETURNED, '214'),
       invalidTokenAlert: _createProblemWithAccountErrorModal(AppEventCode.INVALID_TOKEN, '215'),
+      invalidClientMetadataAlert: _createBasicErrorModal(AppEventCode.INVALID_CLIENT_METADATA, 'ProblemWithApp', { errorCode: '222' }), // Note: Using 222 error code as placeholder
       serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
-      dynamicRegistrationErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError'),
-      termsOfUseErrorAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
-      incorrectOsAlert: _createProblemWithServiceReturnToSetupAlert(AppEventCode.ADD_CARD_INCORRECT_OS, 'ProblemWithService', { errorCode: '204' }),
+      dynamicRegistrationErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError', { errorCode: '202' }),
+      termsOfUseErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
+      incorrectOsAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_INCORRECT_OS, 'DynamicRegistrationError', { errorCode: '204' }),
       addCardNotAvailableAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_PROVIDER, 'AddCardNotAvailable'),
       missingJsonValuesAlert: _createBasicErrorModal(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, 'ProblemWithApp', { errorCode: '206' }),
       signClaimsErrorAlert: _createBasicErrorModal(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, 'ProblemWithApp', { errorCode: '207' }),
@@ -394,7 +366,6 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       factoryResetErrorModal,
       _createBasicErrorModal,
       _createProblemWithAccountErrorModal,
-      _createProblemWithServiceReturnToSetupAlert,
     ]
   )
 }
