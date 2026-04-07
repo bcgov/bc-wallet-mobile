@@ -59,7 +59,7 @@ config.capabilities = [
 ]
 
 // So the device can reach Metro on the host (debug APK loads JS from packager)
-config.onPrepare = async function (_config, _capabilities) {
+config.onPrepare = async function () {
   const udid = process.env.ANDROID_UDID
   const reverseSpec = `tcp:${METRO_PORT}`
   const adbArgs = udid ? ['-s', udid, 'reverse', reverseSpec, reverseSpec] : ['reverse', reverseSpec, reverseSpec]
