@@ -1,5 +1,5 @@
 import Config from 'react-native-config'
-import { getInitialEnvironment, IASEnvironment, reducer, initialState, BCDispatchAction } from './store'
+import { BCDispatchAction, getInitialEnvironment, IASEnvironment, initialState, reducer } from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
