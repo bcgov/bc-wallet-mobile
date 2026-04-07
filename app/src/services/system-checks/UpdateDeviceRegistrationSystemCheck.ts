@@ -34,19 +34,12 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
   }
 
   runCheck() {
-    const currentVersion = getVersion()
-    const currentBuild = getBuildNumber()
-
-    this.utils.logger.info(
-      `[DEBUG] UpdateDeviceRegistrationSystemCheck: stored=${this.lastAppVersion}(${this.lastAppBuildNumber}) current=${currentVersion}(${currentBuild})`
-    )
-
     // Force update if stored values are blank (v3→v4 upgrade or first run)
     if (!this.lastAppVersion || !this.lastAppBuildNumber) {
       return false
     }
 
-    return this.lastAppVersion === currentVersion && this.lastAppBuildNumber === currentBuild
+    return this.lastAppVersion === getVersion() && this.lastAppBuildNumber === getBuildNumber()
   }
 
   async onFail() {

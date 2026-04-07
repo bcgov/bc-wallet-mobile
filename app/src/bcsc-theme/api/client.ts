@@ -69,7 +69,6 @@ class BCSCApiClient {
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
   onError?: BCSCClientOnErrorCallback
-  private requestCounter = 0
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -126,17 +125,7 @@ class BCSCApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(
-      (response) => {
-        const reqId = (response.config as any).__reqId as number | undefined
-        const startTime = (response.config as any).__startTime as number | undefined
-        const elapsed = startTime ? `${Date.now() - startTime}ms` : '?ms'
-        this.logger.info(
-          `[DEBUG] [${new Date().toISOString()}] [req#${reqId}] RESPONSE ${response.status} ${String(response.config.url)} (${elapsed})`
-        )
-        return response
-      },
-      async (_error: unknown) => {
+    this.client.interceptors.response.use(undefined, async (_error: unknown) => {
       // Pass through errors that are already AppErrors (e.g. from request interceptor)
       if (_error instanceof AppError) {
         throw _error
@@ -149,13 +138,6 @@ class BCSCApiClient {
 
       // 1. Format the error - update error code and message properties from IAS response
       const error = formatIasAxiosResponseError(_error)
-
-      const reqId = (error.config as any)?.__reqId as number | undefined
-      const startTime = (error.config as any)?.__startTime as number | undefined
-      const elapsed = startTime ? `${Date.now() - startTime}ms` : '?ms'
-      this.logger.info(
-        `[DEBUG] [${new Date().toISOString()}] [req#${reqId}] ERROR ${error.response?.status ?? 'N/A'} ${String(error.config?.url)} (${elapsed})`
-      )
 
       // 2. Convert the axios error into an AppError
       const appError = getAppErrorFromAxiosError(error)
@@ -281,12 +263,7 @@ class BCSCApiClient {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    const reqId = ++this.requestCounter
-    ;(config as any).__reqId = reqId
-    ;(config as any).__startTime = Date.now()
-    this.logger.info(
-      `[DEBUG] [${new Date().toISOString()}] [req#${reqId}] REQUEST ${config.method?.toUpperCase()} ${String(config.url)} skipAuth=${!!config.skipBearerAuth}`
-    )
+    this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
 
     // skip processing if skipBearerAuth is set in the config
     if (config.skipBearerAuth) {
