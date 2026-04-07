@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
+import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
