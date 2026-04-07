@@ -47,10 +47,7 @@ const _getGlobalAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
     [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],
     [AppEventCode.TOO_MANY_ATTEMPTS, alerts?.tooManyAttemptsAlert],
-    [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestErrorModal],
-    [AppEventCode.SERVER_ERROR, alerts?.badResponseErrorModal],
-    [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutErrorModal],
-    // Catch-all for unknown errors that don't map to a known IAS error code
+    // Catch-all for unknown app errors
     [AppEventCode.UNKNOWN_APP_ERROR, alerts?.unknownErrorModal],
   ])
 }
@@ -93,6 +90,8 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
     [AppEventCode.ERR_299_KEYS_OUT_OF_SYNC, alerts?.keysOutOfSyncAlert],
     [AppEventCode.ERR_300_EMPTY_RESPONSE, alerts?.emptyResponseAlert],
+    // Catch-all for IAS error codes
+    [AppEventCode.UNKNOWN_SERVER_ERROR, alerts?.unknownErrorModal],
   ])
 }
 
