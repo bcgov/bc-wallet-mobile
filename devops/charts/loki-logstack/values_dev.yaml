@@ -124,6 +124,7 @@ volumeMounts: []
 # Loki configuration that is likely to change between
 # deployments
 loki:
+  replicationFactor: 1
   retention:
     retention_period: 3d
 
