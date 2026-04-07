@@ -30,6 +30,6 @@ export function jobNameFromSpec(specPath: string): string {
 
   return match[1]
     .split('/')
-    .map((segment) => segment.replaceAll(/-/g, ' ').replaceAll(/\b\w/g, (c) => c.toUpperCase()))
+    .map((segment) => segment.replaceAll('-', ' ').replaceAll(/\b\w/g, (c) => c.toUpperCase()))
     .join(' / ')
 }
