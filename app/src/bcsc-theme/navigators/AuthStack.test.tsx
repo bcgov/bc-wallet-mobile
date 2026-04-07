@@ -23,7 +23,7 @@ jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => 'HeaderBackButton'),
 }))
 jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithoutBanner: jest.fn((props) => null),
+  createHeaderWithoutBanner: jest.fn(() => null),
 }))
 jest.mock('../components/SettingsHeaderButton', () => ({
   createAuthSettingsHeaderButton: jest.fn(() => () => 'SettingsHeaderButton'),
