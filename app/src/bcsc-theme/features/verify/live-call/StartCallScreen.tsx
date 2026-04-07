@@ -3,7 +3,18 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +26,7 @@ type StartCallScreenProps = {
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
+  const { ButtonLoading } = useAnimatedComponents()
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
@@ -24,6 +36,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const hasRequestedPermission = useRef(false)
   const { liveCallFileUploadAlert } = useAlerts(navigation)
+  const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -60,6 +73,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   }
 
   const onPressStart = async () => {
+    setIsWaitingForPermissions(true)
     if (hasMicrophonePermission) {
       await requestBluetoothPermission()
       navigation.navigate(BCSCScreens.LiveCall)
@@ -76,6 +90,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       }
     }
     setShowPermissionDisabled(true)
+    setIsWaitingForPermissions(false)
   }
 
   const handleImageError = (error: ImageErrorEvent) => {
@@ -94,7 +109,11 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       title={t('BCSC.VideoCall.StartCall')}
       accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
       onPress={onPressStart}
-    />
+      disabled={isWaitingForPermissions}
+      testID={testIdWithKey('StartCall')}
+    >
+      {isWaitingForPermissions && <ButtonLoading />}
+    </Button>
   )
 
   return (

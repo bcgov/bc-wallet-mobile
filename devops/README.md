@@ -6,100 +6,114 @@ This directory contains the source code for supporting infrastructure components
 
 ## Loki Logstack
 
-The Loki Logstack is a set of components for gathering and storing logs temporarily, which helps with troubleshooting and analyzing issues for the BC Wallet's advanced support team.
+The Loki Logstack gathers and stores logs temporarily for troubleshooting and analysis by the BC Wallet advanced support team.
 
-When turned on, the BC Wallet sends its logs to the Loki Logstack through the Loki Proxy. This proxy then forwards the logs to Loki for safekeeping. To ensure security, the Loki Proxy needs proper login details. It will only accept logs from the BC Wallet if the correct credentials are provided.
+When enabled, the BC Wallet sends logs to Loki through a Caddy reverse proxy. The proxy authenticates requests using HTTP Basic Auth and forwards them to Loki for storage.
 
-The components to the Loki Logstack deployment are as follows:
+### Components
 
-1. Loki - a log aggregation system
+| Component    | Role                           | Kind         | Details                                           |
+| ------------ | ------------------------------ | ------------ | ------------------------------------------------- |
+| **Loki**     | Log aggregation                | Deployment   | [grafana.com/oss/loki](https://grafana.com/oss/loki/) |
+| **Proxy**    | Auth gateway (Caddy)           | Deployment   | [caddyserver.com](https://caddyserver.com/)       |
+| **Minio**    | Object storage (S3-compatible) | StatefulSet  |                                                   |
+| **Memcached**| Query/chunk caching            | StatefulSet  |                                                   |
 
-Read more about Loki [here](https://grafana.com/oss/loki/).
+### Environments
 
-2. Proxy - a gatekeeper for the Loki system
+| Environment | Namespace      | Values File        | Replicas | Autoscaling |
+| ----------- | -------------- | ------------------ | -------- | ----------- |
+| Dev         | `ca7f8f-dev`   | `values_dev.yaml`  | 1        | No          |
+| Test        | `ca7f8f-test`  | `values_test.yaml` | 2        | No          |
+| Prod        | `ca7f8f-prod`  | `values_prod.yaml` | 3        | Yes (3-5)   |
 
-The current proxy implementation is Caddy. Read more about Caddy [here](https://caddyserver.com/).
+Production uses HorizontalPodAutoscalers on the Loki and Proxy deployments (80% CPU target).
 
-3. Minio - a high-performance object storage server
-4. Memcached - a high-performance, distributed memory object caching system
+### Credential Generation
+
+Each environment needs its own set of credentials. Generate them before deploying:
+
+```bash
+# Minio credentials
+export MINIO_ACCESS_KEY=$(openssl rand -hex 16)
+export MINIO_SECRET_KEY=$(openssl rand -hex 16)
+
+# Proxy credentials (username: 8 hex chars, password: 16 hex chars)
+export PROXY_USER_NAME=$(openssl rand -hex 8)
+export PROXY_PASSWORD=$(openssl rand -hex 16)
+```
 
 ### Deployment
 
-Deploy the Loki Logstack using the following command:
+Deploy the Loki Logstack by substituting the values file and namespace for the target environment:
 
 ```bash
-helm install bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_dev.yaml \
---set-string namespace=ca7123-dev \
---set-string minio_access_key=$MINIO_ACCESS_KEY \
---set-string minio_secret_key=$MINIO_SECRET_KEY \
---set-string proxyUserName=$PROXY_USER_NAME \
---set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD| awk -F: '{ print $2 }'|tr -d '[:space:]'|base64)
+helm install bcwallet ./devops/charts/loki-logstack \
+  -f ./devops/charts/loki-logstack/<VALUES_FILE> \
+  --set-string namespace=<NAMESPACE> \
+  --set-string minio_access_key=$MINIO_ACCESS_KEY \
+  --set-string minio_secret_key=$MINIO_SECRET_KEY \
+  --set-string proxyUserName=$PROXY_USER_NAME \
+  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]')
 ```
 
-The parameters passed in via the `--set-string` argument for this command are as follows:
+For example, to deploy to prod:
 
-| Value            | Description                                                                                         |
-| ---------------- | --------------------------------------------------------------------------------------------------- |
-| namespace        | The namespace in which to deploy the Loki Logstack. This is used by Caddy to find the Loki service. |
-| proxyUserName    | The username for the Loki Proxy. This is part of the authentication credentials.                    |
-| proxyPassword    | The password for the Loki Proxy.This is part of the authentication credentials.                     |
-| minio_access_key | The access key associated with Minio                                                                |
-| minio_secret_key | The secret key associated with Minio                                                                |
-
-**Pro Tip 🤓**
-
-- Use `openssl rand -hex 8` to generate a random password. The number `8` can be changed to any number to generate a password of that length. i.e `MINIO_SECRET_KEY=$(openssl rand -hex 16)` will generate a 16 character password.
-
-Once deployed there will be several pods running, depending on your replication count, that can be verified with the following command:
-
-```console
-➜  vc-wallet-mobile git:(feat/loki-ha) ✗ oc get pods -l "app.kubernetes.io/name=logstack"
-
-NAME                                       READY   STATUS    RESTARTS   AGE
-bcwallet-logstack-loki-79b7dfd4b4-2ffsb    1/1     Running   0          16h
-bcwallet-logstack-loki-79b7dfd4b4-mds8h    1/1     Running   0          16h
-bcwallet-logstack-memcached-0              1/1     Running   0          18h
-bcwallet-logstack-memcached-1              1/1     Running   0          18h
-bcwallet-logstack-minio-0                  1/1     Running   0          18h
-bcwallet-logstack-minio-1                  1/1     Running   0          18h
-bcwallet-logstack-proxy-5946c98d97-925qp   1/1     Running   0          18h
-bcwallet-logstack-proxy-5946c98d97-clzlg   1/1     Running   0          18h
+```bash
+helm install bcwallet ./devops/charts/loki-logstack \
+  -f ./devops/charts/loki-logstack/values_prod.yaml \
+  --set-string namespace=ca7f8f-prod \
+  --set-string minio_access_key=$MINIO_ACCESS_KEY \
+  --set-string minio_secret_key=$MINIO_SECRET_KEY \
+  --set-string proxyUserName=$PROXY_USER_NAME \
+  --set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD | awk -F: '{ print $2 }' | tr -d '[:space:]')
 ```
 
-In addition to the pods, there will be a route created for the Loki Proxy. This route is used by the BC Wallet to send its logs to the Loki Proxy. The route can be verified with the following command:
+#### Parameters
 
-```console
-➜  vc-wallet-mobile oc get routes -l "app.kubernetes.io/name=logstack"
+| Value              | Description                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `namespace`        | Target namespace. Used by Caddy to resolve the Loki service via cluster DNS.        |
+| `proxyUserName`    | Plaintext username for Caddy Basic Auth.                                            |
+| `proxyPassword`    | Bcrypt hash of the password (the `htpasswd` pipeline handles this).                 |
+| `minio_access_key` | Minio access key (stored in a Secret).                                              |
+| `minio_secret_key` | Minio secret key (stored in a Secret).                                              |
 
-NAME                      HOST/PORT                                                         PATH   SERVICES                  PORT   TERMINATION     WILDCARD
-bcwallet-logstack-proxy   bcwallet-logstack-proxy-abc123-test.apps.silver.devops.gov.bc.ca          bcwallet-logstack-proxy   2015   edge/Redirect   None
+### Verifying the Deployment
+
+Check pods are running:
+
+```bash
+oc get pods -l "app.kubernetes.io/name=logstack" -n <NAMESPACE>
+```
+
+Check the proxy route exists:
+
+```bash
+oc get routes -l "app.kubernetes.io/name=logstack" -n <NAMESPACE>
 ```
 
 ### Usage
 
-To use the Loki Logstack, the BC Wallet needs to be configured to send its logs to the Loki Proxy. This is done by setting the following environment variables (in the .env):
+Configure the BC Wallet to send logs by setting `REMOTE_LOGGING_URL` in `app/.env`:
 
-| Variable Name      | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| REMOTE_LOGGING_URL | The route from above with basic authentication credentials |
-
-For example:
-
-```console
-REMOTE_LOGGING_URL=https://<USERNAME>:<PASSWORD>@bcwallet-logstack-proxy-ab123-test.apps.silver.devops.gov.bc.ca/loki/api/v1/push
+```
+REMOTE_LOGGING_URL=https://<USERNAME>:<PASSWORD>@<PROXY_ROUTE_HOST>/loki/api/v1/push
 ```
 
-You can use the following cURL command to the entire log stack. Loki does not accept outdated logs, so you will need to change the timestamp `1705256799868099100` to the current time.
+Where `<USERNAME>` and `<PASSWORD>` are the plaintext proxy credentials (not the bcrypt hash), and `<PROXY_ROUTE_HOST>` is the hostname from the route above.
 
-Get and updated timestamp:
+#### Testing the Log Stack
 
-```console
-➜  vc-wallet-mobile ✗ node -e "console.log(Date.now() + '099100')"
-1705256928213099100
-```
-
-Send a sample log with the updated timestamp:
+Send a sample log to verify the full pipeline. Loki rejects outdated timestamps, so generate a current one first:
 
 ```bash
-curl -v -H "Content-Type: application/json" -u $PROXY_USER_NAME:$PROXY_PASSWORD -X POST "https://bcwallet-logstack-proxy-caZZZZ-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1734028898448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.blah.gov.bc.ca\"}"]]}]}'
+# Get a current nanosecond timestamp
+TIMESTAMP=$(node -e "console.log(Date.now() + '000000')")
+
+# Send a test log entry
+curl -v -H "Content-Type: application/json" \
+  -u $PROXY_USER_NAME:$PROXY_PASSWORD \
+  -X POST "https://<PROXY_ROUTE_HOST>/loki/api/v1/push" \
+  --data-raw "{\"streams\":[{\"stream\":{\"job\":\"react-native-logs\",\"level\":\"debug\",\"application\":\"bc wallet\",\"version\":\"1.0.0\",\"system\":\"iOS\",\"session_id\":\"test\"},\"values\":[[\"$TIMESTAMP\",\"{\\\"message\\\":\\\"Test log entry\\\"}\"  ]]}]}"
 ```

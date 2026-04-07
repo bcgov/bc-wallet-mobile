@@ -13,7 +13,7 @@ import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningB
 import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
@@ -37,6 +37,7 @@ const Account: React.FC = () => {
   const getQuickLoginURL = useQuickLoginURL()
   const { account, refreshAccount } = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
+  const [isDisabled, setIsDisabled] = useState(false)
 
   const openedWebview = useRef(false)
 
@@ -61,6 +62,7 @@ const Account: React.FC = () => {
       if (nextAppState === 'active' && openedWebview.current) {
         logger.info('Returning from background, refreshing token and account metadata...')
         openedWebview.current = false
+        setIsDisabled(false)
         refreshData()
       }
     })
@@ -82,6 +84,7 @@ const Account: React.FC = () => {
   }, [client, navigation, logger, t])
 
   const handleAllAccountDetailsPress = useCallback(async () => {
+    setIsDisabled(true)
     try {
       if (!bcscServiceClient) {
         // only generate quick login url if we have the bcsc service client metadata
@@ -179,6 +182,7 @@ const Account: React.FC = () => {
             accessibilityHint={t('Global.A11y.OpensInBrowser')}
             description={t('BCSC.Account.AccountDetailsDescription')}
             testID={testIdWithKey('AllAccountDetails')}
+            disabled={isDisabled}
           />
           <SectionButton
             onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
