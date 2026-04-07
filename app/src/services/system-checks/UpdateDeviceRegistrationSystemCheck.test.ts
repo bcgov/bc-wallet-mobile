@@ -10,6 +10,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    jest.restoreAllMocks()
   })
   describe('runCheck', () => {
     it('should return true when app version and build number are the same', async () => {
