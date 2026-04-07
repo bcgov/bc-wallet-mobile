@@ -2519,13 +2519,19 @@ class BcscCoreModule(
 
             if (existingAccounts == null) {
                 Log.e(NAME, "getAccountSecurityMethod: failed to parse accounts for issuer $issuerName")
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to parse accounts for issuer $issuerName")
+                promise.reject(
+                    "E_ACCOUNT_NOT_FOUND",
+                    "Account not found: failed to parse accounts for issuer $issuerName",
+                )
                 return
             }
 
             if (existingAccounts.isEmpty()) {
                 Log.e(NAME, "getAccountSecurityMethod: accounts list is empty for issuer $issuerName")
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts list is empty for issuer $issuerName")
+                promise.reject(
+                    "E_ACCOUNT_NOT_FOUND",
+                    "Account not found: accounts list is empty for issuer $issuerName",
+                )
                 return
             }
 
@@ -2567,13 +2573,19 @@ class BcscCoreModule(
 
             if (existingAccounts == null) {
                 Log.e(NAME, "isAccountLocked: failed to parse accounts for issuer $issuerName")
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to parse accounts for issuer $issuerName")
+                promise.reject(
+                    "E_ACCOUNT_NOT_FOUND",
+                    "Account not found: failed to parse accounts for issuer $issuerName",
+                )
                 return
             }
 
             if (existingAccounts.isEmpty()) {
                 Log.e(NAME, "isAccountLocked: accounts list is empty for issuer $issuerName")
-                promise.reject("E_ACCOUNT_NOT_FOUND", "Account not found: accounts list is empty for issuer $issuerName")
+                promise.reject(
+                    "E_ACCOUNT_NOT_FOUND",
+                    "Account not found: accounts list is empty for issuer $issuerName",
+                )
                 return
             }
 

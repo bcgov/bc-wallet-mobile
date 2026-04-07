@@ -1731,7 +1731,11 @@ class BcscCore: NSObject {
       pathDirectory: .applicationSupportDirectory
     ) else {
       logger.error("getAccountSecurityMethod: failed to decode account_metadata for account \(accountID)")
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to decode account_metadata for account \(accountID)", nil)
+      reject(
+        "E_ACCOUNT_NOT_FOUND",
+        "Account not found: failed to decode account_metadata for account \(accountID)",
+        nil
+      )
       return
     }
 
@@ -1768,7 +1772,11 @@ class BcscCore: NSObject {
       pathDirectory: .applicationSupportDirectory
     ) else {
       logger.error("isAccountLocked: failed to decode account_metadata for account \(accountID)")
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found: failed to decode account_metadata for account \(accountID)", nil)
+      reject(
+        "E_ACCOUNT_NOT_FOUND",
+        "Account not found: failed to decode account_metadata for account \(accountID)",
+        nil
+      )
       return
     }
 
