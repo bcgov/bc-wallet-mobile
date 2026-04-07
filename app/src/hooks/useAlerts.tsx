@@ -294,8 +294,9 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       // ERROR MODALS
       unknownErrorModal,
       factoryResetAlert: factoryResetErrorModal,
-      badRequestErrorModal: _createBasicErrorModal(AppEventCode.ERR_BAD_REQUEST, 'ProblemWithService'),
-      badResponseErrorModal: _createBasicErrorModal(AppEventCode.ERR_BAD_RESPONSE, 'ProblemWithService'),
+      badRequestErrorModal: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'ProblemWithService'),
+      badResponseErrorModal: _createBasicErrorModal(AppEventCode.SERVER_ERROR, 'ProblemWithService'),
+      serverTimeoutErrorModal: _createBasicErrorModal(AppEventCode.SERVER_TIMEOUT, 'ProblemWithService'),
       problemWithAppAlert: _createBasicErrorModal(AppEventCode.GENERAL, 'ProblemWithApp', { errorCode: '000' }),
       accountNotFoundAlert: _createBasicErrorModal(AppEventCode.ACCOUNT_NOT_FOUND, 'ProblemWithApp', { errorCode: '2822' }),
       deviceAuthenticationErrorAlert: _createBasicErrorModal(AppEventCode.DEVICE_AUTHENTICATION_ERROR, 'DeviceAuthenticationError'),

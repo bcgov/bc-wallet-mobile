@@ -47,8 +47,9 @@ const _getGlobalAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
     [AppEventCode.SERVER_ERROR, alerts?.serverErrorAlert],
     [AppEventCode.TOO_MANY_ATTEMPTS, alerts?.tooManyAttemptsAlert],
-    [AppEventCode.ERR_BAD_REQUEST, alerts?.badRequestErrorModal],
-    [AppEventCode.ERR_BAD_RESPONSE, alerts?.badResponseErrorModal],
+    [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestErrorModal],
+    [AppEventCode.SERVER_ERROR, alerts?.badResponseErrorModal],
+    [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutErrorModal],
     // Catch-all for unknown errors that don't map to a known IAS error code
     [AppEventCode.UNKNOWN_APP_ERROR, alerts?.unknownErrorModal],
   ])

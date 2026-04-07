@@ -102,10 +102,10 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 /**
- * Resolves an AppError based on the AxiosError code, mapping specific Axios error codes to predefined AppError definitions.
+ * Maps Axios error codes to predefined AppError definitions based on the application's error registry.
  *
- * @param errorCode - The error code from the AxiosError to resolve
- * @returns An AppError if a mapping exists for the error code, or null if no mapping is found
+ * @param errorCode - The error code from an AxiosError to map to an AppError definition
+ * @returns An ErrorDefinition from the ErrorRegistry if a mapping exists, or null if no mapping is found
  */
 export const getAxiosErrorDefinition = (errorCode?: string): ErrorDefinition | null => {
   switch (errorCode) {
