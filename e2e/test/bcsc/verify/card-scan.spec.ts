@@ -28,23 +28,34 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
 
   it('should navigate to the scan screen and inject the card image', async () => {
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
+    // Queue the image before the camera feed starts — Sauce Labs replaces the
+    // placeholder on the first frame.
     await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
     await SerialInstructions.tap('ScanBarcode')
-    // Inject while the camera is initializing (before the feed is active).
-    // Sauce Labs queues the image so it replaces the placeholder on first frame.
     await acceptSystemAlert()
+    // Re-inject once after the permission dialog in case the first injection
+    // was consumed by the system alert overlay rather than the camera feed.
+    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
   })
 
   it('should wait for the barcode scan to complete', async function () {
     await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
 
+    // Do NOT re-inject inside this loop. The injected image persists as the
+    // camera feed — every frame is identical, so the consecutive-reading
+    // validation counter (3 on Android, 5 on iOS) climbs automatically.
+    // Re-injecting would momentarily blank the feed, triggering
+    // handleNoCodesDetected() which resets the counter to zero.
     const maxAttempts = 10
     for (let i = 0; i < maxAttempts; i++) {
-      await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
       await tapAtWindowPercent(SCAN_SERIAL_TAP_FOCUS_WINDOW.x, SCAN_SERIAL_TAP_FOCUS_WINDOW.y)
       const stillOnScanScreen = await ScanSerial.isDisplayed('EnterManually')
       if (!stillOnScanScreen) break
       await driver.pause(2000)
     }
+  })
+
+  it('Affirm that the Setup Steps screen is displayed', async () => {
+    await SetupSteps.waitFor('Step5')
   })
 })

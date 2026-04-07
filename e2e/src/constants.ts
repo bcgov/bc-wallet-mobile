@@ -24,6 +24,7 @@ export const TestUsers = {
     dob: '19690913',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_shaggy.jpg',
+    selfieImage: 'images/id_shaggy.jpg',
   },
   combined: {
     username: 'e2e_velma',
@@ -31,6 +32,7 @@ export const TestUsers = {
     dob: '19951217',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
+    selfieImage: 'images/id_velma.jpg',
   },
   nonPhoto: {
     username: 'e2e_daphne',
@@ -38,6 +40,7 @@ export const TestUsers = {
     dob: '19800922',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_daphne.jpg',
+    selfieImage: 'images/id_daphne.jpg',
   },
   na: {
     username: 'e2e_fred',
@@ -45,6 +48,7 @@ export const TestUsers = {
     dob: '19680918',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_fred.jpg',
+    selfieImage: 'images/id_fred.jpg',
   },
 }
 

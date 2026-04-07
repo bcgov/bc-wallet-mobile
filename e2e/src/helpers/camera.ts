@@ -117,7 +117,10 @@ export async function injectCameraImage(imagePathOrBase64: string): Promise<void
  * Convenience wrapper — resolves from `e2e/assets/` and delegates to
  * {@link injectCameraImage}.
  */
-export async function injectPhoto(imagePathOrName: string, padding: ImagePadding): Promise<void> {
+export async function injectPhoto(
+  imagePathOrName: string,
+  padding: ImagePadding = { top: 0, right: 0, bottom: 0, left: 0 }
+): Promise<void> {
   const resolved = resolveAssetPath(imagePathOrName)
   const padded = await padImage(resolved, padding)
   await injectCameraImage(padded)
