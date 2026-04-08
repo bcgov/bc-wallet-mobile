@@ -5120,9 +5120,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-firebase/app@npm:23.8.8":
-  version: 23.8.8
-  resolution: "@react-native-firebase/app@npm:23.8.8"
+"@react-native-firebase/app@npm:~24.0.0":
+  version: 24.0.0
+  resolution: "@react-native-firebase/app@npm:24.0.0"
   dependencies:
     firebase: "npm:12.10.0"
   peerDependencies:
@@ -5132,20 +5132,20 @@ __metadata:
   peerDependenciesMeta:
     expo:
       optional: true
-  checksum: 10c0/04ab6e192f6bdd4743dc08cdef8614a8e537d5581fa6b966def4398d9567693657382f844341ac221d42fc89d12c16effdad160aaee36aa7a38bda03afa35607
+  checksum: 10c0/7019b99bda3f9b033bc6e619b8b37206a900ae64c662837971f31356a291b4e8eeb4f9e5a41dba70b33627425824d43620ec44a194daab01368b5932b3b9f7ae
   languageName: node
   linkType: hard
 
-"@react-native-firebase/messaging@npm:23.8.8":
-  version: 23.8.8
-  resolution: "@react-native-firebase/messaging@npm:23.8.8"
+"@react-native-firebase/messaging@npm:~24.0.0":
+  version: 24.0.0
+  resolution: "@react-native-firebase/messaging@npm:24.0.0"
   peerDependencies:
-    "@react-native-firebase/app": 23.8.8
+    "@react-native-firebase/app": 24.0.0
     expo: ">=47.0.0"
   peerDependenciesMeta:
     expo:
       optional: true
-  checksum: 10c0/f6a7d8cfc292d1445ea93ea262b2a22cbf51970be71008c55f1a3d992eaaae45940f937a3cde52f32d069dbf4bf8dec2e2c5215e6b3bddb8ed41d9d43da6dcde
+  checksum: 10c0/5be8b1e50d4f04ff6ead57503c506537c034e7e19c1e4515003eed535c5e8d54a976302fed459bffb62e6413640225bd2c28982c4083e9216c7bda7f768f0336
   languageName: node
   linkType: hard
 
@@ -8105,8 +8105,8 @@ __metadata:
     "@react-native-community/cli-platform-android": "npm:20.0.2"
     "@react-native-community/cli-platform-ios": "npm:20.0.2"
     "@react-native-community/netinfo": "npm:~11.4.1"
-    "@react-native-firebase/app": "npm:23.8.8"
-    "@react-native-firebase/messaging": "npm:23.8.8"
+    "@react-native-firebase/app": "npm:~24.0.0"
+    "@react-native-firebase/messaging": "npm:~24.0.0"
     "@react-native/babel-preset": "npm:~0.81.5"
     "@react-native/eslint-config": "npm:~0.81.5"
     "@react-native/eslint-plugin": "npm:~0.81.5"
