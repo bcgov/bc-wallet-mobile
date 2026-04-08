@@ -1,5 +1,5 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
+import { isNetworkError } from '@/bcsc-theme/utils/axios-error-utils'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { DEVICE_COUNT_BANNER_COOLDOWN_MS_DEV, DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD } from '@/constants'
 import { BCDispatchAction } from '@/store'

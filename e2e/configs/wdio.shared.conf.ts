@@ -36,7 +36,7 @@ export const config: WebdriverIO.Config = {
   },
 
   // Hooks for SauceLabs test status reporting
-  afterTest: async (test, _context, { passed }) => {
+  afterTest: async () => {
     // Implemented in sauce config override
   },
 }
