@@ -23,4 +23,8 @@ describe('Nickname', () => {
     await Nickname.dismissKeyboard()
     await Nickname.tap('SaveAndContinue')
   })
+
+  it('Affirm that the Setup Steps screen is displayed', async () => {
+    await SetupSteps.waitFor('Step2')
+  })
 })

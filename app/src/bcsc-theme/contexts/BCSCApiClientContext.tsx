@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
 import { AxiosAppError, ClientErrorHandlingPolicies, ErrorMatcherContext } from '../api/clientErrorPolicies'
-import { isNetworkError } from '../utils/error-utils'
+import { isNetworkError } from '../utils/axios-error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -67,6 +67,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         logger.info('[BCSCApiClient] No error handling policy for:', {
           endpoint: context.endpoint,
           appEvent: error.appEvent,
+          errorCode: error.cause.code,
         })
         return
       }

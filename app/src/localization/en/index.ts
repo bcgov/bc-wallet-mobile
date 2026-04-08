@@ -10,6 +10,7 @@ const translation = {
     "Loading": "Loading...",
     "Close": "Close",
     "ShowDetails": "Show Details",
+    "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
     "ContinueSetup": "Continue setup",
@@ -1147,7 +1148,7 @@ const translation = {
     },
     "DynamicRegistrationError": {
       "Title": "Problem with Service",
-      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202)"
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error {{ errorCode }})"
     },
     "AddCardNotAvailable": {
       "Title": "Add Card Not Available",

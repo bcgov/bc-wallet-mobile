@@ -3,6 +3,9 @@
 
 replicaCount: 2
 
+autoscaling:
+  enabled: false
+
 podAnnotations: {}
 podLabels: {}
 
@@ -118,6 +121,7 @@ volumeMounts: []
 # Loki configuration that is likely to change between
 # deployments
 loki:
+  replicationFactor: 2
   retention:
     retention_period: 3d
 

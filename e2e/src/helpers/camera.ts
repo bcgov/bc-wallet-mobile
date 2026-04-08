@@ -1,11 +1,48 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
+import sharp from 'sharp'
 import { isSauceLabs } from './sauce.js'
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 const SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png']
+
+/** White (`#FFFFFF`) — matches app guidance for card-on-background scans. */
+const DEFAULT_PAD_IMAGE_BACKGROUND: sharp.Color = { r: 255, g: 255, b: 255, alpha: 1 }
+
+export interface ImagePadding {
+  top?: number
+  right?: number
+  bottom?: number
+  left?: number
+}
+/**
+ * Add whitespace padding around an image so it aligns with a scanner target
+ * area after Sauce Labs scales it to fill the camera frame.
+ *
+ * Padding values are in **pixels**. The background colour defaults to white
+ * (`#FFFFFF`) to match the app's "place card on white background" guidance.
+ *
+ * @returns base64-encoded PNG of the padded image.
+ */
+export async function padImage(
+  imagePath: string,
+  padding: ImagePadding,
+  background: sharp.Color = DEFAULT_PAD_IMAGE_BACKGROUND
+): Promise<string> {
+  const buf = await sharp(imagePath)
+    .extend({
+      top: padding.top ?? 0,
+      right: padding.right ?? 0,
+      bottom: padding.bottom ?? 0,
+      left: padding.left ?? 0,
+      background,
+    })
+    .png()
+    .toBuffer()
+  return buf.toString('base64')
+}
 
 /**
  * Resolve an image path relative to the `e2e/assets/` directory.
@@ -75,27 +112,13 @@ export async function injectCameraImage(imagePathOrBase64: string): Promise<void
 }
 
 /**
- * Inject a QR code image into the device camera.
- *
- * Resolves `imagePathOrName` from `e2e/assets/` when a relative name is given
- * (e.g. `'qr-invite.png'` → `e2e/assets/qr-invite.png`).
- *
- * **Tip:** If the app's QR scanner defines a small target area, add padding
- * (whitespace border) around the QR code image so it fits within the scan
- * region after Sauce Labs scales it to the camera resolution.
- */
-export async function injectQRCode(imagePathOrName: string): Promise<void> {
-  const resolved = resolveAssetPath(imagePathOrName)
-  await injectCameraImage(resolved)
-}
-
-/**
  * Inject a photo (ID card, selfie, evidence) into the device camera.
  *
  * Convenience wrapper — resolves from `e2e/assets/` and delegates to
  * {@link injectCameraImage}.
  */
-export async function injectPhoto(imagePathOrName: string): Promise<void> {
+export async function injectPhoto(imagePathOrName: string, padding: ImagePadding): Promise<void> {
   const resolved = resolveAssetPath(imagePathOrName)
-  await injectCameraImage(resolved)
+  const padded = await padImage(resolved, padding)
+  await injectCameraImage(padded)
 }

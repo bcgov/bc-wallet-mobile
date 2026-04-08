@@ -7789,18 +7789,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.13.2":
-  version: 1.13.2
-  resolution: "axios@npm:1.13.2"
-  dependencies:
-    follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.4"
-    proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/e8a42e37e5568ae9c7a28c348db0e8cf3e43d06fcbef73f0048669edfe4f71219664da7b6cc991b0c0f01c28a48f037c515263cb79be1f1ae8ff034cd813867b
-  languageName: node
-  linkType: hard
-
-"axios@npm:~1.13.2":
+"axios@npm:1.13.6, axios@npm:~1.13.2":
   version: 1.13.6
   resolution: "axios@npm:1.13.6"
   dependencies:
@@ -8138,7 +8127,7 @@ __metadata:
     "@types/react-native-vector-icons": "npm:~6.4.18"
     "@typescript-eslint/eslint-plugin": "npm:~7.18.0"
     "@typescript-eslint/parser": "npm:~7.18.0"
-    axios: "npm:1.13.2"
+    axios: "npm:1.13.6"
     babel-jest: "npm:~29.7.0"
     babel-plugin-module-resolver: "npm:~5.0.2"
     base-64: "npm:~1.0.0"
@@ -8193,7 +8182,7 @@ __metadata:
     react-native-safe-area-context: "npm:~5.6.2"
     react-native-scalable-image: "npm:~1.1.0"
     react-native-screenguard: "npm:~1.1.0"
-    react-native-screens: "npm:~4.16.0"
+    react-native-screens: "npm:~4.24.0"
     react-native-splash-screen: "npm:~3.3.0"
     react-native-sse: "npm:~1.2.1"
     react-native-svg: "npm:~15.12.1"
@@ -11494,7 +11483,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.15.11, follow-redirects@npm:^1.15.6":
+"follow-redirects@npm:^1.15.11":
   version: 1.15.11
   resolution: "follow-redirects@npm:1.15.11"
   peerDependenciesMeta:
@@ -11523,7 +11512,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"form-data@npm:^4.0.4, form-data@npm:^4.0.5":
+"form-data@npm:^4.0.5":
   version: 4.0.5
   resolution: "form-data@npm:4.0.5"
   dependencies:
@@ -17133,17 +17122,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:~4.16.0":
-  version: 4.16.0
-  resolution: "react-native-screens@npm:4.16.0"
+"react-native-screens@npm:~4.24.0":
+  version: 4.24.0
+  resolution: "react-native-screens@npm:4.24.0"
   dependencies:
     react-freeze: "npm:^1.0.0"
-    react-native-is-edge-to-edge: "npm:^1.2.1"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/8ec459ff52cbd317bfca598843a0010b4ca9070d05664f28d792594d8ceabb398b9d68abb578f40295e41f906308efe7ac7359046fba7aaf318a0d9d65446102
+  checksum: 10c0/49299e694ed20cf5a8c0f86702eb77df03f5b7353d9b73e7415bb593ac5ff3aa4dfe76b1e9d8efb0fd926917e507f02f13e0a8791c8833910080454b66d99943
   languageName: node
   linkType: hard
 

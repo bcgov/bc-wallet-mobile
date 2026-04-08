@@ -1,5 +1,5 @@
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError } from './error-utils'
+import { formatIasAxiosResponseError, getAppErrorFromAxiosError, getAxiosErrorDefinition } from './axios-error-utils'
 
 describe('Error Utils', () => {
   describe('getAppErrorFromAxiosError', () => {
@@ -89,6 +89,36 @@ describe('Error Utils', () => {
 
       expect(formattedError.code).toBe('A')
       expect(formattedError.message).toBe('B')
+    })
+  })
+
+  describe('getAxiosErrorDefinition', () => {
+    it('NETWORK_ERROR should resolve to NO_INTERNET AppError', () => {
+      const appError = getAxiosErrorDefinition('ERR_NETWORK')
+
+      expect(appError).toBeDefined()
+      expect(appError?.appEvent).toBe('no_internet')
+    })
+
+    it('ECONNABORTED should resolve to SERVER_TIMEOUT AppError', () => {
+      const errorDefinition = getAxiosErrorDefinition('ECONNABORTED')
+
+      expect(errorDefinition).toBeDefined()
+      expect(errorDefinition?.appEvent).toBe('server_timeout')
+    })
+
+    it('BAD_REQUEST should resolve to BAD_REQUEST AppError', () => {
+      const errorDefinition = getAxiosErrorDefinition('ERR_BAD_REQUEST')
+
+      expect(errorDefinition).toBeDefined()
+      expect(errorDefinition?.appEvent).toBe('err_209_bad_request')
+    })
+
+    it('BAD_RESPONSE should resolve to SERVER_ERROR AppError', () => {
+      const errorDefinition = getAxiosErrorDefinition('ERR_BAD_RESPONSE')
+
+      expect(errorDefinition).toBeDefined()
+      expect(errorDefinition?.appEvent).toBe('server_error')
     })
   })
 })

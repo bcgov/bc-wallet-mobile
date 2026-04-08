@@ -1,0 +1,118 @@
+# Production values for logstack.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+podAnnotations: {}
+podLabels: {}
+
+cacheVolumeSize: "1Gi" # loki emptyDir size limit
+
+images:
+  pullPolicy: IfNotPresent
+  registry: artifacts.developer.gov.bc.ca/docker-remote
+  proxy:
+    repository: caddy
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "2.2.1-alpine"
+  loki:
+    repository: grafana/loki
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "2.9.7"
+  memcached:
+    repository: memcached
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.6.17-alpine"
+  minio:
+    repository: minio/minio
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "RELEASE.2024-03-30T09-41-56Z"
+
+imagePullSecrets:
+  - name: artifactory-creds
+
+env:
+  LOKI_CONFIG_PATH: "/etc/loki/config.yaml"
+  CADDY_CONFIG_PATH: "/etc/caddy/Caddyfile"
+
+resources:
+  loki:
+    requests:
+      memory: 230Mi
+      cpu: 12m
+    limits:
+      memory: 310Mi
+  proxy:
+    requests:
+      memory: 80Mi
+      cpu: 12m
+    limits:
+      memory: 112Mi
+  memcached:
+    limits:
+      memory: 40Mi
+    requests:
+      cpu: 12m
+      memory: 40Mi
+  minio:
+    requests:
+      memory: 230Mi
+      cpu: 24m
+    limits:
+      memory: 230Mi
+
+services:
+  loki:
+    - name: http
+      port: 3100
+    - name: grpc
+      port: 9096
+    - name: memberlist
+      port: 7946
+  memberlist:
+    - name: memberlist
+      port: 7946
+  proxy:
+    - name: http
+      port: 2015
+  memcached:
+    - name: client
+      port: 11211
+  minio:
+    - name: server
+      port: 9000
+
+route:
+  host: ""
+  annotations:
+    haproxy.router.openshift.io/timeout: 60s
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+
+#
+# Loki configuration
+#
+
+# Loki configuration that is likely to change between
+# deployments
+loki:
+  replicationFactor: 3
+  retention:
+    retention_period: 3d
+
+#
+# Caddy configuration
+#
+
+caddy:
+  logLevel: WARN
