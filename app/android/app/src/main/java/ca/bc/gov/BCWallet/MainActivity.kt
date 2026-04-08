@@ -15,7 +15,6 @@ class MainActivity : ReactActivity() {
     // react-native-screens override
     // https://github.com/software-mansion/react-native-screens#android
     override fun onCreate(savedInstanceState: Bundle?) {
-        SplashScreen.show(this)
         supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
         super.onCreate(savedInstanceState)
     }
