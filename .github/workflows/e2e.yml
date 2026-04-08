@@ -35,6 +35,15 @@ on:
         description: 'Run biometric tests (non-blocking)'
         type: boolean
         default: false
+    secrets:
+      SAUCE_USERNAME:
+        required: true
+      SAUCE_ACCESS_KEY:
+        required: true
+      CARD_SERIAL:
+        required: true
+      BIRTH_DATE:
+        required: true
   workflow_dispatch:
     inputs:
       suite:
@@ -102,17 +111,20 @@ jobs:
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           SAUCE_REGION: us
           VARIANT: ${{ matrix.variant }}
+          PLATFORM: ${{ matrix.platform }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.platform }}'
           CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
           BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |
-          if [ "${{ matrix.platform }}" = "iOS" ]; then
-            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ inputs.build_number }}.ipa" \
-              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite ${{ inputs.suite }}
+          if [ "$PLATFORM" = "iOS" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
+              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite "${SUITE}"
           else
-            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ inputs.build_number }}.aab" \
-              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite ${{ inputs.suite }}
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
+              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite "${SUITE}"
           fi
 
   # ─── E2E Biometrics ────────────────────────────────────────────────
@@ -164,15 +176,17 @@ jobs:
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
+          PLATFORM: ${{ matrix.platform }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E Bio - bcsc-dev ${{ matrix.platform }}'
           CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
           BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |
-          if [ "${{ matrix.platform }}" = "iOS" ]; then
-            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ inputs.build_number }}.ipa" \
+          if [ "$PLATFORM" = "iOS" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts --suite biometrics
           else
-            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ inputs.build_number }}.aab" \
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
               yarn wdio configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts --suite biometrics
           fi

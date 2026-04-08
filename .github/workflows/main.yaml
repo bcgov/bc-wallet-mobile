@@ -1166,7 +1166,11 @@ jobs:
       build_number: ${{ github.run_number }}
       variants: ${{ needs.compute-variants.outputs.variants }}
       include_biometrics: false
-    secrets: inherit
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
 
   # Full regression + biometrics on merge to main:
   # e2e-regression:
@@ -1180,4 +1184,8 @@ jobs:
   #     build_number: ${{ github.run_number }}
   #     variants: ${{ needs.compute-variants.outputs.variants }}
   #     include_biometrics: true
-  #   secrets: inherit
+  #   secrets:
+  #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+  #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+  #     CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+  #     BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
