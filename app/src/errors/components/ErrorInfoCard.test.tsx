@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { ErrorInfoCard, ErrorInfoCardColors, ErrorInfoCardProps, fallbackColors } from './ErrorInfoCard'
+import { ErrorInfoCard, ErrorInfoCardProps, colors as errorInfoCardColors } from './ErrorInfoCard'
 
 jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.0',
@@ -8,6 +8,7 @@ jest.mock('react-native-device-info', () => ({
 }))
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'CommunityIcon')
 
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
@@ -79,6 +80,18 @@ describe('ErrorInfoCard', () => {
       expect(getByTestId('com.aries.bifold:id/DetailsText')).toBeTruthy()
     })
 
+    it('should hide details text when toggle is pressed again', () => {
+      const { getByTestId, queryByTestId } = render(
+        <ErrorInfoCard {...defaultProps} message="Technical details" code={2800} />
+      )
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
+      expect(getByTestId('com.aries.bifold:id/DetailsText')).toBeTruthy()
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
+      expect(queryByTestId('com.aries.bifold:id/DetailsText')).toBeNull()
+    })
+
     it('should format details with error code and message', () => {
       const { getByTestId, getByText } = render(
         <ErrorInfoCard {...defaultProps} message="Technical details" code={2800} />
@@ -97,12 +110,29 @@ describe('ErrorInfoCard', () => {
       expect(getByText('Error.ErrorCode 0 - Tech msg')).toBeTruthy()
     })
 
-    it('should hide toggle after revealing details', () => {
-      const { getByTestId, queryByTestId } = render(<ErrorInfoCard {...defaultProps} message="Tech msg" />)
+    it('should keep toggle visible after revealing details', () => {
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} message="Tech msg" />)
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
 
-      expect(queryByTestId('com.aries.bifold:id/ShowDetails')).toBeNull()
+      expect(getByTestId('com.aries.bifold:id/ShowDetails')).toBeTruthy()
+    })
+
+    it('should show "Hide details" text when details are visible', () => {
+      const { getByTestId, getByText } = render(<ErrorInfoCard {...defaultProps} message="Tech msg" />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
+
+      expect(getByText('Global.HideDetails')).toBeTruthy()
+    })
+
+    it('should show "Show details" text after hiding details again', () => {
+      const { getByTestId, getByText } = render(<ErrorInfoCard {...defaultProps} message="Tech msg" />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/ShowDetails'))
+
+      expect(getByText('Global.ShowDetails')).toBeTruthy()
     })
   })
 
@@ -199,7 +229,7 @@ describe('ErrorInfoCard', () => {
         ? Object.assign({}, ...button.props.style)
         : button.props.style
 
-      expect(buttonStyle.backgroundColor).toBe(fallbackColors.destructiveButton)
+      expect(buttonStyle.backgroundColor).toBe(errorInfoCardColors.destructiveButton)
     })
 
     it('should apply secondary style when action.style is not destructive', () => {
@@ -211,7 +241,7 @@ describe('ErrorInfoCard', () => {
         ? Object.assign({}, ...button.props.style)
         : button.props.style
 
-      expect(buttonStyle.backgroundColor).toBe(fallbackColors.secondaryButtonBackground)
+      expect(buttonStyle.backgroundColor).toBe(errorInfoCardColors.secondaryButtonBackground)
     })
 
     it('should not render action button when action is not provided', () => {
@@ -221,23 +251,21 @@ describe('ErrorInfoCard', () => {
     })
   })
 
-  describe('colors', () => {
-    it('should use fallback colors by default', () => {
-      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} />)
+  describe('snapshots', () => {
+    it('should match snapshot with default props', () => {
+      const tree = render(<ErrorInfoCard {...defaultProps} />)
 
-      expect(getByTestId('com.aries.bifold:id/HeaderText')).toBeTruthy()
+      expect(tree.toJSON()).toMatchSnapshot()
     })
 
-    it('should accept custom colors', () => {
-      const customColors: ErrorInfoCardColors = {
-        ...fallbackColors,
-        text: '#FF0000',
-        cardBackground: '#000000',
-      }
+    it('should match snapshot with details expanded', () => {
+      const tree = render(
+        <ErrorInfoCard {...defaultProps} message="Technical details" code={2800} enableReport onReport={mockOnReport} />
+      )
 
-      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} colors={customColors} />)
+      fireEvent.press(tree.getByTestId('com.aries.bifold:id/ShowDetails'))
 
-      expect(getByTestId('com.aries.bifold:id/HeaderText')).toBeTruthy()
+      expect(tree.toJSON()).toMatchSnapshot()
     })
   })
 })

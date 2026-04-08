@@ -9,13 +9,15 @@ import org.devio.rn.splashscreen.SplashScreen
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
 
 class MainActivity : ReactActivity() {
     // react-native-screens override
     // https://github.com/software-mansion/react-native-screens#android
     override fun onCreate(savedInstanceState: Bundle?) {
         SplashScreen.show(this)
-        super.onCreate(null)
+        supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
+        super.onCreate(savedInstanceState)
     }
 
     /**

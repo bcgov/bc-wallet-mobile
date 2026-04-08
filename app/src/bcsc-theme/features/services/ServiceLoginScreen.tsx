@@ -87,7 +87,9 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
           marginBottom: Spacing.lg,
         }}
       />
-      <ThemedText variant={'bold'}>{t('BCSC.Services.PreferOtherDevice')}</ThemedText>
+      <ThemedText variant={'bold'} style={{ textAlign: 'center' }}>
+        {t('BCSC.Services.PreferOtherDevice')}
+      </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>
         {isQuickLogin ? (
@@ -107,10 +109,15 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
 type ReportSuspiciousLinkProps = {
   t: (key: string, options?: Record<string, unknown>) => string
   testID?: string
+  Spacing: ReturnType<typeof useTheme>['Spacing']
 }
 
-const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }: ReportSuspiciousLinkProps) => (
-  <ThemedText variant={'bold'}>
+const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({
+  t,
+  testID,
+  Spacing,
+}: ReportSuspiciousLinkProps) => (
+  <ThemedText variant={'bold'} style={{ textAlign: 'center', marginTop: Spacing.lg }}>
     {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
     <Link
       linkText={t('BCSC.Services.ReportSuspicious')}
@@ -169,7 +176,6 @@ const ServiceLoginUnavailableView = ({
           Spacing={Spacing}
           isQuickLogin={false}
         />
-        <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
       </View>
     </ScrollView>
   </SafeAreaView>
@@ -268,14 +274,17 @@ const ServiceLoginDefaultView = ({
             onPress={onCancel}
           />
         </View>
-        <DevicePreferenceURLView
-          serviceClientUri={state.serviceClientUri}
-          ColorPalette={ColorPalette}
-          t={t}
-          Spacing={Spacing}
-          isQuickLogin={true}
-        />
-        <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
+        {state.privacyPolicyUri ? (
+          <DevicePreferenceURLView
+            serviceClientUri={state.serviceClientUri}
+            ColorPalette={ColorPalette}
+            t={t}
+            Spacing={Spacing}
+            isQuickLogin={true}
+          />
+        ) : (
+          <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} Spacing={Spacing} />
+        )}
       </ScrollView>
     </SafeAreaView>
   )

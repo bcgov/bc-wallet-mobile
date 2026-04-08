@@ -10,6 +10,7 @@ const translation = {
     "Loading": "Chargement...",
     "Close": "Close (FR)",
     "ShowDetails": "Afficher les détails",
+    "HideDetails": "Masquer les détails",
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
     "ContinueSetup": "Continue setup (FR)",

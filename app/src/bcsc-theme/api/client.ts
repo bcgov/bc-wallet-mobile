@@ -10,7 +10,7 @@ import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
-} from '../utils/error-utils'
+} from '../utils/axios-error-utils'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
