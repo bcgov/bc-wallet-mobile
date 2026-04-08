@@ -48,7 +48,8 @@ import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 import { AppContainer } from './container-imp'
 
-initLanguages(localization)
+// Only english in BCSC, all three languages in BC Wallet
+initLanguages(Config.BUILD_TARGET === Mode.BCSC ? { en: localization.en } : localization)
 initIssuer(appLogger)
 
 // Module-level singletons - constructors are pure (no RN bridge calls)
