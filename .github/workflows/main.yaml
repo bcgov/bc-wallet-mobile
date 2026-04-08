@@ -1148,96 +1148,44 @@ jobs:
           artifact_name: ${{ env.ARTIFACT_INNER_NAME }}
 
   # ─── E2E Tests ──────────────────────────────────────────────────────
-  # Available suites (defined in e2e/configs/wdio.shared.conf.ts):
-  #   smoke          — basic launch + first navigation
-  #   happy-path     — onboarding → verify → main (straight-through)
-  #   full-regression — onboarding → verify → main (with detours)
+  # Delegated to .github/workflows/e2e.yml (reusable workflow).
+  # PR: smoke tests for fast feedback.
+  # Main: use e2e-nightly.yml (schedule/manual) for full-regression.
   #
-  # PR:   smoke suite (all variants)
-  # Main: disabled for now (re-enable once SauceLabs pipeline is stable)
-  #
-  # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
-  e2e-tests:
-    name: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
+  # TODO: Uncomment e2e-regression below once GH Actions runner IPs
+  # are whitelisted, to run full-regression on every merge to main.
+  e2e:
     needs: [ship-to-saucelabs, compute-variants]
-    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    timeout-minutes: 15
-    strategy:
-      max-parallel: 2
-      fail-fast: false
-      matrix:
-        platform: [iOS, Android]
-        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
-    steps:
-      - name: Check build artifact exists
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: ${{ matrix.platform == 'iOS' && 'ios' || 'android' }}-${{ matrix.variant }}.${{ matrix.platform == 'iOS' && 'ipa' || 'aab' }}
-          path: ${{ runner.temp }}/probe
+    if: >-
+      always() && !cancelled() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.fork != true
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: smoke
+      build_number: ${{ github.run_number }}
+      variants: ${{ needs.compute-variants.outputs.variants }}
+      include_biometrics: false
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
 
-      - uses: actions/checkout@v6
-        if: steps.probe.outcome == 'success'
-
-      - name: Load variant config
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Determine test suite
-        if: steps.probe.outcome == 'success'
-        id: mode
-        shell: bash
-        run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "E2E on main is temporarily disabled"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "suite=--suite smoke" >> "$GITHUB_OUTPUT"
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Setup NodeJS
-        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
-        uses: ./.github/workflows/actions/setup-node
-
-      - name: Cache E2E dependencies
-        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
-        uses: actions/cache@v5
-        with:
-          path: |
-            e2e/.yarn/cache
-            e2e/node_modules
-          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
-          restore-keys: e2e-deps-
-
-      - name: Install E2E dependencies
-        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
-        working-directory: e2e
-        run: yarn install --immutable
-
-      - name: Run WDIO tests
-        if: steps.probe.outcome == 'success' && steps.mode.outputs.skip != 'true'
-        working-directory: e2e
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-          SAUCE_REGION: us
-          VARIANT: ${{ matrix.variant }}
-          BUILD_NAME: 'build-${{ github.run_number }}'
-          TEST_NAME: 'E2E - ${{ matrix.variant }} ${{ matrix.platform }}'
-          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
-        run: |
-          if [ "${{ matrix.platform }}" = "ios" ]; then
-            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.ipa" \
-              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts ${{ steps.mode.outputs.suite }}
-          else
-            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${{ github.run_number }}.aab" \
-              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts ${{ steps.mode.outputs.suite }}
-          fi
+  # Full regression + biometrics on merge to main:
+  # e2e-regression:
+  #   needs: [ship-to-saucelabs, compute-variants]
+  #   if: >-
+  #     always() && !cancelled() &&
+  #     github.ref_name == 'main'
+  #   uses: ./.github/workflows/e2e.yml
+  #   with:
+  #     suite: full-regression
+  #     build_number: ${{ github.run_number }}
+  #     variants: ${{ needs.compute-variants.outputs.variants }}
+  #     include_biometrics: true
+  #   secrets:
+  #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+  #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+  #     CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+  #     BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
