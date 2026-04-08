@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'react-native',
+  maxWorkers: '50%',
   testTimeout: 10000,
   setupFiles: ['<rootDir>/jestSetup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect', '<rootDir>/jestSetupAfterEnv.js'],
@@ -8,7 +9,7 @@ module.exports = {
     '\\.(jpg|ico|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
       '<rootDir>/__mocks__/file.js',
     '\\.(css|less)$': '<rootDir>/__mocks__/style.js',
-    axios: require.resolve('axios'),
+    '^axios$': require.resolve('axios'),
     'react-i18next': '<rootDir>/__mocks__/react-i18next.ts',
     '^uuid$': require.resolve('uuid'),
     '@credo-ts/core': require.resolve('@credo-ts/core'),

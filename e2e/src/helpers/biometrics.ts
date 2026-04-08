@@ -8,7 +8,7 @@ function bioLog(message: string): void {
 
 /** Subtitle set in bcsc-core `DeviceAuthenticationService` / `BcscCoreModule.performDeviceAuthentication`. */
 const ANDROID_BIOMETRIC_SUBTITLE_SEL =
-  '//android.widget.TextView[contains(@text,"Sign in with FingerPrint") or contains(@text,"Sign in with FaceID")]'
+  '//android.widget.TextView[contains(@text,"Sign in with FingerPrint") or contains(@text,"Sign in with FaceID") or contains(@text,"Authenticate to secure your app")]'
 
 /** iOS system biometric sheet (en — adjust if running localized Sauce sessions). */
 const IOS_BIOMETRIC_LABEL_SEL =

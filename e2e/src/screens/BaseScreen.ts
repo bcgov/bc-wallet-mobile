@@ -251,4 +251,18 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
         (directions === 'both' ? ' in each direction' : '')
     )
   }
+
+  /**
+   * Check if an element is displayed.
+   * @param key - key of the TestID to check
+   * @returns true if the element is displayed, false otherwise
+   */
+  public async isDisplayed(key: keyof T & string): Promise<boolean> {
+    const el = await this.findByTestId(this.ids[key])
+    try {
+      return await el.isDisplayed()
+    } catch {
+      return false
+    }
+  }
 }

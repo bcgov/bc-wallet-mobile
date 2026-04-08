@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
+import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -10,6 +11,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Linking } from 'react-native'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
@@ -31,6 +33,7 @@ jest.mock('./hooks/useServiceLoginState', () => ({
 import { useServiceLoginState } from './hooks/useServiceLoginState'
 
 const mockedUseServiceLoginState = useServiceLoginState as jest.MockedFunction<typeof useServiceLoginState>
+const mockedUseQuickLoginURL = useQuickLoginURL as jest.MockedFunction<typeof useQuickLoginURL>
 
 const SERVICE_CLIENT_URI = 'https://service.example.com'
 
@@ -56,17 +59,6 @@ const renderScreen = (mockNavigation: any) => {
     </BasicAppContext>
   )
 }
-jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    pairing: { loginByPairingCode: jest.fn() },
-    metadata: {},
-  })),
-}))
-
-jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
-  useQuickLoginURL: jest.fn(() => jest.fn()),
-}))
 
 describe('ServiceLogin', () => {
   let mockNavigation: any
@@ -80,6 +72,8 @@ describe('ServiceLogin', () => {
       isLoading: true,
       serviceHydrated: false,
     })
+    mockedUseQuickLoginURL.mockReturnValue(jest.fn())
+    mockNavigation.canGoBack = jest.fn().mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -87,7 +81,7 @@ describe('ServiceLogin', () => {
   })
 
   it('renders correctly', () => {
-    const route = { params: { serviceClient: { client_id: 'test-client' } } }
+    const route = { params: { serviceClientId: 'test-client' } }
     const tree = render(
       <BasicAppContext>
         <PairingServiceProvider service={createMockPairingService()}>
@@ -107,6 +101,7 @@ describe('ServiceLogin', () => {
           serviceInitiateLoginUri: 'https://login.example.com',
           serviceClientUri: SERVICE_CLIENT_URI,
           claimsDescription: 'Your name and birthdate',
+          privacyPolicyUri: 'https://privacy.example.com',
         },
         isLoading: false,
         serviceHydrated: true,
@@ -131,6 +126,41 @@ describe('ServiceLogin', () => {
       const { getByTestId } = renderScreen(mockNavigation)
 
       expect(getByTestId(testIdWithKey('ServiceClientLink'))).toBeTruthy()
+    })
+
+    it('renders Default view with privacy policy card when privacyPolicyUri is set', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          privacyPolicyUri: 'https://privacy.example.com',
+          claimsDescription: 'Your name and birthdate',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
+
+      expect(getByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeTruthy()
+      expect(queryByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeNull()
+    })
+
+    it('renders Default view with report suspicious link when no privacyPolicyUri', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          claimsDescription: 'Your name and birthdate',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
+
+      expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
+      expect(queryByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeNull()
     })
   })
 
@@ -217,6 +247,120 @@ describe('ServiceLogin', () => {
       resolveLogin({ client_ref_id: 'test-client', client_name: 'Test Service' })
 
       await waitFor(() => expect(mockLoginByPairingCode).toHaveBeenCalledTimes(1))
+    })
+  })
+
+  describe('onContinueWithQuickLoginUrl', () => {
+    const mockedUseApi = useApi as jest.MockedFunction<typeof useApi>
+
+    const renderWithService = (mockGetQuickLoginURL: jest.Mock, mockAlerts: Record<string, jest.Mock>) => {
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+      jest.spyOn(useServiceLoginStateModule, 'useServiceLoginState').mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          service: { client_ref_id: 'test', client_name: 'Test Service' } as any,
+          privacyPolicyUri: 'https://privacy.example.com',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      mockedUseApi.mockReturnValue({
+        pairing: { loginByPairingCode: jest.fn() },
+        metadata: {},
+      } as any)
+      mockedUseQuickLoginURL.mockReturnValue(mockGetQuickLoginURL)
+
+      const route = { params: { serviceClientId: 'test-client' } }
+      return render(
+        <BasicAppContext>
+          <PairingServiceProvider service={createMockPairingService()}>
+            <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
+          </PairingServiceProvider>
+        </BasicAppContext>
+      )
+    }
+
+    it('should open URL and navigate home on successful quick login', async () => {
+      const quickLoginUrl = 'https://login.example.com/quick'
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: true, url: quickLoginUrl })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: jest.fn() })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockOpenURL).toHaveBeenCalledWith(quickLoginUrl))
+      await waitFor(() => expect(mockNavigation.reset).toHaveBeenCalled())
+
+      mockOpenURL.mockRestore()
+    })
+
+    it('should show loginServerErrorAlert when quick login URL generation fails', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ error: 'token expired' })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: mockLoginServerErrorAlert })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+  })
+
+  describe('onCancel', () => {
+    const renderWithDefaultState = (mockPairingService: PairingService) => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: { serviceTitle: 'Test Service', pairingCode: 'ABC123' },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const route = { params: { serviceClientId: 'test-client' } }
+      return render(
+        <BasicAppContext>
+          <PairingServiceProvider service={mockPairingService}>
+            <ServiceLoginScreen navigation={mockNavigation as never} route={route as never} />
+          </PairingServiceProvider>
+        </BasicAppContext>
+      )
+    }
+
+    it('consumes pending pairing when hasPendingPairing is true', () => {
+      const mockConsumePendingPairing = jest.fn()
+      const mockPairingService = {
+        ...createMockPairingService(),
+        hasPendingPairing: true,
+        consumePendingPairing: mockConsumePendingPairing,
+      } as unknown as PairingService
+
+      const { getByTestId } = renderWithDefaultState(mockPairingService)
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/ServiceLoginCancel'))
+
+      expect(mockConsumePendingPairing).toHaveBeenCalled()
+      expect(mockNavigation.goBack).not.toHaveBeenCalled()
+    })
+
+    it('goes back when navigation can go back', () => {
+      mockNavigation.canGoBack.mockReturnValue(true)
+
+      const { getByTestId } = renderWithDefaultState(createMockPairingService())
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/ServiceLoginCancel'))
+
+      expect(mockNavigation.goBack).toHaveBeenCalled()
+    })
+
+    it('navigates to home tab when no pending pairing and no back stack', () => {
+      mockNavigation.canGoBack.mockReturnValue(false)
+
+      const { getByTestId } = renderWithDefaultState(createMockPairingService())
+
+      fireEvent.press(getByTestId('com.ariesbifold:id/ServiceLoginCancel'))
+
+      expect(mockNavigation.navigate).toHaveBeenCalled()
+      expect(mockNavigation.goBack).not.toHaveBeenCalled()
     })
   })
 })

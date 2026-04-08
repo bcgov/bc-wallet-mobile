@@ -1,0 +1,497 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = `
+<View
+  style={
+    {
+      "maxWidth": 700,
+      "minWidth": 700,
+    }
+  }
+>
+  <View
+    style={
+      {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#D3D3D3",
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "elevation": 4,
+        "padding": 16,
+        "shadowColor": "#000000",
+        "shadowOffset": {
+          "height": 2,
+          "width": 0,
+        },
+        "shadowOpacity": 0.1,
+        "shadowRadius": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "paddingHorizontal": 4,
+          "paddingTop": 4,
+        }
+      }
+    >
+      <Icon
+        color="#313132"
+        name="error"
+        size={30}
+        style={
+          {
+            "alignSelf": "center",
+            "marginRight": 10,
+          }
+        }
+      />
+      <View
+        style={
+          {
+            "alignSelf": "center",
+            "flex": 1,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#313132",
+              "fontSize": 18,
+              "fontWeight": "700",
+            }
+          }
+          testID="com.aries.bifold:id/HeaderText"
+        >
+          Test Error
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="Global.Close"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        hitSlop={
+          {
+            "bottom": 44,
+            "left": 44,
+            "right": 44,
+            "top": 44,
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        testID="com.aries.bifold:id/CloseButton"
+      >
+        <Icon
+          color="#313132"
+          name="close"
+          size={24}
+        />
+      </View>
+    </View>
+    <RCTScrollView
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "marginTop": 8,
+          "paddingBottom": 8,
+          "paddingHorizontal": 4,
+        }
+      }
+    >
+      <View>
+        <Text
+          style={
+            {
+              "color": "#313132",
+              "fontSize": 16,
+              "lineHeight": 24,
+              "marginVertical": 8,
+            }
+          }
+          testID="com.aries.bifold:id/BodyText"
+        >
+          Something went wrong.
+        </Text>
+        <View
+          style={
+            {
+              "gap": 8,
+              "paddingHorizontal": 4,
+              "paddingTop": 16,
+            }
+          }
+        />
+        <Text
+          style={
+            {
+              "alignSelf": "center",
+              "color": "#606060",
+              "fontSize": 12,
+              "marginTop": 16,
+              "paddingTop": 8,
+            }
+          }
+          testID="com.aries.bifold:id/VersionNumber"
+        >
+          Settings.Version
+           
+          1.0.0
+           (
+          42
+          )
+        </Text>
+      </View>
+    </RCTScrollView>
+  </View>
+</View>
+`;
+
+exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`] = `
+<View
+  style={
+    {
+      "maxWidth": 700,
+      "minWidth": 700,
+    }
+  }
+>
+  <View
+    style={
+      {
+        "backgroundColor": "#FFFFFF",
+        "borderColor": "#D3D3D3",
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "elevation": 4,
+        "padding": 16,
+        "shadowColor": "#000000",
+        "shadowOffset": {
+          "height": 2,
+          "width": 0,
+        },
+        "shadowOpacity": 0.1,
+        "shadowRadius": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "flexDirection": "row",
+          "paddingHorizontal": 4,
+          "paddingTop": 4,
+        }
+      }
+    >
+      <Icon
+        color="#313132"
+        name="error"
+        size={30}
+        style={
+          {
+            "alignSelf": "center",
+            "marginRight": 10,
+          }
+        }
+      />
+      <View
+        style={
+          {
+            "alignSelf": "center",
+            "flex": 1,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#313132",
+              "fontSize": 18,
+              "fontWeight": "700",
+            }
+          }
+          testID="com.aries.bifold:id/HeaderText"
+        >
+          Test Error
+        </Text>
+      </View>
+      <View
+        accessibilityLabel="Global.Close"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        hitSlop={
+          {
+            "bottom": 44,
+            "left": 44,
+            "right": 44,
+            "top": 44,
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        testID="com.aries.bifold:id/CloseButton"
+      >
+        <Icon
+          color="#313132"
+          name="close"
+          size={24}
+        />
+      </View>
+    </View>
+    <RCTScrollView
+      showsVerticalScrollIndicator={false}
+      style={
+        {
+          "marginTop": 8,
+          "paddingBottom": 8,
+          "paddingHorizontal": 4,
+        }
+      }
+    >
+      <View>
+        <Text
+          style={
+            {
+              "color": "#313132",
+              "fontSize": 16,
+              "lineHeight": 24,
+              "marginVertical": 8,
+            }
+          }
+          testID="com.aries.bifold:id/BodyText"
+        >
+          Something went wrong.
+        </Text>
+        <View
+          accessibilityLabel="Global.HideDetails"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": true,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "marginVertical": 8,
+              "opacity": 1,
+            }
+          }
+          testID="com.aries.bifold:id/ShowDetails"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#003366",
+                  "fontSize": 16,
+                  "fontWeight": "500",
+                }
+              }
+            >
+              Global.HideDetails
+               
+            </Text>
+            <CommunityIcon
+              color="#003366"
+              name="chevron-up"
+              size={30}
+            />
+          </View>
+        </View>
+        <Text
+          style={
+            {
+              "color": "#606060",
+              "fontSize": 14,
+              "lineHeight": 20,
+              "marginBottom": 4,
+            }
+          }
+          testID="com.aries.bifold:id/DetailsText"
+        >
+          Error.ErrorCode 2800 - Technical details
+        </Text>
+        <View
+          style={
+            {
+              "gap": 8,
+              "paddingHorizontal": 4,
+              "paddingTop": 16,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="Error.ReportThisProblem"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "#003366",
+                "borderRadius": 8,
+                "justifyContent": "center",
+                "opacity": 1,
+                "paddingHorizontal": 24,
+                "paddingVertical": 14,
+              }
+            }
+            testID="com.aries.bifold:id/ReportThisProblem"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 16,
+                    "fontWeight": "600",
+                  }
+                }
+              >
+                Error.ReportThisProblem
+              </Text>
+            </View>
+          </View>
+        </View>
+        <Text
+          style={
+            {
+              "alignSelf": "center",
+              "color": "#606060",
+              "fontSize": 12,
+              "marginTop": 16,
+              "paddingTop": 8,
+            }
+          }
+          testID="com.aries.bifold:id/VersionNumber"
+        >
+          Settings.Version
+           
+          1.0.0
+           (
+          42
+          )
+        </Text>
+      </View>
+    </RCTScrollView>
+  </View>
+</View>
+`;
