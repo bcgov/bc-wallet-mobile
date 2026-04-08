@@ -4,7 +4,7 @@ import { appLogger } from '@/utils/logger'
 import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
-import { ErrorInfoCard, ErrorInfoCardColors } from './ErrorInfoCard'
+import { ErrorInfoCard } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
 
@@ -23,26 +23,6 @@ export interface ErrorModalPayload {
   cause?: unknown
   stack?: string
 }
-
-const mapThemeToCardColors = (palette: ReturnType<typeof useTheme>['ColorPalette']): ErrorInfoCardColors => ({
-  cardBackground: palette.grayscale.white,
-  cardBorder: palette.grayscale.lightGrey,
-  shadow: palette.grayscale.black,
-  icon: palette.grayscale.darkGrey,
-  text: palette.grayscale.darkGrey,
-  textSecondary: palette.grayscale.mediumGrey,
-  link: palette.brand.link,
-  primaryButton: palette.brand.modalPrimary,
-  primaryButtonDisabled: palette.brand.primaryDisabled,
-  primaryButtonText: palette.brand.text,
-  primaryButtonTextDisabled: palette.grayscale.white,
-  successIcon: palette.semantic.success,
-  secondaryButtonBackground: palette.grayscale.white,
-  secondaryButtonBorder: palette.grayscale.darkGrey,
-  secondaryButtonText: palette.grayscale.darkGrey,
-  destructiveButton: palette.semantic.error,
-  destructiveButtonText: palette.grayscale.white,
-})
 
 export interface BCSCErrorModalProps {
   error: ErrorModalPayload | null
@@ -88,8 +68,6 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     appLogger.report(reportError)
   }, [error])
 
-  const cardColors = useMemo(() => mapThemeToCardColors(ColorPalette), [ColorPalette])
-
   const overlayStyle = useMemo(
     () =>
       StyleSheet.create({
@@ -123,7 +101,6 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
             onReport={handleReport}
             action={action}
             enableReport={enableReport}
-            colors={cardColors}
           />
         </Pressable>
       </Pressable>

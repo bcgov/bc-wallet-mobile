@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'react-native',
+  maxWorkers: '50%',
   testTimeout: 10000,
   setupFiles: ['<rootDir>/jestSetup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect', '<rootDir>/jestSetupAfterEnv.js'],
