@@ -34,7 +34,7 @@ data:
 
     common:
       path_prefix: /var/loki
-      replication_factor: 3
+      replication_factor: {{ .Values.loki.replicationFactor | default .Values.replicaCount }}
       storage:
         s3:
           access_key_id: ${MINIO_ACCESS_KEY}

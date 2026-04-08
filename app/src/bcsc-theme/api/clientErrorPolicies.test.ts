@@ -14,6 +14,7 @@ import {
   failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
   iasErrorPolicy,
+  invalidClientMetadataErrorPolicy,
   invalidRegistrationRequestErrorPolicy,
   invalidUrlErrorPolicy,
   noTokensReturnedErrorPolicy,
@@ -101,6 +102,49 @@ describe('clientErrorPolicies', () => {
         const context = { endpoint: 'https://example.com/device/register', statusCode: 400, apiEndpoints: {} }
         const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
         expect(policy).toBe(iasErrorPolicy)
+      })
+    })
+  })
+
+  describe('invalidClientMetadataErrorPolicy', () => {
+    describe('matches()', () => {
+      it('should match invalid_client_metadata', () => {
+        const error = newError('invalid_client_metadata')
+        error.code = 'invalid_client_metadata'
+        expect(invalidClientMetadataErrorPolicy.matches(error, {} as any)).toBeTruthy()
+      })
+
+      it('should NOT match other errors', () => {
+        const error = newError('some_other_error')
+        expect(invalidClientMetadataErrorPolicy.matches(error, {} as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle()', () => {
+      it('should show invalid client metadata alert', () => {
+        const error = newError('invalid_client_metadata')
+        const mockAlert = jest.fn()
+        const context = { alerts: { invalidClientMetadataAlert: mockAlert } }
+        invalidClientMetadataErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalledWith(error)
+      })
+
+      it('should show dynamic registration alert when technicalMessage indicates unsupported os', () => {
+        const error = newError('invalid_client_metadata')
+        error.cause = new Error('unsupported os version') as AxiosError
+        const mockAlert = jest.fn()
+        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        invalidClientMetadataErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalledWith(error)
+      })
+
+      it('should match unsupported os check case-insensitively', () => {
+        const error = newError('invalid_client_metadata')
+        error.cause = new Error('Client registration failed: Unsupported OS Version detected') as AxiosError
+        const mockAlert = jest.fn()
+        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        invalidClientMetadataErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalledWith(error)
       })
     })
   })
