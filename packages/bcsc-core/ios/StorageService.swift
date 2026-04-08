@@ -71,6 +71,7 @@ class StorageService {
   /// there should only be one account ID present in the 'accounts' array.
   var currentAccountID: String? {
     let pathDirectory = defaultSearchPathDirectory
+    let resolvedBasePath = self.basePath
 
     do {
       let rootDirectoryURL = try FileManager.default.url(
@@ -81,11 +82,13 @@ class StorageService {
       )
       let accountListFileUrl =
         rootDirectoryURL
-          .appendingPathComponent(self.basePath)
+          .appendingPathComponent(resolvedBasePath)
           .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        logger.error("account_list file does not exist at \(accountListFileUrl.path).")
+        logger.error(
+          "account_list file does not exist at '\(accountListFileUrl.path)'. issuer='\(self.issuer)' basePath='\(resolvedBasePath)'"
+        )
         return nil
       }
 
@@ -175,8 +178,14 @@ class StorageService {
     pathDirectory: FileManager.SearchPathDirectory
   ) -> T? { // Added file parameter
     do {
+      let resolvedIssuer = self.issuer
+      let resolvedBasePath = self.basePath
+      let resolvedProvider = self.provider
+
       guard let accountID = self.currentAccountID else {
-        logger.error("readData: currentAccountID is nil. Cannot read data for file: \(file.rawValue)")
+        logger.error(
+          "readData: currentAccountID is nil for file '\(file.rawValue)'. issuer='\(resolvedIssuer)' basePath='\(resolvedBasePath)'"
+        )
         return nil
       }
       let rootDirectoryURL = try FileManager.default.url(
@@ -187,14 +196,16 @@ class StorageService {
       )
       let fileUrl =
         rootDirectoryURL
-          .appendingPathComponent(self.basePath)
-          .appendingPathComponent(accountID) // Use unwrapped accountID
+          .appendingPathComponent(resolvedBasePath)
+          .appendingPathComponent(accountID)
           .appendingPathComponent(file.rawValue)
 
       logger.log("readData: attempting \(file.rawValue) at \(fileUrl.path)")
 
       guard FileManager.default.fileExists(atPath: fileUrl.path) else {
-        logger.error("readData: \(file.rawValue) not found at \(fileUrl.path)")
+        logger.error(
+          "readData: File '\(file.rawValue)' not found at path '\(fileUrl.path)'. issuer='\(resolvedIssuer)' provider='\(resolvedProvider)'"
+        )
         return nil
       }
 
@@ -214,10 +225,13 @@ class StorageService {
         return obj
       }
 
-      logger.error("Failed to decode object from data.")
+      logger.error(
+        "readData: Failed to decode '\(file.rawValue)'. issuer='\(resolvedIssuer)' provider='\(resolvedProvider)' accountID='\(accountID)'"
+      )
 
       return nil
     } catch {
+      logger.error("readData: Unexpected error reading '\(file.rawValue)': \(error)")
       return nil
     }
   }
@@ -230,7 +244,9 @@ class StorageService {
     do {
       // Get the current account ID first
       guard let accountID = self.currentAccountID else {
-        logger.error("writeData: currentAccountID is nil. Cannot write data for file: \(file.rawValue)")
+        logger.error(
+          "writeData: currentAccountID is nil for file '\(file.rawValue)'. issuer='\(self.issuer)' basePath='\(self.basePath)'"
+        )
         return false
       }
 
