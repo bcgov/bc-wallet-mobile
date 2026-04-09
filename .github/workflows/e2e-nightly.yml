@@ -1,0 +1,89 @@
+# E2E Nightly Full Regression
+#
+# Runs the full-regression E2E suite against the latest successful main
+# build's SauceLabs artifacts, followed by biometric tests (non-blocking).
+#
+# Default device matrix: 3 iOS + 3 Android OS versions (moderate coverage).
+#
+# Two trigger modes:
+#   schedule         — runs every night at midnight PT (7 AM UTC)
+#   workflow_dispatch — manual trigger for ad-hoc regression runs
+#
+# The workflow resolves the latest successful main build number via the
+# GitHub API, so no build_number input is needed.
+#
+# NOTE: Nightly schedule is disabled until SauceLabs IPs are whitelisted.
+# To re-enable, uncomment the schedule trigger below.
+name: E2E Nightly
+
+on:
+  # schedule:
+  #   - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Test suite to run'
+        type: choice
+        options:
+          - full-regression
+          - happy-path
+          - smoke
+        default: full-regression
+      device_matrix:
+        description: 'JSON array of {platform, device, os_version} objects'
+        type: string
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]'
+      include_biometrics:
+        description: 'Include biometric tests (non-blocking)'
+        type: boolean
+        default: true
+
+jobs:
+  resolve-build:
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+    outputs:
+      build_number: ${{ steps.find.outputs.build_number }}
+    steps:
+      - name: Find latest successful main build
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BUILD_NUMBER=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?branch=main&status=success&per_page=1" \
+            --jq '.workflow_runs[0].run_number')
+          if [ -z "$BUILD_NUMBER" ] || [ "$BUILD_NUMBER" = "null" ]; then
+            echo "::error::No successful main build found"
+            exit 1
+          fi
+          echo "build_number=${BUILD_NUMBER}" >> "$GITHUB_OUTPUT"
+          echo "Latest successful main build: #${BUILD_NUMBER}"
+
+  e2e:
+    needs: [resolve-build]
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: ${{ inputs.suite || 'full-regression' }}
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]' }}
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+
+  e2e-biometrics:
+    needs: [resolve-build]
+    if: github.event_name != 'workflow_dispatch' || inputs.include_biometrics
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: biometrics
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+    secrets:
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
