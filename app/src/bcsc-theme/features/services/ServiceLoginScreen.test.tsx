@@ -128,6 +128,21 @@ describe('ServiceLogin', () => {
       expect(getByTestId(testIdWithKey('ServiceClientLink'))).toBeTruthy()
     })
 
+    it('renders Unavailable view (quick login unavailable) without service client URI', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceClientUri: undefined,
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const { queryByTestId } = renderScreen(mockNavigation)
+
+      expect(queryByTestId(testIdWithKey('ServiceClientLink'))).toBeNull()
+    })
+
     it('opens service client URI when ServiceClientLink is pressed', () => {
       mockedUseServiceLoginState.mockReturnValue({
         state: {
