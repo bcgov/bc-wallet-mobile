@@ -412,7 +412,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const response = await result.current.deleteRegistration('client-to-delete')
+      const response = await result.current.deleteRegistration('mock-reg-token', 'client-to-delete')
 
       expect(response).toEqual({ success: true })
       expect(mockApiClient.delete).toHaveBeenCalledWith(`${mockApiClient.endpoints.registration}/client-to-delete`, {
@@ -428,7 +428,7 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      const response = await result.current.deleteRegistration('client-to-delete')
+      const response = await result.current.deleteRegistration('mock-reg-token', 'client-to-delete')
 
       expect(response).toEqual({ success: false })
     })
@@ -436,7 +436,7 @@ describe('useRegistrationApi', () => {
     it('should throw if client is not ready', async () => {
       const { result } = renderHook(() => useRegistrationApi(null, false))
 
-      await expect(result.current.deleteRegistration('client-to-delete')).rejects.toThrow(
+      await expect(result.current.deleteRegistration('mock-reg-token', 'client-to-delete')).rejects.toThrow(
         'BCSC client not ready for registration deletion'
       )
     })

@@ -34,6 +34,10 @@ export const useVerificationReset = () => {
   const verificationReset = useCallback(async () => {
     try {
       await withAccount(async (account) => {
+        if (!store.bcscSecure.registrationAccessToken) {
+          throw new Error('No registration access token found in store. Cannot proceed with verification reset.')
+        }
+
         logger.info(`[useVerificationReset] Starting renewal reset for account with clientID: ${account.clientID}`)
         // Clear/reset store values
         clearSecureState({
@@ -53,7 +57,7 @@ export const useVerificationReset = () => {
           // Get original security method for registering the device again
           getAccountSecurityMethod(),
           // Delete old account registration in IAS
-          registrationService.deleteRegistration(account.clientID),
+          registrationService.deleteRegistration(store.bcscSecure.registrationAccessToken, account.clientID),
         ])
 
         logger.info(
