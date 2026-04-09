@@ -28,7 +28,8 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | ----------------- | ------------------------------------------------------------------------------------------------ |
 | `smoke`           | _App launch + initial navigation (fast sanity check)_                                            |
 | `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
-| `full-regression` | _Full flow: onboarding with transfer/setup/help detours, non-photo card with additional ID_      |
+| `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_  |
+| `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
 
 ```bash
 # Run by suite name
@@ -114,7 +115,7 @@ Appium installs **WebDriverAgentRunner** on the device to drive automation. It m
 
 1. **Device:** Trust the computer (USB prompt), enable **Developer Mode** (iOS 16+: Settings → Privacy & Security), and **trust your developer certificate** (Settings → General → VPN & Device Management → your team → Trust).
 2. **WDA signing:** Follow [Appium's real device preparation](https://appium.github.io/appium-xcuitest-driver/latest/preparation/real-device-config/). Easiest is [Basic Automatic Configuration](https://appium.github.io/appium-xcuitest-driver/latest/preparation/prov-profile-basic-auto/) (paid Apple Developer account). If that fails, use one of the manual approaches (e.g. open WDA in Xcode: `appium driver run xcuitest open-wda` from the e2e folder, then sign the WebDriverAgent target with your team).
-3. **Logs:** The device config sets `showXcodeLog: true` so Appium logs show the actual xcodebuild error; check `e2e/logs/` after a run.
+3. **Logs:** Set `SHOW_XCODE_LOG=true` (in `.env.e2e` or inline) to print full xcodebuild output when WDA fails; check `e2e/logs/` after a run.
 
 ### _Local — Android Real Device_
 
@@ -195,15 +196,17 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 
 ### _SauceLabs (`.env.saucelabs`)_
 
-| _Variable_             | _Default_             | _Description_                                     |
-| ---------------------- | --------------------- | ------------------------------------------------- |
-| `SAUCE_USERNAME`       | _—_                   | _SauceLabs username_                              |
-| `SAUCE_ACCESS_KEY`     | _—_                   | _SauceLabs access key_                            |
-| `SAUCE_REGION`         | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_ |
-| `ANDROID_APP_FILENAME` | `BCSC-Dev-latest.aab` | _Android app filename in SauceLabs storage_       |
-| `IOS_APP_FILENAME`     | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_           |
-| `BUILD_NAME`           | `local-<timestamp>`   | _SauceLabs build name_                            |
-| `TEST_NAME`            | `E2E Tests`           | _SauceLabs test name_                             |
+| _Variable_             | _Default_               | _Description_                                                                    |
+| ---------------------- | ----------------------- | -------------------------------------------------------------------------------- |
+| `SAUCE_USERNAME`       | _—_                     | _SauceLabs username_                                                             |
+| `SAUCE_ACCESS_KEY`     | _—_                     | _SauceLabs access key_                                                           |
+| `SAUCE_REGION`         | `us`                    | _SauceLabs data center region (_`us` _or_ `eu`_)_                                |
+| `ANDROID_APP_FILENAME` | `BCSC-Dev-latest.aab`   | _Android app filename in SauceLabs storage_                                      |
+| `IOS_APP_FILENAME`     | `BCSC-Dev-latest.ipa`   | _iOS app filename in SauceLabs storage_                                          |
+| `PLATFORM_VERSION`     | _unset_                 | _Pin Sauce RDC OS version (e.g._ `18`_,_ `15`_). Unset = Sauce picks any match._ |
+| `DEVICE_NAME`          | `iPhone.*` / `Google.*` | _Sauce RDC device name regex. Overrides the default per-platform pattern._       |
+| `BUILD_NAME`           | `local-<timestamp>`     | _SauceLabs build name_                                                           |
+| `TEST_NAME`            | `E2E Tests`             | _SauceLabs test name_                                                            |
 
 ### _SiteMinder (`local.env`)_
 
@@ -238,7 +241,7 @@ wdio.shared.conf.ts                         ← base (specs, suites, framework, 
       └── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
 ```
 
-_Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited._
+_Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Sauce configs read_ `DEVICE_NAME` _and_ `PLATFORM_VERSION` _from the environment to allow CI to control device targeting without config changes._
 
 ## _Writing Tests_
 
@@ -282,10 +285,10 @@ _Specs are small, focused files that each test a single action or feature. Suite
 | `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`   | `--suite happy-path`      |
 | `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression` |
 
-_Each suite's orchestrator imports composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
+_Orchestrator files import composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
 
 ```typescript
-// test/bcsc/happy-path.spec.ts
+// test/bcsc/happy-path.spec.ts — used by --suite happy-path
 import './onboarding/app-launch.spec.js'
 import './onboarding/add-account.spec.js'
 import './onboarding/consent.spec.js'
@@ -298,62 +301,59 @@ import './verify/in-person-verification.spec.js'
 import './main/main.spec.js'
 ```
 
+_The_ `full-regression` _suite uses a **directory glob** (`full-regression/*.spec.ts`) rather than a single orchestrator. Each file in the_ `full-regression/` _directory is an independent orchestrated flow (e.g. card scanning, send video). The standalone_ `full-regression.spec.ts` _orchestrator still exists for running the full non-photo-card flow via_ `--spec`_:_
+
 ```typescript
-// test/bcsc/full-regression.spec.ts
-import './onboarding/app-launch.spec.js'
-import './onboarding/transfer-detour.spec.js'
-import './onboarding/add-account.spec.js'
-import './onboarding/setup-type-interaction.spec.js'
-import './onboarding/consent.spec.js'
-import './onboarding/notifications-help.spec.js'
-import './onboarding/notifications.spec.js'
-import './onboarding/secure-app-help.spec.js'
-import './onboarding/pin-auth.spec.js'
-import './verify/card-type/config-non-photo-card.js'
-import './verify/nickname.spec.js'
-import './verify/card-csn.spec.js'
-import './verify/additional-id-passport.spec.js'
-import './verify/in-person-verification.spec.js'
-import './main/main.spec.js'
+// test/bcsc/full-regression/card-csn-scanning.spec.ts — card scanning flow
+import '../onboarding/app-launch.spec.js'
+import '../onboarding/add-account.spec.js'
+import '../onboarding/consent.spec.js'
+import '../onboarding/notifications.spec.js'
+import '../onboarding/pin-auth.spec.js'
+import '../verify/card-type/config-combined-card.js'
+import '../verify/nickname.spec.js'
+import '../verify/card-scan.spec.js'
 ```
 
 _Shared state (e.g. test user data) flows between specs via_ `verify/card-type/card-context.ts`_. Card-type config modules (e.g._ `config-combined-card.ts`_) set_ `verifyContext.testUser` _and_ `verifyContext.cardTypeButton` _at module evaluation time; downstream specs like_ `card-csn.spec.ts` _and_ `in-person-verification.spec.ts` _read them lazily inside_ `it` _blocks._
 
-### _Camera & Video Injection_
+### _Camera Image Injection_
 
-_The_ `camera` _and_ `video` _helpers simulate camera input on Sauce Labs RDC. Both use Sauce Labs' image injection under the hood — still images for photo capture / QR scanning, and the same mechanism for video frames (Sauce feeds the injected image into_ `AVCaptureVideoDataOutput` _on iOS and_ `camera2` _on Android)._
+_The_ `camera` _helper simulates camera input on Sauce Labs RDC via image injection. The injected image replaces the live camera feed for both still capture and video frame output, so the same call works for photo capture, QR/barcode scanning, and video recording._
 
-_Place test images in_ `e2e/assets/` _(see_ [`assets/README.md`](assets/README.md)_). Helpers resolve relative filenames from that directory automatically._
+_Place test images in_ `e2e/assets/images/` _(see_ [`assets/README.md`](assets/README.md)_). Helpers resolve relative filenames from the_ `assets/` _directory automatically._
+
+_The_ `injectPhoto` _function takes a path and a padding object. Padding (in pixels) repositions the image within the injected camera frame — useful for aligning barcodes with the app's scanning target area:_
 
 ```typescript
-import { injectQRCode, injectPhoto } from '../../src/helpers/camera.js'
-import { injectVideoFrame, sustainedFrameInjection } from '../../src/helpers/video.js'
+import { injectPhoto } from '../../src/helpers/camera.js'
+import { CARD_SCAN_PADDING } from '../../src/constants.js'
 
-// Inject a QR code before the scanner screen opens
-await injectQRCode('qr-invite.png')
-await SerialInstructions.tap('ScanBarcode')
+// Inject a driver's licence photo for card barcode scanning (with padding)
+await injectPhoto('images/dl_velma.jpg', CARD_SCAN_PADDING)
 
-// Inject an ID photo for evidence capture
-await injectPhoto('id-drivers-license.jpg')
-await EvidenceCapture.tap('TakePhoto')
-
-// Inject a face image as video frames while recording
-await injectVideoFrame('selfie-liveness.png')
-await TakeVideo.tap('StartRecordingButton')
-// Keep re-injecting during the recording duration
-await sustainedFrameInjection('selfie-liveness.png', { durationMs: 8_000 })
+// Inject a selfie for evidence capture (no padding needed)
+await injectPhoto('images/id_shaggy.jpg', { top: 0, right: 0, bottom: 0, left: 0 })
+await TakePhoto.tap('TakePhoto')
 ```
 
 _For local testing, camera injection is not available — use a test-mode flag in the app instead._
 
 ## _CI/CD_
 
-_Tests run automatically in GitHub Actions:_
+_Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
 
-| _Trigger_      | _Scope_                                        | _Devices_                   |
-| -------------- | ---------------------------------------------- | --------------------------- |
-| _PR_           | `--suite smoke` _only_                         | _1 Android RDC + 1 iOS RDC_ |
-| `main` _merge_ | _Temporarily disabled (re-enable when stable)_ | _—_                         |
+| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variants_                  | _Biometrics_ |
+| -------------------- | ----------------- | ----------------------------------- | --------------------------- | ------------ |
+| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | _PR variants (2)_           | _No_         |
+| `main` _merge_       | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_            | _Yes_        |
+| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_            | _Yes_        |
+
+_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. Biometric tests run as a separate non-blocking job after the main E2E tests._
+
+_**Note:** The_ `main` _merge E2E regression job is commented out pending GitHub Actions runner IP whitelisting with the BC Gov ID Check portal. See the IP whitelisting options documented in_ `main.yaml`_. Until resolved, nightly runs provide full regression coverage._
+
+_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices × 2 variants = 4 jobs) this means 2 rounds. Nightly runs with the full matrix queue longer._
 
 ## _Local App Binaries_
 
@@ -372,6 +372,7 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 e2e/
 ├── package.json                             # workspace package with WDIO + Appium deps
 ├── tsconfig.json                            # TypeScript config (strict, ESNext modules)
+├── eslint.config.mjs                        # ESLint flat config
 ├── .env.e2e.example                         # general e2e config template (copy to .env.e2e)
 ├── .env.saucelabs.example                   # SauceLabs credentials template (copy to .env.saucelabs)
 │
@@ -391,7 +392,10 @@ e2e/
 │   └── sauce/
 │       ├── wdio.shared.sauce.conf.ts        # SauceLabs auth, region, sauce service
 │       ├── wdio.android.sauce.rdc.conf.ts   # Android real device (SauceLabs)
-│       └── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
+│       ├── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
+│       └── biometrics/
+│           ├── wdio.android.bio.sauce.rdc.conf.ts # Android + allowTouchIdEnroll
+│           └── wdio.ios.bio.sauce.rdc.conf.ts     # iOS + allowTouchIdEnroll
 │
 ├── src/
 │   ├── constants.ts                         # timeouts, TestUsers, and shared values
@@ -399,13 +403,11 @@ e2e/
 │   ├── testIDs.ts                           # central registry of accessibility / resource IDs
 │   │
 │   ├── helpers/
+│   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
 │   │   ├── approval.ts                      # in-person verification approval via SiteMinder
-│   │   ├── biometrics.ts                    # biometric simulation (local + SauceLabs)
-│   │   ├── camera.ts                        # camera image injection (QR codes, photos)
-│   │   ├── video.ts                         # video frame injection + device file push
-│   │   ├── gestures.ts                      # swipe, scroll, long-press wrappers
-│   │   ├── iosPermissions.ts                # iOS local-network permission dialog handling
-│   │   ├── notifications.ts                 # notification permission dialog handling (iOS + Android)
+│   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
+│   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
+│   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
 │   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
 │   │
 │   └── screens/                             # screen objects — generic base + BCSC_TestIDs registry
@@ -418,35 +420,48 @@ e2e/
 │   └── bcsc/                                # BCSC variant test suite
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
 │       ├── happy-path.spec.ts               # suite orchestrator: onboarding → combined card → main
-│       ├── full-regression.spec.ts          # suite orchestrator: full onboarding → non-photo + passport → main
+│       ├── full-regression.spec.ts          # orchestrator: full onboarding → non-photo + passport → main
+│       ├── biometrics.spec.ts               # orchestrator: onboarding with biometric auth
+│       ├── full-regression/                 # full-regression suite (glob: *.spec.ts)
+│       │   ├── card-csn-scanning.spec.ts    # card scanning flow (onboarding → scan → verify)
+│       │   └── send-image-video.spec.ts     # send video flow (onboarding → photo/video capture)
 │       ├── onboarding/
 │       │   ├── app-launch.spec.ts           # app launch + first screen
 │       │   ├── add-account.spec.ts          # add account flow
+│       │   ├── biometric-auth.spec.ts       # biometric auth setup (biometrics suite)
 │       │   ├── consent.spec.ts              # consent screen
 │       │   ├── notifications.spec.ts        # notification permission
-│       │   ├── notifications-help.spec.ts   # notification help detour (full-regression)
+│       │   ├── notifications-help.spec.ts   # notification help detour
 │       │   ├── pin-auth.spec.ts             # PIN creation
-│       │   ├── secure-app-help.spec.ts      # secure app help detour (full-regression)
-│       │   ├── setup-type-interaction.spec.ts # setup type selection detour (full-regression)
-│       │   └── transfer-detour.spec.ts      # transfer detour (full-regression)
+│       │   ├── secure-app-help.spec.ts      # secure app help detour
+│       │   ├── setup-type-interaction.spec.ts # setup type selection detour
+│       │   └── transfer-detour.spec.ts      # transfer detour
 │       ├── verify/
 │       │   ├── card-csn.spec.ts             # card serial + birthdate entry
+│       │   ├── card-scan.spec.ts            # card barcode scanning via camera injection
 │       │   ├── nickname.spec.ts             # nickname entry
-│       │   ├── additional-id-passport.spec.ts # passport evidence capture (full-regression)
+│       │   ├── additional-id-passport.spec.ts # passport evidence capture
 │       │   ├── in-person-verification.spec.ts # in-person verification method
+│       │   ├── send-video-verification.spec.ts # photo + video evidence capture
 │       │   └── card-type/
 │       │       ├── card-context.ts          # shared mutable verify context (testUser, cardType)
 │       │       ├── config-combined-card.ts  # sets context for combined card (happy-path)
-│       │       └── config-non-photo-card.ts # sets context for non-photo card (full-regression)
+│       │       └── config-non-photo-card.ts # sets context for non-photo card
 │       └── main/
 │           └── main.spec.ts                 # tab navigation, settings, account tests
 │
-├── assets/                                  # test images for camera/video injection
+├── assets/                                  # test images for camera injection
 │   ├── README.md
 │   ├── USERS.md                             # test account reference (Scooby-Doo themed)
-│   └── images/                              # ID and passport photos for evidence capture
-│       ├── id-1.jpg .. id-4.jpg
-│       └── passport.jpg
+│   └── images/                              # ID, driver's licence, and passport photos
+│       ├── dl_daphne.jpg                    # driver's licence — Daphne (non-photo card)
+│       ├── dl_shaggy.jpg                    # driver's licence — Shaggy (photo card)
+│       ├── dl_velma.jpg                     # driver's licence — Velma (combo card)
+│       ├── id_daphne.jpg                    # ID selfie — Daphne
+│       ├── id_fred.jpg                      # ID selfie — Fred
+│       ├── id_shaggy.jpg                    # ID selfie — Shaggy
+│       ├── id_velma.jpg                     # ID selfie — Velma
+│       └── passport.jpg                     # passport photo
 │
 ├── logs/                                    # Appium logs (gitignored)
 │
