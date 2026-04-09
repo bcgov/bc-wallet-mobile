@@ -5,9 +5,13 @@
 #
 # Default device matrix: 3 iOS + 3 Android OS versions (moderate coverage).
 #
-# Two trigger modes:
+# Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
 #   workflow_dispatch — manual trigger for ad-hoc regression runs
+#
+# Merge-gated: on schedule, the workflow first checks whether any commits
+# landed on main in the last 24 hours. If nothing changed, it skips the
+# run to avoid burning SauceLabs device time. Manual dispatches always run.
 #
 # The workflow resolves the latest successful main build number via the
 # GitHub API, so no build_number input is needed.
@@ -43,10 +47,41 @@ on:
         default: true
 
 jobs:
-  resolve-build:
+  # ─── Gate: skip scheduled runs when nothing merged to main ──────
+  check-for-merges:
     runs-on: ubuntu-22.04
-    permissions:
-      actions: read
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check for commits on main in the last 24 hours
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Manual dispatch — always run"
+            exit 0
+          fi
+
+          SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+              || date -u -v-24H +%Y-%m-%dT%H:%M:%SZ)
+          COUNT=$(gh api \
+            "repos/${{ github.repository }}/commits?sha=main&since=${SINCE}&per_page=1" \
+            --jq 'length')
+
+          if [ "$COUNT" -gt 0 ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Commits found on main since ${SINCE} — running regression"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "No commits on main since ${SINCE} — skipping"
+          fi
+
+  resolve-build:
+    needs: [check-for-merges]
+    if: needs.check-for-merges.outputs.should_run == 'true'
+    runs-on: ubuntu-22.04
     outputs:
       build_number: ${{ steps.find.outputs.build_number }}
     steps:
@@ -66,7 +101,8 @@ jobs:
           echo "Latest successful main build: #${BUILD_NUMBER}"
 
   e2e:
-    needs: [resolve-build]
+    needs: [check-for-merges, resolve-build]
+    if: needs.check-for-merges.outputs.should_run == 'true'
     uses: ./.github/workflows/e2e.yml
     with:
       suite: ${{ inputs.suite || 'full-regression' }}
@@ -79,8 +115,10 @@ jobs:
       BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
 
   e2e-biometrics:
-    needs: [resolve-build]
-    if: github.event_name != 'workflow_dispatch' || inputs.include_biometrics
+    needs: [check-for-merges, resolve-build]
+    if: >-
+      needs.check-for-merges.outputs.should_run == 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.include_biometrics)
     uses: ./.github/workflows/e2e.yml
     with:
       suite: biometrics
