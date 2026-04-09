@@ -1,6 +1,13 @@
 import { TestUser } from '../../../../src/constants.js'
+import type { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
-export type CardTypeButton = 'CombinedCard' | 'PhotoCard' | 'NoPhotoCard' | 'OtherID'
+/** Card-type controls on Identity Selection for verify E2E flows (excludes e.g. CheckForServicesCard). */
+export type BCSC_IdentitySelectionCardTypeButton = Exclude<
+  keyof typeof BCSC_TestIDs.IdentitySelection,
+  'CheckForServicesCard'
+>
+
+export type CardTypeButton = BCSC_IdentitySelectionCardTypeButton
 
 export type ConfiguredVerifyContext = {
   testUser: TestUser
