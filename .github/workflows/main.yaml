@@ -1151,7 +1151,7 @@ jobs:
   # Delegated to .github/workflows/e2e.yml (reusable workflow).
   # PR: smoke tests on 1 iOS + 1 Android device (fast feedback).
   # Main: full-regression on 3 iOS + 3 Android OS versions.
-  # Nightly: full variant × device coverage via e2e-nightly.yml.
+  # Nightly: full device coverage + biometrics via e2e-nightly.yml.
   #
   # ── IP Whitelisting (required before enabling e2e-regression) ──
   # GH Actions runner IPs must be whitelisted with BC Gov ID Check.
@@ -1160,7 +1160,7 @@ jobs:
   # TODO: Uncomment e2e-regression below once GH Actions runner IPs
   # are whitelisted via one of the above approaches.
   e2e:
-    needs: [ship-to-saucelabs, compute-variants]
+    needs: [ship-to-saucelabs]
     if: >-
       always() && !cancelled() &&
       github.event_name == 'pull_request' &&
@@ -1169,18 +1169,16 @@ jobs:
     with:
       suite: smoke
       build_number: ${{ github.run_number }}
-      variants: ${{ needs.compute-variants.outputs.variants }}
       device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
-      include_biometrics: false
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
       BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
 
-  # Full regression + biometrics on merge to main (3 iOS + 3 Android OS versions):
+  # Full regression on merge to main (3 iOS + 3 Android OS versions):
   # e2e-regression:
-  #   needs: [ship-to-saucelabs, compute-variants]
+  #   needs: [ship-to-saucelabs]
   #   if: >-
   #     always() && !cancelled() &&
   #     github.ref_name == 'main'
@@ -1188,7 +1186,6 @@ jobs:
   #   with:
   #     suite: full-regression
   #     build_number: ${{ github.run_number }}
-  #     variants: ${{ needs.compute-variants.outputs.variants }}
   #     device_matrix: >-
   #       [
   #         {"platform":"iOS","device":"iPhone.*","os_version":"18"},
@@ -1198,7 +1195,6 @@ jobs:
   #         {"platform":"Android","device":"Google.*","os_version":"14"},
   #         {"platform":"Android","device":"Google.*","os_version":"13"}
   #       ]
-  #     include_biometrics: true
   #   secrets:
   #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
   #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}

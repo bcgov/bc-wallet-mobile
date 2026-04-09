@@ -9,6 +9,9 @@
 #   full-regression — onboarding → verify → main (with detours)
 #   biometrics      — onboarding with biometric auth (Sauce RDC only)
 #
+# Each suite is mutually exclusive: selecting "biometrics" runs only the
+# biometric auth job; all other suites run the standard E2E job.
+#
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
 #   objects. Each entry spawns a separate SauceLabs session.
@@ -25,25 +28,17 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, happy-path, full-regression)'
+        description: 'Test suite (smoke, happy-path, full-regression, biometrics)'
         type: string
         required: true
       build_number:
         description: 'Build number for SauceLabs artifact lookup'
         type: string
         required: true
-      variants:
-        description: 'JSON array of variants to test'
-        type: string
-        required: true
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
         required: true
-      include_biometrics:
-        description: 'Run biometric tests (non-blocking)'
-        type: boolean
-        default: false
     secrets:
       SAUCE_USERNAME:
         required: true
@@ -62,27 +57,21 @@ on:
           - smoke
           - happy-path
           - full-regression
+          - biometrics
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
         type: string
         required: true
-      variants:
-        description: 'JSON array of variants to test'
-        type: string
-        default: '["bcsc-dev"]'
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
-      include_biometrics:
-        description: 'Run biometric tests (non-blocking)'
-        type: boolean
-        default: false
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
 
 jobs:
   e2e-tests:
-    name: '${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
+    name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
+    if: inputs.suite != 'biometrics'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -92,14 +81,13 @@ jobs:
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
-        variant: ${{ fromJSON(inputs.variants) }}
     steps:
       - uses: actions/checkout@v6
 
       - name: Load variant config
         uses: ./.github/workflows/actions/load-variant-config
         with:
-          variant: ${{ matrix.variant }}
+          variant: bcsc-dev
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -123,7 +111,7 @@ jobs:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           SAUCE_REGION: us
-          VARIANT: ${{ matrix.variant }}
+          VARIANT: bcsc-dev
           PLATFORM: ${{ matrix.device.platform }}
           IOS_DEVICE_NAME: ${{ matrix.device.platform == 'iOS' && matrix.device.device || '' }}
           IOS_PLATFORM_VERSION: ${{ matrix.device.platform == 'iOS' && matrix.device.os_version || '' }}
@@ -132,7 +120,7 @@ jobs:
           BUILD_NUMBER: ${{ inputs.build_number }}
           SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
-          TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
+          TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
           CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
           BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |
@@ -151,8 +139,7 @@ jobs:
   # Non-blocking: failures are reported but do not gate the pipeline.
   e2e-biometrics:
     name: 'Bio - ${{ matrix.platform }}'
-    needs: [e2e-tests]
-    if: ${{ always() && !cancelled() && inputs.include_biometrics }}
+    if: inputs.suite == 'biometrics'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
