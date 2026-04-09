@@ -47,7 +47,10 @@ describe('NicknameAccount', () => {
     const dispatchMock = jest.fn()
     const updateRegistrationMock = jest.fn().mockResolvedValue(undefined)
     mockUseRegistrationService.mockReturnValue({ updateRegistration: updateRegistrationMock } as any)
-    mockUseStore.mockReturnValue([{ ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } }, dispatchMock] as any)
+    mockUseStore.mockReturnValue([
+      { ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } },
+      dispatchMock,
+    ] as any)
 
     const { getByTestId } = render(
       <BasicAppContext>
@@ -68,7 +71,10 @@ describe('NicknameAccount', () => {
     const dispatchMock = jest.fn()
     const updateRegistrationMock = jest.fn().mockResolvedValue(undefined)
     mockUseRegistrationService.mockReturnValue({ updateRegistration: updateRegistrationMock } as any)
-    mockUseStore.mockReturnValue([{ ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } }, dispatchMock] as any)
+    mockUseStore.mockReturnValue([
+      { ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } },
+      dispatchMock,
+    ] as any)
     const navigation = useNavigation()
 
     const { getByTestId } = render(
@@ -94,7 +100,10 @@ describe('NicknameAccount', () => {
     const apiError = new Error('API failure')
     const updateRegistrationMock = jest.fn().mockRejectedValue(apiError)
     mockUseRegistrationService.mockReturnValue({ updateRegistration: updateRegistrationMock } as any)
-    mockUseStore.mockReturnValue([{ ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } }, dispatchMock] as any)
+    mockUseStore.mockReturnValue([
+      { ...initialState, bcscSecure: { registrationAccessToken: 'test-token' } },
+      dispatchMock,
+    ] as any)
     mockUseServices.mockReturnValue([{ ...defaultLogger, error: errorMock }] as any)
 
     const { getByTestId } = render(
