@@ -128,6 +128,25 @@ describe('ServiceLogin', () => {
       expect(getByTestId(testIdWithKey('ServiceClientLink'))).toBeTruthy()
     })
 
+    it('opens service client URI when ServiceClientLink is pressed', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceClientUri: SERVICE_CLIENT_URI,
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderScreen(mockNavigation)
+
+      fireEvent.press(getByTestId(testIdWithKey('ServiceClientLink')))
+
+      expect(mockOpenURL).toHaveBeenCalledWith(SERVICE_CLIENT_URI)
+      mockOpenURL.mockRestore()
+    })
+
     it('renders Default view with privacy policy card when privacyPolicyUri is set', () => {
       mockedUseServiceLoginState.mockReturnValue({
         state: {
