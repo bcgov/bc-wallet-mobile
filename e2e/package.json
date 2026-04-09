@@ -13,6 +13,8 @@
     "test:ios:device": "wdio configs/local/wdio.ios.local.device.conf.ts",
     "test:android:sauce": "wdio configs/sauce/wdio.android.sauce.rdc.conf.ts",
     "test:ios:sauce": "wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts",
+    "test:android:bio:sauce": "wdio configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts --suite biometrics",
+    "test:ios:bio:sauce": "wdio configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts --suite biometrics",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {

@@ -1,0 +1,192 @@
+# E2E Tests (Reusable + Dispatchable)
+#
+# This workflow runs WebDriverIO tests against SauceLabs Real Device Cloud.
+# Apps must already be uploaded to SauceLabs (see ship-to-saucelabs in main.yaml).
+#
+# Available suites (defined in e2e/configs/wdio.shared.conf.ts):
+#   smoke           — basic launch + first navigation
+#   happy-path      — onboarding → verify → main (straight-through)
+#   full-regression — onboarding → verify → main (with detours)
+#   biometrics      — onboarding with biometric auth (Sauce RDC only)
+#
+# Trigger modes:
+#   workflow_call  — called from main.yaml after builds (PR smoke tests)
+#   workflow_dispatch — manual runs from the Actions UI
+#
+# Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
+name: E2E Tests
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        description: 'Test suite (smoke, happy-path, full-regression)'
+        type: string
+        required: true
+      build_number:
+        description: 'Build number for SauceLabs artifact lookup'
+        type: string
+        required: true
+      variants:
+        description: 'JSON array of variants to test'
+        type: string
+        required: true
+      include_biometrics:
+        description: 'Run biometric tests (non-blocking)'
+        type: boolean
+        default: false
+    secrets:
+      SAUCE_USERNAME:
+        required: true
+      SAUCE_ACCESS_KEY:
+        required: true
+      CARD_SERIAL:
+        required: true
+      BIRTH_DATE:
+        required: true
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Test suite to run'
+        type: choice
+        options:
+          - smoke
+          - happy-path
+          - full-regression
+        default: smoke
+      build_number:
+        description: 'Build number (run_number from the build workflow)'
+        type: string
+        required: true
+      variants:
+        description: 'JSON array of variants to test'
+        type: string
+        default: '["bcsc-dev"]'
+      include_biometrics:
+        description: 'Run biometric tests (non-blocking)'
+        type: boolean
+        default: false
+
+jobs:
+  e2e-tests:
+    name: '${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.platform }}'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    strategy:
+      max-parallel: 2
+      fail-fast: false
+      matrix:
+        platform: [iOS, Android]
+        variant: ${{ fromJSON(inputs.variants) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache E2E dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            e2e/.yarn/cache
+            e2e/node_modules
+          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: e2e-deps-
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Run WDIO tests
+        working-directory: e2e
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SAUCE_REGION: us
+          VARIANT: ${{ matrix.variant }}
+          PLATFORM: ${{ matrix.platform }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          SUITE: ${{ inputs.suite }}
+          BUILD_NAME: 'build-${{ inputs.build_number }}'
+          TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.platform }}'
+          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+        run: |
+          if [ "$PLATFORM" = "iOS" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
+              yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite "${SUITE}"
+          else
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
+              yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite "${SUITE}"
+          fi
+
+  # ─── E2E Biometrics ────────────────────────────────────────────────
+  # Runs biometric auth tests on Sauce Labs RDC with allowTouchIdEnroll.
+  # Separated from the main E2E job because iOS biometrics are flaky on
+  # certain Sauce RDC devices.
+  # Non-blocking: failures are reported but do not gate the pipeline.
+  e2e-biometrics:
+    name: 'Bio - ${{ matrix.platform }}'
+    needs: [e2e-tests]
+    if: ${{ always() && !cancelled() && inputs.include_biometrics }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [iOS, Android]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: bcsc-dev
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache E2E dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            e2e/.yarn/cache
+            e2e/node_modules
+          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: e2e-deps-
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Run biometric tests
+        working-directory: e2e
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SAUCE_REGION: us
+          VARIANT: bcsc-dev
+          PLATFORM: ${{ matrix.platform }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          BUILD_NAME: 'build-${{ inputs.build_number }}'
+          TEST_NAME: 'E2E Bio - bcsc-dev ${{ matrix.platform }}'
+          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+        run: |
+          if [ "$PLATFORM" = "iOS" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
+              yarn wdio configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts --suite biometrics
+          else
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
+              yarn wdio configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts --suite biometrics
+          fi
