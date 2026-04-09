@@ -153,7 +153,7 @@ class StorageService {
   func fileExists(
     file: AccountFiles,
     accountID: String,
-    pathDirectory: FileManager.SearchPathDirectory = .applicationSupportDirectory
+    pathDirectory: FileManager.SearchPathDirectory = defaultSearchPathDirectory
   ) -> Bool {
     do {
       let rootDirectoryURL = try FileManager.default.url(
