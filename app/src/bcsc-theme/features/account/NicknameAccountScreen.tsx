@@ -16,13 +16,15 @@ const NicknameAccountScreen: React.FC = () => {
     async (trimmedNickname: string) => {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedNickname] })
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedNickname] })
+
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+
       try {
         await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
-        // Don't throw error to allow navigation to proceed even if API call fails (nickname in registration is not critical)
+        // Note: Updating nickname in registration is non-critical
         logger.error('Failed to update registration', apiError as Error)
       }
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },
     [dispatch, navigation, logger, registration, store.bcscSecure.registrationAccessToken]
   )
