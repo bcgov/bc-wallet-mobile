@@ -8,7 +8,7 @@ import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
@@ -55,6 +55,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
       logger.error(`Error loading evidence metadata: ${error}`)
     },
   })
+  // Note: Using ref to prevent flicker when stored evidence data changes
+  const initialEvidenceData = useRef(store.bcscSecure.additionalEvidenceData)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -71,37 +73,30 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
   // Clean up any incomplete evidence entries when the screen focuses.
   // This handles the case where user selected a card but backed out before completing.
-  // Intentionally empty deps — run only once per focus, not when evidence changes,
-  // because removeIncompleteEvidence itself updates the evidence array.
   useFocusEffect(
     useCallback(() => {
       removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [removeIncompleteEvidence, store.bcscSecure.additionalEvidenceData])
   )
 
   useEffect(() => {
     load()
   }, [load])
 
-  const shouldAddEvidence = useCallback(
-    (card: EvidenceType): boolean => {
-      const { collection_order } = card
-      // If no additional evidence is present, the user is seeing this screen for the first time
-      if (store.bcscSecure.additionalEvidenceData.length === 0) {
-        return collection_order === 'BOTH' || collection_order === 'FIRST'
-      } else {
-        return (
-          (collection_order === 'BOTH' || collection_order === 'SECOND') &&
-          // if the user is seeing this screen for the second time, we only show cards that are not already selected
-          !store.bcscSecure.additionalEvidenceData.some(
-            (evidence) => evidence.evidenceType?.evidence_type_label === card.evidence_type_label
-          )
-        )
-      }
-    },
-    [store.bcscSecure.additionalEvidenceData]
-  )
+  const shouldAddEvidence = useCallback((card: EvidenceType): boolean => {
+    const evidenceData = initialEvidenceData.current
+    const { collection_order } = card
+    // If no additional evidence is present, the user is seeing this screen for the first time
+    if (evidenceData.length === 0) {
+      return collection_order === 'BOTH' || collection_order === 'FIRST'
+    } else {
+      return (
+        (collection_order === 'BOTH' || collection_order === 'SECOND') &&
+        // if the user is seeing this screen for the second time, we only show cards that are not already selected
+        !evidenceData.some((evidence) => evidence.evidenceType?.evidence_type_label === card.evidence_type_label)
+      )
+    }
+  }, [])
 
   useEffect(() => {
     if (!data) {
@@ -162,7 +157,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    * @returns {[string, string]} An array containing the heading and description text.
    */
   const getEvidenceHeadingAndDescription = useCallback(() => {
-    const evidenceCount = store.bcscSecure.additionalEvidenceData.length
+    const evidenceCount = initialEvidenceData.current.length
     const isNonBCSCCard = cardProcess === BCSCCardProcess.NonBCSC
 
     if (evidenceCount === 1 && isNonBCSCCard) {
@@ -187,7 +182,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [store.bcscSecure.additionalEvidenceData.length, cardProcess, photoFilter, t])
+  }, [cardProcess, photoFilter, t])
 
   /**
    * Whether the "Other Options" escape hatch should be shown.
@@ -197,7 +192,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    * This matches v3 behavior: non-photo BCSC users who don't have a photo ID
    * can choose a non-photo ID instead (but will still need a photo ID afterward).
    */
-  const showOtherOptions = photoFilter === 'photo' && store.bcscSecure.additionalEvidenceData.length === 0
+  const showOtherOptions = photoFilter === 'photo' && initialEvidenceData.current.length === 0
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
@@ -227,9 +222,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
         renderItem={(data: { item: EvidenceType }) => (
           <Pressable
             onPress={() => {
-              // navigate to the next screen with the correct data
-              addEvidenceType(data.item)
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
+              addEvidenceType(data.item)
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
             accessibilityLabel={a11yShortLabel(data.item.evidence_type_label)}
