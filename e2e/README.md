@@ -28,7 +28,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | ----------------- | ------------------------------------------------------------------------------------------------ |
 | `smoke`           | _App launch + initial navigation (fast sanity check)_                                            |
 | `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
-| `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_  |
+| `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_ |
 | `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
 
 ```bash
@@ -196,17 +196,19 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 
 ### _SauceLabs (`.env.saucelabs`)_
 
-| _Variable_             | _Default_               | _Description_                                                                    |
-| ---------------------- | ----------------------- | -------------------------------------------------------------------------------- |
-| `SAUCE_USERNAME`       | _—_                     | _SauceLabs username_                                                             |
-| `SAUCE_ACCESS_KEY`     | _—_                     | _SauceLabs access key_                                                           |
-| `SAUCE_REGION`         | `us`                    | _SauceLabs data center region (_`us` _or_ `eu`_)_                                |
-| `ANDROID_APP_FILENAME` | `BCSC-Dev-latest.aab`   | _Android app filename in SauceLabs storage_                                      |
-| `IOS_APP_FILENAME`     | `BCSC-Dev-latest.ipa`   | _iOS app filename in SauceLabs storage_                                          |
-| `PLATFORM_VERSION`     | _unset_                 | _Pin Sauce RDC OS version (e.g._ `18`_,_ `15`_). Unset = Sauce picks any match._ |
-| `DEVICE_NAME`          | `iPhone.*` / `Google.*` | _Sauce RDC device name regex. Overrides the default per-platform pattern._       |
-| `BUILD_NAME`           | `local-<timestamp>`     | _SauceLabs build name_                                                           |
-| `TEST_NAME`            | `E2E Tests`             | _SauceLabs test name_                                                            |
+| _Variable_                 | _Default_             | _Description_                                                                 |
+| -------------------------- | --------------------- | ----------------------------------------------------------------------------- |
+| `SAUCE_USERNAME`           | _—_                   | _SauceLabs username_                                                          |
+| `SAUCE_ACCESS_KEY`         | _—_                   | _SauceLabs access key_                                                        |
+| `SAUCE_REGION`             | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_                             |
+| `ANDROID_APP_FILENAME`     | `BCSC-Dev-latest.aab` | _Android app filename in SauceLabs storage_                                   |
+| `IOS_APP_FILENAME`         | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_                                       |
+| `IOS_DEVICE_NAME`          | `iPhone.*`            | _iOS device name regex for Sauce RDC allocation_                              |
+| `IOS_PLATFORM_VERSION`     | _unset_               | _Pin iOS version (e.g._ `18`_). Unset = Sauce picks any available match._     |
+| `ANDROID_DEVICE_NAME`      | `Google.*`            | _Android device name regex for Sauce RDC allocation_                          |
+| `ANDROID_PLATFORM_VERSION` | _unset_               | _Pin Android version (e.g._ `15`_). Unset = Sauce picks any available match._ |
+| `BUILD_NAME`               | `local-<timestamp>`   | _SauceLabs build name_                                                        |
+| `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
 
 ### _SiteMinder (`local.env`)_
 
@@ -241,7 +243,7 @@ wdio.shared.conf.ts                         ← base (specs, suites, framework, 
       └── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
 ```
 
-_Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Sauce configs read_ `DEVICE_NAME` _and_ `PLATFORM_VERSION` _from the environment to allow CI to control device targeting without config changes._
+_Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Each platform config reads its own env vars (_`IOS_DEVICE_NAME`_,_ `IOS_PLATFORM_VERSION`_,_ `ANDROID_DEVICE_NAME`_,_ `ANDROID_PLATFORM_VERSION`_) to allow CI to control device targeting without config changes._
 
 ## _Writing Tests_
 
@@ -343,11 +345,11 @@ _For local testing, camera injection is not available — use a test-mode flag i
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
 
-| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variants_                  | _Biometrics_ |
-| -------------------- | ----------------- | ----------------------------------- | --------------------------- | ------------ |
-| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | _PR variants (2)_           | _No_         |
-| `main` _merge_       | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_            | _Yes_        |
-| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_            | _Yes_        |
+| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variants_        | _Biometrics_ |
+| -------------------- | ----------------- | ----------------------------------- | ----------------- | ------------ |
+| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | _PR variants (2)_ | _No_         |
+| `main` _merge_       | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_  | _Yes_        |
+| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_  | _Yes_        |
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. Biometric tests run as a separate non-blocking job after the main E2E tests._
 

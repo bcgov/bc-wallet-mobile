@@ -9,6 +9,11 @@
 #   full-regression — onboarding → verify → main (with detours)
 #   biometrics      — onboarding with biometric auth (Sauce RDC only)
 #
+# Device matrix:
+#   Callers pass a device_matrix JSON array of {platform, device, os_version}
+#   objects. Each entry spawns a separate SauceLabs session.
+#   Example: [{"platform":"iOS","device":"iPhone.*","os_version":"18"}]
+#
 # Trigger modes:
 #   workflow_call  — called from main.yaml after builds (PR smoke tests)
 #   workflow_dispatch — manual runs from the Actions UI
@@ -29,6 +34,10 @@ on:
         required: true
       variants:
         description: 'JSON array of variants to test'
+        type: string
+        required: true
+      device_matrix:
+        description: 'JSON array of {platform, device, os_version} objects'
         type: string
         required: true
       include_biometrics:
@@ -62,6 +71,10 @@ on:
         description: 'JSON array of variants to test'
         type: string
         default: '["bcsc-dev"]'
+      device_matrix:
+        description: 'JSON array of {platform, device, os_version} objects'
+        type: string
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       include_biometrics:
         description: 'Run biometric tests (non-blocking)'
         type: boolean
@@ -69,7 +82,7 @@ on:
 
 jobs:
   e2e-tests:
-    name: '${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.platform }}'
+    name: '${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -78,7 +91,7 @@ jobs:
       max-parallel: 2
       fail-fast: false
       matrix:
-        platform: [iOS, Android]
+        device: ${{ fromJSON(inputs.device_matrix) }}
         variant: ${{ fromJSON(inputs.variants) }}
     steps:
       - uses: actions/checkout@v6
@@ -111,11 +124,15 @@ jobs:
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
           SAUCE_REGION: us
           VARIANT: ${{ matrix.variant }}
-          PLATFORM: ${{ matrix.platform }}
+          PLATFORM: ${{ matrix.device.platform }}
+          IOS_DEVICE_NAME: ${{ matrix.device.platform == 'iOS' && matrix.device.device || '' }}
+          IOS_PLATFORM_VERSION: ${{ matrix.device.platform == 'iOS' && matrix.device.os_version || '' }}
+          ANDROID_DEVICE_NAME: ${{ matrix.device.platform == 'Android' && matrix.device.device || '' }}
+          ANDROID_PLATFORM_VERSION: ${{ matrix.device.platform == 'Android' && matrix.device.os_version || '' }}
           BUILD_NUMBER: ${{ inputs.build_number }}
           SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
-          TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.platform }}'
+          TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.variant }} ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
           CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
           BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |

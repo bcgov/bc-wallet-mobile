@@ -1149,11 +1149,16 @@ jobs:
 
   # ─── E2E Tests ──────────────────────────────────────────────────────
   # Delegated to .github/workflows/e2e.yml (reusable workflow).
-  # PR: smoke tests for fast feedback.
-  # Main: use e2e-nightly.yml (schedule/manual) for full-regression.
+  # PR: smoke tests on 1 iOS + 1 Android device (fast feedback).
+  # Main: full-regression on 3 iOS + 3 Android OS versions.
+  # Nightly: full variant × device coverage via e2e-nightly.yml.
+  #
+  # ── IP Whitelisting (required before enabling e2e-regression) ──
+  # GH Actions runner IPs must be whitelisted with BC Gov ID Check.
+  #  Whitelist GitHub's published ranges (api.github.com/meta → actions)
   #
   # TODO: Uncomment e2e-regression below once GH Actions runner IPs
-  # are whitelisted, to run full-regression on every merge to main.
+  # are whitelisted via one of the above approaches.
   e2e:
     needs: [ship-to-saucelabs, compute-variants]
     if: >-
@@ -1165,6 +1170,7 @@ jobs:
       suite: smoke
       build_number: ${{ github.run_number }}
       variants: ${{ needs.compute-variants.outputs.variants }}
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
       include_biometrics: false
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -1172,7 +1178,7 @@ jobs:
       CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
       BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
 
-  # Full regression + biometrics on merge to main:
+  # Full regression + biometrics on merge to main (3 iOS + 3 Android OS versions):
   # e2e-regression:
   #   needs: [ship-to-saucelabs, compute-variants]
   #   if: >-
@@ -1183,6 +1189,15 @@ jobs:
   #     suite: full-regression
   #     build_number: ${{ github.run_number }}
   #     variants: ${{ needs.compute-variants.outputs.variants }}
+  #     device_matrix: >-
+  #       [
+  #         {"platform":"iOS","device":"iPhone.*","os_version":"18"},
+  #         {"platform":"iOS","device":"iPhone.*","os_version":"17"},
+  #         {"platform":"iOS","device":"iPhone.*","os_version":"16"},
+  #         {"platform":"Android","device":"Google.*","os_version":"15"},
+  #         {"platform":"Android","device":"Google.*","os_version":"14"},
+  #         {"platform":"Android","device":"Google.*","os_version":"13"}
+  #       ]
   #     include_biometrics: true
   #   secrets:
   #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
