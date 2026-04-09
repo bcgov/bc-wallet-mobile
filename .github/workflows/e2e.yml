@@ -24,6 +24,9 @@
 # Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
 name: E2E Tests
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:

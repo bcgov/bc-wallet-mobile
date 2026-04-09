@@ -16,6 +16,10 @@
 # To re-enable, uncomment the schedule trigger below.
 name: E2E Nightly
 
+permissions:
+  contents: read
+  actions: read
+
 on:
   # schedule:
   #   - cron: '0 7 * * *'
