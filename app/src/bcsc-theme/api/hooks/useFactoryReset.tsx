@@ -33,9 +33,43 @@ type FactoryResetResult =
 export const useFactoryReset = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registration = useRegistrationApi(client, Boolean(isClientReady))
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteSecureData } = useSecureActions()
+
+  /**
+   * Deletes the IAS account associated with the given clientID from the server.
+   *
+   * @param clientID - The clientID of the account to delete.
+   * @returns A promise that resolves when the deletion attempt is complete.
+   */
+  const deleteRegistration = useCallback(
+    async (clientID: string) => {
+      try {
+        let registrationAccessToken = store.bcscSecure.registrationAccessToken
+
+        if (!registrationAccessToken) {
+          // Note: This allows a factory reset before secure state has been hydrated
+          const nativeToken = await BcscCore.getToken(BcscCore.TokenType.Registration)
+          registrationAccessToken = nativeToken?.token
+        }
+
+        if (!registrationAccessToken) {
+          logger.info('FactoryReset: No registration access token found, skipping IAS account deletion')
+          return
+        }
+
+        const deleteIASAccount = await registration.deleteRegistration(registrationAccessToken, clientID)
+
+        if (!deleteIASAccount.success) {
+          logger.warn('FactoryReset: Failed to delete IAS account from server')
+        }
+      } catch (error) {
+        logger.warn('FactoryReset: Error occurred while deleting registration', { error })
+      }
+    },
+    [logger, registration, store.bcscSecure.registrationAccessToken]
+  )
 
   /**
    * Removes all artifacts associated with the current BCSC account.
@@ -50,17 +84,9 @@ export const useFactoryReset = () => {
       return
     }
 
-    try {
-      // Delete IAS account registration
-      logger.info('FactoryReset: Deleting IAS account from server...')
-      const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-      if (!deleteIASAccount.success) {
-        logger.warn('FactoryReset: Failed to delete IAS account from server')
-      }
-    } catch (error) {
-      logger.warn('FactoryReset: Error occurred while deleting IAS account from server', { error })
-    }
+    // Delete IAS account registration
+    logger.info('FactoryReset: Deleting IAS account from server...')
+    await deleteRegistration(account.clientID)
 
     // Delete secure data from native storage
     logger.info('FactoryReset: Deleting secure data from native storage...')
@@ -69,7 +95,7 @@ export const useFactoryReset = () => {
     // Remove local account file
     logger.info('FactoryReset: Removing local account file...')
     await BcscCore.removeAccount()
-  }, [deleteSecureData, logger, registration])
+  }, [deleteRegistration, deleteSecureData, logger])
 
   /**
    * Performs a factory reset of the BCSC account and state.
@@ -84,6 +110,7 @@ export const useFactoryReset = () => {
           throw new Error('FactoryReset: BCSCApiClient is not initialized')
         }
 
+        logger.info('FactoryReset: Starting BCSC factory reset process...')
         await removeAccountArtifacts()
 
         // Reset BCSC state to initial state
