@@ -17,14 +17,13 @@ const NicknameAccountScreen: React.FC = () => {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedNickname] })
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedNickname] })
 
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
-
-      try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
-      } catch (apiError) {
-        // Note: Updating nickname in registration is non-critical
+      // Fire-and-forget: Updating nickname is non-critical
+      // Intentionally not awaiting this to prevent state updates on an unmounted component
+      registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname).catch((apiError) => {
         logger.error('Failed to update registration', apiError as Error)
-      }
+      })
+
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },
     [dispatch, navigation, logger, registration, store.bcscSecure.registrationAccessToken]
   )
