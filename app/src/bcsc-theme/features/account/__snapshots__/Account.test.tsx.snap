@@ -39,22 +39,10 @@ exports[`Account renders full name when both given_name and family_name are pres
             {
               "alignItems": "center",
               "flexDirection": "row",
+              "gap": 8,
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "#D3D3D3",
-                "height": 180,
-                "justifyContent": "center",
-                "marginBottom": 16,
-                "overflow": "hidden",
-                "width": 130,
-              }
-            }
-          />
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -68,7 +56,6 @@ exports[`Account renders full name when both given_name and family_name are pres
                 {
                   "flexShrink": 1,
                   "flexWrap": "wrap",
-                  "marginLeft": 8,
                 },
               ]
             }
@@ -633,22 +620,10 @@ exports[`Account renders only family_name when given_name is empty string (monon
             {
               "alignItems": "center",
               "flexDirection": "row",
+              "gap": 8,
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "#D3D3D3",
-                "height": 180,
-                "justifyContent": "center",
-                "marginBottom": 16,
-                "overflow": "hidden",
-                "width": 130,
-              }
-            }
-          />
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -662,7 +637,6 @@ exports[`Account renders only family_name when given_name is empty string (monon
                 {
                   "flexShrink": 1,
                   "flexWrap": "wrap",
-                  "marginLeft": 8,
                 },
               ]
             }
@@ -1227,22 +1201,10 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
             {
               "alignItems": "center",
               "flexDirection": "row",
+              "gap": 8,
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "#D3D3D3",
-                "height": 180,
-                "justifyContent": "center",
-                "marginBottom": 16,
-                "overflow": "hidden",
-                "width": 130,
-              }
-            }
-          />
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -1256,7 +1218,6 @@ exports[`Account renders only family_name when given_name is undefined (mononym)
                 {
                   "flexShrink": 1,
                   "flexWrap": "wrap",
-                  "marginLeft": 8,
                 },
               ]
             }
@@ -1821,22 +1782,10 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
             {
               "alignItems": "center",
               "flexDirection": "row",
+              "gap": 8,
             }
           }
         >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "backgroundColor": "#D3D3D3",
-                "height": 180,
-                "justifyContent": "center",
-                "marginBottom": 16,
-                "overflow": "hidden",
-                "width": 130,
-              }
-            }
-          />
           <Text
             maxFontSizeMultiplier={2}
             style={
@@ -1850,7 +1799,6 @@ exports[`Account renders only given_name when family_name is undefined 1`] = `
                 {
                   "flexShrink": 1,
                   "flexWrap": "wrap",
-                  "marginLeft": 8,
                 },
               ]
             }

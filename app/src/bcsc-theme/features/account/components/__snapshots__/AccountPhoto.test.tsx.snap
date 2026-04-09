@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccountPhoto renders correctly with a photo 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#D3D3D3",
+      "height": 180,
+      "justifyContent": "center",
+      "marginBottom": 16,
+      "overflow": "hidden",
+      "width": 130,
+    }
+  }
+>
+  <Image
+    source={
+      {
+        "uri": "https://example.com/photo.jpg",
+      }
+    }
+    style={
+      {
+        "height": "100%",
+        "resizeMode": "cover",
+        "width": "100%",
+      }
+    }
+  />
+</View>
+`;
+
+exports[`AccountPhoto renders correctly with no photo 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#D3D3D3",
+      "height": 180,
+      "justifyContent": "center",
+      "marginBottom": 16,
+      "overflow": "hidden",
+      "width": 130,
+    }
+  }
+/>
+`;
