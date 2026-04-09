@@ -1,6 +1,6 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { BCDispatchAction } from '@/store'
-import { getVersion } from 'react-native-device-info'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
@@ -9,38 +9,45 @@ type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
  * Checks conditions to determine if the device registration needs to be updated.
  *
  * Currently supports:
- *    - App version mismatch (previously registered app version differs from current app version)
+ *    - App version or build number mismatch
+ *    - Blank stored values (v3→v4 upgrade or first run)
  *
  * @class UpdateDeviceRegistrationSystemCheck
  * @implements {SystemCheckStrategy}
  */
 export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy {
   private readonly lastAppVersion: string
+  private readonly lastAppBuildNumber: string
   private readonly updateRegistration: UpdateRegistrationFunction
   private readonly utils: SystemCheckUtils
 
-  constructor(lastAppVersion: string, updateRegistration: UpdateRegistrationFunction, utils: SystemCheckUtils) {
+  constructor(
+    lastAppVersion: string,
+    lastAppBuildNumber: string,
+    updateRegistration: UpdateRegistrationFunction,
+    utils: SystemCheckUtils
+  ) {
     this.lastAppVersion = lastAppVersion
+    this.lastAppBuildNumber = lastAppBuildNumber
     this.utils = utils
     this.updateRegistration = updateRegistration
   }
 
-  /**
-   * Runs the device registration update check to verify if the device registration needs to be updated.
-   *
-   * @returns {*} {boolean} - A boolean indicating if the device registration is up to date.
-   */
   runCheck() {
-    return this.lastAppVersion === getVersion()
+    // Force update if stored values are blank (v3→v4 upgrade or first run)
+    if (!this.lastAppVersion || !this.lastAppBuildNumber) {
+      return false
+    }
+
+    return this.lastAppVersion === getVersion() && this.lastAppBuildNumber === getBuildNumber()
   }
 
-  /**
-   * Handles the failure case where the device registration needs to be updated.
-   *
-   * @returns {*} {Promise<void>} - A promise that resolves when the device registration update process is complete.
-   */
   async onFail() {
-    this.utils.logger.info('UpdateDeviceRegistrationSystemCheck: Updating device registration due to version change')
+    const reason =
+      !this.lastAppVersion || !this.lastAppBuildNumber
+        ? 'missing stored version/build (first run or upgrade)'
+        : 'version/build change'
+    this.utils.logger.info(`UpdateDeviceRegistrationSystemCheck: Updating device registration due to ${reason}`)
 
     try {
       await this.updateRegistration()

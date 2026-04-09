@@ -139,7 +139,14 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
-      systemChecks.push(new UpdateDeviceRegistrationSystemCheck(store.bcsc.appVersion, updateRegistration, utils))
+      systemChecks.push(
+        new UpdateDeviceRegistrationSystemCheck(
+          store.bcsc.appVersion,
+          store.bcsc.appBuildNumber,
+          updateRegistration,
+          utils
+        )
+      )
     }
     return systemChecks
   }, [
@@ -153,6 +160,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcscSecure.registrationAccessToken,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
+    store.bcsc.appBuildNumber,
   ])
 
   return useMemo(() => {

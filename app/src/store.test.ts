@@ -1,5 +1,5 @@
 import Config from 'react-native-config'
-import { getInitialEnvironment, IASEnvironment } from './store'
+import { BCDispatchAction, getInitialEnvironment, IASEnvironment, initialState, reducer } from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -8,13 +8,15 @@ jest.mock('react-native-config', () => ({
 
 jest.mock('react-native-device-info', () => ({
   getVersion: jest.fn(() => '4.0.0'),
+  getBuildNumber: jest.fn(() => '100'),
 }))
 
 jest.mock('react-native-bcsc-core', () => ({}))
 jest.mock('@bifold/core', () => ({
   defaultState: { preferences: {}, tours: {}, onboarding: {}, loginAttempt: {}, migration: {} },
-  mergeReducers: jest.fn(),
+  mergeReducers: jest.fn((_base: any, custom: any) => custom),
   reducer: jest.fn(),
+  PersistentStorage: { storeValueForKey: jest.fn() },
 }))
 
 const configMock = Config as { DEFAULT_ENVIRONMENT: string; BUILD_TARGET: string }
@@ -83,5 +85,15 @@ describe('getInitialEnvironment', () => {
     configMock.DEFAULT_ENVIRONMENT = 'INVALID'
     configMock.BUILD_TARGET = 'bcwallet'
     expect(getInitialEnvironment()).toBe(IASEnvironment.PROD)
+  })
+})
+
+describe('reducer', () => {
+  it('UPDATE_APP_VERSION sets appVersion and appBuildNumber', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, appVersion: '', appBuildNumber: '' } }
+    const result = reducer(state, { type: BCDispatchAction.UPDATE_APP_VERSION })
+
+    expect(result.bcsc.appVersion).toBe('4.0.0')
+    expect(result.bcsc.appBuildNumber).toBe('100')
   })
 })
