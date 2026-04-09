@@ -107,9 +107,9 @@ describe('ServiceLogin', () => {
         serviceHydrated: true,
       })
 
-      const { getByText, queryByTestId } = renderScreen(mockNavigation)
+      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
 
-      expect(getByText(SERVICE_CLIENT_URI)).toBeTruthy()
+      expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
       expect(queryByTestId(testIdWithKey('ServiceClientLink'))).toBeNull()
     })
 
@@ -140,10 +140,10 @@ describe('ServiceLogin', () => {
         serviceHydrated: true,
       })
 
-      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
+      const { getByTestId } = renderScreen(mockNavigation)
 
       expect(getByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeTruthy()
-      expect(queryByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeNull()
+      expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
     })
 
     it('renders Default view with report suspicious link when no privacyPolicyUri', () => {
