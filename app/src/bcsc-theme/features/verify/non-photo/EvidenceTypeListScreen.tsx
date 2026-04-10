@@ -75,6 +75,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   // This handles the case where user selected a card but backed out before completing.
   useFocusEffect(
     useCallback(() => {
+      // Keep the ref updated on screen focus
+      initialEvidenceData.current = store.bcscSecure.additionalEvidenceData
       removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
     }, [removeIncompleteEvidence, store.bcscSecure.additionalEvidenceData])
   )
