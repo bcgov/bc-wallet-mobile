@@ -22,7 +22,7 @@ config.capabilities = [
     'appium:showXcodeLog': process.env.SHOW_XCODE_LOG === 'true',
     'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
-    'appium:autoAcceptAlerts': false,
+    'appium:autoAcceptAlerts': true,
   },
 ]
 
