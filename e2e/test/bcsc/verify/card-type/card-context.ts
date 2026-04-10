@@ -7,11 +7,9 @@ export type BCSC_IdentitySelectionCardTypeButton = Exclude<
   'CheckForServicesCard'
 >
 
-export type CardTypeButton = BCSC_IdentitySelectionCardTypeButton
-
 export type ConfiguredVerifyContext = {
   testUser: TestUser
-  cardTypeButton: CardTypeButton
+  cardTypeButton: BCSC_IdentitySelectionCardTypeButton
   cardTypeLabel: string
 }
 
@@ -22,7 +20,7 @@ export type ConfiguredVerifyContext = {
  */
 export const verifyContext: {
   testUser: TestUser | undefined
-  cardTypeButton: CardTypeButton | undefined
+  cardTypeButton: BCSC_IdentitySelectionCardTypeButton | undefined
   cardTypeLabel: string | undefined
 } = {
   testUser: undefined,
