@@ -13,7 +13,7 @@ const NicknameAccountScreen: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(
-    async (trimmedNickname: string) => {
+    (trimmedNickname: string) => {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedNickname] })
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedNickname] })
 

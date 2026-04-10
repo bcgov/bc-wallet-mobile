@@ -1,4 +1,5 @@
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, initialState } from '@/store'
 import { useServices, useStore } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -90,7 +91,7 @@ describe('NicknameAccount', () => {
       expect(updateRegistrationMock).toHaveBeenCalledWith('test-token', 'MyAccount')
     })
     expect(navigation.dispatch).toHaveBeenCalledWith(
-      CommonActions.reset({ index: 0, routes: [{ name: 'Setup Steps' }] })
+      CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
     )
   })
 
