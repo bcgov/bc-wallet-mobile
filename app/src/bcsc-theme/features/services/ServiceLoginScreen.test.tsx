@@ -107,9 +107,9 @@ describe('ServiceLogin', () => {
         serviceHydrated: true,
       })
 
-      const { getByText, queryByTestId } = renderScreen(mockNavigation)
+      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
 
-      expect(getByText(SERVICE_CLIENT_URI)).toBeTruthy()
+      expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
       expect(queryByTestId(testIdWithKey('ServiceClientLink'))).toBeNull()
     })
 
@@ -128,6 +128,40 @@ describe('ServiceLogin', () => {
       expect(getByTestId(testIdWithKey('ServiceClientLink'))).toBeTruthy()
     })
 
+    it('renders Unavailable view (quick login unavailable) without service client URI', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceClientUri: undefined,
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const { queryByTestId } = renderScreen(mockNavigation)
+
+      expect(queryByTestId(testIdWithKey('ServiceClientLink'))).toBeNull()
+    })
+
+    it('opens service client URI when ServiceClientLink is pressed', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceClientUri: SERVICE_CLIENT_URI,
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderScreen(mockNavigation)
+
+      fireEvent.press(getByTestId(testIdWithKey('ServiceClientLink')))
+
+      expect(mockOpenURL).toHaveBeenCalledWith(SERVICE_CLIENT_URI)
+      mockOpenURL.mockRestore()
+    })
+
     it('renders Default view with privacy policy card when privacyPolicyUri is set', () => {
       mockedUseServiceLoginState.mockReturnValue({
         state: {
@@ -140,10 +174,10 @@ describe('ServiceLogin', () => {
         serviceHydrated: true,
       })
 
-      const { getByTestId, queryByTestId } = renderScreen(mockNavigation)
+      const { getByTestId } = renderScreen(mockNavigation)
 
       expect(getByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeTruthy()
-      expect(queryByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeNull()
+      expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
     })
 
     it('renders Default view with report suspicious link when no privacyPolicyUri', () => {

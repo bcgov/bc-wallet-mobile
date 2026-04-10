@@ -68,7 +68,6 @@ type DevicePreferenceURLViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string, options?: Record<string, unknown>) => string
   Spacing: ReturnType<typeof useTheme>['Spacing']
-  isQuickLogin: boolean
 }
 
 const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
@@ -76,7 +75,6 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
   ColorPalette,
   t,
   Spacing,
-  isQuickLogin,
 }: DevicePreferenceURLViewProps) =>
   serviceClientUri ? (
     <View style={{ marginTop: Spacing.lg }}>
@@ -91,17 +89,13 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
         {t('BCSC.Services.PreferOtherDevice')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>
-        {isQuickLogin ? (
-          serviceClientUri
-        ) : (
-          <Link
-            style={{ textAlign: 'center' }}
-            linkText={serviceClientUri}
-            testID={testIdWithKey('ServiceClientLink')}
-            onPress={() => Linking.openURL(serviceClientUri)}
-          />
-        )}
+      <ThemedText selectable={true} style={{ textAlign: 'center' }}>
+        <Link
+          style={{ textAlign: 'center' }}
+          linkText={serviceClientUri}
+          testID={testIdWithKey('ServiceClientLink')}
+          onPress={() => Linking.openURL(serviceClientUri)}
+        />
       </ThemedText>
     </View>
   ) : null
@@ -174,7 +168,6 @@ const ServiceLoginUnavailableView = ({
           ColorPalette={ColorPalette}
           t={t}
           Spacing={Spacing}
-          isQuickLogin={false}
         />
       </View>
     </ScrollView>
@@ -274,17 +267,7 @@ const ServiceLoginDefaultView = ({
             onPress={onCancel}
           />
         </View>
-        {state.privacyPolicyUri ? (
-          <DevicePreferenceURLView
-            serviceClientUri={state.serviceClientUri}
-            ColorPalette={ColorPalette}
-            t={t}
-            Spacing={Spacing}
-            isQuickLogin={true}
-          />
-        ) : (
-          <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} Spacing={Spacing} />
-        )}
+        <ReportSuspiciousLink t={t} Spacing={Spacing} testID={testIdWithKey('ReportSuspiciousLink')} />
       </ScrollView>
     </SafeAreaView>
   )
