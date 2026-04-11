@@ -121,6 +121,24 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
+  it('shows a duplicate-nickname validation error and lets the user back out', async () => {
+    // Re-open Edit Nickname. The form's local state is seeded from
+    // `store.bcsc.selectedNickname` (which is now `newNickname` after
+    // the previous test), so tapping Save without changing anything
+    // submits the same value. `getNicknameValidationErrorKey` → `hasNickname`
+    // (account-utils.ts) flags it as a duplicate because the current
+    // nickname is always in the nicknames list, and the form renders the
+    // `BCSC.NicknameAccount.NameAlreadyExists` string inline.
+    await Settings.tap('EditNickname')
+    await EditNickname.waitFor('SaveAndContinue')
+    await EditNickname.tap('SaveAndContinue')
+    const errorText = await EditNickname.findByText('This nickname already exists')
+    await errorText.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    // Navigate back to Settings without saving.
+    await EditNickname.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+  })
+
   it('signs out, re-selects the renamed account, and lands on Home', async () => {
     // Exception to "stay on Settings": logout() dispatches
     // SELECT_ACCOUNT: undefined + DID_AUTHENTICATE: false, routing to the
