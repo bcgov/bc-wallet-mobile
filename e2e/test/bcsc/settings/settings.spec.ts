@@ -20,6 +20,7 @@ const MainAppSecurity = new BaseScreen(BCSC_TestIDs.MainAppSecurity)
 const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
 const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
 const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
+const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 
 /**
  * Nickname written by the Edit Nickname test and read by the Sign Out test so
@@ -200,6 +201,17 @@ describe('Settings', () => {
     const cancelLabel = driver.isIOS ? 'Cancel' : 'CANCEL'
     const cancelButton = await Settings.findByText(cancelLabel)
     await cancelButton.click()
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('opens Help in the in-app WebView and returns to Settings', async () => {
+    // Scroll to the bottom of Settings first so the Information section
+    // rows are within scroll range. `Settings.tap` then auto-scrolls
+    // back up to find the Help row.
+    await Settings.scrollTo('Analytics')
+    await Settings.tap('Help')
+    await WebView.waitFor('Back')
+    await WebView.tap('Back')
     await Settings.waitFor('AutoLock')
   })
 })
