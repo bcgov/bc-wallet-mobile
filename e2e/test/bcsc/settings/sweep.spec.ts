@@ -6,6 +6,8 @@
  *
  * Pre-condition: the user is verified and resting on the Home tab.
  */
+import { randomBytes } from 'node:crypto'
+
 import { Timeouts } from '../../../src/constants.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
@@ -17,6 +19,7 @@ const AccountSelector = new BaseScreen(BCSC_TestIDs.AccountSelector)
 const MainAppSecurity = new BaseScreen(BCSC_TestIDs.MainAppSecurity)
 const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
 const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
+const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
 
 /**
  * Tap any "Continue as" card on the AccountSelector screen. Each card's testID
@@ -64,7 +67,9 @@ describe('Settings', () => {
   })
 
   it('edits the account nickname and verifies it persists', async () => {
-    const NEW_NICKNAME = 'Hello Nickname'
+    // 7 lowercase-hex chars — unique per run so the re-open verification
+    // can't pass against a stale pre-existing value.
+    const NEW_NICKNAME = randomBytes(4).toString('hex').slice(0, 7)
 
     await Settings.tap('EditNickname')
     await EditNickname.waitFor('SaveAndContinue')
@@ -110,5 +115,23 @@ describe('Settings', () => {
     // literal text to confirm the store update propagated to the UI.
     const adornment = await Settings.findByText('3 min')
     await adornment.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  })
+
+  it('forgets all pairings, dismisses the success alert, and returns to Settings', async () => {
+    await Settings.tap('ForgetPairings')
+    await Forget.waitFor('ForgetAllPairings')
+    await Forget.tap('ForgetAllPairings')
+    // After the network call, ForgetAllPairingsScreen fires an RN
+    // `Alert.alert` titled "Success" via `useAlerts.forgetPairingsAlert`
+    // and then `navigation.goBack()`. On Android RN renders Alert.alert
+    // as an app-owned AlertDialog widget, not a true system alert, so
+    // `driver.acceptAlert()` can't see it — dismiss by tapping the OK
+    // button by visible text. Android Material upper-cases it.
+    const successHeading = await Forget.findByText('Success')
+    await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    const okLabel = driver.isIOS ? 'Okay' : 'OK'
+    const okButton = await Forget.findByText(okLabel)
+    await okButton.click()
+    await Settings.waitFor('AutoLock')
   })
 })
