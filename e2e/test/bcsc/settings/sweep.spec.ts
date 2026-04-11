@@ -96,8 +96,11 @@ describe('Settings', () => {
     // rename from the previous test survives logout — the card on
     // AccountSelector must carry the new nickname.
     await Settings.tap('SignOut')
-    const continueAs = await AccountSelector.findByText('Continue as:')
-    await continueAs.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    // Anchor on the AuthStack header's SettingsMenuButton (rendered by
+    // `createAuthSettingsHeaderButton`) rather than the localized
+    // "Continue as:" heading — testID-based, not text-based, so copy
+    // changes can't silently break the test.
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     await tapAccountCard(newNickname)
     await Home.waitFor('SettingsMenuButton')
   })
@@ -155,11 +158,12 @@ describe('Settings', () => {
     // and then `navigation.goBack()`. On Android RN renders Alert.alert
     // as an app-owned AlertDialog widget, not a true system alert, so
     // `driver.acceptAlert()` can't see it — dismiss by tapping the OK
-    // button by visible text. Android Material upper-cases it.
+    // button by visible text. `_createBasicAlert` (useAlerts.tsx:62-74)
+    // passes `actions: [{ text: t('Global.OK') }]` explicitly, so the
+    // button label is the literal "OK" on both platforms.
     const successHeading = await Forget.findByText('Success')
     await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    const okLabel = driver.isIOS ? 'Okay' : 'OK'
-    const okButton = await Forget.findByText(okLabel)
+    const okButton = await Forget.findByText('OK')
     await okButton.click()
     await Settings.waitFor('AutoLock')
   })
