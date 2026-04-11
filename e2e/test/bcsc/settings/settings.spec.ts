@@ -1,8 +1,8 @@
 /**
- * Settings interaction sweep — walks the BCSC Settings menu in the order the
- * rows render. Tests chain: each test assumes it starts on the Settings screen
- * and ends there, with Sign Out being the documented exception (lands on Home
- * via the AccountSelector after account re-selection).
+ * BCSC Settings tests — walks the Settings menu in the order the rows render.
+ * Tests chain: each test assumes it starts on the Settings screen and ends
+ * there, with Sign Out being the documented exception (lands on Home via the
+ * AccountSelector after account re-selection).
  *
  * Pre-condition: the user is verified and resting on the Home tab.
  */
