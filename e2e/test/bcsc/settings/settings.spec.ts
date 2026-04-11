@@ -23,6 +23,7 @@ const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 const MainPrivacyPolicy = new BaseScreen(BCSC_TestIDs.MainPrivacyPolicy)
 const MainContactUs = new BaseScreen(BCSC_TestIDs.MainContactUs)
+const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 
 /**
  * Nickname written by the Edit Nickname test and read by the Sign Out test so
@@ -77,6 +78,16 @@ async function tapAccountCard(nickname: string): Promise<void> {
 describe('Settings', () => {
   it('opens the Settings menu from the Home tab', async () => {
     await Home.waitFor('SettingsMenuButton')
+    await TabBar.tap('SettingsMenuButton')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('backs out of Settings to Home and re-opens Settings', async () => {
+    // Exercises the Settings header back button and the Home → Settings
+    // round trip before we start walking the rest of the menu. Ends on
+    // Settings so subsequent tests can chain.
+    await Settings.tap('BackButton')
+    await Home.waitFor('WhereToUse')
     await TabBar.tap('SettingsMenuButton')
     await Settings.waitFor('AutoLock')
   })
@@ -345,12 +356,35 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('navigates back from Settings to the Home tab', async () => {
-    // Tap the Settings header back button and assert we land on Home.
-    // Anchors on `WhereToUse` — unique to the Home screen and renders
-    // unconditionally, so there's no risk of false positives from any
-    // lingering Settings elements.
-    await Settings.tap('BackButton')
-    await Home.waitFor('WhereToUse')
+  it('confirms Remove Account and factory resets the app to onboarding', async () => {
+    // Final, destructive test — after this the app is back in the
+    // pre-onboarding state and cannot chain into any further Settings
+    // tests. Running this spec again requires re-onboarding the device.
+    await Settings.tap('RemoveAccount')
+    if (driver.isIOS) {
+      // iOS renders a real UIAlertController; `driver.acceptAlert()` taps
+      // the non-cancel action, which is the "Reset App" destructive
+      // button given the actions order
+      // (`SettingsContent.tsx onPressRemoveAccount`).
+      try {
+        await browser.waitUntil(async () => driver.isAlertOpen().catch(() => false), {
+          timeout: Timeouts.elementVisible,
+        })
+        await driver.acceptAlert()
+      } catch {
+        // `autoAcceptAlerts` on the iOS local sim may have already
+        // tapped the default action for us.
+      }
+    } else {
+      const heading = await Settings.findByText('Are you sure?')
+      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      // Android Material upper-cases AlertDialog button labels.
+      const resetButton = await Settings.findByText('RESET APP')
+      await resetButton.click()
+    }
+    // `factoryReset()` tears down secure storage and navigation state;
+    // the app lands back on the AccountSetup onboarding screen. Use the
+    // generous `appLaunch` timeout to absorb the reset work.
+    await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
   })
 })
