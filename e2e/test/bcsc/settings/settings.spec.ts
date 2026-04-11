@@ -21,6 +21,8 @@ const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
 const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
 const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
+const MainPrivacyPolicy = new BaseScreen(BCSC_TestIDs.MainPrivacyPolicy)
+const MainContactUs = new BaseScreen(BCSC_TestIDs.MainContactUs)
 
 /**
  * Nickname written by the Edit Nickname test and read by the Sign Out test so
@@ -212,6 +214,25 @@ describe('Settings', () => {
     await Settings.tap('Help')
     await WebView.waitFor('Back')
     await WebView.tap('Back')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('opens Privacy and returns to Settings', async () => {
+    await Settings.tap('Privacy')
+    await MainPrivacyPolicy.waitFor('PrivacyPolicyBCLoginLink')
+    await MainPrivacyPolicy.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('opens Contact Us and returns to Settings', async () => {
+    await Settings.tap('ContactUs')
+    // The Toll Free / Lower Mainland Link components don't always expose
+    // their testID reliably on Android, so anchor on the screen heading
+    // text (`BCSC.ContactUs.Title` = "Service BC Help Desk") which is
+    // rendered as a plain ThemedText at the top of the screen.
+    const heading = await MainContactUs.findByText('Service BC Help Desk')
+    await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await MainContactUs.tap('BackButton')
     await Settings.waitFor('AutoLock')
   })
 })

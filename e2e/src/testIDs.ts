@@ -393,6 +393,13 @@ export const BCSC_TestIDs = {
     BackButton: 'com.ariesbifold:id/Back',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
   },
+  MainPrivacyPolicy: {
+    BackButton: 'com.ariesbifold:id/Back',
+    PrivacyPolicyBCLoginLink: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+  },
+  MainContactUs: {
+    BackButton: 'com.ariesbifold:id/Back',
+  },
   EditNickname: {
     BackButton: 'com.ariesbifold:id/Back',
     /** Pressable wrapper — use for iOS `tap` and `type`. */
