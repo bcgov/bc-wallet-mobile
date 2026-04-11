@@ -113,16 +113,36 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('changes Auto Lock time to 3 minutes and verifies the row updates', async () => {
+  it('changes Auto Lock time to a different option and verifies the row updates', async () => {
+    // The row's end-adornment ("5 min" / "3 min" / "1 min") reflects the
+    // current `autoLockTime`. Probe to see which one is visible so the
+    // test works regardless of what the previous run left behind.
+    let current: '5 min' | '3 min' | '1 min' | null = null
+    for (const label of ['5 min', '3 min', '1 min'] as const) {
+      const el = await Settings.findByText(label)
+      if (await el.isDisplayed().catch(() => false)) {
+        current = label
+        break
+      }
+    }
+    if (!current) {
+      throw new Error('Could not determine current Auto Lock value from the Settings row')
+    }
+
+    // Cycle to the next option so we always pick something different
+    // from the current value: 5 → 3 → 1 → 5.
+    const next = {
+      '5 min': { tapKey: 'AutoLockTime3' as const, expected: '3 min' },
+      '3 min': { tapKey: 'AutoLockTime1' as const, expected: '1 min' },
+      '1 min': { tapKey: 'AutoLockTime5' as const, expected: '5 min' },
+    }[current]
+
     await Settings.tap('AutoLock')
-    await AutoLock.waitFor('AutoLockTime3')
-    await AutoLock.tap('AutoLockTime3')
+    await AutoLock.waitFor(next.tapKey)
+    await AutoLock.tap(next.tapKey)
     await AutoLock.tap('BackButton')
     await Settings.waitFor('AutoLock')
-    // SettingsActionCard renders the current auto-lock minutes as its
-    // `endAdornmentText` ("3 min") — see SettingsContent.tsx. Match the
-    // literal text to confirm the store update propagated to the UI.
-    const adornment = await Settings.findByText('3 min')
+    const adornment = await Settings.findByText(next.expected)
     await adornment.waitForDisplayed({ timeout: Timeouts.elementVisible })
   })
 
