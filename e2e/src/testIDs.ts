@@ -389,8 +389,16 @@ export const BCSC_TestIDs = {
     AutoLockTime1: 'com.ariesbifold:id/auto-lock-time-1',
     BackButton: 'com.ariesbifold:id/Back',
   },
+  MainAppSecurity: {
+    BackButton: 'com.ariesbifold:id/Back',
+    LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+  },
   EditNickname: {
-    NameInput: 'com.ariesbifold:id/NameInput',
+    BackButton: 'com.ariesbifold:id/Back',
+    /** Pressable wrapper — use for iOS `tap` and `type`. */
+    AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
+    /** TextInput inside `InputWithValidation` — use for Android `type`. */
+    AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
   },
   ForgetAllPairings: {

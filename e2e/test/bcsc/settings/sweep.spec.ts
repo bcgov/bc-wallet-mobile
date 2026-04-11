@@ -14,6 +14,8 @@ const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
 const Home = new BaseScreen(BCSC_TestIDs.Home)
 const Settings = new BaseScreen(BCSC_TestIDs.Settings)
 const AccountSelector = new BaseScreen(BCSC_TestIDs.AccountSelector)
+const MainAppSecurity = new BaseScreen(BCSC_TestIDs.MainAppSecurity)
+const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
 
 /**
  * Tap any "Continue as" card on the AccountSelector screen. Each card's testID
@@ -47,5 +49,52 @@ describe('Settings', () => {
     await continueAs.waitForDisplayed({ timeout: Timeouts.screenTransition })
     await tapAnyAccountCard()
     await Home.waitFor('SettingsMenuButton')
+  })
+
+  it('opens App Security and returns to Settings', async () => {
+    // Previous test (Sign Out) ended on Home as its documented exception,
+    // so re-open Settings before walking into the App Security row.
+    await TabBar.tap('SettingsMenuButton')
+    await Settings.waitFor('AutoLock')
+    await Settings.tap('AppSecurity')
+    await MainAppSecurity.waitFor('LearnMoreButton')
+    await MainAppSecurity.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('edits the account nickname and verifies it persists', async () => {
+    const NEW_NICKNAME = 'Hello Nickname'
+
+    await Settings.tap('EditNickname')
+    await EditNickname.waitFor('SaveAndContinue')
+
+    // Platform-specific input handling — the onboarding Nickname spec
+    // uses this same split because the Android TextInput sits inside a
+    // pressable wrapper while iOS exposes the TextInput directly.
+    if (driver.isAndroid) {
+      await EditNickname.tap('AccountNicknameInput')
+      await EditNickname.type('AccountNicknameInput', NEW_NICKNAME, {
+        tapFirst: true,
+        characterByCharacter: false,
+      })
+    } else {
+      await EditNickname.tap('AccountNicknamePressable')
+      await EditNickname.type('AccountNicknamePressable', NEW_NICKNAME, { tapFirst: true })
+    }
+    await EditNickname.dismissKeyboard()
+
+    // Save — EditNicknameScreen calls navigation.goBack() on success, so
+    // we land back on Settings without any further interaction.
+    await EditNickname.tap('SaveAndContinue')
+    await Settings.waitFor('AutoLock')
+
+    // Re-open Edit Nickname and verify the new value is rendered in the
+    // input. `findByText` matches the TextInput's text on Android and its
+    // value on iOS.
+    await Settings.tap('EditNickname')
+    const nicknameText = await EditNickname.findByText(NEW_NICKNAME)
+    await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await EditNickname.tap('BackButton')
+    await Settings.waitFor('AutoLock')
   })
 })
