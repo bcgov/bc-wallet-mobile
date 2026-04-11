@@ -188,16 +188,29 @@ describe('Settings', () => {
     await Forget.tap('ForgetAllPairings')
     // After the network call, ForgetAllPairingsScreen fires an RN
     // `Alert.alert` titled "Success" via `useAlerts.forgetPairingsAlert`
-    // and then `navigation.goBack()`. On Android RN renders Alert.alert
-    // as an app-owned AlertDialog widget, not a true system alert, so
-    // `driver.acceptAlert()` can't see it — dismiss by tapping the OK
-    // button by visible text. `_createBasicAlert` (useAlerts.tsx:62-74)
-    // passes `actions: [{ text: t('Global.OK') }]` explicitly, so the
-    // button label is the literal "OK" on both platforms.
-    const successHeading = await Forget.findByText('Success')
-    await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    const okButton = await Forget.findByText('OK')
-    await okButton.click()
+    // and then `navigation.goBack()`. iOS maps this to a real
+    // `UIAlertController` that Appium's alert API can dismiss directly
+    // — but `wdio.ios.local.sim.conf.ts` sets `autoAcceptAlerts: true`,
+    // so on the local sim the alert may already be gone by the time we
+    // look for it. On Android RN renders Alert.alert as an app-owned
+    // `AlertDialog` widget, so `driver.acceptAlert()` can't see it and
+    // we have to tap the OK button by visible text instead.
+    if (driver.isIOS) {
+      try {
+        await browser.waitUntil(async () => driver.isAlertOpen().catch(() => false), {
+          timeout: Timeouts.elementVisible,
+        })
+        await driver.acceptAlert()
+      } catch {
+        // `autoAcceptAlerts` already handled it; fall through to the
+        // post-condition assertion.
+      }
+    } else {
+      const successHeading = await Forget.findByText('Success')
+      await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      const okButton = await Forget.findByText('OK')
+      await okButton.click()
+    }
     await Settings.waitFor('AutoLock')
   })
 
@@ -225,14 +238,27 @@ describe('Settings', () => {
     // SettingsContent.tsx `onPressRemoveAccount` calls `emitAlert` which
     // routes through `showAlert` → RN `Alert.alert` with the
     // `Alerts.CancelMobileCardSetup` strings: title "Are you sure?",
-    // Cancel + destructive "Reset App" buttons. On Android this is an
-    // app-owned AlertDialog, not a system alert — match by text.
-    const heading = await Settings.findByText('Are you sure?')
-    await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
-    // Android Material upper-cases AlertDialog button labels.
-    const cancelLabel = driver.isIOS ? 'Cancel' : 'CANCEL'
-    const cancelButton = await Settings.findByText(cancelLabel)
-    await cancelButton.click()
+    // Cancel + destructive "Reset App" buttons. iOS renders a real
+    // `UIAlertController` (Appium alert API works); Android renders an
+    // app-owned `AlertDialog` (text-based fallback required).
+    if (driver.isIOS) {
+      try {
+        await browser.waitUntil(async () => driver.isAlertOpen().catch(() => false), {
+          timeout: Timeouts.elementVisible,
+        })
+        // `dismissAlert` taps the cancel-style button — exactly what we want.
+        await driver.dismissAlert()
+      } catch {
+        // `autoAcceptAlerts` already handled it; fall through to the
+        // post-condition assertion.
+      }
+    } else {
+      const heading = await Settings.findByText('Are you sure?')
+      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      // Android Material upper-cases AlertDialog button labels.
+      const cancelButton = await Settings.findByText('CANCEL')
+      await cancelButton.click()
+    }
     await Settings.waitFor('AutoLock')
   })
 

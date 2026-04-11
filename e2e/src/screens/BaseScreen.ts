@@ -113,12 +113,17 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
   /**
    * Find an element by text.
+   *
+   * On iOS, RN `Text` nodes usually expose their rendered string via the
+   * accessibility `label` attribute, while `value` is reserved for inputs and
+   * a few stateful controls. Matching both covers the common cases.
+   *
    * @param text - text to find
    * @returns the element
    */
   public async findByText(text: string) {
     const selector = driver.isIOS
-      ? `-ios predicate string:value == "${text}"`
+      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
       : `android=new UiSelector().text("${text}")`
     return $(selector)
   }
