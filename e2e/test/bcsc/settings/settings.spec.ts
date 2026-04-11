@@ -284,4 +284,20 @@ describe('Settings', () => {
     await driver.activateApp(appId)
     await Settings.waitFor('AutoLock')
   })
+
+  it('launches Terms of Use URL in the browser and returns to the app', async () => {
+    const appId = await ensureBcscAppId()
+    await Settings.tap('TermsOfUse')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('launches Analytics URL in the browser and returns to the app', async () => {
+    const appId = await ensureBcscAppId()
+    await Settings.tap('Analytics')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
+    await Settings.waitFor('AutoLock')
+  })
 })
