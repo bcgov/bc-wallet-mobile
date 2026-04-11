@@ -300,4 +300,13 @@ describe('Settings', () => {
     await driver.activateApp(appId)
     await Settings.waitFor('AutoLock')
   })
+
+  it('navigates back from Settings to the Home tab', async () => {
+    // Tap the Settings header back button and assert we land on Home.
+    // Anchors on `WhereToUse` — unique to the Home screen and renders
+    // unconditionally, so there's no risk of false positives from any
+    // lingering Settings elements.
+    await Settings.tap('BackButton')
+    await Home.waitFor('WhereToUse')
+  })
 })
