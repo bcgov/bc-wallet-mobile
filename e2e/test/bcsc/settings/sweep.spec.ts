@@ -153,4 +153,20 @@ describe('Settings', () => {
     const after = await Settings.findByText(expectedAfter)
     await after.waitForDisplayed({ timeout: Timeouts.elementVisible })
   })
+
+  it('shows the Remove Account confirmation and cancels', async () => {
+    await Settings.tap('RemoveAccount')
+    // SettingsContent.tsx `onPressRemoveAccount` calls `emitAlert` which
+    // routes through `showAlert` → RN `Alert.alert` with the
+    // `Alerts.CancelMobileCardSetup` strings: title "Are you sure?",
+    // Cancel + destructive "Reset App" buttons. On Android this is an
+    // app-owned AlertDialog, not a system alert — match by text.
+    const heading = await Settings.findByText('Are you sure?')
+    await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    // Android Material upper-cases AlertDialog button labels.
+    const cancelLabel = driver.isIOS ? 'Cancel' : 'CANCEL'
+    const cancelButton = await Settings.findByText(cancelLabel)
+    await cancelButton.click()
+    await Settings.waitFor('AutoLock')
+  })
 })
