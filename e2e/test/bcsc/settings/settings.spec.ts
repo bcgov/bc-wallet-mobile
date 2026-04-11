@@ -32,6 +32,36 @@ const MainContactUs = new BaseScreen(BCSC_TestIDs.MainContactUs)
 let newNickname = ''
 
 /**
+ * Cached package (Android) / bundle id (iOS) of the app under test. Captured
+ * lazily by the first external-browser test while BCSC is still in the
+ * foreground, so `driver.activateApp(...)` can return to it after
+ * `Linking.openURL` hands control to the system browser.
+ */
+let bcscAppId = ''
+
+/** Pause after a `Linking.openURL` call before re-activating the app. */
+const BROWSER_HANDOFF_PAUSE_MS = 2000
+
+/**
+ * Capture the current app's package/bundle id on first call and cache it
+ * for subsequent calls. Must be invoked while the app under test is in the
+ * foreground (not the browser).
+ */
+async function ensureBcscAppId(): Promise<string> {
+  if (bcscAppId) return bcscAppId
+  if (driver.isIOS) {
+    const info = (await driver.execute('mobile: activeAppInfo')) as { bundleId?: string }
+    if (!info?.bundleId) {
+      throw new Error('Unable to resolve iOS bundle id from mobile: activeAppInfo')
+    }
+    bcscAppId = info.bundleId
+  } else {
+    bcscAppId = await driver.getCurrentPackage()
+  }
+  return bcscAppId
+}
+
+/**
  * Tap the account card matching the given nickname on the AccountSelector
  * screen. Cards are rendered by `CardButton.tsx` with a default testID of
  * `com.ariesbifold:id/CardButton-${title}`.
@@ -233,6 +263,25 @@ describe('Settings', () => {
     const heading = await MainContactUs.findByText('Service BC Help Desk')
     await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
     await MainContactUs.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('launches Feedback URL in the browser and returns to the app', async () => {
+    // Capture the app package while BCSC is still in the foreground so
+    // `driver.activateApp(...)` can bring it back after the external
+    // browser takes over.
+    const appId = await ensureBcscAppId()
+    await Settings.tap('Feedback')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('launches Accessibility URL in the browser and returns to the app', async () => {
+    const appId = await ensureBcscAppId()
+    await Settings.tap('Accessibility')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
     await Settings.waitFor('AutoLock')
   })
 })
