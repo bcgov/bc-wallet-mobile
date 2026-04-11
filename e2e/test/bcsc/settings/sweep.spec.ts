@@ -22,15 +22,20 @@ const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
 const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
 
 /**
- * Tap any "Continue as" card on the AccountSelector screen. Each card's testID
- * is `com.ariesbifold:id/CardButton-${nickname}` (see
- * `CardButton.tsx` default testID and `AccountSelectorScreen.tsx`); the
- * nickname is fixture-dependent, so we match the prefix.
+ * Nickname written by the Edit Nickname test and read by the Sign Out test so
+ * we can both locate the correct account card on AccountSelector and
+ * cross-check that the rename round-tripped through logout.
  */
-async function tapAnyAccountCard(): Promise<void> {
-  const selector = driver.isIOS
-    ? '-ios predicate string:name BEGINSWITH "com.ariesbifold:id/CardButton-"'
-    : 'android=new UiSelector().resourceIdMatches("com\\.ariesbifold:id/CardButton-.*")'
+let newNickname = ''
+
+/**
+ * Tap the account card matching the given nickname on the AccountSelector
+ * screen. Cards are rendered by `CardButton.tsx` with a default testID of
+ * `com.ariesbifold:id/CardButton-${title}`.
+ */
+async function tapAccountCard(nickname: string): Promise<void> {
+  const testId = `com.ariesbifold:id/CardButton-${nickname}`
+  const selector = driver.isIOS ? `~${testId}` : `android=new UiSelector().resourceId("${testId}")`
   const card = await $(selector)
   await card.waitForDisplayed({ timeout: Timeouts.elementVisible })
   await card.click()
@@ -43,33 +48,12 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('signs out, re-selects the account, and lands on Home', async () => {
-    // Exception to "stay on Settings": logout() dispatches
-    // SELECT_ACCOUNT: undefined + DID_AUTHENTICATE: false, routing to the
-    // AccountSelector. After tapping the account card, unlockApp() runs and
-    // we end up back on Home.
-    await Settings.tap('SignOut')
-    const continueAs = await AccountSelector.findByText('Continue as:')
-    await continueAs.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await tapAnyAccountCard()
-    await Home.waitFor('SettingsMenuButton')
-  })
-
-  it('opens App Security and returns to Settings', async () => {
-    // Previous test (Sign Out) ended on Home as its documented exception,
-    // so re-open Settings before walking into the App Security row.
-    await TabBar.tap('SettingsMenuButton')
-    await Settings.waitFor('AutoLock')
-    await Settings.tap('AppSecurity')
-    await MainAppSecurity.waitFor('LearnMoreButton')
-    await MainAppSecurity.tap('BackButton')
-    await Settings.waitFor('AutoLock')
-  })
-
   it('edits the account nickname and verifies it persists', async () => {
-    // 7 lowercase-hex chars — unique per run so the re-open verification
-    // can't pass against a stale pre-existing value.
-    const NEW_NICKNAME = randomBytes(4).toString('hex').slice(0, 7)
+    // 7 lowercase-hex chars — unique per run so later assertions can't
+    // pass against a stale pre-existing value. Stored in the module-level
+    // `newNickname` so the Sign Out test can cross-check that the rename
+    // survives logout and shows up on the AccountSelector.
+    newNickname = randomBytes(4).toString('hex').slice(0, 7)
 
     await Settings.tap('EditNickname')
     await EditNickname.waitFor('SaveAndContinue')
@@ -79,13 +63,13 @@ describe('Settings', () => {
     // pressable wrapper while iOS exposes the TextInput directly.
     if (driver.isAndroid) {
       await EditNickname.tap('AccountNicknameInput')
-      await EditNickname.type('AccountNicknameInput', NEW_NICKNAME, {
+      await EditNickname.type('AccountNicknameInput', newNickname, {
         tapFirst: true,
         characterByCharacter: false,
       })
     } else {
       await EditNickname.tap('AccountNicknamePressable')
-      await EditNickname.type('AccountNicknamePressable', NEW_NICKNAME, { tapFirst: true })
+      await EditNickname.type('AccountNicknamePressable', newNickname, { tapFirst: true })
     }
     await EditNickname.dismissKeyboard()
 
@@ -98,9 +82,34 @@ describe('Settings', () => {
     // input. `findByText` matches the TextInput's text on Android and its
     // value on iOS.
     await Settings.tap('EditNickname')
-    const nicknameText = await EditNickname.findByText(NEW_NICKNAME)
+    const nicknameText = await EditNickname.findByText(newNickname)
     await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
     await EditNickname.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+  })
+
+  it('signs out, re-selects the renamed account, and lands on Home', async () => {
+    // Exception to "stay on Settings": logout() dispatches
+    // SELECT_ACCOUNT: undefined + DID_AUTHENTICATE: false, routing to the
+    // AccountSelector. After tapping the account card, unlockApp() runs and
+    // we end up back on Home. This test also cross-checks that the nickname
+    // rename from the previous test survives logout — the card on
+    // AccountSelector must carry the new nickname.
+    await Settings.tap('SignOut')
+    const continueAs = await AccountSelector.findByText('Continue as:')
+    await continueAs.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    await tapAccountCard(newNickname)
+    await Home.waitFor('SettingsMenuButton')
+  })
+
+  it('opens App Security and returns to Settings', async () => {
+    // Previous test (Sign Out) ended on Home as its documented exception,
+    // so re-open Settings before walking into the App Security row.
+    await TabBar.tap('SettingsMenuButton')
+    await Settings.waitFor('AutoLock')
+    await Settings.tap('AppSecurity')
+    await MainAppSecurity.waitFor('LearnMoreButton')
+    await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('AutoLock')
   })
 
