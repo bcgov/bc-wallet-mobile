@@ -16,6 +16,7 @@ const Settings = new BaseScreen(BCSC_TestIDs.Settings)
 const AccountSelector = new BaseScreen(BCSC_TestIDs.AccountSelector)
 const MainAppSecurity = new BaseScreen(BCSC_TestIDs.MainAppSecurity)
 const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
+const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
 
 /**
  * Tap any "Continue as" card on the AccountSelector screen. Each card's testID
@@ -96,5 +97,18 @@ describe('Settings', () => {
     await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
     await EditNickname.tap('BackButton')
     await Settings.waitFor('AutoLock')
+  })
+
+  it('changes Auto Lock time to 3 minutes and verifies the row updates', async () => {
+    await Settings.tap('AutoLock')
+    await AutoLock.waitFor('AutoLockTime3')
+    await AutoLock.tap('AutoLockTime3')
+    await AutoLock.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+    // SettingsActionCard renders the current auto-lock minutes as its
+    // `endAdornmentText` ("3 min") — see SettingsContent.tsx. Match the
+    // literal text to confirm the store update propagated to the UI.
+    const adornment = await Settings.findByText('3 min')
+    await adornment.waitForDisplayed({ timeout: Timeouts.elementVisible })
   })
 })
