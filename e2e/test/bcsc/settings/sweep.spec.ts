@@ -134,4 +134,23 @@ describe('Settings', () => {
     await okButton.click()
     await Settings.waitFor('AutoLock')
   })
+
+  it('toggles Analytics Opt In to the opposite state', async () => {
+    // Scroll the Analytics Opt In row into view so its ON/OFF end-adornment
+    // is observable before and after the tap.
+    await Settings.waitFor('AnalyticsOptIn')
+
+    // SettingsContent.tsx renders `endAdornmentText` as "ON" or "OFF"
+    // based on `store.bcsc.analyticsOptIn`. Probe which one is currently
+    // visible to determine the starting state.
+    const onBefore = await Settings.findByText('ON')
+    const isCurrentlyOn = await onBefore.isDisplayed().catch(() => false)
+
+    await Settings.tap('AnalyticsOptIn')
+
+    // Verify the adornment flipped to the opposite value.
+    const expectedAfter = isCurrentlyOn ? 'OFF' : 'ON'
+    const after = await Settings.findByText(expectedAfter)
+    await after.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  })
 })
