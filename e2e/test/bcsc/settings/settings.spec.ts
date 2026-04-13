@@ -178,40 +178,49 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('changes Auto Lock time to a different option and verifies the row updates', async () => {
-    // The row's end-adornment ("5 min" / "3 min" / "1 min") reflects the
-    // current `autoLockTime`. Probe to see which one is visible so the
-    // test works regardless of what the previous run left behind.
-    let current: '5 min' | '3 min' | '1 min' | null = null
-    for (const label of ['5 min', '3 min', '1 min'] as const) {
-      const el = await Settings.findByText(label)
-      if (await el.isDisplayed().catch(() => false)) {
-        current = label
-        break
-      }
-    }
-    if (!current) {
-      throw new Error('Could not determine current Auto Lock value from the Settings row')
-    }
-
-    // Cycle to the next option so we always pick something different
-    // from the current value: 5 → 3 → 1 → 5.
-    const next = {
-      '5 min': { tapKey: 'AutoLockTime3' as const, expected: '3 min' },
-      '3 min': { tapKey: 'AutoLockTime1' as const, expected: '1 min' },
-      '1 min': { tapKey: 'AutoLockTime5' as const, expected: '5 min' },
-    }[current]
-
+  it('sets Auto Lock to 3 min and verifies the row updates', async () => {
     await Settings.tap('AutoLock')
-    await AutoLock.waitFor(next.tapKey)
-    await AutoLock.tap(next.tapKey)
+    await AutoLock.waitFor('AutoLockTime3')
+    await AutoLock.tap('AutoLockTime3')
     await AutoLock.tap('BackButton')
     await Settings.waitFor('AutoLock')
-    const adornment = await Settings.findByText(next.expected)
-    await adornment.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    const adornment3 = await Settings.findByText('3 min')
+    await adornment3.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  })
+
+  it('sets Auto Lock to 5 min and verifies the row updates', async () => {
+    await Settings.tap('AutoLock')
+    await AutoLock.waitFor('AutoLockTime5')
+    await AutoLock.tap('AutoLockTime5')
+    await AutoLock.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+    const adornment5 = await Settings.findByText('5 min')
+    await adornment5.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  })
+
+  it('sets Auto Lock to 1 min and waits for the session to expire', async () => {
+    await Settings.tap('AutoLock')
+    await AutoLock.waitFor('AutoLockTime1')
+    await AutoLock.tap('AutoLockTime1')
+    await AutoLock.tap('BackButton')
+    await Settings.waitFor('AutoLock')
+    const adornment1 = await Settings.findByText('1 min')
+    await adornment1.waitForDisplayed({ timeout: Timeouts.elementVisible })
+
+    // Wait for the 1-minute inactivity timer to fire. BCSCActivityContext
+    // calls logout() which routes to AccountSelector. Extra 10 s absorbs
+    // timer precision and navigation transition time.
+    await driver.pause(70_000)
+
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await tapAccountCard(newNickname)
+    await Home.waitFor('SettingsMenuButton')
   })
 
   it('forgets all pairings, dismisses the success alert, and returns to Settings', async () => {
+    // Previous test (Auto Lock expiry) ended on Home, so re-open Settings.
+    await TabBar.tap('SettingsMenuButton')
+    await Settings.waitFor('AutoLock')
     await Settings.tap('ForgetPairings')
     await Forget.waitFor('ForgetAllPairings')
     await Forget.tap('ForgetAllPairings')
