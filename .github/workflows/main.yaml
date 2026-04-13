@@ -1091,8 +1091,11 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    if: ${{ always() && !cancelled() && github.event.pull_request.head.repo.fork != true }}
-    needs: [build-ios, build-android, compute-variants]
+    if: >-
+      always() && !cancelled() &&
+      github.event.pull_request.head.repo.fork != true &&
+      needs.early-exit-check.outputs.should_skip_build != 'true'
+    needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -1155,11 +1158,12 @@ jobs:
   # TODO: Uncomment e2e-regression below once GH Actions runner IPs
   # are whitelisted, to run full-regression on every merge to main.
   e2e:
-    needs: [ship-to-saucelabs, compute-variants]
+    needs: [ship-to-saucelabs, compute-variants, early-exit-check]
     if: >-
       always() && !cancelled() &&
       github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.fork != true
+      github.event.pull_request.head.repo.fork != true &&
+      needs.early-exit-check.outputs.should_skip_build != 'true'
     uses: ./.github/workflows/e2e.yml
     with:
       suite: smoke
