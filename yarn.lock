@@ -8197,7 +8197,7 @@ __metadata:
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.16.0"
-    react-test-renderer: "npm:~19.1.4"
+    react-test-renderer: "npm:~19.1.6"
     reflect-metadata: "npm:~0.1.14"
     rxjs: "npm:~7.8.2"
     tsyringe: "npm:~4.8.0"
@@ -16699,10 +16699,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^19.1.0":
-  version: 19.2.4
-  resolution: "react-is@npm:19.2.4"
-  checksum: 10c0/477a7cfc900f24194606e315fa353856a3a13487ea8eca841678817cad4daef64339ea0d1e84e58459fc75dbe0d9ba00bb0cc626db3d07e0cf31edc64cb4fa37
+"react-is@npm:^19.1.6":
+  version: 19.2.5
+  resolution: "react-is@npm:19.2.5"
+  checksum: 10c0/58c28ab2f7f868f9836c728fa164a16dcf20246ab84a3ae6a09e617b0e4d9bbb3acdddfdc40452f0134d27b121d3359227602a050c0be554cb20069cb52a67f4
   languageName: node
   linkType: hard
 
@@ -17399,15 +17399,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-test-renderer@npm:19.1.0":
-  version: 19.1.0
-  resolution: "react-test-renderer@npm:19.1.0"
+"react-test-renderer@npm:19.1.6":
+  version: 19.1.6
+  resolution: "react-test-renderer@npm:19.1.6"
   dependencies:
-    react-is: "npm:^19.1.0"
+    react-is: "npm:^19.1.6"
     scheduler: "npm:^0.26.0"
   peerDependencies:
-    react: ^19.1.0
-  checksum: 10c0/34ed4a37ba8b0beb96c048de6ff28574f018a18dd1042c24f8f46142d48eb5b27f82ff7c2823d082932fd3983c5a3529ab8cc8f15191d4306df0082f9f84678f
+    react: ^19.1.6
+  checksum: 10c0/fadef80b461ffe409c0e3c5c78dee3891facd5c685a79fd36099ee892eaab95fcdf814e2b1c27b16684a181a44512284c2272dbab31a54b68bd8b190b647abb4
   languageName: node
   linkType: hard
 
