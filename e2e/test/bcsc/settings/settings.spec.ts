@@ -9,6 +9,7 @@
 import { randomBytes } from 'node:crypto'
 
 import { Timeouts } from '../../../src/constants.js'
+import { swipeUpBy } from '../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -319,6 +320,7 @@ describe('Settings', () => {
     // rows are within scroll range. `Settings.tap` then auto-scrolls
     // back up to find the Help row.
     await Settings.scrollTo('Analytics')
+    await swipeUpBy(0.15)
     await Settings.tap('Help')
     await WebView.waitFor('Back')
     await WebView.tap('Back')
