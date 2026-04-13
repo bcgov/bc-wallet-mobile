@@ -392,6 +392,8 @@ export const BCSC_TestIDs = {
   MainAppSecurity: {
     BackButton: 'com.ariesbifold:id/Back',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+    ChoosePINButton: 'com.ariesbifold:id/ChoosePINButton',
+    ChooseDeviceAuthButton: 'com.ariesbifold:id/ChooseDeviceAuthButton',
   },
   MainPrivacyPolicy: {
     BackButton: 'com.ariesbifold:id/Back',

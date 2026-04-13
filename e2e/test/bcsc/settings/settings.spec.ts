@@ -23,6 +23,7 @@ const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 const MainPrivacyPolicy = new BaseScreen(BCSC_TestIDs.MainPrivacyPolicy)
 const MainContactUs = new BaseScreen(BCSC_TestIDs.MainContactUs)
+const EnterPIN = new BaseScreen(BCSC_TestIDs.EnterPIN)
 const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 
 /**
@@ -78,16 +79,6 @@ async function tapAccountCard(nickname: string): Promise<void> {
 describe('Settings', () => {
   it('opens the Settings menu from the Home tab', async () => {
     await Home.waitFor('SettingsMenuButton')
-    await TabBar.tap('SettingsMenuButton')
-    await Settings.waitFor('AutoLock')
-  })
-
-  it('backs out of Settings to Home and re-opens Settings', async () => {
-    // Exercises the Settings header back button and the Home → Settings
-    // round trip before we start walking the rest of the menu. Ends on
-    // Settings so subsequent tests can chain.
-    await Settings.tap('BackButton')
-    await Home.waitFor('WhereToUse')
     await TabBar.tap('SettingsMenuButton')
     await Settings.waitFor('AutoLock')
   })
@@ -164,16 +155,36 @@ describe('Settings', () => {
     // changes can't silently break the test.
     await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     await tapAccountCard(newNickname)
+    await EnterPIN.waitFor('PINInput')
+    await EnterPIN.type('PINInput', '222222')
+    await EnterPIN.tap('Continue')
     await Home.waitFor('SettingsMenuButton')
   })
 
-  it('opens App Security and returns to Settings', async () => {
+  it('opens App Security, verifies PIN is the current method, and returns to Settings', async () => {
     // Previous test (Sign Out) ended on Home as its documented exception,
     // so re-open Settings before walking into the App Security row.
     await TabBar.tap('SettingsMenuButton')
     await Settings.waitFor('AutoLock')
     await Settings.tap('AppSecurity')
     await MainAppSecurity.waitFor('LearnMoreButton')
+
+    // The current-method indicator box should show "PIN".
+    const pinLabel = await MainAppSecurity.findByText('PIN')
+    await pinLabel.waitForDisplayed({ timeout: Timeouts.elementVisible })
+
+    // "Create a PIN" card should be disabled (it's the active method).
+    const pinButton = await MainAppSecurity.findByTestId('com.ariesbifold:id/ChoosePINButton')
+    await pinButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    const pinEnabled = await pinButton.isEnabled()
+    if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
+
+    // Device auth card should be enabled (it's the alternative).
+    const deviceAuthButton = await MainAppSecurity.findByTestId('com.ariesbifold:id/ChooseDeviceAuthButton')
+    await deviceAuthButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    const deviceAuthEnabled = await deviceAuthButton.isEnabled()
+    if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
+
     await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('AutoLock')
   })
@@ -214,6 +225,9 @@ describe('Settings', () => {
 
     await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     await tapAccountCard(newNickname)
+    await EnterPIN.waitFor('PINInput')
+    await EnterPIN.type('PINInput', '222222')
+    await EnterPIN.tap('Continue')
     await Home.waitFor('SettingsMenuButton')
   })
 
@@ -363,6 +377,11 @@ describe('Settings', () => {
     await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
     await driver.activateApp(appId)
     await Settings.waitFor('AutoLock')
+  })
+
+  it('backs out of Settings to Home', async () => {
+    await Settings.tap('BackButton')
+    await Home.waitFor('WhereToUse')
   })
 
   it.skip('confirms Remove Account and factory resets the app to onboarding', async () => {
