@@ -375,6 +375,8 @@ describe('Settings', () => {
     await swipeUpBy(0.15)
     await Settings.tap('Help')
     await WebView.waitFor('Back')
+    const supportGuide = await WebView.findByText('Support guide')
+    await supportGuide.waitForDisplayed({ timeout: Timeouts.screenTransition })
     await WebView.tap('Back')
     await Settings.waitFor('AutoLock')
   })
