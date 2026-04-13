@@ -1,3 +1,6 @@
+/** PIN used across all e2e specs — must match the value set during onboarding. */
+export const TEST_PIN = '222222'
+
 export const Timeouts = {
   /** Default wait for an element to appear on screen */
   elementVisible: 5_000,

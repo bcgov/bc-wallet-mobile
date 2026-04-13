@@ -1,3 +1,4 @@
+import { TEST_PIN } from '../../../src/constants.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -14,8 +15,8 @@ describe('PIN Authentication', () => {
     await CreatePIN.waitFor('PINInput1')
     await CreatePIN.tap('PINInput1VisibilityButton')
     await CreatePIN.tap('PINInput2VisibilityButton')
-    await CreatePIN.type('PINInput1', '123456')
-    await CreatePIN.type('PINInput2', '123456')
+    await CreatePIN.type('PINInput1', TEST_PIN)
+    await CreatePIN.type('PINInput2', TEST_PIN)
     await CreatePIN.tap('IUnderstand')
     await CreatePIN.tap('Continue')
   })
