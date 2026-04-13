@@ -31,7 +31,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, happy-path, full-regression, biometrics)'
+        description: 'Test suite (smoke, happy-path, full-regression, verified, biometrics)'
         type: string
         required: true
       build_number:
@@ -60,6 +60,7 @@ on:
           - smoke
           - happy-path
           - full-regression
+          - verified
           - biometrics
         default: smoke
       build_number:
@@ -74,7 +75,7 @@ on:
 jobs:
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
-    if: inputs.suite != 'biometrics'
+    if: inputs.suite != 'biometrics' && inputs.suite != 'verified'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -133,6 +134,70 @@ jobs:
           else
             ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
               yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite "${SUITE}"
+          fi
+
+  # ─── E2E Verified ──────────────────────────────────────────────────
+  # Runs the verified-state suite sequentially with app state persisted
+  # across sessions (noReset=true / fullReset=false). The first spec
+  # runs the full onboarding + verification flow; subsequent specs start
+  # from the verified home screen without re-verifying.
+  # Non-blocking: failures are reported but do not gate the pipeline.
+  e2e-verified:
+    name: 'Verified - ${{ matrix.platform }}'
+    if: inputs.suite == 'verified'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 45
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [iOS, Android]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: bcsc-dev
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache E2E dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            e2e/.yarn/cache
+            e2e/node_modules
+          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: e2e-deps-
+
+      - name: Install E2E dependencies
+        working-directory: e2e
+        run: yarn install --immutable
+
+      - name: Run verified-state tests
+        working-directory: e2e
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SAUCE_REGION: us
+          VARIANT: bcsc-dev
+          PLATFORM: ${{ matrix.platform }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          BUILD_NAME: 'build-${{ inputs.build_number }}'
+          TEST_NAME: 'E2E Verified - bcsc-dev ${{ matrix.platform }}'
+          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
+          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+        run: |
+          if [ "$PLATFORM" = "iOS" ]; then
+            IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
+              yarn wdio configs/sauce/verified/wdio.ios.verified.sauce.rdc.conf.ts --suite verified
+          else
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
+              yarn wdio configs/sauce/verified/wdio.android.verified.sauce.rdc.conf.ts --suite verified
           fi
 
   # ─── E2E Biometrics ────────────────────────────────────────────────

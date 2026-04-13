@@ -1156,6 +1156,8 @@ jobs:
   #       day when multiple PRs merge.
   e2e:
     needs: [ship-to-saucelabs]
+    permissions:
+      contents: read
     if: >-
       always() && !cancelled() &&
       github.event_name == 'pull_request' &&
