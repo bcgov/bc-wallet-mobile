@@ -8,7 +8,7 @@
  */
 import { randomBytes } from 'node:crypto'
 
-import { TEST_PIN, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, UPDATED_TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { swipeUpBy } from '../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
@@ -18,6 +18,7 @@ const Home = new BaseScreen(BCSC_TestIDs.Home)
 const Settings = new BaseScreen(BCSC_TestIDs.Settings)
 const AccountSelector = new BaseScreen(BCSC_TestIDs.AccountSelector)
 const MainAppSecurity = new BaseScreen(BCSC_TestIDs.MainAppSecurity)
+const ChangePIN = new BaseScreen(BCSC_TestIDs.ChangePIN)
 const EditNickname = new BaseScreen(BCSC_TestIDs.EditNickname)
 const AutoLock = new BaseScreen(BCSC_TestIDs.AutoLock)
 const Forget = new BaseScreen(BCSC_TestIDs.ForgetAllPairings)
@@ -33,6 +34,12 @@ const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
  * cross-check that the rename round-tripped through logout.
  */
 let newNickname = ''
+
+/**
+ * Tracks the current PIN across tests. Starts as TEST_PIN (set during
+ * onboarding) and is updated to UPDATED_TEST_PIN by the Change PIN test.
+ */
+let currentPin = TEST_PIN
 
 /**
  * Cached package (Android) / bundle id (iOS) of the app under test. Captured
@@ -157,7 +164,7 @@ describe('Settings', () => {
     await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
-    await EnterPIN.type('PINInput', TEST_PIN)
+    await EnterPIN.type('PINInput', currentPin)
     await EnterPIN.tap('Continue')
     await Home.waitFor('SettingsMenuButton')
   })
@@ -188,6 +195,51 @@ describe('Settings', () => {
 
     await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('AutoLock')
+  })
+
+  it('changes the PIN, verifying mismatch error and checkbox gate', async () => {
+    const MISMATCH_PIN = '999999'
+
+    await Settings.tap('ChangePIN')
+    await ChangePIN.waitFor('EnterCurrentPIN')
+
+    // Enter current PIN.
+    await ChangePIN.type('EnterCurrentPIN', currentPin)
+
+    // Enter the new PIN and a deliberate mismatch to trigger validation.
+    await ChangePIN.type('EnterNewPIN', UPDATED_TEST_PIN)
+    await ChangePIN.type('ReenterNewPIN', MISMATCH_PIN)
+    await ChangePIN.dismissKeyboard()
+
+    // Check the checkbox so the button enables, then tap Change PIN
+    // to trigger validation with the mismatched confirm PIN.
+    await ChangePIN.tap('IUnderstand')
+    await ChangePIN.tap('ChangePIN')
+
+    const mismatchError = await ChangePIN.findByText('PIN does not match')
+    await mismatchError.waitForDisplayed({ timeout: Timeouts.elementVisible })
+
+    // Correct the confirm PIN — the error should clear on completion
+    // because handleConfirmPINComplete calls setConfirmPINError(undefined).
+    await ChangePIN.type('ReenterNewPIN', UPDATED_TEST_PIN)
+
+    // Uncheck and verify the button is disabled.
+    await ChangePIN.tap('IUnderstand')
+    await ChangePIN.dismissKeyboard()
+    const changePINButton = await ChangePIN.findByTestId('com.ariesbifold:id/ChangePIN')
+    await changePINButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    const enabledWhenUnchecked = await changePINButton.isEnabled()
+    if (enabledWhenUnchecked) throw new Error('Expected Change PIN button to be disabled without checkbox')
+
+    // Re-check and submit.
+    await ChangePIN.tap('IUnderstand')
+    await ChangePIN.tap('ChangePIN')
+
+    // Success navigates back to Settings. The new PIN is implicitly
+    // verified by the auto-lock expiry test which re-authenticates
+    // with `currentPin` after the inactivity timer fires.
+    await Settings.waitFor('AutoLock')
+    currentPin = UPDATED_TEST_PIN
   })
 
   it('sets Auto Lock to 3 min and verifies the row updates', async () => {
@@ -227,7 +279,7 @@ describe('Settings', () => {
     await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
-    await EnterPIN.type('PINInput', TEST_PIN)
+    await EnterPIN.type('PINInput', currentPin)
     await EnterPIN.tap('Continue')
     await Home.waitFor('SettingsMenuButton')
   })

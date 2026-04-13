@@ -389,6 +389,14 @@ export const BCSC_TestIDs = {
     AutoLockTime1: 'com.ariesbifold:id/auto-lock-time-1',
     BackButton: 'com.ariesbifold:id/Back',
   },
+  ChangePIN: {
+    BackButton: 'com.ariesbifold:id/Back',
+    EnterCurrentPIN: 'com.ariesbifold:id/EnterCurrentPIN',
+    EnterNewPIN: 'com.ariesbifold:id/EnterNewPIN',
+    ReenterNewPIN: 'com.ariesbifold:id/ReenterNewPIN',
+    IUnderstand: 'com.ariesbifold:id/IUnderstand',
+    ChangePIN: 'com.ariesbifold:id/ChangePIN',
+  },
   MainAppSecurity: {
     BackButton: 'com.ariesbifold:id/Back',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
