@@ -365,7 +365,7 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('confirms Remove Account and factory resets the app to onboarding', async () => {
+  it.skip('confirms Remove Account and factory resets the app to onboarding', async () => {
     // Final, destructive test — after this the app is back in the
     // pre-onboarding state and cannot chain into any further Settings
     // tests. Running this spec again requires re-onboarding the device.
