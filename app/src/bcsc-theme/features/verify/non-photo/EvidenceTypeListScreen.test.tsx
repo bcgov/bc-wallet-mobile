@@ -167,7 +167,8 @@ describe('EvidenceTypeList', () => {
 
       const existingEvidence: EvidenceMetadata = {
         evidenceType: makeEvidenceType({ evidence_type_label: 'Some Other Card' }),
-        metadata: [],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        documentNumber: 'SO123',
       }
 
       mockUseStore.mockReturnValue([
