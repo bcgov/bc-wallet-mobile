@@ -8,6 +8,7 @@
 #   happy-path      — onboarding → verify → main (straight-through)
 #   full-regression — onboarding → verify → main (with detours)
 #   biometrics      — onboarding with biometric auth (Sauce RDC only)
+#   verified        — verified-state flows (noReset, sequential phases; Sauce RDC only)
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}

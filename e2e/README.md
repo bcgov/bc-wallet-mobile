@@ -30,12 +30,15 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
 | `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_ |
 | `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
+| `verified`        | _Verified-state flows: setup (phase 1) then credential checks (phase 2). Sauce RDC only._        |
 
 ```bash
 # Run by suite name
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite full-regression
+# verified runs against Sauce RDC (noReset=true); use the sauce config
+yarn wdio configs/sauce/verified/wdio.ios.verified.sauce.rdc.conf.ts --suite verified
 ```
 
 _Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_._
@@ -345,17 +348,16 @@ _For local testing, camera injection is not available — use a test-mode flag i
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
 
-| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variants_        | _Biometrics_ |
-| -------------------- | ----------------- | ----------------------------------- | ----------------- | ------------ |
-| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | _PR variants (2)_ | _No_         |
-| `main` _merge_       | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_  | _Yes_        |
-| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | _All 5 variants_  | _Yes_        |
+| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variant_  | _Biometrics_ |
+| -------------------- | ----------------- | ----------------------------------- | ---------- | ------------ |
+| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
+| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _Yes_        |
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. Biometric tests run as a separate non-blocking job after the main E2E tests._
 
 _**Note:** The_ `main` _merge E2E regression job is commented out pending GitHub Actions runner IP whitelisting with the BC Gov ID Check portal. See the IP whitelisting options documented in_ `main.yaml`_. Until resolved, nightly runs provide full regression coverage._
 
-_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices × 2 variants = 4 jobs) this means 2 rounds. Nightly runs with the full matrix queue longer._
+_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly runs with the full device matrix queue longer._
 
 ## _Local App Binaries_
 
