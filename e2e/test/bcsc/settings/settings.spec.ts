@@ -239,6 +239,10 @@ describe('Settings', () => {
     // verified by the auto-lock expiry test which re-authenticates
     // with `currentPin` after the inactivity timer fires.
     await Settings.waitFor('AutoLock')
+    // A success toast slides up from the bottom and auto-dismisses after
+    // ~4 s (react-native-toast-message default). Wait it out so it
+    // doesn't intercept taps in the next test.
+    await driver.pause(4500)
     currentPin = UPDATED_TEST_PIN
   })
 
