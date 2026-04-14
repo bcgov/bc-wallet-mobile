@@ -221,13 +221,16 @@ describe('Settings', () => {
     const mismatchError = await ChangePIN.findByText('PIN does not match')
     await mismatchError.waitForDisplayed({ timeout: Timeouts.elementVisible })
 
-    // Correct the confirm PIN — the error should clear on completion
-    // because handleConfirmPINComplete calls setConfirmPINError(undefined).
-    await ChangePIN.type('ReenterNewPIN', UPDATED_TEST_PIN)
-
-    // Uncheck and verify the button is disabled.
+    // Uncheck BEFORE correcting the confirm PIN — typing the 6th digit
+    // triggers handleConfirmPINComplete which auto-validates. If the
+    // checkbox is still checked and PINs match, it auto-submits and
+    // navigates away before we can test the disabled state.
     await ChangePIN.tap('IUnderstand')
+
+    await ChangePIN.type('ReenterNewPIN', UPDATED_TEST_PIN)
     await ChangePIN.dismissKeyboard()
+
+    // Verify the button is disabled without the checkbox.
     const changePINButton = await ChangePIN.findByTestId(ChangePIN.ids.ChangePIN)
     await changePINButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
     const enabledWhenUnchecked = await changePINButton.isEnabled()
