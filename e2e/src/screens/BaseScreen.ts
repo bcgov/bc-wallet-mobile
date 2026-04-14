@@ -204,6 +204,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await el.click()
     }
 
+    // iOS/XCUITest clearValue and mobile:clearText both trigger a
+    // context menu that interferes with input. Brute-force backspace
+    // is reliable on both platforms.
+    for (let i = 0; i < 10; i++) {
+      await el.addValue('\uE003')
+    }
+
     if (options?.characterByCharacter || isSauceLabs()) {
       for (const char of text) {
         await el.addValue(char)
