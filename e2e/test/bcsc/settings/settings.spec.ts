@@ -406,40 +406,17 @@ describe('Settings', () => {
     await Settings.waitFor('AutoLock')
   })
 
-  it('launches Feedback URL in the browser and returns to the app', async () => {
-    // Capture the app package while BCSC is still in the foreground so
-    // `driver.activateApp(...)` can bring it back after the external
-    // browser takes over.
-    const appId = await ensureBcscAppId()
-    await Settings.tap('Feedback')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
-    await driver.activateApp(appId)
-    await Settings.waitFor('AutoLock')
-  })
-
-  it('launches Accessibility URL in the browser and returns to the app', async () => {
-    const appId = await ensureBcscAppId()
-    await Settings.tap('Accessibility')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
-    await driver.activateApp(appId)
-    await Settings.waitFor('AutoLock')
-  })
-
-  it('launches Terms of Use URL in the browser and returns to the app', async () => {
-    const appId = await ensureBcscAppId()
-    await Settings.tap('TermsOfUse')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
-    await driver.activateApp(appId)
-    await Settings.waitFor('AutoLock')
-  })
-
-  it('launches Analytics URL in the browser and returns to the app', async () => {
-    const appId = await ensureBcscAppId()
-    await Settings.tap('Analytics')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
-    await driver.activateApp(appId)
-    await Settings.waitFor('AutoLock')
-  })
+  // External-browser rows all follow the same pattern: tap the Settings
+  // row, pause for the system browser handoff, then reactivate the app.
+  for (const row of ['Feedback', 'Accessibility', 'TermsOfUse', 'Analytics'] as const) {
+    it(`launches ${row} URL in the browser and returns to the app`, async () => {
+      const appId = await ensureBcscAppId()
+      await Settings.tap(row)
+      await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+      await driver.activateApp(appId)
+      await Settings.waitFor('AutoLock')
+    })
+  }
 
   it('backs out of Settings to Home', async () => {
     await Settings.tap('BackButton')
