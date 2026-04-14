@@ -1,9 +1,9 @@
 // organize-imports-ignore — import order defines test run order
 /**
- * Verify photo card BCSC E2E flow: straight-through onboarding (PIN auth, no detours),
- * photo card verification, in-person method, then main tab/settings navigation.
+ * Verify non-photo card BCSC E2E flow: straight-through onboarding (PIN auth, no detours),
+ * non-photo card verification, in-person method, then main tab/settings navigation.
  *
- * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-photo-card.spec.ts
+ * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-non-photo-card.spec.ts
  */
 import '../onboarding/app-launch.spec.js'
 import '../onboarding/add-account.spec.js'
