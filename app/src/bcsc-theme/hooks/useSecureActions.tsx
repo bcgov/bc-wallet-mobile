@@ -39,6 +39,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
+import { isCardEvidenceComplete } from '../utils/card-utils'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -631,9 +632,12 @@ export const useSecureActions = () => {
       }
 
       // Filter out incomplete evidence (those without photo metadata)
-      const updatedEvidence = evidence.filter(
-        (item) => item.metadata && item.metadata.length > 0 && item.documentNumber
-      )
+      const updatedEvidence = evidence.filter((item) => isCardEvidenceComplete(item))
+
+      if (updatedEvidence.length === evidence.length) {
+        // Only persist if there was a change to avoid unnecessary writes
+        return evidence
+      }
 
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
