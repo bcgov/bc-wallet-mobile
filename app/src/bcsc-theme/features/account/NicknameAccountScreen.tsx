@@ -13,15 +13,16 @@ const NicknameAccountScreen: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const handleSubmit = useCallback(
-    async (trimmedNickname: string) => {
+    (trimmedNickname: string) => {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedNickname] })
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedNickname] })
-      try {
-        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
-      } catch (apiError) {
-        // Don't throw error to allow navigation to proceed even if API call fails (nickname in registration is not critical)
+
+      // Fire-and-forget: Updating nickname is non-critical
+      // Intentionally not awaiting this to prevent state updates on an unmounted component
+      registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname).catch((apiError) => {
         logger.error('Failed to update registration', apiError as Error)
-      }
+      })
+
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     },
     [dispatch, navigation, logger, registration, store.bcscSecure.registrationAccessToken]

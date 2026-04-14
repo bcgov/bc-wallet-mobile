@@ -114,9 +114,9 @@ const Account: React.FC = () => {
     photoAndNameContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: Spacing.sm,
     },
     name: {
-      marginLeft: Spacing.sm,
       flexShrink: 1,
       flexWrap: 'wrap',
     },
@@ -137,8 +137,7 @@ const Account: React.FC = () => {
     <TabScreenWrapper>
       <View style={styles.container} testID={testIdWithKey('AccountScreen')}>
         <View style={styles.photoAndNameContainer}>
-          {/*TODO (MD): fallback for when this is undefined (silhouette) */}
-          <AccountPhoto photoUri={account.picture} />
+          {account.picture ? <AccountPhoto photoUri={account.picture} /> : null}
           <ThemedText variant={'headingTwo'} style={styles.name}>
             {account.fullname_formatted}
           </ThemedText>
