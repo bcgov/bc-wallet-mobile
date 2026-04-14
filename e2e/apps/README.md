@@ -65,5 +65,5 @@ The WDIO configs look for these filenames by default (override via env vars):
 | Target                  | Default filename | Env var override |
 | ----------------------- | ---------------- | ---------------- |
 | iOS Simulator           | `BCWallet.app`   | `IOS_APP`        |
-| iOS Real Device         | `BCWallet.ipa`   | `IOS_APP`        |
+| iOS Real Device         | `BCWallet.ipa`   | `IOS_APP_DEVICE` |
 | Android (emu or device) | `BCWallet.apk`   | `ANDROID_APP`    |

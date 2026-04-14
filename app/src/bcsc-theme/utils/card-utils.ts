@@ -1,4 +1,4 @@
-import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
+import { BCSCCardProcess, BCSCCardType, EvidenceMetadata } from 'react-native-bcsc-core'
 
 /**
  * Get the card process for a given card type.
@@ -23,4 +23,14 @@ export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCa
     default:
       return null // Unknown card type -> no card process
   }
+}
+
+/**
+ * Check if the card evidence is complete by verifying that the evidence type, document number, and metadata are all present and valid.
+ *
+ * @param card - The card evidence metadata to check for completeness.
+ * @returns True if the card evidence is complete, false otherwise.
+ */
+export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
+  return Boolean(card?.evidenceType && card.documentNumber && card.metadata.length === 2)
 }

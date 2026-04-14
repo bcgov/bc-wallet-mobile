@@ -1152,13 +1152,15 @@ jobs:
 
   # ─── E2E Tests ──────────────────────────────────────────────────────
   # Delegated to .github/workflows/e2e.yml (reusable workflow).
-  # PR: smoke tests for fast feedback.
-  # Main: use e2e-nightly.yml (schedule/manual) for full-regression.
-  #
-  # TODO: Uncomment e2e-regression below once GH Actions runner IPs
-  # are whitelisted, to run full-regression on every merge to main.
+  # PR: smoke tests on 1 iOS + 1 Android device (fast feedback).
+  # Main: full-regression is deferred to the nightly workflow
+  #       (e2e-nightly.yml) which checks for merges in the last 24h
+  #       before running. This keeps SauceLabs devices free during the
+  #       day when multiple PRs merge.
   e2e:
     needs: [ship-to-saucelabs, compute-variants, early-exit-check]
+    permissions:
+      contents: read
     if: >-
       always() && !cancelled() &&
       github.event_name == 'pull_request' &&
@@ -1168,28 +1170,9 @@ jobs:
     with:
       suite: smoke
       build_number: ${{ github.run_number }}
-      variants: ${{ needs.compute-variants.outputs.variants }}
-      include_biometrics: false
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
       BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
-
-  # Full regression + biometrics on merge to main:
-  # e2e-regression:
-  #   needs: [ship-to-saucelabs, compute-variants]
-  #   if: >-
-  #     always() && !cancelled() &&
-  #     github.ref_name == 'main'
-  #   uses: ./.github/workflows/e2e.yml
-  #   with:
-  #     suite: full-regression
-  #     build_number: ${{ github.run_number }}
-  #     variants: ${{ needs.compute-variants.outputs.variants }}
-  #     include_biometrics: true
-  #   secrets:
-  #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-  #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-  #     CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-  #     BIRTH_DATE: ${{ secrets.BIRTH_DATE }}

@@ -8,13 +8,16 @@ const config = { ...sauceConfig }
 config.capabilities = [
   {
     platformName: 'Android',
-    'appium:deviceName': 'Google.*',
+    'appium:deviceName': process.env.ANDROID_DEVICE_NAME || 'Google.*',
     'appium:automationName': 'UiAutomator2',
     'appium:app': `storage:filename=${appFilename}`,
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
     'appium:autoGrantPermissions': true,
+    ...(process.env.ANDROID_PLATFORM_VERSION && {
+      'appium:platformVersion': process.env.ANDROID_PLATFORM_VERSION,
+    }),
     'sauce:options': sauceRdcOptions,
   },
 ]

@@ -16,6 +16,7 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { jwtDecode } from 'jwt-decode'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
@@ -71,7 +72,10 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: newJti,
     })
 
-    jtiRef.current = newJti
+    // Ensure we are using the correct JTI in case the createDeviceSignedJWT method
+    // uses a fallback JTI instead of our provided one or mutates it in-place
+    const decoded = jwtDecode<{ jti?: string }>(jwt)
+    jtiRef.current = decoded.jti ?? newJti
     const url = `${store.developer.environment.iasApiBaseUrl}/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
@@ -124,9 +128,13 @@ const TransferQRDisplayScreen: React.FC = () => {
     if (!qrValue) {
       return
     }
-    checkAttestation(jtiRef.current)
+    // Snapshot the JTI at the time this effect runs. Reading jtiRef.current live inside the
+    // setInterval closure would mean a QR rotation (createToken mutating jtiRef.current) silently
+    // switches all in-flight polls to the new JTI, abandoning the consumed one before the 200 is seen.
+    const jtiSnapshot = jtiRef.current
+    checkAttestation(jtiSnapshot)
     const interval = setInterval(() => {
-      checkAttestation(jtiRef.current)
+      checkAttestation(jtiSnapshot)
     }, attestationPollInterval)
     return () => clearInterval(interval)
   }, [checkAttestation, qrValue])
