@@ -101,9 +101,9 @@ describe('Settings', () => {
     await Settings.tap('EditNickname')
     await EditNickname.waitFor('SaveAndContinue')
 
-    // Platform-specific input handling — the onboarding Nickname spec
-    // uses this same split because the Android TextInput sits inside a
-    // pressable wrapper while iOS exposes the TextInput directly.
+    // Platform-specific input handling — Appium targets different
+    // elements on each platform due to how RN exposes the TextInput
+    // to the accessibility/UI hierarchy.
     if (driver.isAndroid) {
       await EditNickname.tap('AccountNicknameInput')
       await EditNickname.type('AccountNicknameInput', newNickname, {
@@ -142,8 +142,10 @@ describe('Settings', () => {
     await Settings.tap('EditNickname')
     await EditNickname.waitFor('SaveAndContinue')
     await EditNickname.tap('SaveAndContinue')
-    const errorText = await EditNickname.findByText('This nickname already exists')
-    await errorText.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    // The inline error is rendered by InputWithValidation in the subtext
+    // slot. Assert via testID rather than locale string so the test
+    // survives copy changes and non-English locales.
+    await EditNickname.waitFor('AccountNicknameSubtext')
     // Navigate back to Settings without saving.
     await EditNickname.tap('BackButton')
     await Settings.waitFor('AutoLock')
@@ -182,13 +184,13 @@ describe('Settings', () => {
     await pinLabel.waitForDisplayed({ timeout: Timeouts.elementVisible })
 
     // "Create a PIN" card should be disabled (it's the active method).
-    const pinButton = await MainAppSecurity.findByTestId('com.ariesbifold:id/ChoosePINButton')
+    const pinButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChoosePINButton)
     await pinButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
     const pinEnabled = await pinButton.isEnabled()
     if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
 
     // Device auth card should be enabled (it's the alternative).
-    const deviceAuthButton = await MainAppSecurity.findByTestId('com.ariesbifold:id/ChooseDeviceAuthButton')
+    const deviceAuthButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChooseDeviceAuthButton)
     await deviceAuthButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
     const deviceAuthEnabled = await deviceAuthButton.isEnabled()
     if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
@@ -226,7 +228,7 @@ describe('Settings', () => {
     // Uncheck and verify the button is disabled.
     await ChangePIN.tap('IUnderstand')
     await ChangePIN.dismissKeyboard()
-    const changePINButton = await ChangePIN.findByTestId('com.ariesbifold:id/ChangePIN')
+    const changePINButton = await ChangePIN.findByTestId(ChangePIN.ids.ChangePIN)
     await changePINButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
     const enabledWhenUnchecked = await changePINButton.isEnabled()
     if (enabledWhenUnchecked) throw new Error('Expected Change PIN button to be disabled without checkbox')

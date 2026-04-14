@@ -417,6 +417,8 @@ export const BCSC_TestIDs = {
     /** TextInput inside `InputWithValidation` — use for Android `type`. */
     AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
+    /** Subtext / inline error below the input (rendered by InputWithValidation). */
+    AccountNicknameSubtext: 'com.ariesbifold:id/accountNickname-subtext',
   },
   ForgetAllPairings: {
     ForgetAllPairings: 'com.ariesbifold:id/ForgetAllPairings',
