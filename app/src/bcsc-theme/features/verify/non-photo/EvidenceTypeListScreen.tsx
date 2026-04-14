@@ -84,28 +84,29 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const shouldAddEvidence = useCallback(
     (card: EvidenceType): boolean => {
       const allEvidence = store.bcscSecure.additionalEvidenceData
-      const isEvidenceComplete = allEvidence.some(
+      const order = card.collection_order
+      const isComplete = allEvidence.some(
         (evidence) =>
           evidence.evidenceType?.evidence_type_label === card.evidence_type_label && isCardEvidenceComplete(evidence)
       )
 
-      if (isEvidenceComplete) {
+      if (isComplete) {
         return false
       }
 
-      if (card.collection_order === 'BOTH') {
+      if (order === 'BOTH') {
         return true
       }
 
-      if (card.collection_order === 'FIRST' && allEvidence.length === 0) {
-        return true
+      if (allEvidence.length === 0) {
+        return order === 'FIRST'
       }
 
-      if (card.collection_order === 'SECOND' && allEvidence.length >= 1) {
-        return true
+      if (!isCardEvidenceComplete(allEvidence[0])) {
+        return order === 'FIRST'
       }
 
-      return false
+      return order === 'SECOND'
     },
     [store.bcscSecure.additionalEvidenceData]
   )
