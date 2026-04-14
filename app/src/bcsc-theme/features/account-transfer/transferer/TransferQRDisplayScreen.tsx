@@ -72,7 +72,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: newJti,
     })
 
-    // Ensure we are using the correct JTI incase the createDeviceSignedJWT method
+    // Ensure we are using the correct JTI in case the createDeviceSignedJWT method
     // uses a fallback JTI instead of our provided one or mutates it in-place
     const decoded = jwtDecode<{ jti?: string }>(jwt)
     jtiRef.current = decoded.jti ?? newJti

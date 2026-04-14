@@ -231,8 +231,9 @@ export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
 }
 
 // Error policy for attestation status polling — 404 is expected while the attestation
-// has not yet been created or consumed by another device's verifyAttestation call.
-// 400 is expected when the JTI has expired or been rotated before the transfer device scanned the QR code.
+// has not yet been created by another device's verifyAttestation call.
+// 400 is expected when the JTI has already been consumed but the polling happens
+// additional times before the 2xx response is processed
 export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
     return (

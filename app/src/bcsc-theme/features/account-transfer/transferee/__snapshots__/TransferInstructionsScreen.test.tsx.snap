@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TransferInstructions renders correctly 1`] = `
+exports[`TransferInstructionsScreen renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -253,6 +253,7 @@ exports[`TransferInstructions renders correctly 1`] = `
       </RNSVGSvgView>
     </View>
     <View
+      accessibilityLabel="BCSC.TransferInstructions.ScanQRCode"
       accessibilityRole="button"
       accessibilityState={
         {
@@ -289,6 +290,7 @@ exports[`TransferInstructions renders correctly 1`] = `
           "padding": 16,
         }
       }
+      testID="com.ariesbifold:id/ScanQRCode"
     >
       <View
         style={
