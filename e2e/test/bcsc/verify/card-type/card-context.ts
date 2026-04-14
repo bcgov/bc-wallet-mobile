@@ -1,5 +1,5 @@
 import { TestUser } from '../../../../src/constants.js'
-import type { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
 /** Card-type controls on Identity Selection for verify E2E flows (excludes e.g. CheckForServicesCard). */
 export type BCSC_IdentitySelectionCardTypeButton = Exclude<
