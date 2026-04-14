@@ -2,7 +2,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import QRCodePhone from '@assets/img/qr-code-phone.png'
 import QRScan from '@assets/img/qr-code-scan.png'
 import TabNavigator from '@assets/img/tab-navigator-account.png'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ContentGradient, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -14,19 +14,22 @@ const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
 const QR_SCAN = Image.resolveAssetSource(QRScan)
 
 const TransferInstructionsScreen: React.FC = () => {
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { t } = useTranslation()
 
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      title={t('BCSC.TransferInstructions.ScanQRCode')}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.TransferAccountQRScan)
-      }}
-    />
+    <>
+      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.TransferInstructions.ScanQRCode')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.TransferAccountQRScan)
+        }}
+      />
+    </>
   )
 
   return (

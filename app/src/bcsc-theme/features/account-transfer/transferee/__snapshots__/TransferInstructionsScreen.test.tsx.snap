@@ -169,6 +169,90 @@ exports[`TransferInstructions renders correctly 1`] = `
     }
   >
     <View
+      style={
+        {
+          "height": 30,
+          "position": "absolute",
+          "top": -30,
+          "width": "100%",
+        }
+      }
+    >
+      <RNSVGSvgView
+        bbHeight="30"
+        bbWidth="100%"
+        focusable={false}
+        height="30"
+        style={
+          [
+            {
+              "backgroundColor": "transparent",
+              "borderWidth": 0,
+            },
+            {
+              "bottom": 0,
+              "left": 0,
+              "position": "absolute",
+              "right": 0,
+              "top": 0,
+            },
+            {
+              "flex": 0,
+              "height": 30,
+              "width": "100%",
+            },
+          ]
+        }
+        width="100%"
+      >
+        <RNSVGGroup
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+        >
+          <RNSVGDefs>
+            <RNSVGLinearGradient
+              gradient={
+                [
+                  0,
+                  15921906,
+                  1,
+                  -855310,
+                ]
+              }
+              gradientTransform={null}
+              gradientUnits={0}
+              name="gradient"
+              x1="0%"
+              x2="0%"
+              y1="0%"
+              y2="100%"
+            />
+          </RNSVGDefs>
+          <RNSVGRect
+            fill={
+              {
+                "brushRef": "gradient",
+                "type": 1,
+              }
+            }
+            height="30"
+            propList={
+              [
+                "fill",
+              ]
+            }
+            width="100%"
+            x={0}
+            y={0}
+          />
+        </RNSVGGroup>
+      </RNSVGSvgView>
+    </View>
+    <View
       accessibilityRole="button"
       accessibilityState={
         {

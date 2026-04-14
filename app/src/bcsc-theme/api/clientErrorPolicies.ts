@@ -232,12 +232,18 @@ export const videoSessionErrorPolicy: ErrorHandlingPolicy = {
 
 // Error policy for attestation status polling — 404 is expected while the attestation
 // has not yet been created or consumed by another device's verifyAttestation call.
+// 400 is expected when the JTI has expired or been rotated before the transfer device scanned the QR code.
 export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return context.statusCode === 404 && context.endpoint.includes(context.apiEndpoints.attestation)
+    return (
+      (context.statusCode === 404 || context.statusCode === 400) &&
+      context.endpoint.includes(context.apiEndpoints.attestation)
+    )
   },
   handle: (_error, context) => {
-    context.logger.info('[AttestationPollingErrorPolicy] 404 expected during polling — attestation not yet consumed')
+    context.logger.info(
+      '[AttestationPollingErrorPolicy] 400 or 404 expected during polling — attestation not yet consumed or already consumed'
+    )
   },
 }
 

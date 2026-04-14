@@ -114,12 +114,39 @@ describe('useDeviceAttestationApi', () => {
       const response = await result.current.checkAttestationStatus(mockJwtID)
 
       expect(mockApiClient.get).toHaveBeenCalledWith('/attestation/mock_jwt_id_123', {
-        suppressStatusCodeLogs: [404],
+        suppressStatusCodeLogs: [400, 404],
       })
       expect(response).toBe(true)
     })
 
-    it('should return undefined for non-200 status responses', async () => {
+    it('should return true for any 2xx status response', async () => {
+      const mockJwtID = 'mock_jwt_id_123'
+      const createdResponse = {
+        ...mockAxiosResponse,
+        status: 201,
+        statusText: 'Created',
+      }
+
+      mockApiClient.get.mockResolvedValue(createdResponse)
+
+      const { result } = renderHook(() => useDeviceAttestationApi(mockApiClient))
+      const response = await result.current.checkAttestationStatus(mockJwtID)
+
+      expect(response).toBe(true)
+    })
+
+    it('should propagate errors from the API client', async () => {
+      const mockJwtID = 'mock_jwt_id_123'
+      const error = new Error('Network error')
+
+      mockApiClient.get.mockRejectedValue(error)
+
+      const { result } = renderHook(() => useDeviceAttestationApi(mockApiClient))
+
+      await expect(result.current.checkAttestationStatus(mockJwtID)).rejects.toThrow('Network error')
+    })
+
+    it('should return false for non-2xx status responses', async () => {
       const mockJwtID = 'mock_jwt_id_123'
       const notFoundResponse = {
         ...mockAxiosResponse,
@@ -132,7 +159,7 @@ describe('useDeviceAttestationApi', () => {
       const { result } = renderHook(() => useDeviceAttestationApi(mockApiClient))
       const response = await result.current.checkAttestationStatus(mockJwtID)
 
-      expect(response).toBeFalsy()
+      expect(response).toBe(false)
     })
 
     it('should throw error when BCSC client is not ready', async () => {
