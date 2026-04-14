@@ -70,6 +70,8 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
+  // Clean up any incomplete evidence entries when the screen focuses.
+  // This handles the case where user selected a card but backed out before completing.
   useFocusEffect(
     useCallback(() => {
       removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
