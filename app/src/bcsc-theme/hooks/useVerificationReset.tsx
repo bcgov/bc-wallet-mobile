@@ -3,6 +3,7 @@ import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/core'
 import { useCallback } from 'react'
+import * as BcscCore from 'react-native-bcsc-core'
 import { deleteToken, getAccountSecurityMethod, TokenType } from 'react-native-bcsc-core'
 import { withAccount } from '../api/hooks/withAccountGuard'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
@@ -31,13 +32,43 @@ export const useVerificationReset = () => {
   const { factoryResetAlert } = useAlerts(navigation)
   const registrationService = useRegistrationService()
 
+  /**
+   * Deletes the IAS account associated with the given clientID from the server.
+   *
+   * @param clientID - The clientID of the account to delete.
+   * @returns A promise that resolves when the deletion attempt is complete.
+   */
+  const deleteRegistration = useCallback(
+    async (clientID: string) => {
+      try {
+        let registrationAccessToken = store.bcscSecure.registrationAccessToken
+
+        if (!registrationAccessToken) {
+          // Note: This allows a verification reset before secure state has been hydrated
+          const nativeToken = await BcscCore.getToken(BcscCore.TokenType.Registration)
+          registrationAccessToken = nativeToken?.token
+        }
+
+        if (!registrationAccessToken) {
+          logger.info('[useVerificationReset]: No registration access token found, skipping IAS account deletion')
+          return
+        }
+
+        const deleteIASAccount = await registrationService.deleteRegistration(registrationAccessToken, clientID)
+
+        if (!deleteIASAccount.success) {
+          logger.warn('[useVerificationReset]: Failed to delete IAS account from server')
+        }
+      } catch (error) {
+        logger.warn('[useVerificationReset]: Error occurred while deleting registration', { error })
+      }
+    },
+    [logger, registrationService, store.bcscSecure.registrationAccessToken]
+  )
+
   const verificationReset = useCallback(async () => {
     try {
       await withAccount(async (account) => {
-        if (!store.bcscSecure.registrationAccessToken) {
-          throw new Error('No registration access token found in store. Cannot proceed with verification reset.')
-        }
-
         logger.info(`[useVerificationReset] Starting renewal reset for account with clientID: ${account.clientID}`)
         // Clear/reset store values
         clearSecureState({
@@ -53,16 +84,12 @@ export const useVerificationReset = () => {
           '[useVerificationReset] Secure state cleared. Deleting IAS registration and fetching security method...'
         )
 
-        const [securityMethod, deleteResult] = await Promise.all([
+        const [securityMethod] = await Promise.all([
           // Get original security method for registering the device again
           getAccountSecurityMethod(),
           // Delete old account registration in IAS
-          registrationService.deleteRegistration(store.bcscSecure.registrationAccessToken, account.clientID),
+          deleteRegistration(account.clientID),
         ])
-
-        logger.info(
-          `[useVerificationReset] IAS registration deleted (success=${deleteResult.success}), securityMethod=${securityMethod}`
-        )
 
         // Delete verification data from native storage (credential, auth request, account flags, additional evidence, tokens)
         await deleteVerificationData()
@@ -85,13 +112,14 @@ export const useVerificationReset = () => {
       factoryResetAlert(error)
     }
   }, [
-    clearSecureState,
-    deleteVerificationData,
-    factoryResetAlert,
-    logger,
-    store.bcscSecure.walletKey,
     store.bcscSecure.registrationAccessToken,
+    store.bcscSecure.walletKey,
+    logger,
+    clearSecureState,
+    deleteRegistration,
+    deleteVerificationData,
     registrationService,
+    factoryResetAlert,
   ])
 
   return verificationReset
