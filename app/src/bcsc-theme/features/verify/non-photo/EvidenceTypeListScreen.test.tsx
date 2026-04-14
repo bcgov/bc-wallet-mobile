@@ -194,14 +194,17 @@ describe('EvidenceTypeList', () => {
       expect(queryByText('First Card')).toBeNull()
     })
 
-    it('should exclude already selected evidence types on second visit', () => {
+    it('should exclude evidence types that have already been fully collected', () => {
       const bothCard = makeEvidenceType({ collection_order: 'BOTH', evidence_type_label: 'BC Drivers Licence' })
       const secondCard = makeEvidenceType({ collection_order: 'SECOND', evidence_type_label: 'Passport' })
       const process = BCSCCardProcess.None as string
 
+      // A complete evidence entry — both photos + a document number. shouldAddEvidence only
+      // filters out cards whose existing entry is complete; incomplete entries remain selectable.
       const existingEvidence: EvidenceMetadata = {
         evidenceType: makeEvidenceType({ evidence_type_label: 'BC Drivers Licence' }),
-        metadata: [],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        documentNumber: 'DL123',
       }
 
       mockUseStore.mockReturnValue([

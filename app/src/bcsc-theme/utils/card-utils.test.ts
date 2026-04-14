@@ -1,4 +1,4 @@
-import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
+import { getCardProcessForCardType, isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
 describe('Card Utils', () => {
@@ -37,6 +37,50 @@ describe('Card Utils', () => {
           expect(Object.values(BCSCCardProcess)).toContain(process)
         }
       })
+    })
+  })
+
+  describe('isCardEvidenceComplete', () => {
+    it('should return true for complete card evidence', () => {
+      const completeCard = {
+        evidenceType: 'someEvidenceType',
+        documentNumber: '123456789',
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isCardEvidenceComplete(completeCard as any)).toBe(true)
+    })
+
+    it('should return false when missing evidence type', () => {
+      const incompleteCard = {
+        documentNumber: '123456789',
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
+    })
+
+    it('should return false when missing document number', () => {
+      const incompleteCard = {
+        evidenceType: 'someEvidenceType',
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
+    })
+
+    it('should return false when metadata is incomplete', () => {
+      const incompleteCard = {
+        evidenceType: 'someEvidenceType',
+        documentNumber: '123456789',
+        metadata: ['meta1'], // Only 1 metadata item instead of 2
+      }
+
+      expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
+    })
+
+    it('should return false when card is undefined', () => {
+      expect(isCardEvidenceComplete(undefined)).toBe(false)
     })
   })
 })
