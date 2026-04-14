@@ -273,14 +273,9 @@ describe('clientErrorPolicies', () => {
       it('should call no tokens returned alert', () => {
         const error = newError('no_tokens_returned')
         const alertMock = jest.fn()
-        const navigationMock = jest.fn()
-        const translateMock = jest.fn()
         const context = {
           alerts: { noTokensReturnedAlert: alertMock },
-          translate: translateMock,
-          navigation: { navigate: navigationMock },
         }
-        translateMock.mockReturnValue('close')
         noTokensReturnedErrorPolicy.handle(error, context as any)
 
         expect(alertMock).toHaveBeenCalled()
@@ -350,15 +345,9 @@ describe('clientErrorPolicies', () => {
       it('should call app update required alert', () => {
         const error = newError('ios_app_update_required')
         const mockAlert = jest.fn()
-        const translateMock = jest.fn()
-        const openURLMock = jest.fn()
-        const linkingMock = { openURL: openURLMock }
         const context = {
           alerts: { appUpdateRequiredAlert: mockAlert },
-          translate: translateMock,
-          linking: linkingMock,
         }
-        translateMock.mockReturnValue('Go to App Store')
         updateRequiredErrorPolicy.handle(error, context as any)
 
         expect(mockAlert).toHaveBeenCalled()
@@ -616,6 +605,18 @@ describe('clientErrorPolicies', () => {
         expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
+      it('should match 400 on attestation endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 400,
+          endpoint: '/api/attestation/some-jwt-id',
+          apiEndpoints: {
+            attestation: '/api/attestation',
+          },
+        }
+        expect(attestationPollingErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
       it('should NOT match other status codes on attestation endpoint', () => {
         const error = newError('unknown_server_error')
         const context = {
@@ -637,7 +638,7 @@ describe('clientErrorPolicies', () => {
         attestationPollingErrorPolicy.handle(error, context as any)
 
         expect(loggerMock.info).toHaveBeenCalledWith(
-          '[AttestationPollingErrorPolicy] 404 expected during polling — attestation not yet consumed'
+          '[AttestationPollingErrorPolicy] 400 or 404 expected during polling — attestation not yet consumed or already consumed'
         )
       })
     })

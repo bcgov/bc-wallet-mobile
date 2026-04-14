@@ -61,8 +61,8 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
    * @returns {Promise<boolean | undefined>} Returns status of the attestation request for a given jwtID.
    *                                         True is returned if attestation is complete false if response code of 401, 404 or others are returned.
    *                                         Response Codes:
-   *                                            200: the attestation request is valid
-   *                                            401: the request is authorized, most likely an issue with the tokens
+   *                                            200/201: the attestation request has been consumed and is valid
+   *                                            401: the request is unauthorized, most likely an issue with the tokens
    *                                            404: the attestation has yet to be consumed/ processed by `verifyAttestation`
    *
    * @throws {Error} When BCSC client is not ready
@@ -74,11 +74,11 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
       }
 
       const response = await apiClient.get(`${apiClient.endpoints.attestation}/${jwtID}`, {
-        suppressStatusCodeLogs: [404],
+        suppressStatusCodeLogs: [400, 404],
       })
 
-      // 200 response means that the attestation request has been consumed and is valid
-      if (response.status == 200) {
+      // Any 2xx response means the attestation has been consumed and is valid.
+      if (response.status >= 200 && response.status < 300) {
         return true
       }
 
