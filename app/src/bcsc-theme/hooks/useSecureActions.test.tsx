@@ -58,12 +58,12 @@ describe('useSecureActions', () => {
       expect(setEvidence).not.toHaveBeenCalled()
     })
 
-    it('should keep evidence that has metadata and documentNumber', async () => {
+    it('should keep evidence that has both photos and documentNumber', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       const completeEvidence = makeEvidence({
         evidenceType: { evidence_type: 'drivers_licence' } as any,
-        metadata: [{ uri: 'photo.jpg' } as any],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL123',
       })
 
@@ -73,15 +73,17 @@ describe('useSecureActions', () => {
       })
 
       expect(cleaned).toEqual([completeEvidence])
-      expect(setEvidence).toHaveBeenCalledWith([completeEvidence])
+      // Nothing was removed, so we should skip the persist/dispatch
+      expect(setEvidence).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
     })
 
-    it('should remove evidence with no photo metadata', async () => {
+    it('should remove evidence without both photos', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       const noPhotos = makeEvidence({
         evidenceType: { evidence_type: 'drivers_licence' } as any,
-        metadata: [],
+        metadata: [{ uri: 'front.jpg' } as any],
         documentNumber: 'DL123',
       })
 
@@ -99,7 +101,7 @@ describe('useSecureActions', () => {
 
       const noDocNumber = makeEvidence({
         evidenceType: { evidence_type: 'passport' } as any,
-        metadata: [{ uri: 'photo.jpg' } as any],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
       })
 
       let cleaned: EvidenceMetadata[] = []
@@ -116,12 +118,12 @@ describe('useSecureActions', () => {
 
       const complete = makeEvidence({
         evidenceType: { evidence_type: 'drivers_licence' } as any,
-        metadata: [{ uri: 'front.jpg' } as any],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL456',
       })
       const incomplete = makeEvidence({
         evidenceType: { evidence_type: 'passport' } as any,
-        metadata: [{ uri: 'page.jpg' } as any],
+        metadata: [{ uri: 'page.jpg' } as any, { uri: 'page2.jpg' } as any],
         // no documentNumber
       })
 
@@ -134,17 +136,22 @@ describe('useSecureActions', () => {
       expect(setEvidence).toHaveBeenCalledWith([complete])
     })
 
-    it('should dispatch updated evidence to store', async () => {
+    it('should dispatch updated evidence to store when incomplete entries are removed', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       const complete = makeEvidence({
         evidenceType: { evidence_type: 'drivers_licence' } as any,
-        metadata: [{ uri: 'photo.jpg' } as any],
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL789',
+      })
+      const incomplete = makeEvidence({
+        evidenceType: { evidence_type: 'passport' } as any,
+        metadata: [{ uri: 'page.jpg' } as any],
+        documentNumber: 'P123',
       })
 
       await act(async () => {
-        await result.current.removeIncompleteEvidence([complete])
+        await result.current.removeIncompleteEvidence([complete, incomplete])
       })
 
       expect(mockDispatch).toHaveBeenCalledWith({

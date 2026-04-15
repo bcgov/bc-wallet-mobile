@@ -21,7 +21,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
   })
 
   it('should navigate through the Serial Instructions screen and tap Enter Manually', async () => {
-    await SerialInstructions.waitFor('EnterManually', 10_000)
+    await SerialInstructions.waitFor('EnterManually', 1_000)
     await SerialInstructions.tap('EnterManually')
   })
 
@@ -40,7 +40,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
 
   it('should navigate through the Enter Birthdate screen and fill in the Birthdate', async () => {
     const { testUser } = getVerifyContext()
-    await EnterBirthdate.waitFor('Done', 10_000)
+    await EnterBirthdate.waitFor('Done', 1_000)
     if (driver.isAndroid) {
       await EnterBirthdate.tap('BirthdateInput')
       await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true, characterByCharacter: false })

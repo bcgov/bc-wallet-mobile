@@ -142,11 +142,11 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   public async tapByTestId(testId: string) {
     const el = await this.findByTestId(testId)
     try {
-      await el.waitForDisplayed({ timeout: 1_000 })
+      await el.waitForDisplayed({ timeout: 500 })
     } catch {
-      console.warn(`Element "${testId}" not visible after 1000ms; scrolling then retrying`)
+      console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 5, 'both')
-      await el.waitForDisplayed({ timeout: 1_000 })
+      await el.waitForDisplayed({ timeout: 500 })
     }
     await el.click()
   }

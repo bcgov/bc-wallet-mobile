@@ -1,14 +1,14 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useAnimatedComponents } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, BackHandler, StyleSheet } from 'react-native'
+import { BackHandler, StyleSheet } from 'react-native'
 import useVerificationResponseViewModel from './_models/useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
   const { isSettingUpAccount, handleAccountSetup } = useVerificationResponseViewModel()
+  const { ButtonLoading } = useAnimatedComponents()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -34,7 +34,7 @@ const VerificationSuccessScreen = () => {
       }}
       disabled={isSettingUpAccount}
     >
-      {isSettingUpAccount && <ActivityIndicator color={ColorPalette.brand.text} />}
+      {isSettingUpAccount && <ButtonLoading />}
     </Button>
   )
   return (
