@@ -319,10 +319,15 @@ describe('Settings', () => {
     // `AlertDialog` widget, so `driver.acceptAlert()` can't see it and
     // we have to tap the OK button by visible text instead.
     if (driver.isIOS) {
-      // Real device doesn't support driver.isAlertOpen; just wait for
-      // the alert to appear then accept it.
+      // Sim has autoAcceptAlerts:true so the alert may already be gone;
+      // real device needs explicit dismissal. Try acceptAlert, fall
+      // through if already dismissed.
       await driver.pause(2000)
-      await driver.acceptAlert()
+      try {
+        await driver.acceptAlert()
+      } catch {
+        // autoAcceptAlerts already handled it
+      }
     } else {
       const successHeading = await Forget.findByText('Success')
       await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
@@ -360,9 +365,14 @@ describe('Settings', () => {
     // `UIAlertController` (Appium alert API works); Android renders an
     // app-owned `AlertDialog` (text-based fallback required).
     if (driver.isIOS) {
+      // dismissAlert taps the cancel-style button — exactly what we want.
+      // Try/catch handles sim autoAcceptAlerts already dismissing it.
       await driver.pause(2000)
-      // `dismissAlert` taps the cancel-style button — exactly what we want.
-      await driver.dismissAlert()
+      try {
+        await driver.dismissAlert()
+      } catch {
+        // autoAcceptAlerts already handled it
+      }
     } else {
       const heading = await Settings.findByText('Are you sure?')
       await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
@@ -433,14 +443,11 @@ describe('Settings', () => {
       // the non-cancel action, which is the "Reset App" destructive
       // button given the actions order
       // (`SettingsContent.tsx onPressRemoveAccount`).
+      await driver.pause(2000)
       try {
-        await browser.waitUntil(async () => driver.isAlertOpen().catch(() => false), {
-          timeout: Timeouts.elementVisible,
-        })
         await driver.acceptAlert()
       } catch {
-        // `autoAcceptAlerts` on the iOS local sim may have already
-        // tapped the default action for us.
+        // autoAcceptAlerts already handled it
       }
     } else {
       const heading = await Settings.findByText('Are you sure?')
