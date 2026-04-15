@@ -385,6 +385,7 @@ exports[`InformationRequired renders correctly 1`] = `
                       "textAlign": "center",
                     },
                     false,
+                    false,
                   ],
                 ]
               }

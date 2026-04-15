@@ -444,6 +444,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
                   },
                   false,
                   false,
+                  false,
                 ],
               ]
             }

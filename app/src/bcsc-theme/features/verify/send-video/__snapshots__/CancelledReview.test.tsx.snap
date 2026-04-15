@@ -146,6 +146,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
                 },
                 false,
                 false,
+                false,
               ],
             ]
           }

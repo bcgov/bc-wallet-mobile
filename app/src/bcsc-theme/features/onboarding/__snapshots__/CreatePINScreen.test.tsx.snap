@@ -590,6 +590,7 @@ exports[`CreatePINScreen snapshots renders correctly 1`] = `
                             "textAlign": "center",
                           },
                           false,
+                          false,
                         ],
                       ]
                     }

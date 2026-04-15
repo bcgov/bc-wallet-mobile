@@ -294,6 +294,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                       },
                       false,
                       false,
+                      false,
                     ],
                   ]
                 }
@@ -370,6 +371,7 @@ exports[`EnterPINScreen snapshots renders correctly 1`] = `
                         "fontWeight": "bold",
                         "textAlign": "center",
                       },
+                      false,
                       false,
                       false,
                     ],

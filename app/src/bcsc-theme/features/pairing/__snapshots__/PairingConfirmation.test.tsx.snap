@@ -288,6 +288,7 @@ exports[`PairingConfirmation should match snapshot 1`] = `
                 },
                 false,
                 false,
+                false,
               ],
             ]
           }

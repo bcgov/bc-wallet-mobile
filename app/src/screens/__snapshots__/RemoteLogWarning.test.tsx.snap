@@ -554,6 +554,7 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
                             "textAlign": "center",
                           },
                           false,
+                          false,
                         ],
                       ]
                     }

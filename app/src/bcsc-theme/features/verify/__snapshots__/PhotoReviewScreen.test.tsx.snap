@@ -125,6 +125,7 @@ exports[`PhotoReview renders correctly 1`] = `
                   },
                   false,
                   false,
+                  false,
                 ],
               ]
             }
@@ -191,6 +192,7 @@ exports[`PhotoReview renders correctly 1`] = `
                 },
                 [
                   undefined,
+                  false,
                   false,
                   false,
                 ],

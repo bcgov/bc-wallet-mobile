@@ -301,6 +301,7 @@ exports[`ConfirmDeviceAuthInfoScreen renders correctly 1`] = `
                       },
                       false,
                       false,
+                      false,
                     ],
                   ]
                 }

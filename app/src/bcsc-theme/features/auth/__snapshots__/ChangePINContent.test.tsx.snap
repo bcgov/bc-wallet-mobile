@@ -720,6 +720,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                             "textAlign": "center",
                           },
                           false,
+                          false,
                         ],
                       ]
                     }
@@ -1485,6 +1486,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                             "fontWeight": "bold",
                             "textAlign": "center",
                           },
+                          false,
                           false,
                         ],
                       ]

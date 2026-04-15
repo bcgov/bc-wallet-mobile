@@ -720,6 +720,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "textAlign": "center",
                           },
                           false,
+                          false,
                         ],
                       ]
                     }

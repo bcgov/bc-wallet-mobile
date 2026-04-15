@@ -270,6 +270,7 @@ exports[`VideoReview renders correctly 1`] = `
                 },
                 false,
                 false,
+                false,
               ],
             ]
           }
@@ -336,6 +337,7 @@ exports[`VideoReview renders correctly 1`] = `
               },
               [
                 undefined,
+                false,
                 false,
                 false,
               ],

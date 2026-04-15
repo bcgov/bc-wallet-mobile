@@ -399,6 +399,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
                   },
                   false,
                   false,
+                  false,
                 ],
               ]
             }
@@ -474,6 +475,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
                     "fontWeight": "bold",
                     "textAlign": "center",
                   },
+                  false,
                   false,
                   false,
                 ],

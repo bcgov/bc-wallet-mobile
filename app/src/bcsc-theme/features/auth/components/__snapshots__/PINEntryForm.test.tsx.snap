@@ -590,6 +590,7 @@ exports[`PINEntryForm renders correctly with create and confirm PIN fields 1`] =
                             "textAlign": "center",
                           },
                           false,
+                          false,
                         ],
                       ]
                     }

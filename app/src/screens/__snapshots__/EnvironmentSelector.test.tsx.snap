@@ -1204,6 +1204,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
                 },
                 false,
                 false,
+                false,
               ],
             ]
           }
