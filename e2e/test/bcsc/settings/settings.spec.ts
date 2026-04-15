@@ -89,21 +89,22 @@ describe('Settings', () => {
     // NO_RESET=true should keep the app on the Home screen, but
     // sometimes Appium relaunches the app and lands on AccountSelector.
     // If that happens, re-authenticate so the suite can proceed.
-    const onAccountSelector = await AccountSelector.isDisplayed('SettingsMenuButton').catch(() => false)
-    if (onAccountSelector) {
-      // Tap the first account card. The testID is dynamic
-      // (CardButton-<nickname>) so match by resource ID prefix.
+    // Check for a CardButton (unique to AccountSelector) — if one
+    // exists, tap it and enter the PIN. If not, we're already on Home.
+    try {
       const selector = driver.isIOS
         ? '-ios predicate string:name BEGINSWITH "com.ariesbifold:id/CardButton-"'
         : 'android=new UiSelector().resourceIdMatches(".*CardButton-.*")'
       const card = await $(selector)
-      await card.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await card.waitForDisplayed({ timeout: 3000 })
       await card.click()
       await EnterPIN.waitFor('PINInput')
       await EnterPIN.type('PINInput', currentPin)
       await EnterPIN.tap('Continue')
-      await Home.waitFor('SettingsMenuButton')
+    } catch {
+      // No CardButton found — already on Home, nothing to do.
     }
+    await Home.waitFor('SettingsMenuButton')
   })
 
   it('opens the Settings menu from the Home tab', async () => {
