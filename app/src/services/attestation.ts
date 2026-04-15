@@ -15,17 +15,16 @@ import {
   isPlayIntegrityAvailable,
 } from '@bifold/react-native-attestation'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
+import { Agent, BaseEvent } from '@credo-ts/core'
 import {
-  Agent,
-  BaseEvent,
-  ConnectionRecord,
-  CredentialEventTypes,
-  CredentialExchangeRecord,
-  CredentialState,
-  ProofEventTypes,
-  ProofExchangeRecord,
-  ProofState,
-} from '@credo-ts/core'
+  DidCommConnectionRecord,
+  DidCommCredentialEventTypes,
+  DidCommCredentialExchangeRecord,
+  DidCommCredentialState,
+  DidCommProofEventTypes,
+  DidCommProofExchangeRecord,
+  DidCommProofState,
+} from '@credo-ts/didcomm'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 import { DeviceEventEmitter, Platform } from 'react-native'
@@ -102,11 +101,11 @@ const findCredDefIDs = (restrictions: [Restriction]): Array<string> => {
 }
 
 const invitationUrlFromRestrictions = async (
-  proof: ProofExchangeRecord,
+  proof: DidCommProofExchangeRecord,
   agent: BifoldAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<string | undefined> => {
-  const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
+  const format = (await agent.didcomm.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
   const restrictionsArePresent = format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
 
@@ -129,7 +128,7 @@ const invitationUrlFromRestrictions = async (
 }
 
 export const isProofRequestingAttestation = async (
-  proof: ProofExchangeRecord,
+  proof: DidCommProofExchangeRecord,
   agent: BifoldAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<boolean> => {
@@ -158,7 +157,7 @@ export class AttestationMonitor implements AttestationMonitorI {
   private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
   private _shouldHandleProofRequestAutomatically = false
-  private _proofRequest?: ProofExchangeRecord
+  private _proofRequest?: DidCommProofExchangeRecord
   // private _currentWorkflowState?: typeof AttestationEventTypes
 
   // take in options, agent, and logger. Options should include the attestation service URL
@@ -186,11 +185,11 @@ export class AttestationMonitor implements AttestationMonitorI {
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
-      .observable(ProofEventTypes.ProofStateChanged)
+      .observable(DidCommProofEventTypes.ProofStateChanged)
       .subscribe(this.handleProofStateChanged)
 
     this.offerSubscription = this.agent?.events
-      .observable(CredentialEventTypes.CredentialStateChanged)
+      .observable(DidCommCredentialEventTypes.DidCommCredentialStateChanged)
       .subscribe(this.handleCredentialStateChanged)
   }
 
@@ -281,20 +280,20 @@ export class AttestationMonitor implements AttestationMonitorI {
     DeviceEventEmitter.emit(eventType, error)
   }
 
-  private handleProofRequest = async (proofRequest: ProofExchangeRecord): Promise<boolean> => {
+  private handleProofRequest = async (proofRequest: DidCommProofExchangeRecord): Promise<boolean> => {
     if (!this.agent) {
       return false
     }
 
     this.log?.info('Selecting credentials for attestation proof request')
     // This will throw if we don't have the necessary credentials
-    const credentials = await this.agent.proofs.selectCredentialsForRequest({
-      proofRecordId: proofRequest.id,
+    const credentials = await this.agent.didcomm.proofs.selectCredentialsForRequest({
+      proofExchangeRecordId: proofRequest.id,
     })
 
     this.log?.info('Accepting attestation proof request')
-    await this.agent.proofs.acceptRequest({
-      proofRecordId: proofRequest.id,
+    await this.agent.didcomm.proofs.acceptRequest({
+      proofExchangeRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
     })
 
@@ -311,13 +310,13 @@ export class AttestationMonitor implements AttestationMonitorI {
       )
     }
 
-    const { credentialRecord } = event.payload
-    const credential = credentialRecord as CredentialExchangeRecord
+    const { credentialExchangeRecord } = event.payload
+    const credential = credentialExchangeRecord as DidCommCredentialExchangeRecord
 
     this.log?.info('Handling credential offer')
 
     try {
-      const { offer } = await this.agent.credentials.getFormatData(credential.id)
+      const { offer } = await this.agent.didcomm.credentials.getFormatData(credential.id)
       const offerData = (offer?.anoncreds ?? offer?.indy) as AnonCredsCredentialOffer
 
       // do nothing if not an attestation credential
@@ -327,20 +326,20 @@ export class AttestationMonitor implements AttestationMonitorI {
       }
 
       // if it's a new offer, automatically accept
-      if (credential.state === CredentialState.OfferReceived) {
+      if (credential.state === DidCommCredentialState.OfferReceived) {
         this.log?.info('Accepting credential offer')
-        await this.agent.credentials.acceptOffer({
+        await this.agent.didcomm.credentials.acceptOffer({
           credentialRecordId: credential.id,
         })
       }
 
       // only finish loading state once credential is fully accepted
-      if (credential.state === CredentialState.Done) {
+      if (credential.state === DidCommCredentialState.Done) {
         // TODO: credential.offer in flight completed
         this.log?.info('Credential accepted')
 
         if (this._shouldHandleProofRequestAutomatically && this._proofRequest) {
-          if (this._proofRequest.state === ProofState.RequestReceived) {
+          if (this._proofRequest.state === DidCommProofState.RequestReceived) {
             const result = await this.handleProofRequest(this._proofRequest)
             if (result) {
               this.stopWorkflow(AttestationEventTypes.Completed)
@@ -367,12 +366,12 @@ export class AttestationMonitor implements AttestationMonitorI {
       )
     }
 
-    const { proofRecord } = event.payload
-    const proof = proofRecord as ProofExchangeRecord
+    const { proofExchangeRecord } = event.payload
+    const proof = proofExchangeRecord as DidCommProofExchangeRecord
 
     this.log?.info('Handling proof received')
 
-    if (proof.state !== ProofState.RequestReceived) {
+    if (proof.state !== DidCommProofState.RequestReceived) {
       return
     }
 
@@ -421,7 +420,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
   }
 
-  private async connectToAttestationAgent(invitationUrl: string): Promise<ConnectionRecord | undefined> {
+  private async connectToAttestationAgent(invitationUrl: string): Promise<DidCommConnectionRecord | undefined> {
     if (!this.agent) {
       throw new BifoldError(
         'Attestation Service',
@@ -431,7 +430,7 @@ export class AttestationMonitor implements AttestationMonitorI {
       )
     }
 
-    const invite = await this.agent.oob.parseInvitation(invitationUrl)
+    const invite = await this.agent.didcomm.oob.parseInvitation(invitationUrl)
 
     if (!invite) {
       this.log?.error('Unable to parse attestation agent invitation')
@@ -448,7 +447,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     await removeExistingInvitationsById(this.agent, invite.id)
 
     this.log?.info('Receiving invitation')
-    const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
+    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite)
     if (!connectionRecord) {
       throw new BifoldError(
         'Attestation Service',
@@ -460,10 +459,10 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     // this step will fail if there is more than one active connection record between a given wallet and
     // the traction instance which is why we need to `removeExistingInvitationsById` above
-    return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
+    return await this.agent.didcomm.connections.returnWhenIsConnected(connectionRecord.id)
   }
 
-  private async fetchNonceForAttestation(connection: ConnectionRecord): Promise<string> {
+  private async fetchNonceForAttestation(connection: DidCommConnectionRecord): Promise<string> {
     if (!this.agent) {
       throw new BifoldError(
         'Attestation Service',
@@ -510,7 +509,7 @@ export class AttestationMonitor implements AttestationMonitorI {
   }
 
   private async requestAttestation(
-    connection: ConnectionRecord,
+    connection: DidCommConnectionRecord,
     attestationObj: AttestationRequestParams
   ): Promise<AttestationResult> {
     if (!this.agent) {
@@ -650,7 +649,7 @@ export class AttestationMonitor implements AttestationMonitorI {
 
   private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
     agent.config.logger.info('Fetching proof by id')
-    const proof = await agent?.proofs.getById(proofId)
+    const proof = await agent?.didcomm.proofs.getById(proofId)
     agent.config.logger.info('Second check if proof is requesting attestation')
 
     agent.config.logger.info('Checking if credentials match for proof request')
