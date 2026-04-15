@@ -88,7 +88,7 @@ describe('Settings', () => {
   it('opens the Settings menu from the Home tab', async () => {
     await Home.waitFor('SettingsMenuButton')
     await TabBar.tap('SettingsMenuButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('edits the account nickname and verifies it persists', async () => {
@@ -119,7 +119,7 @@ describe('Settings', () => {
     // Save — EditNicknameScreen calls navigation.goBack() on success, so
     // we land back on Settings without any further interaction.
     await EditNickname.tap('SaveAndContinue')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
 
     // Re-open Edit Nickname and verify the new value is rendered in the
     // input. `findByText` matches the TextInput's text on Android and its
@@ -128,7 +128,7 @@ describe('Settings', () => {
     const nicknameText = await EditNickname.findByText(newNickname)
     await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
     await EditNickname.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('shows a duplicate-nickname validation error and lets the user back out', async () => {
@@ -148,7 +148,7 @@ describe('Settings', () => {
     await EditNickname.waitFor('AccountNicknameSubtext')
     // Navigate back to Settings without saving.
     await EditNickname.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('signs out, re-selects the renamed account, and lands on Home', async () => {
@@ -175,7 +175,7 @@ describe('Settings', () => {
     // Previous test (Sign Out) ended on Home as its documented exception,
     // so re-open Settings before walking into the App Security row.
     await TabBar.tap('SettingsMenuButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     await Settings.tap('AppSecurity')
     await MainAppSecurity.waitFor('LearnMoreButton')
 
@@ -196,7 +196,7 @@ describe('Settings', () => {
     if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
 
     await MainAppSecurity.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('changes the PIN, verifying mismatch error and checkbox gate', async () => {
@@ -243,7 +243,7 @@ describe('Settings', () => {
     // Success navigates back to Settings. The new PIN is implicitly
     // verified by the auto-lock expiry test which re-authenticates
     // with `currentPin` after the inactivity timer fires.
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     // A success toast slides up from the bottom and auto-dismisses after
     // ~4 s (react-native-toast-message default). Wait it out so it
     // doesn't intercept taps in the next test.
@@ -256,7 +256,7 @@ describe('Settings', () => {
     await AutoLock.waitFor('AutoLockTime3')
     await AutoLock.tap('AutoLockTime3')
     await AutoLock.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     // On Android, verify the endAdornmentText updated. On iOS the text
     // is rolled into the parent TouchableOpacity's accessibility tree
     // and not individually queryable via findByText.
@@ -271,7 +271,7 @@ describe('Settings', () => {
     await AutoLock.waitFor('AutoLockTime5')
     await AutoLock.tap('AutoLockTime5')
     await AutoLock.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment5 = await Settings.findByText('5 min')
       await adornment5.waitForDisplayed({ timeout: Timeouts.elementVisible })
@@ -283,7 +283,7 @@ describe('Settings', () => {
     await AutoLock.waitFor('AutoLockTime1')
     await AutoLock.tap('AutoLockTime1')
     await AutoLock.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment1 = await Settings.findByText('1 min')
       await adornment1.waitForDisplayed({ timeout: Timeouts.elementVisible })
@@ -305,7 +305,7 @@ describe('Settings', () => {
   it('forgets all pairings, dismisses the success alert, and returns to Settings', async () => {
     // Previous test (Auto Lock expiry) ended on Home, so re-open Settings.
     await TabBar.tap('SettingsMenuButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
     await Settings.tap('ForgetPairings')
     await Forget.waitFor('ForgetAllPairings')
     await Forget.tap('ForgetAllPairings')
@@ -329,7 +329,7 @@ describe('Settings', () => {
       const okButton = await Forget.findByText('OK')
       await okButton.click()
     }
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('toggles Analytics Opt In to the opposite state', async () => {
@@ -370,7 +370,7 @@ describe('Settings', () => {
       const cancelButton = await Settings.findByText('CANCEL')
       await cancelButton.click()
     }
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('opens Help in the in-app WebView and returns to Settings', async () => {
@@ -384,14 +384,14 @@ describe('Settings', () => {
     const supportGuide = await WebView.findByText('Support guide')
     await supportGuide.waitForDisplayed({ timeout: Timeouts.screenTransition })
     await WebView.tap('Back')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('opens Privacy and returns to Settings', async () => {
     await Settings.tap('Privacy')
     await MainPrivacyPolicy.waitFor('PrivacyPolicyBCLoginLink')
     await MainPrivacyPolicy.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   it('opens Contact Us and returns to Settings', async () => {
@@ -403,7 +403,7 @@ describe('Settings', () => {
     const heading = await MainContactUs.findByText('Service BC Help Desk')
     await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
     await MainContactUs.tap('BackButton')
-    await Settings.waitFor('AutoLock')
+    await Settings.waitFor('EditNickname')
   })
 
   // External-browser rows all follow the same pattern: tap the Settings
@@ -414,7 +414,7 @@ describe('Settings', () => {
       await Settings.tap(row)
       await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
       await driver.activateApp(appId)
-      await Settings.waitFor('AutoLock')
+      await Settings.waitFor('EditNickname')
     })
   }
 
