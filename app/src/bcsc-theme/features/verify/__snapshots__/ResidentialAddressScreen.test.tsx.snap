@@ -985,7 +985,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                           },
                           false,
                           false,
-                          false,
                         ],
                       ]
                     }

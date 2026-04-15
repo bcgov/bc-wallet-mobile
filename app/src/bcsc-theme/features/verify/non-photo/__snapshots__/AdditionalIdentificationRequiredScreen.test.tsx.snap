@@ -478,7 +478,6 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
                     },
                     false,
                     false,
-                    false,
                   ],
                 ]
               }

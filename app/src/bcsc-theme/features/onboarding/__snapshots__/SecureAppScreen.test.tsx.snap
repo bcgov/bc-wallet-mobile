@@ -737,7 +737,6 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
                     },
                     false,
                     false,
-                    false,
                   ],
                 ]
               }
@@ -814,7 +813,6 @@ exports[`SecureApp renders correctly when device auth is NOT available 1`] = `
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
-                    false,
                     false,
                     false,
                   ],

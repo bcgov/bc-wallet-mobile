@@ -152,7 +152,6 @@ exports[`AccountRenewalFinalWarning renders correctly 1`] = `
                 },
                 false,
                 false,
-                false,
               ],
             ]
           }
