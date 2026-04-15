@@ -95,7 +95,7 @@ describe('useVerificationReset', () => {
       verifiedStatus: VerificationStatus.UNVERIFIED,
     })
     expect(getAccount).toHaveBeenCalledTimes(1)
-    expect(mockDeleteRegistration).toHaveBeenCalledWith('client-id')
+    expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
     expect(getAccountSecurityMethod).toHaveBeenCalledTimes(1)
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
     expect(deleteToken).toHaveBeenCalledTimes(3)
@@ -137,7 +137,7 @@ describe('useVerificationReset', () => {
 
     expect(mockClearSecureState).toHaveBeenCalledTimes(1)
     expect(mockDeleteVerificationData).toHaveBeenCalledTimes(1)
-    expect(mockDeleteRegistration).toHaveBeenCalledWith('client-id')
+    expect(mockDeleteRegistration).toHaveBeenCalledWith('registration-token', 'client-id')
     expect(mockCreateRegistration).toHaveBeenCalledWith('device_authentication')
     expect(mockFactoryResetAlert).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).toHaveBeenCalledWith(
