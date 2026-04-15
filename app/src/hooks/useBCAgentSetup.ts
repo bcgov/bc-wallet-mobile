@@ -3,16 +3,15 @@ import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import {
   createLinkSecretIfRequired,
-  DispatchAction,
-  migrateToAskar,
   PersistentStorage,
   TOKENS,
   useServices,
   useStore,
   WalletSecret,
 } from '@bifold/core'
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+import { Agent } from '@credo-ts/core'
+import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
@@ -32,7 +31,7 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
@@ -50,17 +49,13 @@ const useBCAgentSetup = () => {
   )
 
   const restartExistingAgent = useCallback(
-    async (agent: Agent, walletSecret: WalletSecret): Promise<Agent | undefined> => {
+    async (agent: Agent): Promise<Agent | undefined> => {
       try {
-        await agent.wallet.open({
-          id: walletSecret.id,
-          key: walletSecret.key,
-        })
         await agent.initialize()
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
-        // if the existing agents wallet cannot be opened or initialize() fails it was
-        // again not a clean shutdown and the agent should be replaced, not restarted
+        // if the existing agent cannot initialize it was not a clean shutdown
+        // replace rather than restart
         return
       }
 
@@ -73,18 +68,13 @@ const useBCAgentSetup = () => {
     async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
       const options = {
         config: {
-          label: store.preferences.walletName || 'BC Wallet',
-          walletConfig: {
-            id: walletSecret.id,
-            key: walletSecret.key,
-          },
           logger,
-          mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
           autoUpdateStorageOnStartup: true,
-          autoAcceptConnections: true,
         },
         dependencies: agentDependencies,
         modules: getBCAgentModules({
+          walletId: walletSecret.id,
+          walletKey: walletSecret.key,
           indyNetworks: ledgers,
           mediatorInvitationUrl: mediatorUrl,
           txnCache: {
@@ -103,30 +93,20 @@ const useBCAgentSetup = () => {
 
       logger.info(store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled')
 
-      const newAgent = new Agent(options)
-      const wsTransport = new WsOutboundTransport()
-      const httpTransport = new HttpOutboundTransport()
-
-      newAgent.registerOutboundTransport(wsTransport)
-      newAgent.registerOutboundTransport(httpTransport)
-
-      return newAgent
+      return new Agent(options)
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy]
+    [logger, store.developer.enableProxy]
   )
 
-  const migrateIfRequired = useCallback(
-    async (newAgent: Agent, walletSecret: WalletSecret) => {
-      // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-      if (!store.migration.didMigrateToAskar) {
-        await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
-        dispatch({
-          type: DispatchAction.DID_MIGRATE_TO_ASKAR,
-        })
-      }
-    },
-    [store.migration.didMigrateToAskar, dispatch]
-  )
+  // TODO: (al) migrateToAskar was removed in credo 0.6.x (the indy-sdk-to-askar-migration package was dropped).
+  // this is eventually going to be the new bcsc app, do we need to migrate people? all the users will be new and be on asakr
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const migrateIfRequired = useCallback(async (_newAgent: Agent, _walletSecret: WalletSecret) => {
+    // if (!store.migration.didMigrateToAskar) {
+    //   await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
+    //   dispatch({ type: DispatchAction.DID_MIGRATE_TO_ASKAR })
+    // }
+  }, [])
 
   const warmUpCache = useCallback(
     async (newAgent: Agent, cachedLedgers?: IndyVdrPoolConfig[]) => {
@@ -180,10 +160,13 @@ const useBCAgentSetup = () => {
       const mediatorUrl = store.preferences.selectedMediator
       logger.info('Checking for existing agent...')
       if (agentInstanceRef.current) {
-        const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
+        const restartedAgent = await restartExistingAgent(agentInstanceRef.current)
         if (restartedAgent) {
           logger.info('Successfully restarted existing agent...')
-          restartedAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+          restartedAgent.didcomm.mediationRecipient.initiateMessagePickup(
+            undefined,
+            DidCommMediatorPickupStrategy.PickUpV2LiveMode
+          )
           refreshAttestationMonitor(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
@@ -205,7 +188,10 @@ const useBCAgentSetup = () => {
       await newAgent.initialize()
 
       logger.info(`checking mediator type for ${mediatorUrl}`)
-      await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+      await newAgent.didcomm.mediationRecipient.initiateMessagePickup(
+        undefined,
+        DidCommMediatorPickupStrategy.PickUpV2LiveMode
+      )
 
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)
