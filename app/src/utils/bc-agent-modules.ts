@@ -132,9 +132,10 @@ export function getBCAgentModules({
       mediatorInvitationUrl: mediatorInvitationUrl,
       mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
     }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // TODO: (ar) @credo-ts/push-notifications v0.7.1 was built against @credo-ts/core ^0.5.x which
+    // included FeatureRegistry in Module.register(). Core v0.6.x removed FeatureRegistry
+    // keeping 'as any' until @credo-ts/push-notifications is updated for core v0.6.x.
     pushNotificationsFcm: new PushNotificationsFcmModule() as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pushNotificationsApns: new PushNotificationsApnsModule() as any,
     dids: new DidsModule({
       resolvers: [new WebVhDidResolver()],
@@ -146,14 +147,12 @@ export function getBCAgentModules({
     modules.anoncreds = new AnonCredsModule({
       anoncreds,
       registries: [
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }) as any,
+        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }),
         new WebVhAnonCredsRegistry(),
       ],
     })
     modules.dids = new DidsModule({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }) as any, new WebVhDidResolver()],
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }), new WebVhDidResolver()],
     })
   }
 
