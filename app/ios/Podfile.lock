@@ -1917,7 +1917,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (2.12.12):
+  - react-native-attestation (3.0.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -3684,7 +3684,7 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: ab2e1bf0514f33642464301c8c1b81d5f87b3006
+  react-native-attestation: 3a236f8f0ea8841d4f8e5a9addd0eafe320a1860
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
