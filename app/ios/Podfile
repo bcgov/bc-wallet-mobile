@@ -1,5 +1,6 @@
 source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 
 # prevents location usage from react-native-vision-camera
 $VCEnableLocation = false
@@ -52,6 +53,7 @@ end
 
 target 'BCWallet' do
   config = use_native_modules!
+  use_expo_modules!
 
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
@@ -71,6 +73,7 @@ target 'BCWallet' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+    expo_patch_react_imports!(installer)
 
     # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
     # The wrapper scripts fall through to plain clang when ccache is not installed,

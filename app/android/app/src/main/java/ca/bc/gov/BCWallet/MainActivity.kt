@@ -10,6 +10,7 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
+import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
     // react-native-screens override
@@ -53,15 +54,19 @@ class MainActivity : ReactActivity() {
      * (aka React 18) with two boolean flags.
      */
     override fun createReactActivityDelegate(): ReactActivityDelegate =
-        object : DefaultReactActivityDelegate(
+        ReactActivityDelegateWrapper(
             this,
-            mainComponentName,
-            DefaultNewArchitectureEntryPoint.fabricEnabled,
-        ) {
-            override fun onCreate(savedInstanceState: Bundle?) {
-                super.onCreate(savedInstanceState)
+            BuildConfig.IS_NEW_ARCHITECTURE_ENABLED,
+            object : DefaultReactActivityDelegate(
+                this,
+                mainComponentName,
+                DefaultNewArchitectureEntryPoint.fabricEnabled,
+            ) {
+                override fun onCreate(savedInstanceState: Bundle?) {
+                    super.onCreate(savedInstanceState)
+                }
             }
-        }
+        )
 
     /**
      * Clears notification badges etc. on app open
