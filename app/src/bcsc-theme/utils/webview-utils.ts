@@ -69,7 +69,7 @@ export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: 
 <style>
   body {
     background-color: ${colorPalette.brand.primaryBackground};
-    color: ${colorPalette.brand.secondary};
+    color: ${colorPalette.grayscale.darkGrey};
     font-family: -apple-system, system-ui, sans-serif;
     font-size: ${fontSizeCss}px !important;
     padding: 0 16px 16px 16px;
@@ -78,7 +78,7 @@ export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: 
   }
   body, body * {
     background-color: ${colorPalette.brand.primaryBackground} !important;
-    color: ${colorPalette.brand.secondary} !important;
+    color: ${colorPalette.grayscale.darkGrey} !important;
   }
   p, li, dd, dt {
     margin-bottom: 0.75em;
