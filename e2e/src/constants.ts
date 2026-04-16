@@ -25,6 +25,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_shaggy.jpg',
     selfieImage: 'images/id_shaggy.jpg',
+    firstName: 'Shaggy',
+    lastName: 'Rogers',
   },
   combined: {
     username: 'e2e_velma',
@@ -33,6 +35,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
     selfieImage: 'images/id_velma.jpg',
+    firstName: 'Velma',
+    lastName: 'Dinkley',
   },
   nonPhoto: {
     username: 'e2e_daphne',
@@ -41,14 +45,18 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_daphne.jpg',
     selfieImage: 'images/id_daphne.jpg',
+    firstName: 'Daphne',
+    lastName: 'Blake',
   },
   na: {
     username: 'e2e_fred',
     cardSerial: 'N/A',
     dob: '19680918',
-    documentNumber: 'WG12345678',
+    documentNumber: '12345678', // Mock drivers license
     cardScanImage: 'images/dl_fred.jpg',
     selfieImage: 'images/id_fred.jpg',
+    firstName: 'Fred',
+    lastName: 'Jones',
   },
 }
 

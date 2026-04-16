@@ -12,7 +12,7 @@ const IDPhotoInformation = new BaseScreen(BCSC_TestIDs.IDPhotoInformation)
 const EvidenceCapture = new BaseScreen(BCSC_TestIDs.EvidenceCapture)
 const EvidenceFormData = new BaseScreen(BCSC_TestIDs.EvidenceIDCollection)
 
-describe(`BCSC ${context.cardTypeLabel} Card`, () => {
+describe(`Non-BCSC Card (1) - Drivers License`, () => {
   it('should navigate through the Setup Steps screen and tap Step 2', async () => {
     await SetupSteps.tap('Step2')
   })
@@ -47,7 +47,6 @@ describe(`BCSC ${context.cardTypeLabel} Card`, () => {
     await EvidenceFormData.type('DocumentNumberPressable', context.testUser.documentNumber)
     await EvidenceFormData.type('LastNamePressable', context.testUser.lastName)
     await EvidenceFormData.type('FirstNamePressable', context.testUser.firstName)
-    await EvidenceFormData.waitFor('MiddleNamesPressable')
     await EvidenceFormData.type('MiddleNamesPressable', 'Middle Names')
     await EvidenceFormData.type('BirthdatePressable', context.testUser.dob)
     await EvidenceFormData.tap('Continue')
