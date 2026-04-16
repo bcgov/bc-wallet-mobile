@@ -1,7 +1,6 @@
 // organize-imports-ignore — import order defines test run order
 /**
  * Verified-state BCSC E2E suite: specs run sequentially with app state
- * preserved between sessions (noReset=true / fullReset=false).
  *
  * Phase 1 — establishes verified state:
  *   Full onboarding + verification flow, leaving the app at the home screen
@@ -11,7 +10,6 @@
  *   Each subsequent spec starts a new session and finds the app already
  *   verified, so it can skip onboarding entirely.
  *
- * Run with: yarn wdio configs/sauce/verified/wdio.<platform>.verified.sauce.rdc.conf.ts --suite verified
  */
 
 // Phase 1: Onboarding + verification (runs once to establish verified state)

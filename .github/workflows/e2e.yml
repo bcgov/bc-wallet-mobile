@@ -8,13 +8,12 @@
 #   happy-path      — onboarding → verify → main (straight-through)
 #   full-regression — onboarding → verify → main (with detours)
 #   biometrics      — onboarding with biometric auth (Sauce RDC only)
-#   verified        — verified-state flows (noReset, sequential phases; Sauce RDC only)
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
 #   objects. Each entry spawns a separate SauceLabs session.
 #   Example: [{"platform":"iOS","device":"iPhone.*","os_version":"18"}]
-#   For suites that don't need specific devices (verified, biometrics), pass
+#   For suites that don't need specific devices (biometrics), pass
 #   a minimal matrix: [{"platform":"iOS"},{"platform":"Android"}]
 #
 # Trigger modes:
@@ -31,7 +30,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, happy-path, full-regression, verified, biometrics)'
+        description: 'Test suite (smoke, happy-path, full-regression, biometrics)'
         type: string
         required: true
       build_number:
@@ -60,7 +59,6 @@ on:
           - smoke
           - happy-path
           - full-regression
-          - verified
           - biometrics
         default: smoke
       build_number:
@@ -138,10 +136,6 @@ jobs:
           BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |
           case "$SUITE" in
-            verified)
-              IOS_CONF="configs/sauce/verified/wdio.ios.verified.sauce.rdc.conf.ts"
-              ANDROID_CONF="configs/sauce/verified/wdio.android.verified.sauce.rdc.conf.ts"
-              ;;
             biometrics)
               IOS_CONF="configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts"
               ANDROID_CONF="configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts"
