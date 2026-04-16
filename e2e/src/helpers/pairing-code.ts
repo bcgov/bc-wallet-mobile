@@ -83,7 +83,8 @@ export async function fetchPairingCode(): Promise<PairingSession> {
     throw new Error(`GET /login/entry failed: ${entryRes.status}`)
   }
   const entryHtml = await entryRes.text()
-  const txMatch = entryHtml.match(/var\s+transactionID\s*=\s*"([0-9a-fA-F-]+)"/)
+  const txPattern = /var\s+transactionID\s*=\s*"([0-9a-fA-F-]+)"/
+  const txMatch = txPattern.exec(entryHtml)
   if (!txMatch) {
     throw new Error('transactionID literal not found in /login/entry HTML')
   }
@@ -152,14 +153,14 @@ function baseHeaders(jar: CookieJar): Record<string, string> {
 function extractInputValue(html: string, name: string): string | null {
   // Matches <input ... name="X" value="..."> in either attribute order.
   const nameFirst = new RegExp(
-    `<input\\b[^>]*\\bname\\s*=\\s*['"]${name}['"][^>]*\\bvalue\\s*=\\s*['"]([^'"]*)['"]`,
+    String.raw`<input\b[^>]*\bname\s*=\s*['"]${name}['"][^>]*\bvalue\s*=\s*['"]([^'"]*)['"]`,
     'i'
   )
   const valueFirst = new RegExp(
-    `<input\\b[^>]*\\bvalue\\s*=\\s*['"]([^'"]*)['"][^>]*\\bname\\s*=\\s*['"]${name}['"]`,
+    String.raw`<input\b[^>]*\bvalue\s*=\s*['"]([^'"]*)['"][^>]*\bname\s*=\s*['"]${name}['"]`,
     'i'
   )
-  const m = html.match(nameFirst) ?? html.match(valueFirst)
+  const m = nameFirst.exec(html) ?? valueFirst.exec(html)
   return m ? (m[1] ?? null) : null
 }
 
@@ -167,12 +168,13 @@ class CookieJar {
   private readonly store = new Map<string, string>()
 
   consume(headers: Headers): void {
-    const raw =
-      typeof headers.getSetCookie === 'function'
-        ? headers.getSetCookie()
-        : headers.get('set-cookie')
-          ? [headers.get('set-cookie') as string]
-          : []
+    let raw: string[]
+    if (typeof headers.getSetCookie === 'function') {
+      raw = headers.getSetCookie()
+    } else {
+      const single = headers.get('set-cookie')
+      raw = single ? [single] : []
+    }
     for (const line of raw) {
       const first = line.split(';', 1)[0] ?? ''
       const eq = first.indexOf('=')
