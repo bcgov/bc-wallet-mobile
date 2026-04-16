@@ -5,8 +5,6 @@ import { getVerifyContext } from '../card-type/card-context.js'
 const context = getVerifyContext()
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
-const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
-const DualIdentificationRequired = new BaseScreen(BCSC_TestIDs.DualIdentificationRequired)
 const EvidenceIDCollection = new BaseScreen(BCSC_TestIDs.EvidenceIDCollection)
 const IDPhotoInformation = new BaseScreen(BCSC_TestIDs.IDPhotoInformation)
 const EvidenceCapture = new BaseScreen(BCSC_TestIDs.EvidenceCapture)
@@ -29,11 +27,6 @@ describe(`Non-BCSC Card (2) - Passport`, () => {
     await EvidenceCapture.tap('TakePhoto')
     await EvidenceCapture.tap('UsePhoto')
   })
-
-  // it('should capture the back of the passport', async () => {
-  //   await EvidenceCapture.tap('TakePhoto')
-  //   await EvidenceCapture.tap('UsePhoto')
-  // })
 
   it('should enter in the correct form data', async () => {
     await EvidenceFormData.type('DocumentNumberPressable', context.testUser.documentNumber)

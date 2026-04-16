@@ -151,6 +151,7 @@ export const BCSC_TestIDs = {
     CityInput: 'com.ariesbifold:id/city-input',
     ProvinceInput: 'com.ariesbifold:id/province-input',
     PostalCodeInput: 'com.ariesbifold:id/postalCode-input',
+    ProvinceOptionBritishColumbia: 'com.ariesbifold:id/province-option-BC',
   },
   EnterEmail: {
     EmailInput: 'com.ariesbifold:id/email-input',

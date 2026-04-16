@@ -25,7 +25,7 @@ export const config: WebdriverIO.Config = {
   capabilities: [],
 
   logLevel: 'warn',
-  bail: 0,
+  bail: 1, // Stop the test suite on the first failure
   waitforTimeout: 20_000,
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 2,
@@ -35,6 +35,7 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: 'bdd',
     timeout: 600_000, // 10 min per test — generous for real devices
+    bail: true, // Stop the test suite on the first failure
   },
 
   // Hooks for SauceLabs test status reporting
