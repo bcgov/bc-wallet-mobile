@@ -91,7 +91,7 @@ export const DropdownWithValidation = <T extends string | number>({
     modalTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: ColorPalette.brand.secondary,
+      color: ColorPalette.grayscale.darkGrey,
       flex: 1,
       textAlign: 'center',
     },
@@ -217,7 +217,7 @@ export const DropdownWithValidation = <T extends string | number>({
                   accessibilityLabel={a11yLabel(t('Global.Close'))}
                   accessibilityRole="button"
                 >
-                  <Icon name="close" size={24} color={ColorPalette.brand.secondary} />
+                  <Icon name="close" size={24} color={ColorPalette.grayscale.darkGrey} />
                 </Pressable>
               </View>
               <FlatList

@@ -208,7 +208,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <View style={styles.sectionContainer}>
               <SettingsActionCard
                 title={t('BCSC.Settings.SignOut')}
-                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.primary} />}
                 onPress={() => {
                   logout()
                 }}
