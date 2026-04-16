@@ -110,7 +110,7 @@ const fetchAllFiles = async (queryParams) => {
     const items = data.items ?? []
     const total = data.total_items ?? '?'
     files.push(...items)
-    console.log(` got ${Number(items.length)} (${files.length}/${total} total)`)
+    console.log(` got ${Number(items.length)} (${files.length}/${Number(total)} total)`)
 
     if (items.length < perPage || files.length >= (data.total_items ?? Infinity)) {
       break
