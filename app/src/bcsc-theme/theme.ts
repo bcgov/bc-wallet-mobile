@@ -12,7 +12,7 @@ export const BCSCColorPalette: IColorPalette = {
   notification: BCSCNotificationColors,
   brand: {
     ...BCWalletTheme.ColorPalette.brand,
-    primary: '#FCBA19',
+    primary: '#003366',
     primaryDisabled: `#757575`,
     secondary: GrayscaleColors.white,
     secondaryDisabled: `#757575`,
@@ -268,22 +268,23 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         primaryText: {
           ...theme.TextTheme.normal,
-          color: theme.ColorPalette.grayscale.darkGrey,
+          color: theme.ColorPalette.brand.text,
           ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
         primaryTextDisabled: {
           ...theme.TextTheme.normal,
-          color: theme.ColorPalette.grayscale.darkGrey,
+          color: theme.ColorPalette.brand.text,
           ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
         secondary: {
-          backgroundColor: '#1E5189',
-          borderWidth: 0,
+          backgroundColor: theme.ColorPalette.grayscale.white,
+          borderWidth: 2,
+          borderColor: theme.ColorPalette.brand.primary,
         },
         secondaryText: {
-          color: theme.ColorPalette.grayscale.white,
+          color: theme.ColorPalette.brand.primary,
           ...BCSCTextStyles.bold,
           textAlign: 'center',
         },
