@@ -120,6 +120,8 @@ export const BCSC_TestIDs = {
   EvidenceIDCollection: {
     Continue: 'com.ariesbifold:id/EvidenceIDCollectionContinue',
     Cancel: 'com.ariesbifold:id/EvidenceIDCollectionCancel',
+    DriversLicenseEvidenceOption: `com.ariesbifold:id/EvidenceTypeListItem B.C. driver's licence`,
+    PassportEvidenceOption: 'com.ariesbifold:id/EvidenceTypeListItem Canadian Passport',
     DocumentNumberPressable: 'com.ariesbifold:id/documentNumber-pressable',
     LastNamePressable: 'com.ariesbifold:id/lastName-pressable',
     FirstNamePressable: 'com.ariesbifold:id/firstName-pressable',
