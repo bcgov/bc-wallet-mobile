@@ -26,4 +26,4 @@ import '../verify/in-person-verification.spec.js'
 import '../main/main.spec.js'
 
 // Phase 2: Specs that start from the verified home screen
-// (add new specs here as they are created)
+import '../settings/settings.spec.js'
