@@ -98,8 +98,9 @@ const useBCAgentSetup = () => {
     [logger, store.developer.enableProxy]
   )
 
-  // TODO: (al) migrateToAskar was removed in credo 0.6.x (the indy-sdk-to-askar-migration package was dropped).
-  // this is eventually going to be the new bcsc app, do we need to migrate people? all the users will be new and be on asakr
+  // TODO: (al) `migrateToAskar` was removed in Credo 0.6.x when the
+  // `indy-sdk-to-askar-migration` package was dropped. Keep this as a no-op
+  // unless a documented wallet migration path is reintroduced via issue/ADR.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const migrateIfRequired = useCallback(async (_newAgent: Agent, _walletSecret: WalletSecret) => {
     // if (!store.migration.didMigrateToAskar) {
