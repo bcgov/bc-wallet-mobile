@@ -174,7 +174,8 @@ async function readBodyOrThrow(step: string, response: Response): Promise<string
   const body = await response.text()
   if (!response.ok) {
     const snippet = body.slice(0, 200).replaceAll(/\s+/g, ' ').trim()
-    throw new Error(`${step} failed: HTTP ${response.status}${snippet ? ` — ${snippet}` : ''}`)
+    const detail = snippet ? ` — ${snippet}` : ''
+    throw new Error(`${step} failed: HTTP ${response.status}${detail}`)
   }
   return body
 }
