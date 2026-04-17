@@ -106,6 +106,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
   }
 }
 
+extension AppDelegate: ReactNativeFactoryProvider {
+  var factory: ExpoReactNativeFactory? {
+    return reactNativeFactory
+  }
+
+  func recreateRootView(
+    withBundleURL bundleURL: URL?,
+    moduleName: String?,
+    initialProps: [AnyHashable: Any]?,
+    launchOptions: [AnyHashable: Any]?
+  ) -> UIView {
+    guard let factory = reactNativeFactory else {
+      fatalError("reactNativeFactory is nil")
+    }
+    return factory.recreateRootView(
+      withBundleURL: bundleURL,
+      moduleName: moduleName,
+      initialProps: initialProps,
+      launchOptions: launchOptions
+    )
+  }
+}
+
 class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
   override func sourceURL(for _: RCTBridge) -> URL? {
     self.bundleURL()
