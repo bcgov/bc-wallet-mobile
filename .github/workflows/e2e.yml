@@ -75,10 +75,9 @@ jobs:
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   smoke / happy-path / full-regression → configs/sauce/
-  #   verified                             → configs/sauce/verified/
   #   biometrics                           → configs/sauce/biometrics/
   #
-  # Non-blocking suites (verified, biometrics): failures are reported but
+  # Non-blocking suites (biometrics): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -86,7 +85,7 @@ jobs:
     permissions:
       contents: read
     timeout-minutes: 45
-    continue-on-error: ${{ inputs.suite == 'verified' || inputs.suite == 'biometrics' }}
+    continue-on-error: ${{ inputs.suite == 'biometrics' }}
     strategy:
       max-parallel: 2
       fail-fast: false
