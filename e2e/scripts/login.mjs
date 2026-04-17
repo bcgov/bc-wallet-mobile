@@ -154,13 +154,7 @@ export async function approveInPersonLogin(cardSerialNumber, cardBirthdate, user
     redirect: 'follow',
     signal,
   })
-  const loginBody = await logStep('SM login', response)
-  const loginFinalPath = new URL(response.url).pathname
-  if (/\/(pre)?[lL]ogon/.test(loginFinalPath)) {
-    throw new Error(
-      `[SM login] Credentials were rejected or session not established — redirected back to ${loginFinalPath}\n${extractErrorMessage(loginBody)}`
-    )
-  }
+  await logStep('SM login', response)
 
   const response3 = await fetchWithCookies('https://idsit.gov.bc.ca/idcheck/?', {
     headers: {
@@ -237,39 +231,7 @@ export async function approveInPersonLogin(cardSerialNumber, cardBirthdate, user
     }
   )
 
-  const createTransactionBody = await logStep('create transaction', response5)
-
-  const transaction = JSON.parse(createTransactionBody)
-  const deviceType = transaction.devices?.[0]?.pairingType
-  if (!deviceType) {
-    throw new Error('[create transaction] No device offered for transaction — cannot select a deviceType')
-  }
-  console.log(`  deviceType: ${deviceType}`)
-
-  const responseDevice = await fetchWithCookies(
-    `https://idsit.gov.bc.ca/cardtap/v3/transactions/${pageDataAttributes['transaction-id']}/device`,
-    {
-      headers: {
-        accept: '*/*',
-        'accept-language': 'en-US,en;q=0.9,en-CA;q=0.8,pt;q=0.7',
-        'content-type': 'application/json',
-        'sec-ch-ua': '"Not:A-Brand";v="99", "Microsoft Edge";v="145", "Chromium";v="145"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"macOS"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'x-requested-with': 'XMLHttpRequest',
-        Referer:
-          'https://idsit.gov.bc.ca/idcheck/protected/deviceCredential/identify?menuItemAction=verifyMobileCardInPerson',
-      },
-      body: JSON.stringify({ deviceType }),
-      method: 'PUT',
-      signal,
-    }
-  )
-
-  await logStep('select device type', responseDevice)
+  await logStep('create transaction', response5)
 
   const response2 = await fetchWithCookies(
     `https://idsit.gov.bc.ca/cardtap/v3/transactions/${pageDataAttributes['transaction-id']}/cards`,
