@@ -350,20 +350,19 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   /**
    * Deletes a BCSC client registration from the server.
    *
-   * Sends DELETE request to registration endpoint using stored registration
-   * access token. Returns success status based on HTTP response code.
+   * Sends a DELETE request to the registration endpoint using the provided
+   * registration access token. Returns success status based on HTTP response code.
    *
+   * @param registrationAccessToken - Registration access token to use for the request
    * @param clientId - The client ID to delete from BCSC server
    * @returns Promise resolving to object with success boolean (true for 2xx status)
    * @throws Error if BCSC client is not ready
    */
   const deleteRegistration = useCallback(
-    async (clientId: string) => {
+    async (registrationAccessToken: string, clientId: string) => {
       if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration deletion')
       }
-
-      const registrationAccessToken = store.bcscSecure.registrationAccessToken
 
       const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`, {
         skipBearerAuth: true,
@@ -375,7 +374,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken]
+    [isClientReady, apiClient]
   )
 
   return useMemo(

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TransferQRDisplay renders correctly 1`] = `
+exports[`TransferQRDisplayScreen renders correctly 1`] = `
 <ActivityIndicator
   size="large"
   style={

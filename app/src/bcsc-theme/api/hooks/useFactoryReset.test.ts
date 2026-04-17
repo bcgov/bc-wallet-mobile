@@ -58,7 +58,10 @@ describe('useFactoryReset', () => {
       clearSecureState: clearSecureStateMock,
       deleteSecureData: deleteSecureDataMock,
     } as any)
-    bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, dispatchMock])
+    bifoldMock.useStore.mockReturnValue([
+      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
+      dispatchMock,
+    ])
     bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const hook = renderHook(() => useFactoryReset())
@@ -72,12 +75,56 @@ describe('useFactoryReset', () => {
     })
 
     expect(bcscCoreMock.getAccount).toHaveBeenCalledWith()
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('test-client-id')
+    expect(deleteRegistrationMock).toHaveBeenCalledWith('token', 'test-client-id')
     expect(deleteSecureDataMock).toHaveBeenCalledWith()
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
     expect(clearSecureStateMock).toHaveBeenCalledWith()
     expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+  })
+
+  it('should call getToken when registrationAccessToken is missing from store', async () => {
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const useSecureActionsMock = jest.mocked(useSecureActions)
+    const bifoldMock = jest.mocked(Bifold)
+    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
+
+    const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
+    const dispatchMock = jest.fn()
+    const clearSecureStateMock = jest.fn()
+    const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
+
+    useBCSCApiClientStateMock.mockReturnValue({
+      client: { clearTokens: jest.fn() },
+      isClientReady: true,
+    } as any)
+    useRegistrationApiMock.mockReturnValue({
+      deleteRegistration: deleteRegistrationMock,
+      register: jest.fn(),
+    } as any)
+    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
+    bcscCoreMock.getToken.mockResolvedValue({ token: 'native-token' } as any)
+    useSecureActionsMock.mockReturnValue({
+      clearSecureState: clearSecureStateMock,
+      deleteSecureData: deleteSecureDataMock,
+    } as any)
+    bifoldMock.useStore.mockReturnValue([
+      { bcscSecure: { registrationAccessToken: undefined, additionalEvidenceData: [] } } as any,
+      dispatchMock,
+    ])
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(bcscCoreMock.getToken).toHaveBeenCalledWith(BcscCore.TokenType.Registration)
+    expect(deleteRegistrationMock).toHaveBeenCalledWith('native-token', 'test-client-id')
   })
 
   it.todo('should factory reset with custom state when provided')
@@ -126,7 +173,10 @@ describe('useFactoryReset', () => {
       clearSecureState: jest.fn(),
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
-    bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
+    bifoldMock.useStore.mockReturnValue([
+      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
+      jest.fn(),
+    ])
     bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
 
     const hook = renderHook(() => useFactoryReset())
@@ -158,7 +208,10 @@ describe('useFactoryReset', () => {
       clearSecureState: jest.fn(),
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
-    bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
+    bifoldMock.useStore.mockReturnValue([
+      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
+      jest.fn(),
+    ])
     bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
 
     const hook = renderHook(() => useFactoryReset())
@@ -174,7 +227,7 @@ describe('useFactoryReset', () => {
     })
 
     expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('test-client-id')
+    expect(deleteRegistrationMock).toHaveBeenCalledWith('token', 'test-client-id')
     expect(bcscCoreMock.removeAccount).toHaveBeenCalled()
   })
 })

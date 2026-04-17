@@ -138,6 +138,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/EnterCurrentPIN"
                         textContentType="password"
                         value=""
                       />
@@ -179,7 +180,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/EnterCurrentPINVisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}
@@ -270,6 +271,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/EnterNewPIN"
                         textContentType="password"
                         value=""
                       />
@@ -311,7 +313,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/EnterNewPINVisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}
@@ -402,6 +404,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "paddingHorizontal": 8,
                           }
                         }
+                        testID="com.ariesbifold:id/ReenterNewPIN"
                         textContentType="password"
                         value=""
                       />
@@ -443,7 +446,7 @@ exports[`ChangePINForm renders correctly with all PIN fields 1`] = `
                             "padding": 8,
                           }
                         }
-                        testID="com.ariesbifold:id/VisibilityButton"
+                        testID="com.ariesbifold:id/ReenterNewPINVisibilityButton"
                       >
                         <Text
                           allowFontScaling={false}

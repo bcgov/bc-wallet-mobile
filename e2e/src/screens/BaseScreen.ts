@@ -113,12 +113,17 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
   /**
    * Find an element by text.
+   *
+   * On iOS, RN `Text` nodes usually expose their rendered string via the
+   * accessibility `label` attribute, while `value` is reserved for inputs and
+   * a few stateful controls. Matching both covers the common cases.
+   *
    * @param text - text to find
    * @returns the element
    */
   public async findByText(text: string) {
     const selector = driver.isIOS
-      ? `-ios predicate string:value == "${text}"`
+      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
       : `android=new UiSelector().text("${text}")`
     return $(selector)
   }
@@ -142,11 +147,11 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   public async tapByTestId(testId: string) {
     const el = await this.findByTestId(testId)
     try {
-      await el.waitForDisplayed({ timeout: 1_000 })
+      await el.waitForDisplayed({ timeout: 500 })
     } catch {
-      console.warn(`Element "${testId}" not visible after 1000ms; scrolling then retrying`)
+      console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 5, 'both')
-      await el.waitForDisplayed({ timeout: 1_000 })
+      await el.waitForDisplayed({ timeout: 500 })
     }
     await el.click()
   }
@@ -197,6 +202,15 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
     if (options?.tapFirst) {
       await el.click()
+    }
+
+    // iOS/XCUITest clearValue and mobile:clearText both trigger a
+    // context menu that interferes with input. Brute-force backspace
+    // works reliably. Android's setValue already clears first.
+    if (driver.isIOS) {
+      for (let i = 0; i < 10; i++) {
+        await el.addValue('\uE003')
+      }
     }
 
     if (options?.characterByCharacter || isSauceLabs()) {

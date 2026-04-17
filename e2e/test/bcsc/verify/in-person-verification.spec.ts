@@ -10,7 +10,7 @@ const VerificationSuccess = new BaseScreen(BCSC_TestIDs.VerificationSuccess)
 
 describe('In-Person Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
-    await SetupSteps.waitFor('Step5', 10_000)
+    await SetupSteps.waitFor('Step5', 1_000)
     await SetupSteps.tap('Step5')
   })
 

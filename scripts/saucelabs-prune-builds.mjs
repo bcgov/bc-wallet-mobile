@@ -70,15 +70,14 @@ const fetchOpenPRNumbers = async () => {
     const res = await fetch(url, { headers: GITHUB_HEADERS })
 
     if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`GitHub API error ${res.status}: ${body}`)
+      throw new Error(`GitHub API error ${res.status}`)
     }
 
     const prs = await res.json()
     for (const pr of prs) {
       numbers.add(pr.number)
     }
-    console.log(` got ${prs.length} (${numbers.size} total)`)
+    console.log(` got ${Number(prs.length)} (${numbers.size} total)`)
 
     if (prs.length < perPage) break
     page++
@@ -104,15 +103,14 @@ const fetchAllFiles = async (queryParams) => {
     const res = await fetch(url, { headers: SAUCE_HEADERS })
 
     if (!res.ok) {
-      const body = await res.text()
-      throw new Error(`SauceLabs API error ${res.status}: ${body}`)
+      throw new Error(`SauceLabs API error ${res.status}`)
     }
 
     const data = await res.json()
     const items = data.items ?? []
     const total = data.total_items ?? '?'
     files.push(...items)
-    console.log(` got ${items.length} (${files.length}/${total} total)`)
+    console.log(` got ${Number(items.length)} (${files.length}/${Number(total)} total)`)
 
     if (items.length < perPage || files.length >= (data.total_items ?? Infinity)) {
       break
@@ -150,8 +148,7 @@ const deleteFile = async (fileId) => {
   if (res.status === 404) return 'not_found'
 
   if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Failed to delete ${fileId}: ${res.status} ${body}`)
+    throw new Error(`Failed to delete ${fileId}: ${res.status}`)
   }
 
   return 'deleted'

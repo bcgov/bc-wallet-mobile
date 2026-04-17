@@ -1,34 +1,29 @@
 # E2E Test Assets
 
-Static image and video files used by camera/video injection helpers during E2E tests.
+Static image files used by camera injection helpers during E2E tests.
 
 ## Conventions
 
-| File           | Purpose                                      | Format             |
-| -------------- | -------------------------------------------- | ------------------ |
-| `qr-*.png`     | QR code images for scanner tests             | PNG, ≤ 5 MB        |
-| `id-*.jpg`     | ID card / evidence photos                    | JPG or PNG, ≤ 5 MB |
-| `selfie-*.png` | Selfie / face images for liveness            | PNG, ≤ 5 MB        |
-| `*.mp4`        | Pre-recorded videos for gallery upload flows | MP4                |
+| File           | Purpose                      | Format             |
+| -------------- | ---------------------------- | ------------------ |
+| `dl_*.jpg`     | Driver's licence photos      | JPG or PNG, ≤ 5 MB |
+| `id_*.jpg`     | BC Services Card / ID photos | JPG or PNG, ≤ 5 MB |
+| `passport.jpg` | Passport photo               | JPG or PNG, ≤ 5 MB |
 
 ## Image Requirements (Sauce Labs)
 
 - **Format:** JPG, JPEG, or PNG
 - **Max size:** 5 MB
-- **QR codes:** Add whitespace padding around the code if the app's scanner defines a small target area — Sauce Labs scales images linearly to fit the camera resolution
 
 ## Usage
 
 ```typescript
-import { injectQRCode, injectPhoto } from '../src/helpers/camera.js'
-import { injectVideoFrame, sustainedFrameInjection } from '../src/helpers/video.js'
+import { injectPhoto } from '../src/helpers/camera.js'
+import { CARD_SCAN_PADDING } from '../src/constants.js'
 
-// QR code scanning — resolves to e2e/assets/qr-invite.png
-await injectQRCode('qr-invite.png')
+// Driver's licence capture — resolves to e2e/assets/images/dl_velma.jpg
+await injectPhoto('images/dl_velma.jpg', CARD_SCAN_PADDING)
 
-// ID photo capture — resolves to e2e/assets/id-drivers-license.jpg
-await injectPhoto('id-drivers-license.jpg')
-
-// Video recording — inject face image as video frames for 8 seconds
-await sustainedFrameInjection('selfie-liveness.png', { durationMs: 8_000 })
+// ID card capture — resolves to e2e/assets/images/id_shaggy.jpg
+await injectPhoto('images/id_shaggy.jpg', { top: 0, right: 0, bottom: 0, left: 0 })
 ```
