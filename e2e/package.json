@@ -18,7 +18,8 @@
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.4",
+    "basic-ftp": "5.3.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",
