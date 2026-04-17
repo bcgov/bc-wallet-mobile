@@ -30,15 +30,12 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
 | `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_ |
 | `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
-| `verified`        | _Verified-state flows: setup (phase 1) then credential checks (phase 2). Sauce RDC only._        |
 
 ```bash
 # Run by suite name
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite full-regression
-# verified runs against Sauce RDC (noReset=true); use the sauce config
-yarn wdio configs/sauce/verified/wdio.ios.verified.sauce.rdc.conf.ts --suite verified
 ```
 
 _Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_._
