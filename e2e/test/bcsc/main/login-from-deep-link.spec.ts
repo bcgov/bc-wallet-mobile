@@ -54,21 +54,28 @@ async function tapAccountCardIfPresent(): Promise<void> {
   }
 }
 
+/**
+ * Shared setup for both deep-link suites: wait for Home, capture the app id,
+ * mint a fresh pairing deep link, and log a masked suffix so CI archives
+ * don't retain an active pairing code.
+ */
+async function prepareDeepLinkSession(logTag: string): Promise<{ appId: string; deepLink: string }> {
+  await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+  const appId = await getCurrentAppId()
+  const session = await fetchPairingDeepLink({ platform: currentPlatform() })
+  const masked = `***${session.pairingCode.slice(-2)}`
+  console.log(
+    `[${logTag}] minted ${session.scheme}://...${masked} for "${session.clientName}" (tx ${session.transactionId})`
+  )
+  return { appId, deepLink: session.deepLink }
+}
+
 describe('Login From Deep Link — warm start', () => {
   let appId = ''
   let deepLink = ''
 
   before(async () => {
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
-    appId = await getCurrentAppId()
-    const session = await fetchPairingDeepLink({ platform: currentPlatform() })
-    deepLink = session.deepLink
-    // Pairing codes are short-lived but live credentials — only log a masked
-    // suffix so CI archives don't retain an active code.
-    const masked = `***${session.pairingCode.slice(-2)}`
-    console.log(
-      `[deep-link] minted ${session.scheme}://...${masked} for "${session.clientName}" (tx ${session.transactionId})`
-    )
+    ;({ appId, deepLink } = await prepareDeepLinkSession('deep-link'))
   })
 
   it('routes the deep link to ServiceLoginScreen', async () => {
@@ -101,14 +108,7 @@ describe('Login From Deep Link — cold start', () => {
   let deepLink = ''
 
   before(async () => {
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
-    appId = await getCurrentAppId()
-    const session = await fetchPairingDeepLink({ platform: currentPlatform() })
-    deepLink = session.deepLink
-    const masked = `***${session.pairingCode.slice(-2)}`
-    console.log(
-      `[deep-link cold-start] minted ${session.scheme}://...${masked} for "${session.clientName}" (tx ${session.transactionId})`
-    )
+    ;({ appId, deepLink } = await prepareDeepLinkSession('deep-link cold-start'))
   })
 
   it('terminates the app, dispatches the deep link, and re-authenticates into ServiceLoginScreen', async () => {
