@@ -25,9 +25,9 @@ import {
   DidCommProofsModule,
   DidCommWsOutboundTransport,
 } from '@credo-ts/didcomm'
+import { PushNotificationsFcmModule } from '@credo-ts/didcomm-push-notifications'
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
-import { PushNotificationsApnsModule, PushNotificationsFcmModule } from '@credo-ts/push-notifications'
 import { WebVhAnonCredsRegistry, WebVhDidResolver } from '@credo-ts/webvh'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
 import { indyVdr } from '@hyperledger/indy-vdr-react-native'
@@ -132,11 +132,9 @@ export function getBCAgentModules({
       mediatorInvitationUrl: mediatorInvitationUrl,
       mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
     }),
-    // TODO: (ar) @credo-ts/push-notifications v0.7.1 was built against @credo-ts/core ^0.5.x which
-    // included FeatureRegistry in Module.register(). Core v0.6.x removed FeatureRegistry
-    // keeping 'as any' until @credo-ts/push-notifications is updated for core v0.6.x.
-    pushNotificationsFcm: new PushNotificationsFcmModule() as any,
-    pushNotificationsApns: new PushNotificationsApnsModule() as any,
+    // TODO: (ar) test iOS
+    pushNotificationsFcm: new PushNotificationsFcmModule(),
+    // pushNotificationsApns: new PushNotificationsApnsModule(),
     dids: new DidsModule({
       resolvers: [new WebVhDidResolver()],
     }),

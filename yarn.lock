@@ -2214,6 +2214,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/didcomm-push-notifications@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@credo-ts/didcomm-push-notifications@npm:0.0.1"
+  dependencies:
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.2"
+  peerDependencies:
+    "@credo-ts/core": ^0.6.0
+    "@credo-ts/didcomm": ^0.6.0
+  checksum: 10c0/6f3817c14debfaf8dd9584924f23ad53fa7a595ba396cd1ad3ccfc17d1c48c0cc2161132896e6944c995b190402953412a7cdbd1f743cc32613f402725721ef9
+  languageName: node
+  linkType: hard
+
 "@credo-ts/didcomm@npm:0.6.3":
   version: 0.6.3
   resolution: "@credo-ts/didcomm@npm:0.6.3"
@@ -2267,19 +2280,6 @@ __metadata:
     rxjs: "npm:^7.8.2"
     zod: "npm:^4.3.6"
   checksum: 10c0/64ba14d9acacf35fd4b4dc3bbb58c30624309f8faedfda98fd9baefcbb95450932ac8be9d5891f8da0c19606cfdbccfcb627ad535c034704757172eccd970f9e
-  languageName: node
-  linkType: hard
-
-"@credo-ts/push-notifications@npm:0.7.1":
-  version: 0.7.1
-  resolution: "@credo-ts/push-notifications@npm:0.7.1"
-  dependencies:
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:0.14.1"
-    tsyringe: "npm:^4.6.0"
-  peerDependencies:
-    "@credo-ts/core": ^0.5.0
-  checksum: 10c0/cf227b6d243c868f8ac178c91d5680ff6c807a59aa3be1fd574998a6a89353e9b89128486c9a6e9eece961974a3b28d25b4e3a2f29561856db44e09def776ea1
   languageName: node
   linkType: hard
 
@@ -6509,7 +6509,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/validator@npm:^13.11.8, @types/validator@npm:^13.15.3":
+"@types/validator@npm:^13.15.3":
   version: 13.15.10
   resolution: "@types/validator@npm:13.15.10"
   checksum: 10c0/3e2e65fcd37dd6961ca3fd0535293d0c42f5911dc3ca44b96f458835e6db2392b678ccbb0c9815d8c0a14e653439e6c62c7b8758a6cd1d6e390551c9e56618ac
@@ -7619,10 +7619,10 @@ __metadata:
     "@credo-ts/askar": "npm:0.6.3"
     "@credo-ts/core": "npm:0.6.3"
     "@credo-ts/didcomm": "npm:0.6.3"
+    "@credo-ts/didcomm-push-notifications": "npm:^0.0.1"
     "@credo-ts/drpc": "npm:0.6.3"
     "@credo-ts/indy-vdr": "npm:0.6.3"
     "@credo-ts/openid4vc": "npm:0.6.3"
-    "@credo-ts/push-notifications": "npm:0.7.1"
     "@credo-ts/question-answer": "npm:0.6.3"
     "@credo-ts/react-native": "npm:0.6.3"
     "@credo-ts/webvh": "npm:0.6.3"
@@ -8250,25 +8250,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"class-transformer@npm:0.5.1":
+"class-transformer@npm:0.5.1, class-transformer@npm:^0.5.1":
   version: 0.5.1
   resolution: "class-transformer@npm:0.5.1"
   checksum: 10c0/19809914e51c6db42c036166839906420bb60367df14e15f49c45c8c1231bf25ae661ebe94736ee29cc688b77101ef851a8acca299375cc52fc141b64acde18a
   languageName: node
   linkType: hard
 
-"class-validator@npm:0.14.1":
-  version: 0.14.1
-  resolution: "class-validator@npm:0.14.1"
-  dependencies:
-    "@types/validator": "npm:^13.11.8"
-    libphonenumber-js: "npm:^1.10.53"
-    validator: "npm:^13.9.0"
-  checksum: 10c0/946e914e47548b5081449c720ea6a4877bac63dc960e14fca4b990b56e64efe3802d12f07ec22d6420c290245b72ea2d646939239f2a3b597794e6c4c2a4f2ae
-  languageName: node
-  linkType: hard
-
-"class-validator@npm:^0.14.3":
+"class-validator@npm:^0.14.2, class-validator@npm:^0.14.3":
   version: 0.14.4
   resolution: "class-validator@npm:0.14.4"
   dependencies:
@@ -13567,13 +13556,6 @@ __metadata:
     prelude-ls: "npm:~1.1.2"
     type-check: "npm:~0.3.2"
   checksum: 10c0/e440df9de4233da0b389cd55bd61f0f6aaff766400bebbccd1231b81801f6dbc1d816c676ebe8d70566394b749fa624b1ed1c68070e9c94999f0bdecc64cb676
-  languageName: node
-  linkType: hard
-
-"libphonenumber-js@npm:^1.10.53":
-  version: 1.12.40
-  resolution: "libphonenumber-js@npm:1.12.40"
-  checksum: 10c0/bd4aaa2052d76abeb58c6febf737e22562b7e5abf7a6a8708b7f9fa0ed8cef5a74f2a616163425fb220b49062a0d311d87869c566b547915fd8a3b5c85b275e2
   languageName: node
   linkType: hard
 
@@ -19651,13 +19633,6 @@ __metadata:
   version: 13.15.35
   resolution: "validator@npm:13.15.35"
   checksum: 10c0/1958ebcad578128d154853a2b9bf5b95e7738dcc7d1d065e50a969812272312ec379dcaf375b9d7545e04a71de6755f60f5a4b49c1405737a9c80e11da297eef
-  languageName: node
-  linkType: hard
-
-"validator@npm:^13.9.0":
-  version: 13.15.26
-  resolution: "validator@npm:13.15.26"
-  checksum: 10c0/d66041685c531423f6b514d0481228503b96682fe30ed7925ad77ff3cd08c3983dc94f45e18457e44f62f89027b94a3342009d65421800ce65f6e0d2c6eaf7fc
   languageName: node
   linkType: hard
 
