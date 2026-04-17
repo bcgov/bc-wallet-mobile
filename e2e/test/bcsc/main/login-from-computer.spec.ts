@@ -26,8 +26,11 @@ describe('Login From Computer — pairing code minted in Node', () => {
     await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
     const session = await fetchPairingCode()
     pairingCode = session.pairingCode
+    // Pairing codes are short-lived but live credentials — only log a masked
+    // suffix so CI archives don't retain an active code.
+    const redactedPairingCode = `***${pairingCode.slice(-2)}`
     console.log(
-      `[login-from-computer] minted pairing code ${pairingCode} for "${session.clientName}" (tx ${session.transactionId})`
+      `[login-from-computer] minted pairing code ${redactedPairingCode} for "${session.clientName}" (tx ${session.transactionId})`
     )
   })
 
