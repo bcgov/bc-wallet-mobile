@@ -27,4 +27,8 @@ import '../verify/in-person-verification.spec.js'
 import '../main/main.spec.js'
 
 // Phase 2: Specs that start from the verified home screen
+
+import '../main/login-from-deep-link.spec.js'
+import '../main/login-from-computer.spec.js'
+
 import '../settings/settings.spec.js'
