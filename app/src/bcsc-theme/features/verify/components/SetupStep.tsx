@@ -82,7 +82,7 @@ export const SetupStep: React.FC<PropsWithChildren<SetupStepProps>> = (props) =>
 
         <View style={{ marginTop: 8 }}>
           {props.subtext.map((subtext, id) => (
-            <ThemedText key={`${subtext}-${id}`} style={{ color: textColor }}>
+            <ThemedText testID={testIdWithKey(subtext)} key={`${subtext}-${id}`} style={{ color: textColor }}>
               {subtext}
             </ThemedText>
           ))}

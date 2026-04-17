@@ -59,23 +59,18 @@ export async function getEmailConfirmationCode(
     const email = inbox.list[0]
     console.log(`Received email from: ${email.mail_from}`)
 
-    try {
-      const emailResponse = await fetch(`${TEMP_EMAIL_API}?f=fetch_email&email_id=${email.mail_id}&sid_token=${token}`)
-      const emailContent = (await emailResponse.json()) as { mail_body: string }
+    const emailResponse = await fetch(`${TEMP_EMAIL_API}?f=fetch_email&email_id=${email.mail_id}&sid_token=${token}`)
+    const emailContent = (await emailResponse.json()) as { mail_body: string }
 
-      console.log({ emailContent })
+    // Look for a 6-digit code that is not preceded by a '#' character (to avoid picking up HEX codes)
+    const confirmationCodeMatch = emailContent.mail_body.match(/(?<!#)\b(\d{6})\b/)
 
-      // Look for a 6-digit code that is not preceded by a '#' character (to avoid picking up HEX codes)
-      const confirmationCodeMatch = emailContent.mail_body.match(/(?<!#)\b(\d{6})\b/)
-
-      if (confirmationCodeMatch) {
-        return confirmationCodeMatch[1]
-      }
-
-      throw new Error('Confirmation code not found in email body')
-    } catch (error) {
-      console.warn('Failed to fetch or parse email content, retrying...', error)
+    if (confirmationCodeMatch) {
+      return confirmationCodeMatch[1]
     }
+
+    console.log('Email content:', { emailContent })
+    throw new Error('Confirmation code not found in email body')
   }
 
   throw new Error('Email confirmation code timeout exceeded')
