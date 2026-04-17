@@ -44,7 +44,7 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should enter in the correct form data', async () => {
-    await EvidenceFormData.type('DocumentNumberPressable', context.testUser.documentNumber)
+    await EvidenceFormData.type('DocumentNumberPressable', '12345678')
     await EvidenceFormData.type('LastNamePressable', context.testUser.lastName)
     await EvidenceFormData.type('FirstNamePressable', context.testUser.firstName)
     await EvidenceFormData.type('MiddleNamesPressable', 'Middle Names')

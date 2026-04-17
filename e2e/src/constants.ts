@@ -52,7 +52,7 @@ export const TestUsers = {
     username: 'e2e_fred',
     cardSerial: 'N/A',
     dob: '19680918',
-    documentNumber: '12345678', // Mock drivers license
+    documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_fred.jpg',
     selfieImage: 'images/id_fred.jpg',
     firstName: 'Fred',
