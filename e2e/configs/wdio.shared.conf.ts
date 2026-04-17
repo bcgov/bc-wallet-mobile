@@ -19,7 +19,6 @@ export const config: WebdriverIO.Config = {
     'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
     'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
     biometrics: [resolve(__dirname, `../test/${variant}/biometrics.spec.ts`)],
-    verified: [resolve(__dirname, `../test/${variant}/verified.spec.ts`)],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
   exclude: [],

@@ -389,9 +389,36 @@ export const BCSC_TestIDs = {
     AutoLockTime1: 'com.ariesbifold:id/auto-lock-time-1',
     BackButton: 'com.ariesbifold:id/Back',
   },
+  ChangePIN: {
+    BackButton: 'com.ariesbifold:id/Back',
+    EnterCurrentPIN: 'com.ariesbifold:id/EnterCurrentPIN',
+    EnterNewPIN: 'com.ariesbifold:id/EnterNewPIN',
+    ReenterNewPIN: 'com.ariesbifold:id/ReenterNewPIN',
+    IUnderstand: 'com.ariesbifold:id/IUnderstand',
+    ChangePIN: 'com.ariesbifold:id/ChangePIN',
+  },
+  MainAppSecurity: {
+    BackButton: 'com.ariesbifold:id/Back',
+    LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+    ChoosePINButton: 'com.ariesbifold:id/ChoosePINButton',
+    ChooseDeviceAuthButton: 'com.ariesbifold:id/ChooseDeviceAuthButton',
+  },
+  MainPrivacyPolicy: {
+    BackButton: 'com.ariesbifold:id/Back',
+    PrivacyPolicyBCLoginLink: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+  },
+  MainContactUs: {
+    BackButton: 'com.ariesbifold:id/Back',
+  },
   EditNickname: {
-    NameInput: 'com.ariesbifold:id/NameInput',
+    BackButton: 'com.ariesbifold:id/Back',
+    /** Pressable wrapper — use for iOS `tap` and `type`. */
+    AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
+    /** TextInput inside `InputWithValidation` — use for Android `type`. */
+    AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
+    /** Subtext / inline error below the input (rendered by InputWithValidation). */
+    AccountNicknameSubtext: 'com.ariesbifold:id/accountNickname-subtext',
   },
   ForgetAllPairings: {
     ForgetAllPairings: 'com.ariesbifold:id/ForgetAllPairings',

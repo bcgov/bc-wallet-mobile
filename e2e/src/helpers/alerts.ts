@@ -1,79 +1,145 @@
-const POLL_INTERVAL_MS = 500
-const POLL_TIMEOUT_MS = 10_000
+import logger from '@wdio/logger'
 
-const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Trust', 'Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Continue']
+const POLL_INTERVAL_MS = 500
+const DEFAULT_APPEAR_TIMEOUT_MS = 5_000
+const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
+
+const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue']
+
+const webdriverLogger = logger('webdriver')
 
 function escapeIosSelectorValue(value: string): string {
   const bs = String.fromCodePoint(0x5c)
   const dq = String.fromCodePoint(0x22)
-  // Backslashes first so we do not double-escape sequences that escape a quote.
   return value.replaceAll(bs, `${bs}${bs}`).replaceAll(dq, `${bs}${dq}`)
 }
 
+async function quietly<T>(fn: () => Promise<T>): Promise<T> {
+  const previous = webdriverLogger.getLevel()
+  webdriverLogger.setLevel('silent')
+  try {
+    return await fn()
+  } finally {
+    webdriverLogger.setLevel(previous)
+  }
+}
+
+async function getAlertButtons(): Promise<string[] | null> {
+  try {
+    const buttons = await quietly(() => driver.execute('mobile: alert', { action: 'getButtons' }))
+    return Array.isArray(buttons) && buttons.length > 0 ? (buttons as string[]) : null
+  } catch {
+    return null
+  }
+}
+
 async function hasNativePopup(): Promise<boolean> {
-  try {
-    if (await driver.isAlertOpen()) return true
-  } catch {
-    // Some providers may not support isAlertOpen reliably.
-  }
+  // Silent probe first: the app snapshot sometimes includes SpringBoard alerts.
+  const alert = $('-ios class chain:**/XCUIElementTypeAlert')
+  if (await alert.isDisplayed().catch(() => false)) return true
 
-  try {
-    const alert = await $('-ios class chain:**/XCUIElementTypeAlert')
-    if (await alert.isDisplayed().catch(() => false)) return true
-  } catch {
-    // Selector can fail when no alert is present.
-  }
+  // Authoritative fallback: `mobile: alert getButtons` reaches SpringBoard via
+  // WDA. Wrapped in `quietly` because it logs WebDriverError when no alert is
+  // open, which floods test output during polling.
+  return (await getAlertButtons()) !== null
+}
 
+async function waitForPopup(timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (await hasNativePopup()) return true
+    await driver.pause(POLL_INTERVAL_MS)
+  }
   return false
+}
+
+async function waitForDismissal(timeoutMs: number): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (!(await hasNativePopup())) return true
+    await driver.pause(POLL_INTERVAL_MS)
+  }
+  return false
+}
+
+async function tapApproveButtonInsideAlert(): Promise<boolean> {
+  for (const label of IOS_APPROVE_ALERT_BUTTON_LABELS) {
+    const escaped = escapeIosSelectorValue(label)
+    const button = $(
+      `-ios class chain:**/XCUIElementTypeAlert/**/XCUIElementTypeButton[\`label == "${escaped}" OR name == "${escaped}"\`]`
+    )
+    if (await button.isDisplayed().catch(() => false)) {
+      await button.click()
+      console.log(`[alerts] Tapped "${label}" button inside alert`)
+      return true
+    }
+  }
+  return false
+}
+
+async function acceptViaButtonLabel(buttons: string[]): Promise<boolean> {
+  const match = IOS_APPROVE_ALERT_BUTTON_LABELS.find((label) => buttons.includes(label))
+  if (!match) {
+    console.log(`[alerts] Alert buttons ${JSON.stringify(buttons)} had no known approve label`)
+    return false
+  }
+  await quietly(() => driver.execute('mobile: alert', { action: 'accept', buttonLabel: match }))
+  console.log(`[alerts] Accepted via mobile: alert buttonLabel="${match}"`)
+  return true
 }
 
 /**
  * Accept an iOS system alert (e.g. notification/camera permission dialogs).
  *
- * Tries `driver.acceptAlert()` first, then falls back to tapping known
- * affirmative buttons by label (e.g. Allow/Trust/OK). Polls until the alert is
- * dismissed or the timeout expires.
- * Silently succeeds if no alert appears (the permission may already be granted).
+ * SpringBoard permission dialogs live outside the app's UI snapshot on newer
+ * iOS versions, so standard XPath/class-chain queries miss them. We detect
+ * them via `mobile: alert getButtons` (a WDA endpoint that reaches SpringBoard
+ * directly) and accept by label for reliability.
  *
- * On Android this is a no-op — Android permissions are handled via
- * `appium:autoGrantPermissions`.
+ * On Android this is a no-op — use `appium:autoGrantPermissions` there.
  */
-export async function acceptSystemAlert(timeoutMs = POLL_TIMEOUT_MS): Promise<void> {
+export async function acceptSystemAlert(appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT_MS): Promise<void> {
   if (driver.isAndroid) return
-  if (!(await hasNativePopup())) {
-    console.log('[alerts] No native popup visible — skipping alert approval')
+
+  if (!(await waitForPopup(appearTimeoutMs))) {
+    console.log(`[alerts] No native popup appeared within ${appearTimeoutMs}ms — continuing`)
     return
   }
 
-  const deadline = Date.now() + timeoutMs
+  const strategies: Array<{ name: string; run: () => Promise<boolean | void> }> = [
+    {
+      name: 'mobile: alert + buttonLabel',
+      run: async () => {
+        const buttons = await getAlertButtons()
+        if (!buttons) throw new Error('getButtons returned no buttons')
+        return acceptViaButtonLabel(buttons)
+      },
+    },
+    { name: 'mobile: alert accept', run: () => quietly(() => driver.execute('mobile: alert', { action: 'accept' })) },
+    { name: 'driver.acceptAlert()', run: () => quietly(() => driver.acceptAlert()) },
+    {
+      name: 'button tap inside alert',
+      run: async () => {
+        const tapped = await tapApproveButtonInsideAlert()
+        if (!tapped) throw new Error('no approve button found inside alert')
+      },
+    },
+  ]
 
-  while (Date.now() < deadline) {
+  for (const { name, run } of strategies) {
     try {
-      await driver.acceptAlert()
-      console.log('[alerts] Accepted system alert via driver.acceptAlert()')
+      const result = await run()
+      if (result === false) continue
+    } catch (err) {
+      console.log(`[alerts] ${name} threw: ${(err as Error).message ?? err}`)
+      continue
+    }
+    if (await waitForDismissal(DEFAULT_DISMISS_TIMEOUT_MS)) {
+      console.log(`[alerts] Accepted system alert via ${name}`)
       return
-    } catch {
-      // acceptAlert may not work on Sauce Labs RDC — fall back to tapping known labels
     }
-
-    try {
-      for (const label of IOS_APPROVE_ALERT_BUTTON_LABELS) {
-        const escapedLabel = escapeIosSelectorValue(label)
-        const button = await $(
-          `-ios class chain:**/XCUIElementTypeButton[\`label == "${escapedLabel}" OR name == "${escapedLabel}" OR value == "${escapedLabel}"\`]`
-        )
-
-        if (await button.isDisplayed().catch(() => false)) {
-          await button.click()
-          console.log(`[alerts] Accepted system alert via "${label}" button tap`)
-          return
-        }
-      }
-    } catch {
-      // Alert/button not found yet — keep polling
-    }
-
-    await driver.pause(POLL_INTERVAL_MS)
+    console.log(`[alerts] ${name} did not dismiss the alert — trying next strategy`)
   }
-  console.log('[alerts] No system alert found within timeout — continuing')
+
+  throw new Error('[alerts] Detected native popup but failed to dismiss it with any strategy')
 }
