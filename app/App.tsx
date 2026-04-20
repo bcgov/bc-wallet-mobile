@@ -65,13 +65,11 @@ const fcmViewModel = new FcmViewModel(fcmService, appLogger, pairingService, ver
 
 const ThemeAwareStatusBar = () => {
   const { ColorPalette } = useTheme()
-  return (
-    <StatusBar
-      barStyle={statusBarStyleForColor(ColorPalette.brand.primaryBackground)}
-      backgroundColor="transparent"
-      translucent
-    />
-  )
+  const barStyle = statusBarStyleForColor(ColorPalette.brand.primaryBackground) ?? 'dark-content'
+  useEffect(() => {
+    StatusBar.setBarStyle(barStyle, true)
+  }, [barStyle])
+  return <StatusBar barStyle={barStyle} backgroundColor="transparent" translucent />
 }
 
 const App = () => {
