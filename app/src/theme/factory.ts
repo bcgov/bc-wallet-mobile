@@ -307,7 +307,7 @@ export function createAppTheme(v: ThemeVariant) {
           avatarCircle: { borderColor: theme.ColorPalette.grayscale.lightGrey },
           contactTitle: { color: theme.ColorPalette.grayscale.darkGrey },
           contactDate: { color: theme.ColorPalette.grayscale.darkGrey },
-          contactIcon: { color: theme.ColorPalette.brand.secondaryBackground },
+          contactIcon: { color: v.foreground },
           credentialOfferTitle: { fontWeight: undefined },
           requestTemplateTitle: {
             color: theme.ColorPalette.grayscale.black,
