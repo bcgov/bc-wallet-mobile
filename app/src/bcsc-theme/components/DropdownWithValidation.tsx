@@ -112,7 +112,7 @@ export const DropdownWithValidation = <T extends string | number>({
     },
     optionText: {
       fontSize: 16,
-      color: ColorPalette.brand.secondary,
+      color: TextTheme.normal.color,
     },
     optionTextSelected: {
       fontWeight: '600',
