@@ -288,10 +288,10 @@ const Developer: React.FC = () => {
   }
 
   const toggleTheme = () => {
-    if (themeName === BCThemeNames.BCSC) {
+    if (themeName === BCThemeNames.Dark) {
       setTheme(BCThemeNames.BCWallet)
     } else {
-      setTheme(BCThemeNames.BCSC)
+      setTheme(BCThemeNames.Dark)
     }
   }
 
@@ -299,7 +299,7 @@ const Developer: React.FC = () => {
     lockOutUser(LockoutReason.Logout)
 
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
-    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
+    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.Dark
 
     setTheme(newTheme)
     dispatch({
@@ -547,10 +547,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(themeName === BCThemeNames.BCSC)}
+            thumbColor={getSwitchColor(themeName === BCThemeNames.Dark)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleTheme}
-            value={themeName === BCThemeNames.BCSC}
+            value={themeName === BCThemeNames.Dark}
             accessibilityLabel={t('Developer.SwitchTheme')}
           />
         </SectionRow>

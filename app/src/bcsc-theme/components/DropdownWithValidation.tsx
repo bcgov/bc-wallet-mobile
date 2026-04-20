@@ -46,7 +46,7 @@ export const DropdownWithValidation = <T extends string | number>({
   subtextProps,
   errorProps,
 }: DropdownWithValidationProps<T>) => {
-  const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -91,7 +91,7 @@ export const DropdownWithValidation = <T extends string | number>({
     modalTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: ColorPalette.grayscale.darkGrey,
+      color: TextTheme.normal.color,
       flex: 1,
       textAlign: 'center',
     },
@@ -217,7 +217,7 @@ export const DropdownWithValidation = <T extends string | number>({
                   accessibilityLabel={a11yLabel(t('Global.Close'))}
                   accessibilityRole="button"
                 >
-                  <Icon name="close" size={24} color={ColorPalette.grayscale.darkGrey} />
+                  <Icon name="close" size={24} color={TextTheme.normal.color} />
                 </Pressable>
               </View>
               <FlatList

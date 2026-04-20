@@ -125,7 +125,7 @@ const App = () => {
           <StoreProvider initialState={initialState} reducer={reducer}>
             <ThemeProvider
               themes={themes}
-              defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
+              defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.Light : BCThemeNames.BCWallet}
             >
               <NavigationContainerProvider>
                 <PairingServiceProvider service={pairingService}>

@@ -35,7 +35,8 @@ export const appHelpUrl = 'https://www2.gov.bc.ca/gov/content/governments/govern
 
 export const BCThemeNames = {
   BCWallet: 'bcwallet',
-  BCSC: 'bcsc',
+  Dark: 'dark',
+  Light: 'light',
 } as const
 
 // BCSC Constants

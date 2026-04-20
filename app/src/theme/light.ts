@@ -3,13 +3,15 @@ import Logo from '@assets/img/logo-with-text.svg'
 import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
 import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
-export const BCSCNotificationColors: INotificationColors = {
+import { ThemeTextStyles } from './text-styles'
+
+const LightNotificationColors: INotificationColors = {
   ...NotificationColors,
 }
 
-export const BCSCColorPalette: IColorPalette = {
+const LightColorPalette: IColorPalette = {
   ...BCWalletTheme.ColorPalette,
-  notification: BCSCNotificationColors,
+  notification: LightNotificationColors,
   brand: {
     ...BCWalletTheme.ColorPalette.brand,
     primary: '#003366',
@@ -48,122 +50,109 @@ export const BCSCColorPalette: IColorPalette = {
   },
 }
 
-const BCSCTextStyles = {
-  regular: {
-    fontFamily: 'BCSans-Regular',
-    fontWeight: 'normal',
-  },
-  bold: {
-    fontFamily: 'BCSans-Bold',
-    fontWeight: 'normal', // Font won't render without this property
-  },
-} as const
-
-export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
-  .setColorPalette(BCSCColorPalette)
+export const LightTheme = new ThemeBuilder(BCWalletTheme)
+  .setColorPalette(LightColorPalette)
   .withOverrides({
-    themeName: BCThemeNames.BCSC,
+    themeName: BCThemeNames.Light,
   })
-  // TextTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       TextTheme: {
         headingOne: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         headingTwo: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         headingThree: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         headingFour: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         normal: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
           lineHeight: 30,
         },
         bold: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           lineHeight: 30,
         },
         label: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         labelTitle: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         labelSubtitle: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         labelText: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         caption: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         headerTitle: {
           color: theme.ColorPalette.brand.headerText,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           fontSize: 18,
         },
         modalNormal: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         modalTitle: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
           fontSize: 28,
         },
         modalHeadingOne: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
           fontWeight: undefined,
         },
         modalHeadingThree: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
           fontWeight: undefined,
         },
         popupModalText: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         settingsText: {
           ...theme.TextTheme.settingsText,
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.grayscale.darkGrey,
         },
         inlineErrorText: {
           ...theme.TextTheme.inlineErrorText,
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.notification.errorText,
         },
         inlineWarningText: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.notification.warnText,
         },
         title: {
-          ...BCSCTextStyles.regular,
+          ...ThemeTextStyles.regular,
           color: theme.ColorPalette.notification.infoText,
         },
       },
     })
   )
-  // NavigationTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       NavigationTheme: {
@@ -176,7 +165,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // LoadingTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       LoadingTheme: {
@@ -184,7 +172,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // PINInputTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       PINInputTheme: {
@@ -228,7 +215,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // InputTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       Inputs: {
@@ -237,12 +223,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           borderColor: theme.ColorPalette.grayscale.lightGrey,
           color: theme.ColorPalette.grayscale.darkGrey,
           borderWidth: 1,
-          margin: 1, // borderWidth + margin should equal 2 to prevent layout shift on focus
+          margin: 1,
         },
         inputSelected: {
           borderColor: '#7090E4',
           borderWidth: 2,
-          margin: 0, // borderWidth + margin should equal 2 to prevent layout shift on focus
+          margin: 0,
           backgroundColor: theme.ColorPalette.grayscale.white,
           shadowColor: '#7090E4',
           shadowOffset: { width: 0, height: 0 },
@@ -259,7 +245,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // ButtonTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       Buttons: {
@@ -269,13 +254,13 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         primaryText: {
           ...theme.TextTheme.normal,
           color: theme.ColorPalette.brand.text,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           textAlign: 'center',
         },
         primaryTextDisabled: {
           ...theme.TextTheme.normal,
           color: theme.ColorPalette.brand.text,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           textAlign: 'center',
         },
         secondary: {
@@ -285,12 +270,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         secondaryText: {
           color: theme.ColorPalette.brand.primary,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           textAlign: 'center',
         },
         secondaryTextDisabled: {
           color: theme.ColorPalette.brand.secondaryDisabled,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
           textAlign: 'center',
         },
         tertiary: {
@@ -305,11 +290,11 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         tertiaryText: {
           color: theme.ColorPalette.grayscale.darkGrey,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         tertiaryTextDisabled: {
           color: theme.ColorPalette.brand.secondaryDisabled,
-          ...BCSCTextStyles.bold,
+          ...ThemeTextStyles.bold,
         },
         modalPrimaryText: {
           textAlign: 'center',
@@ -338,7 +323,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // ListItems overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       ListItems: {
@@ -364,7 +348,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         requestTemplateDetails: {
           color: theme.ColorPalette.grayscale.black,
-          fontSize: undefined, // Previously this was not set, so intentionally setting undefined Bifold default: 16
+          fontSize: undefined,
         },
         requestTemplateDate: {
           fontSize: undefined,
@@ -378,7 +362,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // TabTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       TabTheme: {
@@ -406,7 +389,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // SettingsTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       SettingsTheme: {
@@ -424,7 +406,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // ChatTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       ChatTheme: {
@@ -478,7 +459,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // HomeTheme overrides
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       HomeTheme: {
@@ -493,7 +473,6 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
     })
   )
-  // Assets overrides
   .withOverrides({
     Assets: {
       svg: {
