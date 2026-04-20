@@ -1,5 +1,5 @@
-import { BCWalletTheme } from '@bcwallet-theme/theme'
-import { DeepPartial, IColorPalette, ITheme, ThemeBuilder } from '@bifold/core'
+import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
+import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
 import { ThemeTextStyles } from './text-styles'
 
@@ -9,13 +9,32 @@ interface SecondaryButtonStyle {
   borderColor?: string
 }
 
+/** Palette values that vary between variants. Everything else is shared defaults. */
+interface PaletteSpec {
+  primary: string
+  primaryBackground: string
+  secondaryBackground: string
+  tertiaryBackground: string
+  modalPrimaryBackground: string
+  modalSecondaryBackground: string
+  modalTertiaryBackground: string
+  link: string
+  unorderedList: string
+  unorderedListModal: string
+  text: string
+  icon: string
+  headerIcon: string
+  headerText: string
+  tabBarInactive: string
+  notification?: Partial<INotificationColors>
+}
+
 /**
  * Everything that differs between the app's theme variants (Light, Dark, and any
  * future ones). Keeps {@link createAppTheme} fully data-driven.
  */
-export interface ThemeVariant {
+export interface ThemeVariant extends PaletteSpec {
   name: string
-  palette: IColorPalette
   logo: React.FC
 
   /** React Navigation `theme.dark` flag. Drives RN's default header/contrast decisions. */
@@ -47,9 +66,52 @@ export interface ThemeVariant {
   tabBarIcon: string
 }
 
+function buildPalette(spec: PaletteSpec): IColorPalette {
+  return {
+    ...BCWalletTheme.ColorPalette,
+    notification: { ...NotificationColors, ...spec.notification },
+    brand: {
+      ...BCWalletTheme.ColorPalette.brand,
+      primary: spec.primary,
+      primaryDisabled: '#757575',
+      secondary: GrayscaleColors.white,
+      secondaryDisabled: '#757575',
+      tertiary: GrayscaleColors.lightGrey,
+      tertiaryDisabled: '#757575',
+      primaryLight: '#3470B1',
+      highlight: '#FCBA19',
+      primaryBackground: spec.primaryBackground,
+      secondaryBackground: spec.secondaryBackground,
+      tertiaryBackground: spec.tertiaryBackground,
+      modalPrimary: '#FCBA19',
+      modalSecondary: '#FCBA19',
+      modalTertiary: '#FCBA19',
+      modalPrimaryBackground: spec.modalPrimaryBackground,
+      modalSecondaryBackground: spec.modalSecondaryBackground,
+      modalTertiaryBackground: spec.modalTertiaryBackground,
+      modalIcon: '#FCBA19',
+      link: spec.link,
+      unorderedList: spec.unorderedList,
+      unorderedListModal: spec.unorderedListModal,
+      text: spec.text,
+      icon: spec.icon,
+      headerIcon: spec.headerIcon,
+      headerText: spec.headerText,
+      buttonText: GrayscaleColors.white,
+      tabBarInactive: spec.tabBarInactive,
+      inlineError: '',
+      inlineWarning: '',
+    },
+    semantic: {
+      ...BCWalletTheme.ColorPalette.semantic,
+      success: '#89CE00',
+    },
+  }
+}
+
 export function createAppTheme(v: ThemeVariant) {
   return new ThemeBuilder(BCWalletTheme)
-    .setColorPalette(v.palette)
+    .setColorPalette(buildPalette(v))
     .withOverrides({ themeName: v.name })
     .withOverrides(
       (theme): DeepPartial<ITheme> => ({

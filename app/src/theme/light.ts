@@ -1,75 +1,47 @@
 import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text.svg'
-import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
-import { IColorPalette, INotificationColors } from '@bifold/core'
+import { GrayscaleColors } from '@bcwallet-theme/theme'
 
 import { createAppTheme } from './factory'
 
-const LightNotificationColors: INotificationColors = {
-  ...NotificationColors,
-}
-
-const LightColorPalette: IColorPalette = {
-  ...BCWalletTheme.ColorPalette,
-  notification: LightNotificationColors,
-  brand: {
-    ...BCWalletTheme.ColorPalette.brand,
-    primary: '#003366',
-    primaryDisabled: `#757575`,
-    secondary: GrayscaleColors.white,
-    secondaryDisabled: `#757575`,
-    tertiary: GrayscaleColors.lightGrey,
-    tertiaryDisabled: '#757575',
-    primaryLight: '#3470B1',
-    highlight: '#FCBA19',
-    primaryBackground: '#F2F2F2',
-    secondaryBackground: '#FFFFFF',
-    tertiaryBackground: '#003366',
-    modalPrimary: '#FCBA19',
-    modalSecondary: '#FCBA19',
-    modalTertiary: '#FCBA19',
-    modalPrimaryBackground: '#FFFFFF',
-    modalSecondaryBackground: '#F2F2F2',
-    modalTertiaryBackground: '#FFFFFF',
-    modalIcon: '#FCBA19',
-    link: '#1A5A96',
-    unorderedList: GrayscaleColors.darkGrey,
-    unorderedListModal: GrayscaleColors.darkGrey,
-    text: GrayscaleColors.white,
-    icon: GrayscaleColors.darkGrey,
-    headerIcon: GrayscaleColors.darkGrey,
-    headerText: GrayscaleColors.darkGrey,
-    buttonText: GrayscaleColors.white,
-    tabBarInactive: GrayscaleColors.darkGrey,
-    inlineError: '',
-    inlineWarning: '',
-  },
-  semantic: {
-    ...BCWalletTheme.ColorPalette.semantic,
-    success: '#89CE00',
-  },
-}
+const BC_BLUE = '#003366'
+const LIGHT_GREY_BG = '#F2F2F2'
+const BC_BLUE_LINK = '#1A5A96'
 
 export const LightTheme = createAppTheme({
   name: BCThemeNames.Light,
-  palette: LightColorPalette,
   logo: Logo,
+  primary: BC_BLUE,
+  primaryBackground: LIGHT_GREY_BG,
+  secondaryBackground: GrayscaleColors.white,
+  tertiaryBackground: BC_BLUE,
+  modalPrimaryBackground: GrayscaleColors.white,
+  modalSecondaryBackground: LIGHT_GREY_BG,
+  modalTertiaryBackground: GrayscaleColors.white,
+  link: BC_BLUE_LINK,
+  unorderedList: GrayscaleColors.darkGrey,
+  unorderedListModal: GrayscaleColors.darkGrey,
+  text: GrayscaleColors.white,
+  icon: GrayscaleColors.darkGrey,
+  headerIcon: GrayscaleColors.darkGrey,
+  headerText: GrayscaleColors.darkGrey,
+  tabBarInactive: GrayscaleColors.darkGrey,
   navigationDark: false,
   navigationBorder: GrayscaleColors.lightGrey,
-  navigationPrimary: LightColorPalette.brand.primary,
+  navigationPrimary: BC_BLUE,
   navigationText: GrayscaleColors.darkGrey,
   foreground: GrayscaleColors.darkGrey,
   foregroundSubtle: GrayscaleColors.darkGrey,
   onboardingBodyText: GrayscaleColors.darkGrey,
   textOnWhite: GrayscaleColors.darkGrey,
-  inlineErrorText: LightNotificationColors.errorText,
+  inlineErrorText: '#FFFFFF',
   secondaryButton: {
     backgroundColor: GrayscaleColors.white,
     borderWidth: 2,
-    borderColor: LightColorPalette.brand.primary,
+    borderColor: BC_BLUE,
   },
-  secondaryButtonText: LightColorPalette.brand.primary,
+  secondaryButtonText: BC_BLUE,
   tertiaryButtonBackground: GrayscaleColors.veryLightGrey,
-  tabBarBackground: LightColorPalette.brand.secondaryBackground,
+  tabBarBackground: GrayscaleColors.white,
   tabBarIcon: GrayscaleColors.darkGrey,
 })

@@ -1,79 +1,53 @@
 import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text-dark.svg'
-import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
-import { IColorPalette, INotificationColors } from '@bifold/core'
+import { GrayscaleColors } from '@bcwallet-theme/theme'
 
 import { createAppTheme } from './factory'
 
-const DarkNotificationColors: INotificationColors = {
-  ...NotificationColors,
-  info: '#01264C',
-  infoBorder: GrayscaleColors.lightGrey,
-  infoIcon: '#FCBA19',
-  infoText: GrayscaleColors.lightGrey,
-  error: '#A2312D',
-  errorText: GrayscaleColors.white,
-  errorBorder: '#A2312D',
-  errorIcon: GrayscaleColors.white,
-}
-
-const DarkColorPalette: IColorPalette = {
-  ...BCWalletTheme.ColorPalette,
-  notification: DarkNotificationColors,
-  brand: {
-    ...BCWalletTheme.ColorPalette.brand,
-    primary: '#FCBA19',
-    primaryDisabled: `#757575`,
-    secondary: GrayscaleColors.white,
-    secondaryDisabled: `#757575`,
-    tertiary: GrayscaleColors.lightGrey,
-    tertiaryDisabled: '#757575',
-    primaryLight: '#3470B1',
-    highlight: '#FCBA19',
-    primaryBackground: '#013366',
-    secondaryBackground: '#01264C',
-    tertiaryBackground: '#013366',
-    modalPrimary: '#FCBA19',
-    modalSecondary: '#FCBA19',
-    modalTertiary: '#FCBA19',
-    modalPrimaryBackground: '#013366',
-    modalSecondaryBackground: '#013366',
-    modalTertiaryBackground: '#013366',
-    modalIcon: '#FCBA19',
-    link: '#FCBA19',
-    unorderedList: GrayscaleColors.white,
-    unorderedListModal: GrayscaleColors.white,
-    text: '#01264C',
-    icon: GrayscaleColors.white,
-    headerIcon: GrayscaleColors.white,
-    headerText: GrayscaleColors.white,
-    buttonText: GrayscaleColors.white,
-    tabBarInactive: GrayscaleColors.white,
-    inlineError: '',
-    inlineWarning: '',
-  },
-  semantic: {
-    ...BCWalletTheme.ColorPalette.semantic,
-    success: '#89CE00',
-  },
-}
+const DARK_BLUE = '#013366'
+const DARK_NAVY = '#01264C'
+const GOLD = '#FCBA19'
 
 export const DarkTheme = createAppTheme({
   name: BCThemeNames.Dark,
-  palette: DarkColorPalette,
   logo: Logo,
+  primary: GOLD,
+  primaryBackground: DARK_BLUE,
+  secondaryBackground: DARK_NAVY,
+  tertiaryBackground: DARK_BLUE,
+  modalPrimaryBackground: DARK_BLUE,
+  modalSecondaryBackground: DARK_BLUE,
+  modalTertiaryBackground: DARK_BLUE,
+  link: GOLD,
+  unorderedList: GrayscaleColors.white,
+  unorderedListModal: GrayscaleColors.white,
+  text: DARK_NAVY,
+  icon: GrayscaleColors.white,
+  headerIcon: GrayscaleColors.white,
+  headerText: GrayscaleColors.white,
+  tabBarInactive: GrayscaleColors.white,
+  notification: {
+    info: DARK_NAVY,
+    infoBorder: GrayscaleColors.lightGrey,
+    infoIcon: GOLD,
+    infoText: GrayscaleColors.lightGrey,
+    error: '#A2312D',
+    errorText: GrayscaleColors.white,
+    errorBorder: '#A2312D',
+    errorIcon: GrayscaleColors.white,
+  },
   navigationDark: true,
   navigationBorder: GrayscaleColors.darkGrey,
-  navigationPrimary: DarkColorPalette.brand.primaryBackground,
-  navigationText: DarkColorPalette.brand.secondaryBackground,
+  navigationPrimary: DARK_BLUE,
+  navigationText: DARK_NAVY,
   foreground: GrayscaleColors.white,
   foregroundSubtle: GrayscaleColors.veryLightGrey,
   onboardingBodyText: GrayscaleColors.lightGrey,
-  textOnWhite: DarkColorPalette.brand.text,
+  textOnWhite: DARK_NAVY,
   inlineErrorText: '#FF816B',
   secondaryButton: { backgroundColor: '#1E5189', borderWidth: 0 },
   secondaryButtonText: GrayscaleColors.white,
   tertiaryButtonBackground: GrayscaleColors.white,
   tabBarBackground: '#252423',
-  tabBarIcon: DarkColorPalette.brand.primaryBackground,
+  tabBarIcon: DARK_BLUE,
 })
