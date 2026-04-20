@@ -289,7 +289,7 @@ const Developer: React.FC = () => {
 
   const toggleTheme = () => {
     if (themeName === BCThemeNames.Dark) {
-      setTheme(BCThemeNames.BCWallet)
+      setTheme(BCThemeNames.Light)
     } else {
       setTheme(BCThemeNames.Dark)
     }
@@ -299,7 +299,7 @@ const Developer: React.FC = () => {
     lockOutUser(LockoutReason.Logout)
 
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
-    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.Dark
+    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.Light
 
     setTheme(newTheme)
     dispatch({
