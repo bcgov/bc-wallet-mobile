@@ -410,7 +410,7 @@ export function createAppTheme(v: ThemeVariant) {
     .withOverrides({
       Assets: {
         svg: {
-          logo: v.logo as React.FC,
+          logo: v.logo,
         },
       },
     })
