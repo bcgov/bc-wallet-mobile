@@ -156,6 +156,7 @@ export const LightTheme = new ThemeBuilder(BCWalletTheme)
   .withOverrides(
     (theme): DeepPartial<ITheme> => ({
       NavigationTheme: {
+        dark: false,
         colors: {
           card: theme.ColorPalette.brand.primaryBackground,
           border: theme.ColorPalette.grayscale.lightGrey,
