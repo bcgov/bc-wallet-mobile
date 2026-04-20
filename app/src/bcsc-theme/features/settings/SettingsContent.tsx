@@ -8,6 +8,7 @@ import {
   DEFAULT_AUTO_LOCK_TIME_MIN,
   FEEDBACK_URL,
   TERMS_OF_USE_URL,
+  BCThemeNames,
 } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -53,7 +54,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onChangePIN,
 }) => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing, ColorPalette, setTheme, themeName } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -199,6 +200,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const showEditNickname = store.bcscSecure.verified && onEditNickname
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
+  const isDarkTheme = themeName === BCThemeNames.Dark
+  const themeLabel = isDarkTheme ? t('BCSC.Settings.ThemeDark') : t('BCSC.Settings.ThemeLight')
+  const onPressTheme = () => {
+    setTheme(isDarkTheme ? BCThemeNames.Light : BCThemeNames.Dark)
+  }
 
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
@@ -263,6 +269,12 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 onPress={onPressOptInAnalytics}
                 endAdornmentText={analyticsOptInText}
                 testID={testIdWithKey('AnalyticsOptIn')}
+              />
+              <SettingsActionCard
+                title={t('BCSC.Settings.Theme')}
+                onPress={onPressTheme}
+                endAdornmentText={themeLabel}
+                testID={testIdWithKey('Theme')}
               />
 
               <SettingsActionCard
