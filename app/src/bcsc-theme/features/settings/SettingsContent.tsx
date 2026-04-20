@@ -38,6 +38,126 @@ interface SettingsContentProps {
   onChangePIN?: () => void
 }
 
+interface AuthenticatedSectionProps {
+  styles: ReturnType<typeof StyleSheet.create>
+  accountSecurityMethod: AccountSecurityMethod | undefined
+  onAppSecurity?: () => void
+  onChangePIN?: () => void
+  onEditNickname?: () => void
+  onAutoLock?: () => void
+  onForgetAllPairings?: () => void
+  onPressOptInAnalytics: () => void | Promise<void>
+  onPressRemoveAccount: () => void
+  onLogout: () => void
+  setTheme: (name: string) => void
+  themeName: string
+}
+
+const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
+  styles,
+  accountSecurityMethod,
+  onAppSecurity,
+  onChangePIN,
+  onEditNickname,
+  onAutoLock,
+  onForgetAllPairings,
+  onPressOptInAnalytics,
+  onPressRemoveAccount,
+  onLogout,
+  setTheme,
+  themeName,
+}) => {
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+  const [store] = useStore<BCState>()
+
+  const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
+  const showEditNickname = store.bcscSecure.verified && onEditNickname
+  const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
+  const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
+  const isDarkTheme = themeName === BCThemeNames.Dark
+  const themeLabel = isDarkTheme ? t('BCSC.Settings.ThemeDark') : t('BCSC.Settings.ThemeLight')
+  const onPressTheme = () => {
+    setTheme(isDarkTheme ? BCThemeNames.Light : BCThemeNames.Dark)
+  }
+
+  return (
+    <>
+      <View style={styles.sectionContainer}>
+        <SettingsActionCard
+          title={t('BCSC.Settings.SignOut')}
+          startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.primary} />}
+          onPress={onLogout}
+          testID={testIdWithKey('SignOut')}
+        />
+      </View>
+
+      <ThemedText variant={'bold'} style={styles.sectionHeader}>
+        {t('BCSC.Settings.HeaderA')}
+      </ThemedText>
+      <View style={styles.sectionContainer}>
+        {onAppSecurity ? (
+          <SettingsActionCard
+            onPress={onAppSecurity}
+            title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
+            testID={testIdWithKey('AppSecurity')}
+          />
+        ) : null}
+        {showChangePIN ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.ChangePIN.ButtonTitle')}
+            onPress={onChangePIN}
+            testID={testIdWithKey('ChangePIN')}
+          />
+        ) : null}
+        {showEditNickname ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.EditNickname')}
+            onPress={onEditNickname}
+            testID={testIdWithKey('EditNickname')}
+          />
+        ) : null}
+        {onAutoLock ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.AutoLockTime')}
+            onPress={onAutoLock}
+            endAdornmentText={autoLockTimeText}
+            testID={testIdWithKey('AutoLock')}
+          />
+        ) : null}
+        {/* TODO: (AR) Keeping this hidden for phase 1 */}
+        {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
+        {onForgetAllPairings ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.ForgetPairings')}
+            onPress={onForgetAllPairings}
+            testID={testIdWithKey('ForgetPairings')}
+          />
+        ) : null}
+        <SettingsActionCard
+          title={t('BCSC.Settings.AnalyticsOptIn')}
+          onPress={onPressOptInAnalytics}
+          endAdornmentText={analyticsOptInText}
+          testID={testIdWithKey('AnalyticsOptIn')}
+        />
+        <SettingsActionCard
+          title={t('BCSC.Settings.Theme')}
+          onPress={onPressTheme}
+          endAdornmentText={themeLabel}
+          testID={testIdWithKey('Theme')}
+        />
+
+        <SettingsActionCard
+          title={t('BCSC.Settings.RemoveAccount')}
+          onPress={onPressRemoveAccount}
+          textStyle={{ color: ColorPalette.semantic.error }}
+          testID={testIdWithKey('RemoveAccount')}
+        />
+      </View>
+    </>
+  )
+}
+
 /**
  * Shared settings content component that can be used across different navigation stacks.
  * Receives navigation callbacks as props to handle stack-specific navigation.
@@ -194,97 +314,26 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     })
   }
 
-  // Pre-compute conditional values
   const isAuthenticated = store.authentication.didAuthenticate
-  const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
-  const showEditNickname = store.bcscSecure.verified && onEditNickname
-  const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
-  const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
-  const isDarkTheme = themeName === BCThemeNames.Dark
-  const themeLabel = isDarkTheme ? t('BCSC.Settings.ThemeDark') : t('BCSC.Settings.ThemeLight')
-  const onPressTheme = () => {
-    setTheme(isDarkTheme ? BCThemeNames.Light : BCThemeNames.Dark)
-  }
 
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
         {isAuthenticated ? (
-          <>
-            <View style={styles.sectionContainer}>
-              <SettingsActionCard
-                title={t('BCSC.Settings.SignOut')}
-                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.primary} />}
-                onPress={() => {
-                  logout()
-                }}
-                testID={testIdWithKey('SignOut')}
-              />
-            </View>
-
-            <ThemedText variant={'bold'} style={styles.sectionHeader}>
-              {t('BCSC.Settings.HeaderA')}
-            </ThemedText>
-            <View style={styles.sectionContainer}>
-              {onAppSecurity ? (
-                <SettingsActionCard
-                  onPress={onAppSecurity}
-                  title={t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
-                  testID={testIdWithKey('AppSecurity')}
-                />
-              ) : null}
-              {showChangePIN ? (
-                <SettingsActionCard
-                  title={t('BCSC.Settings.ChangePIN.ButtonTitle')}
-                  onPress={onChangePIN}
-                  testID={testIdWithKey('ChangePIN')}
-                />
-              ) : null}
-              {showEditNickname ? (
-                <SettingsActionCard
-                  title={t('BCSC.Settings.EditNickname')}
-                  onPress={onEditNickname}
-                  testID={testIdWithKey('EditNickname')}
-                />
-              ) : null}
-              {onAutoLock ? (
-                <SettingsActionCard
-                  title={t('BCSC.Settings.AutoLockTime')}
-                  onPress={onAutoLock}
-                  endAdornmentText={autoLockTimeText}
-                  testID={testIdWithKey('AutoLock')}
-                />
-              ) : null}
-              {/* TODO: (AR) Keeping this hidden for phase 1 */}
-              {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
-              {onForgetAllPairings ? (
-                <SettingsActionCard
-                  title={t('BCSC.Settings.ForgetPairings')}
-                  onPress={onForgetAllPairings}
-                  testID={testIdWithKey('ForgetPairings')}
-                />
-              ) : null}
-              <SettingsActionCard
-                title={t('BCSC.Settings.AnalyticsOptIn')}
-                onPress={onPressOptInAnalytics}
-                endAdornmentText={analyticsOptInText}
-                testID={testIdWithKey('AnalyticsOptIn')}
-              />
-              <SettingsActionCard
-                title={t('BCSC.Settings.Theme')}
-                onPress={onPressTheme}
-                endAdornmentText={themeLabel}
-                testID={testIdWithKey('Theme')}
-              />
-
-              <SettingsActionCard
-                title={t('BCSC.Settings.RemoveAccount')}
-                onPress={onPressRemoveAccount}
-                textStyle={{ color: ColorPalette.semantic.error }}
-                testID={testIdWithKey('RemoveAccount')}
-              />
-            </View>
-          </>
+          <AuthenticatedSection
+            styles={styles}
+            accountSecurityMethod={accountSecurityMethod}
+            onAppSecurity={onAppSecurity}
+            onChangePIN={onChangePIN}
+            onEditNickname={onEditNickname}
+            onAutoLock={onAutoLock}
+            onForgetAllPairings={onForgetAllPairings}
+            onPressOptInAnalytics={onPressOptInAnalytics}
+            onPressRemoveAccount={onPressRemoveAccount}
+            onLogout={logout}
+            setTheme={setTheme}
+            themeName={themeName}
+          />
         ) : null}
 
         <ThemedText variant={'bold'} style={styles.sectionHeader}>
