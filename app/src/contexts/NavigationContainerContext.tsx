@@ -33,7 +33,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren): Re
   return (
     <NavigationContainerContext.Provider value={navigationContext}>
       <NavigationContainer
-        key={NavigationTheme.dark ? 'dark' : 'light'}
         ref={navigationRef}
         theme={NavigationTheme}
         onReady={() => {
