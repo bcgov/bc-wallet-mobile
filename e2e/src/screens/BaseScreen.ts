@@ -63,8 +63,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /** Get the visible text content of an element by its TestID key. */
-  async getText(key: keyof T & string): Promise<string> {
-    return this.getTextByTestId(this.ids[key])
+  async getText(key: keyof T & string, timeout?: number): Promise<string> {
+    return this.getTextByTestId(this.ids[key], timeout)
   }
 
   /** Get the raw testID string for a given key. */
@@ -79,12 +79,19 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   /**
    * Wait until this screen is visible.
    * Each subclass defines its own "screen loaded" selector.
+   * @param timeout - timeout in milliseconds
    * @param testId - test ID of the element to wait for
    * @returns void
    */
   async waitForDisplayed(testId: string, timeout: number = Timeouts.elementVisible) {
     const el = await this.findByTestId(testId)
-    await el.isDisplayed()
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 4, 'both')
+      await el.waitForDisplayed({ timeout })
+    }
   }
 
   /**
@@ -92,8 +99,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * On iOS, falls back to the `label` attribute when `getText()` returns empty
    * (common for styled ThemedText / accessibility-labelled elements).
    */
-  public async getTextByTestId(testId: string): Promise<string> {
+  public async getTextByTestId(testId: string, timeout: number = Timeouts.elementVisible): Promise<string> {
     const el = await this.findByTestId(testId)
+    await el.waitForDisplayed({ timeout })
     const text = await el.getText()
     if (text) return text
     if (driver.isIOS) {
@@ -105,12 +113,17 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
   /**
    * Find an element by text.
+   *
+   * On iOS, RN `Text` nodes usually expose their rendered string via the
+   * accessibility `label` attribute, while `value` is reserved for inputs and
+   * a few stateful controls. Matching both covers the common cases.
+   *
    * @param text - text to find
    * @returns the element
    */
   public async findByText(text: string) {
     const selector = driver.isIOS
-      ? `-ios predicate string:value == "${text}"`
+      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
       : `android=new UiSelector().text("${text}")`
     return $(selector)
   }
@@ -133,6 +146,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async tapByTestId(testId: string) {
     const el = await this.findByTestId(testId)
+    try {
+      await el.waitForDisplayed({ timeout: 500 })
+    } catch {
+      console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 5, 'both')
+      await el.waitForDisplayed({ timeout: 500 })
+    }
     await el.click()
   }
 
@@ -145,6 +165,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.screenTransition) {
     const el = await this.findByTestId(testId)
+    await el.waitForDisplayed({ timeout })
     await el.waitForEnabled({ timeout })
     await el.click()
   }
@@ -171,9 +192,25 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     const el = await this.findByTestId(testId)
-    if (options?.tapFirst === undefined || options.tapFirst) {
-      // Tap to focus before typing, unless disabled
+    try {
+      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${Timeouts.screenTransition}ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 4, 'both')
+      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    }
+
+    if (options?.tapFirst) {
       await el.click()
+    }
+
+    // iOS/XCUITest clearValue and mobile:clearText both trigger a
+    // context menu that interferes with input. Brute-force backspace
+    // works reliably. Android's setValue already clears first.
+    if (driver.isIOS) {
+      for (let i = 0; i < 10; i++) {
+        await el.addValue('\uE003')
+      }
     }
 
     if (options?.characterByCharacter || isSauceLabs()) {
