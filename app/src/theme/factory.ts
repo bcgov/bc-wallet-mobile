@@ -202,10 +202,9 @@ export function createAppTheme(v: ThemeVariant) {
         OnboardingTheme: {
           bodyText: { color: v.onboardingBodyText },
           headerText: {
-            ...theme.TextTheme.normal,
+            ...theme.TextTheme.bold,
             color: theme.ColorPalette.notification.infoText,
             fontSize: 32,
-            fontWeight: 'bold',
           },
           imageDisplayOptions: {
             fill: theme.ColorPalette.notification.infoText,

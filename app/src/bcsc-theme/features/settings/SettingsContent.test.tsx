@@ -67,22 +67,21 @@ describe('SettingsContent', () => {
     expect(await screen.findByTestId(tid('EditNickname'))).toBeTruthy()
   })
 
-  it('toggles theme via the Theme row', async () => {
+  it('renders the Theme row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('Theme'))
     fireEvent.press(row)
-    // No throw = press wired up; visual toggle is covered by the label.
     expect(row).toBeTruthy()
   })
 
-  it('toggles analytics opt-in via the row', async () => {
+  it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('AnalyticsOptIn'))
     fireEvent.press(row)
     expect(row).toBeTruthy()
   })
 
-  it('invokes logout when sign out is pressed', async () => {
+  it('renders the SignOut row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('SignOut'))
     fireEvent.press(row)
@@ -126,7 +125,7 @@ describe('SettingsContent', () => {
     expect(baseProps.onPressDeveloperMode).toHaveBeenCalled()
   })
 
-  it('exercises RemoveAccount press', async () => {
+  it('renders the RemoveAccount row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('RemoveAccount'))
     fireEvent.press(row)
