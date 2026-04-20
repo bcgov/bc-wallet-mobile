@@ -98,7 +98,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
         <Icon
           name={'analytics'}
           size={ONBOARDING_ICON_IMAGE_SIZE}
-          color={ColorPalette.brand.primary}
+          color={ColorPalette.grayscale.darkGrey}
           style={styles.icon}
         />
       </View>
