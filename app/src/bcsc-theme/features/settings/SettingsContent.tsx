@@ -5,10 +5,10 @@ import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import {
   ACCESSIBILITY_URL,
   ANALYTICS_URL,
+  BCThemeNames,
   DEFAULT_AUTO_LOCK_TIME_MIN,
   FEEDBACK_URL,
   TERMS_OF_USE_URL,
-  BCThemeNames,
 } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
