@@ -2,7 +2,7 @@ import { Timeouts } from '../../../src/constants.js'
 import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { approveInPersonRequest } from '../../../src/helpers/approval.js'
 import { annotate } from '../../../src/helpers/sauce.js'
-import { ANDROID_PKG, V3 } from '../../../src/v3TestIDs.js'
+import { V3 } from '../../../src/v3TestIDs.js'
 import { migrationContext } from './migration-context.js'
 
 // ---------------------------------------------------------------------------
@@ -31,31 +31,73 @@ function parseDob(dob: string) {
   return { year: y, monthShort: months[m - 1].slice(0, 3), monthFull: months[m - 1], day: String(d) }
 }
 
+const testUser = migrationContext.user
+
 /**
- * Scroll an Android NumberPicker to a target value by clicking its arrow button.
- * @param picker - The NumberPicker element
- * @param target - The value to scroll to (must match the EditText's displayed text)
- * @param buttonIndex - 0 = top button (decrement), 1 = bottom button (increment)
+ * Click the arrow button on an Android NumberPicker until the EditText shows the target value.
+ * Automatically chooses the faster direction (increment or decrement).
+ * @param picker  The NumberPicker element
+ * @param target  The text value to reach (e.g. "Dec", "17", "1995")
  */
 async function scrollNumberPickerTo(
-  picker: ChainablePromiseElement,
+  picker: ChainablePromiseElement | WebdriverIO.Element,
   target: string,
-  buttonIndex: 0 | 1,
-  maxClicks = 80
+  maxClicks = 100
 ) {
-  const editText = await picker.$('android.widget.EditText')
-  const buttons = await picker.$$('android.widget.Button')
-  const btn = buttons[buttonIndex]
+  const resolved = await Promise.resolve(picker)
+  const editText = await resolved.$('android.widget.EditText')
+  const buttons = await resolved.$$('android.widget.Button')
+  const decrementBtn = buttons[0]
+  const incrementBtn = buttons[1]
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  function calculateDistance(current: string, target: string): { increment: number; decrement: number } {
+    if (current === target) return { increment: 0, decrement: 0 }
+
+    // Check if values are months
+    const currentMonthIdx = months.indexOf(current)
+    const targetMonthIdx = months.indexOf(target)
+
+    if (currentMonthIdx !== -1 && targetMonthIdx !== -1) {
+      // Circular distance for months (12 total)
+      const forward = (targetMonthIdx - currentMonthIdx + 12) % 12 || 12
+      const backward = (currentMonthIdx - targetMonthIdx + 12) % 12 || 12
+      return { increment: forward, decrement: backward }
+    }
+
+    // Try parsing as numbers (days, years)
+    const curNum = parseInt(current, 10)
+    const targetNum = parseInt(target, 10)
+
+    if (!isNaN(curNum) && !isNaN(targetNum)) {
+      // For days (1-31), use circular distance
+      if (curNum >= 1 && curNum <= 31 && targetNum >= 1 && targetNum <= 31) {
+        const forward = (targetNum - curNum + 31) % 31 || 31
+        const backward = (curNum - targetNum + 31) % 31 || 31
+        return { increment: forward, decrement: backward }
+      } else {
+        // For other numbers (years), use linear distance
+        const forward = targetNum >= curNum ? targetNum - curNum : targetNum - curNum + 10000
+        const backward = curNum >= targetNum ? curNum - targetNum : curNum - targetNum + 10000
+        return { increment: forward, decrement: backward }
+      }
+    }
+
+    return { increment: maxClicks, decrement: maxClicks }
+  }
+
   for (let i = 0; i < maxClicks; i++) {
-    const current = await editText.getText()
-    if (current === target) return
+    const cur = await editText.getText()
+    if (cur === target) return
+
+    const { increment, decrement } = calculateDistance(cur, target)
+    const btn = increment <= decrement ? incrementBtn : decrementBtn
     await btn.click()
   }
-  const finalVal = await editText.getText()
-  throw new Error(`NumberPicker did not reach "${target}" after ${maxClicks} clicks (stuck on "${finalVal}")`)
-}
 
-const testUser = migrationContext.user
+  throw new Error(`NumberPicker did not reach "${target}" after ${maxClicks} clicks`)
+}
 
 describe('V3 Add Card', () => {
   it('should tap the Add Card / Setup button', async () => {
@@ -243,25 +285,30 @@ describe('V3 Add Card', () => {
     const dob = parseDob(testUser.dob)
 
     if (driver.isAndroid) {
-      const dateView = await V3.Birthdate.birthdateInput()
-      await dateView.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await dateView.click()
+      // Android: tap the date field to open the spinner date picker dialog
+      const dateField = await V3.Birthdate.birthdateInput()
+      await dateField.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await dateField.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await dateField.click()
 
+      // Wait for the date picker dialog's NumberPickers to appear
       const pickers = await $$('android.widget.NumberPicker')
+      await pickers[0].waitForDisplayed({ timeout: 5_000 })
 
+      // Detect locale order: if first picker has alphabetic text, it's month-first
       const firstText = await pickers[0].$('android.widget.EditText').getText()
       const isMonthFirst = /^[A-Za-z]/.test(firstText)
-
       const monthPicker = pickers[isMonthFirst ? 0 : 1]
       const dayPicker = pickers[isMonthFirst ? 1 : 0]
       const yearPicker = pickers[2]
 
-      await scrollNumberPickerTo(monthPicker, dob.monthShort, 0)
-      await scrollNumberPickerTo(dayPicker, dob.day, 1)
-      await scrollNumberPickerTo(yearPicker, dob.year, 0)
+      await scrollNumberPickerTo(dayPicker, dob.day)
+      await scrollNumberPickerTo(monthPicker, dob.monthShort)
+      await scrollNumberPickerTo(yearPicker, dob.year)
 
-      const okBtn = await $(`android=new UiSelector().resourceId("${ANDROID_PKG}:id/ok_btn")`)
+      const okBtn = await V3.Birthdate.ok()
       await okBtn.waitForDisplayed({ timeout: 5_000 })
+      await okBtn.waitForEnabled({ timeout: 5_000 })
       await okBtn.click()
 
       const validateBtn = await V3.Birthdate.validate()
