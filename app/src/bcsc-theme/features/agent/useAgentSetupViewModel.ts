@@ -2,7 +2,7 @@ import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
-import { createLinkSecretIfRequired, DispatchAction, migrateToAskar, TOKENS, useServices, useStore } from '@bifold/core'
+import { createLinkSecretIfRequired, DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { Agent, MediatorPickupStrategy } from '@credo-ts/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
@@ -111,8 +111,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           logger,
         })
 
+        // BCSC v4.1 starts fresh on Askar — no legacy Indy wallet to migrate.
+        // Mark the flag so any downstream code that still checks it stays consistent.
         if (!didMigrateToAskar) {
-          await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
           dispatch({ type: DispatchAction.DID_MIGRATE_TO_ASKAR })
         }
 
