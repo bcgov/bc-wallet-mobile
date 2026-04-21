@@ -98,16 +98,6 @@ const useBCAgentSetup = () => {
     [logger, store.developer.enableProxy]
   )
 
-  // TODO: (al) migrateToAskar was removed in credo 0.6.x (the indy-sdk-to-askar-migration package was dropped).
-  // this is eventually going to be the new bcsc app, do we need to migrate people? all the users will be new and be on asakr
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const migrateIfRequired = useCallback(async (_newAgent: Agent, _walletSecret: WalletSecret) => {
-    // if (!store.migration.didMigrateToAskar) {
-    //   await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
-    //   dispatch({ type: DispatchAction.DID_MIGRATE_TO_ASKAR })
-    // }
-  }, [])
-
   const warmUpCache = useCallback(
     async (newAgent: Agent, cachedLedgers?: IndyVdrPoolConfig[]) => {
       const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
@@ -181,9 +171,6 @@ const useBCAgentSetup = () => {
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
 
-      logger.info('Migrating agent if required...')
-      await migrateIfRequired(newAgent, walletSecret)
-
       logger.info('Initializing agent...')
       await newAgent.initialize()
 
@@ -218,7 +205,6 @@ const useBCAgentSetup = () => {
       logger,
       indyLedgers,
       createNewAgent,
-      migrateIfRequired,
       warmUpCache,
       refreshAttestationMonitor,
       restartExistingAgent,

@@ -124,7 +124,9 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       } catch (error: unknown) {
         initializing.current = false
         const formatError = (e: unknown, depth = 0): string => {
-          if (!(e instanceof Error)) { return String(e) }
+          if (!(e instanceof Error)) {
+            return String(e)
+          }
           const indent = '  '.repeat(depth)
           const msg = `${indent}${e.constructor.name}: ${e.message}`
           const cause = (e as Error & { cause?: unknown }).cause
