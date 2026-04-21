@@ -2,7 +2,7 @@ import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
-import { createLinkSecretIfRequired, DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
+import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
 import { Agent, MediatorPickupStrategy } from '@credo-ts/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
@@ -19,7 +19,7 @@ export interface AgentSetupResult {
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
@@ -41,7 +41,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const walletLabel = store.preferences.walletName || 'BC Wallet'
   const enableProxy = store.developer.enableProxy
   const usePushNotifications = store.preferences.usePushNotifications
-  const didMigrateToAskar = store.migration.didMigrateToAskar
 
   const refreshAttestationMonitor = useCallback(
     (liveAgent: Agent) => {
@@ -111,12 +110,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           logger,
         })
 
-        // BCSC v4.1 starts fresh on Askar — no legacy Indy wallet to migrate.
-        // Mark the flag so any downstream code that still checks it stays consistent.
-        if (!didMigrateToAskar) {
-          dispatch({ type: DispatchAction.DID_MIGRATE_TO_ASKAR })
-        }
-
         await newAgent.initialize()
         await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
         await warmCache(newAgent, credDefs, schemas, cachedLedgers, logger)
@@ -152,14 +145,12 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     walletLabel,
     enableProxy,
     usePushNotifications,
-    didMigrateToAskar,
     retryCount,
     status,
     logger,
     indyLedgers,
     credDefs,
     schemas,
-    dispatch,
     refreshAttestationMonitor,
   ])
 
