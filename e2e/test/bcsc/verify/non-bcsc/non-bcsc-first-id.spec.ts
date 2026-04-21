@@ -44,11 +44,12 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should enter in the correct form data', async () => {
-    await EvidenceFormData.type('DocumentNumberPressable', '12345678')
-    await EvidenceFormData.type('LastNamePressable', context.testUser.lastName)
-    await EvidenceFormData.type('FirstNamePressable', context.testUser.firstName)
-    await EvidenceFormData.type('MiddleNamesPressable', 'Middle Names')
-    await EvidenceFormData.type('BirthdatePressable', context.testUser.dob)
+    await EvidenceFormData.type('DocumentNumberInput', '12345678')
+    await EvidenceFormData.type('LastNameInput', context.testUser.lastName)
+    await EvidenceFormData.type('FirstNameInput', context.testUser.firstName)
+    await EvidenceFormData.type('MiddleNamesInput', 'Middle Names')
+    await EvidenceFormData.scrollTo('BirthdateInput')
+    await EvidenceFormData.type('BirthdateInput', context.testUser.dob)
     await EvidenceFormData.tap('Continue')
   })
 })

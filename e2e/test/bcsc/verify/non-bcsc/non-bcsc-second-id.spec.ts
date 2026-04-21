@@ -29,7 +29,7 @@ describe(`Non-BCSC Card (2) - Passport`, () => {
   })
 
   it('should enter in the correct form data', async () => {
-    await EvidenceFormData.type('DocumentNumberPressable', context.testUser.documentNumber)
+    await EvidenceFormData.type('DocumentNumberInput', context.testUser.documentNumber)
     await EvidenceFormData.tap('Continue')
   })
 })
