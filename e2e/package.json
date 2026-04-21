@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "setup": "node scripts/setup-drivers.mjs",
+    "typecheck": "tsc --noEmit",
     "emulator:android": "node scripts/start-android-emulator.mjs",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",

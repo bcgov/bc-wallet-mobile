@@ -15,7 +15,9 @@
       "@wdio/mocha-framework",
       "expect-webdriverio",
       "@wdio/sauce-service"
-    ]
+    ],
+    "skipLibCheck": true
   },
-  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts"]
+  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts"],
+  "exclude": ["node_modules"]
 }

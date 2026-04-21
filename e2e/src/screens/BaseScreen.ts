@@ -1,6 +1,5 @@
 import { Timeouts } from '../constants.js'
-import { swipeDownBy, swipeUpBy } from '../helpers/gestures.js'
-import { isSauceLabs } from '../helpers/sauce.js'
+import { Adapter, getPlatformAdapter } from './Adapter.js'
 
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
 export interface EnterTextOptions {
@@ -28,9 +27,11 @@ export interface EnterTextOptions {
 export class BaseScreen<T extends Record<string, string> = Record<string, string>> {
   /** The TestID map for this screen. Access raw values via `ids.KeyName`. */
   public readonly ids: T
+  private readonly adapter: Adapter
 
   constructor(ids?: T) {
     this.ids = (ids ?? {}) as T
+    this.adapter = getPlatformAdapter()
   }
 
   // ---------------------------------------------------------------------------
@@ -53,8 +54,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /** Scroll until an element (by TestID key) is visible. */
-  async scrollTo(key: keyof T & string, maxScrolls?: number, directions?: 'down' | 'both') {
-    await this.scrollToTestId(this.ids[key], maxScrolls, directions)
+  async scrollTo(key: keyof T & string) {
+    await this.scrollToTestId(this.ids[key])
   }
 
   /** Wait until an element (by TestID key) is enabled, then tap it. */
@@ -63,8 +64,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /** Get the visible text content of an element by its TestID key. */
-  async getText(key: keyof T & string, timeout?: number): Promise<string> {
-    return this.getTextByTestId(this.ids[key], timeout)
+  async getText(key: keyof T & string): Promise<string> {
+    return this.getTextByTestId(this.ids[key])
+  }
+
+  /** Check if an element (by TestID key) is displayed. */
+  async isDisplayed(key: keyof T & string): Promise<boolean> {
+    return this.isTestIdDisplayed(this.ids[key])
   }
 
   /** Get the raw testID string for a given key. */
@@ -84,14 +90,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @returns void
    */
   async waitForDisplayed(testId: string, timeout: number = Timeouts.elementVisible) {
-    const el = await this.findByTestId(testId)
-    try {
-      await el.waitForDisplayed({ timeout })
-    } catch {
-      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 4, 'both')
-      await el.waitForDisplayed({ timeout })
-    }
+    const el = this.findByTestId(testId)
+    await el.isDisplayed()
   }
 
   /**
@@ -99,16 +99,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * On iOS, falls back to the `label` attribute when `getText()` returns empty
    * (common for styled ThemedText / accessibility-labelled elements).
    */
-  public async getTextByTestId(testId: string, timeout: number = Timeouts.elementVisible): Promise<string> {
-    const el = await this.findByTestId(testId)
-    await el.waitForDisplayed({ timeout })
-    const text = await el.getText()
-    if (text) return text
-    if (driver.isIOS) {
-      const label = await el.getAttribute('label')
-      if (label) return label
-    }
-    return ''
+  public async getTextByTestId(testId: string): Promise<string> {
+    return this.adapter.getTextByTestId(testId)
   }
 
   /**
@@ -121,11 +113,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param text - text to find
    * @returns the element
    */
-  public async findByText(text: string) {
-    const selector = driver.isIOS
-      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
-      : `android=new UiSelector().text("${text}")`
-    return $(selector)
+  public findByText(text: string): ChainablePromiseElement {
+    return this.adapter.findByText(text)
   }
 
   /**
@@ -133,27 +122,17 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID to find
    * @returns the element
    */
-  public async findByTestId(testId: string) {
-    const selector = driver.isIOS
-      ? `~${testId}` // accessibility id
-      : `android=new UiSelector().resourceId("${testId}")`
-    return $(selector)
+  public findByTestId(testId: string): ChainablePromiseElement {
+    return this.adapter.findByTestId(testId)
   }
 
   /**
    * Tap an element by test ID.
    * @param testId - test ID to tap
+   * @returns the element
    */
-  public async tapByTestId(testId: string) {
-    const el = await this.findByTestId(testId)
-    try {
-      await el.waitForDisplayed({ timeout: 500 })
-    } catch {
-      console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 5, 'both')
-      await el.waitForDisplayed({ timeout: 500 })
-    }
-    await el.click()
+  public async tapByTestId(testId: string): Promise<ChainablePromiseElement> {
+    return this.adapter.tapByTestId(testId)
   }
 
   /**
@@ -163,24 +142,18 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID of the element
    * @param timeout - max time to wait for the element to become enabled (default 20s)
    */
-  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.screenTransition) {
-    const el = await this.findByTestId(testId)
-    await el.waitForDisplayed({ timeout })
+  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.screenTransition): Promise<void> {
+    const el = this.findByTestId(testId)
     await el.waitForEnabled({ timeout })
-    await el.click()
+    await this.tapByTestId(testId)
   }
 
   /**
    * Dismiss the soft keyboard using platform-native commands (no test IDs needed).
    * Call before tapping buttons when the keyboard may be covering them.
    */
-  async dismissKeyboard() {
-    if (driver.isIOS) {
-      const { width, height } = await driver.getWindowSize()
-      await driver.execute('mobile: tap', { x: Math.round(width / 2), y: Math.round(height / 4) })
-    } else {
-      await driver.hideKeyboard()
-    }
+  async dismissKeyboard(): Promise<void> {
+    await this.adapter.dismissKeyboard()
   }
 
   /**
@@ -191,88 +164,31 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param options - optional: tapFirst (focus), characterByCharacter (for secure/controlled inputs)
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
-    const el = await this.findByTestId(testId)
     try {
-      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    } catch {
-      console.warn(`Element "${testId}" not visible after ${Timeouts.screenTransition}ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 4, 'both')
-      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    }
-
-    if (options?.tapFirst) {
-      await el.click()
-    }
-
-    // iOS/XCUITest clearValue and mobile:clearText both trigger a
-    // context menu that interferes with input. Brute-force backspace
-    // works reliably. Android's setValue already clears first.
-    if (driver.isIOS) {
-      for (let i = 0; i < 10; i++) {
-        await el.addValue('\uE003')
-      }
-    }
-
-    if (options?.characterByCharacter || isSauceLabs()) {
-      for (const char of text) {
-        await el.addValue(char)
-      }
-    } else {
+      const el = this.findByTestId(testId)
       await el.setValue(text)
+    } catch {
+      await this.tapByTestId(testId)
+      await driver.execute('mobile: type', { text, replace: true })
     }
   }
 
   /**
-   * Scroll until an element with the given test ID is visible.
-   * Uses small, controlled swipe increments (25% of screen height) to avoid
-   * overshooting elements. Pauses briefly after each swipe for the UI to settle.
-   *
+   * Scroll until an element with the given test ID.
    * @param testId - testID of the element to scroll to
-   * @param maxScrolls - maximum scroll attempts per direction before throwing (default 8)
-   * @param directions - `down` scrolls toward content below; `both` tries down then up
+   * @returns void
    */
-  public async scrollToTestId(testId: string, maxScrolls = 8, directions: 'down' | 'both' = 'down') {
-    const isVisible = async () => {
-      const candidate = await this.findByTestId(testId)
-      try {
-        return await candidate.isDisplayed()
-      } catch {
-        return false
-      }
-    }
-
-    if (await isVisible()) return
-
-    const scrollFraction = 0.25
-    const settlePauseMs = 150
-
-    for (let i = 0; i < maxScrolls; i++) {
-      await swipeUpBy(scrollFraction)
-      await driver.pause(settlePauseMs)
-      if (await isVisible()) return
-    }
-
-    if (directions === 'both') {
-      for (let i = 0; i < maxScrolls * 2; i++) {
-        await swipeDownBy(scrollFraction)
-        await driver.pause(settlePauseMs)
-        if (await isVisible()) return
-      }
-    }
-
-    throw new Error(
-      `Element "${testId}" not visible after ${maxScrolls} scroll attempt(s)` +
-        (directions === 'both' ? ' in each direction' : '')
-    )
+  public async scrollToTestId(testId: string) {
+    await driver.execute('mobile: scroll', { strategy: 'accessibility id', selector: testId })
   }
 
   /**
-   * Check if an element is displayed.
-   * @param key - key of the TestID to check
+   * Check if an test ID is displayed.
+   * @param testId - test ID to check
    * @returns true if the element is displayed, false otherwise
    */
-  public async isDisplayed(key: keyof T & string): Promise<boolean> {
-    const el = await this.findByTestId(this.ids[key])
+  public async isTestIdDisplayed(testId: string): Promise<boolean> {
+    const el = this.findByTestId(testId)
     try {
       return await el.isDisplayed()
     } catch {
