@@ -26,7 +26,7 @@ export async function getTempEmailAddress(): Promise<{ email: string; token: str
 }
 
 /**
- * Retrives the confirmation code from the email inbox.
+ * Retrieves the confirmation code from the email inbox.
  *
  * @param token - The token associated with the temporary email address, used to check for incoming emails.
  * @param options - Optional configuration for timeout and polling interval.
