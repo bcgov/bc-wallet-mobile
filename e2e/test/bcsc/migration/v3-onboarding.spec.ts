@@ -1,5 +1,4 @@
 import { Timeouts } from '../../../src/constants.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { approveInPersonRequest } from '../../../src/helpers/approval.js'
 import { annotate } from '../../../src/helpers/sauce.js'
 import { V3 } from '../../../src/v3TestIDs.js'
@@ -142,8 +141,6 @@ describe('V3 Add Card', () => {
       await enableBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
       await enableBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
       await enableBtn.click()
-
-      await acceptSystemAlert()
     } else {
       // Android doesn't show a notifications screen
     }

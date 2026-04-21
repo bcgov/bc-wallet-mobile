@@ -6,12 +6,12 @@
  * the v4 app over it mid-test using `driver.installApp()`.
  *
  * Key differences from the standard Android sauce config:
- * - `appium:app` points to the v3 app (V3_ANDROID_APP_FILENAME)
+ * - `appium:app` points to the v3 app (V3_ANDROID_APP)
  * - `appium:noReset: false` and `appium:fullReset: true` for a clean start
  */
 import { config as sauceConfig, sauceRdcOptions } from './wdio.shared.sauce.conf.js'
 
-const v3AppFilename = process.env.V3_ANDROID_APP_FILENAME || 'BCSC-v3-latest.apk'
+const v3AppFilename = process.env.V3_ANDROID_APP || 'BCSC-v3.apk'
 
 const config = { ...sauceConfig }
 

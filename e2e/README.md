@@ -169,8 +169,8 @@ _The migration suite tests upgrading from the v3 BC Services Card app (native Sw
 2. _Set the v3 app filenames in_ `.env.saucelabs`_:_
 
 ```bash
-V3_ANDROID_APP_FILENAME=BCSC-v3.apk
-V3_IOS_APP_FILENAME=BCSC-v3.ipa
+V3_ANDROID_APP=BCSC-v3.apk
+V3_IOS_APP=BCSC-v3.ipa
 
 # Migration upgrade uses the standard current-build vars:
 # ANDROID_APP_FILENAME / IOS_APP_FILENAME
@@ -243,8 +243,8 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `ANDROID_PLATFORM_VERSION` | _unset_               | _Pin Android version (e.g._ `15`_). Unset = Sauce picks any available match._ |
 | `BUILD_NAME`               | `local-<timestamp>`   | _SauceLabs build name_                                                        |
 | `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
-| `V3_ANDROID_APP_FILENAME`  | `BCSC-v3.apk`         | _V3 Android app for migration tests_                                          |
-| `V3_IOS_APP_FILENAME`      | `BCSC-v3.ipa`         | _V3 iOS app for migration tests_                                              |
+| `V3_ANDROID_APP`           | `BCSC-v3.apk`         | _V3 Android app for migration tests (local file or Sauce storage filename)_   |
+| `V3_IOS_APP`               | `BCSC-v3.ipa`         | _V3 iOS app for migration tests (local file or Sauce storage filename)_       |
 
 ### _SiteMinder (`local.env`)_
 

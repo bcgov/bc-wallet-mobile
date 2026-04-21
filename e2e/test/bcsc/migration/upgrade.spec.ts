@@ -1,9 +1,8 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { annotate } from '../../../src/helpers/sauce.js'
+import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const isSauceRun = Boolean(process.env.SAUCE_USERNAME)
 
 function toSauceAppRef(value: string): string {
   if (value.startsWith('storage:') || value.startsWith('http')) return value
@@ -27,15 +26,16 @@ describe('Upgrade v3 → v4', () => {
   it('should install the v4 app over v3', async () => {
     await annotate('Migration: Upgrading v3 → v4')
 
+    const onSauce = isSauceLabs()
     let v4App: string
     if (driver.isAndroid) {
-      if (isSauceRun) {
+      if (onSauce) {
         v4App = process.env.ANDROID_APP_FILENAME || 'BCSC-Dev-latest.aab'
       } else {
         v4App = process.env.ANDROID_APP || 'BCSC.apk'
       }
     } else {
-      if (isSauceRun) {
+      if (onSauce) {
         v4App = process.env.IOS_APP_FILENAME || 'BCSC-Dev-latest.ipa'
       } else {
         v4App = process.env.IOS_APP_DEVICE || 'BCSC.ipa'
@@ -43,14 +43,14 @@ describe('Upgrade v3 → v4', () => {
     }
 
     let appRef: string
-    if (isSauceRun) {
+    if (onSauce) {
       appRef = toSauceAppRef(v4App)
     } else if (v4App.startsWith('storage:') || v4App.startsWith('http')) {
       // Local run with explicit remote reference
       appRef = v4App
     } else {
       // Local device — resolve to an absolute file path under e2e/apps/
-      appRef = resolve(__dirname, '../../../../apps', v4App)
+      appRef = resolve(__dirname, '../../../apps', v4App)
     }
 
     console.log(`[migration] Installing v4 app: ${appRef}`)
