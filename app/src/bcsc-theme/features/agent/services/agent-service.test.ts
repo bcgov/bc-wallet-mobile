@@ -1,3 +1,5 @@
+import { AppError } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { PersistentStorage } from '@bifold/core'
 import moment from 'moment'
 
@@ -121,8 +123,18 @@ describe('buildAgent', () => {
     logger,
   }
 
-  it('throws when mediatorUrl is empty', () => {
-    expect(() => buildAgent({ ...baseOptions, mediatorUrl: '' })).toThrow('Mediator URL is required to build agent')
+  it('throws a typed AppError (2901) when mediatorUrl is empty', () => {
+    let caught: unknown
+    try {
+      buildAgent({ ...baseOptions, mediatorUrl: '' })
+    } catch (e) {
+      caught = e
+    }
+
+    expect(caught).toBeInstanceOf(AppError)
+    expect((caught as AppError).statusCode).toBe(2901)
+    expect((caught as AppError).appEvent).toBe(AppEventCode.AGENT_INITIALIZATION_ERROR)
+    expect((caught as AppError).cause).toBeInstanceOf(Error)
   })
 
   it('constructs an agent and registers both outbound transports', () => {

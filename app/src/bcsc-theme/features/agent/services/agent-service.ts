@@ -1,4 +1,5 @@
 import { CACHED_LEDGERS_TTL_DAYS } from '@/constants'
+import { AppError, ErrorRegistry } from '@/errors'
 import { BCLocalStorageKeys } from '@/store'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import { BifoldLogger, PersistentStorage } from '@bifold/core'
@@ -47,7 +48,9 @@ export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefin
 
 export const buildAgent = (opts: BuildAgentOptions): Agent => {
   if (!opts.mediatorUrl) {
-    throw new Error('Mediator URL is required to build agent')
+    throw AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, {
+      cause: new Error('Mediator URL is required to build agent'),
+    })
   }
 
   const agentOptions = {
