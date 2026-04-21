@@ -47,7 +47,6 @@ describe('useAgentSetupViewModel', () => {
     jest.mocked(Bifold.useServices).mockReturnValue([logger, [], attestationMonitor, [], []] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
-    jest.mocked(Bifold.migrateToAskar).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)
     jest.mocked(agentService.buildAgent).mockReturnValue(mockAgent())
     jest.mocked(agentService.restartAgent).mockResolvedValue(undefined)
