@@ -34,6 +34,23 @@ export async function swipeDownBy(fraction = 0.25, durationMs = 500): Promise<vo
 }
 
 /**
+ * Pop the top stack frame using the platform's native "back" affordance:
+ * an edge-swipe-from-left on iOS (XCUITest's `interactivePopGestureRecognizer`),
+ * or the system back button on Android (`driver.back()`).
+ *
+ * Useful for screens that intentionally omit an in-app back/close control —
+ * e.g. PairingConfirmation in the iOS app-switch flow, where the user is
+ * expected to leave via the OS back-to-Safari shortcut.
+ */
+export async function navigateBack(): Promise<void> {
+  if (driver.isIOS) {
+    await swipeIosFromTo({ x: 0, y: 0.5 }, { x: 0.85, y: 0.5 }, 300)
+  } else {
+    await driver.back()
+  }
+}
+
+/**
  * Tap at window-relative coordinates (0–1 fractions of width/height). Uses the same
  * primitives as dismiss-keyboard taps — good for camera tap-to-focus without a test id.
  */
