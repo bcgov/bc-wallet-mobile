@@ -5,10 +5,9 @@
  *
  * Required env vars / defaults:
  *   V3_IOS_APP      — filename of v3 IPA in e2e/apps/ (default: BCSC-v3.ipa)
- *   V4_APP_FILENAME — path to v4 IPA for mid-test install (default: apps/BCWallet.ipa)
  *
  * Example:
- *   V3_IOS_APP=BCSC-v3.ipa V4_APP_FILENAME=$PWD/apps/BCWallet.ipa \
+ *   V3_IOS_APP=BCSC-v3.ipa \
  *     yarn wdio configs/local/wdio.ios.local.device.migration.conf.ts --suite migration
  */
 import { dirname, resolve } from 'node:path'

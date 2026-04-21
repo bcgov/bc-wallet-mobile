@@ -5,10 +5,9 @@
  *
  * Required env vars / defaults:
  *   V3_ANDROID_APP  — filename of v3 APK in e2e/apps/ (default: BCSC-v3.apk)
- *   V4_APP_FILENAME — path to v4 APK for mid-test install (default: apps/BCWallet.apk)
  *
  * Example:
- *   V3_ANDROID_APP=BCSC-v3.apk V4_APP_FILENAME=$PWD/apps/BCWallet.apk \
+ *   V3_ANDROID_APP=BCSC-v3.apk \
  *     yarn wdio configs/local/wdio.android.local.device.migration.conf.ts --suite migration
  */
 import { dirname, resolve } from 'node:path'

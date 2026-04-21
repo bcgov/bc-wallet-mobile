@@ -159,7 +159,7 @@ yarn test:ios:sauce
 yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite happy-path
 ```
 
-### _Migration Tests (v3 → v4) — SauceLabs Only_
+### _Migration Tests (v3 → v4)_
 
 _The migration suite tests upgrading from the v3 BC Services Card app (native Swift/Java) to the v4 BCSC app (React Native). It runs the full v3 onboarding and verification flow, then installs v4 over v3 and verifies the app unlocks with the v3 PIN._
 
@@ -169,9 +169,11 @@ _The migration suite tests upgrading from the v3 BC Services Card app (native Sw
 2. _Set the v3 app filenames in_ `.env.saucelabs`_:_
 
 ```bash
-V3_ANDROID_APP_FILENAME=BCSC-v3-latest.apk
-V3_IOS_APP_FILENAME=BCSC-v3-latest.ipa
-V4_APP_FILENAME=BCSC-Dev-latest.ipa
+V3_ANDROID_APP_FILENAME=BCSC-v3.apk
+V3_IOS_APP_FILENAME=BCSC-v3.ipa
+
+# Migration upgrade uses the standard current-build vars:
+# ANDROID_APP_FILENAME / IOS_APP_FILENAME
 ```
 
 3. _Ensure SiteMinder credentials are in_ `local.env` _(the v3 flow uses in-person verification)._
@@ -188,7 +190,7 @@ yarn test:ios:migration:sauce
 yarn wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration
 ```
 
-_The migration configs start with the v3 app as the initial install. During the test, `driver.installApp()` upgrades to v4 mid-session. Both apps share the same bundle/package ID (`ca.bc.gov.id.servicescard`), so the upgrade preserves app data._
+_The migration configs start with the v3 app as the initial install. During the test, `driver.installApp()` upgrades to v4 mid-session. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
 
 ### _Variant Selection_
 
@@ -241,9 +243,8 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `ANDROID_PLATFORM_VERSION` | _unset_               | _Pin Android version (e.g._ `15`_). Unset = Sauce picks any available match._ |
 | `BUILD_NAME`               | `local-<timestamp>`   | _SauceLabs build name_                                                        |
 | `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
-| `V3_ANDROID_APP_FILENAME`  | `BCSC-v3-latest.apk`  | _V3 Android app for migration tests_                                          |
-| `V3_IOS_APP_FILENAME`      | `BCSC-v3-latest.ipa`  | _V3 iOS app for migration tests_                                              |
-| `V4_APP_FILENAME`          | `BCSC-Dev-latest.ipa` | _V4 app installed mid-test during migration (URL or filename)_                |
+| `V3_ANDROID_APP_FILENAME`  | `BCSC-v3.apk`         | _V3 Android app for migration tests_                                          |
+| `V3_IOS_APP_FILENAME`      | `BCSC-v3.ipa`         | _V3 iOS app for migration tests_                                              |
 
 ### _SiteMinder (`local.env`)_
 

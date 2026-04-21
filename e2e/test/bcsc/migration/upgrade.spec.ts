@@ -3,6 +3,12 @@ import { fileURLToPath } from 'node:url'
 import { annotate } from '../../../src/helpers/sauce.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const isSauceRun = Boolean(process.env.SAUCE_USERNAME)
+
+function toSauceAppRef(value: string): string {
+  if (value.startsWith('storage:') || value.startsWith('http')) return value
+  return `storage:filename=${value}`
+}
 
 /**
  * Upgrade from v3 (BC Services Card) to v4 (BC Wallet / BCSC v4).
@@ -23,18 +29,28 @@ describe('Upgrade v3 → v4', () => {
 
     let v4App: string
     if (driver.isAndroid) {
-      v4App = process.env.ANDROID_APP || 'BCSC.apk'
+      if (isSauceRun) {
+        v4App = process.env.ANDROID_APP_FILENAME || 'BCSC-Dev-latest.aab'
+      } else {
+        v4App = process.env.ANDROID_APP || 'BCSC.apk'
+      }
     } else {
-      v4App = process.env.IOS_APP_DEVICE || 'BCSC.ipa'
+      if (isSauceRun) {
+        v4App = process.env.IOS_APP_FILENAME || 'BCSC-Dev-latest.ipa'
+      } else {
+        v4App = process.env.IOS_APP_DEVICE || 'BCSC.ipa'
+      }
     }
 
     let appRef: string
-    if (v4App.startsWith('storage:') || v4App.startsWith('http')) {
-      // Sauce Labs — already a valid remote reference
+    if (isSauceRun) {
+      appRef = toSauceAppRef(v4App)
+    } else if (v4App.startsWith('storage:') || v4App.startsWith('http')) {
+      // Local run with explicit remote reference
       appRef = v4App
     } else {
       // Local device — resolve to an absolute file path under e2e/apps/
-      appRef = resolve(__dirname, '../../../apps', v4App)
+      appRef = resolve(__dirname, '../../../../apps', v4App)
     }
 
     console.log(`[migration] Installing v4 app: ${appRef}`)

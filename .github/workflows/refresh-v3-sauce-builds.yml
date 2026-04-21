@@ -11,7 +11,7 @@
 #
 # Sauce Storage behaviour: uploading with the same `name` creates a new
 # version in the same app group, resetting the retention clock.
-# `storage:filename=BCSC-v3-latest.ipa` always resolves to the newest
+# `storage:filename=BCSC-v3.ipa` always resolves to the newest
 # upload of that filename, so migration configs need no changes.
 name: Refresh V3 Sauce Builds
 
@@ -23,8 +23,8 @@ on:
 
 env:
   RELEASE_TAG: bcsc-v3
-  V3_IOS_FILENAME: BCSC-v3-latest.ipa
-  V3_ANDROID_FILENAME: BCSC-v3-latest.apk
+  V3_IOS_FILENAME: BCSC-v3.ipa
+  V3_ANDROID_FILENAME: BCSC-v3.apk
 
 jobs:
   upload-v3-builds:
@@ -53,9 +53,12 @@ jobs:
             --dir .
 
       - name: Upload v3 iOS to SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" \
-            -u "${{ secrets.SAUCE_USERNAME }}:${{ secrets.SAUCE_ACCESS_KEY }}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
             --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$V3_IOS_FILENAME\"" \
@@ -70,9 +73,12 @@ jobs:
           echo "✓ Uploaded $V3_IOS_FILENAME (HTTP $http_code)"
 
       - name: Upload v3 Android to SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" \
-            -u "${{ secrets.SAUCE_USERNAME }}:${{ secrets.SAUCE_ACCESS_KEY }}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
             --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$V3_ANDROID_FILENAME\"" \

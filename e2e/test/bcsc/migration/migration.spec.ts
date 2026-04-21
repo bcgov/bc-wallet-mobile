@@ -8,7 +8,7 @@
  *
  * Prerequisites:
  * - V3 app uploaded to Sauce Labs storage (set as initial `appium:app`)
- * - V4 app uploaded to Sauce Labs storage (set via `V4_APP_FILENAME` env var)
+ * - V4 app uploaded to Sauce Labs storage
  * - SiteMinder credentials in `local.env` (for in-person verification approval)
  *
  * Run with: yarn wdio configs/sauce/wdio.<platform>.sauce.migration.conf.ts --suite migration
