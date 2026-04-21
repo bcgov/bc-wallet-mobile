@@ -15,6 +15,11 @@
     "test:ios:sauce": "wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts",
     "test:android:bio:sauce": "wdio configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts --suite biometrics",
     "test:ios:bio:sauce": "wdio configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts --suite biometrics",
+    "test:android:migration:sauce": "wdio configs/sauce/wdio.android.sauce.migration.conf.ts --suite migration",
+    "test:ios:migration:sauce": "wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration",
+    "test:migration:sauce": "npm run test:android:migration:sauce && npm run test:ios:migration:sauce",
+    "test:android:migration:device": "wdio configs/local/wdio.android.local.device.migration.conf.ts --suite migration",
+    "test:ios:migration:device": "wdio configs/local/wdio.ios.local.device.migration.conf.ts --suite migration",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
