@@ -32,5 +32,7 @@ export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCa
  * @returns True if the card evidence is complete, false otherwise.
  */
 export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
-  return Boolean(card?.evidenceType && card.documentNumber && card.metadata.length === 2)
+  return Boolean(
+    card?.evidenceType && card.documentNumber && card.metadata.length === card.evidenceType.image_sides.length
+  )
 }
