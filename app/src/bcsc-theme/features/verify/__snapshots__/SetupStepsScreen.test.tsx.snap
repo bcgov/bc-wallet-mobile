@@ -125,6 +125,7 @@ exports[`SetupSteps renders correctly 1`] = `
                   },
                 ]
               }
+              testID="com.ariesbifold:id/BCSC.NicknameAccount.AccountName"
             >
               BCSC.NicknameAccount.AccountName
             </Text>
@@ -235,6 +236,7 @@ exports[`SetupSteps renders correctly 1`] = `
                   },
                 ]
               }
+              testID="com.ariesbifold:id/BCSC.Steps.ScanOrTakePhotos"
             >
               BCSC.Steps.ScanOrTakePhotos
             </Text>
@@ -345,6 +347,7 @@ exports[`SetupSteps renders correctly 1`] = `
                   },
                 ]
               }
+              testID="com.ariesbifold:id/BCSC.Steps.GetVerificationStep3Subtext3"
             >
               BCSC.Steps.GetVerificationStep3Subtext3
             </Text>
@@ -574,6 +577,7 @@ exports[`SetupSteps renders correctly 1`] = `
                   },
                 ]
               }
+              testID="com.ariesbifold:id/BCSC.Steps.GetVerificationStep5Subtext3"
             >
               BCSC.Steps.GetVerificationStep5Subtext3
             </Text>

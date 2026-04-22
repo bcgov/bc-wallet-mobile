@@ -30,7 +30,6 @@ describe('Email Address', () => {
   it('should render the email address in Setup Step 4', async () => {
     // The email address is generated on the fly, so the test ID is dynamic.
     // After confirmation, the app returns to Setup Steps and displays the confirmed email on Step 4.
-    const el = await SetupSteps.findByTestId(`com.ariesbifold:id/${tempEmail.email}`)
-    await el.isDisplayed()
+    await SetupSteps.waitForDisplayed(`com.ariesbifold:id/${tempEmail.email}`)
   })
 })
