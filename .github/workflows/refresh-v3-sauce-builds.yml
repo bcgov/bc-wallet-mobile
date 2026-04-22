@@ -1,0 +1,93 @@
+# Refresh V3 Builds in SauceLabs
+#
+# Sauce Labs app storage deletes files after 60 days of inactivity.
+# The v3 BC Services Card builds (ias-ios / ias-android) are frozen —
+# this workflow re-uploads them on a schedule to keep them available
+# for migration tests (v3 → v4).
+#
+# The v3 .ipa and .apk are stored as GitHub Release assets on the
+# `bcsc-v3` tag in this repo. Update the RELEASE_TAG variable below
+# if you move them to a different release.
+#
+# Sauce Storage behaviour: uploading with the same `name` creates a new
+# version in the same app group, resetting the retention clock.
+# `storage:filename=BCSC-v3.ipa` always resolves to the newest
+# upload of that filename, so migration configs need no changes.
+name: Refresh V3 Sauce Builds
+
+on:
+  schedule:
+    # 1st of every month at 08:00 UTC — well within the 60-day window
+    - cron: '0 8 1 * *'
+  workflow_dispatch: {}
+
+env:
+  RELEASE_TAG: bcsc-v3
+  V3_IOS_FILENAME: BCSC-v3.ipa
+  V3_ANDROID_FILENAME: BCSC-v3.apk
+
+jobs:
+  upload-v3-builds:
+    name: Upload v3 builds to SauceLabs
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - name: Download v3 iOS build from GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "$V3_IOS_FILENAME" \
+            --dir .
+
+      - name: Download v3 Android build from GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "$V3_ANDROID_FILENAME" \
+            --dir .
+
+      - name: Upload v3 iOS to SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$V3_IOS_FILENAME\"" \
+            --form "name=\"$V3_IOS_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $V3_IOS_FILENAME (HTTP $http_code)"
+
+      - name: Upload v3 Android to SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$V3_ANDROID_FILENAME\"" \
+            --form "name=\"$V3_ANDROID_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $V3_ANDROID_FILENAME (HTTP $http_code)"

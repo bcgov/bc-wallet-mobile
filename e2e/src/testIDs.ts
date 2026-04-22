@@ -272,7 +272,7 @@ export const BCSC_TestIDs = {
     PINInput: 'com.ariesbifold:id/PINInput',
     Continue: 'com.ariesbifold:id/Continue',
     GetHelp: 'com.ariesbifold:id/GetHelp',
-    VisibilityButton: 'com.ariesbifold:id/VisibilityButton',
+    VisibilityButton: 'com.ariesbifold:id/PINInputVisibilityButton',
   },
   Lockout: {
     RemoveAccount: 'com.ariesbifold:id/RemoveAccount',
