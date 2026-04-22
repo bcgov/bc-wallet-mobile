@@ -28,6 +28,7 @@ describe('Email Address', () => {
   })
 
   it('should render the email address in Setup Step 4', async () => {
-    await SetupSteps.waitFor('UserEmailAddress')
+    await SetupSteps.waitFor('EmailAddress')
+    await SetupSteps.waitFor('EditEmail')
   })
 })

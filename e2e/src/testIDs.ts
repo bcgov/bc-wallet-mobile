@@ -242,7 +242,7 @@ export const BCSC_TestIDs = {
     Step3: 'com.ariesbifold:id/Step 3',
     Step4: 'com.ariesbifold:id/Step 4',
     EditEmail: 'com.ariesbifold:id/EditEmail',
-    UserEmailAddress: 'com.ariesbifold:id/UserEmailAddress',
+    EmailAddress: 'com.ariesbifold:id/EmailAddress',
     Step5: 'com.ariesbifold:id/Step 5',
     SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
     Help: 'com.ariesbifold:id/Help',
