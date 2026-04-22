@@ -1,3 +1,4 @@
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 import { getVerifyContext } from '../card-type/card-context.js'
@@ -34,6 +35,7 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should capture the front of the BC drivers licence', async () => {
+    await acceptSystemAlert()
     await EvidenceCapture.tap('TakePhoto')
     await EvidenceCapture.tap('UsePhoto')
   })

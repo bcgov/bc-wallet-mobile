@@ -132,7 +132,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View style={styles.contentEmailContainer}>
           {steps.email.completed ? (
             <>
-              <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
+              <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }} testID={testIdWithKey('UserEmailAddress')}>
                 {t('BCSC.Steps.StoredEmail', { email: store.bcscSecure.emailAddress })}
               </ThemedText>
               <TouchableOpacity
