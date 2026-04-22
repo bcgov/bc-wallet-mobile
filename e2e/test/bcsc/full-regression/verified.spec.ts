@@ -31,4 +31,4 @@ import '../main/main.spec.js'
 import '../main/login-from-deep-link.spec.js'
 import '../main/login-from-computer.spec.js'
 
-import '../settings/settings.spec.js'
+import '../main/settings/settings.spec.js'

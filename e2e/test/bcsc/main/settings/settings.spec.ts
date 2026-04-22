@@ -8,10 +8,10 @@
  */
 import { randomBytes } from 'node:crypto'
 
-import { TEST_PIN, UPDATED_TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { swipeUpBy } from '../../../src/helpers/gestures.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
+import { TEST_PIN, UPDATED_TEST_PIN, Timeouts } from '../../../../src/constants.js'
+import { swipeUpBy } from '../../../../src/helpers/gestures.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
 const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
 const Home = new BaseScreen(BCSC_TestIDs.Home)
