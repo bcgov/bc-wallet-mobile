@@ -33,6 +33,6 @@ export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCa
  */
 export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
   return Boolean(
-    card?.evidenceType && card.documentNumber && card.metadata.length === card.evidenceType.image_sides.length
+    card?.evidenceType && card.documentNumber && card.metadata.length >= card.evidenceType.image_sides.length
   )
 }
