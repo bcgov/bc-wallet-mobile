@@ -43,9 +43,19 @@ describe('Card Utils', () => {
   describe('isCardEvidenceComplete', () => {
     it('should return true for complete card evidence', () => {
       const completeCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: { image_sides: ['front', 'back'] },
         documentNumber: '123456789',
         metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isCardEvidenceComplete(completeCard as any)).toBe(true)
+    })
+
+    it('should return true for single-sided card evidence', () => {
+      const completeCard = {
+        evidenceType: { image_sides: ['front'] },
+        documentNumber: '123456789',
+        metadata: ['meta1'],
       }
 
       expect(isCardEvidenceComplete(completeCard as any)).toBe(true)
@@ -62,7 +72,7 @@ describe('Card Utils', () => {
 
     it('should return false when missing document number', () => {
       const incompleteCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: { image_sides: ['front', 'back'] },
         metadata: ['meta1', 'meta2'],
       }
 
@@ -71,9 +81,9 @@ describe('Card Utils', () => {
 
     it('should return false when metadata is incomplete', () => {
       const incompleteCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: { image_sides: ['front', 'back'] },
         documentNumber: '123456789',
-        metadata: ['meta1'], // Only 1 metadata item instead of 2
+        metadata: ['meta1'],
       }
 
       expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
