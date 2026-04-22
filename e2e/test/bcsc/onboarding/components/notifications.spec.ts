@@ -1,6 +1,6 @@
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
 const Notifications = new BaseScreen(BCSC_TestIDs.Notifications)
 
