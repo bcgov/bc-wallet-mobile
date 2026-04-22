@@ -175,7 +175,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     })
 
     if (hasPhotoEvidence || store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC) {
-      // we have photo formState, take the formState back to the setup steps
+      // If photo evidence already exists, or this is the NonBCSC flow, return to the setup steps
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
