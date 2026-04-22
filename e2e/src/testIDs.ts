@@ -27,7 +27,7 @@ export const BCSC_TestIDs = {
   },
   PrivacyPolicy: {
     Continue: 'com.ariesbifold:id/Continue',
-    LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+    LearnMore: 'com.ariesbifold:id/CardButton-Learn more',
     Back: 'com.ariesbifold:id/Back',
   },
   OptInAnalytics: {

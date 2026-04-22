@@ -13,8 +13,6 @@ describe('PIN Authentication', () => {
 
   it('should create a PIN', async () => {
     await CreatePIN.waitFor('PINInput1')
-    await CreatePIN.tap('PINInput1VisibilityButton')
-    await CreatePIN.tap('PINInput2VisibilityButton')
     await CreatePIN.type('PINInput1', TEST_PIN)
     await CreatePIN.type('PINInput2', TEST_PIN)
     await CreatePIN.tap('IUnderstand')
