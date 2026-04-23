@@ -9,7 +9,6 @@ import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountSta
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
-import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -18,7 +17,6 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
-import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -65,28 +63,37 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verified === false) {
-    return (
-      <BCSCActivityProvider>
-        <VerifyStack />
-      </BCSCActivityProvider>
-    )
-  }
+  return (
+    <BCSCActivityProvider>
+      <BCSCAccountProvider>
+        <BCSCMainStack />
+      </BCSCAccountProvider>
+    </BCSCActivityProvider>
+  )
 
-  if (store.bcscSecure.verified === true) {
-    return (
-      <BCSCActivityProvider>
-        <BCSCAccountProvider>
-          <BCSCIdTokenProvider>
-            <BCSCMainStack />
-          </BCSCIdTokenProvider>
-        </BCSCAccountProvider>
-      </BCSCActivityProvider>
-    )
-  }
-
-  // Fallback to AuthStack if verification state is somehow lost
-  return <AuthStack />
+  // FIXME (V4.1): Verification flow will be triggered from the Home screen
+  // if (store.bcscSecure.verified === false) {
+  //   return (
+  //     <BCSCActivityProvider>
+  //       <VerifyStack />
+  //     </BCSCActivityProvider>
+  //   )
+  // }
+  //
+  // if (store.bcscSecure.verified === true) {
+  //   return (
+  //     <BCSCActivityProvider>
+  //       <BCSCAccountProvider>
+  //         <BCSCIdTokenProvider>
+  //           <BCSCMainStack />
+  //         </BCSCIdTokenProvider>
+  //       </BCSCAccountProvider>
+  //     </BCSCActivityProvider>
+  //   )
+  // }
+  //
+  // // Fallback to AuthStack if verification state is somehow lost
+  // return <AuthStack />
 }
 
 export default BCSCRootStack

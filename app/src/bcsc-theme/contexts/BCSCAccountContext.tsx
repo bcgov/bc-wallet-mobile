@@ -1,6 +1,7 @@
 import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { BCSCEventTypes } from '@/events/eventTypes'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import { DeviceEventEmitter } from 'react-native'
@@ -31,6 +32,7 @@ export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(n
 export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const userService = useUserService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
 
   const { data, load, isLoading, refresh } = useDataLoader(userService.getUserMetadata, {
     onError: (error) => {
@@ -39,8 +41,10 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   })
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (store.bcscSecure.verified) {
+      load()
+    }
+  }, [load, store.bcscSecure.verified])
 
   // Listen for token refresh events (e.g., from FCM status notifications) and refresh account data
   useEffect(() => {

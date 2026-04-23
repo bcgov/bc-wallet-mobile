@@ -53,8 +53,10 @@ const Services: React.FC = () => {
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
   useEffect(() => {
-    loadIdTokenMetadata()
-  }, [loadIdTokenMetadata])
+    if (store.bcscSecure.verified) {
+      loadIdTokenMetadata()
+    }
+  }, [loadIdTokenMetadata, store.bcscSecure.verified])
 
   const styles = StyleSheet.create({
     headerText: {

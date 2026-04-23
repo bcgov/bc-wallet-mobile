@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -63,6 +64,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const [store] = useStore<BCState>()
 
   const filteringDoneRef = useRef(false)
 
@@ -79,8 +81,10 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   })
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (store.bcscSecure.verified) {
+      load()
+    }
+  }, [load, store.bcscSecure.verified])
 
   // Alert the user if services fail to load
   if (!serviceClients && isReady) {
