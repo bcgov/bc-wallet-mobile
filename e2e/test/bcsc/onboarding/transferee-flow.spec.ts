@@ -47,7 +47,7 @@ describe('Transfer Account Detour', () => {
   it('should fill in the Nickname and continue to Setup Steps', async () => {
     if (driver.isAndroid) {
       await Nickname.tap('AccountNicknameInput')
-      await Nickname.type('AccountNicknameInput', 'My Test Account', { tapFirst: true, characterByCharacter: false })
+      await Nickname.type('AccountNicknameInput', 'My Test Account', { tapFirst: true })
     } else {
       await Nickname.tap('AccountNicknamePressable')
       await Nickname.type('AccountNicknamePressable', 'My Test Account', { tapFirst: true })

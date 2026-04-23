@@ -129,10 +129,7 @@ describe('Settings', () => {
     // to the accessibility/UI hierarchy.
     if (driver.isAndroid) {
       await EditNickname.tap('AccountNicknameInput')
-      await EditNickname.type('AccountNicknameInput', newNickname, {
-        tapFirst: true,
-        characterByCharacter: false,
-      })
+      await EditNickname.type('AccountNicknameInput', newNickname, { tapFirst: true })
     } else {
       await EditNickname.tap('AccountNicknamePressable')
       await EditNickname.type('AccountNicknamePressable', newNickname, { tapFirst: true })
