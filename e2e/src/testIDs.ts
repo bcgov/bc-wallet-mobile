@@ -69,6 +69,13 @@ export const BCSC_TestIDs = {
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
     Back: 'com.ariesbifold:id/Back',
   },
+  TransferInstructions: {
+    ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferQRScanner: {
+    Back: 'com.ariesbifold:id/Back',
+  },
   IdentitySelection: {
     CombinedCard: 'com.ariesbifold:id/CombinedCard',
     PhotoCard: 'com.ariesbifold:id/PhotoCard',

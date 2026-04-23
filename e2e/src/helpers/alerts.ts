@@ -4,7 +4,15 @@ const POLL_INTERVAL_MS = 500
 const DEFAULT_APPEAR_TIMEOUT_MS = 5_000
 const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
 
-const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue']
+const IOS_APPROVE_ALERT_BUTTON_LABELS = [
+  'Allow',
+  'Allow While Using App',
+  'Allow Once',
+  'OK',
+  'Trust',
+  'Continue',
+  'Reset App',
+]
 
 const webdriverLogger = logger('webdriver')
 
