@@ -5,5 +5,6 @@ describe('Home', () => {
     const home = render(<Home navigation={{} as any} route={{} as any} />)
 
     expect(home).toBeTruthy()
+    expect(home).toMatchSnapshot()
   })
 })
