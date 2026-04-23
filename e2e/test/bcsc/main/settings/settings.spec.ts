@@ -203,17 +203,27 @@ describe('Settings', () => {
     const pinLabel = await MainAppSecurity.findByText('PIN')
     await pinLabel.waitForDisplayed({ timeout: Timeouts.elementVisible })
 
-    // "Create a PIN" card should be disabled (it's the active method).
+    // Button-state assertions fork on whether biometrics are available:
+    // `SecurityMethodSelector` has two render branches. When device auth
+    // is available (real devices), it renders CardButtons — ChoosePINButton
+    // is disabled because PIN is the current method, ChooseDeviceAuthButton
+    // is the enabled alternative. When device auth is NOT available
+    // (SauceLabs emulators), it renders a fallback branch with plain
+    // Buttons: only ChoosePINButton (always enabled, taps navigate to
+    // ChangePIN) and LearnMoreButton — ChooseDeviceAuthButton is not in
+    // the tree at all. Probe for the device-auth button to pick a branch.
     const pinButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChoosePINButton)
     await pinButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-    const pinEnabled = await pinButton.isEnabled()
-    if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
-
-    // Device auth card should be enabled (it's the alternative).
     const deviceAuthButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChooseDeviceAuthButton)
-    await deviceAuthButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-    const deviceAuthEnabled = await deviceAuthButton.isEnabled()
-    if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
+    const deviceAuthAvailable = await deviceAuthButton.isDisplayed().catch(() => false)
+
+    if (deviceAuthAvailable) {
+      const pinEnabled = await pinButton.isEnabled()
+      if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
+
+      const deviceAuthEnabled = await deviceAuthButton.isEnabled()
+      if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
+    }
 
     await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('EditNickname')
