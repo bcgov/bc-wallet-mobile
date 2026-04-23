@@ -50,6 +50,10 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   const filteredBannerMessages = store.bcsc.bannerMessages.filter((b) => b.id === BCSCBanner.ACCOUNT_EXPIRING_SOON)
 
+  if (!store.bcscSecure.verified) {
+    return <TabScreenWrapper />
+  }
+
   if (!account) {
     return <LoadingScreen />
   }
