@@ -32,7 +32,7 @@ interface TermsOfUseScreenProps {
  */
 export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.ReactElement => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { config } = useApi()
   const [termsOfUse, setTermsOfUse] = useState<TermsOfUseResponseData | null>(null)
@@ -130,6 +130,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
           {
             termsOfUse,
             colorPalette: ColorPalette,
+            textColor: TextTheme.normal.color,
             headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
             subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
             versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),

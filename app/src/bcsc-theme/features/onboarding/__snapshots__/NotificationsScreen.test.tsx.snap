@@ -48,7 +48,7 @@ exports[`Notifications renders correctly 1`] = `
           style={
             [
               {
-                "color": "#FFFFFF",
+                "color": "#003366",
                 "fontSize": 125,
               },
               undefined,

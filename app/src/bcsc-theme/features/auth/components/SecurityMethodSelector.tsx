@@ -192,7 +192,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   if (isLoading) {
     return (
       <ScreenWrapper scrollViewContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={ColorPalette.grayscale.white} />
+        <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
       </ScreenWrapper>
     )
   }

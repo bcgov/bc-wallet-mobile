@@ -42,11 +42,11 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
         "html": "<!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">  
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body {
     background-color: #F2F2F2;
-    color: #FFFFFFFF;
+    color: #313132;
     font-family: -apple-system, system-ui, sans-serif;
     font-size: 32px !important;
     padding: 0 16px 16px 16px;
@@ -55,7 +55,7 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
   }
   body, body * {
     background-color: #F2F2F2 !important;
-    color: #FFFFFFFF !important;
+    color: #313132 !important;
   }
   p, li, dd, dt {
     margin-bottom: 0.75em;

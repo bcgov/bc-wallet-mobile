@@ -143,7 +143,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <View style={styles.iconContainer}>
-        <Icon name={'bell-ring-outline'} size={ONBOARDING_ICON_IMAGE_SIZE} color={ColorPalette.grayscale.white} />
+        <Icon name={'bell-ring-outline'} size={ONBOARDING_ICON_IMAGE_SIZE} color={ColorPalette.brand.primary} />
       </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
