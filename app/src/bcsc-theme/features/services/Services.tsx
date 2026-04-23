@@ -48,6 +48,7 @@ const Services: React.FC = () => {
   const { serviceClients, isLoading } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
+    disabled: !store.bcscSecure.verified, // V4.1 only fetch service clients when user is verified
   })
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
