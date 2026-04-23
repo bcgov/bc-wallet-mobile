@@ -1,7 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCState } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,7 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
+import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -63,37 +64,23 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
+  if (store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
+    return (
+      <BCSCActivityProvider>
+        <VerifyStack />
+      </BCSCActivityProvider>
+    )
+  }
+
   return (
     <BCSCActivityProvider>
       <BCSCAccountProvider>
+        {/* <BCSCIdTokenProvider> */}
         <BCSCMainStack />
+        {/* </BCSCIdTokenProvider> */}
       </BCSCAccountProvider>
     </BCSCActivityProvider>
   )
-
-  // FIXME (V4.1): Verification flow will be triggered from the Home screen
-  // if (store.bcscSecure.verified === false) {
-  //   return (
-  //     <BCSCActivityProvider>
-  //       <VerifyStack />
-  //     </BCSCActivityProvider>
-  //   )
-  // }
-  //
-  // if (store.bcscSecure.verified === true) {
-  //   return (
-  //     <BCSCActivityProvider>
-  //       <BCSCAccountProvider>
-  //         <BCSCIdTokenProvider>
-  //           <BCSCMainStack />
-  //         </BCSCIdTokenProvider>
-  //       </BCSCAccountProvider>
-  //     </BCSCActivityProvider>
-  //   )
-  // }
-  //
-  // // Fallback to AuthStack if verification state is somehow lost
-  // return <AuthStack />
 }
 
 export default BCSCRootStack
