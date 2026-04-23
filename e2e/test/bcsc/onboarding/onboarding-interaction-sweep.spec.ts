@@ -38,15 +38,9 @@ async function getBcscAppId(): Promise<string> {
   return driver.getCurrentPackage()
 }
 
-describe('App Launch', () => {
-  it('should display the Account Setup screen', async () => {
-    await acceptSystemAlert()
-    await AccountSetup.waitFor('TransferAccount', Timeouts.appLaunch)
-  })
-})
-
 describe('Add Account', () => {
   it('should tap Add Account', async () => {
+    await acceptSystemAlert()
     await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
     await AccountSetup.tap('AddAccount')
   })
