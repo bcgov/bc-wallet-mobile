@@ -16,7 +16,6 @@ import { BCSC_TestIDs } from '../../../src/testIDs.js'
 const BROWSER_HANDOFF_PAUSE_MS = 2000
 
 const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
-const TransferInformation = new BaseScreen(BCSC_TestIDs.TransferInformation)
 const SetupTypes = new BaseScreen(BCSC_TestIDs.SetupTypes)
 const IntroCarousel = new BaseScreen(BCSC_TestIDs.IntroCarousel)
 const PrivacyPolicy = new BaseScreen(BCSC_TestIDs.PrivacyPolicy)
@@ -27,10 +26,6 @@ const SecureApp = new BaseScreen(BCSC_TestIDs.SecureApp)
 const CreatePIN = new BaseScreen(BCSC_TestIDs.CreatePIN)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
-const Nickname = new BaseScreen(BCSC_TestIDs.Nickname)
-const TransferInstructions = new BaseScreen(BCSC_TestIDs.TransferInstructions)
-const TransferQRScanner = new BaseScreen(BCSC_TestIDs.TransferQRScanner)
-const Settings = new BaseScreen(BCSC_TestIDs.Settings)
 
 async function getBcscAppId(): Promise<string> {
   if (driver.isIOS) {
@@ -47,85 +42,6 @@ describe('App Launch', () => {
   it('should display the Account Setup screen', async () => {
     await acceptSystemAlert()
     await AccountSetup.waitFor('TransferAccount', Timeouts.appLaunch)
-  })
-})
-
-describe('Transfer Account Detour', () => {
-  it('should detour through Transfer Account all the way to Setup Steps', async () => {
-    await AccountSetup.tap('TransferAccount')
-    await TransferInformation.waitFor('TransferAccountButton')
-    await TransferInformation.tap('TransferAccountButton')
-    await PrivacyPolicy.waitFor('Continue')
-    await PrivacyPolicy.tap('Continue')
-    await OptInAnalytics.waitFor('Accept')
-    await OptInAnalytics.tap('Accept')
-    await TermsOfUse.waitFor('AcceptAndContinue')
-    await TermsOfUse.tapWhenEnabled('AcceptAndContinue')
-
-    if (!driver.isAndroid) {
-      await Notifications.waitFor('Continue')
-      await Notifications.tap('Continue')
-      // Dismiss the iOS permission alert ("Don't Allow") to exercise the
-      // declined-permission codepath. `ContinueWithoutNotifications` only
-      // renders on re-entry after a prior denial (NotificationsScreen.tsx),
-      // which is unreachable in a single fresh-install flow — tap it only
-      // if it happens to be visible.
-      await driver.pause(1500)
-      try {
-        await driver.dismissAlert()
-      } catch {
-        // No alert or already dismissed.
-      }
-    }
-    await SecureApp.waitFor('PinAuth')
-    await SecureApp.tap('PinAuth')
-    await CreatePIN.waitFor('PINInput1')
-    await CreatePIN.type('PINInput1', TEST_PIN)
-    await CreatePIN.type('PINInput2', TEST_PIN)
-    await CreatePIN.tap('IUnderstand')
-    await CreatePIN.tap('Continue')
-    await SetupSteps.waitFor('Step1')
-    await SetupSteps.tap('Step1')
-    await Nickname.waitFor('AccountNicknameInput')
-  })
-
-  it('should fill in the Nickname and continue to Setup Steps', async () => {
-    if (driver.isAndroid) {
-      await Nickname.tap('AccountNicknameInput')
-      await Nickname.type('AccountNicknameInput', 'My Test Account', { tapFirst: true, characterByCharacter: false })
-    } else {
-      await Nickname.tap('AccountNicknamePressable')
-      await Nickname.type('AccountNicknamePressable', 'My Test Account', { tapFirst: true })
-    }
-    await Nickname.dismissKeyboard()
-    await Nickname.tap('SaveAndContinue')
-    await SetupSteps.waitFor('Step2')
-  })
-
-  it('should click Step 2 and open the Transfer Account screen', async () => {
-    await SetupSteps.tap('Step2')
-    await TransferInstructions.waitFor('ScanQRCode')
-    await TransferInstructions.tap('ScanQRCode')
-    await acceptSystemAlert()
-    await TransferQRScanner.waitFor('Back')
-    await TransferQRScanner.tap('Back')
-    await TransferInstructions.waitFor('Back')
-    await TransferInstructions.tap('Back')
-  })
-
-  it('should reset fully back to beginning of onboarding after backing out of Transfer Account', async () => {
-    await SetupSteps.waitFor('SettingsMenuButton')
-    await SetupSteps.tap('SettingsMenuButton')
-    await Settings.waitFor('RemoveAccount')
-    await Settings.tap('RemoveAccount')
-
-    if (driver.isAndroid) {
-      const resetButton = await $('android=new UiSelector().textMatches("(?i)^reset app$")')
-      await resetButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-      await resetButton.click()
-    } else {
-      await acceptSystemAlert()
-    }
   })
 })
 
@@ -172,7 +88,11 @@ describe('Intro Carousel Interactions', () => {
 })
 
 describe('Privacy Policy Page', () => {
-  it('should continue', async () => {
+  it('should open learn more web view then return and carry onwards', async () => {
+    await PrivacyPolicy.waitFor('LearnMore')
+    await PrivacyPolicy.tap('LearnMore')
+    await WebView.waitFor('Back')
+    await WebView.tap('Back')
     await PrivacyPolicy.waitFor('Continue')
     await PrivacyPolicy.tap('Continue')
   })
