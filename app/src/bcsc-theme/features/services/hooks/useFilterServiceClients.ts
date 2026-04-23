@@ -1,8 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +49,11 @@ export interface ServiceClientsFilter {
    * @type {string[]}
    */
   serviceClientIdsFilter?: string[]
+  /**
+   * If true, the hook will skip loading service clients and return an empty list.
+   * @type {boolean}
+   */
+  disabled?: boolean
 }
 
 /**
@@ -64,7 +68,6 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
 
   const filteringDoneRef = useRef(false)
 
@@ -73,18 +76,25 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     load,
     isReady,
     isLoading,
-  } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
-    onError: (error) => {
-      logger.error('Error loading services', error as Error)
-      filteringDoneRef.current = true
+  } = useDataLoader<ClientMetadata[]>(
+    async () => {
+      if (filter.disabled) {
+        return []
+      }
+
+      return metadata.getClientMetadata()
     },
-  })
+    {
+      onError: (error) => {
+        logger.error('Error loading services', error as Error)
+        filteringDoneRef.current = true
+      },
+    }
+  )
 
   useEffect(() => {
-    if (store.bcscSecure.verified) {
-      load()
-    }
-  }, [load, store.bcscSecure.verified])
+    load()
+  }, [load])
 
   // Alert the user if services fail to load
   if (!serviceClients && isReady) {

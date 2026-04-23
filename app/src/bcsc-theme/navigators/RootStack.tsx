@@ -64,7 +64,7 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
+  if (store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />
