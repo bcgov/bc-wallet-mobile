@@ -65,7 +65,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   })
 
   const renderStepSeparator = () => <View style={styles.itemSeparator} />
-  console.log(store.bcscSecure.additionalEvidenceData.length)
 
   // SETUP STEP 1: Nickname Account
   const renderStepNickname = () => (
