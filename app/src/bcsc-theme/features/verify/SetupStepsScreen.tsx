@@ -65,6 +65,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   })
 
   const renderStepSeparator = () => <View style={styles.itemSeparator} />
+  console.log(store.bcscSecure.additionalEvidenceData.length)
 
   // SETUP STEP 1: Nickname Account
   const renderStepNickname = () => (
@@ -93,7 +94,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           <View>
             <View style={styles.addSecondIdTextContainer}>
               <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
-                {t('BCSC.Steps.AddSecondIdText')}
+                {store.bcscSecure.additionalEvidenceData.length === 1 && store.bcscSecure.serial
+                  ? t('BCSC.Steps.AddThirdIdText')
+                  : t('BCSC.Steps.AddSecondIdText')}
               </ThemedText>
               <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
             </View>
