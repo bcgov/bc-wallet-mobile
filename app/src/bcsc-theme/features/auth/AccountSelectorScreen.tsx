@@ -60,7 +60,8 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
 
   return (
     <>
-      <NotificationBannerContainer excludeBanners={[BCSCBanner.DEVICE_LIMIT_EXCEEDED]} />
+      {/* noop handler: DEVICE_LIMIT_EXCEEDED is the only banner that invokes it and is excluded above */}
+      <NotificationBannerContainer onManageDevices={() => {}} excludeBanners={[BCSCBanner.DEVICE_LIMIT_EXCEEDED]} />
       <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
         <GenericCardImage />
         <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>

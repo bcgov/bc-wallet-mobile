@@ -11,7 +11,7 @@ import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 interface NotificationBannerContainerProps {
-  onManageDevices?: () => void
+  onManageDevices: () => void
   excludeBanners?: BCSCBanner[]
 }
 
@@ -82,7 +82,7 @@ export const NotificationBannerContainer = ({ onManageDevices, excludeBanners }:
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
           handleDelete={handleDeleteDeviceCountMessage}
-          onManageDevices={onManageDevices ?? (() => {})}
+          onManageDevices={onManageDevices}
         />
       </SafeAreaModal>
 
