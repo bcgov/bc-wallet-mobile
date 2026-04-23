@@ -10,6 +10,7 @@
  */
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { getCurrentAppId } from '../../../src/helpers/deep-link.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -26,17 +27,6 @@ const SecureApp = new BaseScreen(BCSC_TestIDs.SecureApp)
 const CreatePIN = new BaseScreen(BCSC_TestIDs.CreatePIN)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
-
-async function getBcscAppId(): Promise<string> {
-  if (driver.isIOS) {
-    const info = (await driver.execute('mobile: activeAppInfo')) as { bundleId?: string }
-    if (!info?.bundleId) {
-      throw new Error('Unable to resolve iOS bundle id from mobile: activeAppInfo')
-    }
-    return info.bundleId
-  }
-  return driver.getCurrentPackage()
-}
 
 describe('Add Account', () => {
   it('should tap Add Account', async () => {
@@ -64,7 +54,7 @@ describe('Setup Type Interaction', () => {
 describe('Intro Carousel Interactions', () => {
   it('should open Where to use in the browser and return to the carousel', async () => {
     await IntroCarousel.waitFor('CarouselNext')
-    const appId = await getBcscAppId()
+    const appId = await getCurrentAppId()
     await IntroCarousel.tap('WhereToUseButton')
     await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
     await driver.activateApp(appId)
