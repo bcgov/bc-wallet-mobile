@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Home should render the Home component 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "off",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    {
+      "backgroundColor": "#000000",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "flexGrow": 1,
+      }
+    }
+  >
+    <View />
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;
