@@ -82,7 +82,7 @@ export const NotificationBannerContainer = ({ onManageDevices, excludeBanners }:
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
           handleDelete={handleDeleteDeviceCountMessage}
-          onManageDevices={() => onManageDevices?.()}
+          onManageDevices={onManageDevices ?? (() => {})}
         />
       </SafeAreaModal>
 
