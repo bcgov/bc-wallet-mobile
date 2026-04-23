@@ -75,6 +75,7 @@ describe('Privacy Policy Page', () => {
   it('should open learn more web view then return and carry onwards', async () => {
     await PrivacyPolicy.waitFor('LearnMore')
     await PrivacyPolicy.tap('LearnMore')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
     await WebView.waitFor('Back')
     await WebView.tap('Back')
     await PrivacyPolicy.waitFor('Continue')
