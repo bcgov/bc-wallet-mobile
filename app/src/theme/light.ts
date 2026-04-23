@@ -1,6 +1,6 @@
 import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text.svg'
-import { GrayscaleColors } from '@bcwallet-theme/theme'
+import { GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
 
 import { createAppTheme } from './factory'
 
@@ -34,7 +34,7 @@ export const LightTheme = createAppTheme({
   foregroundSubtle: GrayscaleColors.darkGrey,
   onboardingBodyText: GrayscaleColors.darkGrey,
   textOnWhite: GrayscaleColors.darkGrey,
-  inlineErrorText: '#FFFFFF',
+  inlineErrorText: NotificationColors.errorText,
   secondaryButton: {
     backgroundColor: GrayscaleColors.white,
     borderWidth: 2,
