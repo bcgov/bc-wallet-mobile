@@ -1,3 +1,4 @@
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
@@ -59,7 +60,7 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
 
   return (
     <>
-      <NotificationBannerContainer onManageDevices={() => {}} />
+      <NotificationBannerContainer excludeBanners={[BCSCBanner.DEVICE_LIMIT_EXCEEDED]} />
       <ScreenWrapper scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
         <GenericCardImage />
         <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
