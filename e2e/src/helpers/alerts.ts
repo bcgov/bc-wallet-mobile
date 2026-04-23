@@ -105,16 +105,13 @@ async function actOnIosAlertByLabel(
   return true
 }
 
-async function resolveIosSystemAlert(action: 'accept' | 'dismiss', appearTimeoutMs: number): Promise<void> {
-  if (!(await waitForPopup(appearTimeoutMs))) {
-    console.log(`[alerts] No iOS native popup appeared within ${appearTimeoutMs}ms — continuing`)
-    return
-  }
+type AlertStrategy = { name: string; run: () => Promise<boolean | void> }
 
+function buildIosAlertStrategies(action: 'accept' | 'dismiss'): AlertStrategy[] {
   const labels = action === 'accept' ? IOS_APPROVE_ALERT_BUTTON_LABELS : IOS_DECLINE_ALERT_BUTTON_LABELS
   const driverFallback = action === 'accept' ? () => driver.acceptAlert() : () => driver.dismissAlert()
 
-  const strategies: Array<{ name: string; run: () => Promise<boolean | void> }> = [
+  return [
     {
       name: `mobile: alert + buttonLabel (${action})`,
       run: async () => {
@@ -133,20 +130,32 @@ async function resolveIosSystemAlert(action: 'accept' | 'dismiss', appearTimeout
       },
     },
   ]
+}
 
-  for (const { name, run } of strategies) {
-    try {
-      const result = await run()
-      if (result === false) continue
-    } catch (err) {
-      console.log(`[alerts] ${name} threw: ${(err as Error).message ?? err}`)
-      continue
-    }
-    if (await waitForDismissal(DEFAULT_DISMISS_TIMEOUT_MS)) {
-      console.log(`[alerts] Resolved system alert via ${name}`)
-      return
-    }
-    console.log(`[alerts] ${name} did not dismiss the alert — trying next strategy`)
+async function tryAlertStrategy({ name, run }: AlertStrategy): Promise<boolean> {
+  try {
+    const result = await run()
+    if (result === false) return false
+  } catch (err) {
+    console.log(`[alerts] ${name} threw: ${(err as Error).message ?? err}`)
+    return false
+  }
+  if (await waitForDismissal(DEFAULT_DISMISS_TIMEOUT_MS)) {
+    console.log(`[alerts] Resolved system alert via ${name}`)
+    return true
+  }
+  console.log(`[alerts] ${name} did not dismiss the alert — trying next strategy`)
+  return false
+}
+
+async function resolveIosSystemAlert(action: 'accept' | 'dismiss', appearTimeoutMs: number): Promise<void> {
+  if (!(await waitForPopup(appearTimeoutMs))) {
+    console.log(`[alerts] No iOS native popup appeared within ${appearTimeoutMs}ms — continuing`)
+    return
+  }
+
+  for (const strategy of buildIosAlertStrategies(action)) {
+    if (await tryAlertStrategy(strategy)) return
   }
 
   throw new Error(`[alerts] Detected native popup but failed to ${action} it with any strategy`)
