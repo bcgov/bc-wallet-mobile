@@ -1,5 +1,5 @@
-import { TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { TEST_PIN } from '../../../src/constants.js'
+import { acceptSystemAlert, tapResetAppConfirm } from '../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -29,21 +29,9 @@ describe('Transfer Account Detour', () => {
     await TermsOfUse.waitFor('AcceptAndContinue')
     await TermsOfUse.tapWhenEnabled('AcceptAndContinue')
 
-    if (!driver.isAndroid) {
-      await Notifications.waitFor('Continue')
-      await Notifications.tap('Continue')
-      // Dismiss the iOS permission alert ("Don't Allow") to exercise the
-      // declined-permission codepath. `ContinueWithoutNotifications` only
-      // renders on re-entry after a prior denial (NotificationsScreen.tsx),
-      // which is unreachable in a single fresh-install flow — tap it only
-      // if it happens to be visible.
-      await driver.pause(1500)
-      try {
-        await driver.dismissAlert()
-      } catch {
-        // No alert or already dismissed.
-      }
-    }
+    await Notifications.waitFor('Continue')
+    await Notifications.tap('Continue')
+    await acceptSystemAlert()
     await SecureApp.waitFor('PinAuth')
     await SecureApp.tap('PinAuth')
     await CreatePIN.waitFor('PINInput1')
@@ -86,12 +74,6 @@ describe('Transfer Account Detour', () => {
     await Settings.waitFor('RemoveAccount')
     await Settings.tap('RemoveAccount')
 
-    if (driver.isAndroid) {
-      const resetButton = await $('android=new UiSelector().textMatches("(?i)^reset app$")')
-      await resetButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-      await resetButton.click()
-    } else {
-      await acceptSystemAlert()
-    }
+    await tapResetAppConfirm()
   })
 })

@@ -8,7 +8,8 @@
  */
 import { randomBytes } from 'node:crypto'
 
-import { TEST_PIN, UPDATED_TEST_PIN, Timeouts } from '../../../../src/constants.js'
+import { TEST_PIN, Timeouts, UPDATED_TEST_PIN } from '../../../../src/constants.js'
+import { tapResetAppConfirm } from '../../../../src/helpers/alerts.js'
 import { swipeUpBy } from '../../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
@@ -334,16 +335,13 @@ describe('Settings', () => {
     // After the network call, ForgetAllPairingsScreen fires an RN
     // `Alert.alert` titled "Success" via `useAlerts.forgetPairingsAlert`
     // and then `navigation.goBack()`. iOS maps this to a real
-    // `UIAlertController` that Appium's alert API can dismiss directly
-    // — but `wdio.ios.local.sim.conf.ts` sets `autoAcceptAlerts: true`,
-    // so on the local sim the alert may already be gone by the time we
-    // look for it. On Android RN renders Alert.alert as an app-owned
-    // `AlertDialog` widget, so `driver.acceptAlert()` can't see it and
-    // we have to tap the OK button by visible text instead.
+    // `UIAlertController` that Appium's alert API can dismiss directly.
+    // The migration iOS device config enables `autoAcceptAlerts`, so the
+    // alert may already be gone by the time we look for it. On Android
+    // RN renders Alert.alert as an app-owned `AlertDialog` widget, so
+    // `driver.acceptAlert()` can't see it and we have to tap the OK
+    // button by visible text instead.
     if (driver.isIOS) {
-      // Sim has autoAcceptAlerts:true so the alert may already be gone;
-      // real device needs explicit dismissal. Try acceptAlert, fall
-      // through if already dismissed.
       await driver.pause(2000)
       try {
         await driver.acceptAlert()
@@ -388,7 +386,8 @@ describe('Settings', () => {
     // app-owned `AlertDialog` (text-based fallback required).
     if (driver.isIOS) {
       // dismissAlert taps the cancel-style button — exactly what we want.
-      // Try/catch handles sim autoAcceptAlerts already dismissing it.
+      // Try/catch handles the migration device config where autoAcceptAlerts
+      // may already have dismissed it.
       await driver.pause(2000)
       try {
         await driver.dismissAlert()
@@ -460,24 +459,7 @@ describe('Settings', () => {
     // pre-onboarding state and cannot chain into any further Settings
     // tests. Running this spec again requires re-onboarding the device.
     await Settings.tap('RemoveAccount')
-    if (driver.isIOS) {
-      // iOS renders a real UIAlertController; `driver.acceptAlert()` taps
-      // the non-cancel action, which is the "Reset App" destructive
-      // button given the actions order
-      // (`SettingsContent.tsx onPressRemoveAccount`).
-      await driver.pause(2000)
-      try {
-        await driver.acceptAlert()
-      } catch {
-        // autoAcceptAlerts already handled it
-      }
-    } else {
-      const heading = await Settings.findByText('Are you sure?')
-      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
-      // Android Material upper-cases AlertDialog button labels.
-      const resetButton = await Settings.findByText('RESET APP')
-      await resetButton.click()
-    }
+    await tapResetAppConfirm()
     // `factoryReset()` tears down secure storage and navigation state;
     // the app lands back on the AccountSetup onboarding screen. Use the
     // generous `appLaunch` timeout to absorb the reset work.

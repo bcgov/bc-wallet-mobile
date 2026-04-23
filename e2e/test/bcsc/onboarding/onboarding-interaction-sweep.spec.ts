@@ -9,7 +9,7 @@
  * Imported by `full-regression/interaction-sweep.spec.ts`.
  */
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { acceptSystemAlert, dismissSystemAlert } from '../../../src/helpers/alerts.js'
 import { getCurrentAppId } from '../../../src/helpers/deep-link.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
@@ -96,29 +96,27 @@ describe('Terms of Use', () => {
   })
 })
 
-// Android auto-grants notifications (`autoGrantPermissions: true`), and
-// TermsOfUseScreen skips OnboardingNotifications when permission is already
-// granted — so the Notifications screen is only reachable on iOS.
 describe('Notifications Interactions', () => {
   it('should tap Help and return from the WebView', async () => {
-    if (driver.isAndroid) return
-
     await Notifications.waitFor('Help')
     await Notifications.tap('Help')
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
     await WebView.waitFor('Back')
     await WebView.tap('Back')
   })
 
-  it('should Continue without notifications', async () => {
-    if (driver.isAndroid) return
+  it('should click Continue then deny native permissions', async () => {
+    await Notifications.waitFor('Continue')
+    await Notifications.tap('Continue')
+    await dismissSystemAlert()
+  })
 
-    if (await Notifications.isDisplayed('ContinueWithoutNotifications')) {
-      await Notifications.tap('ContinueWithoutNotifications')
-    } else {
-      await Notifications.waitFor('Continue')
-      await Notifications.tap('Continue')
-      await acceptSystemAlert()
-    }
+  it('should navigate back to the previous screen then continue without notifications', async () => {
+    await SecureApp.waitFor('Back')
+    await SecureApp.tap('Back')
+
+    await Notifications.waitFor('ContinueWithoutNotifications')
+    await Notifications.tap('ContinueWithoutNotifications')
   })
 })
 
