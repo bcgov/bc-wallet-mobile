@@ -11,7 +11,7 @@ import { useNotifications } from '@/hooks/notifications'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { BCState } from '@/store'
 import { getCredentialNotificationType } from '@/utils/credentials'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { NotificationListItem, testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback } from 'react'
@@ -30,7 +30,7 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 const Home: React.FC<HomeProps> = () => {
   const { Spacing } = useTheme()
   const notifications = useNotifications()
-  const customNotifications = useCustomNotifications()
+  const { getCustomNotificationConfig } = useCustomNotifications()
 
   return (
     <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg } }}>
@@ -40,18 +40,13 @@ const Home: React.FC<HomeProps> = () => {
         decelerationRate="fast"
         data={notifications}
         keyExtractor={(notification) => notification.id}
-        renderItem={({ item }) => {
-          const notificationType = getCredentialNotificationType(item)
-          const customNotification = customNotifications.getCustomNotification(item.id)
-          return (
-            <ThemedText>{`Notification: ${item.id}, Type: ${notificationType} CustomNotification:${customNotification}`}</ThemedText>
-            // <NotificationListItem
-            //   notificationType={notificationType}
-            //   notification={item}
-            //   customNotification={customNotification}
-            // />
-          )
-        }}
+        renderItem={({ item }) => (
+          <NotificationListItem
+            notificationType={getCredentialNotificationType(item)}
+            notification={item}
+            customNotification={getCustomNotificationConfig(item.id)}
+          />
+        )}
       />
     </TabScreenWrapper>
   )

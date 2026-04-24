@@ -12,6 +12,11 @@ export const useCustomNotifications = () => {
   /**
    * Defines the configuration for the "Start Verification" custom notification
    *
+   * @example
+   *  title: 'You're not verified',
+   *  description: 'You can continue the verification process at anytime.'
+   *  buttonTitle: 'Start verification'
+   *
    * @returns The configuration object for the "Start Verification" custom notification.
    */
   const startVerificationNotification = useCallback((): CustomNotificationConfig => {
@@ -34,7 +39,7 @@ export const useCustomNotifications = () => {
    * @param id - The ID of the custom notification to retrieve.
    * @returns The custom notification configuration if found, otherwise undefined.
    */
-  const getCustomNotification = useCallback(
+  const getCustomNotificationConfig = useCallback(
     (id: string | CustomNotificationID): CustomNotificationConfig | undefined => {
       if (id === CustomNotificationID.BCSCStartVerification) {
         return startVerificationNotification()
@@ -45,9 +50,9 @@ export const useCustomNotifications = () => {
 
   return useMemo(
     () => ({
-      getCustomNotification,
+      getCustomNotificationConfig,
       startVerificationNotification,
     }),
-    [getCustomNotification, startVerificationNotification]
+    [getCustomNotificationConfig, startVerificationNotification]
   )
 }
