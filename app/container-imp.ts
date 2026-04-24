@@ -240,11 +240,13 @@ export class AppContainer implements Container {
 
     // BCSC uses its own Main stack (not Bifold's SettingStack), so override the
     // Credentials screen's headerLeft to navigate to BCSCScreens.MainSettings.
+    // Also rename the header title from "Credentials" to "Wallet" per BCSC v4.1 design.
     if (Config.BUILD_TARGET === Mode.BCSC) {
       this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
         ...DefaultScreenOptionsDictionary,
         [Screens.Credentials]: {
           ...DefaultScreenOptionsDictionary[Screens.Credentials],
+          title: 'Wallet',
           headerLeft: createMainSettingsHeaderButton(),
         },
       })
