@@ -354,9 +354,11 @@ export const BCSC_TestIDs = {
   TransferAccountQRInformation: {
     GetQRCodeButton: 'com.ariesbifold:id/GetQRCodeButton',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountQRDisplay: {
     GetNewQRCode: 'com.ariesbifold:id/GetNewQRCode',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountSuccess: {
     TransferSuccessButton: 'com.ariesbifold:id/TransferSuccessButton',

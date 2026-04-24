@@ -75,5 +75,6 @@ describe('Transfer Account Detour', () => {
     await Settings.tap('RemoveAccount')
 
     await tapResetAppConfirm()
+    await AccountSetup.waitFor('TransferAccount')
   })
 })
