@@ -12,7 +12,7 @@ import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
-  excludeBanners?: BCSCBanner[]
+  bannerMessages: BCSCBannerMessage[]
 }
 
 /**
@@ -21,7 +21,7 @@ interface NotificationBannerContainerProps {
  * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = ({ onManageDevices, excludeBanners }: NotificationBannerContainerProps) => {
+export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
@@ -87,16 +87,14 @@ export const NotificationBannerContainer = ({ onManageDevices, excludeBanners }:
       </SafeAreaModal>
 
       <AppBanner
-        messages={store.bcsc.bannerMessages
-          .filter((banner) => !excludeBanners?.includes(banner.id))
-          .map((banner) => ({
-            id: banner.id,
-            title: banner.title,
-            description: banner.description,
-            type: banner.type,
-            dismissible: banner.dismissible,
-            onPress: () => handleBannerPress(banner),
-          }))}
+        messages={bannerMessages.map((banner) => ({
+          id: banner.id,
+          title: banner.title,
+          description: banner.description,
+          type: banner.type,
+          dismissible: banner.dismissible,
+          onPress: () => handleBannerPress(banner),
+        }))}
       />
     </View>
   )

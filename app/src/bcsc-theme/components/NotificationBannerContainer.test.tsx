@@ -25,12 +25,13 @@ describe('NotificationBannerContainer', () => {
     jest.clearAllMocks()
   })
 
-  it('renders all banners when excludeBanners is not provided', () => {
+  it('renders the banners passed via bannerMessages', () => {
     const tree = render(
-      <BasicAppContext
-        initialStateOverride={{ bcsc: { bannerMessages: [deviceLimitBanner, serverNotificationBanner] } as any }}
-      >
-        <NotificationBannerContainer onManageDevices={onManageDevices} />
+      <BasicAppContext>
+        <NotificationBannerContainer
+          onManageDevices={onManageDevices}
+          bannerMessages={[deviceLimitBanner, serverNotificationBanner]}
+        />
       </BasicAppContext>
     )
 
@@ -38,15 +39,21 @@ describe('NotificationBannerContainer', () => {
     expect(tree.getByText('Server notification')).toBeTruthy()
   })
 
-  it('filters out banners whose ids are in excludeBanners', () => {
+  it('renders nothing when bannerMessages is empty', () => {
     const tree = render(
-      <BasicAppContext
-        initialStateOverride={{ bcsc: { bannerMessages: [deviceLimitBanner, serverNotificationBanner] } as any }}
-      >
-        <NotificationBannerContainer
-          onManageDevices={onManageDevices}
-          excludeBanners={[BCSCBanner.DEVICE_LIMIT_EXCEEDED]}
-        />
+      <BasicAppContext>
+        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[]} />
+      </BasicAppContext>
+    )
+
+    expect(tree.queryByText('Device limit reached')).toBeNull()
+    expect(tree.queryByText('Server notification')).toBeNull()
+  })
+
+  it('only renders banners the caller provides', () => {
+    const tree = render(
+      <BasicAppContext>
+        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serverNotificationBanner]} />
       </BasicAppContext>
     )
 
@@ -54,25 +61,14 @@ describe('NotificationBannerContainer', () => {
     expect(tree.getByText('Server notification')).toBeTruthy()
   })
 
-  it('treats an empty excludeBanners array as no-op', () => {
+  it('hides a dismissible banner after it is pressed', () => {
     const tree = render(
-      <BasicAppContext initialStateOverride={{ bcsc: { bannerMessages: [serverNotificationBanner] } as any }}>
-        <NotificationBannerContainer onManageDevices={onManageDevices} excludeBanners={[]} />
-      </BasicAppContext>
-    )
-
-    expect(tree.getByText('Server notification')).toBeTruthy()
-  })
-
-  it('invokes the banner press handler when a banner is tapped', () => {
-    const tree = render(
-      <BasicAppContext initialStateOverride={{ bcsc: { bannerMessages: [serverNotificationBanner] } as any }}>
-        <NotificationBannerContainer onManageDevices={onManageDevices} />
+      <BasicAppContext>
+        <NotificationBannerContainer onManageDevices={onManageDevices} bannerMessages={[serverNotificationBanner]} />
       </BasicAppContext>
     )
 
     fireEvent.press(tree.getByText('Server notification'))
-    // Dismissible banner should be removed from the visible tree after press.
     expect(tree.queryByText('Server notification')).toBeNull()
   })
 })
