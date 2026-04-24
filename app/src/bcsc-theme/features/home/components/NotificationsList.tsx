@@ -11,18 +11,19 @@ import CustomNotificationListItem from './CustomNotificationListItem'
  */
 export const WithAgentNotificationsList = () => {
   const notifications = useNotifications()
-  const { customNotifications, getCustomNotificationConfig } = useCustomNotifications()
-
-  const allNotifications = [...customNotifications, ...notifications]
+  const { customNotificationConfigs } = useCustomNotifications()
 
   return (
     <>
-      {allNotifications.map((item) => (
+      {customNotificationConfigs.map((config) => (
+        <CustomNotificationListItem key={config.id} notification={config} />
+      ))}
+
+      {notifications.map((item) => (
         <NotificationListItem
           key={item.id}
           notificationType={getCredentialNotificationType(item)}
           notification={item}
-          customNotification={getCustomNotificationConfig(item.id)}
         />
       ))}
     </>
@@ -35,17 +36,13 @@ export const WithAgentNotificationsList = () => {
  * @returns React.Element
  */
 export const WithoutAgentNotificationsList = () => {
-  const { customNotifications, getCustomNotificationConfig } = useCustomNotifications()
+  const { customNotificationConfigs } = useCustomNotifications()
 
   return (
     <>
-      {customNotifications.map((item) => {
-        const config = getCustomNotificationConfig(item.id)
-        if (!config) {
-          return null
-        }
-        return <CustomNotificationListItem key={item.id} notification={config} />
-      })}
+      {customNotificationConfigs.map((config) => (
+        <CustomNotificationListItem key={config.id} notification={config} />
+      ))}
     </>
   )
 }

@@ -27,11 +27,12 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * @returns React element
  */
 const Home: React.FC<HomeProps> = () => {
+  // FIXME (V4.1.x): Replace this useBCAgentSetup hook with the new useAgent hook once complete.
   const { agent } = useBCAgentSetup()
   const { Spacing } = useTheme()
 
   return (
-    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg } }}>
+    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
       {agent ? <WithAgentNotificationsList /> : <WithoutAgentNotificationsList />}
     </TabScreenWrapper>
   )

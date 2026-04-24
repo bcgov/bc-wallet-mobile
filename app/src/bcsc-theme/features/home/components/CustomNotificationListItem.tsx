@@ -33,7 +33,7 @@ const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({
   const styles = StyleSheet.create({
     container: {
       borderRadius: 5,
-      borderWidth: 1,
+      borderWidth: 2,
       padding: 10,
       backgroundColor: ColorPalette.notification.info,
       borderColor: ColorPalette.notification.infoBorder,
