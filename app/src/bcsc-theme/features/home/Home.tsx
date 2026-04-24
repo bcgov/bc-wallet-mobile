@@ -20,7 +20,18 @@ import SavedServices from './components/SavedServices'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
-const Home: React.FC<HomeProps> = ({ navigation }) => {
+/**
+ * Home screen for >= V4.1.x
+ * @returns React element
+ */
+const Home: React.FC<HomeProps> = () => {
+  return <TabScreenWrapper></TabScreenWrapper>
+}
+
+/**
+ * FIXME (V4.1): This screen will be needed somewhere in the release, uncertain where it will be used. Keeping as reference.
+ */
+export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()
