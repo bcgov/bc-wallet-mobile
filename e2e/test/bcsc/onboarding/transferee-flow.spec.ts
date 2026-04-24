@@ -1,4 +1,4 @@
-import { TEST_PIN } from '../../../src/constants.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { acceptSystemAlert, dismissSystemAlert, tapResetAppConfirm } from '../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
@@ -18,8 +18,12 @@ const CreatePIN = new BaseScreen(BCSC_TestIDs.CreatePIN)
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Transfer Account Detour', () => {
-  it('should detour through Transfer Account all the way to Setup Steps', async () => {
+  it('should tap Transfer Account', async () => {
+    await AccountSetup.waitFor('TransferAccount', Timeouts.APP_LAUNCH)
     await AccountSetup.tap('TransferAccount')
+  })
+
+  it('should detour through Transfer Account all the way to Setup Steps', async () => {
     await TransferInformation.waitFor('TransferAccountButton')
     await TransferInformation.tap('TransferAccountButton')
     await PrivacyPolicy.waitFor('Continue')
