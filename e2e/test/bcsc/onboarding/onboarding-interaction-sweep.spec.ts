@@ -31,7 +31,7 @@ const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Add Account', () => {
   it('should tap Add Account', async () => {
-    await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
+    await AccountSetup.waitFor('AddAccount', Timeouts.APP_LAUNCH)
     await AccountSetup.tap('AddAccount')
   })
 })
@@ -166,6 +166,6 @@ describe('PIN Authentication with Visibility Toggles', () => {
   })
 
   it('should land on Setup Steps after PIN creation', async () => {
-    await SetupSteps.waitFor('Step1', Timeouts.appLaunch)
+    await SetupSteps.waitFor('Step1', Timeouts.APP_LAUNCH)
   })
 })

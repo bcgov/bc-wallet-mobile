@@ -8,6 +8,6 @@ const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 describe('App Launch', () => {
   it('should display the Account Setup screen', async () => {
     await acceptSystemAlert()
-    await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
+    await AccountSetup.waitFor('AddAccount', Timeouts.APP_LAUNCH)
   })
 })
