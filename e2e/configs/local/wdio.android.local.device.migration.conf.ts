@@ -29,7 +29,7 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 240,
-    'appium:autoGrantPermissions': true,
+    'appium:autoGrantPermissions': false,
   },
 ]
 
