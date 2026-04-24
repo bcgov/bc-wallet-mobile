@@ -14,7 +14,7 @@ config.capabilities = [
     'appium:noReset': false,
     'appium:fullReset': true,
     'appium:newCommandTimeout': 180,
-    'appium:autoGrantPermissions': true,
+    'appium:autoGrantPermissions': false,
     ...(process.env.ANDROID_PLATFORM_VERSION && {
       'appium:platformVersion': process.env.ANDROID_PLATFORM_VERSION,
     }),

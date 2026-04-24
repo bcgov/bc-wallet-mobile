@@ -1,5 +1,5 @@
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
 const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 

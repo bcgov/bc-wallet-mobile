@@ -14,11 +14,7 @@
  */
 
 // Phase 1: Onboarding + verification (runs once to establish verified state)
-import '../onboarding/app-launch.spec.js'
-import '../onboarding/add-account.spec.js'
-import '../onboarding/consent.spec.js'
-import '../onboarding/notifications.spec.js'
-import '../onboarding/pin-auth.spec.js'
+import '../onboarding/onboarding-basic.spec.js'
 // Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import '../verify/card-type/config-combined-card.js'
 import '../verify/nickname.spec.js'
@@ -31,4 +27,4 @@ import '../main/main.spec.js'
 import '../main/login-from-deep-link.spec.js'
 import '../main/login-from-computer.spec.js'
 
-import '../settings/settings.spec.js'
+import '../main/settings/settings.spec.js'

@@ -6,11 +6,7 @@
  * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-non-bcsc-card.spec.ts
  */
 // Onboarding
-import '../onboarding/app-launch.spec.js'
-import '../onboarding/add-account.spec.js'
-import '../onboarding/consent.spec.js'
-import '../onboarding/notifications.spec.js'
-import '../onboarding/pin-auth.spec.js'
+import '../onboarding/onboarding-basic.spec.js'
 
 // Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import '../verify/card-type/config-non-bcsc-card.js'
