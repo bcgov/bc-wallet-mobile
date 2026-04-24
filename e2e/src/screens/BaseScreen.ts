@@ -1,6 +1,5 @@
 import { Timeouts } from '../constants.js'
 import { swipeDownBy, swipeUpBy } from '../helpers/gestures.js'
-import { isSauceLabs } from '../helpers/sauce.js'
 
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
 export interface EnterTextOptions {
@@ -213,7 +212,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       }
     }
 
-    if (options?.characterByCharacter || isSauceLabs()) {
+    if (options?.characterByCharacter) {
       for (const char of text) {
         await el.addValue(char)
       }
