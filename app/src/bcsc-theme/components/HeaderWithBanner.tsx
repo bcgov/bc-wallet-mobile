@@ -15,7 +15,11 @@ interface HeaderWithBannerProps extends StackHeaderProps {
  * @param {HeaderWithBannerProps} props - The properties for the header component.
  * @returns {*} {React.ReactElement} The header component with an optional notification banner.
  */
-const HeaderWithBanner = ({ onManageDevices, bannerMessages, ...headerProps }: HeaderWithBannerProps): React.ReactElement => {
+const HeaderWithBanner = ({
+  onManageDevices,
+  bannerMessages,
+  ...headerProps
+}: HeaderWithBannerProps): React.ReactElement => {
   return (
     <View>
       <Header {...headerProps} />
