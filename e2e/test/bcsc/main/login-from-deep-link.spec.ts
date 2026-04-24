@@ -45,7 +45,7 @@ async function tapAccountCardIfPresent(): Promise<void> {
  * log a masked suffix so CI archives don't retain an active pairing code.
  */
 async function prepareDeepLinkSession(logTag: string): Promise<{ appId: string; deepLink: string }> {
-  await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+  await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
   const appId = await getCurrentAppId()
   const session = await fetchPairingDeepLink({ platform: currentPlatform() })
   const masked = `***${session.pairingCode.slice(-2)}`
@@ -65,16 +65,16 @@ describe('Login From Deep Link — warm start', () => {
 
   it('routes the deep link to ServiceLoginScreen', async () => {
     await dispatchDeepLink(deepLink, appId)
-    await ServiceLogin.waitFor('ServiceLoginCancel', Timeouts.screenTransition)
+    await ServiceLogin.waitFor('ServiceLoginCancel', Timeouts.SCREEN_TRANSITION)
   })
 
   it('continues to the PairingConfirmation screen', async () => {
-    await ServiceLogin.waitFor('ServiceLoginContinue', Timeouts.screenTransition)
+    await ServiceLogin.waitFor('ServiceLoginContinue', Timeouts.SCREEN_TRANSITION)
     await ServiceLogin.tap('ServiceLoginContinue')
   })
 
   it('saves bookmark for the logged-in service', async () => {
-    await PairingConfirmation.waitFor('ToggleBookmark', Timeouts.screenTransition)
+    await PairingConfirmation.waitFor('ToggleBookmark', Timeouts.SCREEN_TRANSITION)
     await PairingConfirmation.tap('ToggleBookmark')
     await PairingConfirmation.tap('ToggleBookmark')
   })
@@ -83,7 +83,7 @@ describe('Login From Deep Link — warm start', () => {
     // Two back gestures pop the stack: PairingConfirmation → ServiceLogin → Home.
     await navigateBack()
     await navigateBack()
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
   })
 })
 
@@ -103,16 +103,16 @@ describe('Login From Deep Link — cold start', () => {
     // Cold-launch sequence: AccountSelector (multi-account devices only) →
     // EnterPIN → ServiceLogin.
     await tapAccountCardIfPresent()
-    await EnterPIN.waitFor('PINInput', Timeouts.appLaunch)
+    await EnterPIN.waitFor('PINInput', Timeouts.APP_LAUNCH)
     await EnterPIN.type('PINInput', TEST_PIN)
     await EnterPIN.tap('Continue')
 
-    await ServiceLogin.waitFor('ServiceLoginCancel', Timeouts.appLaunch)
+    await ServiceLogin.waitFor('ServiceLoginCancel', Timeouts.APP_LAUNCH)
   })
 
   it('cancels back to the Home tab', async () => {
     // ServiceLogin onCancel navigates to Home when the screen was the initial route.
     await ServiceLogin.tap('ServiceLoginCancel')
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
   })
 })
