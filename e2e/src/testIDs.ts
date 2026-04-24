@@ -27,7 +27,8 @@ export const BCSC_TestIDs = {
   },
   PrivacyPolicy: {
     Continue: 'com.ariesbifold:id/Continue',
-    LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+    Link: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
     Back: 'com.ariesbifold:id/Back',
   },
   OptInAnalytics: {
@@ -67,6 +68,13 @@ export const BCSC_TestIDs = {
     /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
     AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferInstructions: {
+    ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferQRScanner: {
     Back: 'com.ariesbifold:id/Back',
   },
   IdentitySelection: {

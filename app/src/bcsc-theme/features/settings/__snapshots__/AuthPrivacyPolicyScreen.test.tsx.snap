@@ -202,7 +202,7 @@ exports[`AuthPrivacyPolicyScreen renders correctly 1`] = `
             undefined,
           ]
         }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+        testID="com.ariesbifold:id/LearnMore"
       >
         <View
           style={
