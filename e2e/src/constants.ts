@@ -23,7 +23,7 @@ export enum Timeouts {
   /** swipe duration */
   swipeDuration = 800,
   /** Browser handoff pause (ms) */
-  BROWSER_HANDOFF_PAUSE_MS = 2_000,
+  BROWSER_HANDOFF_PAUSE_MS = 1_000,
 }
 
 export const TestUsers = {

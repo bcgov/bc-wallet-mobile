@@ -1,5 +1,5 @@
 import { TEST_PIN } from '../../../src/constants.js'
-import { acceptSystemAlert, tapResetAppConfirm } from '../../../src/helpers/alerts.js'
+import { acceptSystemAlert, dismissSystemAlert, tapResetAppConfirm } from '../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 
@@ -29,9 +29,11 @@ describe('Transfer Account Detour', () => {
     await TermsOfUse.waitFor('AcceptAndContinue')
     await TermsOfUse.tapWhenEnabled('AcceptAndContinue')
 
+    // Dismissing notifications permission to exercise that codepath
     await Notifications.waitFor('Continue')
     await Notifications.tap('Continue')
-    await acceptSystemAlert()
+    await dismissSystemAlert()
+
     await SecureApp.waitFor('PinAuth')
     await SecureApp.tap('PinAuth')
     await CreatePIN.waitFor('PINInput1')

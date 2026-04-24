@@ -9,12 +9,9 @@
  * Imported by `full-regression/interaction-sweep.spec.ts`.
  */
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { acceptSystemAlert, dismissSystemAlert } from '../../../src/helpers/alerts.js'
 import { getCurrentAppId } from '../../../src/helpers/deep-link.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
-
-const BROWSER_HANDOFF_PAUSE_MS = 2000
 
 const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
 const SetupTypes = new BaseScreen(BCSC_TestIDs.SetupTypes)
@@ -30,7 +27,6 @@ const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Add Account', () => {
   it('should tap Add Account', async () => {
-    await acceptSystemAlert()
     await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
     await AccountSetup.tap('AddAccount')
   })
@@ -56,7 +52,7 @@ describe('Intro Carousel Interactions', () => {
     await IntroCarousel.waitFor('CarouselNext')
     const appId = await getCurrentAppId()
     await IntroCarousel.tap('WhereToUseButton')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
     await driver.activateApp(appId)
     await IntroCarousel.waitFor('CarouselNext')
   })
@@ -72,10 +68,18 @@ describe('Intro Carousel Interactions', () => {
 })
 
 describe('Privacy Policy Page', () => {
+  it('should open the BC login service in the browser then return and carry onwards', async () => {
+    await PrivacyPolicy.waitFor('Link')
+    const appId = await getCurrentAppId()
+    await PrivacyPolicy.tap('Link')
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
+  })
+
   it('should open learn more web view then return and carry onwards', async () => {
     await PrivacyPolicy.waitFor('LearnMore')
     await PrivacyPolicy.tap('LearnMore')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
     await WebView.waitFor('Back')
     await WebView.tap('Back')
     await PrivacyPolicy.waitFor('Continue')
@@ -84,6 +88,14 @@ describe('Privacy Policy Page', () => {
 })
 
 describe('Opt-In Analytics Decline', () => {
+  it('should open learn more web view then return and carry onwards', async () => {
+    await OptInAnalytics.waitFor('LearnMore')
+    await OptInAnalytics.tap('LearnMore')
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
+    await WebView.waitFor('Back')
+    await WebView.tap('Back')
+  })
+
   it('should decline analytics opt-in', async () => {
     await OptInAnalytics.waitFor('Decline')
     await OptInAnalytics.tap('Decline')
@@ -101,21 +113,20 @@ describe('Notifications Interactions', () => {
   it('should tap Help and return from the WebView', async () => {
     await Notifications.waitFor('Help')
     await Notifications.tap('Help')
-    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
     await WebView.waitFor('Back')
     await WebView.tap('Back')
   })
 
-  it('should click Continue then deny native permissions', async () => {
-    await Notifications.waitFor('Continue')
-    await Notifications.tap('Continue')
-    await dismissSystemAlert()
+  it('should open the settings and navigate back', async () => {
+    await Notifications.waitFor('OpenSettings')
+    const appId = await getCurrentAppId()
+    await Notifications.tap('OpenSettings')
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
+    await driver.activateApp(appId)
   })
 
-  it('should navigate back to the previous screen then continue without notifications', async () => {
-    await SecureApp.waitFor('Back')
-    await SecureApp.tap('Back')
-
+  it('should continue without notifications', async () => {
     await Notifications.waitFor('ContinueWithoutNotifications')
     await Notifications.tap('ContinueWithoutNotifications')
   })
@@ -125,17 +136,18 @@ describe('Secure App Learn More Detour', () => {
   it('should tap Learn More and return from the WebView', async () => {
     await SecureApp.waitFor('LearnMore')
     await SecureApp.tap('LearnMore')
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
     await WebView.waitFor('Back')
     await WebView.tap('Back')
   })
-})
 
-describe('PIN Authentication with Visibility Toggles', () => {
   it('should select PIN auth on the Secure App screen', async () => {
     await SecureApp.waitFor('PinAuth')
     await SecureApp.tap('PinAuth')
   })
+})
 
+describe('PIN Authentication with Visibility Toggles', () => {
   it('should toggle PIN visibility on both inputs and create a PIN', async () => {
     await CreatePIN.waitFor('PINInput1')
     // Toggle each input on then off so both masked and visible states render.

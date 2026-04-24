@@ -35,6 +35,7 @@ export const BCSC_TestIDs = {
     Accept: 'com.ariesbifold:id/Accept',
     Decline: 'com.ariesbifold:id/Decline',
     Back: 'com.ariesbifold:id/Back',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
   },
   Notifications: {
     Continue: 'com.ariesbifold:id/Continue',
