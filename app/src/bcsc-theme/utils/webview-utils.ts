@@ -39,6 +39,7 @@ const createFontScalingCss = (fontScale: number): number => {
 export interface TermsOfUseHtmlOptions {
   termsOfUse: TermsOfUseResponseData
   colorPalette: IColorPalette
+  textColor: string
   headerText: string
   subtitlePrefix: string
   versionLabel: string
@@ -58,18 +59,18 @@ export interface TermsOfUseHtmlOptions {
  * @returns {string} A complete HTML document string
  */
 export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: number): string => {
-  const { termsOfUse, colorPalette, headerText, subtitlePrefix, versionLabel } = options
+  const { termsOfUse, colorPalette, textColor, headerText, subtitlePrefix, versionLabel } = options
   const formattedDate = formatLongDate(termsOfUse.date)
   const bodyContent = stripOuterDocumentTags(termsOfUse.html)
   const fontSizeCss = createFontScalingCss(fontScale)
   return `<!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">  
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   body {
     background-color: ${colorPalette.brand.primaryBackground};
-    color: ${colorPalette.brand.secondary};
+    color: ${textColor};
     font-family: -apple-system, system-ui, sans-serif;
     font-size: ${fontSizeCss}px !important;
     padding: 0 16px 16px 16px;
@@ -78,7 +79,7 @@ export const createTermsOfUseHtml = (options: TermsOfUseHtmlOptions, fontScale: 
   }
   body, body * {
     background-color: ${colorPalette.brand.primaryBackground} !important;
-    color: ${colorPalette.brand.secondary} !important;
+    color: ${textColor} !important;
   }
   p, li, dd, dt {
     margin-bottom: 0.75em;

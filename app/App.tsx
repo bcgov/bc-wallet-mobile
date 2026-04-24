@@ -28,16 +28,18 @@ import {
   initStoredLanguage,
   MainContainer,
   NetworkProvider,
+  statusBarStyleForColor,
   StoreProvider,
   ThemeProvider,
   toastConfig,
   TourProvider,
+  useTheme,
 } from '@bifold/core'
 import WebDisplay from '@screens/WebDisplay'
 import i18next from 'i18next'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert } from 'react-native'
+import { Alert, StatusBar } from 'react-native'
 import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -60,6 +62,15 @@ const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
 const fcmService = new FcmService(appLogger)
 const fcmViewModel = new FcmViewModel(fcmService, appLogger, pairingService, verificationResponseService, appMode)
+
+const ThemeAwareStatusBar = () => {
+  const { ColorPalette } = useTheme()
+  const barStyle = statusBarStyleForColor(ColorPalette.brand.primaryBackground) ?? 'dark-content'
+  useEffect(() => {
+    StatusBar.setBarStyle(barStyle, true)
+  }, [barStyle])
+  return <StatusBar barStyle={barStyle} backgroundColor="transparent" translucent />
+}
 
 const App = () => {
   const { t } = useTranslation()
@@ -112,7 +123,7 @@ const App = () => {
           <StoreProvider initialState={initialState} reducer={reducer}>
             <ThemeProvider
               themes={themes}
-              defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
+              defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.Light : BCThemeNames.BCWallet}
             >
               <NavigationContainerProvider>
                 <PairingServiceProvider service={pairingService}>
@@ -121,6 +132,7 @@ const App = () => {
                       <AnimatedComponentsProvider value={animatedComponents}>
                         <AuthProvider>
                           <NetworkProvider>
+                            <ThemeAwareStatusBar />
                             <ErrorModal enableReport />
                             <WebDisplay
                               destinationUrl={surveyMonkeyUrl}
