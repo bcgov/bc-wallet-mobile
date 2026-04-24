@@ -1,17 +1,16 @@
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
 import { AttestationRestrictions } from '@/constants'
 import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
   BifoldAgent,
   CredentialMetadata,
+  NotificationListItem,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
-import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
+import { useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   BasicMessageRecord,
   CredentialExchangeRecord as CredentialRecord,
@@ -21,9 +20,19 @@ import {
 } from '@credo-ts/core'
 import { isProofRequestingAttestation } from '@services/attestation'
 import { useEffect, useMemo, useState } from 'react'
+import useBCAgentSetup from './useBCAgentSetup'
 
-export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
-  const { agent } = useAgent()
+export enum CustomNotificationID {
+  BCSCStartVerification = 'BCSCStartVerification',
+}
+
+type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
+export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']>
+type CredentialNotification = NotificationItemListProps['notification']
+
+export const useNotifications = (): Array<CredentialNotification> => {
+  // FIXME (V4.1.x): Previously we were using useAgent, but it will throw if agent in not initialized. We need agent init to be non blocking for BCSC features.
+  const { agent } = useBCAgentSetup()
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
@@ -60,16 +69,15 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
       }
     })
 
-    const credentials = [...credsDone, ...credsReceived]
-    const credentialDefinitionIDs = credentials.map(
-      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
-    )
-    const invitationDate = new Date()
-    const custom =
-      showPersonCredentialSelector(credentialDefinitionIDs) &&
-      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
-        ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
-        : []
+    const customNotifications: CredentialNotification[] = []
+    if (store.bcscSecure.verified === false) {
+      customNotifications.push({
+        type: 'CustomNotification',
+        createdAt: new Date(),
+        id: CustomNotificationID.BCSCStartVerification,
+      })
+    }
+
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
         ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
@@ -81,7 +89,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
-    const notificationsWithCustom = [...custom, ...notif]
+    const notificationsWithCustom = [...customNotifications, ...notif]
     setNotifications(notificationsWithCustom as never[])
   }, [
     offers,
@@ -90,9 +98,14 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
     basicMessages,
     nonAttestationProofs,
     store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
+    store.bcscSecure.verified,
   ])
 
   useEffect(() => {
+    if (!agent) {
+      return
+    }
+
     Promise.all(
       [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, AttestationRestrictions)

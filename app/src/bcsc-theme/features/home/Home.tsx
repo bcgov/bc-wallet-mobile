@@ -7,13 +7,16 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { useNotifications } from '@/hooks/notifications'
+import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { BCState } from '@/store'
-import { testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { getCredentialNotificationType } from '@/utils/credentials'
+import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { FlatList, StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
@@ -25,7 +28,33 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * @returns React element
  */
 const Home: React.FC<HomeProps> = () => {
-  return <TabScreenWrapper></TabScreenWrapper>
+  const { Spacing } = useTheme()
+  const notifications = useNotifications()
+  const customNotifications = useCustomNotifications()
+
+  return (
+    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg } }}>
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={Boolean(notifications.length)}
+        decelerationRate="fast"
+        data={notifications}
+        keyExtractor={(notification) => notification.id}
+        renderItem={({ item }) => {
+          const notificationType = getCredentialNotificationType(item)
+          const customNotification = customNotifications.getCustomNotification(item.id)
+          return (
+            <ThemedText>{`Notification: ${item.id}, Type: ${notificationType} CustomNotification:${customNotification}`}</ThemedText>
+            // <NotificationListItem
+            //   notificationType={notificationType}
+            //   notification={item}
+            //   customNotification={customNotification}
+            // />
+          )
+        }}
+      />
+    </TabScreenWrapper>
+  )
 }
 
 /**

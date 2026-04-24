@@ -1,3 +1,4 @@
+import { CredentialNotification } from '@/hooks/notifications'
 import { BifoldAgent } from '@bifold/core'
 import { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
@@ -34,6 +35,16 @@ export type ProofCredentialPredicates = {
   proofSchemaId?: string
   credName: string
   predicates?: Predicate[]
+}
+
+// TODO: Export this from @bifold/core
+export enum NotificationType {
+  BasicMessage = 'BasicMessage',
+  CredentialOffer = 'Offer',
+  ProofRequest = 'ProofRecord',
+  Revocation = 'Revocation',
+  Custom = 'Custom',
+  Proof = 'Proof',
 }
 
 /**
@@ -182,4 +193,34 @@ export const credentialsMatchForProof = async (
   }
 
   return credentials
+}
+
+/**
+ * Get the notification type for a given notification item.
+ *
+ * @param notification The notification item to get the type for.
+ * @returns The notification type for the given notification item.
+ */
+export const getCredentialNotificationType = (notification: CredentialNotification): NotificationType => {
+  if (notification.type === 'BasicMessageRecord') {
+    return NotificationType.BasicMessage
+  }
+
+  if (notification.type === 'CredentialRecord' && 'revocationNotification' in notification) {
+    return NotificationType.Revocation
+  }
+
+  if (notification.type === 'CredentialRecord') {
+    return NotificationType.CredentialOffer
+  }
+
+  if (notification.type === 'CustomNotification') {
+    return NotificationType.Custom
+  }
+
+  if (notification.type === 'CredentialExpired') {
+    return NotificationType.Custom
+  }
+
+  return NotificationType.ProofRequest
 }
