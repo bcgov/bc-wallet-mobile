@@ -1,12 +1,19 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import PersonCredential from '@/bcwallet-theme/features/person-flow/screens/PersonCredential'
+import { BCState, VerificationStatus } from '@/store'
+import { useStore } from '@bifold/core'
+import { CustomNotificationRecord } from '@bifold/core/lib/typescript/src/types/notification'
 import { useCallback, useMemo } from 'react'
-import { CustomNotificationConfig, CustomNotificationID } from './notifications'
+import { CustomNotificationConfig } from './notifications'
+
+export enum CustomNotificationId {
+  BCSCStartVerification = 'BCSCStartVerification',
+}
 
 /**
  * Hook to manage custom notifications in the app.
  */
 export const useCustomNotifications = () => {
+  const [store] = useStore<BCState>()
   const secureActions = useSecureActions()
 
   /**
@@ -21,12 +28,12 @@ export const useCustomNotifications = () => {
    */
   const startVerificationNotification = useCallback((): CustomNotificationConfig => {
     return {
-      component: PersonCredential as React.FC,
+      component: () => null,
       onPressAction: () => {
         secureActions.continueVerificationProcess()
       },
       onCloseAction: () => {},
-      pageTitle: 'StartVerificationNotification.PageTitle',
+      pageTitle: '',
       title: 'StartVerificationNotification.Title',
       description: 'StartVerificationNotification.Description',
       buttonTitle: 'StartVerificationNotification.ButtonTitle',
@@ -40,19 +47,34 @@ export const useCustomNotifications = () => {
    * @returns The custom notification configuration if found, otherwise undefined.
    */
   const getCustomNotificationConfig = useCallback(
-    (id: string | CustomNotificationID): CustomNotificationConfig | undefined => {
-      if (id === CustomNotificationID.BCSCStartVerification) {
+    (id: string | CustomNotificationId): CustomNotificationConfig | undefined => {
+      if (id === CustomNotificationId.BCSCStartVerification) {
         return startVerificationNotification()
       }
     },
     [startVerificationNotification]
   )
 
+  const customNotifications = useMemo(() => {
+    const notifications: CustomNotificationRecord[] = []
+
+    if (!store.bcscSecure.verified && store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS) {
+      notifications.push({
+        id: CustomNotificationId.BCSCStartVerification,
+        type: 'CustomNotification',
+        createdAt: new Date(),
+      })
+    }
+
+    return notifications
+  }, [store.bcscSecure.verified, store.bcscSecure.verifiedStatus])
+
   return useMemo(
     () => ({
+      customNotifications,
       getCustomNotificationConfig,
-      startVerificationNotification,
+      startVerificationNotificationConfig: startVerificationNotification,
     }),
-    [getCustomNotificationConfig, startVerificationNotification]
+    [customNotifications, getCustomNotificationConfig, startVerificationNotification]
   )
 }

@@ -7,18 +7,17 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { useNotifications } from '@/hooks/notifications'
-import { useCustomNotifications } from '@/hooks/useCustomNotifications'
+import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { BCState } from '@/store'
-import { getCredentialNotificationType } from '@/utils/credentials'
-import { NotificationListItem, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
+import { WithAgentNotificationsList, WithoutAgentNotificationsList } from './components/NotificationsList'
 import SavedServices from './components/SavedServices'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
@@ -28,26 +27,12 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * @returns React element
  */
 const Home: React.FC<HomeProps> = () => {
+  const { agent } = useBCAgentSetup()
   const { Spacing } = useTheme()
-  const notifications = useNotifications()
-  const { getCustomNotificationConfig } = useCustomNotifications()
 
   return (
     <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg } }}>
-      <FlatList
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={Boolean(notifications.length)}
-        decelerationRate="fast"
-        data={notifications}
-        keyExtractor={(notification) => notification.id}
-        renderItem={({ item }) => (
-          <NotificationListItem
-            notificationType={getCredentialNotificationType(item)}
-            notification={item}
-            customNotification={getCustomNotificationConfig(item.id)}
-          />
-        )}
-      />
+      {agent ? <WithAgentNotificationsList /> : <WithoutAgentNotificationsList />}
     </TabScreenWrapper>
   )
 }

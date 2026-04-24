@@ -9,7 +9,7 @@ import {
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
-import { useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
+import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import {
   BasicMessageRecord,
@@ -20,19 +20,13 @@ import {
 } from '@credo-ts/core'
 import { isProofRequestingAttestation } from '@services/attestation'
 import { useEffect, useMemo, useState } from 'react'
-import useBCAgentSetup from './useBCAgentSetup'
-
-export enum CustomNotificationID {
-  BCSCStartVerification = 'BCSCStartVerification',
-}
 
 type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
 export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']>
-type CredentialNotification = NotificationItemListProps['notification']
+export type CredentialNotification = NotificationItemListProps['notification']
 
 export const useNotifications = (): Array<CredentialNotification> => {
-  // FIXME (V4.1.x): Previously we were using useAgent, but it will throw if agent in not initialized. We need agent init to be non blocking for BCSC features.
-  const { agent } = useBCAgentSetup()
+  const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
@@ -69,15 +63,6 @@ export const useNotifications = (): Array<CredentialNotification> => {
       }
     })
 
-    const customNotifications: CredentialNotification[] = []
-    if (store.bcscSecure.verified === false) {
-      customNotifications.push({
-        type: 'CustomNotification',
-        createdAt: new Date(),
-        id: CustomNotificationID.BCSCStartVerification,
-      })
-    }
-
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
         ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
@@ -89,8 +74,8 @@ export const useNotifications = (): Array<CredentialNotification> => {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
-    const notificationsWithCustom = [...customNotifications, ...notif]
-    setNotifications(notificationsWithCustom as never[])
+    // const notificationsWithCustom = [...customNotifications, ...notif]
+    setNotifications(notif as never[])
   }, [
     offers,
     credsReceived,

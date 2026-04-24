@@ -87,7 +87,6 @@ const translation = {
     "ButtonTitle": "Start",
   },
   "StartVerificationNotification": {
-    "PageTitle": "Verification",
     "Title": "You're not verified",
     "Description": "You can continue the verification process at anytime.",
     "ButtonTitle": "Start verification"
