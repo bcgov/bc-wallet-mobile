@@ -120,8 +120,13 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
 
       id: () => {
         if (steps.id.nonBcscNeedsAdditionalCard) {
+          const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData.some(
+            (evidence) => evidence.evidenceType?.has_photo
+          )
           navigation.navigate(BCSCScreens.EvidenceTypeList, {
             cardProcess: BCSCCardProcess.NonBCSC,
+            // Note: User must choose a photo ID if the first Non-BCSC ID they provided had no photo
+            photoFilter: !hasPhotoEvidence ? 'photo' : undefined,
           })
           return
         }
