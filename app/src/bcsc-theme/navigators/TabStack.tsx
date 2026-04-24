@@ -1,5 +1,5 @@
 import { HelpCentreUrl } from '@/constants'
-import { testIdWithKey, useTheme } from '@bifold/core'
+import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
-import Account from '../features/account/Account'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
@@ -99,15 +98,15 @@ const BCSCTabStack: React.FC = () => {
           }}
         />
         <Tab.Screen
-          name={BCSCScreens.Account}
-          component={Account}
+          name={BCSCScreens.Wallet}
+          component={CredentialStack}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Account', 'account'),
+            tabBarIcon: createTabBarIcon('Wallet', 'wallet-outline'),
             tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Account',
-            tabBarTestID: testIdWithKey('Account'),
-            headerLeft: createMainSettingsHeaderButton(),
+            tabBarAccessibilityLabel: 'Wallet',
+            tabBarTestID: testIdWithKey('Wallet'),
+            headerShown: false,
           }}
         />
       </Tab.Navigator>

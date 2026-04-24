@@ -1,5 +1,5 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { AgentProvider } from '@bifold/core'
+import { AgentProvider, OpenIDCredentialRecordProvider } from '@bifold/core'
 import React, { PropsWithChildren, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -35,7 +35,11 @@ const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
   }, [status, error, emitErrorModal, retry, t])
 
   if (status === 'ready' && agent) {
-    return <AgentProvider agent={agent}>{children}</AgentProvider>
+    return (
+      <AgentProvider agent={agent}>
+        <OpenIDCredentialRecordProvider>{children}</OpenIDCredentialRecordProvider>
+      </AgentProvider>
+    )
   }
 
   return <LoadingScreen message={t('Init.InitializingAgent')} />
