@@ -383,6 +383,7 @@ const translation = {
       "GetVerificationStep5Subtext3": "Verify identity (PT-BR)",
       "TransferAccountSubtext": "Transfer your account from another device (PT-BR)",
       "AddSecondIdText": "Add second ID (PT-BR)",
+      "AddThirdIdText": "Add third ID (PT-BR)",
       "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card. (PT-BR)",
       "StoredEmail": "Email: {{ email }} (PT-BR)",
       "EmailAddress": "Email Address (PT-BR)",

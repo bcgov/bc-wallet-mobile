@@ -156,7 +156,7 @@ describe('useSetupStepsModel', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
     })
 
-    it('should navigate to EvidenceTypeList when nonBcscNeedsAdditionalCard is true', () => {
+    it('should navigate to EvidenceTypeList when nonBcscNeedsAdditionalCard is true and missing photo evidence', () => {
       const useSetupStepsMock = jest.mocked(useSetupSteps)
       useSetupStepsMock.mockReturnValue({
         ...mockSteps,
@@ -174,6 +174,46 @@ describe('useSetupStepsModel', () => {
 
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList, {
         cardProcess: BCSCCardProcess.NonBCSC,
+        photoFilter: 'photo',
+      })
+    })
+
+    it('should navigate to EvidenceTypeList when nonBcscNeedsAdditionalCard is true and including photo evidence', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...mockStore,
+          bcscSecure: {
+            ...mockStore.bcscSecure,
+            additionalEvidenceData: [
+              {
+                evidenceType: {
+                  has_photo: true,
+                },
+              },
+            ],
+          },
+        } as BCState,
+        mockDispatch,
+      ])
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          ...mockSteps.id,
+          completed: false,
+          nonBcscNeedsAdditionalCard: true,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+      })
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
+
+      result.current.stepActions.id()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList, {
+        cardProcess: BCSCCardProcess.NonBCSC,
+        photoFilter: undefined,
       })
     })
 
