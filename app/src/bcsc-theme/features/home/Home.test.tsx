@@ -3,7 +3,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import Home from './Home'
+import { HomeV4_0_x as Home } from './Home'
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
   useBCSCApiClient: jest.fn(() => ({

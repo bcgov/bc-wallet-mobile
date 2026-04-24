@@ -1,7 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCState } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,7 +9,6 @@ import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountSta
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
-import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -65,7 +64,7 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verified === false) {
+  if (store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />
@@ -73,20 +72,15 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
-  if (store.bcscSecure.verified === true) {
-    return (
-      <BCSCActivityProvider>
-        <BCSCAccountProvider>
-          <BCSCIdTokenProvider>
-            <BCSCMainStack />
-          </BCSCIdTokenProvider>
-        </BCSCAccountProvider>
-      </BCSCActivityProvider>
-    )
-  }
-
-  // Fallback to AuthStack if verification state is somehow lost
-  return <AuthStack />
+  return (
+    <BCSCActivityProvider>
+      <BCSCAccountProvider>
+        {/* <BCSCIdTokenProvider> */}
+        <BCSCMainStack />
+        {/* </BCSCIdTokenProvider> */}
+      </BCSCAccountProvider>
+    </BCSCActivityProvider>
+  )
 }
 
 export default BCSCRootStack

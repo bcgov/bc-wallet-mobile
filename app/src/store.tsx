@@ -102,6 +102,7 @@ export enum VerificationStatus {
   VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
   UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
   DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
+  IN_PROGRESS = 'IN_PROGRESS', // Verification is currently in progress
 }
 
 /**

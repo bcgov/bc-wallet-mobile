@@ -1,4 +1,5 @@
 import { ErrorRegistry } from '@/errors'
+import { VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
@@ -167,13 +168,13 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('AuthStack')
   })
 
-  it('renders VerifyStack when authenticated but not verified', () => {
+  it('renders VerifyStack when authenticated and verification in progress', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
         bcsc: { hasAccount: true, nicknames: [] },
         authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
+        bcscSecure: { verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS },
       }),
       mockDispatch,
     ] as any)
@@ -199,7 +200,7 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
-  it('renders AuthStack as fallback when verified is undefined', () => {
+  it('renders MainStack as fallback when verified is undefined', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
@@ -212,7 +213,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('AuthStack')
+    expect(toJSON()).toBe('MainStack')
   })
 
   it('calls loadState when stateLoaded is false', () => {
