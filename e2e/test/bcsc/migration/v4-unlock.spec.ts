@@ -38,7 +38,7 @@ describe('V4 Unlock After Migration', () => {
   })
 
   it('should land on the Home screen', async () => {
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     await TabBar.waitFor('Home')
     await annotate('Migration: SUCCESS — v4 unlocked with v3 PIN')
     console.log('[migration] v4 app unlocked successfully with v3 PIN')

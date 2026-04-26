@@ -81,7 +81,7 @@ async function tapAccountCard(nickname: string): Promise<void> {
   const testId = `com.ariesbifold:id/CardButton-${nickname}`
   const selector = driver.isIOS ? `~${testId}` : `android=new UiSelector().resourceId("${testId}")`
   const card = await $(selector)
-  await card.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  await card.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
   await card.click()
 }
 
@@ -146,7 +146,7 @@ describe('Settings', () => {
     // value on iOS.
     await Settings.tap('EditNickname')
     const nicknameText = await EditNickname.findByText(newNickname)
-    await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await nicknameText.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     await EditNickname.tap('BackButton')
     await Settings.waitFor('EditNickname')
   })
@@ -183,7 +183,7 @@ describe('Settings', () => {
     // `createAuthSettingsHeaderButton`) rather than the localized
     // "Continue as:" heading — testID-based, not text-based, so copy
     // changes can't silently break the test.
-    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
     await EnterPIN.type('PINInput', currentPin)
@@ -201,7 +201,7 @@ describe('Settings', () => {
 
     // The current-method indicator box should show "PIN".
     const pinLabel = await MainAppSecurity.findByText('PIN')
-    await pinLabel.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await pinLabel.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
 
     // Button-state assertions fork on whether biometrics are available:
     // `SecurityMethodSelector` has two render branches. When device auth
@@ -213,7 +213,7 @@ describe('Settings', () => {
     // ChangePIN) and LearnMoreButton — ChooseDeviceAuthButton is not in
     // the tree at all. Probe for the device-auth button to pick a branch.
     const pinButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChoosePINButton)
-    await pinButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await pinButton.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     const deviceAuthButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChooseDeviceAuthButton)
     const deviceAuthAvailable = await deviceAuthButton.isDisplayed().catch(() => false)
 
@@ -249,7 +249,7 @@ describe('Settings', () => {
     await ChangePIN.tap('ChangePIN')
 
     const mismatchError = await ChangePIN.findByText('PIN does not match')
-    await mismatchError.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await mismatchError.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
 
     // Uncheck BEFORE correcting the confirm PIN — typing the 6th digit
     // triggers handleConfirmPINComplete which auto-validates. If the
@@ -262,7 +262,7 @@ describe('Settings', () => {
 
     // Verify the button is disabled without the checkbox.
     const changePINButton = await ChangePIN.findByTestId(ChangePIN.ids.ChangePIN)
-    await changePINButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await changePINButton.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     const enabledWhenUnchecked = await changePINButton.isEnabled()
     if (enabledWhenUnchecked) throw new Error('Expected Change PIN button to be disabled without checkbox')
 
@@ -292,7 +292,7 @@ describe('Settings', () => {
     // and not individually queryable via findByText.
     if (driver.isAndroid) {
       const adornment3 = await Settings.findByText('3 min')
-      await adornment3.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment3.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
   })
 
@@ -304,7 +304,7 @@ describe('Settings', () => {
     await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment5 = await Settings.findByText('5 min')
-      await adornment5.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment5.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
   })
 
@@ -316,7 +316,7 @@ describe('Settings', () => {
     await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment1 = await Settings.findByText('1 min')
-      await adornment1.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment1.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
 
     // Wait for the 1-minute inactivity timer to fire. BCSCActivityContext
@@ -324,7 +324,7 @@ describe('Settings', () => {
     // timer precision and navigation transition time.
     await driver.pause(70_000)
 
-    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
     await EnterPIN.type('PINInput', currentPin)
@@ -357,7 +357,7 @@ describe('Settings', () => {
       }
     } else {
       const successHeading = await Forget.findByText('Success')
-      await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await successHeading.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       const okButton = await Forget.findByText('OK')
       await okButton.click()
     }
@@ -376,7 +376,7 @@ describe('Settings', () => {
       await Settings.tap('AnalyticsOptIn')
       const expectedAfter = isCurrentlyOn ? 'OFF' : 'ON'
       const after = await Settings.findByText(expectedAfter)
-      await after.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await after.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     } else {
       // On iOS just verify the tap doesn't error.
       await Settings.tap('AnalyticsOptIn')
@@ -403,7 +403,7 @@ describe('Settings', () => {
       }
     } else {
       const heading = await Settings.findByText('Are you sure?')
-      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await heading.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
       // Android Material upper-cases AlertDialog button labels.
       const cancelButton = await Settings.findByText('CANCEL')
       await cancelButton.click()
@@ -420,7 +420,7 @@ describe('Settings', () => {
     await Settings.tap('Help')
     await WebView.waitFor('Back')
     const supportGuide = await WebView.findByText('Support guide')
-    await supportGuide.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    await supportGuide.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await WebView.tap('Back')
     await Settings.waitFor('EditNickname')
   })
@@ -439,7 +439,7 @@ describe('Settings', () => {
     // text (`BCSC.ContactUs.Title` = "Service BC Help Desk") which is
     // rendered as a plain ThemedText at the top of the screen.
     const heading = await MainContactUs.findByText('Service BC Help Desk')
-    await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await heading.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     await MainContactUs.tap('BackButton')
     await Settings.waitFor('EditNickname')
   })
@@ -469,7 +469,7 @@ describe('Settings', () => {
     await tapResetAppConfirm()
     // `factoryReset()` tears down secure storage and navigation state;
     // the app lands back on the AccountSetup onboarding screen. Use the
-    // generous `appLaunch` timeout to absorb the reset work.
-    await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
+    // generous `APP_LAUNCH` timeout to absorb the reset work.
+    await AccountSetup.waitFor('AddAccount', Timeouts.APP_LAUNCH)
   })
 })

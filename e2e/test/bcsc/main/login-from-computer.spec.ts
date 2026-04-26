@@ -23,7 +23,7 @@ describe('Login From Computer — pairing code minted in Node', () => {
   let pairingCode = ''
 
   before(async () => {
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     const session = await fetchPairingCode()
     pairingCode = session.pairingCode
     // Pairing codes are short-lived but live credentials — only log a masked
@@ -46,11 +46,11 @@ describe('Login From Computer — pairing code minted in Node', () => {
     })
     await ManualPairing.dismissKeyboard()
     await ManualPairing.tap('Submit')
-    await PairingConfirmation.waitFor('Close', Timeouts.screenTransition)
+    await PairingConfirmation.waitFor('Close', Timeouts.SCREEN_TRANSITION)
   })
 
   it('closes the PairingConfirmation screen', async () => {
     await PairingConfirmation.tap('Close')
-    await Home.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await Home.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
   })
 })
