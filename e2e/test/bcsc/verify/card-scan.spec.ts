@@ -45,7 +45,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   // fall back to manual CSN entry so the rest of the flow can still be verified.
   // TODO: replace with a scan hotwire once that ticket lands.
   it('should wait for the barcode scan to complete or fall back to manual entry', async function () {
-    await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
+    await ScanSerial.waitFor('EnterManually', Timeouts.SCREEN_TRANSITION)
 
     const maxAttempts = 3
     let scanSucceeded = false

@@ -35,6 +35,7 @@ export const BCSC_TestIDs = {
     Accept: 'com.ariesbifold:id/Accept',
     Decline: 'com.ariesbifold:id/Decline',
     Back: 'com.ariesbifold:id/Back',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
   },
   Notifications: {
     Continue: 'com.ariesbifold:id/Continue',
@@ -354,9 +355,11 @@ export const BCSC_TestIDs = {
   TransferAccountQRInformation: {
     GetQRCodeButton: 'com.ariesbifold:id/GetQRCodeButton',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountQRDisplay: {
     GetNewQRCode: 'com.ariesbifold:id/GetNewQRCode',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountSuccess: {
     TransferSuccessButton: 'com.ariesbifold:id/TransferSuccessButton',
