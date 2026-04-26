@@ -4417,15 +4417,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@openwallet-foundation/askar-react-native@npm:0.5.0-alpha-20260121132554":
-  version: 0.5.0-alpha-20260121132554
-  resolution: "@openwallet-foundation/askar-react-native@npm:0.5.0-alpha-20260121132554"
+"@openwallet-foundation/askar-react-native@npm:0.5.0-alpha-20260211085454":
+  version: 0.5.0-alpha-20260211085454
+  resolution: "@openwallet-foundation/askar-react-native@npm:0.5.0-alpha-20260211085454"
   dependencies:
-    "@openwallet-foundation/askar-shared": "npm:0.5.0-alpha-20260121132554"
+    "@openwallet-foundation/askar-shared": "npm:0.5.0-alpha-20260211085454"
   peerDependencies:
     react: ">= 16"
     react-native: ">= 0.71"
-  checksum: 10c0/aa1c21ba62307b6de10e1509cac1208a3e802229c5c5ae77b3a73514c9928df3bab6807d718a8025cc13d20074544d7482e0c67e48fcfa3caf6f83deea401297
+  checksum: 10c0/73d1c943097cf2dd3ddf4ba1d05163687c74d06b9abb949f653cca3fa907e99fa560889fe1090a9b72124d0a102c2d694ac6f5a11545629341a878aec1c9a437
   languageName: node
   linkType: hard
 
@@ -8097,7 +8097,7 @@ __metadata:
     "@hyperledger/anoncreds-react-native": "npm:0.3.4"
     "@hyperledger/indy-vdr-react-native": "npm:0.2.4"
     "@hyperledger/indy-vdr-shared": "npm:0.2.4"
-    "@openwallet-foundation/askar-react-native": "npm:0.5.0-alpha-20260121132554"
+    "@openwallet-foundation/askar-react-native": "npm:0.5.0-alpha-20260211085454"
     "@pexip/infinity-api": "npm:~19.1.2"
     "@react-native-async-storage/async-storage": "npm:~2.2.0"
     "@react-native-clipboard/clipboard": "npm:~1.16.3"
