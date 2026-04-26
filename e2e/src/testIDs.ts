@@ -27,7 +27,8 @@ export const BCSC_TestIDs = {
   },
   PrivacyPolicy: {
     Continue: 'com.ariesbifold:id/Continue',
-    LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+    Link: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
     Back: 'com.ariesbifold:id/Back',
   },
   OptInAnalytics: {
@@ -67,6 +68,13 @@ export const BCSC_TestIDs = {
     /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
     AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferInstructions: {
+    ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferQRScanner: {
     Back: 'com.ariesbifold:id/Back',
   },
   IdentitySelection: {
@@ -120,11 +128,14 @@ export const BCSC_TestIDs = {
   EvidenceIDCollection: {
     Continue: 'com.ariesbifold:id/EvidenceIDCollectionContinue',
     Cancel: 'com.ariesbifold:id/EvidenceIDCollectionCancel',
+    DriversLicenseEvidenceOption: `com.ariesbifold:id/EvidenceTypeListItem B.C. driver's licence`,
+    PassportEvidenceOption: `com.ariesbifold:id/EvidenceTypeListItem Canadian Passport`,
     DocumentNumberPressable: 'com.ariesbifold:id/documentNumber-pressable',
-    LastNamePressable: 'com.ariesbifold:id/lastName-pressable',
-    FirstNamePressable: 'com.ariesbifold:id/firstName-pressable',
-    MiddleNamesPressable: 'com.ariesbifold:id/middleNames-pressable',
-    BirthdatePressable: 'com.ariesbifold:id/birthDate-pressable',
+    DocumentNumberInput: 'com.ariesbifold:id/documentNumber-input',
+    LastNameInput: 'com.ariesbifold:id/lastName-input',
+    FirstNameInput: 'com.ariesbifold:id/firstName-input',
+    MiddleNamesInput: 'com.ariesbifold:id/middleNames-input',
+    BirthdateInput: 'com.ariesbifold:id/birthDate-input',
     Help: 'com.ariesbifold:id/Help',
   },
   EvidenceTypeList: {
@@ -149,6 +160,7 @@ export const BCSC_TestIDs = {
     CityInput: 'com.ariesbifold:id/city-input',
     ProvinceInput: 'com.ariesbifold:id/province-input',
     PostalCodeInput: 'com.ariesbifold:id/postalCode-input',
+    ProvinceOptionBritishColumbia: 'com.ariesbifold:id/province-option-BC',
   },
   EnterEmail: {
     EmailInput: 'com.ariesbifold:id/email-input',
@@ -238,6 +250,7 @@ export const BCSC_TestIDs = {
     Step3: 'com.ariesbifold:id/Step 3',
     Step4: 'com.ariesbifold:id/Step 4',
     EditEmail: 'com.ariesbifold:id/EditEmail',
+    EmailAddress: 'com.ariesbifold:id/EmailAddress',
     Step5: 'com.ariesbifold:id/Step 5',
     SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
     Help: 'com.ariesbifold:id/Help',

@@ -170,38 +170,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       setIsSubmitting(false)
     }
 
-    const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
-      return item?.evidenceType?.has_photo
-    })
-
-    if (hasPhotoEvidence) {
-      // we have photo formState, take the formState back to the setup steps
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
-        })
-      )
-      return
-    }
-
-    // if no photo formState is available, navigate back to the formState list screen
     navigation.dispatch(
       CommonActions.reset({
-        index: 1,
-        routes: [
-          {
-            name: BCSCScreens.SetupSteps,
-          },
-          {
-            name: BCSCScreens.EvidenceTypeList,
-            params: {
-              cardProcess: BCSCCardProcess.BCSCNonPhoto,
-              // Second time around: must select a photo ID, no "Other Options" escape hatch
-              photoFilter: 'photo',
-            },
-          },
-        ],
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
       })
     )
   }
