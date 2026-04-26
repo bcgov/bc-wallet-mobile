@@ -1,6 +1,14 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
-import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
+import {
+  ConnectStack,
+  testIdWithKey,
+  TOKENS,
+  useDefaultStackOptions,
+  useServices,
+  useTheme,
+  useTour,
+} from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useMemo, useState } from 'react'
@@ -120,6 +128,7 @@ const MainStack: React.FC = () => {
             animationEnabled: false,
           }}
         />
+        <Stack.Screen name={BCSCStacks.Connect} component={ConnectStack} />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}

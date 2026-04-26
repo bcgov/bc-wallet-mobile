@@ -10,6 +10,7 @@ export enum BCSCStacks {
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
   Main = 'BCSCMainStack',
+  Connect = 'BCSCConnectStack',
 }
 
 export enum BCSCModals {
@@ -220,8 +221,16 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Wallet]: undefined
 }
 
+export type BCSCConnectStackParams = {
+  Scan: { defaultToConnect?: boolean } | undefined
+  'Scan Help': undefined
+  'Paste URL': undefined
+  'Rename Wallet': undefined
+}
+
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCStacks.Connect]: NavigatorScreenParams<BCSCConnectStackParams>
   [BCSCScreens.MainWebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
