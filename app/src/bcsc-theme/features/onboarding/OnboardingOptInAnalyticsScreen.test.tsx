@@ -37,7 +37,7 @@ describe('OnboardingOptInAnalytics', () => {
       </BasicAppContext>
     )
 
-    const learnMoreButton = getByTestId(testIdWithKey('CardButton-BCSC.Onboarding.LearnMore'))
+    const learnMoreButton = getByTestId(testIdWithKey('LearnMore'))
     fireEvent.press(learnMoreButton)
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingWebView, {
