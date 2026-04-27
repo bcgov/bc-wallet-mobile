@@ -35,6 +35,16 @@ interface CachedGenesisTransactions {
   transactions: IndyVdrPoolConfig[]
 }
 
+/**
+ * Loads previously cached pool genesis transactions from persistent storage.
+ *
+ * Used to skip live ledger discovery on subsequent agent inits. Returns `undefined`
+ * if no cache exists or if the cache is older than `CACHED_LEDGERS_TTL_DAYS`,
+ * signalling that callers should fall back to the configured ledgers and refresh
+ * the cache.
+ *
+ * @returns Cached ledger configs if fresh, otherwise `undefined`.
+ */
 export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   const cached = await PersistentStorage.fetchValueForKey<CachedGenesisTransactions>(
     BCLocalStorageKeys.GenesisTransactions
@@ -46,6 +56,18 @@ export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefin
   return isFresh ? cached.transactions : undefined
 }
 
+/**
+ * Constructs a new Credo `Agent` configured for BCSC.
+ *
+ * Wires Indy ledgers, mediator endpoint, optional Indy VDR proxy, and the BC agent
+ * module set. The returned agent is registered for outbound HTTP and WebSocket
+ * transports but is not yet initialized — the caller must `await agent.initialize()`.
+ *
+ * @param opts - Agent build options including ledgers, wallet secret, mediator URL,
+ *   wallet label, proxy settings, and a logger.
+ * @throws {AppError} `AGENT_INITIALIZATION_ERROR` (2901) when `mediatorUrl` is empty.
+ * @returns The configured (but uninitialized) `Agent` instance.
+ */
 export const buildAgent = (opts: BuildAgentOptions): Agent => {
   if (!opts.mediatorUrl) {
     throw AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, {
@@ -87,6 +109,19 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
   return agent
 }
 
+/**
+ * Reopens the supplied agent's wallet and re-initializes it.
+ *
+ * Used when an agent instance is already held in memory (e.g. after a brief lock
+ * or app foreground) but its wallet handle is closed. On any failure the error
+ * is logged and `undefined` is returned so the caller can fall through to
+ * building a fresh agent rather than crashing the init flow.
+ *
+ * @param agent - The existing agent whose wallet should be reopened.
+ * @param walletSecret - Wallet `id` and `key` used to unlock the wallet.
+ * @param logger - Logger used to record failures.
+ * @returns The same `agent` once re-initialized, or `undefined` if reopen failed.
+ */
 export const restartAgent = async (
   agent: Agent,
   walletSecret: AgentWalletSecret,
@@ -102,6 +137,22 @@ export const restartAgent = async (
   }
 }
 
+/**
+ * Pre-fetches credential definitions and schemas from the Indy ledgers so that
+ * subsequent credential offers render without per-attribute network round-trips.
+ *
+ * If `cachedLedgers` is undefined, the pool cache is refreshed first so the
+ * agent has live genesis transactions to work with. Each cred-def and schema
+ * fetch is run in parallel via `Promise.allSettled`; per-item failures are
+ * logged as warnings and do not abort the warm-up — caching is purely additive
+ * and must not block agent init.
+ *
+ * @param agent - An initialized agent used to resolve the Indy VDR pool service.
+ * @param credDefs - Credential definitions to pre-fetch (`{ did, id }` per entry).
+ * @param schemas - Schemas to pre-fetch (`{ did, id }` per entry).
+ * @param cachedLedgers - Previously cached ledger configs, or `undefined` to refresh.
+ * @param logger - Logger used to record per-item failures.
+ */
 export const warmCache = async (
   agent: Agent,
   credDefs: CachedItemId[],
@@ -169,6 +220,16 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
   }
 }
 
+/**
+ * Best-effort agent shutdown.
+ *
+ * Errors are logged but never thrown — shutdown failures must not block logout
+ * or app teardown, and the wallet is closed in the underlying Askar handle even
+ * if Credo's cleanup throws.
+ *
+ * @param agent - The agent to shut down.
+ * @param logger - Logger used to record shutdown errors.
+ */
 export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise<void> => {
   try {
     await agent.shutdown()
