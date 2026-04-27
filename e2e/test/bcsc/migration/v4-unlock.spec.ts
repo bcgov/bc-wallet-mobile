@@ -1,5 +1,5 @@
 import { Timeouts } from '../../../src/constants.js'
-import { annotate } from '../../../src/helpers/sauce.js'
+import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 import { migrationContext } from './migration-context.js'
@@ -13,6 +13,9 @@ import { migrationContext } from './migration-context.js'
  *
  * This spec enters the same PIN that was created during v3 onboarding and
  * verifies the app lands on the Home screen.
+ *
+ * NOTE: skipped on Sauce iOS because the upgrade spec it depends on is
+ * skipped there (see upgrade.spec.ts for details).
  */
 
 const AccountSelector = new BaseScreen(BCSC_TestIDs.AccountSelector)
@@ -21,6 +24,13 @@ const Home = new BaseScreen(BCSC_TestIDs.Home)
 const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
 
 describe('V4 Unlock After Migration', () => {
+  before(function () {
+    if (isSauceLabs() && driver.isIOS) {
+      console.log('[migration] Skipping iOS v4 unlock on Sauce — depends on upgrade spec')
+      this.skip()
+    }
+  })
+
   it('should display account selector screen and select account by nickname', async () => {
     const nickname = migrationContext.user.username
 
@@ -33,7 +43,6 @@ describe('V4 Unlock After Migration', () => {
     const { pin } = migrationContext
 
     await EnterPIN.waitFor('PINInput')
-    await EnterPIN.tap('VisibilityButton')
     await EnterPIN.type('PINInput', pin)
   })
 
