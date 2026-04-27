@@ -12,6 +12,13 @@ interface CustomNotificationListItemProps {
   notification: CustomNotification
 }
 
+/**
+ * A custom notification list item component that displays a notification with a title, description, and an action button.
+ * The component also includes a dismiss button to remove the notification from the list.
+ *
+ * @param props - The properties for the CustomNotificationListItem component, including the notification object.
+ * @returns React.Element - The rendered CustomNotificationListItem component.
+ */
 const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({ notification }) => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()

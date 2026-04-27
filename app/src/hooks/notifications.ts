@@ -74,7 +74,6 @@ export const useNotifications = (): Array<CredentialNotification> => {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
-    // const notificationsWithCustom = [...customNotifications, ...notif]
     setNotifications(notif as never[])
   }, [
     offers,

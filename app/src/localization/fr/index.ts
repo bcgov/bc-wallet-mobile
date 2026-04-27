@@ -86,6 +86,11 @@ const translation = {
     "Description": "Ajouter votre carte d'identité à votre portefeuille et utilisez-la pour accéder aux services en ligne.",
     "ButtonTitle": "Start (FR)",
   },
+  "StartVerificationNotification": {
+    "Title": "You're not verified (FR)",
+    "Description": "You can continue the verification process at anytime. (FR)",
+    "ButtonTitle": "Start verification (FR)"
+  },
   "PersonCredential": {
     "ServicesCardInstalled": "Étape 1: BC Services Card est déjà installé",
     "InstallServicesCard": "Étape 1: Installation de l'application BC Services Card",
