@@ -8,7 +8,9 @@ import { useEffect } from 'react'
 import CustomNotificationListItem from './CustomNotificationListItem'
 
 /**
- * NotificationsList is a component that conditionally renders notifications based on the agent setup status. If the agent is set up, it renders both credential and custom notifications using WithAgentNotificationsList. If the agent is not set up, it renders only custom notifications using WithoutAgentNotificationsList, as some internal dependencies require the Agent to be initialized.
+ * NotificationsList is a component that conditionally renders notifications based on the agent setup status.
+ * If the agent is set up, it renders both credential and custom notifications using WithAgentNotificationsList.
+ * If the agent is not set up, it renders only custom notifications using WithoutAgentNotificationsList, as some internal dependencies require the Agent to be initialized.
  *
  * @returns React.Element
  */
