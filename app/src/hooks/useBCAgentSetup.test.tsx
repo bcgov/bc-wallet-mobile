@@ -64,35 +64,38 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
   const poolService = createMockPoolService()
 
   const agent: Partial<Agent> = {
-    wallet: {
-      open: jest.fn().mockResolvedValue(undefined),
-      agentContext: {} as any,
-      wallet: {} as any,
-      storageUpdateService: {} as any,
-      logger: mockLogger,
-    } as any,
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
 
-    mediationRecipient: {
-      initiateMessagePickup: jest.fn(),
-      stopMessagePickup: jest.fn(),
-      findDefaultMediator: jest.fn().mockResolvedValue(null),
-      requestAndAwaitGrant: jest.fn().mockResolvedValue({}),
-      setDefaultMediator: jest.fn(),
-      notifyKeylistUpdate: jest.fn(),
+    didcomm: {
+      wallet: {
+        open: jest.fn().mockResolvedValue(undefined),
+        agentContext: {} as any,
+        wallet: {} as any,
+        storageUpdateService: {} as any,
+        logger: mockLogger,
+      } as any,
+      mediationRecipient: {
+        initiateMessagePickup: jest.fn(),
+        stopMessagePickup: jest.fn(),
+        findDefaultMediator: jest.fn().mockResolvedValue(null),
+        requestAndAwaitGrant: jest.fn().mockResolvedValue({}),
+        setDefaultMediator: jest.fn(),
+        notifyKeylistUpdate: jest.fn(),
+      } as any,
+      oob: {
+        receiveInvitationFromUrl: jest.fn().mockResolvedValue({
+          connectionRecord: new DidCommConnectionRecord({
+            id: 'test-connection-id',
+            state: DidCommDidExchangeState.Completed,
+            role: DidCommDidExchangeRole.Responder,
+            theirDid: 'did:example:123',
+          }),
+        }),
+      } as any,
+      connections: { sendPing: jest.fn() } as any,
     } as any,
 
-    oob: {
-      receiveInvitationFromUrl: jest.fn().mockResolvedValue({
-        connectionRecord: new DidCommConnectionRecord({
-          id: 'test-connection-id',
-          state: DidCommDidExchangeState.Completed,
-          role: DidCommDidExchangeRole.Responder,
-          theirDid: 'did:example:123',
-        }),
-      }),
-    } as any,
     dependencyManager: {
       resolve: jest.fn((dep: any) => {
         if (dep === DidCommConnectionRepository) {
@@ -119,8 +122,6 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
       stop$: { subscribe: jest.fn() },
       observable: { subscribe: jest.fn() },
     } as any,
-    connections: { sendPing: jest.fn() } as any,
-    registerOutboundTransport: jest.fn(),
   }
 
   return {
@@ -156,10 +157,18 @@ jest.mock('@/utils/bc-agent-modules', () => ({
 
 jest.mock('@credo-ts/core', () => {
   const actual = jest.requireActual('@credo-ts/core')
-  return {
-    ...actual,
-    Agent: jest.fn(() => createMockAgent()),
-  }
+  return Object.defineProperties(
+    {},
+    {
+      ...Object.getOwnPropertyDescriptors(actual),
+      Agent: {
+        value: jest.fn(() => createMockAgent()),
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      },
+    }
+  )
 })
 
 jest.mock('react-native-config', () => ({
@@ -238,8 +247,8 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
     })
 
-    expect(mockAgent.didcomm.wallet.open).toHaveBeenCalled()
     expect(mockAgent.initialize).toHaveBeenCalled()
+    expect(mockAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled()
   })
 
   it('should call recovery if initialization fails', async () => {
