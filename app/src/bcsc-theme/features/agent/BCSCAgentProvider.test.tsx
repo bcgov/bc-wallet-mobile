@@ -23,6 +23,7 @@ jest.mock('../../contexts/BCSCLoadingContext', () => {
 })
 jest.mock('@bifold/core', () => ({
   AgentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  OpenIDCredentialRecordProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: jest.fn(),

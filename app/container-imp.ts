@@ -1,6 +1,7 @@
 import {
   Biometry,
   Container,
+  DefaultScreenOptionsDictionary,
   DispatchAction,
   InlineErrorPosition,
   LocalStorageKeys,
@@ -32,6 +33,7 @@ import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
+import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
@@ -235,6 +237,21 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.HOOK_USE_AGENT_SETUP, useBCAgentSetup)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
+
+    // BCSC uses its own Main stack (not Bifold's SettingStack), so override the
+    // Credentials screen's headerLeft to navigate to BCSCScreens.MainSettings.
+    // Also rename the header title from "Credentials" to "Wallet" per BCSC v4.1 design.
+    if (Config.BUILD_TARGET === Mode.BCSC) {
+      this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
+        ...DefaultScreenOptionsDictionary,
+        [Screens.Credentials]: {
+          ...DefaultScreenOptionsDictionary[Screens.Credentials],
+          title: 'Wallet',
+          headerLeft: createMainSettingsHeaderButton(),
+        },
+      })
+    }
+
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooterView)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
