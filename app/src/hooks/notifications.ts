@@ -82,14 +82,9 @@ export const useNotifications = (): Array<CredentialNotification> => {
     basicMessages,
     nonAttestationProofs,
     store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
-    store.bcscSecure.verified,
   ])
 
   useEffect(() => {
-    if (!agent) {
-      return
-    }
-
     Promise.all(
       [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, AttestationRestrictions)
