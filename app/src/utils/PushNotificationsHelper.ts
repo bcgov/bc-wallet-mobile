@@ -1,6 +1,13 @@
 import { PersistentStorage } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
-import { DidCommConnectionRecord, DidCommConnectionType } from '@credo-ts/didcomm'
+import {
+  DidCommConnectionRecord,
+  DidCommConnectionService,
+  DidCommConnectionType,
+  DidCommMessageSender,
+  DidCommOutboundMessageContext,
+} from '@credo-ts/didcomm'
+import { DidCommPushNotificationsFcmSetDeviceInfoMessage } from '@credo-ts/didcomm-push-notifications'
 import { getApp } from '@react-native-firebase/app'
 import {
   AuthorizationStatus,
@@ -244,19 +251,29 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     return
   }
 
-  agent.config.logger.info(`Trying to send device info to mediator with connection [${mediator.id}]`)
+  agent.config.logger.info(
+    `Trying to send device info to mediator with connection [${mediator.id}] platform=${Platform.OS} tokenLength=${token?.length ?? 0} blank=${blankDeviceToken}`
+  )
   try {
-    await agent.modules.pushNotificationsFcm.setDeviceInfo(mediator.id, {
+    const message = new DidCommPushNotificationsFcmSetDeviceInfoMessage({
       deviceToken: token,
       devicePlatform: Platform.OS,
     })
+    const connectionService = agent.context.dependencyManager.resolve(DidCommConnectionService)
+    const connection = await connectionService.getById(agent.context, mediator.id)
+    const outbound = new DidCommOutboundMessageContext(message, { agentContext: agent.context, connection })
+
+    await agent.context.dependencyManager.resolve(DidCommMessageSender).sendMessage(outbound)
+    agent.config.logger.info(`Successfully sent device info to mediator [${mediator.id}]`)
     if (blankDeviceToken) {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
     } else {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
     }
   } catch (error) {
-    agent.config.logger.error('Error sending device token info to mediator agent')
+    agent.config.logger.error(
+      `Error sending device token info to mediator agent: ${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}`
+    )
   }
 }
 
