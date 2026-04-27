@@ -10,7 +10,18 @@ import {
   WalletSecret,
 } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
-import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
+import {
+  DidCommConnectionEventTypes,
+  DidCommConnectionRecord,
+  DidCommConnectionRepository,
+  DidCommConnectionStateChangedEvent,
+  DidCommConnectionType,
+  DidCommDidExchangeState,
+  DidCommKeylistUpdateAction,
+  DidCommMediationRepository,
+  DidCommMediatorPickupStrategy,
+  DidCommOutOfBandRepository,
+} from '@credo-ts/didcomm'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
@@ -148,18 +159,18 @@ const useBCAgentSetup = () => {
     [credDefs, schemas]
   )
 
-  const waitForConnectionCompleted = async (agent: Agent, connection: ConnectionRecord) => {
-    if (connection.state === DidExchangeState.Completed) {
+  const waitForConnectionCompleted = async (agent: Agent, connection: DidCommConnectionRecord) => {
+    if (connection.state === DidCommDidExchangeState.Completed) {
       return connection
     }
 
-    return new Promise<ConnectionRecord>((resolve, reject) => {
-      const listener = (event: ConnectionStateChangedEvent) => {
+    return new Promise<DidCommConnectionRecord>((resolve, reject) => {
+      const listener = (event: DidCommConnectionStateChangedEvent) => {
         const { connectionRecord } = event.payload
 
         if (
           connectionRecord.id === connection.id &&
-          connectionRecord.state === DidExchangeState.Completed &&
+          connectionRecord.state === DidCommDidExchangeState.Completed &&
           connectionRecord.isReady
         ) {
           cleanup()
@@ -168,11 +179,11 @@ const useBCAgentSetup = () => {
       }
 
       const cleanup = () => {
-        agent.events.off(ConnectionEventTypes.ConnectionStateChanged, listener)
+        agent.events.off(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
         clearTimeout(timeoutId)
       }
 
-      agent.events.on(ConnectionEventTypes.ConnectionStateChanged, listener)
+      agent.events.on(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
 
       const timeoutId = setTimeout(() => {
         cleanup()
@@ -182,11 +193,11 @@ const useBCAgentSetup = () => {
   }
 
   const updateLastSeen = useCallback(async (agent: Agent) => {
-    const connectionRepository = agent.dependencyManager.resolve(ConnectionRepository)
+    const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
 
     const connectionRecords = await connectionRepository.getAll(agent.context)
     const defaultMediatorConnection = connectionRecords.find((record) =>
-      record.connectionTypes?.includes(ConnectionType.Mediator)
+      record.connectionTypes?.includes(DidCommConnectionType.Mediator)
     )
     defaultMediatorConnection?.setTag('lastSeen', new Date().toISOString())
     if (defaultMediatorConnection) {
@@ -199,16 +210,16 @@ const useBCAgentSetup = () => {
       logger.info('Resetting mediation state and creating a new connection...')
 
       try {
-        await agent.mediationRecipient.stopMessagePickup()
+        await agent.didcomm.mediationRecipient.stopMessagePickup()
       } catch (e) {
         logger.warn(`No active message pickup to stop: ${e}`)
       }
 
-      const mediationRepository = agent.dependencyManager.resolve(MediationRepository)
-      const connectionRepository = agent.dependencyManager.resolve(ConnectionRepository)
-      const outOfBandRepository = agent.dependencyManager.resolve(OutOfBandRepository)
+      const mediationRepository = agent.dependencyManager.resolve(DidCommMediationRepository)
+      const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
+      const outOfBandRepository = agent.dependencyManager.resolve(DidCommOutOfBandRepository)
 
-      const oldMediationRecord = await agent.mediationRecipient.findDefaultMediator()
+      const oldMediationRecord = await agent.didcomm.mediationRecipient.findDefaultMediator()
       if (!oldMediationRecord) {
         logger.warn('No mediation record found to delete')
         throw originalError
@@ -266,7 +277,7 @@ const useBCAgentSetup = () => {
       try {
         logger.info('Mediation state cleared. Creating new mediation connection...')
 
-        const { connectionRecord } = await agent.oob.receiveInvitationFromUrl(mediatorUrl, {
+        const { connectionRecord } = await agent.didcomm.oob.receiveInvitationFromUrl(mediatorUrl, {
           reuseConnection: false,
           autoAcceptConnection: true,
           autoAcceptInvitation: true,
@@ -283,19 +294,23 @@ const useBCAgentSetup = () => {
         const freshConnection = await connectionRepository.getById(agent.context, connectionRecord.id)
 
         // Ping ensures the session is created on the mediator side for the new connection.
-        await agent.connections.sendPing(freshConnection.id, { responseRequested: true })
+        await agent.didcomm.connections.sendPing(freshConnection.id, { responseRequested: true })
 
         // Request mediation grant for the new connection and register the existing recipient keys.
-        const newMediationRecord = await agent.mediationRecipient.requestAndAwaitGrant(freshConnection)
+        const newMediationRecord = await agent.didcomm.mediationRecipient.requestAndAwaitGrant(freshConnection)
         for (const key of oldMediationRecord.recipientKeys) {
           logger.debug(`Adding key to key list: ${key}`)
-          await agent.mediationRecipient.notifyKeylistUpdate(freshConnection, key, KeylistUpdateAction.add)
+          await agent.didcomm.mediationRecipient.notifyKeylistUpdate(
+            freshConnection,
+            key,
+            DidCommKeylistUpdateAction.add
+          )
         }
 
-        await agent.mediationRecipient.setDefaultMediator(newMediationRecord)
-        await agent.mediationRecipient.initiateMessagePickup(
+        await agent.didcomm.mediationRecipient.setDefaultMediator(newMediationRecord)
+        await agent.didcomm.mediationRecipient.initiateMessagePickup(
           newMediationRecord,
-          MediatorPickupStrategy.PickUpV2LiveMode
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
         )
       } catch (error) {
         logger.error(`Error during mediation recovery. Attempting recovery of the deleted mediation records: ${error}`)
