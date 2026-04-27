@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCState, VerificationStatus } from '@/store'
 import { NotificationListItem, useStore } from '@bifold/core'
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
 export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']> & {
@@ -19,7 +19,18 @@ export enum CustomNotificationId {
  */
 export const useCustomNotifications = () => {
   const [store] = useStore<BCState>()
+  const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
   const secureActions = useSecureActions()
+
+  /**
+   * Dismisses a custom notification by adding its ID to the dismissedIds set.
+   *
+   * @param id - The ID of the custom notification to dismiss.
+   * @returns void
+   */
+  const dismissCustomNotification = useCallback((id: CustomNotificationId) => {
+    setDismissedIds((prev) => new Set(prev).add(id))
+  }, [])
 
   /**
    * Custom notification configurations to be displayed on the Home screen.
@@ -36,7 +47,9 @@ export const useCustomNotifications = () => {
         onPressAction: () => {
           secureActions.continueVerificationProcess()
         },
-        onCloseAction: () => {},
+        onCloseAction: () => {
+          dismissCustomNotification(CustomNotificationId.BCSCStartVerification)
+        },
         pageTitle: '',
         title: 'StartVerificationNotification.Title',
         description: 'StartVerificationNotification.Description',
@@ -44,13 +57,20 @@ export const useCustomNotifications = () => {
       })
     }
 
-    return notifications
-  }, [secureActions, store.bcscSecure.verified, store.bcscSecure.verifiedStatus])
+    return notifications.filter((n) => !dismissedIds.has(n.id))
+  }, [
+    secureActions,
+    store.bcscSecure.verified,
+    store.bcscSecure.verifiedStatus,
+    dismissedIds,
+    dismissCustomNotification,
+  ])
 
   return useMemo(
     () => ({
       customNotificationConfigs,
+      dismissCustomNotification,
     }),
-    [customNotificationConfigs]
+    [customNotificationConfigs, dismissCustomNotification]
   )
 }

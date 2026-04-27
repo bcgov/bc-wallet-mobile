@@ -82,7 +82,7 @@ const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({
           <Icon accessible={false} name="info" size={ICON_SIZE} color={ColorPalette.brand.primary} />
         </View>
         <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
-          {t(notification.title as any)}
+          {t(notification.title)}
         </ThemedText>
         <TouchableOpacity
           accessibilityLabel={t('Global.Dismiss')}
@@ -96,11 +96,11 @@ const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({
       </View>
       <View style={styles.bodyContainer}>
         <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
-          {t(notification.description as any)}
+          {t(notification.description)}
         </ThemedText>
         <Button
-          title={t(notification.buttonTitle as any)}
-          accessibilityLabel={t(notification.buttonTitle as any)}
+          title={t(notification.buttonTitle)}
+          accessibilityLabel={t(notification.buttonTitle)}
           testID={testIdWithKey('ViewCustomNotification')}
           buttonType={ButtonType.Primary}
           onPress={handlePress}

@@ -7,7 +7,6 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { BCState } from '@/store'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -17,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
-import { WithAgentNotificationsList, WithoutAgentNotificationsList } from './components/NotificationsList'
+import { NotificationsList } from './components/NotificationsList'
 import SavedServices from './components/SavedServices'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
@@ -27,13 +26,11 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * @returns React element
  */
 const Home: React.FC<HomeProps> = () => {
-  // FIXME (V4.1.x): Replace this useBCAgentSetup hook with the new useAgent hook once complete.
-  const { agent } = useBCAgentSetup()
   const { Spacing } = useTheme()
 
   return (
     <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
-      {agent ? <WithAgentNotificationsList /> : <WithoutAgentNotificationsList />}
+      <NotificationsList />
     </TabScreenWrapper>
   )
 }

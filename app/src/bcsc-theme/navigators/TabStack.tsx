@@ -51,7 +51,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
 
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme } = useTheme()
+  const { TabTheme, ColorPalette } = useTheme()
 
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
@@ -68,6 +68,9 @@ const BCSCTabStack: React.FC = () => {
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
+          tabBarBadgeStyle: {
+            backgroundColor: ColorPalette.notification.errorIcon,
+          },
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           title: '',
