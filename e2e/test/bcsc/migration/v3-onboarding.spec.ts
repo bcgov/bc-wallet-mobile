@@ -1,4 +1,5 @@
 import { Timeouts } from '../../../src/constants.js'
+import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
 import { approveInPersonRequest } from '../../../src/helpers/approval.js'
 import { annotate } from '../../../src/helpers/sauce.js'
 import { V3 } from '../../../src/v3TestIDs.js'
@@ -104,9 +105,7 @@ describe('V3 Add Card', () => {
     const addCard = await V3.Initial.addCard()
     await addCard.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await addCard.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
-    console.log('tapping add card...')
     await addCard.click()
-    console.log('tapped add card...')
   })
 
   it('should complete the tutorial carousel', async () => {
@@ -117,9 +116,7 @@ describe('V3 Add Card', () => {
         await nextBtn.waitForDisplayed({ timeout: 5_000 })
         await nextBtn.waitForEnabled({ timeout: 5_000 })
         await nextBtn.click()
-        console.log(`tapped tutorial page ${i + 1}`)
       } catch {
-        console.log(`tutorial carousel ended at page ${i + 1}`)
         break
       }
     }
@@ -129,10 +126,8 @@ describe('V3 Add Card', () => {
   it('should advance past the "New setup" intro page', async () => {
     const continueBtn = await V3.NewSetup.continue()
     await continueBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-    console.log('tapping continue on New setup intro page...')
     await continueBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.click()
-    console.log('tapped continue on New setup intro page...')
   })
 
   it('should enable notifications', async () => {
@@ -141,6 +136,10 @@ describe('V3 Add Card', () => {
       await enableBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await enableBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await enableBtn.click()
+
+      // Tapping Continue triggers the iOS system "Allow Notifications" popup.
+      // On Sauce Labs RDC the popup hangs unless we explicitly accept it via WDA.
+      await acceptSystemAlert()
     } else {
       // Android doesn't show a notifications screen
     }

@@ -21,8 +21,20 @@ function toSauceAppRef(value: string): string {
  *
  * On Sauce Labs the app reference should be a `storage:filename=...` value or URL.
  * For local device runs it must be a local file path (resolved relative to e2e/apps/).
+ *
+ * NOTE: iOS upgrade is skipped on Sauce public RDC because mid-test
+ * `installApp()` bypasses Sauce's resigning pipeline, and Apple rejects
+ * unsigned IPAs on public devices. Run the iOS migration suite locally, or
+ * on Sauce private devices with pre-signed IPAs.
  */
 describe('Upgrade v3 → v4', () => {
+  before(function () {
+    if (isSauceLabs() && driver.isIOS) {
+      console.log('[migration] Skipping iOS upgrade on Sauce — see spec header for details')
+      this.skip()
+    }
+  })
+
   it('should install the v4 app over v3', async () => {
     await annotate('Migration: Upgrading v3 → v4')
 
@@ -30,16 +42,12 @@ describe('Upgrade v3 → v4', () => {
     let v4App: string
     if (driver.isAndroid) {
       if (onSauce) {
-        v4App = process.env.ANDROID_APP_FILENAME || 'BCSC-Dev-latest.aab'
+        v4App = process.env.ANDROID_APP_FILENAME || 'BCSC-Dev-latest.apk'
       } else {
         v4App = process.env.ANDROID_APP || 'BCSC.apk'
       }
     } else {
-      if (onSauce) {
-        v4App = process.env.IOS_APP_FILENAME || 'BCSC-Dev-latest.ipa'
-      } else {
-        v4App = process.env.IOS_APP_DEVICE || 'BCSC.ipa'
-      }
+      v4App = process.env.IOS_APP_DEVICE || 'BCSC.ipa'
     }
 
     let appRef: string
@@ -53,9 +61,8 @@ describe('Upgrade v3 → v4', () => {
       appRef = resolve(__dirname, '../../../apps', v4App)
     }
 
-    console.log(`[migration] Installing v4 app: ${appRef}`)
     await driver.installApp(appRef)
-    console.log('[migration] v4 app installed successfully')
+    console.log('[migration] Installed v4 app over v3 successfully')
   })
 
   it('should terminate and relaunch the app as v4', async () => {
@@ -70,7 +77,6 @@ describe('Upgrade v3 → v4', () => {
 
     await driver.pause(2_000)
     await driver.activateApp(bundleId)
-    console.log('[migration] v4 app launched')
 
     // Wait for the app to fully initialize
     await driver.pause(3_000)

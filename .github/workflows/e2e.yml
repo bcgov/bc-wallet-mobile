@@ -148,6 +148,6 @@ jobs:
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio "$IOS_CONF" --suite "${SUITE}"
           else
-            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.aab" \
+            ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.apk" \
               yarn wdio "$ANDROID_CONF" --suite "${SUITE}"
           fi
