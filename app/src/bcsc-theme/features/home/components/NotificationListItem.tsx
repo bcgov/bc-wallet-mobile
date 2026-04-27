@@ -8,18 +8,18 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const ICON_SIZE = 30
 
-interface CustomNotificationListItemProps {
+interface NotificationListItemProps {
   notification: CustomNotificationConfig
 }
 
 /**
- * A custom notification list item component that displays a notification with a title, description, and an action button.
+ * A notification list item component that displays a notification with a title, description, and an action button.
  * The component also includes a dismiss button to remove the notification from the list.
  *
- * @param props - The properties for the CustomNotificationListItem component, including the notification object.
- * @returns React.Element - The rendered CustomNotificationListItem component.
+ * @param props - The properties for the NotificationListItem component, including the notification object.
+ * @returns React.Element - The rendered NotificationListItem component.
  */
-const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({ notification }) => {
+const NotificationListItem: React.FC<NotificationListItemProps> = ({ notification }) => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const [dismissed, setDismissed] = useState(false)
@@ -76,7 +76,7 @@ const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({
   })
 
   return (
-    <View style={styles.container} testID={testIdWithKey('CustomNotificationListItem')}>
+    <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
       <View style={styles.headerContainer}>
         <View style={styles.icon}>
           <Icon accessible={false} name="info" size={ICON_SIZE} color={ColorPalette.brand.primary} />
@@ -110,4 +110,4 @@ const CustomNotificationListItem: React.FC<CustomNotificationListItemProps> = ({
   )
 }
 
-export default CustomNotificationListItem
+export default NotificationListItem

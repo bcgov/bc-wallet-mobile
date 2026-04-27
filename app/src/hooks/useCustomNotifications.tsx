@@ -32,11 +32,6 @@ export const useCustomNotifications = () => {
     setDismissedIds((prev) => new Set(prev).add(id))
   }, [])
 
-  /**
-   * Custom notification configurations to be displayed on the Home screen.
-   *
-   * @returns An array of custom notification configurations to be displayed on the Home screen.
-   */
   const customNotificationConfigs = useMemo(() => {
     const notifications: CustomNotificationConfig[] = []
 

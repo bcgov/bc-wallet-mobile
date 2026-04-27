@@ -2,10 +2,14 @@ import { useNotifications } from '@/hooks/notifications'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { getCredentialNotificationType } from '@/utils/credentials'
-import { NotificationListItem } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect } from 'react'
-import CustomNotificationListItem from './CustomNotificationListItem'
+import NotificationListItem from './NotificationListItem'
+// BasicMessage
+// ProofRequest
+// CredentialOffer
+// Revocation
+// Proof
 
 /**
  * NotificationsList is a component that conditionally renders notifications based on the agent setup status.
@@ -43,7 +47,7 @@ const WithAgentNotificationsList = () => {
   return (
     <>
       {customNotificationConfigs.map((config) => (
-        <CustomNotificationListItem key={config.id} notification={config} />
+        <NotificationListItem key={config.id} notification={config} />
       ))}
 
       {notifications.map((item) => (
@@ -74,7 +78,7 @@ const WithoutAgentNotificationsList = () => {
   return (
     <>
       {customNotificationConfigs.map((config) => (
-        <CustomNotificationListItem key={config.id} notification={config} />
+        <NotificationListItem key={config.id} notification={config} />
       ))}
     </>
   )

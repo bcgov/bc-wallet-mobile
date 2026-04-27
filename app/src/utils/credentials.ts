@@ -43,7 +43,6 @@ export enum NotificationType {
   CredentialOffer = 'Offer',
   ProofRequest = 'ProofRecord',
   Revocation = 'Revocation',
-  Custom = 'Custom',
   Proof = 'Proof',
 }
 
@@ -214,9 +213,9 @@ export const getCredentialNotificationType = (notification: CredentialNotificati
     return NotificationType.CredentialOffer
   }
 
-  if (notification.type === 'CustomNotification') {
-    return NotificationType.Custom
+  if (notification.type === 'ProofRecord') {
+    return NotificationType.ProofRequest
   }
 
-  return NotificationType.ProofRequest
+  return NotificationType.Proof
 }
