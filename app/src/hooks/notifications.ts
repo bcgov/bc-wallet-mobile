@@ -12,7 +12,6 @@ import {
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
-// import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   DidCommCredentialExchangeRecord as CredentialRecord,
   DidCommBasicMessageRecord,
@@ -24,7 +23,7 @@ import { isProofRequestingAttestation } from '@services/attestation'
 import { useEffect, useMemo, useState } from 'react'
 
 export const useNotifications = (): Array<
-  DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
+  DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord | 'CustomNotification'
 > => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()

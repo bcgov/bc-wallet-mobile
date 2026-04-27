@@ -42,6 +42,8 @@ class MainApplication :
     override fun onCreate() {
         registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance())
         super.onCreate()
+        // Required for expo modules to instantiate properly
+        ApplicationLifecycleDispatcher.onApplicationCreate(this)
         loadReactNative(this)
     }
 
