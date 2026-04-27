@@ -235,7 +235,7 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `SAUCE_USERNAME`           | _—_                   | _SauceLabs username_                                                          |
 | `SAUCE_ACCESS_KEY`         | _—_                   | _SauceLabs access key_                                                        |
 | `SAUCE_REGION`             | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_                             |
-| `ANDROID_APP_FILENAME`     | `BCSC-Dev-latest.aab` | _Android app filename in SauceLabs storage_                                   |
+| `ANDROID_APP_FILENAME`     | `BCSC-Dev-latest.apk` | _Android app filename in SauceLabs storage_                                   |
 | `IOS_APP_FILENAME`         | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_                                       |
 | `IOS_DEVICE_NAME`          | `iPhone.*`            | _iOS device name regex for Sauce RDC allocation_                              |
 | `IOS_PLATFORM_VERSION`     | _unset_               | _Pin iOS version (e.g._ `18`_). Unset = Sauce picks any available match._     |
