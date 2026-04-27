@@ -123,29 +123,45 @@ jobs:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
 
-  # ─── Release Branch Version Validation ──────────────────────────────
-  # On release/vX.Y.Z branches (and PRs targeting them), make sure the
-  # APP_VERSION in each in-scope variant.env matches the version implied
-  # by the branch name. This catches forgotten version bumps before a
-  # build is produced and uploaded.
-  #
-  # NOTE: Only the variants listed in VALIDATED_VARIANTS are checked.
-  # Add a variant here once its APP_VERSION has been bumped to the
-  # release version on this branch.
-  validate-release-version:
+  # ─── Dynamic Variant Matrix ──────────────────────────────────────────
+  # Determine variant matrix
+  # - PRs / merge queue / release/v4.x branches: bcwallet-prod + bcsc-dev (fast feedback).
+  # - Pushes / workflow_dispatch on main: all variants.
+  compute-variants:
+    runs-on: ubuntu-22.04
+    outputs:
+      variants: ${{ steps.set-variants.outputs.variants }}
+    steps:
+      - name: Determine variant matrix
+        id: set-variants
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "merge_group" || "$REF_NAME" == release/v* ]]; then
+            echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  early-exit-check:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
-    if: >-
-      startsWith(github.ref_name, 'release/v') ||
-      startsWith(github.base_ref, 'release/v')
+    outputs:
+      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     env:
       VALIDATED_VARIANTS: 'bcsc-dev bcsc-qa bcsc-test bcsc-prod'
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Fetch all branches, main needed.
 
       - name: Validate APP_VERSION matches release branch
         shell: bash
+        if: >-
+          startsWith(github.ref_name, 'release/v') ||
+          startsWith(github.base_ref, 'release/v')
         run: |
           set -euo pipefail
           # Resolve the release branch name regardless of trigger.
@@ -189,41 +205,6 @@ jobs:
           if [ $fail -ne 0 ]; then
             exit 1
           fi
-
-  # ─── Dynamic Variant Matrix ──────────────────────────────────────────
-  # Determine variant matrix
-  # - PRs / merge queue: bcwallet-prod + bcsc-dev (fast feedback).
-  # - Pushes / workflow_dispatch on release/v* branches: bcsc-dev only
-  #   while the release line is being stabilized. Add more variants here
-  #   as they are signed off for the release.
-  # - Pushes / workflow_dispatch on main: all variants.
-  compute-variants:
-    runs-on: ubuntu-22.04
-    outputs:
-      variants: ${{ steps.set-variants.outputs.variants }}
-    steps:
-      - name: Determine variant matrix
-        id: set-variants
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "merge_group" || "$REF_NAME" == release/v* ]]; then
-            echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
-          else
-            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
-          fi
-
-  early-exit-check:
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    outputs:
-      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # Fetch all branches, main needed.
 
       - name: Check if core files changed
         id: core_files_changed
