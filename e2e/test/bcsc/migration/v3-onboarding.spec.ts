@@ -103,8 +103,8 @@ describe('V3 Add Card', () => {
   it('should tap the Add Card / Setup button', async () => {
     await annotate('Migration: V3 onboarding')
     const addCard = await V3.Initial.addCard()
-    await addCard.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await addCard.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await addCard.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await addCard.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await addCard.click()
   })
 
@@ -125,16 +125,16 @@ describe('V3 Add Card', () => {
   // this is the one that it gets stuck on
   it('should advance past the "New setup" intro page', async () => {
     const continueBtn = await V3.NewSetup.continue()
-    await continueBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await continueBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await continueBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await continueBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.click()
   })
 
   it('should enable notifications', async () => {
     if (driver.isIOS) {
       const enableBtn = await V3.Notifications.continue()
-      await enableBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await enableBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await enableBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await enableBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await enableBtn.click()
 
       // Tapping Continue triggers the iOS system "Allow Notifications" popup.
@@ -147,29 +147,29 @@ describe('V3 Add Card', () => {
 
   it('should tap Step 1', async () => {
     const step1 = await V3.SetupSteps.step1()
-    await step1.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await step1.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await step1.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await step1.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step1.click()
   })
 
   it('should accept the privacy policy', async () => {
     const continueBtn = await V3.Privacy.continue()
-    await continueBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await continueBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await continueBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await continueBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.click()
   })
 
   it('should accept terms of use', async () => {
     const acceptBtn = await V3.Terms.acceptAndContinue()
-    await acceptBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await acceptBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await acceptBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await acceptBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await acceptBtn.click()
   })
 
   it('should enter an account nickname', async () => {
     if (driver.isAndroid) {
       const nicknameInput = await V3.Nickname.nicknameInput()
-      await nicknameInput.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await nicknameInput.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await nicknameInput.click()
       await nicknameInput.setValue(testUser.username)
 
@@ -179,7 +179,7 @@ describe('V3 Add Card', () => {
       await saveBtn.click()
     } else {
       const nicknameField = await $('-ios class chain:**/XCUIElementTypeTextField')
-      await nicknameField.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await nicknameField.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await nicknameField.click()
       await nicknameField.setValue(testUser.username)
 
@@ -194,8 +194,8 @@ describe('V3 Add Card', () => {
 
   it('should tap Choose a PIN', async () => {
     const choosePinBtn = await V3.PINPrep.choosePIN()
-    await choosePinBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await choosePinBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await choosePinBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await choosePinBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await choosePinBtn.click()
   })
 
@@ -204,7 +204,7 @@ describe('V3 Add Card', () => {
 
     if (driver.isAndroid) {
       const choosePinInput = await V3.PINInput.choosePIN()
-      await choosePinInput.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await choosePinInput.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await choosePinInput.click()
       await choosePinInput.setValue(pin)
 
@@ -219,55 +219,55 @@ describe('V3 Add Card', () => {
       await saveBtn.click()
     } else {
       const choosePinField = await V3.PINInput.choosePIN()
-      await choosePinField.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await choosePinField.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await choosePinField.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await choosePinField.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await choosePinField.click()
       for (const char of pin) {
         await choosePinField.addValue(char)
       }
 
       const confirmPinField = await V3.PINInput.confirmPIN()
-      await confirmPinField.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await confirmPinField.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await confirmPinField.click()
       for (const char of pin) {
         await confirmPinField.addValue(char)
       }
 
       const checkbox = await V3.PINInput.understandCheckbox()
-      await checkbox.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await checkbox.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await checkbox.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await checkbox.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await checkbox.click()
 
       const saveBtn = await V3.PINInput.saveAndContinue()
-      await saveBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await saveBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await saveBtn.click()
     }
   })
 
   it('should tap Step 2', async () => {
     const step2 = await V3.SetupSteps.step2()
-    await step2.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await step2.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step2.click()
   })
 
   it('should select the combined card type', async () => {
     const combined = await V3.CardTypeSelection.combinedCard()
-    await combined.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await combined.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await combined.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await combined.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await combined.click()
   })
 
   it('should choose Enter Manually', async () => {
     const enterManually = await V3.AddCardInstructions.enterManually()
-    await enterManually.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await enterManually.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await enterManually.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await enterManually.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await enterManually.click()
   })
 
   it('should enter the card serial number', async () => {
     const serialInput = await V3.ManualEntry.serialInput()
-    await serialInput.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await serialInput.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await serialInput.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await serialInput.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await serialInput.click()
     await serialInput.setValue(testUser.cardSerial)
 
@@ -283,8 +283,8 @@ describe('V3 Add Card', () => {
     if (driver.isAndroid) {
       // Android: tap the date field to open the spinner date picker dialog
       const dateField = await V3.Birthdate.birthdateInput()
-      await dateField.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await dateField.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await dateField.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await dateField.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await dateField.click()
 
       // Wait for the date picker dialog's NumberPickers to appear
@@ -313,7 +313,7 @@ describe('V3 Add Card', () => {
       await validateBtn.click()
     } else {
       const monthWheel = await V3.Birthdate.monthWheel()
-      await monthWheel.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await monthWheel.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await monthWheel.addValue(dob.monthFull)
 
       const dateWheel = await V3.Birthdate.dateWheel()
@@ -331,20 +331,20 @@ describe('V3 Add Card', () => {
 
   it('should tap step 5', async () => {
     const step5 = await V3.SetupSteps.step5()
-    await step5.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await step5.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await step5.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await step5.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step5.click()
   })
 
   it('should select in-person verification', async () => {
     if (driver.isAndroid) {
       const inPersonOption = await $('android=new UiSelector().textContains("In Person")')
-      await inPersonOption.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await inPersonOption.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await inPersonOption.click()
     } else {
       const verifyInPerson = await V3.VerifyOptions.verifyInPerson()
-      await verifyInPerson.waitForDisplayed({ timeout: Timeouts.screenTransition })
-      await verifyInPerson.waitForEnabled({ timeout: Timeouts.screenTransition })
+      await verifyInPerson.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await verifyInPerson.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await verifyInPerson.click()
     }
   })
@@ -354,11 +354,11 @@ describe('V3 Add Card', () => {
 
     if (driver.isAndroid) {
       const codeEl = await V3.VerifyInPerson.confirmationCode()
-      await codeEl.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await codeEl.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       confirmationCode = await codeEl.getText()
     } else {
       const codeEl = await $('-ios predicate string:label MATCHES "^[A-Z0-9]{4}-[A-Z0-9]{4}$"')
-      await codeEl.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await codeEl.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       confirmationCode = await codeEl.getText()
     }
 
@@ -368,17 +368,17 @@ describe('V3 Add Card', () => {
 
   it('should tap complete button once the verification is approved and tap Ok on the "You\'re all set" screen', async () => {
     const completeBtn = await V3.VerifyInPerson.complete()
-    await completeBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await completeBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await completeBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await completeBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await completeBtn.click()
 
     const okBtn = await V3.AllSet.ok()
-    await okBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
-    await okBtn.waitForEnabled({ timeout: Timeouts.screenTransition })
+    await okBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await okBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await okBtn.click()
 
     const homeBtn = await V3.Home.whereToUse()
-    await homeBtn.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    await homeBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await annotate('Migration: V3 onboarding + verification complete')
   })
 })
