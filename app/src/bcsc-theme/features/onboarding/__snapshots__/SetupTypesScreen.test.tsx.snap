@@ -242,7 +242,7 @@ exports[`SetupTypesScreen Rendering should render correctly 1`] = `
             <Text
               style={
                 {
-                  "color": "#FFFFFF",
+                  "color": "#313132",
                   "flex": 1,
                   "fontFamily": "BCSans-Regular",
                   "fontSize": 18,
@@ -331,7 +331,7 @@ exports[`SetupTypesScreen Rendering should render correctly 1`] = `
             <Text
               style={
                 {
-                  "color": "#FFFFFF",
+                  "color": "#313132",
                   "flex": 1,
                   "fontFamily": "BCSans-Regular",
                   "fontSize": 18,

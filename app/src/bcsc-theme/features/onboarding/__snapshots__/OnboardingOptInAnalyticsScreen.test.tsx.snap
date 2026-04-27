@@ -48,7 +48,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
           style={
             [
               {
-                "color": "#F2F2F2",
+                "color": "#313132",
                 "fontSize": 125,
               },
               {

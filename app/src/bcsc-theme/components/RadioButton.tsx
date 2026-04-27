@@ -48,7 +48,7 @@ export const RadioButton = <T,>({
     },
     label: {
       ...TextTheme.normal,
-      color: disabled ? ColorPalette.grayscale.mediumGrey : ColorPalette.grayscale.white,
+      color: disabled ? ColorPalette.grayscale.mediumGrey : TextTheme.normal.color,
       flex: 1,
     },
   })
