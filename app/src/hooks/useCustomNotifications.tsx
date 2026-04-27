@@ -1,8 +1,12 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCState, VerificationStatus } from '@/store'
-import { useStore } from '@bifold/core'
+import { NotificationListItem, useStore } from '@bifold/core'
 import { useMemo } from 'react'
-import { CustomNotificationConfig } from './notifications'
+
+type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
+export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']> & {
+  id: CustomNotificationId
+}
 
 export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
@@ -23,7 +27,7 @@ export const useCustomNotifications = () => {
    * @returns An array of custom notification configurations to be displayed on the Home screen.
    */
   const customNotificationConfigs = useMemo(() => {
-    const notifications: (CustomNotificationConfig & { id: string })[] = []
+    const notifications: CustomNotificationConfig[] = []
 
     if (!store.bcscSecure.verified && store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS) {
       notifications.push({

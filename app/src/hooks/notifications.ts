@@ -1,5 +1,4 @@
 import { AttestationRestrictions } from '@/constants'
-import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
   BifoldAgent,
@@ -7,7 +6,6 @@ import {
   NotificationListItem,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
-  useStore,
 } from '@bifold/core'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
@@ -19,15 +17,13 @@ import {
   ProofState,
 } from '@credo-ts/core'
 import { isProofRequestingAttestation } from '@services/attestation'
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
-export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']>
 export type CredentialNotification = NotificationItemListProps['notification']
 
 export const useNotifications = (): Array<CredentialNotification> => {
   const { agent } = useAgent()
-  const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
   const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
@@ -75,14 +71,7 @@ export const useNotifications = (): Array<CredentialNotification> => {
     )
 
     setNotifications(notif as never[])
-  }, [
-    offers,
-    credsReceived,
-    credsDone,
-    basicMessages,
-    nonAttestationProofs,
-    store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
-  ])
+  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs])
 
   useEffect(() => {
     Promise.all(

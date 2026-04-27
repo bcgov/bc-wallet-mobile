@@ -88,7 +88,7 @@ const translation = {
   },
   "StartVerificationNotification": {
     "Title": "You're not verified (FR)",
-    "Description": "You can continue the verification process at anytime. (FR)",
+    "Description": "You can continue the verification process at any time. (FR)",
     "ButtonTitle": "Start verification (FR)"
   },
   "PersonCredential": {

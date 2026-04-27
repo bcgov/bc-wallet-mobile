@@ -1,3 +1,4 @@
+import { Stacks as BifoldStacks } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
@@ -10,6 +11,7 @@ export enum BCSCStacks {
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
   Main = 'BCSCMainStack',
+  Notification = BifoldStacks.NotificationStack,
 }
 
 export enum BCSCModals {
@@ -222,6 +224,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCStacks.Notification]: undefined
   [BCSCScreens.MainWebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }

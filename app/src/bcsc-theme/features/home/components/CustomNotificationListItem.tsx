@@ -1,6 +1,6 @@
 import { hitSlop } from '@/constants'
+import { CustomNotificationConfig } from '@/hooks/useCustomNotifications'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { CustomNotification } from '@bifold/core/lib/typescript/src/types/notification'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 const ICON_SIZE = 30
 
 interface CustomNotificationListItemProps {
-  notification: CustomNotification
+  notification: CustomNotificationConfig
 }
 
 /**

@@ -1,6 +1,6 @@
 import { CredentialNotification } from '@/hooks/notifications'
 import { BifoldAgent } from '@bifold/core'
-import { Attribute, Predicate } from '@bifold/oca/build/legacy'
+import type { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
   AnonCredsCredentialInfo,
   AnonCredsPredicateType,
@@ -215,10 +215,6 @@ export const getCredentialNotificationType = (notification: CredentialNotificati
   }
 
   if (notification.type === 'CustomNotification') {
-    return NotificationType.Custom
-  }
-
-  if (notification.type === 'CredentialExpired') {
     return NotificationType.Custom
   }
 
