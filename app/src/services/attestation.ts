@@ -280,7 +280,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     DeviceEventEmitter.emit(eventType, error)
   }
 
-  private handleProofRequest = async (proofRequest: DidCommProofExchangeRecord): Promise<boolean> => {
+  private readonly handleProofRequest = async (proofRequest: DidCommProofExchangeRecord): Promise<boolean> => {
     if (!this.agent) {
       return false
     }

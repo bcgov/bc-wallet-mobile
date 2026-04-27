@@ -132,7 +132,6 @@ export function getBCAgentModules({
       mediatorInvitationUrl: mediatorInvitationUrl,
       mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
     }),
-    // TODO: (ar) test iOS
     pushNotificationsFcm: new PushNotificationsFcmModule(),
     // pushNotificationsApns: new PushNotificationsApnsModule(),
     dids: new DidsModule({
