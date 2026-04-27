@@ -86,6 +86,11 @@ const translation = {
     "Description": "Add your Person credential to your wallet and use it to get access to services online.",
     "ButtonTitle": "Start",
   },
+  "StartVerificationNotification": {
+    "Title": "You're not verified",
+    "Description": "You can continue the verification process at any time.",
+    "ButtonTitle": "Start verification"
+  },
   "PersonCredential": {
     "ServicesCardInstalled": "Step 1: BC Services Card app installed",
     "InstallServicesCard": "Step 1: Install the BC Services Card app",
