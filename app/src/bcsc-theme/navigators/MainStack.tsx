@@ -1,5 +1,6 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { BCState } from '@/store'
 import {
   CredentialDetails,
   Screens,
@@ -7,6 +8,7 @@ import {
   TOKENS,
   useDefaultStackOptions,
   useServices,
+  useStore,
   useTheme,
   useTour,
 } from '@bifold/core'
@@ -91,6 +93,7 @@ const MainStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
@@ -126,7 +129,10 @@ const MainStack: React.FC = () => {
     })
   }, [apiClient.endpoints.accountDevices, navigation, t])
 
-  const headerWithBanner = useMemo(() => createHeaderWithBanner(handleManageDevices), [handleManageDevices])
+  const headerWithBanner = useMemo(
+    () => createHeaderWithBanner(handleManageDevices, store.bcsc.bannerMessages),
+    [handleManageDevices, store.bcsc.bannerMessages]
+  )
 
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
