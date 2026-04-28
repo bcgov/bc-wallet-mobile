@@ -181,9 +181,7 @@ describe('useAgentSetupViewModel', () => {
 
     // Force pickup to fail on the next iteration so we land in catch with
     // agentRef.current still pointing at agent1.
-    agent1.mediationRecipient.initiateMessagePickup = jest
-      .fn()
-      .mockRejectedValueOnce(new Error('pickup failed'))
+    agent1.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValueOnce(new Error('pickup failed'))
 
     act(() => {
       result.current.retry()
@@ -225,7 +223,6 @@ describe('useAgentSetupViewModel', () => {
     const { result, rerender } = renderHook(() => useAgentSetupViewModel())
 
     await waitFor(() => expect(result.current.status).toBe('initializing'))
-
     ;(store.authentication as Record<string, unknown>).didAuthenticate = false
     rerender({})
 
