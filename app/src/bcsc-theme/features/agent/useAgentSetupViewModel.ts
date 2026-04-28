@@ -90,10 +90,14 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
 
         if (agentRef.current) {
           const restarted = await restartAgent(agentRef.current, walletSecret, logger)
-          if (cancelled) return
+          if (cancelled) {
+            return
+          }
           if (restarted) {
             await restarted.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
-            if (cancelled) return
+            if (cancelled) {
+              return
+            }
             refreshAttestationMonitor(restarted)
             agentRef.current = restarted
             setAgent(restarted)
@@ -107,7 +111,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         }
 
         const cachedLedgers = await loadCachedLedgers()
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
         const ledgers = cachedLedgers ?? indyLedgers
 
         inFlightAgent = buildAgent({
@@ -121,13 +127,21 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         })
 
         await inFlightAgent.initialize()
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
         await inFlightAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
         await warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger)
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
         await createLinkSecretIfRequired(inFlightAgent)
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
         if (usePushNotifications) {
           activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
@@ -140,7 +154,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setStatus('ready')
         inFlightAgent = undefined
       } catch (err) {
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
         const appError =
           err instanceof AppError
             ? err
