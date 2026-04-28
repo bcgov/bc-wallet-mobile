@@ -45,7 +45,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   // fall back to manual CSN entry so the rest of the flow can still be verified.
   // TODO: replace with a scan hotwire once that ticket lands.
   it('should wait for the barcode scan to complete or fall back to manual entry', async function () {
-    await ScanSerial.waitFor('EnterManually', Timeouts.screenTransition)
+    await ScanSerial.waitFor('EnterManually', Timeouts.SCREEN_TRANSITION)
 
     const maxAttempts = 3
     let scanSucceeded = false
@@ -73,7 +73,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
 
     if (driver.isAndroid) {
       await ManualSerial.tap('SerialInput')
-      await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true, characterByCharacter: false })
+      await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true })
     } else {
       await ManualSerial.tap('SerialPressable')
       await ManualSerial.type('SerialPressable', testUser.cardSerial, { tapFirst: true })
@@ -91,7 +91,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
 
     if (driver.isAndroid) {
       await EnterBirthdate.tap('BirthdateInput')
-      await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true, characterByCharacter: false })
+      await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true })
     } else {
       await EnterBirthdate.tap('BirthdateInputPressable')
       await EnterBirthdate.type('BirthdateInputPressable', testUser.dob, { tapFirst: true })

@@ -15,10 +15,18 @@
     "test:ios:sauce": "wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts",
     "test:android:bio:sauce": "wdio configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts --suite biometrics",
     "test:ios:bio:sauce": "wdio configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts --suite biometrics",
+    "test:android:migration:sauce": "wdio configs/sauce/wdio.android.sauce.migration.conf.ts --suite migration",
+    "test:ios:migration:sauce": "wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration",
+    "test:migration:sauce": "npm run test:android:migration:sauce && npm run test:ios:migration:sauce",
+    "test:android:migration:device": "wdio configs/local/wdio.android.local.device.migration.conf.ts --suite migration",
+    "test:ios:migration:device": "wdio configs/local/wdio.ios.local.device.migration.conf.ts --suite migration",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.4",
+    "basic-ftp": "5.3.0",
+    "protobufjs": "7.5.5",
+    "axios": "1.15.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.0.0",

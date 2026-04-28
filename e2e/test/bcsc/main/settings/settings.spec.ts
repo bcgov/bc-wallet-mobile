@@ -8,10 +8,11 @@
  */
 import { randomBytes } from 'node:crypto'
 
-import { TEST_PIN, UPDATED_TEST_PIN, Timeouts } from '../../../src/constants.js'
-import { swipeUpBy } from '../../../src/helpers/gestures.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
+import { TEST_PIN, Timeouts, UPDATED_TEST_PIN } from '../../../../src/constants.js'
+import { tapResetAppConfirm } from '../../../../src/helpers/alerts.js'
+import { swipeUpBy } from '../../../../src/helpers/gestures.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
 const TabBar = new BaseScreen(BCSC_TestIDs.TabBar)
 const Home = new BaseScreen(BCSC_TestIDs.Home)
@@ -80,7 +81,7 @@ async function tapAccountCard(nickname: string): Promise<void> {
   const testId = `com.ariesbifold:id/CardButton-${nickname}`
   const selector = driver.isIOS ? `~${testId}` : `android=new UiSelector().resourceId("${testId}")`
   const card = await $(selector)
-  await card.waitForDisplayed({ timeout: Timeouts.elementVisible })
+  await card.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
   await card.click()
 }
 
@@ -128,10 +129,7 @@ describe('Settings', () => {
     // to the accessibility/UI hierarchy.
     if (driver.isAndroid) {
       await EditNickname.tap('AccountNicknameInput')
-      await EditNickname.type('AccountNicknameInput', newNickname, {
-        tapFirst: true,
-        characterByCharacter: false,
-      })
+      await EditNickname.type('AccountNicknameInput', newNickname, { tapFirst: true })
     } else {
       await EditNickname.tap('AccountNicknamePressable')
       await EditNickname.type('AccountNicknamePressable', newNickname, { tapFirst: true })
@@ -148,7 +146,7 @@ describe('Settings', () => {
     // value on iOS.
     await Settings.tap('EditNickname')
     const nicknameText = await EditNickname.findByText(newNickname)
-    await nicknameText.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await nicknameText.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     await EditNickname.tap('BackButton')
     await Settings.waitFor('EditNickname')
   })
@@ -185,7 +183,7 @@ describe('Settings', () => {
     // `createAuthSettingsHeaderButton`) rather than the localized
     // "Continue as:" heading — testID-based, not text-based, so copy
     // changes can't silently break the test.
-    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
     await EnterPIN.type('PINInput', currentPin)
@@ -203,19 +201,29 @@ describe('Settings', () => {
 
     // The current-method indicator box should show "PIN".
     const pinLabel = await MainAppSecurity.findByText('PIN')
-    await pinLabel.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await pinLabel.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
 
-    // "Create a PIN" card should be disabled (it's the active method).
+    // Button-state assertions fork on whether biometrics are available:
+    // `SecurityMethodSelector` has two render branches. When device auth
+    // is available (real devices), it renders CardButtons — ChoosePINButton
+    // is disabled because PIN is the current method, ChooseDeviceAuthButton
+    // is the enabled alternative. When device auth is NOT available
+    // (SauceLabs emulators), it renders a fallback branch with plain
+    // Buttons: only ChoosePINButton (always enabled, taps navigate to
+    // ChangePIN) and LearnMoreButton — ChooseDeviceAuthButton is not in
+    // the tree at all. Probe for the device-auth button to pick a branch.
     const pinButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChoosePINButton)
-    await pinButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-    const pinEnabled = await pinButton.isEnabled()
-    if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
-
-    // Device auth card should be enabled (it's the alternative).
+    await pinButton.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     const deviceAuthButton = await MainAppSecurity.findByTestId(MainAppSecurity.ids.ChooseDeviceAuthButton)
-    await deviceAuthButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
-    const deviceAuthEnabled = await deviceAuthButton.isEnabled()
-    if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
+    const deviceAuthAvailable = await deviceAuthButton.isDisplayed().catch(() => false)
+
+    if (deviceAuthAvailable) {
+      const pinEnabled = await pinButton.isEnabled()
+      if (pinEnabled) throw new Error('Expected "Create a PIN" button to be disabled')
+
+      const deviceAuthEnabled = await deviceAuthButton.isEnabled()
+      if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
+    }
 
     await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('EditNickname')
@@ -241,7 +249,7 @@ describe('Settings', () => {
     await ChangePIN.tap('ChangePIN')
 
     const mismatchError = await ChangePIN.findByText('PIN does not match')
-    await mismatchError.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await mismatchError.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
 
     // Uncheck BEFORE correcting the confirm PIN — typing the 6th digit
     // triggers handleConfirmPINComplete which auto-validates. If the
@@ -254,7 +262,7 @@ describe('Settings', () => {
 
     // Verify the button is disabled without the checkbox.
     const changePINButton = await ChangePIN.findByTestId(ChangePIN.ids.ChangePIN)
-    await changePINButton.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await changePINButton.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     const enabledWhenUnchecked = await changePINButton.isEnabled()
     if (enabledWhenUnchecked) throw new Error('Expected Change PIN button to be disabled without checkbox')
 
@@ -284,7 +292,7 @@ describe('Settings', () => {
     // and not individually queryable via findByText.
     if (driver.isAndroid) {
       const adornment3 = await Settings.findByText('3 min')
-      await adornment3.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment3.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
   })
 
@@ -296,7 +304,7 @@ describe('Settings', () => {
     await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment5 = await Settings.findByText('5 min')
-      await adornment5.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment5.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
   })
 
@@ -308,7 +316,7 @@ describe('Settings', () => {
     await Settings.waitFor('EditNickname')
     if (driver.isAndroid) {
       const adornment1 = await Settings.findByText('1 min')
-      await adornment1.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await adornment1.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     }
 
     // Wait for the 1-minute inactivity timer to fire. BCSCActivityContext
@@ -316,7 +324,7 @@ describe('Settings', () => {
     // timer precision and navigation transition time.
     await driver.pause(70_000)
 
-    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.screenTransition)
+    await AccountSelector.waitFor('SettingsMenuButton', Timeouts.SCREEN_TRANSITION)
     await tapAccountCard(newNickname)
     await EnterPIN.waitFor('PINInput')
     await EnterPIN.type('PINInput', currentPin)
@@ -334,16 +342,13 @@ describe('Settings', () => {
     // After the network call, ForgetAllPairingsScreen fires an RN
     // `Alert.alert` titled "Success" via `useAlerts.forgetPairingsAlert`
     // and then `navigation.goBack()`. iOS maps this to a real
-    // `UIAlertController` that Appium's alert API can dismiss directly
-    // — but `wdio.ios.local.sim.conf.ts` sets `autoAcceptAlerts: true`,
-    // so on the local sim the alert may already be gone by the time we
-    // look for it. On Android RN renders Alert.alert as an app-owned
-    // `AlertDialog` widget, so `driver.acceptAlert()` can't see it and
-    // we have to tap the OK button by visible text instead.
+    // `UIAlertController` that Appium's alert API can dismiss directly.
+    // The migration iOS device config enables `autoAcceptAlerts`, so the
+    // alert may already be gone by the time we look for it. On Android
+    // RN renders Alert.alert as an app-owned `AlertDialog` widget, so
+    // `driver.acceptAlert()` can't see it and we have to tap the OK
+    // button by visible text instead.
     if (driver.isIOS) {
-      // Sim has autoAcceptAlerts:true so the alert may already be gone;
-      // real device needs explicit dismissal. Try acceptAlert, fall
-      // through if already dismissed.
       await driver.pause(2000)
       try {
         await driver.acceptAlert()
@@ -352,7 +357,7 @@ describe('Settings', () => {
       }
     } else {
       const successHeading = await Forget.findByText('Success')
-      await successHeading.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await successHeading.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       const okButton = await Forget.findByText('OK')
       await okButton.click()
     }
@@ -371,7 +376,7 @@ describe('Settings', () => {
       await Settings.tap('AnalyticsOptIn')
       const expectedAfter = isCurrentlyOn ? 'OFF' : 'ON'
       const after = await Settings.findByText(expectedAfter)
-      await after.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await after.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     } else {
       // On iOS just verify the tap doesn't error.
       await Settings.tap('AnalyticsOptIn')
@@ -388,7 +393,8 @@ describe('Settings', () => {
     // app-owned `AlertDialog` (text-based fallback required).
     if (driver.isIOS) {
       // dismissAlert taps the cancel-style button — exactly what we want.
-      // Try/catch handles sim autoAcceptAlerts already dismissing it.
+      // Try/catch handles the migration device config where autoAcceptAlerts
+      // may already have dismissed it.
       await driver.pause(2000)
       try {
         await driver.dismissAlert()
@@ -397,7 +403,7 @@ describe('Settings', () => {
       }
     } else {
       const heading = await Settings.findByText('Are you sure?')
-      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+      await heading.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
       // Android Material upper-cases AlertDialog button labels.
       const cancelButton = await Settings.findByText('CANCEL')
       await cancelButton.click()
@@ -414,7 +420,7 @@ describe('Settings', () => {
     await Settings.tap('Help')
     await WebView.waitFor('Back')
     const supportGuide = await WebView.findByText('Support guide')
-    await supportGuide.waitForDisplayed({ timeout: Timeouts.screenTransition })
+    await supportGuide.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await WebView.tap('Back')
     await Settings.waitFor('EditNickname')
   })
@@ -433,7 +439,7 @@ describe('Settings', () => {
     // text (`BCSC.ContactUs.Title` = "Service BC Help Desk") which is
     // rendered as a plain ThemedText at the top of the screen.
     const heading = await MainContactUs.findByText('Service BC Help Desk')
-    await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
+    await heading.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     await MainContactUs.tap('BackButton')
     await Settings.waitFor('EditNickname')
   })
@@ -460,27 +466,10 @@ describe('Settings', () => {
     // pre-onboarding state and cannot chain into any further Settings
     // tests. Running this spec again requires re-onboarding the device.
     await Settings.tap('RemoveAccount')
-    if (driver.isIOS) {
-      // iOS renders a real UIAlertController; `driver.acceptAlert()` taps
-      // the non-cancel action, which is the "Reset App" destructive
-      // button given the actions order
-      // (`SettingsContent.tsx onPressRemoveAccount`).
-      await driver.pause(2000)
-      try {
-        await driver.acceptAlert()
-      } catch {
-        // autoAcceptAlerts already handled it
-      }
-    } else {
-      const heading = await Settings.findByText('Are you sure?')
-      await heading.waitForDisplayed({ timeout: Timeouts.elementVisible })
-      // Android Material upper-cases AlertDialog button labels.
-      const resetButton = await Settings.findByText('RESET APP')
-      await resetButton.click()
-    }
+    await tapResetAppConfirm()
     // `factoryReset()` tears down secure storage and navigation state;
     // the app lands back on the AccountSetup onboarding screen. Use the
-    // generous `appLaunch` timeout to absorb the reset work.
-    await AccountSetup.waitFor('AddAccount', Timeouts.appLaunch)
+    // generous `APP_LAUNCH` timeout to absorb the reset work.
+    await AccountSetup.waitFor('AddAccount', Timeouts.APP_LAUNCH)
   })
 })

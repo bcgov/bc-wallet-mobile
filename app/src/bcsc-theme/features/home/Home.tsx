@@ -67,7 +67,7 @@ export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <>
-      <NotificationBannerContainer onManageDevices={handleManageDevices} />
+      <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
       <TabScreenWrapper>
         <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
         <View style={styles.buttonsContainer}>

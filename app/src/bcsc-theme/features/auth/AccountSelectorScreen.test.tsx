@@ -1,3 +1,4 @@
+import { BCSCBanner, BCSCBannerMessage } from '@/bcsc-theme/components/AppBanner'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -77,6 +78,45 @@ describe('AccountSetup', () => {
       fireEvent.press(continueButton)
 
       expect(mockUnlockApp).toHaveBeenCalled()
+    })
+  })
+
+  describe('banner filtering (issue #3717)', () => {
+    const deviceLimitBanner: BCSCBannerMessage = {
+      id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
+      title: 'Device limit reached',
+      type: 'warning',
+      dismissible: false,
+    }
+
+    const serverNotificationBanner: BCSCBannerMessage = {
+      id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+      title: 'Server notification',
+      type: 'info',
+      dismissible: true,
+    }
+
+    it('does not render the device limit banner', () => {
+      const tree = render(
+        <BasicAppContext initialStateOverride={{ bcsc: { bannerMessages: [deviceLimitBanner] } as any }}>
+          <AccountSelectorScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
+
+      expect(tree.queryByText('Device limit reached')).toBeNull()
+    })
+
+    it('still renders other banners', () => {
+      const tree = render(
+        <BasicAppContext
+          initialStateOverride={{ bcsc: { bannerMessages: [deviceLimitBanner, serverNotificationBanner] } as any }}
+        >
+          <AccountSelectorScreen navigation={mockNavigation as never} />
+        </BasicAppContext>
+      )
+
+      expect(tree.queryByText('Device limit reached')).toBeNull()
+      expect(tree.getByText('Server notification')).toBeTruthy()
     })
   })
 })

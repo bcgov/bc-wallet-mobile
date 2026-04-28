@@ -5,24 +5,18 @@ export const TEST_PIN = '222222'
  *  enter a PIN after the settings suite should use this value. */
 export const UPDATED_TEST_PIN = '555555'
 
-export const Timeouts = {
+export enum Timeouts {
   /** Default wait for an element to appear on screen */
-  elementVisible: 5_000,
+  ELEMENT_VISIBLE = 5_000,
   /** Wait for a screen transition to complete */
-  screenTransition: 20_000,
+  SCREEN_TRANSITION = 20_000,
   /** Initial app launch — generous for cold starts on real devices */
-  appLaunch: 30_000,
+  APP_LAUNCH = 30_000,
   /** Per-test timeout (Mocha) */
-  testTimeout: 300_000,
-  /** WDIO waitforTimeout */
-  waitFor: 20_000,
-  /** Appium new command timeout */
-  newCommand: 180,
-  /** WDIO connection retry timeout */
-  connectionRetry: 180_000,
-  /** swipe duration */
-  swipeDuration: 800,
-} as const
+  TEST_TIMEOUT = 300_000,
+  /** Browser handoff pause (ms) */
+  BROWSER_HANDOFF_PAUSE_MS = 1_000,
+}
 
 export const TestUsers = {
   photo: {
@@ -32,6 +26,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_shaggy.jpg',
     selfieImage: 'images/id_shaggy.jpg',
+    firstName: 'Shaggy',
+    lastName: 'Rogers',
   },
   combined: {
     username: 'e2e_velma',
@@ -40,6 +36,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
     selfieImage: 'images/id_velma.jpg',
+    firstName: 'Velma',
+    lastName: 'Dinkley',
   },
   nonPhoto: {
     username: 'e2e_daphne',
@@ -48,6 +46,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_daphne.jpg',
     selfieImage: 'images/id_daphne.jpg',
+    firstName: 'Daphne',
+    lastName: 'Blake',
   },
   na: {
     username: 'e2e_fred',
@@ -56,6 +56,8 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_fred.jpg',
     selfieImage: 'images/id_fred.jpg',
+    firstName: 'Fred',
+    lastName: 'Jones',
   },
 }
 

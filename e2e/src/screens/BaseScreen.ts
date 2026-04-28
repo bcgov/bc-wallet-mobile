@@ -1,6 +1,5 @@
 import { Timeouts } from '../constants.js'
 import { swipeDownBy, swipeUpBy } from '../helpers/gestures.js'
-import { isSauceLabs } from '../helpers/sauce.js'
 
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
 export interface EnterTextOptions {
@@ -83,7 +82,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID of the element to wait for
    * @returns void
    */
-  async waitForDisplayed(testId: string, timeout: number = Timeouts.elementVisible) {
+  async waitForDisplayed(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE) {
     const el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
@@ -99,7 +98,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * On iOS, falls back to the `label` attribute when `getText()` returns empty
    * (common for styled ThemedText / accessibility-labelled elements).
    */
-  public async getTextByTestId(testId: string, timeout: number = Timeouts.elementVisible): Promise<string> {
+  public async getTextByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<string> {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     const text = await el.getText()
@@ -163,7 +162,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID of the element
    * @param timeout - max time to wait for the element to become enabled (default 20s)
    */
-  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.screenTransition) {
+  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION) {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     await el.waitForEnabled({ timeout })
@@ -193,11 +192,11 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     const el = await this.findByTestId(testId)
     try {
-      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     } catch {
-      console.warn(`Element "${testId}" not visible after ${Timeouts.screenTransition}ms; scrolling then retrying`)
+      console.warn(`Element "${testId}" not visible after ${Timeouts.SCREEN_TRANSITION}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
-      await el.waitForDisplayed({ timeout: Timeouts.screenTransition })
+      await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     }
 
     if (options?.tapFirst) {
@@ -213,7 +212,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       }
     }
 
-    if (options?.characterByCharacter || isSauceLabs()) {
+    if (options?.characterByCharacter) {
       for (const char of text) {
         await el.addValue(char)
       }

@@ -29,7 +29,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
     const { testUser } = getVerifyContext()
     if (driver.isAndroid) {
       await ManualSerial.tap('SerialInput')
-      await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true, characterByCharacter: false })
+      await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true })
     } else {
       await ManualSerial.tap('SerialPressable')
       await ManualSerial.type('SerialPressable', testUser.cardSerial, { tapFirst: true })
@@ -43,7 +43,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
     await EnterBirthdate.waitFor('Done', 1_000)
     if (driver.isAndroid) {
       await EnterBirthdate.tap('BirthdateInput')
-      await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true, characterByCharacter: false })
+      await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true })
     } else {
       await EnterBirthdate.tap('BirthdateInputPressable')
       await EnterBirthdate.type('BirthdateInputPressable', testUser.dob, { tapFirst: true })
