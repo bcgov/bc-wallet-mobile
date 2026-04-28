@@ -1,6 +1,7 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
+import { Agent } from '@credo-ts/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 
 import * as agentService from './services/agent-service'
