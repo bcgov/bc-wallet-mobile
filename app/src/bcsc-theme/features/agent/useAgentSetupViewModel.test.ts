@@ -119,6 +119,40 @@ describe('useAgentSetupViewModel', () => {
     expect(agentService.buildAgent).toHaveBeenCalledTimes(2)
   })
 
+  it('does not transition to ready when didAuthenticate flips false mid-init', async () => {
+    let resolveInit: () => void = () => undefined
+    const initPromise = new Promise<void>((resolve) => {
+      resolveInit = resolve
+    })
+    const newAgent = mockAgent()
+    newAgent.initialize = jest.fn().mockReturnValue(initPromise)
+    jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+
+    const store: Record<string, unknown> = {
+      authentication: { didAuthenticate: true },
+      bcscSecure: { walletKey: 'wallet-key-hash' },
+      preferences: { selectedMediator: 'https://m', walletName: 'BC Wallet', usePushNotifications: false },
+      developer: { enableProxy: false },
+      migration: { didMigrateToAskar: true },
+    }
+    jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+
+    const { result, rerender } = renderHook(() => useAgentSetupViewModel())
+
+    await waitFor(() => expect(result.current.status).toBe('initializing'))
+
+    // Flip to unauthenticated while initialize() is still pending
+    ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+    rerender({})
+
+    // Now allow the in-flight initialize to resolve
+    resolveInit()
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.agent).toBeNull()
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },

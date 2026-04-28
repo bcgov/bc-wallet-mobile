@@ -77,6 +77,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     setStatus('initializing')
     setError(null)
 
+    let cancelled = false
+
     const run = async (): Promise<void> => {
       try {
         if (!walletKey) {
@@ -87,8 +89,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
 
         if (agentRef.current) {
           const restarted = await restartAgent(agentRef.current, walletSecret, logger)
+          if (cancelled) return
           if (restarted) {
             await restarted.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+            if (cancelled) return
             refreshAttestationMonitor(restarted)
             agentRef.current = restarted
             setAgent(restarted)
@@ -98,6 +102,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         }
 
         const cachedLedgers = await loadCachedLedgers()
+        if (cancelled) return
         const ledgers = cachedLedgers ?? indyLedgers
 
         const newAgent = buildAgent({
@@ -111,9 +116,13 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         })
 
         await newAgent.initialize()
+        if (cancelled) return
         await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+        if (cancelled) return
         await warmCache(newAgent, credDefs, schemas, cachedLedgers, logger)
+        if (cancelled) return
         await createLinkSecretIfRequired(newAgent)
+        if (cancelled) return
 
         if (usePushNotifications) {
           activate(newAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
@@ -125,6 +134,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setAgent(newAgent)
         setStatus('ready')
       } catch (err) {
+        if (cancelled) return
         const appError =
           err instanceof AppError
             ? err
@@ -133,11 +143,18 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setError(appError)
         setStatus('error')
       } finally {
-        initializingRef.current = false
+        if (!cancelled) {
+          initializingRef.current = false
+        }
       }
     }
 
     run()
+
+    return () => {
+      cancelled = true
+      initializingRef.current = false
+    }
   }, [
     didAuthenticate,
     walletKey,
