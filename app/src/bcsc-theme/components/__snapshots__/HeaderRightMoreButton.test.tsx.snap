@@ -74,7 +74,7 @@ exports[`HeaderRightMoreButton Component createHeaderRightMoreButton renders cor
         ]
       }
     >
-      󰇙
+      󰘥
     </Text>
   </View>
 </View>
@@ -154,7 +154,7 @@ exports[`HeaderRightMoreButton Component renders correctly 1`] = `
         ]
       }
     >
-      󰇙
+      󰘥
     </Text>
   </View>
 </View>

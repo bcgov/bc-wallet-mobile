@@ -1949,6 +1949,8 @@ PODS:
     - react-native-config/App (= 1.5.10)
   - react-native-config/App (1.5.10):
     - React-Core
+  - react-native-drop-shadow (1.0.3):
+    - React
   - react-native-get-random-values (1.11.0):
     - React-Core
   - react-native-keyboard-controller (1.18.6):
@@ -3325,6 +3327,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - "react-native-attestation (from `../node_modules/@bifold/react-native-attestation`)"
   - react-native-config (from `../node_modules/react-native-config`)
+  - react-native-drop-shadow (from `../node_modules/react-native-drop-shadow`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
@@ -3502,6 +3505,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@bifold/react-native-attestation"
   react-native-config:
     :path: "../node_modules/react-native-config"
+  react-native-drop-shadow:
+    :path: "../node_modules/react-native-drop-shadow"
   react-native-get-random-values:
     :path: "../node_modules/react-native-get-random-values"
   react-native-keyboard-controller:
@@ -3686,6 +3691,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
   react-native-attestation: ab2e1bf0514f33642464301c8c1b81d5f87b3006
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
+  react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
   react-native-keyboard-controller: 7e305e26078360602b5d523ff84250b5a054a6ff
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187

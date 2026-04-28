@@ -148,6 +148,33 @@ exports[`AccountSetup renders correctly 1`] = `
       <View
         style={
           {
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
+            }
+          }
+        />
+      </View>
+      <View
+        style={
+          {
             "backgroundColor": "#F2F2F2",
             "flexGrow": 1,
             "gap": 8,
@@ -311,27 +338,6 @@ exports[`AccountSetup renders correctly 1`] = `
           </View>
         </View>
       </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#F2F2F2",
-            "elevation": 5,
-            "height": 2,
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": -5,
-              "width": 0,
-            },
-            "shadowOpacity": 0.6,
-            "shadowRadius": 5,
-            "top": 0,
-            "zIndex": 1,
-          }
-        }
-      />
     </View>
   </View>
 </RNCSafeAreaView>

@@ -10,7 +10,7 @@ export const HeaderRightMoreButton = (props: HeaderBackButtonProps) => {
   return (
     <IconButton
       buttonLocation={ButtonLocation.Right}
-      icon={'dots-vertical'}
+      icon={'help-circle-outline'}
       accessibilityLabel={String(props.accessibilityLabel)}
       testID={String(props.testID)}
       onPress={() => props.onPress?.()}
