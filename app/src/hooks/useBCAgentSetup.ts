@@ -110,7 +110,7 @@ const useBCAgentSetup = () => {
 
       return new Agent(options)
     },
-    [logger, store.developer.enableProxy]
+    [logger, store.developer.enableProxy, store.preferences.walletName]
   )
 
   const warmUpCache = useCallback(
