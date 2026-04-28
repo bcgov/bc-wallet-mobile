@@ -18,7 +18,6 @@ import {
   DidCommCredentialsModule,
   DidCommDifPresentationExchangeProofFormatService,
   DidCommHttpOutboundTransport,
-  DidCommMediationRecipientModule,
   DidCommMediatorPickupStrategy,
   DidCommModule,
   DidCommProofV2Protocol,
@@ -78,6 +77,34 @@ export function getBCAgentModules({
     })
   }
 
+  // Protocol instances are shared between DidCommModule's internal sub-modules and the
+  // top-level module keys. This ensures:
+  // - agent.didcomm.credentials / agent.didcomm.proofs are available (sub-modules inside DidCommModule)
+  // - agent.modules.credentials / agent.modules.proofs are available (top-level keys, used by bifold)
+  // - The first-registered handlers (from DidCommModule) carry the proper format services, so
+  //   incoming messages are processed correctly.
+  const credentialProtocols = [
+    new DidCommCredentialV1Protocol({ indyCredentialFormat }),
+    new DidCommCredentialV2Protocol({
+      credentialFormats: [
+        indyCredentialFormat,
+        new AnonCredsDidCommCredentialFormatService(),
+        new DataIntegrityDidCommCredentialFormatService(),
+      ],
+    }),
+  ]
+
+  const proofProtocols = [
+    new DidCommProofV1Protocol({ indyProofFormat }),
+    new DidCommProofV2Protocol({
+      proofFormats: [
+        indyProofFormat,
+        new AnonCredsDidCommProofFormatService(),
+        new DidCommDifPresentationExchangeProofFormatService(),
+      ],
+    }),
+  ]
+
   const modules = {
     askar: new AskarModule({
       askar,
@@ -98,39 +125,35 @@ export function getBCAgentModules({
       transports: {
         outbound: [new DidCommWsOutboundTransport(), new DidCommHttpOutboundTransport()],
       },
+      credentials: {
+        autoAcceptCredentials: DidCommAutoAcceptCredential.ContentApproved,
+        credentialProtocols,
+      },
+      proofs: {
+        autoAcceptProofs: DidCommAutoAcceptProof.ContentApproved,
+        proofProtocols,
+      },
+      mediator: false,
+      // mediationRecipient lives inside DidCommModule so agent.didcomm.mediationRecipient is accessible.
+      // The top-level module pattern does not expose sub-modules via agent.didcomm.X.
+      mediationRecipient: {
+        mediatorInvitationUrl: mediatorInvitationUrl,
+        mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
+      },
     }),
     connections: new DidCommConnectionsModule({
       autoAcceptConnections: true,
     }),
+    // Top-level credentials/proofs modules keep agent.modules.credentials and
+    // agent.modules.proofs available for bifold call sites (deleteById, declineOffer, etc.).
+    // They share the same protocol instances so both API paths resolve against the same format services.
     credentials: new DidCommCredentialsModule({
       autoAcceptCredentials: DidCommAutoAcceptCredential.ContentApproved,
-      credentialProtocols: [
-        new DidCommCredentialV1Protocol({ indyCredentialFormat }),
-        new DidCommCredentialV2Protocol({
-          credentialFormats: [
-            indyCredentialFormat,
-            new AnonCredsDidCommCredentialFormatService(),
-            new DataIntegrityDidCommCredentialFormatService(),
-          ],
-        }),
-      ],
+      credentialProtocols,
     }),
     proofs: new DidCommProofsModule({
       autoAcceptProofs: DidCommAutoAcceptProof.ContentApproved,
-      proofProtocols: [
-        new DidCommProofV1Protocol({ indyProofFormat }),
-        new DidCommProofV2Protocol({
-          proofFormats: [
-            indyProofFormat,
-            new AnonCredsDidCommProofFormatService(),
-            new DidCommDifPresentationExchangeProofFormatService(),
-          ],
-        }),
-      ],
-    }),
-    mediationRecipient: new DidCommMediationRecipientModule({
-      mediatorInvitationUrl: mediatorInvitationUrl,
-      mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
+      proofProtocols,
     }),
     pushNotificationsFcm: new PushNotificationsFcmModule(),
     // pushNotificationsApns: new PushNotificationsApnsModule(),
