@@ -10,7 +10,6 @@ import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarn
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
-import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -65,23 +64,7 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  return (
-    <BCSCAgentProvider>
-      <AuthenticatedStack
-        verified={store.bcscSecure.verified}
-        verifiedStatus={store.bcscSecure.verifiedStatus}
-      />
-    </BCSCAgentProvider>
-  )
-}
-
-interface AuthenticatedStackProps {
-  verified: boolean | undefined
-  verifiedStatus: VerificationStatus
-}
-
-const AuthenticatedStack: React.FC<AuthenticatedStackProps> = ({ verified, verifiedStatus }) => {
-  if (verified === false && verifiedStatus === VerificationStatus.IN_PROGRESS) {
+  if (store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />

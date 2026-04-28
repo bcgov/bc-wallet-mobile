@@ -59,10 +59,6 @@ jest.mock('../contexts/BCSCAccountContext', () => ({
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
 }))
-jest.mock('../features/agent/BCSCAgentProvider', () => ({
-  __esModule: true,
-  default: ({ children }: any) => children,
-}))
 
 const mockStore = (overrides: Record<string, any> = {}) => ({
   stateLoaded: true,
