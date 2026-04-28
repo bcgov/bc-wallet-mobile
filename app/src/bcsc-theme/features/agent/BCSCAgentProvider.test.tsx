@@ -1,6 +1,5 @@
-import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppError, ErrorRegistry } from '@/errors'
-import { render, waitFor } from '@testing-library/react-native'
+import { render } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
 
@@ -24,18 +23,12 @@ jest.mock('../../contexts/BCSCLoadingContext', () => {
 jest.mock('@bifold/core', () => ({
   AgentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
-jest.mock('@/contexts/ErrorAlertContext', () => ({
-  useErrorAlert: jest.fn(),
-}))
 
 const mockViewModel = useAgentSetupViewModel as jest.MockedFunction<typeof useAgentSetupViewModel>
 
 describe('BCSCAgentProvider', () => {
-  const emitErrorModal = jest.fn()
-
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.spyOn(ErrorAlertContext, 'useErrorAlert').mockReturnValue({ emitErrorModal, emitAlert: jest.fn() })
   })
 
   it('renders LoadingScreen while initializing', () => {
@@ -65,47 +58,17 @@ describe('BCSCAgentProvider', () => {
     expect(queryByText('Init.InitializingAgent')).toBeNull()
   })
 
-  it('calls emitErrorModal once per error transition with retry action', async () => {
-    const retry = jest.fn()
+  it('renders children without AgentProvider when init fails (non-blocking)', () => {
     const error = AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR)
-    mockViewModel.mockReturnValue({ agent: null, status: 'error', error, retry })
-
-    const { rerender } = render(
-      <BCSCAgentProvider>
-        <Text>hidden</Text>
-      </BCSCAgentProvider>
-    )
-
-    await waitFor(() => expect(emitErrorModal).toHaveBeenCalledTimes(1))
-    expect(emitErrorModal).toHaveBeenCalledWith(
-      'Error.Title2901',
-      'Error.Message2901',
-      error,
-      expect.objectContaining({
-        action: expect.objectContaining({ text: 'Init.Retry', onPress: retry }),
-      })
-    )
-
-    // Re-render with same error — should not emit again
-    rerender(
-      <BCSCAgentProvider>
-        <Text>hidden</Text>
-      </BCSCAgentProvider>
-    )
-    expect(emitErrorModal).toHaveBeenCalledTimes(1)
-  })
-
-  it('emits modal with 2902 strings when walletKey is missing', async () => {
-    const error = AppError.fromErrorDefinition(ErrorRegistry.WALLET_SECRET_NOT_FOUND)
     mockViewModel.mockReturnValue({ agent: null, status: 'error', error, retry: jest.fn() })
 
-    render(
+    const { getByText, queryByText } = render(
       <BCSCAgentProvider>
-        <Text>hidden</Text>
+        <Text>home-screen</Text>
       </BCSCAgentProvider>
     )
 
-    await waitFor(() => expect(emitErrorModal).toHaveBeenCalledTimes(1))
-    expect(emitErrorModal).toHaveBeenCalledWith('Error.Title2902', 'Error.Message2902', error, expect.anything())
+    expect(getByText('home-screen')).toBeTruthy()
+    expect(queryByText('Init.InitializingAgent')).toBeNull()
   })
 })
