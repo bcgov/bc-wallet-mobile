@@ -85,10 +85,27 @@ const translation = {
       "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone.",
     }
   },
-  "PersonCredentialNotification": {
-    "Title": "Get your Person credential",
-    "Description": "Add your Person credential to your wallet and use it to get access to services online.",
-    "ButtonTitle": "Start",
+  "Notification": {
+    "StartVerification": {
+      "Title": "You're not verified",
+      "Description": "You can continue the verification process at any time.",
+      "ButtonTitle": "Start verification"
+    },
+    "BasicMessage": {
+      "Title": "New message",
+      "SentMessage": "{{ label }} sent a message",
+      "ReceivedMessage": "You received a new message",
+      "ButtonTitle": "View message"
+    },
+    "CredentialOffer": {
+      "Title": "New credential offer",
+    },
+    "ProofRequest": {
+      "Title": "New proof request"
+    },
+    "Revocation": {
+      "Title": "Credential revoked"
+    }
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Step 1: BC Services Card app installed",

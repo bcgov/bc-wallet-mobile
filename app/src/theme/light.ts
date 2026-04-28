@@ -7,12 +7,13 @@ import { createAppTheme } from './factory'
 const BC_BLUE = '#003366'
 const LIGHT_GREY_BG = '#F2F2F2'
 const BC_BLUE_LINK = '#1A5A96'
+const OFF_WHITE = '#F7F9FC' // QUESTION (MD): Is this also the value for LIGHT_GREY_BG?
 
 export const LightTheme = createAppTheme({
   name: BCThemeNames.Light,
   logo: Logo,
   primary: BC_BLUE,
-  primaryBackground: LIGHT_GREY_BG,
+  primaryBackground: GrayscaleColors.white,
   secondaryBackground: GrayscaleColors.white,
   tertiaryBackground: BC_BLUE,
   modalPrimaryBackground: GrayscaleColors.white,
@@ -44,4 +45,8 @@ export const LightTheme = createAppTheme({
   tertiaryButtonBackground: GrayscaleColors.veryLightGrey,
   tabBarBackground: GrayscaleColors.white,
   tabBarIcon: GrayscaleColors.darkGrey,
+  notification: {
+    info: OFF_WHITE,
+    infoBorder: '#053662',
+  },
 })
