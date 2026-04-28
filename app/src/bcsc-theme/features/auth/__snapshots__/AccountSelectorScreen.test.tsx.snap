@@ -146,10 +146,8 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
           style={
             [
               {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
+                "backgroundColor": "#003366",
                 "borderRadius": 4,
-                "borderWidth": 1,
                 "padding": 16,
               },
               undefined,
@@ -180,14 +178,10 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
                     {
                       "color": "#313132",
                       "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "color": "#003366",
-                      "fontSize": 20,
+                      "fontSize": 21,
                       "fontWeight": "bold",
                     },
+                    undefined,
                   ]
                 }
               >
@@ -231,10 +225,8 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
           style={
             [
               {
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#D9EAF7",
+                "backgroundColor": "#003366",
                 "borderRadius": 4,
-                "borderWidth": 1,
                 "padding": 16,
               },
               undefined,
@@ -265,14 +257,10 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
                     {
                       "color": "#313132",
                       "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "color": "#003366",
-                      "fontSize": 20,
+                      "fontSize": 21,
                       "fontWeight": "bold",
                     },
+                    undefined,
                   ]
                 }
               >

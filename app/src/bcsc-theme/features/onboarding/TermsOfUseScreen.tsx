@@ -1,11 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createTermsOfUseHtml } from '@/bcsc-theme/utils/webview-utils'
 import {
   Button,
   ButtonType,
-  ContentGradient,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -18,7 +18,6 @@ import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
-import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { WebViewContent } from '../webview/WebViewContent'
 
 interface TermsOfUseScreenProps {
@@ -61,7 +60,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
 
   const styles = StyleSheet.create({
     scrollContainer: {
-      paddingHorizontal: Spacing.sm,
+      padding: Spacing.lg,
       flex: 1,
     },
     loadingContainer: {
@@ -72,8 +71,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   })
 
   const controls = (
-    <View style={{ width: '100%' }}>
-      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+    <ControlContainer>
       {error ? (
         <Button
           title={t('Init.Retry')}
@@ -87,27 +85,20 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
         <Button
           title={t('BCSC.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
-          onPress={async () => {
-            const status = await PushNotifications.status()
-
-            // if permission is granted, skip notification screen
-            if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
-              return navigation.navigate(BCSCScreens.OnboardingSecureApp)
-            }
-
-            navigation.navigate(BCSCScreens.OnboardingNotifications)
+          onPress={() => {
+            navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
           disabled={!webViewIsLoaded || isLoading}
         />
       )}
-    </View>
+    </ControlContainer>
   )
 
   if (!termsOfUse) {
     return (
-      <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+      <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
         <View style={styles.loadingContainer}>
           {error && !isLoading ? (
             <View style={{ flexDirection: 'row' }}>
@@ -124,7 +115,12 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   }
 
   return (
-    <ScreenWrapper scrollable={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper
+      padded={false}
+      scrollable={false}
+      controls={controls}
+      scrollViewContainerStyle={styles.scrollContainer}
+    >
       <WebViewContent
         html={createTermsOfUseHtml(
           {
