@@ -100,6 +100,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
             setStatus('ready')
             return
           }
+          // Restart failed — old agent may still hold open transports/listeners.
+          // Best-effort shut it down before falling through to build a fresh one.
+          await shutdownAgent(agentRef.current, logger)
+          agentRef.current = null
         }
 
         const cachedLedgers = await loadCachedLedgers()
@@ -142,6 +146,13 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
             ? err
             : AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: err })
         logger.error(`[${appError.appEvent}] Agent init failed: ${appError.message}`)
+        // Clear any stale agent so retry takes the fresh build path instead of
+        // re-attempting restart on a broken instance.
+        if (agentRef.current) {
+          await shutdownAgent(agentRef.current, logger)
+          agentRef.current = null
+          setAgent(null)
+        }
         setError(appError)
         setStatus('error')
       } finally {

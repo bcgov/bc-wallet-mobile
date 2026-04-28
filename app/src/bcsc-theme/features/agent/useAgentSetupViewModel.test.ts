@@ -153,6 +153,46 @@ describe('useAgentSetupViewModel', () => {
     expect(result.current.agent).toBeNull()
   })
 
+  it('shuts down old agent when restart returns undefined before building fresh', async () => {
+    const agent1 = mockAgent()
+    const agent2 = mockAgent()
+    jest.mocked(agentService.buildAgent).mockReturnValueOnce(agent1).mockReturnValueOnce(agent2)
+    jest.mocked(agentService.restartAgent).mockResolvedValueOnce(undefined)
+
+    const { result } = renderHook(() => useAgentSetupViewModel())
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    act(() => {
+      result.current.retry()
+    })
+
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+    expect(agentService.buildAgent).toHaveBeenCalledTimes(2)
+  })
+
+  it('shuts down stale agent on init failure so retry rebuilds fresh', async () => {
+    const agent1 = mockAgent()
+    jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+    jest.mocked(agentService.restartAgent).mockResolvedValueOnce(agent1)
+
+    const { result } = renderHook(() => useAgentSetupViewModel())
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    // Force pickup to fail on the next iteration so we land in catch with
+    // agentRef.current still pointing at agent1.
+    agent1.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('pickup failed'))
+
+    act(() => {
+      result.current.retry()
+    })
+
+    await waitFor(() => expect(result.current.status).toBe('error'))
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+  })
+
   it('shuts down partially-built agent when init step throws', async () => {
     const newAgent = mockAgent()
     newAgent.initialize = jest.fn().mockRejectedValue(new Error('initialize failed'))
