@@ -1110,7 +1110,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v8
         with:
-          name: ${{ matrix.platform }}-${{ matrix.variant }}.${{ matrix.platform == 'ios' && 'ipa' || 'aab' }}
+          name: ${{ matrix.platform }}-${{ matrix.variant }}.${{ matrix.platform == 'ios' && 'ipa' || 'apk' }}
           path: ${{ runner.temp }}/probe
 
       - uses: actions/checkout@v6
@@ -1129,8 +1129,8 @@ jobs:
             EXT="ipa"
             INNER_FILENAME="BCWallet.ipa"
           else
-            EXT="aab"
-            INNER_FILENAME="app-release.aab"
+            EXT="apk"
+            INNER_FILENAME="app-release.apk"
           fi
           cat >> "$GITHUB_ENV" <<EOF
           SAUCE_LABS_NAME=${SAUCE_LABS_PREFIX}-${{ github.run_number }}.${EXT}

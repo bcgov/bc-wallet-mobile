@@ -104,17 +104,30 @@ export const V3 = {
 
   PINPrep: {
     /**
-     * iOS: Both options are GovernmentBlueView with the same accessibilityIdentifier.
-     * accessibilityLabel is set on the child titleLabel, not the parent view,
-     * so predicate string matching on label doesn't work reliably.
-     * Use index instead — Choose a PIN is the second GovernmentBlueView.
+     * Handles both variants of the "Choose a PIN" UI:
+     *  1. App Security method selection screen (shown when device auth is available):
+     *     - iOS: second GovernmentBlueView (index 1)
+     *     - Android: `use_pin_security_ll`
+     *  2. PIN Prep screen (shown when device auth is unavailable):
+     *     - iOS: button titled "Choose a PIN"
+     *     - Android: `choose_a_pin_btn`
+     *
+     * Falls back to the PIN Prep variant if the App Security variant isn't found.
      */
     choosePIN: async () => {
       if (driver.isIOS) {
         const views = await $$('~GovernmentBlueView')
-        return views[1]
+        const second = views[1]
+        if (second) {
+          return second
+        }
+        return iosPredicate('type == "XCUIElementTypeButton" AND label == "Choose a PIN"')
       }
-      return androidId('use_pin_security_ll')
+      const securityOption = androidId('use_pin_security_ll')
+      if (await securityOption.isExisting()) {
+        return securityOption
+      }
+      return androidId('choose_a_pin_btn')
     },
     useDeviceSecurity: async () => {
       if (driver.isIOS) {
