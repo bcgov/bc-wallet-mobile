@@ -328,6 +328,7 @@ export const BCSC_TestIDs = {
     ReadPrivacyPolicy: 'com.ariesbifold:id/ReadPrivacyPolicy',
     ServiceLoginContinue: 'com.ariesbifold:id/ServiceLoginContinue',
     ServiceLoginCancel: 'com.ariesbifold:id/ServiceLoginCancel',
+    Back: 'com.ariesbifold:id/Back',
   },
   ManualPairingCode: {
     Submit: 'com.ariesbifold:id/Submit',
