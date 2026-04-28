@@ -524,6 +524,8 @@ const translation = {
       "NotificationsTitle": "Notifications",
       "NotificationsHeader": "Enable Notifications?",
       "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions.",
+      "EnableNotifications": "Enable Notifications",
+      "SkipNotifications": "Skip",
       "SecureAppHeader": "Choose how to secure this app",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",

@@ -103,17 +103,31 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     }
   }
 
+  const skipPushNotifications = () => {
+    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+  }
+
   const controls = (
     <ControlContainer>
       <Button
-        title={t('Global.Continue')}
+        title={t('BCSC.Onboarding.EnableNotifications')}
         buttonType={ButtonType.Primary}
         onPress={async () => {
           await activatePushNotifications()
           navigation.navigate(BCSCScreens.OnboardingSecureApp)
         }}
-        testID={testIdWithKey('Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        testID={testIdWithKey('EnableNotifications')}
+        accessibilityLabel={t('BCSC.Onboarding.EnableNotifications')}
+      />
+      <Button
+        title={t('BCSC.Onboarding.SkipNotifications')}
+        buttonType={ButtonType.Secondary}
+        onPress={() => {
+          skipPushNotifications()
+          navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }}
+        testID={testIdWithKey('SkipNotifications')}
+        accessibilityLabel={t('BCSC.Onboarding.SkipNotifications')}
       />
     </ControlContainer>
   )
