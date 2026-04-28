@@ -34,6 +34,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const [retryCount, setRetryCount] = useState(0)
   const agentRef = useRef<Agent | null>(null)
   const initializingRef = useRef(false)
+  const statusRef = useRef<AgentSetupStatus>('idle')
+  statusRef.current = status
 
   const didAuthenticate = store.authentication.didAuthenticate
   const walletKey = store.bcscSecure.walletKey
@@ -69,7 +71,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       return
     }
 
-    if (initializingRef.current || status === 'ready' || status === 'error') {
+    if (initializingRef.current || statusRef.current === 'ready' || statusRef.current === 'error') {
       return
     }
 
@@ -195,7 +197,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     enableProxy,
     usePushNotifications,
     retryCount,
-    status,
     logger,
     indyLedgers,
     credDefs,

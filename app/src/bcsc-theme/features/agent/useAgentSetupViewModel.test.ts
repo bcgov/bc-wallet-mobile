@@ -230,6 +230,41 @@ describe('useAgentSetupViewModel', () => {
     await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger))
   })
 
+  it('does not double-launch init when setStatus(initializing) re-renders mid-flight', async () => {
+    // Regression test: previously `status` was in the effect dep array, so
+    // setStatus('initializing') re-fired the effect and the cleanup reset
+    // initializingRef before the in-flight run had a chance to bail, racing
+    // a second restartAgent call on the same agent instance.
+    const agent1 = mockAgent()
+    jest.mocked(agentService.buildAgent).mockReturnValueOnce(agent1)
+
+    let resolveRestart: (val: Agent | undefined) => void = () => undefined
+    const restartPromise = new Promise<Agent | undefined>((resolve) => {
+      resolveRestart = resolve
+    })
+    jest.mocked(agentService.restartAgent).mockReturnValueOnce(restartPromise)
+
+    const { result } = renderHook(() => useAgentSetupViewModel())
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    act(() => {
+      result.current.retry()
+    })
+
+    await waitFor(() => expect(result.current.status).toBe('initializing'))
+    // Flush microtasks so any spurious re-fire would have launched a second run.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+
+    expect(agentService.restartAgent).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveRestart(agent1)
+    })
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
