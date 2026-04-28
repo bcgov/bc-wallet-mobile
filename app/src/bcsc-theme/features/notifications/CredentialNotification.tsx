@@ -32,7 +32,8 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
   }
 }
 
-const BasicMessageNotification = (_props: CredentialNotificationProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const BasicMessageNotification = (props: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const label = 'TODO (V4.1.x): Connection Label' // Bifold:NotificationListItem.tsx:263
 
@@ -51,7 +52,8 @@ const BasicMessageNotification = (_props: CredentialNotificationProps) => {
   )
 }
 
-const CredentialOfferNotification = (_props: CredentialNotificationProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const CredentialOfferNotification = (props: CredentialNotificationProps) => {
   const { t } = useTranslation()
 
   return (
@@ -67,7 +69,8 @@ const CredentialOfferNotification = (_props: CredentialNotificationProps) => {
   )
 }
 
-const ProofRequestNotification = (_props: CredentialNotificationProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ProofRequestNotification = (props: CredentialNotificationProps) => {
   const { t } = useTranslation()
 
   return (
@@ -86,7 +89,8 @@ const ProofRequestNotification = (_props: CredentialNotificationProps) => {
 // TODO (V4.1.x): Add Proof notification. Needs more invesitgation. Bifold appears to not have this wired up.
 //const ProofNotification = (_props: CredentialNotificationProps) => {}
 
-const RevocationNotification = (_props: CredentialNotificationProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const RevocationNotification = (props: CredentialNotificationProps) => {
   const { t } = useTranslation()
 
   return (
