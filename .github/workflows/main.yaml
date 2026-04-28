@@ -1219,6 +1219,7 @@ jobs:
       always() && !cancelled() &&
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.fork != true &&
+      !startsWith(github.base_ref, 'release/') &&
       needs.early-exit-check.outputs.should_skip_build != 'true'
     uses: ./.github/workflows/e2e.yml
     with:
