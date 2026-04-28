@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
+import { NotificationsList } from './components/NotificationsList'
 import SavedServices from './components/SavedServices'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
@@ -25,7 +26,13 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * @returns React element
  */
 const Home: React.FC<HomeProps> = () => {
-  return <TabScreenWrapper></TabScreenWrapper>
+  const { Spacing } = useTheme()
+
+  return (
+    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+      <NotificationsList />
+    </TabScreenWrapper>
+  )
 }
 
 /**

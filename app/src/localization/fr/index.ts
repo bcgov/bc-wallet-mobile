@@ -85,10 +85,27 @@ const translation = {
       "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone. (FR)",
     }
   },
-  "PersonCredentialNotification": {
-    "Title": "Obtener votre carte d'identité",
-    "Description": "Ajouter votre carte d'identité à votre portefeuille et utilisez-la pour accéder aux services en ligne.",
-    "ButtonTitle": "Start (FR)",
+  "Notification": {
+    "StartVerification": {
+      "Title": "You're not verified (FR)",
+      "Description": "You can continue the verification process at any time. (FR)",
+      "ButtonTitle": "Start verification (FR)"
+    },
+    "BasicMessage": {
+      "Title": "New message (FR)",
+      "SentMessage": "{{ label }} sent a message (FR)",
+      "ReceivedMessage": "You received a new message (FR)",
+      "ButtonTitle": "View message (FR)"
+    },
+    "CredentialOffer": {
+      "Title": "New credential offer (FR)",
+    },
+    "ProofRequest": {
+      "Title": "New proof request (FR)"
+    },
+    "Revocation": {
+      "Title": "Credential revoked (FR)"
+    }
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Étape 1: BC Services Card est déjà installé",
