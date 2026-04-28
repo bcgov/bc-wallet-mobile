@@ -78,6 +78,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     setError(null)
 
     let cancelled = false
+    let inFlightAgent: Agent | undefined
 
     const run = async (): Promise<void> => {
       try {
@@ -105,7 +106,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         if (cancelled) return
         const ledgers = cachedLedgers ?? indyLedgers
 
-        const newAgent = buildAgent({
+        inFlightAgent = buildAgent({
           ledgers,
           walletSecret,
           mediatorUrl,
@@ -115,24 +116,25 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           logger,
         })
 
-        await newAgent.initialize()
+        await inFlightAgent.initialize()
         if (cancelled) return
-        await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+        await inFlightAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
         if (cancelled) return
-        await warmCache(newAgent, credDefs, schemas, cachedLedgers, logger)
+        await warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger)
         if (cancelled) return
-        await createLinkSecretIfRequired(newAgent)
+        await createLinkSecretIfRequired(inFlightAgent)
         if (cancelled) return
 
         if (usePushNotifications) {
-          activate(newAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
+          activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
         }
 
-        refreshAttestationMonitor(newAgent)
+        refreshAttestationMonitor(inFlightAgent)
 
-        agentRef.current = newAgent
-        setAgent(newAgent)
+        agentRef.current = inFlightAgent
+        setAgent(inFlightAgent)
         setStatus('ready')
+        inFlightAgent = undefined
       } catch (err) {
         if (cancelled) return
         const appError =
@@ -143,6 +145,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setError(appError)
         setStatus('error')
       } finally {
+        if (inFlightAgent) {
+          await shutdownAgent(inFlightAgent, logger)
+        }
         if (!cancelled) {
           initializingRef.current = false
         }

@@ -153,6 +153,46 @@ describe('useAgentSetupViewModel', () => {
     expect(result.current.agent).toBeNull()
   })
 
+  it('shuts down partially-built agent when init step throws', async () => {
+    const newAgent = mockAgent()
+    newAgent.initialize = jest.fn().mockRejectedValue(new Error('initialize failed'))
+    jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+
+    const { result } = renderHook(() => useAgentSetupViewModel())
+
+    await waitFor(() => expect(result.current.status).toBe('error'))
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger)
+  })
+
+  it('shuts down agent built mid-init when didAuthenticate flips false', async () => {
+    let resolveInit: () => void = () => undefined
+    const initPromise = new Promise<void>((resolve) => {
+      resolveInit = resolve
+    })
+    const newAgent = mockAgent()
+    newAgent.initialize = jest.fn().mockReturnValue(initPromise)
+    jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+
+    const store: Record<string, unknown> = {
+      authentication: { didAuthenticate: true },
+      bcscSecure: { walletKey: 'wallet-key-hash' },
+      preferences: { selectedMediator: 'https://m', walletName: 'BC Wallet', usePushNotifications: false },
+      developer: { enableProxy: false },
+      migration: { didMigrateToAskar: true },
+    }
+    jest.mocked(Bifold.useStore).mockImplementation(() => [store as never, jest.fn()])
+
+    const { result, rerender } = renderHook(() => useAgentSetupViewModel())
+
+    await waitFor(() => expect(result.current.status).toBe('initializing'))
+
+    ;(store.authentication as Record<string, unknown>).didAuthenticate = false
+    rerender({})
+
+    resolveInit()
+    await waitFor(() => expect(agentService.shutdownAgent).toHaveBeenCalledWith(newAgent, logger))
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
