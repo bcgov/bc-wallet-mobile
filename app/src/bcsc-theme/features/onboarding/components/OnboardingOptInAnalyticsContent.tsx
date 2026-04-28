@@ -105,7 +105,12 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.AnalyticsAnonymousInfo')}</ThemedText>
-      <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
+      <CardButton
+        title={t('BCSC.Onboarding.LearnMore')}
+        testID={testIdWithKey('LearnMore')}
+        onPress={onLearnMore}
+        endIcon="open-in-new"
+      />
     </ScreenWrapper>
   )
 }

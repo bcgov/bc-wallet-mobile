@@ -19,12 +19,13 @@ export const config: WebdriverIO.Config = {
     'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
     'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
     biometrics: [resolve(__dirname, `../test/${variant}/biometrics.spec.ts`)],
+    migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
   exclude: [],
   capabilities: [],
 
   logLevel: 'warn',
-  bail: 0,
+  bail: 1, // Stop the test suite on the first failure
   waitforTimeout: 20_000,
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 2,
@@ -34,6 +35,7 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: 'bdd',
     timeout: 600_000, // 10 min per test — generous for real devices
+    bail: true, // Stop the test suite on the first failure
   },
 
   // Hooks for SauceLabs test status reporting

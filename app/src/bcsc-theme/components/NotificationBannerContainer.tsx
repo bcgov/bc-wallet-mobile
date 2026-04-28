@@ -12,6 +12,7 @@ import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
+  bannerMessages: BCSCBannerMessage[]
 }
 
 /**
@@ -20,7 +21,7 @@ interface NotificationBannerContainerProps {
  * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {React.ReactElement} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
+export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
@@ -86,7 +87,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
       </SafeAreaModal>
 
       <AppBanner
-        messages={store.bcsc.bannerMessages.map((banner) => ({
+        messages={bannerMessages.map((banner) => ({
           id: banner.id,
           title: banner.title,
           description: banner.description,

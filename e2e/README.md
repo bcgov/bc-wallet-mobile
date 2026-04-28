@@ -30,6 +30,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
 | `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_ |
 | `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
+| `migration`       | _V3→V4 upgrade: runs v3 onboarding + verification, upgrades to v4, unlocks with v3 PIN_          |
 
 ```bash
 # Run by suite name
@@ -158,6 +159,39 @@ yarn test:ios:sauce
 yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite happy-path
 ```
 
+### _Migration Tests (v3 → v4)_
+
+_The migration suite tests upgrading from the v3 BC Services Card app (native Swift/Java) to the v4 BCSC app (React Native). It runs the full v3 onboarding and verification flow, then installs v4 over v3 and verifies the app unlocks with the v3 PIN._
+
+**_Prerequisites:_**
+
+1. _Upload both the v3 and v4 app builds to Sauce Labs storage._
+2. _Set the v3 app filenames in_ `.env.saucelabs`_:_
+
+```bash
+V3_ANDROID_APP=BCSC-v3.apk
+V3_IOS_APP=BCSC-v3.ipa
+
+# Migration upgrade uses the standard current-build vars:
+# ANDROID_APP_FILENAME / IOS_APP_FILENAME
+```
+
+3. _Ensure SiteMinder credentials are in_ `local.env` _(the v3 flow uses in-person verification)._
+
+```bash
+# Run migration on both platforms
+yarn test:migration:sauce
+
+# Or individually
+yarn test:android:migration:sauce
+yarn test:ios:migration:sauce
+
+# Or with a specific config
+yarn wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration
+```
+
+_The migration configs start with the v3 app as the initial install. During the test, `driver.installApp()` upgrades to v4 mid-session. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
+
 ### _Variant Selection_
 
 _All commands respect the_ `VARIANT` _env var. Defaults to_ `bcsc` _if not set. Values starting with_ `bcsc` _normalize to_ `bcsc`_; values starting with_ `bcwallet` _or_ `bc-wallet` _normalize to_ `bc-wallet`_._
@@ -201,7 +235,7 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `SAUCE_USERNAME`           | _—_                   | _SauceLabs username_                                                          |
 | `SAUCE_ACCESS_KEY`         | _—_                   | _SauceLabs access key_                                                        |
 | `SAUCE_REGION`             | `us`                  | _SauceLabs data center region (_`us` _or_ `eu`_)_                             |
-| `ANDROID_APP_FILENAME`     | `BCSC-Dev-latest.aab` | _Android app filename in SauceLabs storage_                                   |
+| `ANDROID_APP_FILENAME`     | `BCSC-Dev-latest.apk` | _Android app filename in SauceLabs storage_                                   |
 | `IOS_APP_FILENAME`         | `BCSC-Dev-latest.ipa` | _iOS app filename in SauceLabs storage_                                       |
 | `IOS_DEVICE_NAME`          | `iPhone.*`            | _iOS device name regex for Sauce RDC allocation_                              |
 | `IOS_PLATFORM_VERSION`     | _unset_               | _Pin iOS version (e.g._ `18`_). Unset = Sauce picks any available match._     |
@@ -209,6 +243,8 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `ANDROID_PLATFORM_VERSION` | _unset_               | _Pin Android version (e.g._ `15`_). Unset = Sauce picks any available match._ |
 | `BUILD_NAME`               | `local-<timestamp>`   | _SauceLabs build name_                                                        |
 | `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
+| `V3_ANDROID_APP`           | `BCSC-v3.apk`         | _V3 Android app for migration tests (local file or Sauce storage filename)_   |
+| `V3_IOS_APP`               | `BCSC-v3.ipa`         | _V3 iOS app for migration tests (local file or Sauce storage filename)_       |
 
 ### _SiteMinder (`local.env`)_
 
@@ -240,7 +276,9 @@ wdio.shared.conf.ts                         ← base (specs, suites, framework, 
   │   └── local/wdio.ios.local.device.conf.ts      ← + iOS real device caps
   └── sauce/wdio.shared.sauce.conf.ts          ← + SauceLabs service
       ├── sauce/wdio.android.sauce.rdc.conf.ts    ← + Android real device caps
-      └── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
+      ├── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
+      ├── sauce/wdio.android.sauce.migration.conf.ts ← + Android migration (v3 app)
+      └── sauce/wdio.ios.sauce.migration.conf.ts     ← + iOS migration (v3 app)
 ```
 
 _Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Each platform config reads its own env vars (_`IOS_DEVICE_NAME`_,_ `IOS_PLATFORM_VERSION`_,_ `ANDROID_DEVICE_NAME`_,_ `ANDROID_PLATFORM_VERSION`_) to allow CI to control device targeting without config changes._
@@ -394,6 +432,8 @@ e2e/
 │       ├── wdio.shared.sauce.conf.ts        # SauceLabs auth, region, sauce service
 │       ├── wdio.android.sauce.rdc.conf.ts   # Android real device (SauceLabs)
 │       ├── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
+│       ├── wdio.android.sauce.migration.conf.ts # Android migration v3→v4 (SauceLabs)
+│       ├── wdio.ios.sauce.migration.conf.ts     # iOS migration v3→v4 (SauceLabs)
 │       └── biometrics/
 │           ├── wdio.android.bio.sauce.rdc.conf.ts # Android + allowTouchIdEnroll
 │           └── wdio.ios.bio.sauce.rdc.conf.ts     # iOS + allowTouchIdEnroll
@@ -402,6 +442,7 @@ e2e/
 │   ├── constants.ts                         # timeouts, TestUsers, and shared values
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
 │   ├── testIDs.ts                           # central registry of accessibility / resource IDs
+│   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for migration
 │   │
 │   ├── helpers/
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
@@ -448,8 +489,14 @@ e2e/
 │       │       ├── card-context.ts          # shared mutable verify context (testUser, cardType)
 │       │       ├── config-combined-card.ts  # sets context for combined card (happy-path)
 │       │       └── config-non-photo-card.ts # sets context for non-photo card
-│       └── main/
-│           └── main.spec.ts                 # tab navigation, settings, account tests
+│       ├── main/
+│       │   └── main.spec.ts                 # tab navigation, settings, account tests
+│       └── migration/
+│           ├── migration.spec.ts            # suite orchestrator: v3 onboarding → upgrade → v4 unlock
+│           ├── migration-context.ts         # shared state (PIN) between v3 and v4 specs
+│           ├── v3-onboarding.spec.ts        # v3 app onboarding + card verification
+│           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
+│           └── v4-unlock.spec.ts            # unlock v4 with v3 PIN, verify Home screen
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md
