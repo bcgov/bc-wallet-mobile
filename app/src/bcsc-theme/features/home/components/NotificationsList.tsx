@@ -1,8 +1,7 @@
 import { useNotifications } from '@/hooks/notifications'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { useNavigation } from '@react-navigation/native'
-import { JSX, useEffect } from 'react'
+import { JSX } from 'react'
 import CredentialNotification from '../../notifications/CredentialNotification'
 
 /**
@@ -27,14 +26,8 @@ export const NotificationsList = (): JSX.Element => {
  * @returns React.Element
  */
 const WithAgentNotificationsList = (): JSX.Element => {
-  const navigation = useNavigation()
   const notifications = useNotifications()
   const { customNotifications } = useCustomNotifications()
-
-  useEffect(() => {
-    // Set the tab bar badge to the total number of notifications (credential + custom)
-    navigation.setOptions({ tabBarBadge: notifications.length + customNotifications.length || undefined })
-  }, [customNotifications.length, navigation, notifications.length])
 
   return (
     <>
@@ -52,13 +45,7 @@ const WithAgentNotificationsList = (): JSX.Element => {
  * @returns React.Element
  */
 const WithoutAgentNotificationsList = (): JSX.Element => {
-  const navigation = useNavigation()
   const { customNotifications } = useCustomNotifications()
-
-  useEffect(() => {
-    // Set the tab bar badge to the total number of notifications (custom)
-    navigation.setOptions({ tabBarBadge: customNotifications.length || undefined })
-  }, [navigation, customNotifications.length])
 
   return <>{customNotifications}</>
 }
