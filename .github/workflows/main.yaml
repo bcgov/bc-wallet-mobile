@@ -622,7 +622,7 @@ jobs:
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
         working-directory: app
         run: |
-          export USE_HERMES=true
+          export USE_HERMES=1
           yarn run ios:setup && \
           git status && \
           git diff ios/Podfile.lock

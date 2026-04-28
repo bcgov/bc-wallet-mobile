@@ -10,13 +10,6 @@ import useAgentSetupViewModel from './useAgentSetupViewModel'
 jest.mock('@bifold/core')
 jest.mock('@/utils/PushNotificationsHelper', () => ({ activate: jest.fn().mockResolvedValue(undefined) }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
-jest.mock('@credo-ts/core', () => {
-  const actual = jest.requireActual('@credo-ts/core')
-  return {
-    ...actual,
-    MediatorPickupStrategy: { PickUpV2LiveMode: 'PickUpV2LiveMode' },
-  }
-})
 jest.mock('./services/agent-service')
 
 const mockedStore = (overrides: Record<string, unknown> = {}) => {
@@ -33,7 +26,9 @@ const mockedStore = (overrides: Record<string, unknown> = {}) => {
 
 const mockAgent = () =>
   ({
-    mediationRecipient: { initiateMessagePickup: jest.fn().mockResolvedValue(undefined) },
+    didcomm: {
+      mediationRecipient: { initiateMessagePickup: jest.fn().mockResolvedValue(undefined) },
+    },
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,7 +177,9 @@ describe('useAgentSetupViewModel', () => {
 
     // Force pickup to fail on the next iteration so we land in catch with
     // agentRef.current still pointing at agent1.
-    agent1.mediationRecipient.initiateMessagePickup = jest.fn().mockRejectedValueOnce(new Error('pickup failed'))
+    agent1.didcomm.mediationRecipient.initiateMessagePickup = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('pickup failed'))
 
     act(() => {
       result.current.retry()

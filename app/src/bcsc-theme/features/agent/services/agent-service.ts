@@ -3,8 +3,9 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { BCLocalStorageKeys } from '@/store'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import { BifoldLogger, PersistentStorage } from '@bifold/core'
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+import { Agent } from '@credo-ts/core'
+import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
@@ -76,16 +77,18 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
   }
 
   const agentOptions = {
+    label: opts.walletLabel,
     config: {
-      label: opts.walletLabel,
       walletConfig: { id: opts.walletSecret.id, key: opts.walletSecret.key },
       logger: opts.logger,
-      mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
+      mediatorPickupStrategy: DidCommMediatorPickupStrategy.Implicit,
       autoUpdateStorageOnStartup: true,
       autoAcceptConnections: true,
     },
     dependencies: agentDependencies,
     modules: getBCAgentModules({
+      walletId: opts.walletSecret.id,
+      walletKey: opts.walletSecret.key,
       indyNetworks: opts.ledgers,
       mediatorInvitationUrl: opts.mediatorUrl,
       txnCache: {
@@ -102,11 +105,7 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
     }),
   }
 
-  const agent = new Agent(agentOptions)
-  agent.registerOutboundTransport(new WsOutboundTransport())
-  agent.registerOutboundTransport(new HttpOutboundTransport())
-
-  return agent
+  return new Agent(agentOptions)
 }
 
 /**
@@ -122,13 +121,8 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
  * @param logger - Logger used to record failures.
  * @returns The same `agent` once re-initialized, or `undefined` if reopen failed.
  */
-export const restartAgent = async (
-  agent: Agent,
-  walletSecret: AgentWalletSecret,
-  logger: BifoldLogger
-): Promise<Agent | undefined> => {
+export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<Agent | undefined> => {
   try {
-    await agent.wallet.open({ id: walletSecret.id, key: walletSecret.key })
     await agent.initialize()
     return agent
   } catch (error) {

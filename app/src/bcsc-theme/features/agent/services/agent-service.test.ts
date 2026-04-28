@@ -7,24 +7,24 @@ jest.mock('@/store', () => ({
   BCLocalStorageKeys: { GenesisTransactions: 'GenesisTransactions' },
 }))
 jest.mock('@credo-ts/react-native', () => ({ agentDependencies: {} }))
+jest.mock('@credo-ts/didcomm', () => ({
+  DidCommMediatorPickupStrategy: {
+    PickUpV1: 'PickUpV1',
+    PickUpV2: 'PickUpV2',
+    PickUpV2LiveMode: 'PickUpV2LiveMode',
+    Implicit: 'Implicit',
+    None: 'None',
+  },
+}))
 jest.mock('@/utils/bc-agent-modules', () => ({ getBCAgentModules: jest.fn(() => ({})) }))
 jest.mock('react-native-fs', () => ({ CachesDirectoryPath: '/tmp' }))
 
-const mockRegisterOutboundTransport = jest.fn()
-jest.mock('@credo-ts/core', () => {
-  const actual = jest.requireActual('@credo-ts/core')
-  return {
-    ...actual,
-    Agent: jest.fn().mockImplementation(() => ({
-      registerOutboundTransport: mockRegisterOutboundTransport,
-      wallet: { open: jest.fn() },
-      initialize: jest.fn(),
-      shutdown: jest.fn(),
-    })),
-    HttpOutboundTransport: jest.fn(),
-    WsOutboundTransport: jest.fn(),
-  }
-})
+jest.mock('@credo-ts/core', () => ({
+  Agent: jest.fn().mockImplementation(() => ({
+    initialize: jest.fn(),
+    shutdown: jest.fn(),
+  })),
+}))
 
 jest.mock('@bifold/core', () => ({
   PersistentStorage: {
@@ -51,7 +51,7 @@ const mockPoolService = {
   refreshPoolConnections: jest.fn(),
   getAllPoolTransactions: jest.fn(),
 }
-jest.mock('@credo-ts/indy-vdr/build/pool', () => ({
+jest.mock('@credo-ts/indy-vdr', () => ({
   IndyVdrPoolService: jest.fn(),
 }))
 
@@ -137,47 +137,34 @@ describe('buildAgent', () => {
     expect((caught as AppError).cause).toBeInstanceOf(Error)
   })
 
-  it('constructs an agent and registers both outbound transports', () => {
+  it('constructs and returns an agent', () => {
     const agent = buildAgent({ ...baseOptions, mediatorUrl: 'https://mediator.example' })
 
     expect(agent).toBeDefined()
-    expect(mockRegisterOutboundTransport).toHaveBeenCalledTimes(2)
   })
 })
 
 describe('restartAgent', () => {
   const makeAgent = () =>
     ({
-      wallet: { open: jest.fn() },
       initialize: jest.fn(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any
 
-  it('returns the agent when wallet.open and initialize succeed', async () => {
+  it('returns the agent when initialize succeeds', async () => {
     const agent = makeAgent()
 
-    const result = await restartAgent(agent, walletSecret, logger)
+    const result = await restartAgent(agent, logger)
 
     expect(result).toBe(agent)
-    expect(agent.wallet.open).toHaveBeenCalledWith(walletSecret)
     expect(agent.initialize).toHaveBeenCalled()
   })
 
-  it('returns undefined and logs a warning when wallet.open throws', async () => {
-    const agent = makeAgent()
-    agent.wallet.open.mockRejectedValue(new Error('cannot open'))
-
-    const result = await restartAgent(agent, walletSecret, logger)
-
-    expect(result).toBeUndefined()
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('cannot open'))
-  })
-
-  it('returns undefined when initialize throws', async () => {
+  it('returns undefined and logs a warning when initialize throws', async () => {
     const agent = makeAgent()
     agent.initialize.mockRejectedValue(new Error('init failed'))
 
-    const result = await restartAgent(agent, walletSecret, logger)
+    const result = await restartAgent(agent, logger)
 
     expect(result).toBeUndefined()
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('init failed'))

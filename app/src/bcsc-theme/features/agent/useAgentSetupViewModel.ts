@@ -3,7 +3,8 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
-import { Agent, MediatorPickupStrategy } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
+import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
@@ -91,12 +92,15 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         const walletSecret = { id: WALLET_ID, key: walletKey }
 
         if (agentRef.current) {
-          const restarted = await restartAgent(agentRef.current, walletSecret, logger)
+          const restarted = await restartAgent(agentRef.current, logger)
           if (cancelled) {
             return
           }
           if (restarted) {
-            await restarted.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+            await restarted.didcomm.mediationRecipient.initiateMessagePickup(
+              undefined,
+              DidCommMediatorPickupStrategy.PickUpV2LiveMode
+            )
             if (cancelled) {
               return
             }
@@ -132,7 +136,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         if (cancelled) {
           return
         }
-        await inFlightAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+        await inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup(
+          undefined,
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
+        )
         if (cancelled) {
           return
         }
