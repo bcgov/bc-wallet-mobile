@@ -130,7 +130,7 @@ export function createAppTheme(v: ThemeVariant) {
           labelText: { ...ThemeTextStyles.regular, color: v.foreground },
           caption: { ...ThemeTextStyles.regular, color: v.foreground },
           headerTitle: {
-            color: theme.ColorPalette.brand.headerText,
+            color: v.foreground,
             ...ThemeTextStyles.bold,
             fontSize: 18,
           },

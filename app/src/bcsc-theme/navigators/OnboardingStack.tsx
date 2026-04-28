@@ -79,6 +79,7 @@ const OnboardingStack = (): React.ReactElement => {
         component={OnboardingOptInAnalyticsScreen}
         options={{
           headerShown: true,
+          title: t('BCSC.Settings.Analytics'),
         }}
       />
       <Stack.Screen
