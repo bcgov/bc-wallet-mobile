@@ -149,3 +149,12 @@ export const DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD = 30 * 24 * 60 * 60 * 1000 // 
 // Agent constants
 export const WALLET_ID = 'bc-wallet-bcsc'
 export const CACHED_LEDGERS_TTL_DAYS = 1
+
+// Shadow constants
+export const SHADOW_CASTER_HEIGHT = 1
+export const SHADOW_SIZE = 3
+export const SHADOW_COLOR = '#000'
+export const SHADOW_OPACITY = 0.9
+export const SHADOW_RADIUS = SHADOW_SIZE
+export const SHADOW_OFFSET_DOWN = { width: 0, height: SHADOW_SIZE }
+export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }

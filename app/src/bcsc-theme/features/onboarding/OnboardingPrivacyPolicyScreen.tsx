@@ -1,9 +1,9 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { Button, ButtonType, ContentGradient, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -17,10 +17,9 @@ interface OnboardingPrivacyPolicyScreenProps {
  */
 export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
 
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
+    navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
   }
 
   const handleLearnMore = () => {
@@ -31,8 +30,7 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
   }
 
   const controls = (
-    <View style={{ width: '100%' }}>
-      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+    <ControlContainer>
       <Button
         title={t('Global.Continue')}
         buttonType={ButtonType.Primary}
@@ -40,7 +38,7 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
         testID={testIdWithKey('Continue')}
         accessibilityLabel={t('Global.Continue')}
       />
-    </View>
+    </ControlContainer>
   )
 
   return <PrivacyPolicyContent onLearnMore={handleLearnMore} controls={controls} />

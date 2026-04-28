@@ -1,10 +1,11 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ONBOARDING_ICON_IMAGE_SIZE } from '@/constants'
+import Blob from '@assets/img/blob.svg'
+import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
   Button,
   ButtonType,
-  ContentGradient,
   DispatchAction,
   ScreenWrapper,
   testIdWithKey,
@@ -18,9 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, StyleSheet, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
-import BulletPoint from '../../components/BulletPoint'
 
 interface NotificationsScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingNotifications>
@@ -34,30 +33,19 @@ interface NotificationsScreenProps {
 export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [deniedPermission, setDeniedPermission] = useState(false)
 
   const styles = StyleSheet.create({
-    scrollContainer: {
-      gap: Spacing.lg,
-    },
-    bulletContainer: {
-      gap: Spacing.sm,
-      paddingLeft: Spacing.sm,
-    },
-    iconContainer: {
+    imageContainer: {
+      flex: 1,
+      position: 'relative',
+      justifyContent: 'center',
       alignItems: 'center',
-      marginVertical: Spacing.md,
+      marginBottom: Spacing.md,
     },
   })
-
-  const bulletItems = [
-    t('BCSC.Onboarding.NotificationsBullet1'),
-    t('BCSC.Onboarding.NotificationsBullet2'),
-    t('BCSC.Onboarding.NotificationsBullet3'),
-    t('BCSC.Onboarding.NotificationsBullet4'),
-  ]
 
   const checkPermissions = useCallback(async () => {
     const status = await PushNotifications.status()
@@ -115,20 +103,33 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
     }
   }
 
+  const skipPushNotifications = () => {
+    dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+  }
+
   const controls = (
-    <View style={{ width: '100%' }}>
-      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
+    <ControlContainer>
       <Button
-        title={t('Global.Continue')}
+        title={t('BCSC.Onboarding.EnableNotifications')}
         buttonType={ButtonType.Primary}
         onPress={async () => {
           await activatePushNotifications()
           navigation.navigate(BCSCScreens.OnboardingSecureApp)
         }}
-        testID={testIdWithKey('Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        testID={testIdWithKey('EnableNotifications')}
+        accessibilityLabel={t('BCSC.Onboarding.EnableNotifications')}
       />
-    </View>
+      <Button
+        title={t('BCSC.Onboarding.SkipNotifications')}
+        buttonType={ButtonType.Secondary}
+        onPress={() => {
+          skipPushNotifications()
+          navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }}
+        testID={testIdWithKey('SkipNotifications')}
+        accessibilityLabel={t('BCSC.Onboarding.SkipNotifications')}
+      />
+    </ControlContainer>
   )
 
   if (deniedPermission) {
@@ -141,19 +142,19 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
   }
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
-      <View style={styles.iconContainer}>
-        <Icon name={'bell-ring-outline'} size={ONBOARDING_ICON_IMAGE_SIZE} color={ColorPalette.brand.primary} />
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <View style={styles.imageContainer}>
+        <Blob />
+        <PushNotificationImage style={{ position: 'absolute' }} />
       </View>
-      <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-      <ThemedText>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
-      <ThemedText>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
-
-      <View style={styles.bulletContainer}>
-        {bulletItems.map((item) => (
-          <BulletPoint key={item} pointsText={item} />
-        ))}
-      </View>
+      <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+        {t('BCSC.Onboarding.NotificationsHeader')}
+      </ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Onboarding.NotificationsContent')}</ThemedText>
     </ScreenWrapper>
   )
 }

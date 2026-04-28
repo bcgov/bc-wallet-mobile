@@ -23,11 +23,10 @@ exports[`Notifications renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
+        false,
         {
-          "padding": 16,
-        },
-        {
-          "gap": 24,
+          "gap": 16,
+          "padding": 24,
         },
       ]
     }
@@ -38,31 +37,21 @@ exports[`Notifications renders correctly 1`] = `
         style={
           {
             "alignItems": "center",
-            "marginVertical": 16,
+            "flex": 1,
+            "justifyContent": "center",
+            "marginBottom": 16,
+            "position": "relative",
           }
         }
       >
-        <Text
-          allowFontScaling={false}
-          selectable={false}
+        < />
+        <
           style={
-            [
-              {
-                "color": "#003366",
-                "fontSize": 125,
-              },
-              undefined,
-              {
-                "fontFamily": "Material Design Icons",
-                "fontStyle": "normal",
-                "fontWeight": "normal",
-              },
-              {},
-            ]
+            {
+              "position": "absolute",
+            }
           }
-        >
-          󰂟
-        </Text>
+        />
       </View>
       <Text
         maxFontSizeMultiplier={2}
@@ -74,7 +63,9 @@ exports[`Notifications renders correctly 1`] = `
               "fontSize": 26,
               "fontWeight": "bold",
             },
-            undefined,
+            {
+              "textAlign": "center",
+            },
           ]
         }
       >
@@ -90,221 +81,14 @@ exports[`Notifications renders correctly 1`] = `
               "fontSize": 18,
               "fontWeight": "normal",
             },
-            undefined,
-          ]
-        }
-      >
-        BCSC.Onboarding.NotificationsContentA
-      </Text>
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
             {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
+              "textAlign": "center",
             },
-            undefined,
           ]
         }
       >
-        BCSC.Onboarding.NotificationsContentB
+        BCSC.Onboarding.NotificationsContent
       </Text>
-      <View
-        style={
-          {
-            "gap": 8,
-            "paddingLeft": 8,
-          }
-        }
-      >
-        <View
-          accessible={true}
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            •
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flex": 1,
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            BCSC.Onboarding.NotificationsBullet1
-          </Text>
-        </View>
-        <View
-          accessible={true}
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            •
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flex": 1,
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            BCSC.Onboarding.NotificationsBullet2
-          </Text>
-        </View>
-        <View
-          accessible={true}
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            •
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flex": 1,
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            BCSC.Onboarding.NotificationsBullet3
-          </Text>
-        </View>
-        <View
-          accessible={true}
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            •
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flex": 1,
-                  "paddingLeft": 8,
-                },
-              ]
-            }
-          >
-            BCSC.Onboarding.NotificationsBullet4
-          </Text>
-        </View>
-      </View>
     </View>
   </RCTScrollView>
   <View
@@ -313,10 +97,7 @@ exports[`Notifications renders correctly 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }
@@ -324,6 +105,7 @@ exports[`Notifications renders correctly 1`] = `
     <View
       style={
         {
+          "flexGrow": 1,
           "width": "100%",
         }
       }
@@ -331,162 +113,194 @@ exports[`Notifications renders correctly 1`] = `
       <View
         style={
           {
-            "height": 30,
+            "left": 0,
             "position": "absolute",
-            "top": -30,
-            "width": "100%",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
-      >
-        <RNSVGSvgView
-          bbHeight="30"
-          bbWidth="100%"
-          focusable={false}
-          height="30"
-          style={
-            [
-              {
-                "backgroundColor": "transparent",
-                "borderWidth": 0,
-              },
-              {
-                "bottom": 0,
-                "left": 0,
-                "position": "absolute",
-                "right": 0,
-                "top": 0,
-              },
-              {
-                "flex": 0,
-                "height": 30,
-                "width": "100%",
-              },
-            ]
-          }
-          width="100%"
-        >
-          <RNSVGGroup
-            fill={
-              {
-                "payload": 4278190080,
-                "type": 0,
-              }
-            }
-          >
-            <RNSVGDefs>
-              <RNSVGLinearGradient
-                gradient={
-                  [
-                    0,
-                    15921906,
-                    1,
-                    -855310,
-                  ]
-                }
-                gradientTransform={null}
-                gradientUnits={0}
-                name="gradient"
-                x1="0%"
-                x2="0%"
-                y1="0%"
-                y2="100%"
-              />
-            </RNSVGDefs>
-            <RNSVGRect
-              fill={
-                {
-                  "brushRef": "gradient",
-                  "type": 1,
-                }
-              }
-              height="30"
-              propList={
-                [
-                  "fill",
-                ]
-              }
-              width="100%"
-              x={0}
-              y={0}
-            />
-          </RNSVGGroup>
-        </RNSVGSvgView>
-      </View>
-      <View
-        accessibilityLabel="Global.Continue"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "backgroundColor": "#003366",
-            "borderRadius": 4,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-        testID="com.ariesbifold:id/Continue"
       >
         <View
           style={
             {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
             }
           }
+        />
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.Onboarding.EnableNotifications"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/EnableNotifications"
         >
-          <Text
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                ],
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
             }
           >
-            Global.Continue
-          </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Onboarding.EnableNotifications
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Onboarding.SkipNotifications"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/SkipNotifications"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Onboarding.SkipNotifications
+            </Text>
+          </View>
         </View>
       </View>
     </View>
