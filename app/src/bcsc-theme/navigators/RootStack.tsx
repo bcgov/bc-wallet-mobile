@@ -67,10 +67,7 @@ const BCSCRootStack: React.FC = () => {
 
   return (
     <BCSCAgentProvider>
-      <AuthenticatedStack
-        verified={store.bcscSecure.verified}
-        verifiedStatus={store.bcscSecure.verifiedStatus}
-      />
+      <AuthenticatedStack verified={store.bcscSecure.verified} verifiedStatus={store.bcscSecure.verifiedStatus} />
     </BCSCAgentProvider>
   )
 }
