@@ -1,7 +1,6 @@
 import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { getCredentialNotificationType, NotificationType } from '@/utils/credentials'
-import { getConnectionName, InfoBoxType, useStore } from '@bifold/core'
-import { useConnectionById } from '@bifold/react-hooks'
+import { InfoBoxType } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationCard from './NotificationCard'
 
@@ -33,16 +32,16 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
   }
 }
 
-const BasicMessageNotification = (props: CredentialNotificationProps) => {
+const BasicMessageNotification = (_props: CredentialNotificationProps) => {
   const { t } = useTranslation()
-  const [store] = useStore()
-  const connection = useConnectionById(String(props.notification.connectionId))
-  const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const label = 'TODO (V4.1.x): Connection Label' // Bifold:NotificationListItem.tsx:263
 
   return (
     <NotificationCard
       title={t('Notification.BasicMessage.Title')}
-      description={label ? t('Notification.BasicMessage.SentMessage') : t('Notification.BasicMessage.ReceviedMessage')}
+      description={
+        label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceviedMessage')
+      }
       buttonTitle={t('Notification.BasicMessage.ButtonTitle')}
       cardType={InfoBoxType.Info}
       onPress={() => {
@@ -76,7 +75,7 @@ const ProofRequestNotification = (_props: CredentialNotificationProps) => {
       title={t('Notification.ProofRequest.Title')}
       description={'TODO (V4.1.x): Dynamic content'} // Bifold:NotificationListItem.tsx:302
       buttonTitle={t('Global.View')}
-      cardType={InfoBoxType.Error}
+      cardType={InfoBoxType.Info}
       onPress={() => {
         // FIXME (V4.1.x): Replace this callback with the appropriate credential notification callback once implemented.
       }}
@@ -84,7 +83,7 @@ const ProofRequestNotification = (_props: CredentialNotificationProps) => {
   )
 }
 
-// TODO (V4.1.x): Add Proof notification, slightly confusing what this is defaulting to on the Bifold side. Needs more invesitgation.
+// TODO (V4.1.x): Add Proof notification. Needs more invesitgation. Bifold appears to not have this wired up.
 //const ProofNotification = (_props: CredentialNotificationProps) => {}
 
 const RevocationNotification = (_props: CredentialNotificationProps) => {
