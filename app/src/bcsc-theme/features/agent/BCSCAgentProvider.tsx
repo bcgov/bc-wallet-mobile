@@ -1,17 +1,13 @@
-import { AgentProvider } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import React, { createContext, PropsWithChildren, useContext, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import { AppError } from '@/errors'
 
-import { LoadingScreen } from '../../contexts/BCSCLoadingContext'
-
-import useAgentSetupViewModel, { AgentSetupStatus } from './useAgentSetupViewModel'
+import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 export interface BCSCAgentContextValue {
   agent: Agent | null
-  status: AgentSetupStatus
+  loading: boolean
   error: AppError | null
   retry: () => void
 }
@@ -26,33 +22,25 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
   return ctx
 }
 
-// Non-blocking on error: init failures are logged by the ViewModel but we do
-// not surface a modal — children render inside the BCSC context (so they can
-// inspect status/error and react), but Bifold's AgentProvider is skipped on
-// error since it requires a live agent. Downstream credential features will
-// surface their own errors when invoked.
+// Non-blocking and decoupled from Bifold's AgentProvider. Children always
+// render; consumers inspect { agent, loading, error } via useBCSCAgent and
+// decide what to show. Init failures are logged by the ViewModel — no modal,
+// no fall-through to Bifold hooks. Screens that need the live agent reach
+// for it through useBCSCAgent().agent rather than Bifold's useAgent().
 const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { t } = useTranslation()
   const { agent, status, error, retry } = useAgentSetupViewModel()
 
   const value = useMemo<BCSCAgentContextValue>(
-    () => ({ agent, status, error, retry }),
+    () => ({
+      agent,
+      loading: status === 'idle' || status === 'initializing',
+      error,
+      retry,
+    }),
     [agent, status, error, retry]
   )
 
-  if (status === 'ready' && agent) {
-    return (
-      <BCSCAgentContext.Provider value={value}>
-        <AgentProvider agent={agent}>{children}</AgentProvider>
-      </BCSCAgentContext.Provider>
-    )
-  }
-
-  if (status === 'error') {
-    return <BCSCAgentContext.Provider value={value}>{children}</BCSCAgentContext.Provider>
-  }
-
-  return <LoadingScreen message={t('Init.InitializingAgent')} />
+  return <BCSCAgentContext.Provider value={value}>{children}</BCSCAgentContext.Provider>
 }
 
 export default BCSCAgentProvider
