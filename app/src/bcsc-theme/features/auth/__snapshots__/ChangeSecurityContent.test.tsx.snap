@@ -207,10 +207,8 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 {
@@ -243,14 +241,10 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -313,10 +307,8 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -347,14 +339,10 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -417,10 +405,8 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 undefined,
@@ -451,14 +437,10 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -474,7 +456,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                         "fontSize": 32,
                       },
                       {
-                        "color": "#003366",
+                        "color": "#313132",
                       },
                       {
                         "fontFamily": "Material Icons",
@@ -863,10 +845,8 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -897,14 +877,10 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -967,10 +943,8 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 {
@@ -1003,14 +977,10 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -1073,10 +1043,8 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 undefined,
@@ -1107,14 +1075,10 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -1130,7 +1094,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                         "fontSize": 32,
                       },
                       {
-                        "color": "#003366",
+                        "color": "#313132",
                       },
                       {
                         "fontFamily": "Material Icons",

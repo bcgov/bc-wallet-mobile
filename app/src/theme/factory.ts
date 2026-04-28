@@ -1,4 +1,4 @@
-import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
+import { BCWalletTheme, GrayscaleColors, NotificationColors, Spacing } from '@bcwallet-theme/theme'
 import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
 import { ThemeTextStyles } from './text-styles'
@@ -46,6 +46,8 @@ export interface ThemeVariant extends PaletteSpec {
 
   /** Main text colour on `brand.primaryBackground`. */
   foreground: string
+  /** Heading text colour on `brand.primaryBackground`. */
+  foregroundHeading: string
   /** Subtle text/icon colour for settings rows and captions. */
   foregroundSubtle: string
   /** OnboardingTheme body text colour. */
@@ -116,10 +118,10 @@ export function createAppTheme(v: ThemeVariant) {
     .withOverrides(
       (theme): DeepPartial<ITheme> => ({
         TextTheme: {
-          headingOne: { color: v.foreground, ...ThemeTextStyles.bold },
-          headingTwo: { color: v.foreground, ...ThemeTextStyles.bold },
-          headingThree: { color: v.foreground, ...ThemeTextStyles.bold },
-          headingFour: { color: v.foreground, ...ThemeTextStyles.bold },
+          headingOne: { color: v.foregroundHeading, ...ThemeTextStyles.bold },
+          headingTwo: { color: v.foregroundHeading, ...ThemeTextStyles.bold },
+          headingThree: { color: v.foregroundHeading, ...ThemeTextStyles.bold },
+          headingFour: { color: v.foregroundHeading, ...ThemeTextStyles.bold },
           normal: { ...ThemeTextStyles.regular, color: v.foreground, lineHeight: 30 },
           bold: { color: v.foreground, ...ThemeTextStyles.bold, lineHeight: 30 },
           label: { ...ThemeTextStyles.regular, color: v.foreground },
@@ -243,7 +245,7 @@ export function createAppTheme(v: ThemeVariant) {
     .withOverrides(
       (theme): DeepPartial<ITheme> => ({
         Buttons: {
-          critical: { backgroundColor: theme.ColorPalette.semantic.error },
+          primary: { paddingVertical: Spacing.sm, borderWidth: 1 },
           primaryText: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
@@ -256,7 +258,10 @@ export function createAppTheme(v: ThemeVariant) {
             ...ThemeTextStyles.bold,
             textAlign: 'center',
           },
-          secondary: v.secondaryButton,
+          secondary: {
+            paddingVertical: Spacing.sm,
+            ...v.secondaryButton,
+          },
           secondaryText: {
             color: v.secondaryButtonText,
             ...ThemeTextStyles.bold,
@@ -267,12 +272,15 @@ export function createAppTheme(v: ThemeVariant) {
             ...ThemeTextStyles.bold,
             textAlign: 'center',
           },
+          critical: { paddingVertical: Spacing.sm, backgroundColor: theme.ColorPalette.semantic.error },
           tertiary: {
+            paddingVertical: Spacing.sm,
             borderRadius: 4,
             borderWidth: 0,
             backgroundColor: v.tertiaryButtonBackground,
           },
           tertiaryDisabled: {
+            paddingVertical: Spacing.sm,
             borderRadius: 4,
             borderWidth: 2,
             borderColor: theme.ColorPalette.brand.tertiaryDisabled,
@@ -282,18 +290,19 @@ export function createAppTheme(v: ThemeVariant) {
             color: theme.ColorPalette.brand.secondaryDisabled,
             ...ThemeTextStyles.bold,
           },
+          modalPrimary: { paddingVertical: Spacing.sm },
+          modalPrimaryDisabled: { paddingVertical: Spacing.sm },
           modalPrimaryText: { textAlign: 'center', color: v.textOnWhite },
-          modalSecondary: { borderColor: theme.ColorPalette.brand.primary },
+          modalSecondary: { paddingVertical: Spacing.sm, borderColor: theme.ColorPalette.brand.primary },
+          modalSecondaryDisabled: { paddingVertical: Spacing.sm },
           modalSecondaryText: { textAlign: 'center' },
-          modalCritical: { backgroundColor: theme.ColorPalette.semantic.error },
+          modalCritical: { paddingVertical: Spacing.sm, backgroundColor: theme.ColorPalette.semantic.error },
+          modalCriticalDisabled: { paddingVertical: Spacing.sm },
           criticalTextDisabled: undefined,
-          modalCriticalDisabled: undefined,
           modalCriticalTextDisabled: undefined,
-          modalPrimaryDisabled: undefined,
-          modalSecondaryDisabled: undefined,
           modalSecondaryTextDisabled: undefined,
-          modalTertiary: undefined,
-          modalTertiaryDisabled: undefined,
+          modalTertiary: { paddingVertical: Spacing.sm },
+          modalTertiaryDisabled: { paddingVertical: Spacing.sm },
           modalTertiaryText: undefined,
           modalTertiaryTextDisabled: undefined,
           modalPrimaryTextDisabled: undefined,
