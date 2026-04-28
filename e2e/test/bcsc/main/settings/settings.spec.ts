@@ -191,7 +191,7 @@ describe('Settings', () => {
     await Home.waitFor('SettingsMenuButton')
   })
 
-  it('opens App Security, verifies PIN is the current method, and returns to Settings', async () => {
+  it('opens App Security, verifies PIN is the current method, opens Learn More, and returns to Settings', async () => {
     // Previous test (Sign Out) ended on Home as its documented exception,
     // so re-open Settings before walking into the App Security row.
     await TabBar.tap('SettingsMenuButton')
@@ -224,6 +224,14 @@ describe('Settings', () => {
       const deviceAuthEnabled = await deviceAuthButton.isEnabled()
       if (!deviceAuthEnabled) throw new Error('Expected device auth button to be enabled')
     }
+
+    // Tap Learn More — `MainChangeSecurityScreen.handleLearnMorePress`
+    // navigates to MainWebView with SECURE_APP_LEARN_MORE_URL. Back returns
+    // to MainAppSecurity (LearnMoreButton renders again).
+    await MainAppSecurity.tap('LearnMoreButton')
+    await WebView.waitFor('Back', Timeouts.SCREEN_TRANSITION)
+    await WebView.tap('Back')
+    await MainAppSecurity.waitFor('LearnMoreButton')
 
     await MainAppSecurity.tap('BackButton')
     await Settings.waitFor('EditNickname')

@@ -1,16 +1,8 @@
 /**
- * Onboarding Interaction Sweep: runs the full onboarding flow and exercises
- * every secondary interaction the happy-path suite skips — setup-type radio
- * options, carousel back + external "Where to use" link, privacy-policy
- * learn-more detour + BC login service link handoff, analytics learn-more
- * detour + decline, notifications help detour + open-settings handoff,
- * secure-app learn-more detour, and create-PIN visibility toggles. Ends at
- * SetupSteps (verify phase ready).
- *
- * The account-transfer detour and the notifications deny-permission path
- * live in `transferee-flow.spec.ts`.
- *
- * Imported by `full-regression/interaction-sweep.spec.ts`.
+ * Onboarding Interaction Sweep — exercises every reachable onboarding
+ * interaction in a single flow, including WebView detours. Excludes
+ * account type selection (onboarding-basic.spec.ts) and the transferee
+ * flow (transferee-flow.spec.ts).
  */
 import { TEST_PIN, Timeouts } from '../../../src/constants.js'
 import { getCurrentAppId } from '../../../src/helpers/deep-link.js'
