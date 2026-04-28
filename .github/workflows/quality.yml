@@ -56,7 +56,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
-        if: always()
+        if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
 
   lint-format:
     runs-on: macos-26
