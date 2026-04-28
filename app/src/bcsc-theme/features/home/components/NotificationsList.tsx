@@ -1,10 +1,9 @@
 import { useNotifications } from '@/hooks/notifications'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { getCredentialNotificationType } from '@/utils/credentials'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect } from 'react'
-import NotificationListItem from '../../notifications/NotificationListItem'
+import { JSX, useEffect } from 'react'
+import CredentialNotification from '../../notifications/CredentialNotification'
 
 /**
  * NotificationsList is a component that conditionally renders notifications based on the agent setup status.
@@ -13,7 +12,7 @@ import NotificationListItem from '../../notifications/NotificationListItem'
  *
  * @returns React.Element
  */
-export const NotificationsList = () => {
+export const NotificationsList = (): JSX.Element => {
   // FIXME (V4.1.x): Replace this useBCAgentSetup hook with the new useAgent hook once complete.
   const { agent } = useBCAgentSetup()
 
@@ -29,28 +28,21 @@ export const NotificationsList = () => {
  *
  * @returns React.Element
  */
-const WithAgentNotificationsList = () => {
-  const notifications = useNotifications()
-  const { customNotificationConfigs } = useCustomNotifications()
+const WithAgentNotificationsList = (): JSX.Element => {
   const navigation = useNavigation()
+  const notifications = useNotifications()
+  const { customNotifications } = useCustomNotifications()
 
   useEffect(() => {
     // Set the tab bar badge to the total number of notifications (credential + custom)
-    navigation.setOptions({ tabBarBadge: notifications.length + customNotificationConfigs.length || undefined })
-  }, [customNotificationConfigs.length, navigation, notifications.length])
+    navigation.setOptions({ tabBarBadge: notifications.length + customNotifications.length || undefined })
+  }, [customNotifications.length, navigation, notifications.length])
 
   return (
     <>
-      {customNotificationConfigs.map((config) => (
-        <NotificationListItem key={config.id} notification={config} />
-      ))}
-
-      {notifications.map((item) => (
-        <NotificationListItem
-          key={item.id}
-          notificationType={getCredentialNotificationType(item)}
-          notification={item}
-        />
+      {customNotifications}
+      {notifications.map((notification) => (
+        <CredentialNotification key={notification.id} notification={notification} />
       ))}
     </>
   )
@@ -61,20 +53,14 @@ const WithAgentNotificationsList = () => {
  *
  * @returns React.Element
  */
-const WithoutAgentNotificationsList = () => {
+const WithoutAgentNotificationsList = (): JSX.Element => {
   const navigation = useNavigation()
-  const { customNotificationConfigs } = useCustomNotifications()
+  const { customNotifications } = useCustomNotifications()
 
   useEffect(() => {
     // Set the tab bar badge to the total number of notifications (custom)
-    navigation.setOptions({ tabBarBadge: customNotificationConfigs.length || undefined })
-  }, [navigation, customNotificationConfigs.length])
+    navigation.setOptions({ tabBarBadge: customNotifications.length || undefined })
+  }, [navigation, customNotifications.length])
 
-  return (
-    <>
-      {customNotificationConfigs.map((config) => (
-        <NotificationListItem key={config.id} notification={config} />
-      ))}
-    </>
-  )
+  return <>{customNotifications}</>
 }

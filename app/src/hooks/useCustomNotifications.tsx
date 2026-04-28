@@ -1,12 +1,7 @@
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import { BCState, VerificationStatus } from '@/store'
-import { NotificationListItem, useStore } from '@bifold/core'
-import { useCallback, useMemo, useState } from 'react'
-
-type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
-export type CustomNotificationConfig = NonNullable<NotificationItemListProps['customNotification']> & {
-  id: CustomNotificationId
-}
+import { useStore } from '@bifold/core'
+import { JSX, useCallback, useMemo, useState } from 'react'
 
 export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
@@ -20,7 +15,6 @@ export enum CustomNotificationId {
 export const useCustomNotifications = () => {
   const [store] = useStore<BCState>()
   const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
-  const secureActions = useSecureActions()
 
   /**
    * Dismisses a custom notification by adding its ID to the dismissedIds set.
@@ -32,40 +26,34 @@ export const useCustomNotifications = () => {
     setDismissedIds((prev) => new Set(prev).add(id))
   }, [])
 
-  const customNotificationConfigs = useMemo(() => {
-    const notifications: CustomNotificationConfig[] = []
+  /**
+   * Generates an array of custom notifications to be displayed.
+   */
+  const customNotifications = useMemo((): JSX.Element[] => {
+    const notifications = []
 
     if (!store.bcscSecure.verified && store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS) {
       notifications.push({
         id: CustomNotificationId.BCSCStartVerification,
-        component: () => null,
-        onPressAction: () => {
-          secureActions.continueVerificationProcess()
-        },
-        onCloseAction: () => {
-          dismissCustomNotification(CustomNotificationId.BCSCStartVerification)
-        },
-        pageTitle: '',
-        title: 'StartVerificationNotification.Title',
-        description: 'StartVerificationNotification.Description',
-        buttonTitle: 'StartVerificationNotification.ButtonTitle',
+        element: (
+          <StartVerificationNotification
+            key={CustomNotificationId.BCSCStartVerification}
+            onClose={() => dismissCustomNotification(CustomNotificationId.BCSCStartVerification)}
+          />
+        ),
       })
     }
 
-    return notifications.filter((n) => !dismissedIds.has(n.id))
-  }, [
-    secureActions,
-    store.bcscSecure.verified,
-    store.bcscSecure.verifiedStatus,
-    dismissedIds,
-    dismissCustomNotification,
-  ])
+    return notifications
+      .filter((notification) => !dismissedIds.has(notification.id))
+      .map((notification) => notification.element)
+  }, [store.bcscSecure.verified, store.bcscSecure.verifiedStatus, dismissCustomNotification, dismissedIds])
 
   return useMemo(
     () => ({
-      customNotificationConfigs,
+      customNotifications,
       dismissCustomNotification,
     }),
-    [customNotificationConfigs, dismissCustomNotification]
+    [customNotifications, dismissCustomNotification]
   )
 }

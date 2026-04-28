@@ -15,7 +15,7 @@ interface CredentialNotificationProps {
  * @param props - The properties for the CredentialNotification component, including the notification record.
  * @returns React.Element - The rendered CredentialNotification component, which conditionally renders specific notification cards based on the notification type.
  */
-export const CredentialNotification = (props: CredentialNotificationProps) => {
+const CredentialNotification = (props: CredentialNotificationProps) => {
   const notificationType = getCredentialNotificationType(props.notification)
 
   switch (notificationType) {
@@ -84,7 +84,7 @@ const ProofRequestNotification = (_props: CredentialNotificationProps) => {
   )
 }
 
-// TODO (V4.1.x): Add Proof notification once implemented in Bifold
+// TODO (V4.1.x): Add Proof notification, slightly confusing what this is defaulting to on the Bifold side. Needs more invesitgation.
 //const ProofNotification = (_props: CredentialNotificationProps) => {}
 
 const RevocationNotification = (_props: CredentialNotificationProps) => {
@@ -102,3 +102,5 @@ const RevocationNotification = (_props: CredentialNotificationProps) => {
     />
   )
 }
+
+export default CredentialNotification
