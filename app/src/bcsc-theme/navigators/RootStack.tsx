@@ -67,33 +67,20 @@ const BCSCRootStack: React.FC = () => {
 
   return (
     <BCSCAgentProvider>
-      <AuthenticatedStack verified={store.bcscSecure.verified} verifiedStatus={store.bcscSecure.verifiedStatus} />
+      {store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS ? (
+        <BCSCActivityProvider>
+          <VerifyStack />
+        </BCSCActivityProvider>
+      ) : (
+        <BCSCActivityProvider>
+          <BCSCAccountProvider>
+            {/* <BCSCIdTokenProvider> */}
+            <BCSCMainStack />
+            {/* </BCSCIdTokenProvider> */}
+          </BCSCAccountProvider>
+        </BCSCActivityProvider>
+      )}
     </BCSCAgentProvider>
-  )
-}
-
-interface AuthenticatedStackProps {
-  verified: boolean | undefined
-  verifiedStatus: VerificationStatus
-}
-
-const AuthenticatedStack: React.FC<AuthenticatedStackProps> = ({ verified, verifiedStatus }) => {
-  if (verified === false && verifiedStatus === VerificationStatus.IN_PROGRESS) {
-    return (
-      <BCSCActivityProvider>
-        <VerifyStack />
-      </BCSCActivityProvider>
-    )
-  }
-
-  return (
-    <BCSCActivityProvider>
-      <BCSCAccountProvider>
-        {/* <BCSCIdTokenProvider> */}
-        <BCSCMainStack />
-        {/* </BCSCIdTokenProvider> */}
-      </BCSCAccountProvider>
-    </BCSCActivityProvider>
   )
 }
 
