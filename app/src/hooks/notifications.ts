@@ -3,7 +3,6 @@ import {
   BasicMessageMetadata,
   BifoldAgent,
   CredentialMetadata,
-  NotificationListItem,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
 } from '@bifold/core'
@@ -17,12 +16,11 @@ import {
   ProofState,
 } from '@credo-ts/core'
 import { isProofRequestingAttestation } from '@services/attestation'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-type NotificationItemListProps = React.ComponentProps<typeof NotificationListItem>
-export type CredentialNotification = NotificationItemListProps['notification']
+export type CredentialNotificationRecord = BasicMessageRecord | CredentialRecord | ProofExchangeRecord
 
-export const useNotifications = (): Array<CredentialNotification> => {
+export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const { agent } = useAgent()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)

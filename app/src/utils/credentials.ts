@@ -1,4 +1,4 @@
-import { CredentialNotification } from '@/hooks/notifications'
+import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { BifoldAgent } from '@bifold/core'
 import type { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
@@ -200,7 +200,7 @@ export const credentialsMatchForProof = async (
  * @param notification The notification item to get the type for.
  * @returns The notification type for the given notification item.
  */
-export const getCredentialNotificationType = (notification: CredentialNotification): NotificationType => {
+export const getCredentialNotificationType = (notification: CredentialNotificationRecord): NotificationType => {
   if (notification.type === 'BasicMessageRecord') {
     return NotificationType.BasicMessage
   }

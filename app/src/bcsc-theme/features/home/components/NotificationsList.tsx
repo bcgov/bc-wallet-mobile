@@ -4,12 +4,7 @@ import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { getCredentialNotificationType } from '@/utils/credentials'
 import { useNavigation } from '@react-navigation/native'
 import { useEffect } from 'react'
-import NotificationListItem from './NotificationListItem'
-// BasicMessage
-// ProofRequest
-// CredentialOffer
-// Revocation
-// Proof
+import NotificationListItem from '../../notifications/NotificationListItem'
 
 /**
  * NotificationsList is a component that conditionally renders notifications based on the agent setup status.
