@@ -7710,6 +7710,7 @@ __metadata:
     react-native-config: "npm:~1.5.5"
     react-native-confirmation-code-field: "npm:~7.3.2"
     react-native-device-info: "npm:~8.7.1"
+    react-native-drop-shadow: "npm:^1.0.3"
     react-native-fs: "npm:~2.20.0"
     react-native-gesture-handler: "npm:~2.28.0"
     react-native-get-random-values: "npm:~1.11.0"
@@ -16560,6 +16561,16 @@ __metadata:
   peerDependencies:
     react-native: "*"
   checksum: 10c0/6dd27bed19b194e33bfa3d18162e4dd12f652285d2327d21fd0c4fd0d2e5ddf53df05abbc3117118bbcb4226feb916f4d05a8469a038ee281a99cf11ea57eadc
+  languageName: node
+  linkType: hard
+
+"react-native-drop-shadow@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "react-native-drop-shadow@npm:1.0.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/e68353e75855ef6b50edee40b40c2119f17bfee0716baddd0dbdbc21c50fbc3be7131cc5300855bf814f05d250c121fe96c03d680438ca72550cbbee80bfae21
   languageName: node
   linkType: hard
 
