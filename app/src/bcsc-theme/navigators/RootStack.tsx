@@ -10,6 +10,7 @@ import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarn
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -64,22 +65,22 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS) {
-    return (
-      <BCSCActivityProvider>
-        <VerifyStack />
-      </BCSCActivityProvider>
-    )
-  }
-
   return (
-    <BCSCActivityProvider>
-      <BCSCAccountProvider>
-        {/* <BCSCIdTokenProvider> */}
-        <BCSCMainStack />
-        {/* </BCSCIdTokenProvider> */}
-      </BCSCAccountProvider>
-    </BCSCActivityProvider>
+    <BCSCAgentProvider>
+      {store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS ? (
+        <BCSCActivityProvider>
+          <VerifyStack />
+        </BCSCActivityProvider>
+      ) : (
+        <BCSCActivityProvider>
+          <BCSCAccountProvider>
+            {/* <BCSCIdTokenProvider> */}
+            <BCSCMainStack />
+            {/* </BCSCIdTokenProvider> */}
+          </BCSCAccountProvider>
+        </BCSCActivityProvider>
+      )}
+    </BCSCAgentProvider>
   )
 }
 
