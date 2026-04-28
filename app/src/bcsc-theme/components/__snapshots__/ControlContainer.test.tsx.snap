@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ControlContainer Component renders correctly 1`] = `
+<View
+  style={
+    {
+      "flexGrow": 1,
+      "width": "100%",
+    }
+  }
+>
+  <View
+    style={
+      {
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "shadowColor": "#000",
+        "shadowOffset": {
+          "height": -3,
+          "width": 0,
+        },
+        "shadowOpacity": 0.9,
+        "shadowRadius": 3,
+        "top": 0,
+        "zIndex": -1,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "#F2F2F2",
+          "height": 1,
+        }
+      }
+    />
+  </View>
+  <View
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "flexGrow": 1,
+        "gap": 8,
+        "padding": 24,
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          },
+          undefined,
+        ]
+      }
+    >
+      Control content
+    </Text>
+  </View>
+</View>
+`;

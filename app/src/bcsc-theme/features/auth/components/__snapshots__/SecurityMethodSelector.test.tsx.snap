@@ -207,10 +207,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 {
@@ -243,14 +241,10 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -313,10 +307,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -347,14 +339,10 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -417,10 +405,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 undefined,
@@ -451,14 +437,10 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -474,7 +456,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         "fontSize": 32,
                       },
                       {
-                        "color": "#003366",
+                        "color": "#313132",
                       },
                       {
                         "fontFamily": "Material Icons",
@@ -1197,10 +1179,8 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -1231,14 +1211,10 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -1301,10 +1277,8 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -1335,14 +1309,10 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -1405,10 +1375,8 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 undefined,
@@ -1439,14 +1407,10 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
+                        "fontSize": 21,
                         "fontWeight": "bold",
                       },
+                      undefined,
                     ]
                   }
                 >
@@ -1462,7 +1426,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                         "fontSize": 32,
                       },
                       {
-                        "color": "#003366",
+                        "color": "#313132",
                       },
                       {
                         "fontFamily": "Material Icons",

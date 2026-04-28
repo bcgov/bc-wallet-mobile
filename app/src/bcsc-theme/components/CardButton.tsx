@@ -59,31 +59,24 @@ interface CardProps {
  * @returns {*} {React.ReactElement} The rendered CardButton component
  */
 export const CardButton = (props: CardProps): React.ReactElement => {
-  const theme = useTheme()
+  const { TextTheme, Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
     cardContainer: {
-      padding: theme.Spacing.md,
-      backgroundColor: theme.ColorPalette.brand.secondaryBackground,
-      borderWidth: 1,
-      borderColor: theme.ColorPalette.brand.primaryLight,
-      borderRadius: theme.Spacing.xs,
+      padding: Spacing.md,
+      backgroundColor: ColorPalette.brand.tertiaryBackground,
+      borderRadius: Spacing.xs,
     },
     cardContentContainer: {
-      gap: theme.Spacing.sm,
+      gap: Spacing.sm,
     },
     cardTitleContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    cardTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: theme.ColorPalette.brand.primary,
-    },
     cardIcon: {
-      color: theme.ColorPalette.brand.primary,
+      color: TextTheme.headingFour.color,
     },
     cardSubtext: {
       fontSize: 18,
@@ -108,8 +101,8 @@ export const CardButton = (props: CardProps): React.ReactElement => {
     >
       <View style={styles.cardContentContainer}>
         <View style={styles.cardTitleContainer}>
-          <ThemedText style={styles.cardTitle}>{props.title}</ThemedText>
-          {props.endIcon ? <Icon name={props.endIcon} style={styles.cardIcon} size={theme.Spacing.xl} /> : null}
+          <ThemedText variant={'headingFour'}>{props.title}</ThemedText>
+          {props.endIcon ? <Icon name={props.endIcon} style={styles.cardIcon} size={Spacing.xl} /> : null}
         </View>
         {props.subtext ? <ThemedText style={styles.cardSubtext}>{props.subtext}</ThemedText> : null}
       </View>

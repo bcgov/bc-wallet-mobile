@@ -1,0 +1,310 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CardButton Component renders correctly when disabled 1`] = `
+<View
+  accessibilityLabel="Card Title"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": true,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "backgroundColor": "#003366",
+        "borderRadius": 4,
+        "padding": 16,
+      },
+      {
+        "opacity": 0.6,
+      },
+    ]
+  }
+  testID="com.ariesbifold:id/CardButton-Card Title"
+>
+  <View
+    style={
+      {
+        "gap": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        Card Title
+      </Text>
+    </View>
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          },
+          {
+            "fontSize": 18,
+            "lineHeight": 30,
+          },
+        ]
+      }
+    >
+      Disabled card
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`CardButton Component renders correctly with subtext and end icon 1`] = `
+<View
+  accessibilityLabel="Card Title"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "backgroundColor": "#003366",
+        "borderRadius": 4,
+        "padding": 16,
+      },
+      undefined,
+    ]
+  }
+  testID="com.ariesbifold:id/CardButton-Card Title"
+>
+  <View
+    style={
+      {
+        "gap": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        Card Title
+      </Text>
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": undefined,
+              "fontSize": 32,
+            },
+            {
+              "color": "#313132",
+            },
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          },
+          {
+            "fontSize": 18,
+            "lineHeight": 30,
+          },
+        ]
+      }
+    >
+      This is a subtext
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`CardButton Component renders correctly with title only 1`] = `
+<View
+  accessibilityLabel="Card Title"
+  accessibilityRole="button"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    [
+      {
+        "backgroundColor": "#003366",
+        "borderRadius": 4,
+        "padding": 16,
+      },
+      undefined,
+    ]
+  }
+  testID="com.ariesbifold:id/CardButton-Card Title"
+>
+  <View
+    style={
+      {
+        "gap": 8,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        Card Title
+      </Text>
+    </View>
+  </View>
+</View>
+`;

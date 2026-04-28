@@ -41,6 +41,7 @@ export const DarkTheme = createAppTheme({
   navigationPrimary: DARK_BLUE,
   navigationText: DARK_NAVY,
   foreground: GrayscaleColors.white,
+  foregroundHeading: GrayscaleColors.white,
   foregroundSubtle: GrayscaleColors.veryLightGrey,
   onboardingBodyText: GrayscaleColors.lightGrey,
   textOnWhite: DARK_NAVY,
