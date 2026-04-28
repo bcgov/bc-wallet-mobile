@@ -81,6 +81,7 @@ const useBCAgentSetup = () => {
   const createNewAgent = useCallback(
     async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
       const options = {
+        label: store.preferences.walletName || 'BC Wallet',
         config: {
           logger,
           autoUpdateStorageOnStartup: true,

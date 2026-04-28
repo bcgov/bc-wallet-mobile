@@ -156,7 +156,6 @@ export function getBCAgentModules({
       proofProtocols,
     }),
     pushNotificationsFcm: new PushNotificationsFcmModule(),
-    // pushNotificationsApns: new PushNotificationsApnsModule(),
     dids: new DidsModule({
       resolvers: [new WebVhDidResolver()],
     }),
