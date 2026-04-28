@@ -1148,6 +1148,8 @@ jobs:
     if: >-
       always() && !cancelled() &&
       github.event.pull_request.head.repo.fork != true &&
+      !startsWith(github.base_ref, 'release/') &&
+      !startsWith(github.ref_name, 'release/') &&
       needs.early-exit-check.outputs.should_skip_build != 'true'
     needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
