@@ -545,6 +545,8 @@ const translation = {
       "NotificationsTitle": "Notifications (PT-BR)",
       "NotificationsHeader": "Enable Notifications? (PT-BR)",
       "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions. (PT-BR)",
+      "EnableNotifications": "Enable Notifications (PT-BR)",
+      "SkipNotifications": "Skip (PT-BR)",
       "SecureAppHeader": "Choose how to secure this app (PT-BR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (PT-BR)",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}} (PT-BR)",

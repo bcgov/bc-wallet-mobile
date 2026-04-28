@@ -4,15 +4,7 @@ exports[`ControlContainer Component renders correctly 1`] = `
 <View
   style={
     {
-      "backgroundColor": "#F2F2F2",
       "flexGrow": 1,
-      "padding": 24,
-      "shadowOffset": {
-        "height": -8,
-        "width": 0,
-      },
-      "shadowOpacity": 0.2,
-      "shadowRadius": 8,
       "width": "100%",
     }
   }
@@ -20,8 +12,10 @@ exports[`ControlContainer Component renders correctly 1`] = `
   <View
     style={
       {
+        "backgroundColor": "#F2F2F2",
         "flexGrow": 1,
         "gap": 8,
+        "padding": 24,
       }
     }
   >
@@ -42,5 +36,26 @@ exports[`ControlContainer Component renders correctly 1`] = `
       Control content
     </Text>
   </View>
+  <View
+    style={
+      {
+        "backgroundColor": "#F2F2F2",
+        "elevation": 5,
+        "height": 2,
+        "left": 0,
+        "position": "absolute",
+        "right": 0,
+        "shadowColor": "#000",
+        "shadowOffset": {
+          "height": -5,
+          "width": 0,
+        },
+        "shadowOpacity": 0.6,
+        "shadowRadius": 5,
+        "top": 0,
+        "zIndex": 1,
+      }
+    }
+  />
 </View>
 `;
