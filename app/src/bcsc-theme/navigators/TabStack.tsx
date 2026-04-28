@@ -1,4 +1,5 @@
 import { HelpCentreUrl } from '@/constants'
+import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
@@ -51,7 +52,13 @@ const createTabBarIcon = (label: string, iconName: string) => {
 
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme } = useTheme()
+  const { TabTheme, ColorPalette } = useTheme()
+  const { customNotifications } = useCustomNotifications()
+
+  // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
+  // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
+  // If that's not possible, call navigation.setOptions({ tabBarBadge: badgeCount }) to update the badge count when notifications change.
+  const homeNotificationsBadgeCount = customNotifications.length || undefined
 
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
@@ -68,6 +75,9 @@ const BCSCTabStack: React.FC = () => {
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
+          tabBarBadgeStyle: {
+            backgroundColor: ColorPalette.notification.errorIcon,
+          },
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           title: '',
@@ -82,6 +92,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Home',
             tabBarTestID: testIdWithKey('Home'),
+            tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
             headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}

@@ -1,17 +1,13 @@
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
 import { AttestationRestrictions } from '@/constants'
-import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
   BifoldAgent,
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
-  useStore,
 } from '@bifold/core'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import {
   DidCommCredentialExchangeRecord as CredentialRecord,
   DidCommBasicMessageRecord,
@@ -22,11 +18,10 @@ import {
 import { isProofRequestingAttestation } from '@services/attestation'
 import { useEffect, useMemo, useState } from 'react'
 
-export const useNotifications = (): Array<
-  DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord | 'CustomNotification'
-> => {
+export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
+
+export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const { agent } = useAgent()
-  const [store] = useStore<BCState>()
   const offers = useCredentialByState(DidCommCredentialState.OfferReceived)
   const proofsRequested = useProofByState(DidCommProofState.RequestReceived)
   const [nonAttestationProofs, setNonAttestationProofs] = useState<DidCommProofExchangeRecord[]>([])
@@ -65,16 +60,6 @@ export const useNotifications = (): Array<
       }
     })
 
-    const credentials = [...credsDone, ...credsReceived]
-    const credentialDefinitionIDs = credentials.map(
-      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
-    )
-    const invitationDate = new Date()
-    const custom =
-      showPersonCredentialSelector(credentialDefinitionIDs) &&
-      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
-        ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
-        : []
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
         ![DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state) ||
@@ -86,16 +71,8 @@ export const useNotifications = (): Array<
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
-    const notificationsWithCustom = [...custom, ...notif]
-    setNotifications(notificationsWithCustom as never[])
-  }, [
-    offers,
-    credsReceived,
-    credsDone,
-    basicMessages,
-    nonAttestationProofs,
-    store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
-  ])
+    setNotifications(notif as never[])
+  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs])
 
   useEffect(() => {
     Promise.all(

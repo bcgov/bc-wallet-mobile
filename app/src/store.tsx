@@ -263,6 +263,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
+  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
@@ -686,6 +687,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         // QUESTION (MD): Should we handle DEACTIVATED here?
         verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
       }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS: {
+      const verifiedStatus = (action?.payload || []).pop() ?? VerificationStatus.UNVERIFIED
+      const bcscSecure = { ...state.bcscSecure, verifiedStatus }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
