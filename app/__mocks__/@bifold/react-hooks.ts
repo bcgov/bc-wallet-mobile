@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
-import { CredentialExchangeRecord, CredentialProtocolOptions, ProofExchangeRecord } from '@credo-ts/core'
+import {
+  CredentialProtocolOptions,
+  DidCommCredentialExchangeRecord,
+  DidCommProofExchangeRecord,
+} from '@credo-ts/didcomm'
 
 const useCredentials = jest.fn().mockReturnValue({ credentials: [] } as any)
-const useCredentialByState = jest.fn().mockReturnValue([] as CredentialExchangeRecord[])
-const useProofByState = jest.fn().mockReturnValue([] as ProofExchangeRecord[])
+const useCredentialByState = jest.fn().mockReturnValue([] as DidCommCredentialExchangeRecord[])
+const useProofByState = jest.fn().mockReturnValue([] as DidCommProofExchangeRecord[])
 const mockCredentialModule = {
   acceptOffer: jest.fn(),
   declineOffer: jest.fn(),

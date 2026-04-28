@@ -11,41 +11,46 @@ import {
 } from '@bifold/core'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import {
-  BasicMessageRecord,
-  CredentialExchangeRecord as CredentialRecord,
-  CredentialState,
-  ProofExchangeRecord,
-  ProofState,
-} from '@credo-ts/core'
+  DidCommCredentialExchangeRecord as CredentialRecord,
+  DidCommBasicMessageRecord,
+  DidCommCredentialState,
+  DidCommProofExchangeRecord,
+  DidCommProofState,
+} from '@credo-ts/didcomm'
 import { isProofRequestingAttestation } from '@services/attestation'
 import { useEffect, useMemo, useState } from 'react'
 
-export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
+export const useNotifications = (): Array<
+  DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord | 'CustomNotification'
+> => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
-  const offers = useCredentialByState(CredentialState.OfferReceived)
-  const proofsRequested = useProofByState(ProofState.RequestReceived)
-  const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
+  const offers = useCredentialByState(DidCommCredentialState.OfferReceived)
+  const proofsRequested = useProofByState(DidCommProofState.RequestReceived)
+  const [nonAttestationProofs, setNonAttestationProofs] = useState<DidCommProofExchangeRecord[]>([])
   const [notifications, setNotifications] = useState([])
   const { records: basicMessages } = useBasicMessages()
-  const credsReceived = useCredentialByState(CredentialState.CredentialReceived)
-  const credsDone = useCredentialByState(CredentialState.Done)
-  const doneStates = useMemo(() => [ProofState.Done, ProofState.PresentationReceived] as ProofState[], [])
+  const credsReceived = useCredentialByState(DidCommCredentialState.CredentialReceived)
+  const credsDone = useCredentialByState(DidCommCredentialState.Done)
+  const doneStates = useMemo(
+    () => [DidCommProofState.Done, DidCommProofState.PresentationReceived] as DidCommProofState[],
+    []
+  )
   const proofsDone = useProofByState(doneStates)
 
   useEffect(() => {
     // get all unseen messages
-    const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg: BasicMessageRecord) => {
+    const unseenMessages: DidCommBasicMessageRecord[] = basicMessages.filter((msg: DidCommBasicMessageRecord) => {
       const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
       return !meta?.seen
     })
 
     // add one unseen message per contact to notifications
     const contactsWithUnseenMessages: string[] = []
-    const messagesToShow: BasicMessageRecord[] = []
-    unseenMessages.forEach((msg: BasicMessageRecord) => {
+    const messagesToShow: DidCommBasicMessageRecord[] = []
+    unseenMessages.forEach((msg: DidCommBasicMessageRecord) => {
       if (!contactsWithUnseenMessages.includes(msg.connectionId)) {
         contactsWithUnseenMessages.push(msg.connectionId)
         messagesToShow.push(msg)
@@ -72,7 +77,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
         : []
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
-        ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
+        ![DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state) ||
         (proof.isVerified !== undefined &&
           !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
       )
@@ -94,7 +99,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
   useEffect(() => {
     Promise.all(
-      [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
+      [...proofsRequested, ...proofsDone].map(async (proof: DidCommProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, AttestationRestrictions)
         return {
           value: proof,

@@ -3,30 +3,26 @@ import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import {
   createLinkSecretIfRequired,
-  DispatchAction,
-  migrateToAskar,
   PersistentStorage,
   TOKENS,
   useServices,
   useStore,
   WalletSecret,
 } from '@bifold/core'
+import { Agent } from '@credo-ts/core'
 import {
-  Agent,
-  ConnectionEventTypes,
-  ConnectionRecord,
-  ConnectionRepository,
-  ConnectionStateChangedEvent,
-  ConnectionType,
-  DidExchangeState,
-  HttpOutboundTransport,
-  KeylistUpdateAction,
-  MediationRepository,
-  MediatorPickupStrategy,
-  OutOfBandRepository,
-  WsOutboundTransport,
-} from '@credo-ts/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+  DidCommConnectionEventTypes,
+  DidCommConnectionRecord,
+  DidCommConnectionRepository,
+  DidCommConnectionStateChangedEvent,
+  DidCommConnectionType,
+  DidCommDidExchangeState,
+  DidCommKeylistUpdateAction,
+  DidCommMediationRepository,
+  DidCommMediatorPickupStrategy,
+  DidCommOutOfBandRepository,
+} from '@credo-ts/didcomm'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
@@ -49,7 +45,7 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
@@ -67,17 +63,13 @@ const useBCAgentSetup = () => {
   )
 
   const restartExistingAgent = useCallback(
-    async (agent: Agent, walletSecret: WalletSecret): Promise<Agent | undefined> => {
+    async (agent: Agent): Promise<Agent | undefined> => {
       try {
-        await agent.wallet.open({
-          id: walletSecret.id,
-          key: walletSecret.key,
-        })
         await agent.initialize()
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
-        // if the existing agents wallet cannot be opened or initialize() fails it was
-        // again not a clean shutdown and the agent should be replaced, not restarted
+        // if the existing agent cannot initialize it was not a clean shutdown
+        // replace rather than restart
         return
       }
 
@@ -90,18 +82,13 @@ const useBCAgentSetup = () => {
     async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
       const options = {
         config: {
-          label: store.preferences.walletName || 'BC Wallet',
-          walletConfig: {
-            id: walletSecret.id,
-            key: walletSecret.key,
-          },
           logger,
-          mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
           autoUpdateStorageOnStartup: true,
-          autoAcceptConnections: true,
         },
         dependencies: agentDependencies,
         modules: getBCAgentModules({
+          walletId: walletSecret.id,
+          walletKey: walletSecret.key,
           indyNetworks: ledgers,
           mediatorInvitationUrl: mediatorUrl,
           txnCache: {
@@ -120,29 +107,9 @@ const useBCAgentSetup = () => {
 
       logger.info(store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled')
 
-      const newAgent = new Agent(options)
-      const wsTransport = new WsOutboundTransport()
-      const httpTransport = new HttpOutboundTransport()
-
-      newAgent.registerOutboundTransport(wsTransport)
-      newAgent.registerOutboundTransport(httpTransport)
-
-      return newAgent
+      return new Agent(options)
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy]
-  )
-
-  const migrateIfRequired = useCallback(
-    async (newAgent: Agent, walletSecret: WalletSecret) => {
-      // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-      if (!store.migration.didMigrateToAskar) {
-        await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
-        dispatch({
-          type: DispatchAction.DID_MIGRATE_TO_ASKAR,
-        })
-      }
-    },
-    [store.migration.didMigrateToAskar, dispatch]
+    [logger, store.developer.enableProxy]
   )
 
   const warmUpCache = useCallback(
@@ -192,18 +159,18 @@ const useBCAgentSetup = () => {
     [credDefs, schemas]
   )
 
-  const waitForConnectionCompleted = async (agent: Agent, connection: ConnectionRecord) => {
-    if (connection.state === DidExchangeState.Completed) {
+  const waitForConnectionCompleted = async (agent: Agent, connection: DidCommConnectionRecord) => {
+    if (connection.state === DidCommDidExchangeState.Completed) {
       return connection
     }
 
-    return new Promise<ConnectionRecord>((resolve, reject) => {
-      const listener = (event: ConnectionStateChangedEvent) => {
+    return new Promise<DidCommConnectionRecord>((resolve, reject) => {
+      const listener = (event: DidCommConnectionStateChangedEvent) => {
         const { connectionRecord } = event.payload
 
         if (
           connectionRecord.id === connection.id &&
-          connectionRecord.state === DidExchangeState.Completed &&
+          connectionRecord.state === DidCommDidExchangeState.Completed &&
           connectionRecord.isReady
         ) {
           cleanup()
@@ -212,11 +179,11 @@ const useBCAgentSetup = () => {
       }
 
       const cleanup = () => {
-        agent.events.off(ConnectionEventTypes.ConnectionStateChanged, listener)
+        agent.events.off(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
         clearTimeout(timeoutId)
       }
 
-      agent.events.on(ConnectionEventTypes.ConnectionStateChanged, listener)
+      agent.events.on(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
 
       const timeoutId = setTimeout(() => {
         cleanup()
@@ -226,11 +193,11 @@ const useBCAgentSetup = () => {
   }
 
   const updateLastSeen = useCallback(async (agent: Agent) => {
-    const connectionRepository = agent.dependencyManager.resolve(ConnectionRepository)
+    const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
 
     const connectionRecords = await connectionRepository.getAll(agent.context)
     const defaultMediatorConnection = connectionRecords.find((record) =>
-      record.connectionTypes?.includes(ConnectionType.Mediator)
+      record.connectionTypes?.includes(DidCommConnectionType.Mediator)
     )
     defaultMediatorConnection?.setTag('lastSeen', new Date().toISOString())
     if (defaultMediatorConnection) {
@@ -243,16 +210,16 @@ const useBCAgentSetup = () => {
       logger.info('Resetting mediation state and creating a new connection...')
 
       try {
-        await agent.mediationRecipient.stopMessagePickup()
+        await agent.didcomm.mediationRecipient.stopMessagePickup()
       } catch (e) {
         logger.warn(`No active message pickup to stop: ${e}`)
       }
 
-      const mediationRepository = agent.dependencyManager.resolve(MediationRepository)
-      const connectionRepository = agent.dependencyManager.resolve(ConnectionRepository)
-      const outOfBandRepository = agent.dependencyManager.resolve(OutOfBandRepository)
+      const mediationRepository = agent.dependencyManager.resolve(DidCommMediationRepository)
+      const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
+      const outOfBandRepository = agent.dependencyManager.resolve(DidCommOutOfBandRepository)
 
-      const oldMediationRecord = await agent.mediationRecipient.findDefaultMediator()
+      const oldMediationRecord = await agent.didcomm.mediationRecipient.findDefaultMediator()
       if (!oldMediationRecord) {
         logger.warn('No mediation record found to delete')
         throw originalError
@@ -310,7 +277,7 @@ const useBCAgentSetup = () => {
       try {
         logger.info('Mediation state cleared. Creating new mediation connection...')
 
-        const { connectionRecord } = await agent.oob.receiveInvitationFromUrl(mediatorUrl, {
+        const { connectionRecord } = await agent.didcomm.oob.receiveInvitationFromUrl(mediatorUrl, {
           reuseConnection: false,
           autoAcceptConnection: true,
           autoAcceptInvitation: true,
@@ -327,19 +294,23 @@ const useBCAgentSetup = () => {
         const freshConnection = await connectionRepository.getById(agent.context, connectionRecord.id)
 
         // Ping ensures the session is created on the mediator side for the new connection.
-        await agent.connections.sendPing(freshConnection.id, { responseRequested: true })
+        await agent.didcomm.connections.sendPing(freshConnection.id, { responseRequested: true })
 
         // Request mediation grant for the new connection and register the existing recipient keys.
-        const newMediationRecord = await agent.mediationRecipient.requestAndAwaitGrant(freshConnection)
+        const newMediationRecord = await agent.didcomm.mediationRecipient.requestAndAwaitGrant(freshConnection)
         for (const key of oldMediationRecord.recipientKeys) {
           logger.debug(`Adding key to key list: ${key}`)
-          await agent.mediationRecipient.notifyKeylistUpdate(freshConnection, key, KeylistUpdateAction.add)
+          await agent.didcomm.mediationRecipient.notifyKeylistUpdate(
+            freshConnection,
+            key,
+            DidCommKeylistUpdateAction.add
+          )
         }
 
-        await agent.mediationRecipient.setDefaultMediator(newMediationRecord)
-        await agent.mediationRecipient.initiateMessagePickup(
+        await agent.didcomm.mediationRecipient.setDefaultMediator(newMediationRecord)
+        await agent.didcomm.mediationRecipient.initiateMessagePickup(
           newMediationRecord,
-          MediatorPickupStrategy.PickUpV2LiveMode
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
         )
       } catch (error) {
         logger.error(`Error during mediation recovery. Attempting recovery of the deleted mediation records: ${error}`)
@@ -361,10 +332,13 @@ const useBCAgentSetup = () => {
       const mediatorUrl = store.preferences.selectedMediator
       logger.info('Checking for existing agent...')
       if (agentInstanceRef.current) {
-        const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
+        const restartedAgent = await restartExistingAgent(agentInstanceRef.current)
         if (restartedAgent) {
           logger.info('Successfully restarted existing agent...')
-          restartedAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+          restartedAgent.didcomm.mediationRecipient.initiateMessagePickup(
+            undefined,
+            DidCommMediatorPickupStrategy.PickUpV2LiveMode
+          )
           refreshAttestationMonitor(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
@@ -379,14 +353,15 @@ const useBCAgentSetup = () => {
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
 
-      logger.info('Migrating agent if required...')
-      await migrateIfRequired(newAgent, walletSecret)
-
       logger.info('Initializing agent...')
       await newAgent.initialize()
 
+      logger.info(`checking mediator type for ${mediatorUrl}`)
       try {
-        await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+        await newAgent.didcomm.mediationRecipient.initiateMessagePickup(
+          undefined,
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
+        )
       } catch (error) {
         logger.error(`Error initiating message pickup: ${error}`)
         await recoverMediationIfExpired(newAgent, mediatorUrl, error as Error)
@@ -422,7 +397,6 @@ const useBCAgentSetup = () => {
       logger,
       indyLedgers,
       createNewAgent,
-      migrateIfRequired,
       warmUpCache,
       refreshAttestationMonitor,
       restartExistingAgent,

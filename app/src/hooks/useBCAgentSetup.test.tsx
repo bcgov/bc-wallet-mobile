@@ -5,15 +5,15 @@ jest.mock('@/store', () => ({
   useStore: jest.fn(),
 }))
 
+import { Agent } from '@credo-ts/core'
 import {
-  Agent,
-  ConnectionRecord,
-  ConnectionRepository,
-  DidExchangeRole,
-  DidExchangeState,
-  MediationRepository,
-  OutOfBandRepository,
-} from '@credo-ts/core'
+  DidCommConnectionRecord,
+  DidCommConnectionRepository,
+  DidCommDidExchangeRole,
+  DidCommDidExchangeState,
+  DidCommMediationRepository,
+  DidCommOutOfBandRepository,
+} from '@credo-ts/didcomm'
 
 import { act, renderHook } from '@testing-library/react-native'
 import useBCAgentSetup from './useBCAgentSetup'
@@ -64,44 +64,47 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
   const poolService = createMockPoolService()
 
   const agent: Partial<Agent> = {
-    wallet: {
-      open: jest.fn().mockResolvedValue(undefined),
-      agentContext: {} as any,
-      wallet: {} as any,
-      storageUpdateService: {} as any,
-      logger: mockLogger,
-    } as any,
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
 
-    mediationRecipient: {
-      initiateMessagePickup: jest.fn(),
-      stopMessagePickup: jest.fn(),
-      findDefaultMediator: jest.fn().mockResolvedValue(null),
-      requestAndAwaitGrant: jest.fn().mockResolvedValue({}),
-      setDefaultMediator: jest.fn(),
-      notifyKeylistUpdate: jest.fn(),
+    didcomm: {
+      wallet: {
+        open: jest.fn().mockResolvedValue(undefined),
+        agentContext: {} as any,
+        wallet: {} as any,
+        storageUpdateService: {} as any,
+        logger: mockLogger,
+      } as any,
+      mediationRecipient: {
+        initiateMessagePickup: jest.fn(),
+        stopMessagePickup: jest.fn(),
+        findDefaultMediator: jest.fn().mockResolvedValue(null),
+        requestAndAwaitGrant: jest.fn().mockResolvedValue({}),
+        setDefaultMediator: jest.fn(),
+        notifyKeylistUpdate: jest.fn(),
+      } as any,
+      oob: {
+        receiveInvitationFromUrl: jest.fn().mockResolvedValue({
+          connectionRecord: new DidCommConnectionRecord({
+            id: 'test-connection-id',
+            state: DidCommDidExchangeState.Completed,
+            role: DidCommDidExchangeRole.Responder,
+            theirDid: 'did:example:123',
+          }),
+        }),
+      } as any,
+      connections: { sendPing: jest.fn() } as any,
     } as any,
 
-    oob: {
-      receiveInvitationFromUrl: jest.fn().mockResolvedValue({
-        connectionRecord: new ConnectionRecord({
-          id: 'test-connection-id',
-          state: DidExchangeState.Completed,
-          role: DidExchangeRole.Responder,
-          theirDid: 'did:example:123',
-        }),
-      }),
-    } as any,
     dependencyManager: {
       resolve: jest.fn((dep: any) => {
-        if (dep === ConnectionRepository) {
+        if (dep === DidCommConnectionRepository) {
           return connectionRepository
         }
-        if (dep === MediationRepository) {
+        if (dep === DidCommMediationRepository) {
           return mediationRepository
         }
-        if (dep === OutOfBandRepository) {
+        if (dep === DidCommOutOfBandRepository) {
           return outOfBandRepository
         }
         if (dep?.name === 'IndyVdrPoolService') {
@@ -119,8 +122,6 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
       stop$: { subscribe: jest.fn() },
       observable: { subscribe: jest.fn() },
     } as any,
-    connections: { sendPing: jest.fn() } as any,
-    registerOutboundTransport: jest.fn(),
   }
 
   return {
@@ -156,10 +157,18 @@ jest.mock('@/utils/bc-agent-modules', () => ({
 
 jest.mock('@credo-ts/core', () => {
   const actual = jest.requireActual('@credo-ts/core')
-  return {
-    ...actual,
-    Agent: jest.fn(() => createMockAgent()),
-  }
+  return Object.defineProperties(
+    {},
+    {
+      ...Object.getOwnPropertyDescriptors(actual),
+      Agent: {
+        value: jest.fn(() => createMockAgent()),
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      },
+    }
+  )
 })
 
 jest.mock('react-native-config', () => ({
@@ -238,15 +247,15 @@ describe('useBCAgentSetup', () => {
       await result.current.initializeAgent({ id: 'wallet-id', key: 'wallet-key', salt: 'wallet-salt' })
     })
 
-    expect(mockAgent.wallet.open).toHaveBeenCalled()
     expect(mockAgent.initialize).toHaveBeenCalled()
+    expect(mockAgent.didcomm.mediationRecipient.initiateMessagePickup).toHaveBeenCalled()
   })
 
   it('should call recovery if initialization fails', async () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agentInstance = createMockAgent()
-    agentInstance.mediationRecipient.initiateMessagePickup = jest
+    agentInstance.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
     ;(Agent as jest.Mock).mockImplementation(() => agentInstance)
@@ -282,17 +291,17 @@ describe('useBCAgentSetup', () => {
     const { result } = renderHook(() => useBCAgentSetup())
 
     const agent = createMockAgent()
-    agent.mediationRecipient.initiateMessagePickup = jest
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
-    agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
 
     agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === ConnectionRepository) {
+      if (dep === DidCommConnectionRepository) {
         return {
           getById: jest.fn().mockResolvedValue({
             getTag: jest.fn().mockReturnValue(new Date().toISOString()),
@@ -348,35 +357,35 @@ describe('useBCAgentSetup', () => {
     }
 
     agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === MediationRepository) {
+      if (dep === DidCommMediationRepository) {
         return mediationRepository
       }
-      if (dep === ConnectionRepository) {
+      if (dep === DidCommConnectionRepository) {
         return connectionRepository
       }
-      if (dep === OutOfBandRepository) {
+      if (dep === DidCommOutOfBandRepository) {
         return outOfBandRepository
       }
       return {}
     }) as any
-    agent.mediationRecipient.initiateMessagePickup = jest
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValue(new Error('Timed out waiting for connection test-connection-id to complete'))
-    agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    agent.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
+    agent.didcomm.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
       outOfBandRecord: { id: 'oob1' },
       connectionRecord: {
         id: 'test-connection-id',
-        state: DidExchangeState.Completed,
-        role: DidExchangeRole.Responder,
+        state: DidCommDidExchangeState.Completed,
+        role: DidCommDidExchangeRole.Responder,
         theirDid: 'did:example:123',
       },
     })
-    agent.connections.sendPing = jest
+    agent.didcomm.connections.sendPing = jest
       .fn()
       .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
@@ -423,27 +432,27 @@ describe('useBCAgentSetup', () => {
     }
 
     agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === MediationRepository) {
+      if (dep === DidCommMediationRepository) {
         return mediationRepository
       }
-      if (dep === ConnectionRepository) {
+      if (dep === DidCommConnectionRepository) {
         return connectionRepository
       }
-      if (dep === OutOfBandRepository) {
+      if (dep === DidCommOutOfBandRepository) {
         return outOfBandRepository
       }
       return {}
     }) as any
 
-    agent.mediationRecipient.initiateMessagePickup = jest
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValue(new Error('Failed to initiate message pickup'))
-    agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    agent.oob.receiveInvitationFromUrl = jest
+    agent.didcomm.oob.receiveInvitationFromUrl = jest
       .fn()
       .mockRejectedValue(new Error('Failed to establish a new connection for mediation recovery'))
     ;(Agent as jest.Mock).mockImplementation(() => agent)
@@ -490,41 +499,41 @@ describe('useBCAgentSetup', () => {
       save: jest.fn(),
     }
     agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === MediationRepository) {
+      if (dep === DidCommMediationRepository) {
         return mediationRepository
       }
-      if (dep === ConnectionRepository) {
+      if (dep === DidCommConnectionRepository) {
         return connectionRepository
       }
-      if (dep === OutOfBandRepository) {
+      if (dep === DidCommOutOfBandRepository) {
         return outOfBandRepository
       }
       return {}
     }) as any
 
-    agent.mediationRecipient.initiateMessagePickup = jest
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValueOnce(new Error('Failed to initiate message pickup'))
-    agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    agent.mediationRecipient.setDefaultMediator = jest.fn().mockResolvedValue(undefined)
-    agent.mediationRecipient.initiateMessagePickup = jest.fn().mockResolvedValue(undefined)
-    agent.mediationRecipient.requestAndAwaitGrant = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.setDefaultMediator = jest.fn().mockResolvedValue(undefined)
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest.fn().mockResolvedValue(undefined)
+    agent.didcomm.mediationRecipient.requestAndAwaitGrant = jest.fn().mockResolvedValue({
       recipientKeys: ['newKey1'],
     })
-    agent.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
+    agent.didcomm.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
       outOfBandRecord: { id: 'oob1' },
       connectionRecord: {
         id: 'test-connection-id',
-        state: DidExchangeState.Completed,
-        role: DidExchangeRole.Responder,
+        state: DidCommDidExchangeState.Completed,
+        role: DidCommDidExchangeRole.Responder,
         theirDid: 'did:example:123',
       },
     })
-    agent.connections.sendPing = jest.fn().mockResolvedValue(undefined)
+    agent.didcomm.connections.sendPing = jest.fn().mockResolvedValue(undefined)
     ;(Agent as jest.Mock).mockImplementation(() => agent)
 
     jest.spyOn(PersistentStorage, 'fetchValueForKey').mockResolvedValue(undefined)
@@ -578,31 +587,31 @@ describe('useBCAgentSetup', () => {
     }
 
     agent.dependencyManager.resolve = jest.fn((dep: any) => {
-      if (dep === MediationRepository) {
+      if (dep === DidCommMediationRepository) {
         return mediationRepository
       }
-      if (dep === ConnectionRepository) {
+      if (dep === DidCommConnectionRepository) {
         return connectionRepository
       }
-      if (dep === OutOfBandRepository) {
+      if (dep === DidCommOutOfBandRepository) {
         return outOfBandRepository
       }
       return {}
     }) as any
-    agent.mediationRecipient.initiateMessagePickup = jest
+    agent.didcomm.mediationRecipient.initiateMessagePickup = jest
       .fn()
       .mockRejectedValue(new Error('Failed to initiate message pickup'))
-    agent.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
+    agent.didcomm.mediationRecipient.findDefaultMediator = jest.fn().mockResolvedValue({
       id: 'med1',
       connectionId: 'conn1',
       recipientKeys: ['key1'],
     })
-    agent.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
+    agent.didcomm.oob.receiveInvitationFromUrl = jest.fn().mockResolvedValue({
       outOfBandRecord: { id: 'oob1' },
       connectionRecord: {
         id: 'test-connection-id',
-        state: DidExchangeState.RequestSent,
-        role: DidExchangeRole.Responder,
+        state: DidCommDidExchangeState.RequestSent,
+        role: DidCommDidExchangeRole.Responder,
         theirDid: 'did:example:123',
         isReady: false,
       },
