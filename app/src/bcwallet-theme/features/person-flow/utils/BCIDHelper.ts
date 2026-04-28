@@ -48,7 +48,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
 export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
-  const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
+  const invite = await agent.didcomm.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
     throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_INVITATION_ERROR)
@@ -56,7 +56,7 @@ export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string)
 
   await removeExistingInvitationsById(agent, invite.id)
 
-  const record = await agent.oob.receiveInvitation(invite)
+  const record = await agent.didcomm.oob.receiveInvitation(invite)
 
   if (!record) {
     throw AppError.fromErrorDefinition(ErrorRegistry.RECEIVE_INVITATION_ERROR)

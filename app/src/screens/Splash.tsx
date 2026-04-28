@@ -123,6 +123,16 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         setStep(4)
       } catch (error: unknown) {
         initializing.current = false
+        const formatError = (e: unknown, depth = 0): string => {
+          if (!(e instanceof Error)) {
+            return String(e)
+          }
+          const indent = '  '.repeat(depth)
+          const msg = `${indent}${e.constructor.name}: ${e.message}`
+          const cause = (e as Error & { cause?: unknown }).cause
+          return cause ? `${msg}\n${formatError(cause, depth + 1)}` : msg
+        }
+        logger.error(`Agent initialization failed:\n${formatError(error)}`)
         const appError = AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: error })
         setInitError(appError)
       }
@@ -137,6 +147,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
     t,
     store.authentication.didAuthenticate,
     walletSecret,
+    logger,
   ])
 
   const handleErrorCallToActionPressed = useCallback(() => {

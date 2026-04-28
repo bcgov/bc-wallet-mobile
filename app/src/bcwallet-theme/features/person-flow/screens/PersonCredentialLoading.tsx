@@ -19,7 +19,7 @@ import {
 import { useAgent, useCredentialByState } from '@bifold/react-hooks'
 import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
 import ProgressBar from '@components/ProgressBar'
-import { CredentialState } from '@credo-ts/core'
+import { DidCommCredentialState } from '@credo-ts/didcomm'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -40,7 +40,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const timer = useRef<NodeJS.Timeout>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
+  const receivedCredentialOffers = useCredentialByState(DidCommCredentialState.OfferReceived)
   const [stepText, setStepText] = useState<string>('Starting process...')
   const [progressPercent, setProgressPercent] = useState(0)
   const { agent } = useAgent()
@@ -230,7 +230,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     for (const credential of receivedCredentialOffers) {
       if (
-        credential.state == CredentialState.OfferReceived &&
+        credential.state == DidCommCredentialState.OfferReceived &&
         credential.connectionId === remoteAgentDetails?.connectionId
       ) {
         goToCredentialOffer(credential.id)

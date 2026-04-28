@@ -2,8 +2,8 @@ import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-f
 import { hitSlop } from '@/constants'
 import { SafeAreaModal, Screens, Stacks, testIdForAccessabilityLabel, testIdWithKey, useTheme } from '@bifold/core'
 import { useCredentialByState } from '@bifold/react-hooks'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
-import { CredentialState } from '@credo-ts/core'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
+import { DidCommCredentialState } from '@credo-ts/didcomm'
 import { BCWalletEventTypes } from '@events/eventTypes'
 import { useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -19,8 +19,8 @@ export default function AddCredentialSlider() {
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [showGetPersonCredential, setShowGetPersonCredential] = useState<boolean>(false)
 
-  const credentialsReceived = useCredentialByState(CredentialState.CredentialReceived)
-  const credentialsDone = useCredentialByState(CredentialState.Done)
+  const credentialsReceived = useCredentialByState(DidCommCredentialState.CredentialReceived)
+  const credentialsDone = useCredentialByState(DidCommCredentialState.Done)
 
   const styles = StyleSheet.create({
     centeredView: {
