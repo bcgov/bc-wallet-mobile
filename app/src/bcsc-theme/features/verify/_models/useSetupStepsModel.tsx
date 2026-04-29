@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
@@ -7,7 +9,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
@@ -25,6 +27,17 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
+  const { account } = useAccount()
+  const { updateRegistration } = useRegistrationService()
+
+  // Auto set nickname from account info if not already set
+  useEffect(() => {
+    if (store.bcsc.nicknames.length === 0 && account) {
+      const nickname = account?.family_name.trim() || account?.given_name.trim()
+      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
+      updateRegistration(store.bcscSecure.registrationAccessToken, nickname)
+    }
+  }, [account, store.bcsc.nicknames, store.bcscSecure.registrationAccessToken, dispatch, updateRegistration])
 
   // Get unified step state (completed, focused, subtext for each step)
   const steps = useSetupSteps(store)
@@ -114,10 +127,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    */
   const stepActions = useMemo(
     () => ({
-      nickname: () => {
-        navigation.navigate(BCSCScreens.NicknameAccount)
-      },
-
       id: () => {
         if (steps.id.nonBcscNeedsAdditionalCard) {
           const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData.some(
