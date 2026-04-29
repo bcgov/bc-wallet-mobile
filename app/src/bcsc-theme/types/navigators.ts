@@ -89,7 +89,6 @@ export enum BCSCScreens {
   TransferAccountQRInformation = 'QR Get Overview',
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
-  NicknameAccount = 'Choose Account Nickname',
   EditNickname = 'Change Account Nickname',
   OnboardingAccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
@@ -198,7 +197,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddress]: undefined
-  [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.VerifySettings]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
