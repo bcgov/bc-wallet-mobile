@@ -94,19 +94,19 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const nonBcscRegistered = isNonBCSCCards && completedEvidenceCount === 2
 
     // ---- Step completion states ----
-    // Calculating Step 5 first, if this is true, it is safe to assume all other steps are complete
+    // Step 4 (verify) first — if true, all other steps are complete
     const step4Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
     const step1Completed = step4Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
-    const step2Completed = step4Completed || (step1Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
+    const step2Completed = step4Completed || (step1Completed && Boolean(store.bcscSecure.deviceCode))
     const step3Completed =
-      step4Completed || (step2Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification)) // Step 2 must be completed before step 4 can be completed
+      step4Completed || (step1Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification))
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
     const step2Focused = step1Completed && !step2Completed
-    const step3Focused = step2Completed && !step3Completed
-    const step4Focused = step2Completed && step3Completed
-    const step5Focused = step1Completed && store.bcsc.accountSetupType === AccountSetupType.TransferAccount // this is used for the account transfer process
+    const step3Focused = step1Completed && step2Completed && !step3Completed
+    const step4Focused = step1Completed && step2Completed && step3Completed
+    const step5Focused = store.bcsc.accountSetupType === AccountSetupType.TransferAccount
 
     // ---- Subtext generators ----
     const getStep1Subtext = (): string[] => {
@@ -130,12 +130,12 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     const getStep2Subtext = (): string[] => {
       // For BCSC card with serial, address comes from the card
-      if (step2Completed && store.bcscSecure.serial) {
+      if (step1Completed && store.bcscSecure.serial) {
         return [t('BCSC.Steps.GetVerificationStep3Subtext1')]
       }
 
-      // Only show address if step 3 is completed
-      if (step3Completed && store.bcscSecure.userMetadata?.address) {
+      // Only show address if step 2 is completed
+      if (step2Completed && store.bcscSecure.userMetadata?.address) {
         return [
           t('BCSC.Steps.GetVerificationStep3Subtext2', {
             address: formatAddressForDisplay(store.bcscSecure.userMetadata.address),
@@ -147,7 +147,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     }
 
     const getStep4Subtext = (): string[] => {
-      if (step5Focused && store.bcscSecure.deviceCodeExpiresAt) {
+      if (step4Focused && store.bcscSecure.deviceCodeExpiresAt) {
         const expirationDate = store.bcscSecure.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
           day: '2-digit',
           month: 'long',
