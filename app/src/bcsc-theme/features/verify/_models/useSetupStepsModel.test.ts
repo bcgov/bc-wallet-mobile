@@ -79,7 +79,6 @@ describe('useSetupStepsModel', () => {
   }
 
   const mockSteps = {
-    nickname: { completed: true, focused: false, subtext: ['Account: Test'] },
     id: {
       completed: true,
       focused: false,
@@ -123,16 +122,6 @@ describe('useSetupStepsModel', () => {
       expect(result.current.stepActions).toBeDefined()
       expect(result.current.handleCheckStatus).toBeDefined()
       expect(result.current.handleCancelVerification).toBeDefined()
-    })
-  })
-
-  describe('stepActions.nickname', () => {
-    it('should navigate to NicknameAccount screen', () => {
-      const { result } = renderHook(() => useSetupStepsModel(mockNavigation), { wrapper: BasicAppContext })
-
-      result.current.stepActions.nickname()
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.NicknameAccount)
     })
   })
 

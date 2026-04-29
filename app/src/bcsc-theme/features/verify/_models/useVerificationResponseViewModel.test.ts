@@ -65,7 +65,7 @@ describe('useVerificationResponseViewModel', () => {
     // Reset mock implementations
     mockUpdateVerified.mockResolvedValue(undefined)
     mockUpdateUserMetadata.mockResolvedValue(undefined)
-    mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
+    mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'TestNickname' })
     mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
     const bifoldMock = jest.mocked(Bifold)
@@ -98,8 +98,8 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
 
@@ -258,7 +258,6 @@ describe('useVerificationResponseViewModel', () => {
       mockUpdateVerified.mockResolvedValue(undefined)
       mockUpdateUserMetadata.mockResolvedValue(undefined)
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-      mockGetCachedIdTokenMetadata.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
@@ -267,11 +266,11 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       // Verify all operations were called in order:
-      // updateUserMetadata → updateRegistration → token refresh → updateVerified
+      // updateUserMetadata → token refresh → updateRegistration → updateVerified
       const calls = [
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
-        mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
         mockGetCachedIdTokenMetadata.mock.invocationCallOrder[0],
+        mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
         mockUpdateVerified.mock.invocationCallOrder[0],
       ]
 
