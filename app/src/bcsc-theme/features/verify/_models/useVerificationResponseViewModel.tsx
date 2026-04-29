@@ -41,7 +41,7 @@ const useVerificationResponseViewModel = () => {
       // force a token exchange so the backend activates the device registration before navigation
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
       // update local store with nickname
-      const nickname = token.family_name || token.given_name // derived nickname
+      const nickname = token.given_name || token.family_name // derived nickname
       updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens
       await handleUpdateRegistration(nickname)
