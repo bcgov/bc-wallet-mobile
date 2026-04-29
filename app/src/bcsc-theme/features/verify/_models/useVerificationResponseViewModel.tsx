@@ -26,7 +26,7 @@ const useVerificationResponseViewModel = () => {
   )
 
   const updateNicknameInLocalStorage = useCallback(
-    async (nickname: string) => {
+    (nickname: string) => {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
     },
