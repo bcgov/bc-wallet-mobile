@@ -4,7 +4,6 @@
     "outDir": "./lib",
     "declaration": true,
     "skipLibCheck": true,
-    "types": ["jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

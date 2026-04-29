@@ -153,7 +153,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <SetupStep
       title={t('BCSC.Steps.Step4')}
       subtext={steps.verify.subtext}
-      isComplete={false} // The user won't see this step completed, they'll be veriified or need to re submit
+      isComplete={false} // The user won't see this step completed, they'll be verified or need to re-submit
       isFocused={steps.verify.focused}
       isDisabled={!steps.email.completed || Boolean(store.bcscSecure.userSubmittedVerificationVideo)}
       onPress={stepActions.verify}
