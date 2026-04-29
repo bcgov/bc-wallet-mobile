@@ -1,8 +1,8 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import HomeHeader from '../home/components/HomeHeader'
+import { BCAnimatedLoadingIcon } from './BCAnimatedLoadingIcon'
 
 export interface LoadingScreenContentProps {
   /**
@@ -20,60 +20,35 @@ export interface LoadingScreenContentProps {
  */
 export const LoadingScreenContent = ({ message }: LoadingScreenContentProps) => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette, Assets } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: Spacing.xxl,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
-    topContainer: {
-      flex: 4,
-      justifyContent: 'flex-end',
-      marginBottom: Spacing.xs,
+    contentContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: Spacing.lg,
     },
-    bottomContainer: {
-      flex: 6,
-      justifyContent: 'space-between',
-      marginTop: Spacing.xl,
+    textContainer: {
+      padding: Spacing.lg,
     },
-    divider: {
-      height: 1,
-      width: '100%',
-      backgroundColor: ColorPalette.brand.primary,
-    },
-    message: {
-      fontSize: 26,
+    text: {
       textAlign: 'center',
-    },
-    logoContainer: {
-      alignSelf: 'center',
-      marginBottom: 30,
-    },
-    bcgovLogo: {
-      width: 150,
-      height: 150,
     },
   })
 
   return (
     <SafeAreaView style={styles.container} testID={testIdWithKey('LoadingScreenContent')}>
-      <View style={styles.topContainer}>
-        <HomeHeader name={t('BCSC.FullTitle')} fontSize={18} />
-      </View>
-
-      <View style={styles.divider} />
-
-      <View style={styles.bottomContainer}>
-        <ThemedText variant="bold" style={styles.message}>
-          {message ?? t('BCSC.Loading.DefaultMessage')}
-        </ThemedText>
-
-        <ActivityIndicator size={'large'} color={ColorPalette.brand.primaryLight} />
-
-        <View style={styles.logoContainer}>
-          <Image source={Assets.img.logoPrimary.src} style={styles.bcgovLogo} testID={testIdWithKey('BCGovLogo')} />
+      <View style={styles.contentContainer}>
+        <BCAnimatedLoadingIcon size={113} />
+        <View style={styles.textContainer}>
+          <ThemedText style={styles.text} variant="headingFour">
+            {message ?? t('BCSC.Loading.DefaultMessage')}
+          </ThemedText>
         </View>
       </View>
     </SafeAreaView>
