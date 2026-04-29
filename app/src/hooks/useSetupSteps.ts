@@ -105,7 +105,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const step1Focused = !step1Completed
     const step2Focused = step1Completed && !step2Completed
     const step3Focused = step2Completed && !step3Completed
-    const step4Focused = step2Completed && step3Completed && !step4Completed
+    const step4Focused = step2Completed && step3Completed
     const step5Focused = step1Completed && store.bcsc.accountSetupType === AccountSetupType.TransferAccount // this is used for the account transfer process
 
     // ---- Subtext generators ----
