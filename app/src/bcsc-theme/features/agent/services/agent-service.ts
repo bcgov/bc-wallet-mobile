@@ -4,6 +4,7 @@ import { BCLocalStorageKeys } from '@/store'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import { BifoldLogger, PersistentStorage } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
@@ -69,7 +70,7 @@ export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefin
  * @throws {AppError} `AGENT_INITIALIZATION_ERROR` (2901) when `mediatorUrl` is empty.
  * @returns The configured (but uninitialized) `Agent` instance.
  */
-export const buildAgent = (opts: BuildAgentOptions): Agent => {
+export const buildAgent = (opts: BuildAgentOptions): BCAgent => {
   if (!opts.mediatorUrl) {
     throw AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, {
       cause: new Error('Mediator URL is required to build agent'),
@@ -105,7 +106,7 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
     }),
   }
 
-  return new Agent(agentOptions)
+  return new Agent(agentOptions) as BCAgent
 }
 
 /**
@@ -121,7 +122,7 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
  * @param logger - Logger used to record failures.
  * @returns The same `agent` once re-initialized, or `undefined` if reopen failed.
  */
-export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<Agent | undefined> => {
+export const restartAgent = async (agent: BCAgent, logger: BifoldLogger): Promise<BCAgent | undefined> => {
   try {
     await agent.initialize()
     return agent
@@ -148,7 +149,7 @@ export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<
  * @param logger - Logger used to record per-item failures.
  */
 export const warmCache = async (
-  agent: Agent,
+  agent: BCAgent,
   credDefs: CachedItemId[],
   schemas: CachedItemId[],
   cachedLedgers: IndyVdrPoolConfig[] | undefined,
@@ -224,7 +225,7 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
  * @param agent - The agent to shut down.
  * @param logger - Logger used to record shutdown errors.
  */
-export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise<void> => {
+export const shutdownAgent = async (agent: BCAgent, logger: BifoldLogger): Promise<void> => {
   try {
     await agent.shutdown()
   } catch (error) {

@@ -26,11 +26,11 @@ import {
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
-import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
+import { BCAgent } from './src/utils/bc-agent-modules'
 
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -219,7 +219,7 @@ export class AppContainer implements Container {
       enablePushNotifications: {
         status: status,
         setup: setup,
-        toggle: async (state: boolean, agent: Agent) => {
+        toggle: async (state: boolean, agent: BCAgent) => {
           if (state) {
             await activate(agent)
           } else {

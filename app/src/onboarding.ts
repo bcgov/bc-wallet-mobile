@@ -1,6 +1,7 @@
 import { Config, OnboardingTask, Screens } from '@bifold/core'
-import { Agent } from '@credo-ts/core'
+
 import { BCState } from './store'
+import { BCAgent } from './utils/bc-agent-modules'
 
 export const isPrefaceComplete = (didSeePreface: boolean, showPreface: boolean): OnboardingTask => {
   return { name: Screens.Preface, completed: (didSeePreface && showPreface) || !showPreface }
@@ -48,7 +49,7 @@ export const isAuthenticationComplete = (didCreatePIN: boolean, didAuthenticate:
   return { name: Screens.EnterPIN, completed: didAuthenticate || !didCreatePIN }
 }
 
-export const isAgentInitializationComplete = (agent: Agent | null): OnboardingTask => {
+export const isAgentInitializationComplete = (agent: BCAgent | null): OnboardingTask => {
   return { name: Screens.Splash, completed: !!agent }
 }
 
@@ -56,7 +57,7 @@ export const generateOnboardingWorkflowSteps = (
   state: BCState,
   config: Config,
   termsVersion: number,
-  agent: Agent | null
+  agent: BCAgent | null
 ): Array<OnboardingTask> => {
   const {
     didSeePreface,

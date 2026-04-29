@@ -6,6 +6,7 @@ jest.mock('@/store', () => ({
 }))
 
 import { Agent } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import {
   DidCommConnectionRecord,
   DidCommConnectionRepository,
@@ -58,12 +59,12 @@ const createMockPoolService = () => ({
   }),
 })
 
-const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
+const createMockAgent = (overrides: Partial<BCAgent> = {}): BCAgent => {
   const { connectionRepository, mediationRepository, outOfBandRepository } = createMockRepositories()
 
   const poolService = createMockPoolService()
 
-  const agent: Partial<Agent> = {
+  const agent: Partial<BCAgent> = {
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
 
@@ -127,7 +128,7 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => {
   return {
     ...agent,
     ...overrides,
-  } as Agent
+  } as BCAgent
 }
 
 // ---- MOCKS ----

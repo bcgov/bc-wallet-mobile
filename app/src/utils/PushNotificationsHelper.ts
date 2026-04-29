@@ -1,5 +1,5 @@
 import { PersistentStorage } from '@bifold/core'
-import { Agent } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import {
   DidCommConnectionRecord,
   DidCommConnectionService,
@@ -117,7 +117,7 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
  * Helper Functions Section
  */
 
-const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRecord | undefined> => {
+const getMediatorConnection = async (agent: BCAgent): Promise<DidCommConnectionRecord | undefined> => {
   const connections: DidCommConnectionRecord[] = await agent.didcomm.connections.getAll()
   const mediators = connections.filter((r) => r.connectionTypes.includes(DidCommConnectionType.Mediator))
   if (mediators.length < 1) {
@@ -168,7 +168,7 @@ const setHasPromptedForNotifications = async (): Promise<void> => {
  * @param agent - The active aries agent
  * @returns {Promise<boolean>}
  */
-const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => {
+const isMediatorCapable = async (agent: BCAgent): Promise<boolean | undefined> => {
   if (Config.MEDIATOR_USE_PUSH_NOTIFICATIONS !== 'true') {
     return false
   }
@@ -237,7 +237,7 @@ const isEnabled = async (): Promise<boolean> => {
  * @param blankDeviceToken - If true, will send an empty string as the device token to the mediator
  * @returns {Promise<void>}
  */
-const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<void> => {
+const setDeviceInfo = async (agent: BCAgent, blankDeviceToken = false): Promise<void> => {
   let token
   if (blankDeviceToken) {
     token = ''
@@ -297,10 +297,10 @@ const setup = async (): Promise<NotificationPermissionStatus> => {
   return result
 }
 
-const activate = async (agent: Agent): Promise<void> => {
+const activate = async (agent: BCAgent): Promise<void> => {
   await setDeviceInfo(agent)
 }
-const deactivate = async (agent: Agent): Promise<void> => {
+const deactivate = async (agent: BCAgent): Promise<void> => {
   await setDeviceInfo(agent, true)
 }
 

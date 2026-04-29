@@ -1,5 +1,6 @@
 import { AttestationRestrictions } from '@/constants'
 import { getErrorDefinition } from '@/errors'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import {
   AbstractBifoldLogger,
   AttestationEventTypes,
@@ -152,7 +153,7 @@ export const isOfferingAttestation = (credDefId: string, restrictions: Attestati
 export class AttestationMonitor implements AttestationMonitorI {
   private proofSubscription?: AgentSubscription
   private offerSubscription?: AgentSubscription
-  private agent?: Agent
+  private agent?: BCAgent
   private options: AttestationMonitorOptions
   private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
@@ -181,7 +182,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return this._shouldHandleProofRequestAutomatically
   }
 
-  public start(agent: Agent): void {
+  public start(agent: BifoldAgent): void {
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
@@ -213,7 +214,12 @@ export class AttestationMonitor implements AttestationMonitorI {
     this.startWorkflow()
 
     try {
-      const invitationUrl = await invitationUrlFromRestrictions(this._proofRequest, this.agent, AttestationRestrictions)
+      // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+      const invitationUrl = await invitationUrlFromRestrictions(
+        this._proofRequest,
+        this.agent as Agent,
+        AttestationRestrictions
+      )
       if (!invitationUrl) {
         throw new BifoldError(
           'Attestation Service',
@@ -329,7 +335,7 @@ export class AttestationMonitor implements AttestationMonitorI {
       if (credential.state === DidCommCredentialState.OfferReceived) {
         this.log?.info('Accepting credential offer')
         await this.agent.didcomm.credentials.acceptOffer({
-          credentialRecordId: credential.id,
+          credentialExchangeRecordId: credential.id,
         })
       }
 
@@ -379,7 +385,8 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     try {
       // 1. Is the proof requesting an attestation credential
-      if (!(await isProofRequestingAttestation(proof, this.agent, AttestationRestrictions))) {
+      // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+      if (!(await isProofRequestingAttestation(proof, this.agent as Agent, AttestationRestrictions))) {
         return
       }
 
@@ -393,7 +400,8 @@ export class AttestationMonitor implements AttestationMonitorI {
 
       // 2. Does the wallet have a valid attestation credential that will
       // satisfy the proof request?
-      const required = await this.attestationCredentialRequired(this.agent, proof.id)
+      // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+      const required = await this.attestationCredentialRequired(this.agent as Agent, proof.id)
 
       // 3. If yes, do nothing
       if (!required) {
@@ -444,10 +452,11 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
 
     this.log?.info('Removing any existing duplicate invitations if they exist')
-    await removeExistingInvitationsById(this.agent, invite.id)
+    // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+    await removeExistingInvitationsById(this.agent as Agent, invite.id)
 
     this.log?.info('Receiving invitation')
-    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite)
+    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, { label: 'BC Wallet' })
     if (!connectionRecord) {
       throw new BifoldError(
         'Attestation Service',
@@ -474,7 +483,8 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     this.log?.info('Requesting nonce from controller')
 
-    const requestNonceCb = await requestNonceDrpc(this.agent, connection)
+    // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+    const requestNonceCb = await requestNonceDrpc(this.agent as Agent, connection)
     const nonceResponse = await requestNonceCb(defaultResponseTimeoutInMs)
 
     if (!nonceResponse) {
@@ -523,7 +533,12 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     this.log?.info('Requesting attestation credential from controller')
 
-    const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
+    // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+    const requestAttestationCb = await requestAttestationDrpc(
+      this.agent as unknown as BCAgent,
+      connection,
+      attestationObj
+    )
     const attestationResponse = await requestAttestationCb(defaultResponseTimeoutInMs)
 
     if (!attestationResponse) {

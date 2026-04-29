@@ -1,6 +1,6 @@
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
-import { getBCAgentModules } from '@/utils/bc-agent-modules'
+import { BCAgent, getBCAgentModules } from '@/utils/bc-agent-modules'
 import {
   createLinkSecretIfRequired,
   PersistentStorage,
@@ -43,8 +43,8 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 }
 
 const useBCAgentSetup = () => {
-  const [agent, setAgent] = useState<Agent | null>(null)
-  const agentInstanceRef = useRef<Agent | null>(null)
+  const [agent, setAgent] = useState<BCAgent | null>(null)
+  const agentInstanceRef = useRef<BCAgent | null>(null)
   const [store] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
@@ -55,7 +55,7 @@ const useBCAgentSetup = () => {
   ])
 
   const refreshAttestationMonitor = useCallback(
-    (agent: Agent) => {
+    (agent: BCAgent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
     },
@@ -63,7 +63,7 @@ const useBCAgentSetup = () => {
   )
 
   const restartExistingAgent = useCallback(
-    async (agent: Agent): Promise<Agent | undefined> => {
+    async (agent: BCAgent): Promise<BCAgent | undefined> => {
       try {
         await agent.initialize()
       } catch (error) {
@@ -79,7 +79,7 @@ const useBCAgentSetup = () => {
   )
 
   const createNewAgent = useCallback(
-    async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
+    async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<BCAgent> => {
       const options = {
         label: store.preferences.walletName || 'BC Wallet',
         config: {
@@ -108,13 +108,13 @@ const useBCAgentSetup = () => {
 
       logger.info(store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled')
 
-      return new Agent(options)
+      return new Agent(options) as BCAgent
     },
     [logger, store.developer.enableProxy, store.preferences.walletName]
   )
 
   const warmUpCache = useCallback(
-    async (newAgent: Agent, cachedLedgers?: IndyVdrPoolConfig[]) => {
+    async (newAgent: BCAgent, cachedLedgers?: IndyVdrPoolConfig[]) => {
       const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
       if (!cachedLedgers) {
         // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
@@ -160,7 +160,7 @@ const useBCAgentSetup = () => {
     [credDefs, schemas]
   )
 
-  const waitForConnectionCompleted = async (agent: Agent, connection: DidCommConnectionRecord) => {
+  const waitForConnectionCompleted = async (agent: BCAgent, connection: DidCommConnectionRecord) => {
     if (connection.state === DidCommDidExchangeState.Completed) {
       return connection
     }
@@ -193,7 +193,7 @@ const useBCAgentSetup = () => {
     })
   }
 
-  const updateLastSeen = useCallback(async (agent: Agent) => {
+  const updateLastSeen = useCallback(async (agent: BCAgent) => {
     const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
 
     const connectionRecords = await connectionRepository.getAll(agent.context)
@@ -207,7 +207,7 @@ const useBCAgentSetup = () => {
   }, [])
 
   const recoverMediationIfExpired = useCallback(
-    async (agent: Agent, mediatorUrl: string, originalError: Error) => {
+    async (agent: BCAgent, mediatorUrl: string, originalError: Error) => {
       logger.info('Resetting mediation state and creating a new connection...')
 
       try {
@@ -279,6 +279,7 @@ const useBCAgentSetup = () => {
         logger.info('Mediation state cleared. Creating new mediation connection...')
 
         const { connectionRecord } = await agent.didcomm.oob.receiveInvitationFromUrl(mediatorUrl, {
+          label: store.preferences.walletName || 'BC Wallet',
           reuseConnection: false,
           autoAcceptConnection: true,
           autoAcceptInvitation: true,
@@ -325,7 +326,7 @@ const useBCAgentSetup = () => {
 
       logger.info('Mediation re-established successfully')
     },
-    [logger]
+    [logger, store.preferences.walletName]
   )
 
   const initializeAgent = useCallback(
@@ -372,7 +373,8 @@ const useBCAgentSetup = () => {
       await warmUpCache(newAgent, cachedLedgers)
 
       logger.info('Creating link secret if required...')
-      await createLinkSecretIfRequired(newAgent)
+      // BCAgent and BifoldAgent have incompatible module generics; cast to credo Agent
+      await createLinkSecretIfRequired(newAgent as Agent)
 
       if (store.preferences.usePushNotifications) {
         logger.info('Activating push notifications...')

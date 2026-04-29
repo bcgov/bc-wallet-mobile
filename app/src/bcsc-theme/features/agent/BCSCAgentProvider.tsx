@@ -1,4 +1,4 @@
-import { Agent } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import React, { createContext, PropsWithChildren, useContext, useMemo } from 'react'
 
 import { AppError } from '@/errors'
@@ -6,7 +6,7 @@ import { AppError } from '@/errors'
 import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 export interface BCSCAgentContextValue {
-  agent: Agent | null
+  agent: BCAgent | null
   loading: boolean
   error: AppError | null
   retry: () => void

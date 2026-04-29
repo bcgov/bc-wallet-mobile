@@ -1,9 +1,9 @@
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import { activate } from '@/utils/PushNotificationsHelper'
-import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
-import { Agent } from '@credo-ts/core'
+import { Agent, createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
@@ -13,7 +13,7 @@ import { buildAgent, loadCachedLedgers, restartAgent, shutdownAgent, warmCache }
 export type AgentSetupStatus = 'idle' | 'initializing' | 'ready' | 'error'
 
 export interface AgentSetupResult {
-  agent: Agent | null
+  agent: BCAgent | null
   status: AgentSetupStatus
   error: AppError | null
   retry: () => void
@@ -30,10 +30,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   ])
 
   const [status, setStatus] = useState<AgentSetupStatus>('idle')
-  const [agent, setAgent] = useState<Agent | null>(null)
+  const [agent, setAgent] = useState<BCAgent | null>(null)
   const [error, setError] = useState<AppError | null>(null)
   const [retryCount, setRetryCount] = useState(0)
-  const agentRef = useRef<Agent | null>(null)
+  const agentRef = useRef<BCAgent | null>(null)
   const initializingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
@@ -46,7 +46,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const usePushNotifications = store.preferences.usePushNotifications
 
   const refreshAttestationMonitor = useCallback(
-    (liveAgent: Agent) => {
+    (liveAgent: BCAgent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(liveAgent)
     },
@@ -81,7 +81,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     setError(null)
 
     let cancelled = false
-    let inFlightAgent: Agent | undefined
+    let inFlightAgent: BCAgent | undefined
 
     const run = async (): Promise<void> => {
       try {
@@ -147,7 +147,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         if (cancelled) {
           return
         }
-        await createLinkSecretIfRequired(inFlightAgent)
+        // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+        await createLinkSecretIfRequired(inFlightAgent as Agent)
         if (cancelled) {
           return
         }

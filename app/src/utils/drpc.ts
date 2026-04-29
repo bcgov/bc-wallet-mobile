@@ -1,4 +1,4 @@
-import { Agent } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import { DrpcRequest, DrpcResponseObject } from '@credo-ts/drpc'
 
@@ -34,18 +34,18 @@ const DrpcMethod = {
 } as const
 
 export const sendDrpcRequest = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionId: string,
   request: Partial<DrpcRequest>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<DrpcResponsePromise<any>> => {
   const requestWithId = { jsonrpc: '2.0', id: Math.floor(Math.random() * 900000) + 100000, ...request }
 
-  return await agent.modules.drpc.sendRequest(connectionId, requestWithId)
+  return await agent.modules.drpc.sendRequest(connectionId, requestWithId as DrpcRequest)
 }
 
 export const requestNonceDrpc = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionRecord: DidCommConnectionRecord
 ): Promise<DrpcResponsePromise<NonceDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
@@ -56,7 +56,7 @@ export const requestNonceDrpc = async (
 }
 
 export const requestAttestationDrpc = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionRecord: DidCommConnectionRecord,
   params: AttestationRequestParams
 ): Promise<DrpcResponsePromise<AttestationDrpcResponse>> => {

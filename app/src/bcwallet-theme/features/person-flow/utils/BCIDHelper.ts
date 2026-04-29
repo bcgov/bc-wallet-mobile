@@ -1,13 +1,8 @@
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError, ErrorRegistry } from '@/errors'
-import {
-  Agent,
-  BifoldError,
-  EventTypes as BifoldEventTypes,
-  BifoldLogger,
-  removeExistingInvitationsById,
-} from '@bifold/core'
-import { DidRepository } from '@credo-ts/core'
+import { BCAgent } from '@/utils/bc-agent-modules'
+import { BifoldError, EventTypes as BifoldEventTypes, BifoldLogger, removeExistingInvitationsById } from '@bifold/core'
+import { Agent, DidRepository } from '@credo-ts/core'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
@@ -45,7 +40,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
   return !credentialDefinitionIDs.some((i) => trustedPersonCredentialIssuerRe.test(i))
 }
 
-export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string): Promise<WellKnownAgentDetails> => {
+export const connectToIASAgent = async (agent: BCAgent, iasAgentInviteUrl: string): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
   const invite = await agent.didcomm.oob.parseInvitation(iasAgentInviteUrl)
@@ -54,9 +49,10 @@ export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string)
     throw AppError.fromErrorDefinition(ErrorRegistry.PARSE_INVITATION_ERROR)
   }
 
-  await removeExistingInvitationsById(agent, invite.id)
+  // BCAgent and BifoldAgent have incompatible module generics; cast as base Agent
+  await removeExistingInvitationsById(agent as Agent, invite.id)
 
-  const record = await agent.didcomm.oob.receiveInvitation(invite)
+  const record = await agent.didcomm.oob.receiveInvitation(invite, { label: 'BC Wallet' })
 
   if (!record) {
     throw AppError.fromErrorDefinition(ErrorRegistry.RECEIVE_INVITATION_ERROR)
