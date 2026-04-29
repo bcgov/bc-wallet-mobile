@@ -36,7 +36,7 @@ const useVerificationResponseViewModel = () => {
   const handleAccountSetup = useCallback(async () => {
     setIsSettingUpAccount(true)
     try {
-      // this cleans up old metadata from the verification process (photos, address ect.)
+      // this cleans up old metadata from the verification process (photos, address etc.)
       await updateUserMetadata(null)
       // force a token exchange so the backend activates the device registration before navigation
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
