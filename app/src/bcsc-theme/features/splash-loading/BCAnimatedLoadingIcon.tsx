@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Animated } from 'react-native'
 import Svg, { ClipPath, Defs, G, Mask, Path, Rect } from 'react-native-svg'
 
 const ANIMATION_DURATION_MS = 2000
+const WAVE_WIDTH = 118
 const LIGHT_BLUE_WATER = '#76BAFF'
 const DARK_BLUE_MOUNTAINS = '#234075'
 const LIGHT_YELLOW_SKY = '#F9C462'
@@ -18,13 +19,12 @@ interface BCAnimatedLoadingIconProps {
 /**
  * Renders the BCAnimatedLoadingIcon component, which displays an animated loading icon.
  *
- * @param {BCAnimatedLoadingIconProps} props - The properties for the BCLoadingAnimationIcon component, including the size of the icon.
+ * @param {BCAnimatedLoadingIconProps} props - The properties for the BCAnimatedLoadingIcon component, including the size of the icon.
  * @returns The BCAnimatedLoadingIcon component.
  */
 export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
   const skyAnimation = useRef(new Animated.Value(0)).current
   const waterAnimation = useRef(new Animated.Value(0)).current
-  const [waterTranslation, setWaterTranslation] = useState(0)
 
   const skyColor = skyAnimation.interpolate({
     inputRange: [0, 1],
@@ -32,44 +32,36 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
   })
 
   useEffect(() => {
-    const waterListener = waterAnimation.addListener(({ value }) => {
-      setWaterTranslation(value)
-    })
-
     Animated.loop(
       Animated.sequence([
         // Move one wave left and change sky color to dark blue
         Animated.parallel([
           Animated.timing(waterAnimation, {
-            toValue: -118,
+            toValue: -WAVE_WIDTH,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(skyAnimation, {
             toValue: 1,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]),
         // Move one wave left and change sky color back to light yellow
         Animated.parallel([
           Animated.timing(waterAnimation, {
-            toValue: -236,
+            toValue: -2 * WAVE_WIDTH,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
           Animated.timing(skyAnimation, {
             toValue: 0,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }),
         ]),
       ])
     ).start()
-
-    return () => {
-      waterAnimation.removeListener(waterListener)
-    }
   }, [skyAnimation, waterAnimation])
 
   return (
@@ -95,14 +87,14 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
           />
         </Mask>
         <G mask="url(#mask0_369_1738)">
-          <AnimatedG transform={[{ translateX: waterTranslation }]}>
+          <AnimatedG transform={[{ translateX: waterAnimation }]}>
             <Path
               d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
               fill={LIGHT_BLUE_WATER}
             />
             {/* Duplicate the wave path to create a continuous wave effect */}
             <Path
-              transform="translate(236, 0)"
+              transform={`translate(${WAVE_WIDTH * 2}, 0)`}
               d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
               fill={LIGHT_BLUE_WATER}
             />

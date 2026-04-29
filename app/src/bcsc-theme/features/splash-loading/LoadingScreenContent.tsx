@@ -14,7 +14,7 @@ export interface LoadingScreenContentProps {
 }
 
 /**
- * Renders the LoadingScreenContent component with a message and an activity indicator.
+ * Renders the LoadingScreenContent component with a message and a loading icon.
  *
  * @returns The LoadingScreenContent component.
  */
