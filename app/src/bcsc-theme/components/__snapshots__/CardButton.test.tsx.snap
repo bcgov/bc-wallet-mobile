@@ -50,19 +50,49 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
   <View
     style={
       {
-        "gap": 8,
+        "alignItems": "center",
+        "flexDirection": "row",
+        "gap": 16,
       }
     }
   >
     <View
       style={
         {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "justifyContent": "space-between",
+          "flex": 1,
+          "gap": 4,
         }
       }
     >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "color": "#313132",
+                "fontSize": undefined,
+              },
+            ]
+          }
+        >
+          Card Title
+        </Text>
+      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -70,35 +100,18 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
-              "fontWeight": "bold",
+              "fontSize": 18,
+              "fontWeight": "normal",
             },
-            undefined,
+            {
+              "fontSize": 16,
+            },
           ]
         }
       >
-        Card Title
+        Disabled card
       </Text>
     </View>
-    <Text
-      maxFontSizeMultiplier={2}
-      style={
-        [
-          {
-            "color": "#313132",
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          },
-          {
-            "fontSize": 18,
-            "lineHeight": 30,
-          },
-        ]
-      }
-    >
-      Disabled card
-    </Text>
   </View>
 </View>
 `;
@@ -151,19 +164,72 @@ exports[`CardButton Component renders correctly with subtext and end icon 1`] = 
   <View
     style={
       {
-        "gap": 8,
+        "alignItems": "center",
+        "flexDirection": "row",
+        "gap": 16,
       }
     }
   >
     <View
       style={
         {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "justifyContent": "space-between",
+          "flex": 1,
+          "gap": 4,
         }
       }
     >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "color": "#313132",
+                "fontSize": undefined,
+              },
+            ]
+          }
+        >
+          Card Title
+        </Text>
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": undefined,
+                "fontSize": 32,
+              },
+              {
+                "color": "#313132",
+              },
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -171,58 +237,18 @@ exports[`CardButton Component renders correctly with subtext and end icon 1`] = 
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
-              "fontWeight": "bold",
-            },
-            undefined,
-          ]
-        }
-      >
-        Card Title
-      </Text>
-      <Text
-        allowFontScaling={false}
-        selectable={false}
-        style={
-          [
-            {
-              "color": undefined,
-              "fontSize": 32,
-            },
-            {
-              "color": "#313132",
-            },
-            {
-              "fontFamily": "Material Icons",
-              "fontStyle": "normal",
+              "fontSize": 18,
               "fontWeight": "normal",
             },
-            {},
+            {
+              "fontSize": 16,
+            },
           ]
         }
       >
-        
+        This is a subtext
       </Text>
     </View>
-    <Text
-      maxFontSizeMultiplier={2}
-      style={
-        [
-          {
-            "color": "#313132",
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 18,
-            "fontWeight": "normal",
-          },
-          {
-            "fontSize": 18,
-            "lineHeight": 30,
-          },
-        ]
-      }
-    >
-      This is a subtext
-    </Text>
   </View>
 </View>
 `;
@@ -275,35 +301,49 @@ exports[`CardButton Component renders correctly with title only 1`] = `
   <View
     style={
       {
-        "gap": 8,
+        "alignItems": "center",
+        "flexDirection": "row",
+        "gap": 16,
       }
     }
   >
     <View
       style={
         {
-          "alignItems": "center",
-          "flexDirection": "row",
-          "justifyContent": "space-between",
+          "flex": 1,
+          "gap": 4,
         }
       }
     >
-      <Text
-        maxFontSizeMultiplier={2}
+      <View
         style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
-              "fontWeight": "bold",
-            },
-            undefined,
-          ]
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "space-between",
+          }
         }
       >
-        Card Title
-      </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "color": "#313132",
+                "fontSize": undefined,
+              },
+            ]
+          }
+        >
+          Card Title
+        </Text>
+      </View>
     </View>
   </View>
 </View>

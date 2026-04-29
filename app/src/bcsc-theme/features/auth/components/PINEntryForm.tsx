@@ -1,3 +1,5 @@
+import { Callout } from '@/bcsc-theme/components/Callout'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
@@ -20,6 +22,7 @@ import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export interface PINEntryResult {
   success: boolean
@@ -72,7 +75,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const { register } = useRegistrationService()
   const pin2Ref = useRef<TextInput>(null)
 
-  const { Spacing } = useTheme()
+  const { Spacing, TextTheme } = useTheme()
 
   // Helper to get translation with prefix
   const tWithPrefix = useCallback((key: string) => t(`${translationPrefix}.${key}`), [t, translationPrefix])
@@ -189,43 +192,27 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   })
 
   const controls = (
-    <>
-      <View style={styles.pinCheckboxRow}>
-        <CheckBoxRow
-          title={tWithPrefix('IUnderstand')}
-          accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
-          testID={testIdWithKey('IUnderstand')}
-          checked={checked}
-          onPress={() => {
-            setCheckboxError(checked)
-            setChecked(!checked)
-          }}
-          titleStyle={styles.pinCheckboxTitle}
-        />
-        {checkboxError ? (
-          <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
-            {tWithPrefix('MustCheckBox')}
-          </ThemedText>
-        ) : null}
-      </View>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
-        title={t('Global.Continue')}
-        accessibilityLabel={a11yLabel(t('Global.Continue'))}
-        testID={testIdWithKey('Continue')}
+        title={tWithPrefix('CreatePINShort')}
+        accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
+        testID={testIdWithKey('CreatePIN')}
         disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
       >
         {loading && <ButtonLoading />}
       </Button>
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper padded keyboardActive controls={controls}>
+    <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={styles.pinEntryContent}>
         <View style={styles.pinFormRow}>
-          <ThemedText variant={'bold'}>{tWithPrefix('CreatePIN')}</ThemedText>
+          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            {tWithPrefix('CreatePIN')}
+          </ThemedText>
           <PINInput
             onPINChange={handlePIN1Change}
             onPINComplete={handlePIN1Complete}
@@ -233,9 +220,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             testIDKey="PINInput1"
             accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
           />
+          <ThemedText variant={'labelSubtitle'}>{tWithPrefix('CreatePINExample')}</ThemedText>
         </View>
         <View style={styles.pinFormRow}>
-          <ThemedText variant={'bold'}>{tWithPrefix('ConfirmPIN')}</ThemedText>
+          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            {tWithPrefix('ConfirmPIN')}
+          </ThemedText>
           <PINInput
             ref={pin2Ref}
             onPINChange={handlePIN2Change}
@@ -245,9 +235,35 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             accessibilityLabel={a11yLabel(tWithPrefix('ConfirmPIN'))}
           />
         </View>
-        <View style={styles.pinReminder}>
-          <ThemedText variant={'bold'}>{tWithPrefix('RememberPIN')}</ThemedText>
-          <ThemedText>{tWithPrefix('RememberPINDescription')}</ThemedText>
+        <Callout>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, marginBottom: Spacing.sm }}>
+            <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+              {tWithPrefix('ThisPINIsUnique')}
+            </ThemedText>
+            <Icon name="information-outline" size={24} color={TextTheme.headingFour.color} />
+          </View>
+          <ThemedText>
+            <ThemedText variant={'bold'}>{tWithPrefix('RememberPINWarning')}</ThemedText>{' '}
+            {tWithPrefix('RememberPINDescription')}
+          </ThemedText>
+        </Callout>
+        <View style={styles.pinCheckboxRow}>
+          <CheckBoxRow
+            title={tWithPrefix('IUnderstand')}
+            accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
+            testID={testIdWithKey('IUnderstand')}
+            checked={checked}
+            onPress={() => {
+              setCheckboxError(checked)
+              setChecked(!checked)
+            }}
+            titleStyle={styles.pinCheckboxTitle}
+          />
+          {checkboxError ? (
+            <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
+              {tWithPrefix('MustCheckBox')}
+            </ThemedText>
+          ) : null}
         </View>
       </View>
     </ScreenWrapper>

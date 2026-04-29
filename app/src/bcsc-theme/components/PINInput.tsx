@@ -30,7 +30,7 @@ export const PINInput = ({
 }: PINInputProps) => {
   const { t } = useTranslation()
   const [pin, setPin] = useState('')
-  const { ColorPalette, Spacing, PINInputTheme } = useTheme()
+  const { ColorPalette, Spacing, PINInputTheme, TextTheme } = useTheme()
   const [isVisible, setIsVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const styles = StyleSheet.create({
@@ -40,7 +40,7 @@ export const PINInput = ({
     inputContainer: {
       flexDirection: 'row',
       borderWidth: 2,
-      borderColor: isFocused ? PINInputTheme.focussedCell.borderColor : PINInputTheme.cell.backgroundColor,
+      borderColor: isFocused ? PINInputTheme.focussedCell.borderColor : PINInputTheme.cell.borderColor,
       borderRadius: Spacing.xs,
       backgroundColor: PINInputTheme.cell.backgroundColor,
     },
@@ -103,7 +103,7 @@ export const PINInput = ({
           accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
           accessibilityRole="button"
         >
-          <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={ColorPalette.grayscale.darkGrey} />
+          <Icon name={isVisible ? 'eye' : 'eye-off'} size={32} color={TextTheme.headingFour.color} />
         </TouchableOpacity>
       </View>
       {errorMessage && <ThemedText variant={'inlineErrorText'}>{errorMessage}</ThemedText>}

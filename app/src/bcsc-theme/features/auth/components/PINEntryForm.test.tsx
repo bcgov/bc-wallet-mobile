@@ -52,8 +52,9 @@ describe('PINEntryForm', () => {
 
     expect(tree.getByText('BCSC.PIN.CreatePIN')).toBeTruthy()
     expect(tree.getByText('BCSC.PIN.ConfirmPIN')).toBeTruthy()
-    expect(tree.getByText('BCSC.PIN.RememberPIN')).toBeTruthy()
-    expect(tree.getByText('BCSC.PIN.RememberPINDescription')).toBeTruthy()
+    expect(tree.getByText('BCSC.PIN.ThisPINIsUnique')).toBeTruthy()
+    expect(tree.getByText(/BCSC\.PIN\.RememberPINWarning/)).toBeTruthy()
+    expect(tree.getByText(/BCSC\.PIN\.RememberPINDescription/)).toBeTruthy()
     expect(tree).toMatchSnapshot()
   })
 
@@ -91,7 +92,7 @@ describe('PINEntryForm', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText('Global.Continue')).toBeTruthy()
+    expect(tree.getByText('BCSC.PIN.CreatePINShort')).toBeTruthy()
   })
 
   it('button is disabled when PINs are not entered and checkbox unchecked', () => {
@@ -103,7 +104,7 @@ describe('PINEntryForm', () => {
       </BasicAppContext>
     )
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
   })
 
@@ -131,7 +132,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -159,7 +160,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -186,7 +187,7 @@ describe('PINEntryForm', () => {
     fireEvent.press(checkbox)
 
     // Button should remain disabled when PINs are too short
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
@@ -207,7 +208,7 @@ describe('PINEntryForm', () => {
 
     // Don't check the checkbox
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -239,7 +240,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -267,7 +268,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -296,7 +297,7 @@ describe('PINEntryForm', () => {
     // Button is disabled so we need to bypass by triggering validation directly
     // This is simulating the scenario where the user could somehow submit
     // Actually, the button should be disabled, so let's verify that
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
@@ -318,7 +319,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()

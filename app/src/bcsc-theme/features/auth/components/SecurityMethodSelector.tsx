@@ -1,4 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import {
   Button,
@@ -79,6 +80,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const styles = StyleSheet.create({
     scrollContainer: {
       gap: Spacing.lg,
+      padding: Spacing.lg,
     },
     currentMethodContainer: {
       flexDirection: 'row',
@@ -151,11 +153,22 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const deviceAuthSubtext =
     isSettingsContext && isCurrentMethodDeviceAuth
       ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-      : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName })
+      : isSettingsContext
+        ? t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName })
+        : t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext')
   const pinSubtext =
     isSettingsContext && !isCurrentMethodDeviceAuth
       ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
       : t('BCSC.Onboarding.SecureAppPINSubtext')
+  const headerText = isSettingsContext
+    ? t('BCSC.Onboarding.SecureAppHeader')
+    : t('BCSC.Onboarding.SecureAppOnboardingHeader')
+  const contentText = isSettingsContext
+    ? t('BCSC.Onboarding.SecureAppContent')
+    : t('BCSC.Onboarding.SecureAppOnboardingContent')
+  const deviceAuthTitle = isSettingsContext
+    ? t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })
+    : t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')
 
   // Current method indicator (only shown in settings context)
   const currentMethodIndicator = isSettingsContext ? (
@@ -171,7 +184,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   // Controls for when device auth is NOT available
   const controlsForNoDeviceAuth = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.Onboarding.SecureAppPINTitle')}
@@ -179,14 +192,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         onPress={onPINPress}
         testID={testIdWithKey('ChoosePINButton')}
       />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title={t('BCSC.Onboarding.LearnMore')}
-        accessibilityLabel={t('BCSC.Onboarding.LearnMore')}
-        onPress={onLearnMorePress}
-        testID={testIdWithKey('LearnMoreButton')}
-      />
-    </>
+    </ControlContainer>
   )
 
   if (isLoading) {
@@ -200,18 +206,21 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   // When device auth is available, show both options
   if (isDeviceAuthAvailable) {
     return (
-      <ScreenWrapper scrollViewContainerStyle={styles.scrollContainer}>
-        <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
-        <ThemedText>{t('BCSC.Onboarding.SecureAppContent')}</ThemedText>
+      <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer}>
+        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+          {headerText}
+        </ThemedText>
+        <ThemedText>{contentText}</ThemedText>
 
         {/* Show current method indicator (settings only) */}
         {currentMethodIndicator}
 
         {/* Device Auth Option */}
         <CardButton
-          title={t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })}
+          title={deviceAuthTitle}
           testID={testIdWithKey('ChooseDeviceAuthButton')}
           subtext={deviceAuthSubtext}
+          startIcon={isSettingsContext ? undefined : 'fingerprint'}
           onPress={handleDeviceAuthentication}
           disabled={isSettingsContext && isCurrentMethodDeviceAuth}
         />
@@ -221,25 +230,30 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
           testID={testIdWithKey('ChoosePINButton')}
           subtext={pinSubtext}
+          startIcon={isSettingsContext ? undefined : 'dialpad'}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />
 
-        {/* Learn More */}
-        <CardButton
-          title={t('BCSC.Onboarding.LearnMore')}
-          testID={testIdWithKey('LearnMoreButton')}
-          endIcon="open-in-new"
-          onPress={onLearnMorePress}
-        />
+        {/* Learn More (settings only — onboarding wireframe omits it) */}
+        {isSettingsContext ? (
+          <CardButton
+            title={t('BCSC.Onboarding.LearnMore')}
+            testID={testIdWithKey('LearnMoreButton')}
+            endIcon="open-in-new"
+            onPress={onLearnMorePress}
+          />
+        ) : null}
       </ScreenWrapper>
     )
   }
 
   // When device auth is NOT available
   return (
-    <ScreenWrapper padded scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
-      <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
+    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
+      <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+        {headerText}
+      </ThemedText>
 
       {/* Show current method indicator (settings only) */}
       {currentMethodIndicator}

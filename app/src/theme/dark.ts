@@ -51,4 +51,6 @@ export const DarkTheme = createAppTheme({
   tertiaryButtonBackground: GrayscaleColors.white,
   tabBarBackground: '#252423',
   tabBarIcon: DARK_BLUE,
+  pinInputBorder: GrayscaleColors.lightGrey,
+  pinInputBackground: GrayscaleColors.white,
 })

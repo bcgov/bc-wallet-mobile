@@ -185,7 +185,7 @@ describe('ChangePINContent', () => {
         </BasicAppContext>
       )
 
-      expect(tree.getByText('Global.Continue')).toBeTruthy()
+      expect(tree.getByText('BCSC.PIN.CreatePINShort')).toBeTruthy()
     })
 
     it('sets security method and shows toast on successful PIN creation', async () => {
@@ -219,7 +219,7 @@ describe('ChangePINContent', () => {
       fireEvent.press(checkbox)
 
       // Press continue button
-      const button = tree.getByTestId('com.ariesbifold:id/Continue')
+      const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
       fireEvent.press(button)
 
       await waitFor(() => {
@@ -268,7 +268,7 @@ describe('ChangePINContent', () => {
       fireEvent.press(checkbox)
 
       // Press continue button
-      const button = tree.getByTestId('com.ariesbifold:id/Continue')
+      const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
       fireEvent.press(button)
 
       await waitFor(() => {
