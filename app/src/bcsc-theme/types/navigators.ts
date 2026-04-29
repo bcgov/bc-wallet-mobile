@@ -30,7 +30,7 @@ export enum BCSCModals {
 export enum BCSCScreens {
   Home = 'Home',
   Services = 'Service List',
-  Account = 'Account Details',
+  Wallet = 'Wallet',
   ForgetAllPairings = 'Forget All Pairings',
   SetupSteps = 'Setup Steps',
   IdentitySelection = 'New Setup ID Confirmation',
@@ -221,7 +221,7 @@ export type BCSCVerifyStackParams = {
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
+  [BCSCScreens.Wallet]: undefined
 }
 
 export type BCSCMainStackParams = {
