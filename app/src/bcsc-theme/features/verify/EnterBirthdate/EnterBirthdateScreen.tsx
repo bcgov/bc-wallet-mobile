@@ -16,7 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Alert, StyleSheet, View } from 'react-native'
 import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
@@ -66,10 +66,34 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         return
       }
 
-      logger.error('CSN and birthdate mismatch, card not found', { error })
-      navigation.navigate(BCSCScreens.VerificationCardError, {
-        errorType: VerificationCardError.MismatchedSerial,
-      })
+      // TEMP DEBUG (S25 / Android 16 "Card not found"): surface the IAS 4xx body on-device so a
+      // tester without access to remote logs can capture it. Remove once root cause is fixed.
+      const cause = (error as any)?.cause
+      const debug = {
+        appEvent: (error as any)?.appEvent,
+        technicalMessage: (error as any)?.technicalMessage,
+        status: cause?.response?.status,
+        iasError: cause?.response?.data?.error,
+        iasErrorDescription: cause?.response?.data?.error_description,
+        url: cause?.config?.url,
+        userAgent: cause?.config?.headers?.['User-Agent'] ?? cause?.config?.headers?.['user-agent'],
+      }
+      logger.error('CSN and birthdate mismatch, card not found', { error, debug })
+      Alert.alert(
+        '[DEBUG] Card not found',
+        Object.entries(debug)
+          .map(([k, v]) => `${k}: ${v ?? '—'}`)
+          .join('\n'),
+        [
+          {
+            text: 'OK',
+            onPress: () =>
+              navigation.navigate(BCSCScreens.VerificationCardError, {
+                errorType: VerificationCardError.MismatchedSerial,
+              }),
+          },
+        ]
+      )
     } finally {
       setLoading(false)
     }
