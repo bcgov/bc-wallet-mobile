@@ -51,7 +51,7 @@ describe('useResidentialAddressModel', () => {
 
   const mockStore: any = {
     bcscSecure: {
-      birthdate: new Date('1990-01-15'),
+      birthdate: new Date(1990, 0, 15),
       deviceCode: null,
       deviceCodeExpiresAt: null,
       userMetadata: {
@@ -174,7 +174,7 @@ describe('useResidentialAddressModel', () => {
 
       const storeWithEmptyAddress = {
         bcscSecure: {
-          birthdate: new Date('1990-01-15'),
+          birthdate: new Date(1990, 0, 15),
           userMetadata: {
             name: { first: 'John', last: 'Doe' },
             address: null,
@@ -209,7 +209,7 @@ describe('useResidentialAddressModel', () => {
 
       const storeWithEmptyAddress = {
         bcscSecure: {
-          birthdate: new Date('1990-01-15'),
+          birthdate: new Date(1990, 0, 15),
           userMetadata: {
             name: { first: 'John', last: 'Doe' },
             address: null,
@@ -502,7 +502,7 @@ describe('useResidentialAddressModel', () => {
     it('should throw error when user name is missing', async () => {
       const storeWithoutName = {
         bcscSecure: {
-          birthdate: new Date('1990-01-15'),
+          birthdate: new Date(1990, 0, 15),
           deviceCode: null,
           deviceCodeExpiresAt: null,
           userMetadata: {
