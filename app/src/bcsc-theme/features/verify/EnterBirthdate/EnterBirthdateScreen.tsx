@@ -66,9 +66,10 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         return
       }
 
-      // TEMP DEBUG (S25 / Android 16 "Card not found"): surface the IAS 4xx body on-device so a
-      // tester without access to remote logs can capture it. Remove once root cause is fixed.
+      // TEMP DEBUG (S25 / Android 16 "Card not found"): surface the IAS 4xx body + request data
+      // on-device so we can see exactly what was sent. Remove once root cause is fixed.
       const cause = (error as any)?.cause
+      const requestData = cause?.config?.data
       const debug = {
         appEvent: (error as any)?.appEvent,
         technicalMessage: (error as any)?.technicalMessage,
@@ -77,6 +78,8 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         iasErrorDescription: cause?.response?.data?.error_description,
         url: cause?.config?.url,
         userAgent: cause?.config?.headers?.['User-Agent'] ?? cause?.config?.headers?.['user-agent'],
+        contentType: cause?.config?.headers?.['Content-Type'] ?? cause?.config?.headers?.['content-type'],
+        requestBody: typeof requestData === 'string' ? requestData : JSON.stringify(requestData),
       }
       logger.error('CSN and birthdate mismatch, card not found', { error, debug })
       Alert.alert(
