@@ -41,10 +41,9 @@ const useVerificationResponseViewModel = () => {
       // force a token exchange so the backend activates the device registration before navigation
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
       // update local store with nickname
-      const nickname = token.given_name || token.family_name // derived nickname
-      updateNicknameInLocalStorage(nickname)
+      updateNicknameInLocalStorage(token.given_name)
       // this updates their registration status with their nickname and new access tokens
-      await handleUpdateRegistration(nickname)
+      await handleUpdateRegistration(token.given_name)
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
     } catch (error) {
