@@ -67,7 +67,7 @@ const BCSCRootStack: React.FC = () => {
   }
 
   const shouldShowVerifyPrompt =
-    store.bcsc.hasSeenVerifyPrompt === false &&
+    !store.bcsc.hasSeenVerifyPrompt &&
     store.bcscSecure.verified !== true &&
     store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS &&
     store.bcscSecure.verifiedStatus !== VerificationStatus.VERIFIED
