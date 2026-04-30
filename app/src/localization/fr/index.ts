@@ -214,6 +214,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
+      "AppStartup": "Getting your BCSC App ready... (FR)"
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
