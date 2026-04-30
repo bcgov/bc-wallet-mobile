@@ -1,4 +1,5 @@
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import moment from 'moment'
 import { useCallback, useMemo } from 'react'
 import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -62,7 +63,9 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           response_type: 'device_code',
           client_id: account.clientID,
           card_serial_number: serial ?? undefined,
-          birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
+          // Format in local time. toISOString() shifts to UTC, which moves the date back a day
+          // for any TZ east of UTC (e.g. Sauce Labs cloud devices) and breaks IAS card lookup.
+          birth_date: birthdate ? moment(birthdate).format('YYYY-MM-DD') : undefined,
           scope: IAS_SCOPE,
         }
 

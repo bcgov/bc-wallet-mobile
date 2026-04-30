@@ -19,6 +19,7 @@ import {
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
+import moment from 'moment'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, View } from 'react-native'
@@ -93,7 +94,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
     middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
     lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
-    birthDate: store.bcscSecure.birthdate?.toISOString().split('T')[0] ?? '',
+    birthDate: store.bcscSecure.birthdate ? moment(store.bcscSecure.birthdate).format('YYYY-MM-DD') : '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 

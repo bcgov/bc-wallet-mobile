@@ -7,6 +7,7 @@ import { BCState, NonBCSCUserMetadata } from '@/store'
 import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import moment from 'moment'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
@@ -157,7 +158,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
         firstName: store.bcscSecure.userMetadata.name.first,
         lastName: store.bcscSecure.userMetadata.name.last,
-        birthdate: store.bcscSecure.birthdate.toISOString().split('T')[0],
+        birthdate: moment(store.bcscSecure.birthdate).format('YYYY-MM-DD'),
         middleNames: store.bcscSecure.userMetadata.name.middle,
         address: {
           streetAddress: mergedStreetAddress,
