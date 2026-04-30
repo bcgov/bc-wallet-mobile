@@ -13,13 +13,13 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
-import { StackScreenProps } from '@react-navigation/stack'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
-
-const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
+const ManualPairing: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
