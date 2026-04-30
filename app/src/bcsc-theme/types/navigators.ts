@@ -133,6 +133,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  QRCore = 'QRCore',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -257,6 +258,7 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
+  [BCSCScreens.QRCore]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

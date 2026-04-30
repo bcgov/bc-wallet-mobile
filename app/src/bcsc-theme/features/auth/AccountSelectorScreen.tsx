@@ -53,7 +53,8 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
       testID={testIdWithKey('ContinueSetup')}
       title={t('Global.ContinueSetup')}
       accessibilityLabel={a11yLabel(t('Global.ContinueSetup'))}
-      onPress={authentication.unlockApp}
+      // onPress={authentication.unlockApp
+      onPress={() => navigation.navigate(BCSCScreens.QRCore)}
     />
   )
 

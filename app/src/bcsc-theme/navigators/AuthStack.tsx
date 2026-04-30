@@ -19,6 +19,7 @@ import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import QRPairingStack from './QRPairingStack'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -114,6 +115,14 @@ const AuthStack = (): React.ReactElement => {
         component={Developer}
         options={{
           title: t('Developer.DeveloperMode'),
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCScreens.QRPairing}
+        component={QRPairingStack}
+        options={{
+          headerShown: false,
         }}
       />
 
