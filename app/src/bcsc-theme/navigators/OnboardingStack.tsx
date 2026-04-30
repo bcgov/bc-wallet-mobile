@@ -43,7 +43,7 @@ const OnboardingStack = (): React.ReactElement => {
         ...defaultStackOptions,
         headerShown: false,
         title: '',
-        headerShadowVisible: true,
+        headerShadowVisible: false,
         headerBackTitleVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),

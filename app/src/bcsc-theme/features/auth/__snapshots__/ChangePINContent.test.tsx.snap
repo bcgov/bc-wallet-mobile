@@ -1069,10 +1069,10 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
             <View
               style={
                 [
+                  false,
                   {
-                    "padding": 16,
+                    "padding": 24,
                   },
-                  undefined,
                 ]
               }
             >
@@ -1100,7 +1100,9 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                           "fontSize": 18,
                           "fontWeight": "bold",
                         },
-                        undefined,
+                        {
+                          "color": "#313132",
+                        },
                       ]
                     }
                   >
@@ -1215,6 +1217,22 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                       </View>
                     </View>
                   </View>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 14,
+                          "fontWeight": "normal",
+                        },
+                        undefined,
+                      ]
+                    }
+                  >
+                    BCSC.PIN.CreatePINExample
+                  </Text>
                 </View>
                 <View
                   style={
@@ -1233,7 +1251,9 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                           "fontSize": 18,
                           "fontWeight": "bold",
                         },
-                        undefined,
+                        {
+                          "color": "#313132",
+                        },
                       ]
                     }
                   >
@@ -1352,26 +1372,62 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                 <View
                   style={
                     {
-                      "gap": 8,
+                      "borderLeftColor": "#FCBA19",
+                      "borderLeftWidth": 8,
+                      "paddingLeft": 16,
                     }
                   }
                 >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                  <View
                     style={
-                      [
-                        {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "bold",
-                        },
-                        undefined,
-                      ]
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "gap": 8,
+                        "marginBottom": 8,
+                      }
                     }
                   >
-                    BCSC.PIN.RememberPIN
-                  </Text>
+                    <Text
+                      maxFontSizeMultiplier={2}
+                      style={
+                        [
+                          {
+                            "color": "#313132",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                          },
+                          {
+                            "color": "#313132",
+                          },
+                        ]
+                      }
+                    >
+                      BCSC.PIN.ThisPINIsUnique
+                    </Text>
+                    <Text
+                      allowFontScaling={false}
+                      selectable={false}
+                      style={
+                        [
+                          {
+                            "color": "#313132",
+                            "fontSize": 24,
+                          },
+                          undefined,
+                          {
+                            "fontFamily": "Material Design Icons",
+                            "fontStyle": "normal",
+                            "fontWeight": "normal",
+                          },
+                          {},
+                        ]
+                      }
+                    >
+                      󰋽
+                    </Text>
+                  </View>
                   <Text
                     maxFontSizeMultiplier={2}
                     style={
@@ -1386,8 +1442,139 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                       ]
                     }
                   >
+                    <Text
+                      maxFontSizeMultiplier={2}
+                      style={
+                        [
+                          {
+                            "color": "#313132",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                          },
+                          undefined,
+                        ]
+                      }
+                    >
+                      BCSC.PIN.RememberPINWarning
+                    </Text>
+                     
                     BCSC.PIN.RememberPINDescription
                   </Text>
+                </View>
+                <View
+                  style={
+                    {
+                      "marginHorizontal": -8,
+                    }
+                  }
+                >
+                  <View
+                    style={
+                      {
+                        "alignItems": "center",
+                        "flexDirection": "row",
+                        "margin": 10,
+                      }
+                    }
+                  >
+                    <View
+                      accessibilityLabel="BCSC.PIN.IUnderstand"
+                      accessibilityRole="checkbox"
+                      accessibilityState={
+                        {
+                          "busy": undefined,
+                          "checked": false,
+                          "disabled": undefined,
+                          "expanded": undefined,
+                          "selected": undefined,
+                        }
+                      }
+                      accessibilityValue={
+                        {
+                          "max": undefined,
+                          "min": undefined,
+                          "now": undefined,
+                          "text": undefined,
+                        }
+                      }
+                      accessible={true}
+                      collapsable={false}
+                      focusable={true}
+                      hitSlop={
+                        {
+                          "bottom": 44,
+                          "left": 44,
+                          "right": 44,
+                          "top": 44,
+                        }
+                      }
+                      onClick={[Function]}
+                      onResponderGrant={[Function]}
+                      onResponderMove={[Function]}
+                      onResponderRelease={[Function]}
+                      onResponderTerminate={[Function]}
+                      onResponderTerminationRequest={[Function]}
+                      onStartShouldSetResponder={[Function]}
+                      style={
+                        {
+                          "opacity": 1,
+                        }
+                      }
+                      testID="com.ariesbifold:id/IUnderstand"
+                    >
+                      <Text
+                        allowFontScaling={false}
+                        selectable={false}
+                        style={
+                          [
+                            {
+                              "color": "#003366",
+                              "fontSize": 36,
+                            },
+                            undefined,
+                            {
+                              "fontFamily": "Material Icons",
+                              "fontStyle": "normal",
+                              "fontWeight": "normal",
+                            },
+                            {},
+                          ]
+                        }
+                      >
+                        
+                      </Text>
+                    </View>
+                    <Text
+                      maxFontSizeMultiplier={2}
+                      style={
+                        [
+                          {
+                            "color": "#313132",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "normal",
+                          },
+                          [
+                            {
+                              "color": "#313132",
+                              "flexShrink": 1,
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                              "marginLeft": 10,
+                              "marginRight": 0,
+                            },
+                            {
+                              "marginLeft": 16,
+                            },
+                          ],
+                        ]
+                      }
+                    >
+                      BCSC.PIN.IUnderstand
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -1398,10 +1585,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                     {
                       "gap": 16,
                     },
-                    {
-                      "paddingBottom": 16,
-                      "paddingHorizontal": 16,
-                    },
+                    false,
                     undefined,
                   ],
                   {
@@ -1413,27 +1597,56 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
               <View
                 style={
                   {
-                    "marginHorizontal": -8,
+                    "flexGrow": 1,
+                    "width": "100%",
                   }
                 }
               >
                 <View
                   style={
                     {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "margin": 10,
+                      "left": 0,
+                      "position": "absolute",
+                      "right": 0,
+                      "shadowColor": "#000",
+                      "shadowOffset": {
+                        "height": -3,
+                        "width": 0,
+                      },
+                      "shadowOpacity": 0.9,
+                      "shadowRadius": 3,
+                      "top": 0,
+                      "zIndex": -1,
                     }
                   }
                 >
                   <View
-                    accessibilityLabel="BCSC.PIN.IUnderstand"
-                    accessibilityRole="checkbox"
+                    style={
+                      {
+                        "backgroundColor": "#F2F2F2",
+                        "height": 1,
+                      }
+                    }
+                  />
+                </View>
+                <View
+                  style={
+                    {
+                      "backgroundColor": "#F2F2F2",
+                      "flexGrow": 1,
+                      "gap": 8,
+                      "padding": 24,
+                    }
+                  }
+                >
+                  <View
+                    accessibilityLabel="Global.Continue"
+                    accessibilityRole="button"
                     accessibilityState={
                       {
                         "busy": undefined,
-                        "checked": false,
-                        "disabled": undefined,
+                        "checked": undefined,
+                        "disabled": true,
                         "expanded": undefined,
                         "selected": undefined,
                       }
@@ -1448,15 +1661,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                     }
                     accessible={true}
                     collapsable={false}
-                    focusable={true}
-                    hitSlop={
-                      {
-                        "bottom": 44,
-                        "left": 44,
-                        "right": 44,
-                        "top": 44,
-                      }
-                    }
+                    focusable={false}
                     onClick={[Function]}
                     onResponderGrant={[Function]}
                     onResponderMove={[Function]}
@@ -1466,145 +1671,57 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                     onStartShouldSetResponder={[Function]}
                     style={
                       {
+                        "backgroundColor": "#757575",
+                        "borderRadius": 4,
                         "opacity": 1,
+                        "padding": 16,
                       }
                     }
-                    testID="com.ariesbifold:id/IUnderstand"
+                    testID="com.ariesbifold:id/Continue"
                   >
-                    <Text
-                      allowFontScaling={false}
-                      selectable={false}
+                    <View
                       style={
-                        [
-                          {
-                            "color": "#003366",
-                            "fontSize": 36,
-                          },
-                          undefined,
-                          {
-                            "fontFamily": "Material Icons",
-                            "fontStyle": "normal",
-                            "fontWeight": "normal",
-                          },
-                          {},
-                        ]
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "justifyContent": "center",
+                        }
                       }
                     >
-                      
-                    </Text>
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            [
+                              {
+                                "color": "#FFFFFF",
+                                "fontFamily": "BCSans-Regular",
+                                "fontSize": 18,
+                                "fontWeight": "bold",
+                                "textAlign": "center",
+                              },
+                              {
+                                "color": "#FFFFFF",
+                                "fontFamily": "BCSans-Regular",
+                                "fontSize": 18,
+                                "fontWeight": "bold",
+                                "textAlign": "center",
+                              },
+                              false,
+                            ],
+                          ]
+                        }
+                      >
+                        Global.Continue
+                      </Text>
+                    </View>
                   </View>
-                  <Text
-                    maxFontSizeMultiplier={2}
-                    style={
-                      [
-                        {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
-                        },
-                        [
-                          {
-                            "color": "#313132",
-                            "flexShrink": 1,
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 18,
-                            "fontWeight": "normal",
-                            "marginLeft": 10,
-                            "marginRight": 0,
-                          },
-                          {
-                            "marginLeft": 16,
-                          },
-                        ],
-                      ]
-                    }
-                  >
-                    BCSC.PIN.IUnderstand
-                  </Text>
-                </View>
-              </View>
-              <View
-                accessibilityLabel="Global.Continue"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": true,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={false}
-                onClick={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  {
-                    "backgroundColor": "#757575",
-                    "borderRadius": 4,
-                    "opacity": 1,
-                    "padding": 16,
-                  }
-                }
-                testID="com.ariesbifold:id/Continue"
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "justifyContent": "center",
-                    }
-                  }
-                >
-                  <Text
-                    maxFontSizeMultiplier={2}
-                    style={
-                      [
-                        {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
-                        },
-                        [
-                          {
-                            "color": "#FFFFFF",
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 18,
-                            "fontWeight": "bold",
-                            "textAlign": "center",
-                          },
-                          {
-                            "color": "#FFFFFF",
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 18,
-                            "fontWeight": "bold",
-                            "textAlign": "center",
-                          },
-                          false,
-                        ],
-                      ]
-                    }
-                  >
-                    Global.Continue
-                  </Text>
                 </View>
               </View>
             </View>

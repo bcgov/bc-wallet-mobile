@@ -96,6 +96,7 @@ export interface BCSCState {
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
+  hasSeenVerifyPrompt?: boolean
 }
 
 export enum VerificationStatus {
@@ -270,6 +271,7 @@ enum BCSCDispatchAction {
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
+  SEEN_VERIFY_PROMPT = 'bcsc/seenVerifyPrompt',
 }
 
 enum ModeDispatchAction {
@@ -777,6 +779,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
       const dismissedAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SEEN_VERIFY_PROMPT: {
+      const hasSeen = (action?.payload || []).pop() ?? true
+      const bcsc = { ...state.bcsc, hasSeenVerifyPrompt: hasSeen }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

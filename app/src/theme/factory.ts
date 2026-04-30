@@ -66,6 +66,11 @@ export interface ThemeVariant extends PaletteSpec {
   /** Tab bar background + button icon colours. */
   tabBarBackground: string
   tabBarIcon: string
+
+  /** PIN input cell border colour. */
+  pinInputBorder: string
+  /** PIN input cell background colour. */
+  pinInputBackground: string
 }
 
 function buildPalette(spec: PaletteSpec): IColorPalette {
@@ -184,14 +189,14 @@ export function createAppTheme(v: ThemeVariant) {
       (theme): DeepPartial<ITheme> => ({
         PINInputTheme: {
           cell: {
-            backgroundColor: theme.ColorPalette.grayscale.white,
-            borderColor: theme.ColorPalette.grayscale.lightGrey,
+            backgroundColor: v.pinInputBackground,
+            borderColor: v.pinInputBorder,
             borderWidth: undefined,
           },
           focussedCell: { borderColor: '#7090E4' },
           labelAndFieldContainer: {
-            backgroundColor: theme.ColorPalette.grayscale.white,
-            borderColor: theme.ColorPalette.grayscale.lightGrey,
+            backgroundColor: v.pinInputBackground,
+            borderColor: v.pinInputBorder,
             borderWidth: undefined,
           },
           cellText: { color: theme.ColorPalette.grayscale.darkGrey },
