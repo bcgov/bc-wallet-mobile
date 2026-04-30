@@ -84,6 +84,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
   return (
     <ScreenWrapper
+      keyboardActive
       padded={false}
       controls={controls}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
