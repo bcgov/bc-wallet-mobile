@@ -68,6 +68,12 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
       justifyContent: 'center',
       alignItems: 'center',
     },
+    // Reserve a thin gap below the WebView so the ControlContainer's
+    // upward DropShadow has non-webview pixels to render on top of
+    webViewContainer: {
+      flex: 1,
+      marginBottom: Spacing.md,
+    },
   })
 
   const controls = (
@@ -121,20 +127,22 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
       controls={controls}
       scrollViewContainerStyle={styles.scrollContainer}
     >
-      <WebViewContent
-        html={createTermsOfUseHtml(
-          {
-            termsOfUse,
-            colorPalette: ColorPalette,
-            textColor: TextTheme.normal.color,
-            headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
-            subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
-            versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
-          },
-          fontScale
-        )}
-        onLoaded={() => setWebViewIsLoaded(true)}
-      />
+      <View style={styles.webViewContainer}>
+        <WebViewContent
+          html={createTermsOfUseHtml(
+            {
+              termsOfUse,
+              colorPalette: ColorPalette,
+              textColor: TextTheme.normal.color,
+              headerText: t('BCSC.Onboarding.TermsOfUseHeader'),
+              subtitlePrefix: t('BCSC.Onboarding.TermsOfUseSubtitle'),
+              versionLabel: t('BCSC.Onboarding.TermsOfUseVersion'),
+            },
+            fontScale
+          )}
+          onLoaded={() => setWebViewIsLoaded(true)}
+        />
+      </View>
     </ScreenWrapper>
   )
 }

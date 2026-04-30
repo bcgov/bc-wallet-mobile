@@ -1,4 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import {
   Button,
@@ -79,6 +80,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const styles = StyleSheet.create({
     scrollContainer: {
       gap: Spacing.lg,
+      padding: Spacing.lg,
     },
     currentMethodContainer: {
       flexDirection: 'row',
@@ -148,14 +150,24 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const currentMethodLabel = isCurrentMethodDeviceAuth
     ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
     : t('BCSC.Settings.AppSecurity.PIN')
-  const deviceAuthSubtext =
-    isSettingsContext && isCurrentMethodDeviceAuth
-      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-      : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName })
-  const pinSubtext =
-    isSettingsContext && !isCurrentMethodDeviceAuth
-      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-      : t('BCSC.Onboarding.SecureAppPINSubtext')
+  const currentlySelected = t('BCSC.Settings.AppSecurity.CurrentlySelected')
+  const copy = isSettingsContext
+    ? {
+        header: t('BCSC.Onboarding.SecureAppHeader'),
+        content: t('BCSC.Onboarding.SecureAppContent'),
+        deviceAuthTitle: t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
+        deviceAuthSubtext: isCurrentMethodDeviceAuth
+          ? currentlySelected
+          : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
+        pinSubtext: isCurrentMethodDeviceAuth ? t('BCSC.Onboarding.SecureAppPINSubtext') : currentlySelected,
+      }
+    : {
+        header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
+        content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
+        deviceAuthTitle: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle'),
+        deviceAuthSubtext: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext'),
+        pinSubtext: t('BCSC.Onboarding.SecureAppPINSubtext'),
+      }
 
   // Current method indicator (only shown in settings context)
   const currentMethodIndicator = isSettingsContext ? (
@@ -171,7 +183,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   // Controls for when device auth is NOT available
   const controlsForNoDeviceAuth = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.Onboarding.SecureAppPINTitle')}
@@ -179,14 +191,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         onPress={onPINPress}
         testID={testIdWithKey('ChoosePINButton')}
       />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title={t('BCSC.Onboarding.LearnMore')}
-        accessibilityLabel={t('BCSC.Onboarding.LearnMore')}
-        onPress={onLearnMorePress}
-        testID={testIdWithKey('LearnMoreButton')}
-      />
-    </>
+    </ControlContainer>
   )
 
   if (isLoading) {
@@ -200,18 +205,21 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   // When device auth is available, show both options
   if (isDeviceAuthAvailable) {
     return (
-      <ScreenWrapper scrollViewContainerStyle={styles.scrollContainer}>
-        <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
-        <ThemedText>{t('BCSC.Onboarding.SecureAppContent')}</ThemedText>
+      <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer}>
+        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+          {copy.header}
+        </ThemedText>
+        <ThemedText>{copy.content}</ThemedText>
 
         {/* Show current method indicator (settings only) */}
         {currentMethodIndicator}
 
         {/* Device Auth Option */}
         <CardButton
-          title={t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })}
+          title={copy.deviceAuthTitle}
           testID={testIdWithKey('ChooseDeviceAuthButton')}
-          subtext={deviceAuthSubtext}
+          subtext={copy.deviceAuthSubtext}
+          startIcon={isSettingsContext ? undefined : 'fingerprint'}
           onPress={handleDeviceAuthentication}
           disabled={isSettingsContext && isCurrentMethodDeviceAuth}
         />
@@ -220,26 +228,31 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         <CardButton
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
           testID={testIdWithKey('ChoosePINButton')}
-          subtext={pinSubtext}
+          subtext={copy.pinSubtext}
+          startIcon={isSettingsContext ? undefined : 'dialpad'}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />
 
-        {/* Learn More */}
-        <CardButton
-          title={t('BCSC.Onboarding.LearnMore')}
-          testID={testIdWithKey('LearnMoreButton')}
-          endIcon="open-in-new"
-          onPress={onLearnMorePress}
-        />
+        {/* Learn More (settings only — onboarding wireframe omits it) */}
+        {isSettingsContext ? (
+          <CardButton
+            title={t('BCSC.Onboarding.LearnMore')}
+            testID={testIdWithKey('LearnMoreButton')}
+            endIcon="open-in-new"
+            onPress={onLearnMorePress}
+          />
+        ) : null}
       </ScreenWrapper>
     )
   }
 
   // When device auth is NOT available
   return (
-    <ScreenWrapper padded scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
-      <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
+    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
+      <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+        {copy.header}
+      </ThemedText>
 
       {/* Show current method indicator (settings only) */}
       {currentMethodIndicator}

@@ -45,15 +45,16 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
     expect(tree.getByText('BCSC.PIN.CreatePIN')).toBeTruthy()
     expect(tree.getByText('BCSC.PIN.ConfirmPIN')).toBeTruthy()
-    expect(tree.getByText('BCSC.PIN.RememberPIN')).toBeTruthy()
-    expect(tree.getByText('BCSC.PIN.RememberPINDescription')).toBeTruthy()
+    expect(tree.getByText('BCSC.PIN.ThisPINIsUnique')).toBeTruthy()
+    expect(tree.getByText(/BCSC\.PIN\.RememberPINWarning/)).toBeTruthy()
+    expect(tree.getByText(/BCSC\.PIN\.RememberPINDescription/)).toBeTruthy()
     expect(tree).toMatchSnapshot()
   })
 
@@ -61,7 +62,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} translationPrefix="Custom.Prefix" />
+          <PINEntryForm onSuccess={mockOnSuccess} translationPrefix="Custom.Prefix" creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -74,7 +75,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -82,11 +83,23 @@ describe('PINEntryForm', () => {
     expect(tree.getByText('BCSC.PIN.IUnderstand')).toBeTruthy()
   })
 
-  it('shows Continue button', () => {
+  it('shows Create PIN button', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    expect(tree.getByText('BCSC.PIN.CreatePINShort')).toBeTruthy()
+  })
+
+  it('shows continue button when creatingNewPIN is false', () => {
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={false} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -98,12 +111,12 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
   })
 
@@ -117,7 +130,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -131,7 +144,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -147,7 +160,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -159,7 +172,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -173,7 +186,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -186,7 +199,7 @@ describe('PINEntryForm', () => {
     fireEvent.press(checkbox)
 
     // Button should remain disabled when PINs are too short
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
@@ -196,7 +209,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -207,7 +220,7 @@ describe('PINEntryForm', () => {
 
     // Don't check the checkbox
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -227,7 +240,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -239,7 +252,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -255,7 +268,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -267,7 +280,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     fireEvent.press(button)
 
     await waitFor(() => {
@@ -281,7 +294,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -296,7 +309,7 @@ describe('PINEntryForm', () => {
     // Button is disabled so we need to bypass by triggering validation directly
     // This is simulating the scenario where the user could somehow submit
     // Actually, the button should be disabled, so let's verify that
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
@@ -306,7 +319,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -318,7 +331,7 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    const button = tree.getByTestId('com.ariesbifold:id/Continue')
+    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
     expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()

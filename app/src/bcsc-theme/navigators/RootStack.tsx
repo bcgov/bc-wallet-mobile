@@ -18,6 +18,7 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
+import PromptStack from './PromptStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
@@ -63,6 +64,16 @@ const BCSCRootStack: React.FC = () => {
 
   if (store.authentication.didAuthenticate === false) {
     return <AuthStack />
+  }
+
+  const shouldShowVerifyPrompt =
+    !store.bcsc.hasSeenVerifyPrompt &&
+    store.bcscSecure.verified !== true &&
+    store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS &&
+    store.bcscSecure.verifiedStatus !== VerificationStatus.VERIFIED
+
+  if (shouldShowVerifyPrompt) {
+    return <PromptStack />
   }
 
   return (
