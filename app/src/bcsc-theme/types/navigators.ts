@@ -6,6 +6,7 @@ import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
+  Prompt = 'BCSCPromptStack',
   Auth = 'BCSCAuthStack',
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
@@ -102,6 +103,7 @@ export enum BCSCScreens {
   OnboardingOptInAnalytics = 'Analytics Opt In', // NOTE: New V4 screen, not in V3
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
+  VerifyPrompt = `${BCSCStacks.Prompt} Verify Prompt`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -153,6 +155,10 @@ export type BCSCOnboardingStackParams = {
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
+}
+
+export type BCSCPromptStackParams = {
+  [BCSCScreens.VerifyPrompt]: undefined
 }
 
 export type BCSCVerifyStackParams = {

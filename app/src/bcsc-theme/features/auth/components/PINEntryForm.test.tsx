@@ -45,7 +45,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -62,7 +62,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} translationPrefix="Custom.Prefix" />
+          <PINEntryForm onSuccess={mockOnSuccess} translationPrefix="Custom.Prefix" creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -75,7 +75,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -83,11 +83,11 @@ describe('PINEntryForm', () => {
     expect(tree.getByText('BCSC.PIN.IUnderstand')).toBeTruthy()
   })
 
-  it('shows Continue button', () => {
+  it('shows Create PIN button', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -95,11 +95,23 @@ describe('PINEntryForm', () => {
     expect(tree.getByText('BCSC.PIN.CreatePINShort')).toBeTruthy()
   })
 
+  it('shows continue button when creatingNewPIN is false', () => {
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={false} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    expect(tree.getByText('Global.Continue')).toBeTruthy()
+  })
+
   it('button is disabled when PINs are not entered and checkbox unchecked', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -118,7 +130,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -148,7 +160,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -174,7 +186,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -197,7 +209,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -228,7 +240,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -256,7 +268,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -282,7 +294,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -307,7 +319,7 @@ describe('PINEntryForm', () => {
     const tree = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} />
+          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )

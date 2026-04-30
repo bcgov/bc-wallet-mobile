@@ -1640,7 +1640,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                   }
                 >
                   <View
-                    accessibilityLabel="BCSC.PIN.CreatePINShort"
+                    accessibilityLabel="Global.Continue"
                     accessibilityRole="button"
                     accessibilityState={
                       {
@@ -1677,7 +1677,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                         "padding": 16,
                       }
                     }
-                    testID="com.ariesbifold:id/CreatePIN"
+                    testID="com.ariesbifold:id/Continue"
                   >
                     <View
                       style={
@@ -1718,7 +1718,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                           ]
                         }
                       >
-                        BCSC.PIN.CreatePINShort
+                        Global.Continue
                       </Text>
                     </View>
                   </View>

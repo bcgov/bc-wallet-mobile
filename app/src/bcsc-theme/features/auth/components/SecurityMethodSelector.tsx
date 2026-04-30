@@ -150,25 +150,24 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   const currentMethodLabel = isCurrentMethodDeviceAuth
     ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
     : t('BCSC.Settings.AppSecurity.PIN')
-  const deviceAuthSubtext =
-    isSettingsContext && isCurrentMethodDeviceAuth
-      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-      : isSettingsContext
-        ? t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName })
-        : t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext')
-  const pinSubtext =
-    isSettingsContext && !isCurrentMethodDeviceAuth
-      ? t('BCSC.Settings.AppSecurity.CurrentlySelected')
-      : t('BCSC.Onboarding.SecureAppPINSubtext')
-  const headerText = isSettingsContext
-    ? t('BCSC.Onboarding.SecureAppHeader')
-    : t('BCSC.Onboarding.SecureAppOnboardingHeader')
-  const contentText = isSettingsContext
-    ? t('BCSC.Onboarding.SecureAppContent')
-    : t('BCSC.Onboarding.SecureAppOnboardingContent')
-  const deviceAuthTitle = isSettingsContext
-    ? t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName })
-    : t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')
+  const currentlySelected = t('BCSC.Settings.AppSecurity.CurrentlySelected')
+  const copy = isSettingsContext
+    ? {
+        header: t('BCSC.Onboarding.SecureAppHeader'),
+        content: t('BCSC.Onboarding.SecureAppContent'),
+        deviceAuthTitle: t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
+        deviceAuthSubtext: isCurrentMethodDeviceAuth
+          ? currentlySelected
+          : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
+        pinSubtext: isCurrentMethodDeviceAuth ? t('BCSC.Onboarding.SecureAppPINSubtext') : currentlySelected,
+      }
+    : {
+        header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
+        content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
+        deviceAuthTitle: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle'),
+        deviceAuthSubtext: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext'),
+        pinSubtext: t('BCSC.Onboarding.SecureAppPINSubtext'),
+      }
 
   // Current method indicator (only shown in settings context)
   const currentMethodIndicator = isSettingsContext ? (
@@ -208,18 +207,18 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     return (
       <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer}>
         <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-          {headerText}
+          {copy.header}
         </ThemedText>
-        <ThemedText>{contentText}</ThemedText>
+        <ThemedText>{copy.content}</ThemedText>
 
         {/* Show current method indicator (settings only) */}
         {currentMethodIndicator}
 
         {/* Device Auth Option */}
         <CardButton
-          title={deviceAuthTitle}
+          title={copy.deviceAuthTitle}
           testID={testIdWithKey('ChooseDeviceAuthButton')}
-          subtext={deviceAuthSubtext}
+          subtext={copy.deviceAuthSubtext}
           startIcon={isSettingsContext ? undefined : 'fingerprint'}
           onPress={handleDeviceAuthentication}
           disabled={isSettingsContext && isCurrentMethodDeviceAuth}
@@ -229,7 +228,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
         <CardButton
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
           testID={testIdWithKey('ChoosePINButton')}
-          subtext={pinSubtext}
+          subtext={copy.pinSubtext}
           startIcon={isSettingsContext ? undefined : 'dialpad'}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
@@ -252,7 +251,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
       <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-        {headerText}
+        {copy.header}
       </ThemedText>
 
       {/* Show current method indicator (settings only) */}

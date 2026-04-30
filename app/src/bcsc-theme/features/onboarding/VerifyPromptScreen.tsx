@@ -1,23 +1,10 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  useDefaultStackOptions,
-  useStore,
-  useTheme,
-} from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
-import { createHeaderRightMoreButton } from '@/bcsc-theme/components/HeaderRightMoreButton'
 import AccountCircle from '@assets/img/account_circle.svg'
 import Blob from '@assets/img/blob.svg'
 import VerifiedCheck from '@assets/img/verified.svg'
@@ -28,7 +15,7 @@ import VerifiedCheck from '@assets/img/verified.svg'
  * or defer it until later. The choice is recorded via `SEEN_VERIFY_PROMPT` so
  * the screen is not shown again on subsequent launches.
  */
-const VerifyPromptScreenContent: React.FC = () => {
+export const VerifyPromptScreen: React.FC = () => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -106,32 +93,3 @@ const VerifyPromptScreenContent: React.FC = () => {
     </ScreenWrapper>
   )
 }
-
-/**
- * Wraps the prompt in a single-screen stack so it gets the same themed header
- * (banner + title) as the screens in OnboardingStack / MainStack.
- */
-const VerifyPromptScreen: React.FC = () => {
-  const theme = useTheme()
-  const defaultStackOptions = useDefaultStackOptions(theme)
-  const Stack = createStackNavigator()
-
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        ...defaultStackOptions,
-        headerShown: true,
-        headerLeft: () => null,
-        headerBackTitleVisible: false,
-        headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
-        header: createHeaderWithoutBanner,
-        headerRight: createHeaderRightMoreButton,
-        title: '',
-      }}
-    >
-      <Stack.Screen name="BCSCVerifyPrompt" component={VerifyPromptScreenContent} />
-    </Stack.Navigator>
-  )
-}
-
-export default VerifyPromptScreen

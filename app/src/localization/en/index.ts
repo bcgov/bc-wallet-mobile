@@ -558,7 +558,7 @@ const translation = {
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",
       "SecureAppOnboardingDeviceAuthTitle": "Use device authentication",
       "SecureAppDeviceAuthSubtext": "It’s already set up on this {{platform}}. It never leaves this device or is shared with us.",
-      "SecureAppOnboardingDeviceAuthSubtext": "It’s already setup on this phone or tablet. It never leaves this device or is shared with us.",
+      "SecureAppOnboardingDeviceAuthSubtext": "It’s already set up on this phone or tablet. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
       "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private.",

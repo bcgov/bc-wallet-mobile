@@ -45,6 +45,12 @@ interface PINEntryFormProps {
    * IUnderstand, MustCheckBox, PINTooShort, PINsDoNotMatch, FailedToSetPIN, ErrorSettingPIN
    */
   translationPrefix?: string
+  /**
+   * Optional prop to indicate if this form is being used for creating new PIN.
+   * Can be used to adjust labels, validation, or behavior as needed.
+   * Default is false.
+   */
+  creatingNewPIN?: boolean
 }
 
 /**
@@ -60,6 +66,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   onSuccess,
   loadingMessage,
   translationPrefix = 'BCSC.PIN',
+  creatingNewPIN = false,
 }: PINEntryFormProps) => {
   const { t } = useTranslation()
   const { ButtonLoading } = useAnimatedComponents()
@@ -195,9 +202,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
     <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
-        title={tWithPrefix('CreatePINShort')}
-        accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
-        testID={testIdWithKey('CreatePIN')}
+        title={creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue')}
+        accessibilityLabel={a11yLabel(creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue'))}
+        testID={testIdWithKey(creatingNewPIN ? 'CreatePIN' : 'Continue')}
         disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
       >

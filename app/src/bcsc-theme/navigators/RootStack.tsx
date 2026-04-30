@@ -12,13 +12,13 @@ import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
-import VerifyPromptScreen from '../features/onboarding/VerifyPromptScreen'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
+import PromptStack from './PromptStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
@@ -67,13 +67,13 @@ const BCSCRootStack: React.FC = () => {
   }
 
   const shouldShowVerifyPrompt =
-    !store.bcsc.hasSeenVerifyPrompt &&
+    store.bcsc.hasSeenVerifyPrompt === false &&
     store.bcscSecure.verified !== true &&
     store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS &&
     store.bcscSecure.verifiedStatus !== VerificationStatus.VERIFIED
 
   if (shouldShowVerifyPrompt) {
-    return <VerifyPromptScreen />
+    return <PromptStack />
   }
 
   return (
