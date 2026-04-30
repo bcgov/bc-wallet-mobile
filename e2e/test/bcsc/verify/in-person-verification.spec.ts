@@ -1,4 +1,4 @@
-import { approveInPersonRequest } from '../../../src/helpers/approval.js'
+import { ApproveInPersonInput, approveInPersonRequest } from '../../../src/helpers/approval.js'
 import { BaseScreen } from '../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../src/testIDs.js'
 import { getVerifyContext } from './card-type/card-context.js'
@@ -27,7 +27,31 @@ describe('In-Person Verification', () => {
     const confirmationCode = await VerifyInPerson.getText('ConfirmationCode')
     console.log(`[e2e] Read confirmation code from screen: "${confirmationCode}"`)
 
-    await approveInPersonRequest(confirmationCode, testUser.cardSerial, testUser.dob)
+    let input: ApproveInPersonInput
+    if (testUser.flow === 'non-bcsc') {
+      input = {
+        flow: 'non-bcsc',
+        documents: [
+          { typeId: testUser.primaryDocumentTypeId, number: testUser.primaryDocumentNumber },
+          { typeId: testUser.documentTypeId, number: testUser.documentNumber },
+        ],
+      }
+    } else if (testUser.flow === 'non-photo') {
+      input = {
+        flow: 'non-photo',
+        cardSerialNumber: testUser.cardSerial,
+        cardBirthdate: testUser.dob,
+        document: { typeId: testUser.documentTypeId, number: testUser.documentNumber },
+      }
+    } else {
+      input = {
+        flow: 'photo',
+        cardSerialNumber: testUser.cardSerial,
+        cardBirthdate: testUser.dob,
+      }
+    }
+
+    await approveInPersonRequest(confirmationCode, input)
 
     await VerifyInPerson.waitFor('Complete')
     await VerifyInPerson.tap('Complete')

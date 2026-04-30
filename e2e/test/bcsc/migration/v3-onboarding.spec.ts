@@ -363,7 +363,11 @@ describe('V3 Add Card', () => {
     }
 
     console.log(`[migration] V3 confirmation code: "${confirmationCode}"`)
-    await approveInPersonRequest(confirmationCode, testUser.cardSerial, testUser.dob)
+    await approveInPersonRequest(confirmationCode, {
+      flow: 'photo',
+      cardSerialNumber: testUser.cardSerial,
+      cardBirthdate: testUser.dob,
+    })
   })
 
   it('should tap complete button once the verification is approved and tap Ok on the "You\'re all set" screen', async () => {

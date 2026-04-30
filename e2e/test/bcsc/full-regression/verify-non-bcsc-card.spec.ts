@@ -24,6 +24,5 @@ import '../verify/non-bcsc/residential-address.spec.js'
 // Setup Steps 4: Email Address
 import '../verify/non-bcsc/email-address.spec.js'
 
-// TODO (MD): In-person verification only supports BC Services Cards, we need to update the "verify" script to allow for Non-BCSC users.
-// import '../verify/in-person-verification.spec.js'
-// import '../main/main.spec.js'
+import '../verify/in-person-verification.spec.js'
+import '../main/main.spec.js'
