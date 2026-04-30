@@ -305,6 +305,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
               "alignContent": "center",
               "alignItems": "center",
               "flexDirection": "row",
+              "justifyContent": "space-between",
             }
           }
         >
@@ -318,7 +319,9 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
                   "fontSize": 21,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >
@@ -357,6 +360,7 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
+                "marginLeft": 8,
                 "opacity": 1,
               }
             }
@@ -395,7 +399,9 @@ exports[`AdditionalIdentificationRequired renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "normal",
               },
-              undefined,
+              {
+                "marginTop": 8,
+              },
             ]
           }
         >
