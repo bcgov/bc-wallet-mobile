@@ -13,8 +13,17 @@ describe('Residential Address', () => {
     await ResidentialAddress.type('StreetAddress1Input', '123 Main St')
     await ResidentialAddress.type('StreetAddress2Input', 'Apt 4B')
     await ResidentialAddress.type('CityInput', 'Victoria')
+    await ResidentialAddress.dismissKeyboard()
     await ResidentialAddress.tap('ProvinceInput')
-    await ResidentialAddress.tap('ProvinceOptionBritishColumbia')
+    if (driver.isIOS) {
+      await driver.pause(500)
+      const opt = await ResidentialAddress.findByText('British\u00A0Columbia\u00A0(BC)')
+      await opt.waitForDisplayed({ timeout: 10000 })
+      await opt.click()
+    } else {
+      await ResidentialAddress.waitFor('ProvinceOptionBritishColumbia')
+      await ResidentialAddress.tap('ProvinceOptionBritishColumbia')
+    }
     await ResidentialAddress.type('PostalCodeInput', 'V8W 2Y2')
     await ResidentialAddress.tap('Continue')
   })
