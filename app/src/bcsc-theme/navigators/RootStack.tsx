@@ -54,7 +54,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
-    return <LoadingScreen />
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 
   if (store.bcsc.hasAccount === false) {
