@@ -44,9 +44,19 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
         />
       </View>
       <View style={{ marginBottom: Spacing.lg }}>
-        <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
-          <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignContent: 'center',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <ThemedText variant={'headingFour'} style={{ flexShrink: 1 }}>
+            {t('BCSC.AdditionalEvidence.LimitedAccess')}
+          </ThemedText>
           <TouchableOpacity
+            style={{ marginLeft: Spacing.sm }}
             onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}
             accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
             accessibilityRole="link"
@@ -56,7 +66,9 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
             <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
           </TouchableOpacity>
         </View>
-        <ThemedText>{t('BCSC.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
+        <ThemedText style={{ marginTop: Spacing.sm }}>
+          {t('BCSC.AdditionalEvidence.LimitedAccessDescription')}
+        </ThemedText>
       </View>
       <View style={{ marginTop: Spacing.md }}>
         <Button
