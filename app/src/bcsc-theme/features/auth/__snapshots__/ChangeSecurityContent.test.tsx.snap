@@ -591,7 +591,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -666,9 +666,9 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }
@@ -1339,7 +1339,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -1414,9 +1414,9 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }
@@ -1957,7 +1957,7 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -2032,9 +2032,9 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }

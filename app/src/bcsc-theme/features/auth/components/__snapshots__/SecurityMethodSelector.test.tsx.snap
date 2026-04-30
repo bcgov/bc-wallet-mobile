@@ -591,7 +591,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -666,9 +666,9 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }
@@ -1130,7 +1130,7 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -1205,9 +1205,9 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }
@@ -1781,7 +1781,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294558818,
+                    "payload": 4294493282,
                     "type": 0,
                   }
                 }
@@ -1856,9 +1856,9 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                     [
                       1,
                       0,
-                      0,
+                      -0,
                       1,
-                      0,
+                      -0.2640023024576092,
                       0,
                     ]
                   }
