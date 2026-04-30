@@ -348,6 +348,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
               "alignContent": "center",
               "alignItems": "center",
               "flexDirection": "row",
+              "justifyContent": "space-between",
             }
           }
         >
@@ -361,7 +362,9 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                   "fontSize": 21,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "flexShrink": 1,
+                },
               ]
             }
           >
@@ -439,7 +442,9 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "normal",
               },
-              undefined,
+              {
+                "marginTop": 8,
+              },
             ]
           }
         >
