@@ -55,7 +55,8 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
         toValue,
         duration,
         easing,
-        useNativeDriver: false,
+        // TranslateX is supported by native driver. Use to allow smoother animations on lower-end devices
+        useNativeDriver: true,
       })
 
       animationRef.current.start(({ finished }) => {
@@ -78,9 +79,7 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
     animateTransition(0)
   }
 
-  useImperativeHandle(props.ref, () => ({
-    close: handleClose,
-  }))
+  useImperativeHandle(props.ref, () => ({ close: handleClose }))
 
   const styles = StyleSheet.create({
     root: {
@@ -127,7 +126,12 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
             <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
               <AnimatedDropShadow style={[styles.container, { transform: [{ translateX }] }]}>
                 <View style={styles.headerContainer}>
-                  <PressableOpacity onPress={handleClose} hitSlop={hitSlop}>
+                  <PressableOpacity
+                    onPress={handleClose}
+                    hitSlop={hitSlop}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('Global.Close')}
+                  >
                     <Icon name="close" size={24} color={ColorPalette.brand.headerText} />
                   </PressableOpacity>
                   <ThemedText variant="headingFour">{t('BCSC.HelpMenu.Title')}</ThemedText>

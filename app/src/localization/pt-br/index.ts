@@ -214,6 +214,7 @@ const translation = {
     },
     "HelpMenu": {
       "Title": "Need help? (PT-BR)",
+      "AccessibilityLabel": "Help menu (PT-BR)",
       "Version": "BCSC version: {{ version }} (PT-BR)",
       "LearnMore": "Learn about BCSC app (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",

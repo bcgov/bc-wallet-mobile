@@ -1,4 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
+import { a11yLabel } from '@/utils/accessibility'
 import { ThemedText, useTheme } from '@bifold/core'
 import React, { Children, ReactElement } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -74,7 +75,13 @@ export const ListButton = (props: ListButtonProps) => {
   }
 
   return (
-    <PressableOpacity accessible={true} style={[styles.container, getBorderRadiusStyle()]} onPress={props.onPress}>
+    <PressableOpacity
+      accessible={true}
+      style={[styles.container, getBorderRadiusStyle()]}
+      onPress={props.onPress}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel(props.text)}
+    >
       <View style={styles.textContainer}>
         <ThemedText style={styles.text}>{props.text}</ThemedText>
         {props.endAdornment}
@@ -92,7 +99,7 @@ export const ListButton = (props: ListButtonProps) => {
  */
 export const ListButtonGroup = (props: ListButtonGroupProps) => {
   const { Spacing } = useTheme()
-  const ListButtons = Children.toArray(props.children)
+  const listButtons = Children.toArray(props.children)
 
   const styles = StyleSheet.create({
     container: {
@@ -102,7 +109,7 @@ export const ListButtonGroup = (props: ListButtonGroupProps) => {
   })
 
   const getPosition = (index: number) => {
-    if (ListButtons.length === 1) {
+    if (listButtons.length === 1) {
       return 'only'
     }
 
@@ -110,7 +117,7 @@ export const ListButtonGroup = (props: ListButtonGroupProps) => {
       return 'first'
     }
 
-    if (index === ListButtons.length - 1) {
+    if (index === listButtons.length - 1) {
       return 'last'
     }
 
@@ -119,7 +126,7 @@ export const ListButtonGroup = (props: ListButtonGroupProps) => {
 
   return (
     <View style={styles.container}>
-      {ListButtons.map((child, index) => {
+      {listButtons.map((child, index) => {
         return React.cloneElement(child as ReactElement<ListButtonProps>, { position: getPosition(index) })
       })}
     </View>
