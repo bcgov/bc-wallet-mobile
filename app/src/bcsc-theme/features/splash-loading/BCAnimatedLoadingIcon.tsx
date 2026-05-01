@@ -26,9 +26,10 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
   const skyAnimation = useRef(new Animated.Value(0)).current
   const waterAnimation = useRef(new Animated.Value(0)).current
 
-  const skyColor = skyAnimation.interpolate({
+  const darkSkyOpacity = skyAnimation // 0→1 fades dark sky in
+  const lightSkyOpacity = skyAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [LIGHT_YELLOW_SKY, DARK_BLUE_SKY],
+    outputRange: [1, 0], // inverse
   })
 
   useEffect(() => {
@@ -39,12 +40,12 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
           Animated.timing(waterAnimation, {
             toValue: -WAVE_WIDTH,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(skyAnimation, {
             toValue: 1,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
         // Move one wave left and change sky color back to light yellow
@@ -52,12 +53,12 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
           Animated.timing(waterAnimation, {
             toValue: -2 * WAVE_WIDTH,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(skyAnimation, {
             toValue: 0,
             duration: ANIMATION_DURATION_MS,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ]),
       ])
@@ -72,9 +73,17 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
         </ClipPath>
       </Defs>
       <G clipPath="url(#clip0_369_1738)">
+        {/* Light sky — fades out */}
         <AnimatedPath
           d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
-          fill={skyColor}
+          fill={LIGHT_YELLOW_SKY}
+          opacity={lightSkyOpacity}
+        />
+        {/* Dark sky — fades in */}
+        <AnimatedPath
+          d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+          fill={DARK_BLUE_SKY}
+          opacity={darkSkyOpacity}
         />
         <Path
           d="M112.985 56.5969C112.985 87.7377 87.7378 112.985 56.5969 112.985C25.4561 112.985 0.20459 87.7377 0.20459 56.5969C0.20459 53.1345 0.51563 49.7458 1.11315 46.4594L13.3051 41.0613L17.1317 43.0953L20.2871 44.0693L20.4549 44.0243C20.4549 44.0243 23.7086 42.5305 24.5271 42.0148L29.3155 47.0611C29.3155 47.0611 39.7107 55.2995 40.0136 55.2995C40.3165 55.2995 49.1893 50.151 49.1893 50.151L57.1372 44.6914L64.066 49.7376L69.2636 50.769L74.1052 54.2723C74.1052 54.2723 86.7269 45.8333 88.7732 44.8019L94.8139 47.1552L103.797 40.8525L111.864 45.3503C112.6 48.9846 112.985 52.7457 112.985 56.5969Z"

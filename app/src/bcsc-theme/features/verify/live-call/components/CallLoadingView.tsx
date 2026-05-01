@@ -1,7 +1,7 @@
+import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
 import ProgressBar from '@/components/ProgressBar'
-import Mountains from '@assets/img/mountains-circle.svg'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -33,6 +33,10 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
     controlsContainer: {
       marginTop: 'auto',
       padding: Spacing.md,
+    },
+    iconContainer: {
+      alignSelf: 'center',
+      marginVertical: Spacing.md,
     },
   })
 
@@ -70,7 +74,9 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
           <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
             {message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
           </ThemedText>
-          <Mountains style={{ alignSelf: 'center', marginVertical: Spacing.md }} height={200} width={200} />
+          <View style={styles.iconContainer}>
+            <BCAnimatedLoadingIcon size={200} />
+          </View>
           {delayReached ? (
             <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
               {t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}
