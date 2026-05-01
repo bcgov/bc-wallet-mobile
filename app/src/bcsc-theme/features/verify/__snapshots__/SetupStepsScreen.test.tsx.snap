@@ -31,7 +31,7 @@ exports[`SetupSteps renders correctly 1`] = `
   >
     <View>
       <View
-        accessibilityHint="BCSC.NicknameAccount.AccountName"
+        accessibilityHint="BCSC.Steps.ScanOrTakePhotos"
         accessibilityLabel="BCSC.Steps.Step1"
         accessibilityRole="button"
         accessibilityState={
@@ -126,7 +126,7 @@ exports[`SetupSteps renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.NicknameAccount.AccountName
+              BCSC.Steps.ScanOrTakePhotos
             </Text>
           </View>
         </View>
@@ -141,7 +141,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
-        accessibilityHint="BCSC.Steps.ScanOrTakePhotos"
+        accessibilityHint="BCSC.Steps.GetVerificationStep3Subtext3"
         accessibilityLabel="BCSC.Steps.Step2"
         accessibilityRole="button"
         accessibilityState={
@@ -236,7 +236,7 @@ exports[`SetupSteps renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.Steps.ScanOrTakePhotos
+              BCSC.Steps.GetVerificationStep3Subtext3
             </Text>
           </View>
         </View>
@@ -251,7 +251,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
-        accessibilityHint="BCSC.Steps.GetVerificationStep3Subtext3"
+        accessibilityHint=""
         accessibilityLabel="BCSC.Steps.Step3"
         accessibilityRole="button"
         accessibilityState={
@@ -330,24 +330,33 @@ exports[`SetupSteps renders correctly 1`] = `
               }
             }
           >
-            <Text
-              maxFontSizeMultiplier={2}
+            <View
               style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  {
-                    "color": "#313132",
-                  },
-                ]
+                {
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
               }
             >
-              BCSC.Steps.GetVerificationStep3Subtext3
-            </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#313132",
+                    },
+                  ]
+                }
+              >
+                BCSC.Steps.EmailAddress
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -361,7 +370,7 @@ exports[`SetupSteps renders correctly 1`] = `
         }
       />
       <View
-        accessibilityHint=""
+        accessibilityHint="BCSC.Steps.GetVerificationStep5Subtext3"
         accessibilityLabel="BCSC.Steps.Step4"
         accessibilityRole="button"
         accessibilityState={
@@ -431,125 +440,6 @@ exports[`SetupSteps renders correctly 1`] = `
               }
             >
               BCSC.Steps.Step4
-            </Text>
-          </View>
-          <View
-            style={
-              {
-                "marginTop": 8,
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-            >
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "color": "#313132",
-                    },
-                  ]
-                }
-              >
-                BCSC.Steps.EmailAddress
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#F2F2F2",
-            "height": 8,
-            "width": "100%",
-          }
-        }
-      />
-      <View
-        accessibilityHint="BCSC.Steps.GetVerificationStep5Subtext3"
-        accessibilityLabel="BCSC.Steps.Step5"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": true,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={false}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "opacity": 1,
-            "paddingHorizontal": 24,
-            "paddingVertical": 24,
-          }
-        }
-        testID="com.ariesbifold:id/BCSC.Steps.Step5"
-      >
-        <View
-          accessibilityElementsHidden={true}
-          importantForAccessibility="no-hide-descendants"
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 21,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "color": "#313132",
-                    "marginRight": 16,
-                  },
-                ]
-              }
-            >
-              BCSC.Steps.Step5
             </Text>
           </View>
           <View
