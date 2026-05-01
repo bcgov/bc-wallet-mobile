@@ -9,7 +9,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-type QRPairingTabParams = {
+type QRCoreTabParams = {
   Scanner: undefined
   Display: undefined
   PairingCode: undefined
@@ -52,8 +52,8 @@ const createTabBarIcon = (label: string, iconName: string) => {
   return TabBarIconComponent
 }
 
-const QRPairingStack: React.FC = () => {
-  const Tab = createBottomTabNavigator<QRPairingTabParams>()
+const QRCoreStack: React.FC = () => {
+  const Tab = createBottomTabNavigator<QRCoreTabParams>()
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
 
@@ -114,4 +114,4 @@ const QRPairingStack: React.FC = () => {
   )
 }
 
-export default QRPairingStack
+export default QRCoreStack
