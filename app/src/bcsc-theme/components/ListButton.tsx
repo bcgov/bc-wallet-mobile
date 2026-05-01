@@ -22,11 +22,11 @@ export interface ListButtonProps {
  *
  * @example:
  * ╭──────────────╮
- * │ Item 1       │ ← isFirst (rounded top)
+ * │ Item 1       │ ← first (rounded top)
  * ├──────────────┤
  * │ Item 2       │ ← middle (square)
  * ├──────────────┤
- * │ Item 3       │ ← isLast (rounded bottom)
+ * │ Item 3       │ ← last (rounded bottom)
  * ╰──────────────╯
  *
  * @example:
