@@ -5,15 +5,12 @@ import { PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'rea
 import { useTranslation } from 'react-i18next'
 import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, View } from 'react-native'
 import { getVersion } from 'react-native-device-info'
-import DropShadow from 'react-native-drop-shadow'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const ANIMATION_DURATION = 300
 const MENU_MIN_WIDTH = 200
 const DEFAULT_TRANSLATE_X = 600
-
-const AnimatedDropShadow = Animated.createAnimatedComponent(DropShadow)
 
 export interface FloatingHelpMenuRef {
   // Expose a method to allow parent components to programmatically close the menu (includes animation)
@@ -98,6 +95,7 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
       shadowOpacity: 0.4,
       shadowRadius: SHADOW_RADIUS,
       shadowOffset: { width: 0, height: 2 },
+      elevation: 6,
       borderTopLeftRadius: 10,
       borderBottomLeftRadius: 10,
       padding: Spacing.md,
@@ -124,7 +122,7 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
         <View style={styles.root}>
           <View style={styles.floatingMenuContainer}>
             <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
-              <AnimatedDropShadow style={[styles.container, { transform: [{ translateX }] }]}>
+              <Animated.View style={[styles.container, { transform: [{ translateX }] }]}>
                 <View style={styles.headerContainer}>
                   <PressableOpacity
                     onPress={handleClose}
@@ -140,7 +138,7 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
                 <View style={styles.versionContainer}>
                   <ThemedText>{t('BCSC.HelpMenu.Version', { version: getVersion() })}</ThemedText>
                 </View>
-              </AnimatedDropShadow>
+              </Animated.View>
             </TouchableWithoutFeedback>
           </View>
         </View>
