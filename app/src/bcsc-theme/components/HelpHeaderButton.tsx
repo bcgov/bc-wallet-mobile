@@ -2,15 +2,9 @@ import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { ReactElement, useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCMainStackParams, BCSCOnboardingStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
-import FloatingHelpMenu from './FloatingHelpMenu'
-import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
-
-type FloatingHelpMenuButtonProps = {
-  children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
-}
 
 type HelpHeaderButtonUrlProps = {
   helpCentreUrl: HelpCentreUrl
@@ -60,42 +54,6 @@ const HelpHeaderButton: React.FC<{
       }}
     />
   )
-}
-
-const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
-  const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
-
-  return (
-    <>
-      <IconButton
-        buttonLocation={ButtonLocation.Right}
-        icon={'help-circle'}
-        accessibilityLabel={t('BCSC.HelpMenu.AccessibilityLabel')}
-        testID={testIdWithKey('Help')}
-        onPress={() => setOpen(true)}
-      />
-      <FloatingHelpMenu open={open} onClose={() => setOpen(false)}>
-        <ListButtonGroup>{props.children}</ListButtonGroup>
-      </FloatingHelpMenu>
-    </>
-  )
-}
-
-export const createMainFloatingMenuButton = () => {
-  const MainHeaderRight = () => {
-    const { t } = useTranslation()
-
-    return (
-      <FloatingHelpMenuButton>
-        <ListButton text={t('BCSC.HelpMenu.LearnMore')} onPress={() => {}} />
-        <ListButton text={t('BCSC.HelpMenu.GiveFeedback')} onPress={() => {}} />
-        <ListButton text={t('BCSC.HelpMenu.ReportProblem')} onPress={() => {}} />
-      </FloatingHelpMenuButton>
-    )
-  }
-
-  return MainHeaderRight
 }
 
 /**

@@ -45,11 +45,12 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
       top: top,
       right: 0,
       bottom: 0,
+      maxWidth: '80%',
     },
     container: {
       backgroundColor: ColorPalette.brand.primaryBackground,
       shadowColor: SHADOW_COLOR,
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.4,
       shadowRadius: SHADOW_RADIUS,
       shadowOffset: { width: 0, height: 2 },
       borderTopLeftRadius: 10,
@@ -61,6 +62,7 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: Spacing.xs,
     },
     versionContainer: {
       flexDirection: 'row',

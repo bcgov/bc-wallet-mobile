@@ -215,6 +215,9 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help?",
       "Version": "BCSC version: {{ version }}",
+      "LearnMore": "Learn about BCSC app",
+      "GiveFeedback": "Give feedback",
+      "ReportProblem": "Report a problem",
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",

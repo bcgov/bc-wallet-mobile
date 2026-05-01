@@ -5,7 +5,7 @@ import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { createMainFloatingMenuButton } from '../components/HelpHeaderButton'
+import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import Account from '../features/account/Account'
 import Home from '../features/home/Home'
@@ -94,7 +94,6 @@ const BCSCTabStack: React.FC = () => {
             tabBarTestID: testIdWithKey('Home'),
             tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
-            // headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}
         />
         <Tab.Screen
