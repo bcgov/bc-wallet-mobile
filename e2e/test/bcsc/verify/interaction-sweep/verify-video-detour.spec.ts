@@ -6,7 +6,7 @@
  * Pre: SetupSteps with Step 5 ready. Post: SetupSteps anchor.
  */
 import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { swipeDownBy, swipeUpBy } from '../../../../src/helpers/gestures.js'
+import { swipeUpBy } from '../../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
