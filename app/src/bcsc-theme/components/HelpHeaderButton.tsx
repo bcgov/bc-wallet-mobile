@@ -8,8 +8,8 @@ import { BCSCMainStackParams, BCSCOnboardingStackParams, BCSCScreens, BCSCVerify
 import FloatingHelpMenu from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
 
-interface FloatingHelpMenuHeaderButtonProps {
-  children: ReactElement<ListButtonProps>[] | ReactElement<ListButtonProps>
+type FloatingHelpMenuButtonProps = {
+  children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
 }
 
 type HelpHeaderButtonUrlProps = {
@@ -62,9 +62,9 @@ const HelpHeaderButton: React.FC<{
   )
 }
 
-const FloatingHelpMenuHeaderButton = (props: FloatingHelpMenuHeaderButtonProps) => {
+const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
   const { t } = useTranslation()
-  const [openMenu, setOpenMenu] = useState(false)
+  const [open, setOpen] = useState(false)
 
   return (
     <>
@@ -73,33 +73,29 @@ const FloatingHelpMenuHeaderButton = (props: FloatingHelpMenuHeaderButtonProps) 
         icon={'help-circle'}
         accessibilityLabel={t('BCSC.HelpMenu.AccessibilityLabel')}
         testID={testIdWithKey('Help')}
-        onPress={() => {
-          setOpenMenu(true)
-        }}
+        onPress={() => setOpen(true)}
       />
-      {openMenu ? (
-        <FloatingHelpMenu onClose={() => setOpenMenu(false)}>
-          <ListButtonGroup>{props.children}</ListButtonGroup>
-        </FloatingHelpMenu>
-      ) : null}
+      <FloatingHelpMenu open={open} onClose={() => setOpen(false)}>
+        <ListButtonGroup>{props.children}</ListButtonGroup>
+      </FloatingHelpMenu>
     </>
   )
 }
 
 export const createMainFloatingMenuButton = () => {
-  const FloatingMenu = () => {
+  const MainHeaderRight = () => {
     const { t } = useTranslation()
 
     return (
-      <FloatingHelpMenuHeaderButton>
+      <FloatingHelpMenuButton>
         <ListButton text={t('BCSC.HelpMenu.LearnMore')} onPress={() => {}} />
         <ListButton text={t('BCSC.HelpMenu.GiveFeedback')} onPress={() => {}} />
         <ListButton text={t('BCSC.HelpMenu.ReportProblem')} onPress={() => {}} />
-      </FloatingHelpMenuHeaderButton>
+      </FloatingHelpMenuButton>
     )
   }
 
-  return FloatingMenu
+  return MainHeaderRight
 }
 
 /**
