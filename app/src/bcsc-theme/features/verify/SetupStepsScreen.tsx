@@ -66,21 +66,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   const renderStepSeparator = () => <View style={styles.itemSeparator} />
 
-  // SETUP STEP 1: Nickname Account
-  const renderStepNickname = () => (
-    <SetupStep
-      title={t('BCSC.Steps.Step1')}
-      subtext={steps.nickname.subtext}
-      isComplete={steps.nickname.completed}
-      isFocused={steps.nickname.focused}
-      isDisabled={shouldStepBeDisabled(steps.nickname.completed, steps.nickname.focused)}
-      onPress={stepActions.nickname}
-    />
-  )
-  // SETUP STEP 2: Identification submission
+  // SETUP STEP 1: Identification submission
   const renderStepID = () => (
     <SetupStep
-      title={t('BCSC.Steps.Step2')}
+      title={t('BCSC.Steps.Step1')}
       subtext={steps.id.subtext}
       isComplete={steps.id.completed}
       isFocused={steps.id.focused}
@@ -107,10 +96,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       }
     </SetupStep>
   )
-  // SETUP STEP 3: Residential Address
+  // SETUP STEP 2: Residential Address
   const renderStepAddress = () => (
     <SetupStep
-      title={t('BCSC.Steps.Step3')}
+      title={t('BCSC.Steps.Step2')}
       subtext={steps.address.subtext}
       isComplete={steps.address.completed}
       isFocused={steps.address.focused}
@@ -118,10 +107,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       onPress={stepActions.address}
     />
   )
-  // SETUP STEP 4: Email Address
+  // SETUP STEP 3: Email Address
   const renderStepEmail = () => (
     <SetupStep
-      title={t('BCSC.Steps.Step4')}
+      title={t('BCSC.Steps.Step3')}
       subtext={steps.email.subtext}
       isComplete={steps.email.completed}
       isFocused={steps.email.focused}
@@ -159,21 +148,21 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       }
     </SetupStep>
   )
-  // SETUP STEP 5: Identity Verification
+  // SETUP STEP 4: Identity Verification
   const renderStepVerification = () => (
     <SetupStep
-      title={t('BCSC.Steps.Step5')}
+      title={t('BCSC.Steps.Step4')}
       subtext={steps.verify.subtext}
-      isComplete={false} // The user won't see this step completed, they'll be veriified or need to re submit
+      isComplete={false} // The user won't see this step completed, they'll be verified or need to re-submit
       isFocused={steps.verify.focused}
       isDisabled={!steps.email.completed || Boolean(store.bcscSecure.userSubmittedVerificationVideo)}
       onPress={stepActions.verify}
     />
   )
-  // TRANSFER SETUP STEP 2: Transfer Account
+  // TRANSFER SETUP STEP 1: Transfer Account
   const renderStepTransfer = () => (
     <SetupStep
-      title={t('BCSC.Steps.Step2')}
+      title={t('BCSC.Steps.Step1')}
       subtext={steps.transfer.subtext}
       isComplete={steps.transfer.completed}
       isFocused={steps.transfer.focused}
@@ -185,8 +174,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   // Renders all of the steps for Add Account flow
   const renderAddAccountSteps = () => (
     <>
-      {renderStepNickname()}
-      {renderStepSeparator()}
       {renderStepID()}
       {renderStepSeparator()}
       {renderStepAddress()}
@@ -198,13 +185,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   )
 
   // Renders all of the steps for Transfer Account flow
-  const renderTransferAccountSteps = () => (
-    <>
-      {renderStepNickname()}
-      {renderStepSeparator()}
-      {renderStepTransfer()}
-    </>
-  )
+  const renderTransferAccountSteps = () => renderStepTransfer()
+
   const accountType = store.bcsc?.accountSetupType ?? AccountSetupType.AddAccount
   return (
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
