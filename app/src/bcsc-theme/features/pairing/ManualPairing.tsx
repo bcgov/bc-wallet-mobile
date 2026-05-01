@@ -76,10 +76,15 @@ const ManualPairing: React.FC = () => {
 
   return (
     <ScreenWrapper keyboardActive controls={controls}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+      <ThemedText
+        variant={'headingTwo'}
+        style={{ marginHorizontal: Spacing.md, marginBottom: Spacing.md, alignSelf: 'center' }}
+      >
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md, marginHorizontal: Spacing.md, alignSelf: 'center' }}>
+        {t('BCSC.ManualPairing.EnterPairingCodeMessage')}
+      </ThemedText>
       <CodeInput
         value={code}
         onChange={handleChangeCode}
