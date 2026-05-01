@@ -7,16 +7,20 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
-import { BifoldScope } from '../features/agent'
+import { useBCSCAgent } from '../features/agent'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
-const ScopedCredentialStack: React.FC = () => (
-  <BifoldScope>
-    <CredentialStack />
-  </BifoldScope>
-)
+const ScopedCredentialStack: React.FC = () => {
+  const { agent } = useBCSCAgent()
+
+  if (!agent) {
+    return null
+  }
+
+  return <CredentialStack />
+}
 
 type TabBarIconProps = {
   focused: boolean
