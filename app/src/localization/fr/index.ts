@@ -213,6 +213,14 @@ const translation = {
       "PrivacyInformation": "Privacy Information (FR)",
       "ManageDevices": "Manage Devices (FR)",
     },
+    "HelpMenu": {
+      "Title": "Need help? (FR)",
+      "AccessibilityLabel": "Help menu (FR)",
+      "Version": "BCSC version: {{ version }} (FR)",
+      "LearnMore": "Learn about BCSC app (FR)",
+      "GiveFeedback": "Give feedback (FR)",
+      "ReportProblem": "Report a problem (FR)",
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
       "AppStartup": "Getting your BCSC App ready... (FR)"
