@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
@@ -584,6 +585,9 @@ const Developer: React.FC = () => {
             </SectionRow>
           </>
         ) : null}
+        <View style={styles.footer}>
+          <Text style={TextTheme.caption}>{`Version ${getVersion()} (${getBuildNumber()})`}</Text>
+        </View>
       </ScrollView>
     </ScreenWrapper>
   )
