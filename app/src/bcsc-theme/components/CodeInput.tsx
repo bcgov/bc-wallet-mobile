@@ -59,7 +59,7 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
       textAlignVertical: 'center',
       borderRadius: 8,
       borderWidth: CELL_BORDER_WIDTH,
-      borderColor: 'transparent',
+      borderColor: '#D8D8D8',
       color: ColorPalette.grayscale.darkGrey,
       includeFontPadding: false,
     },
