@@ -8143,7 +8143,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:~4.6.2"
     eslint-plugin-react-native-a11y: "npm:^3.5.1"
     fast-text-encoding: "npm:~1.0.6"
-    i18next: "npm:~25.8.0"
+    i18next: "npm:~25.8.20"
     jest: "npm:~29.6.4"
     jwt-decode: "npm:~4.0.0"
     lodash.merge: "npm:~4.6.2"
@@ -12310,9 +12310,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next@npm:~25.8.0":
-  version: 25.8.18
-  resolution: "i18next@npm:25.8.18"
+"i18next@npm:~25.8.20":
+  version: 25.8.20
+  resolution: "i18next@npm:25.8.20"
   dependencies:
     "@babel/runtime": "npm:^7.28.6"
   peerDependencies:
@@ -12320,7 +12320,7 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/a5b68b12a8de7db59c6253f6c714616e0a687f1543300cbcfdc847bf6199aef2e3d3645756e3c36a261fdbdde127ad42f4bd1d25571cfe0519849fcbe7665724
+  checksum: 10c0/b22fb1fe0dd10b307cc376b07e7d0a04793b1feabca5e9a4c90547db08e6c7e83e28aa33771ffb4d1ac13173bebdcbc8ed96cbe137bffcca76c56f8f5900521f
   languageName: node
   linkType: hard
 
