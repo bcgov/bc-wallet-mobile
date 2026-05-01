@@ -130,6 +130,7 @@ describe('Notifications Interactions', () => {
 
 describe('Secure App Learn More Detour', () => {
   it('should tap Learn More and return from the WebView', async () => {
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
     await SecureApp.waitFor('LearnMore')
     await SecureApp.tap('LearnMore')
     await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)

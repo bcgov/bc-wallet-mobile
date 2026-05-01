@@ -1,10 +1,10 @@
-import { CARD_SCAN_PADDING, SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../src/constants.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
-import { injectPhoto } from '../../../src/helpers/camera.js'
-import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { getVerifyContext } from './card-type/card-context.js'
+import { CARD_SCAN_PADDING, SCAN_SERIAL_TAP_FOCUS_WINDOW, Timeouts } from '../../../../src/constants.js'
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
+import { injectPhoto } from '../../../../src/helpers/camera.js'
+import { tapAtWindowPercent } from '../../../../src/helpers/gestures.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)

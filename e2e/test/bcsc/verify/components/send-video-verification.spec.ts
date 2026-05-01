@@ -1,8 +1,8 @@
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
-import { injectPhoto } from '../../../src/helpers/camera.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { getVerifyContext } from './card-type/card-context.js'
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
+import { injectPhoto } from '../../../../src/helpers/camera.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
