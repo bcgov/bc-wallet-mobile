@@ -1,11 +1,12 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
-import React, { ReactElement, useState } from 'react'
+import React, { ReactElement, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import FloatingHelpMenu from './FloatingHelpMenu'
+import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
 
 type FloatingHelpMenuButtonProps = {
   children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
+  ref?: React.Ref<FloatingHelpMenuRef>
 }
 
 /**
@@ -27,7 +28,7 @@ const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
         testID={testIdWithKey('HelpMenu')}
         onPress={() => setOpen(true)}
       />
-      <FloatingHelpMenu open={open} onClose={() => setOpen(false)}>
+      <FloatingHelpMenu ref={props.ref} open={open} onClose={() => setOpen(false)}>
         <ListButtonGroup>{props.children}</ListButtonGroup>
       </FloatingHelpMenu>
     </>
@@ -42,25 +43,29 @@ const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
 export const createMainFloatingMenuButton = () => {
   const MainHeaderRight = () => {
     const { t } = useTranslation()
+    const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
 
     return (
-      <FloatingHelpMenuButton>
+      <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
         <ListButton
           text={t('BCSC.HelpMenu.LearnMore')}
           onPress={() => {
             // TODO (V4.1.x): Implement Learn More page and link here
+            floatingHelpMenuRef.current?.close()
           }}
         />
         <ListButton
           text={t('BCSC.HelpMenu.GiveFeedback')}
           onPress={() => {
             // TODO (V4.1.x): Implement Give Feedback page and link here
+            floatingHelpMenuRef.current?.close()
           }}
         />
         <ListButton
           text={t('BCSC.HelpMenu.ReportProblem')}
           onPress={() => {
             // TODO (V4.1.x): Implement Report a Problem page and link here
+            floatingHelpMenuRef.current?.close()
           }}
         />
       </FloatingHelpMenuButton>

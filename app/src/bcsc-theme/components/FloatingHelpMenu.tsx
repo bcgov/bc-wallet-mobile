@@ -1,7 +1,7 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { hitSlop, SHADOW_COLOR, SHADOW_RADIUS } from '@/constants'
 import { ThemedText, useTheme } from '@bifold/core'
-import { PropsWithChildren, useCallback, useRef } from 'react'
+import { PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, View } from 'react-native'
 import { getVersion } from 'react-native-device-info'
@@ -15,9 +15,15 @@ const DEFAULT_TRANSLATE_X = 600
 
 const AnimatedDropShadow = Animated.createAnimatedComponent(DropShadow)
 
+export interface FloatingHelpMenuRef {
+  // Expose a method to allow parent components to programmatically close the menu (includes animation)
+  close: () => void
+}
+
 interface FloatingHelpMenuProps extends PropsWithChildren {
   open: boolean
   onClose: () => void
+  ref?: React.Ref<FloatingHelpMenuRef>
 }
 
 /**
@@ -35,6 +41,46 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
   const { Spacing, ColorPalette } = useTheme()
   const translateX = useRef(new Animated.Value(DEFAULT_TRANSLATE_X)).current
   const animationRef = useRef<Animated.CompositeAnimation | null>(null)
+
+  const animateTransition = useCallback(
+    (toValue: number, onFinished?: () => void) => {
+      // Cancel any in-flight animation before starting a new one
+      animationRef.current?.stop()
+
+      const isClosing = toValue !== 0
+      const easing = isClosing ? Easing.in(Easing.cubic) : Easing.out(Easing.cubic)
+      const duration = isClosing ? ANIMATION_DURATION / 2 : ANIMATION_DURATION
+
+      animationRef.current = Animated.timing(translateX, {
+        toValue,
+        duration,
+        easing,
+        useNativeDriver: false,
+      })
+
+      animationRef.current.start(({ finished }) => {
+        if (finished) {
+          onFinished?.()
+        }
+      })
+    },
+    [translateX]
+  )
+
+  const handleClose = () => {
+    // After animation complete, call the onClose callback to update parent state and unmount the menu
+    animateTransition(DEFAULT_TRANSLATE_X, props.onClose)
+  }
+
+  const handleShow = () => {
+    // Ensure menu starts off-screen when opened
+    translateX.setValue(DEFAULT_TRANSLATE_X)
+    animateTransition(0)
+  }
+
+  useImperativeHandle(props.ref, () => ({
+    close: handleClose,
+  }))
 
   const styles = StyleSheet.create({
     root: {
@@ -73,57 +119,25 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
     },
   })
 
-  const animateTransition = useCallback(
-    (toValue: number, onFinished?: () => void) => {
-      // Cancel any in-flight animation before starting a new one
-      animationRef.current?.stop()
-
-      const isClosing = toValue !== 0
-      const easing = isClosing ? Easing.in(Easing.cubic) : Easing.out(Easing.cubic)
-      const duration = isClosing ? ANIMATION_DURATION / 2 : ANIMATION_DURATION
-
-      animationRef.current = Animated.timing(translateX, {
-        toValue,
-        duration,
-        easing,
-        useNativeDriver: false,
-      })
-
-      animationRef.current.start(({ finished }) => {
-        if (finished) {
-          onFinished?.()
-        }
-      })
-    },
-    [translateX]
-  )
-
-  const handleClose = () => {
-    animateTransition(DEFAULT_TRANSLATE_X, props.onClose)
-  }
-
-  const handleShow = () => {
-    translateX.setValue(DEFAULT_TRANSLATE_X) // Ensure menu starts off-screen when opened
-    animateTransition(0)
-  }
-
   return (
     <Modal visible={props.open} onShow={handleShow} transparent animationType="none" onRequestClose={handleClose}>
       <TouchableWithoutFeedback onPress={handleClose} accessible={false}>
         <View style={styles.root}>
           <View style={styles.floatingMenuContainer}>
-            <AnimatedDropShadow style={[styles.container, { transform: [{ translateX }] }]}>
-              <View style={styles.headerContainer}>
-                <PressableOpacity onPress={handleClose} hitSlop={hitSlop}>
-                  <Icon name="close" size={24} color={ColorPalette.brand.headerText} />
-                </PressableOpacity>
-                <ThemedText variant="headingFour">{t('BCSC.HelpMenu.Title')}</ThemedText>
-              </View>
-              <View style={styles.childrenContainer}>{props.children}</View>
-              <View style={styles.versionContainer}>
-                <ThemedText>{t('BCSC.HelpMenu.Version', { version: getVersion() })}</ThemedText>
-              </View>
-            </AnimatedDropShadow>
+            <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
+              <AnimatedDropShadow style={[styles.container, { transform: [{ translateX }] }]}>
+                <View style={styles.headerContainer}>
+                  <PressableOpacity onPress={handleClose} hitSlop={hitSlop}>
+                    <Icon name="close" size={24} color={ColorPalette.brand.headerText} />
+                  </PressableOpacity>
+                  <ThemedText variant="headingFour">{t('BCSC.HelpMenu.Title')}</ThemedText>
+                </View>
+                <View style={styles.childrenContainer}>{props.children}</View>
+                <View style={styles.versionContainer}>
+                  <ThemedText>{t('BCSC.HelpMenu.Version', { version: getVersion() })}</ThemedText>
+                </View>
+              </AnimatedDropShadow>
+            </TouchableWithoutFeedback>
           </View>
         </View>
       </TouchableWithoutFeedback>
