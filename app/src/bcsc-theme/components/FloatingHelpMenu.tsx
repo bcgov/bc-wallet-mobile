@@ -3,14 +3,13 @@ import { hitSlop, SHADOW_COLOR, SHADOW_RADIUS } from '@/constants'
 import { ThemedText, useTheme } from '@bifold/core'
 import { PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, View } from 'react-native'
+import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native'
 import { getVersion } from 'react-native-device-info'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const ANIMATION_DURATION = 300
 const MENU_MIN_WIDTH = 200
-const DEFAULT_TRANSLATE_X = 600
 
 export interface FloatingHelpMenuRef {
   // Expose a method to allow parent components to programmatically close the menu (includes animation)
@@ -36,7 +35,8 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
   const { t } = useTranslation()
   const { top } = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const translateX = useRef(new Animated.Value(DEFAULT_TRANSLATE_X)).current
+  const { width: screenWidth } = useWindowDimensions()
+  const translateX = useRef(new Animated.Value(screenWidth)).current
   const animationRef = useRef<Animated.CompositeAnimation | null>(null)
 
   const animateTransition = useCallback(
@@ -67,12 +67,12 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
 
   const handleClose = () => {
     // After animation complete, call the onClose callback to update parent state and unmount the menu
-    animateTransition(DEFAULT_TRANSLATE_X, props.onClose)
+    animateTransition(screenWidth, props.onClose)
   }
 
   const handleShow = () => {
     // Ensure menu starts off-screen when opened
-    translateX.setValue(DEFAULT_TRANSLATE_X)
+    translateX.setValue(screenWidth)
     animateTransition(0)
   }
 
