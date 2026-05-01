@@ -12,7 +12,7 @@ import '../onboarding/onboarding-basic.spec.js'
 import '../verify/card-type/config-non-bcsc-card.js'
 
 // Setup Steps 1: Nickname
-import '../verify/nickname.spec.js'
+import '../verify/components/nickname.spec.js'
 
 // Setup Steps 2: Driver's License & Passport
 import '../verify/non-bcsc/non-bcsc-first-id.spec.js'
@@ -24,5 +24,5 @@ import '../verify/non-bcsc/residential-address.spec.js'
 // Setup Steps 4: Email Address
 import '../verify/non-bcsc/email-address.spec.js'
 
-import '../verify/in-person-verification.spec.js'
+import '../verify/components/in-person-verification.spec.js'
 import '../main/main.spec.js'
