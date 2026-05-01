@@ -21,25 +21,33 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
   }
 >
   <View
-    allowsBackForwardNavigationGestures={true}
-    bounces={false}
-    domStorageEnabled={true}
-    javaScriptEnabled={true}
-    mixedContentMode="compatibility"
-    onError={[Function]}
-    onHttpError={[Function]}
-    onLoad={[Function]}
-    originWhitelist={
-      [
-        "*",
-      ]
-    }
-    renderLoading={[Function]}
-    sharedCookiesEnabled={true}
-    source={
+    style={
       {
-        "baseUrl": "",
-        "html": "<!DOCTYPE html>
+        "flex": 1,
+        "marginBottom": 16,
+      }
+    }
+  >
+    <View
+      allowsBackForwardNavigationGestures={true}
+      bounces={false}
+      domStorageEnabled={true}
+      javaScriptEnabled={true}
+      mixedContentMode="compatibility"
+      onError={[Function]}
+      onHttpError={[Function]}
+      onLoad={[Function]}
+      originWhitelist={
+        [
+          "*",
+        ]
+      }
+      renderLoading={[Function]}
+      sharedCookiesEnabled={true}
+      source={
+        {
+          "baseUrl": "",
+          "html": "<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,19 +81,20 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
 <p>Terms of Use content</p>
 </body>
 </html>",
+        }
       }
-    }
-    startInLoadingState={true}
-    style={
-      {
-        "backgroundColor": "#F2F2F2",
+      startInLoadingState={true}
+      style={
+        {
+          "backgroundColor": "#F2F2F2",
+        }
       }
-    }
-    testID="mocked-webview"
-    textZoom={200}
-    thirdPartyCookiesEnabled={true}
-    userAgent="BCServicesCard/4.0.0 (iOS 17.4; Build 142)"
-  />
+      testID="mocked-webview"
+      textZoom={200}
+      thirdPartyCookiesEnabled={true}
+      userAgent="BCServicesCard/4.0.0 (iOS 17.4; Build 142)"
+    />
+  </View>
   <View
     style={
       [

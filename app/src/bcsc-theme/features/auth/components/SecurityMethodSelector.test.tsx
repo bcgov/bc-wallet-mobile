@@ -67,12 +67,12 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
-      expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+      expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
-      expect(tree.getByText('BCSC.Onboarding.LearnMore')).toBeTruthy()
+      expect(tree.queryByTestId(testIdWithKey('LearnMoreButton'))).toBeNull()
       expect(tree).toMatchSnapshot()
     })
 
@@ -90,7 +90,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppContent')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingContent')).toBeTruthy()
       })
     })
 
@@ -133,7 +133,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
 
       const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
@@ -160,7 +160,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
 
       const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
@@ -172,6 +172,7 @@ describe('SecurityMethodSelector', () => {
     })
 
     it('calls onLearnMorePress when learn more option is pressed', async () => {
+      // Learn More is only shown in the settings context (with currentMethod) when device auth is available
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
@@ -179,13 +180,14 @@ describe('SecurityMethodSelector', () => {
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
               onLearnMorePress={mockOnLearnMorePress}
+              currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
             />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.LearnMore')).toBeTruthy()
+        expect(tree.getByTestId(testIdWithKey('LearnMoreButton'))).toBeTruthy()
       })
 
       const learnMoreButton = tree.getByTestId(testIdWithKey('LearnMoreButton'))
@@ -215,7 +217,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
       // Should show no device auth content
@@ -224,7 +226,7 @@ describe('SecurityMethodSelector', () => {
       expect(tree).toMatchSnapshot()
     })
 
-    it('renders PIN and Learn More buttons', async () => {
+    it('renders PIN-only view (no Learn More button in onboarding)', async () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
@@ -239,8 +241,9 @@ describe('SecurityMethodSelector', () => {
 
       await waitFor(() => {
         expect(tree.getByTestId(testIdWithKey('ChoosePINButton'))).toBeTruthy()
-        expect(tree.getByTestId(testIdWithKey('LearnMoreButton'))).toBeTruthy()
       })
+
+      expect(tree.queryByTestId(testIdWithKey('LearnMoreButton'))).toBeNull()
     })
 
     it('calls onPINPress when PIN button is pressed', async () => {
@@ -430,7 +433,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
 
       const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
@@ -462,7 +465,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
 
       const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
@@ -495,7 +498,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
 
       const deviceAuthButton = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
@@ -525,7 +528,7 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle')).toBeTruthy()
       })
     })
   })
