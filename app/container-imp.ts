@@ -248,6 +248,12 @@ export class AppContainer implements Container {
     // navigate to Stacks.SettingStack which BCSC does not register), rename
     // the header to "Wallet" per the v4.1 design, and replace the BC-Wallet-
     // branded empty-list component with a plain BCSC empty state.
+    //
+    // The hamburger button is rendered inside Bifold's CredentialStack, so its
+    // active navigator is the inner Credentials stack — not BCSC's MainStack.
+    // navigation.navigate('BCSC Main Stack In App Settings') still resolves
+    // because react-navigation walks up the navigator tree by route name and
+    // finds MainSettings registered in BCSC's MainStack.
     if (Config.BUILD_TARGET === Mode.BCSC) {
       this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
         ...DefaultScreenOptionsDictionary,
