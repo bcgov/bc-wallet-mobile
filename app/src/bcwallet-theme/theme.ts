@@ -98,6 +98,7 @@ export const BrandColors: IBrandColors = {
   tabBarInactive: GrayscaleColors.white,
   inlineError: '',
   inlineWarning: '',
+  loadingIcon: GrayscaleColors.white,
 }
 
 export const ColorPalette: IColorPalette = {
