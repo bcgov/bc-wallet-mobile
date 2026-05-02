@@ -2,33 +2,21 @@ import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
-import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
-import { useBCSCAgent } from '../features/agent'
+import { AgentReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
-const ScopedCredentialStack: React.FC = () => {
-  const { agent } = useBCSCAgent()
-  const { ColorPalette } = useTheme()
-
-  if (!agent) {
-    return (
-      <View
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-        testID={testIdWithKey('Wallet.Loading')}
-      >
-        <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
-      </View>
-    )
-  }
-
-  return <CredentialStack />
-}
+const ScopedCredentialStack: React.FC = () => (
+  <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
+    <CredentialStack />
+  </AgentReadyGate>
+)
 
 type TabBarIconProps = {
   focused: boolean

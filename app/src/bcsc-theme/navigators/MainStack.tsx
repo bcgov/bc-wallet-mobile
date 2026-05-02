@@ -31,7 +31,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
-import { BifoldScope } from '../features/agent'
+import { AgentReadyGate, BifoldScope } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
@@ -52,6 +52,12 @@ import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
+
+const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDetails>> = (props) => (
+  <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
+    <CredentialDetails {...props} />
+  </AgentReadyGate>
+)
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -135,7 +141,7 @@ const MainStack: React.FC = () => {
           />
           <Stack.Screen
             name={Screens.CredentialDetails}
-            component={CredentialDetails}
+            component={ScopedCredentialDetails}
             options={{
               headerShown: true,
               title: t('Screens.CredentialDetails'),

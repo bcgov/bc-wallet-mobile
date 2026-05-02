@@ -3,8 +3,8 @@ import { render } from '@testing-library/react-native'
 import React, { PropsWithChildren } from 'react'
 import { Text } from 'react-native'
 
-import BifoldScope from './BifoldScope'
 import { useBCSCAgent } from './BCSCAgentProvider'
+import BifoldScope from './BifoldScope'
 
 jest.mock('./BCSCAgentProvider', () => ({
   useBCSCAgent: jest.fn(),

@@ -240,8 +240,6 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooterView)
-    this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
-
     // BCSC re-uses Bifold's CredentialStack for the Wallet tab but owns its
     // own settings flow. Override the Credentials screen options so the
     // hamburger navigates to BCSCScreens.MainSettings (Bifold's default would
@@ -254,7 +252,9 @@ export class AppContainer implements Container {
     // navigation.navigate('BCSC Main Stack In App Settings') still resolves
     // because react-navigation walks up the navigator tree by route name and
     // finds MainSettings registered in BCSC's MainStack.
-    if (Config.BUILD_TARGET === Mode.BCSC) {
+    const isBCSC = Config.BUILD_TARGET === Mode.BCSC
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, isBCSC ? EmptyWalletList : EmptyList)
+    if (isBCSC) {
       this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
         ...DefaultScreenOptionsDictionary,
         [Screens.Credentials]: {
@@ -263,7 +263,6 @@ export class AppContainer implements Container {
           headerLeft: createMainSettingsHeaderButton(),
         },
       })
-      this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyWalletList)
     }
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
