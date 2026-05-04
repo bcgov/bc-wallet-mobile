@@ -126,7 +126,6 @@ class StorageService {
 
       let value = try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-      logger.log("currentIssuer: Read from issuer file → \(value) (env: \(getIssuerNameFromIssuer(issuer: value)))")
       return value
     } catch {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
@@ -439,25 +438,6 @@ class StorageService {
     }
   }
 
-  /// Logs the high-level contents (names, type, size) of a directory — one line per item.
-  private func logDirectoryContents(_ url: URL, label: String) {
-    guard let contents = try? FileManager.default.contentsOfDirectory(
-      at: url,
-      includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
-      options: .skipsHiddenFiles
-    ) else {
-      logger.log("logDirectoryContents: \(label): not accessible at \(url.path)")
-      return
-    }
-    logger.log("logDirectoryContents: \(label): \(contents.count) item(s) at \(url.lastPathComponent)/")
-    for item in contents.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
-      let isDir = (try? item.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
-      let size = (try? item.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
-      let suffix = isDir ? "/" : " (\(size) bytes)"
-      logger.log("logDirectoryContents:   \(item.lastPathComponent)\(suffix)")
-    }
-  }
-
   /// Scans the accounts_dir for known environment subdirectories containing UUID-format account
   /// directories. Returns the issuer URL for the first match in priority order.
   /// Used as a fallback when the issuer file is missing (e.g. V3 migrated users).
@@ -470,7 +450,6 @@ class StorageService {
       .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
 
     logger.log("findIssuerFromAccountDirectories: scanning \(accountsDirURL.path)")
-    logDirectoryContents(accountsDirURL, label: "findIssuerFromAccountDirectories: accounts_dir")
 
     guard let uuidRegex = try? NSRegularExpression(
       pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -482,12 +461,8 @@ class StorageService {
       guard let contents = try? FileManager.default.contentsOfDirectory(
         at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
       ) else {
-        logger.log("findIssuerFromAccountDirectories: '\(entry.name)' — not present")
         continue
       }
-
-      logger.log("findIssuerFromAccountDirectories: '\(entry.name)' — \(contents.count) item(s)")
-      logDirectoryContents(envDirURL, label: "findIssuerFromAccountDirectories: \(entry.name)")
 
       let uuidDirs = contents.filter { url in
         guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
@@ -500,12 +475,6 @@ class StorageService {
         logger.log(
           "findIssuerFromAccountDirectories: Found \(uuidDirs.count) account(s) in '\(entry.name)', using issuer \(entry.url)"
         )
-        for uuidDir in uuidDirs {
-          logDirectoryContents(
-            uuidDir,
-            label: "findIssuerFromAccountDirectories: \(entry.name)/\(uuidDir.lastPathComponent)"
-          )
-        }
         return entry.url
       }
     }

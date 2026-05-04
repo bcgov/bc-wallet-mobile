@@ -15,11 +15,6 @@ protocol TokenStorageServiceProtocol {
 }
 
 class KeychainTokenStorageService: TokenStorageServiceProtocol {
-  private let logger = AppLogger(
-    subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard",
-    category: "TokenService"
-  )
-
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
   private var nativeModuleName: String {
@@ -209,7 +204,5 @@ extension KeychainTokenStorageService {
       kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
     ]
     SecItemDelete(deleteQuery)
-
-    logger.log("migrateV3TokenIfNeeded: migration complete, old key deleted")
   }
 }
