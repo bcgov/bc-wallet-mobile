@@ -1097,6 +1097,9 @@ const translation = {
       "AuthorizationErrorTitle": "Authorization failed",
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
+    "Wallet": {
+      "EmptyMessage": "Your wallet is empty",
+    },
     "Account": {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
