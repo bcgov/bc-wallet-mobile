@@ -15,7 +15,10 @@ protocol TokenStorageServiceProtocol {
 }
 
 class KeychainTokenStorageService: TokenStorageServiceProtocol {
-  // private let log = Logger(source: "KeychainTokenStorageService")
+  private let logger = AppLogger(
+    subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard",
+    category: "TokenService"
+  )
 
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
@@ -165,6 +168,8 @@ extension KeychainTokenStorageService {
     guard let range = newId.range(of: "/tokens/") else { return }
     let v3Id = newId.replacingCharacters(in: range, with: "/")
 
+    logger.log("[MIGRATION] migrateV3TokenIfNeeded: checking V3 key '\(v3Id)' for V4 key '\(newId)'")
+
     // Read token data at V3 key
     let readQuery: NSDictionary = [
       kSecClass: kSecClassKey,
@@ -176,7 +181,12 @@ extension KeychainTokenStorageService {
     guard SecItemCopyMatching(readQuery, &result) == errSecSuccess,
           let data = result as? Data,
           let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
-    else { return }
+    else {
+      logger.log("[MIGRATION] migrateV3TokenIfNeeded: no V3 token found at '\(v3Id)'")
+      return
+    }
+
+    logger.log("[MIGRATION] migrateV3TokenIfNeeded: found V3 token at '\(v3Id)', migrating to '\(newId)'")
 
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
@@ -204,5 +214,7 @@ extension KeychainTokenStorageService {
       kSecAttrApplicationTag: v3Id.data(using: .utf8)!,
     ]
     SecItemDelete(deleteQuery)
+
+    logger.log("[MIGRATION] migrateV3TokenIfNeeded: migration complete, old key '\(v3Id)' deleted")
   }
 }

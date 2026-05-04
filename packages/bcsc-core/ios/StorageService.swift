@@ -43,6 +43,7 @@ class StorageService {
   /// Maps environment directory names (as produced by getIssuerNameFromIssuer) to issuer URLs.
   /// Priority order matters: prod is checked first, then non-prod environments.
   private let issuerDirectoryToURL: [(name: String, url: String)] = [
+    ("PROD", "https://id.gov.bc.ca"),
     ("prod", "https://id.gov.bc.ca"),
     ("SIT", "https://idsit.gov.bc.ca"),
     ("QA", "https://idqa.gov.bc.ca"),
@@ -85,7 +86,8 @@ class StorageService {
           .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        logger.error("account_list file does not exist at \(accountListFileUrl.path).")
+        logger.error("[MIGRATION] account_list file does not exist at \(accountListFileUrl.path).")
+        logDirectoryContents(accountListFileUrl.deletingLastPathComponent(), label: "[MIGRATION] account_list parent dir")
         return nil
       }
 
@@ -125,22 +127,43 @@ class StorageService {
           .appendingPathComponent("\(currentBundleID)/data")
           .appendingPathComponent(issuerURLComponent)
 
-      return try String(contentsOf: issuerFileURL, encoding: .utf8)
+      let value = try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
+      logger.log("[MIGRATION] currentIssuer: Read from issuer file → \(value) (env: \(getIssuerNameFromIssuer(issuer: value)))")
+      let accountsDirURL = rootDirectoryURL.appendingPathComponent("\(currentBundleID)/data/accounts_dir")
+      logDirectoryContents(accountsDirURL, label: "[MIGRATION] currentIssuer: accounts_dir")
+      return value
     } catch {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
       // Fallback: infer issuer from directory structure (v3 migration path)
       if let inferred = findIssuerFromAccountDirectories() {
-        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred)")
+        logger.log("[MIGRATION] currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))")
         return inferred
       }
-      logger.log("currentIssuer: Defaulting to production issuer")
+      logger.log("[MIGRATION] currentIssuer: Defaulting to production issuer")
       return productionIssuer
     }
   }
 
   var basePath: String {
-    return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
+    let envDir = getIssuerNameFromIssuer(issuer: issuer)
+    let base = "\(currentBundleID)/data/accounts_dir"
+    // iOS APFS is case-sensitive. Primary dir is uppercase (e.g. "PROD") matching V3.
+    // Fall back to lowercase (e.g. "prod") for any early V4 installs that used lowercase.
+    if let rootURL = try? FileManager.default.url(
+      for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+    ) {
+      let computedURL = rootURL.appendingPathComponent("\(base)/\(envDir)")
+      if !FileManager.default.fileExists(atPath: computedURL.path) {
+        let lowerDir = envDir.lowercased()
+        let lowerURL = rootURL.appendingPathComponent("\(base)/\(lowerDir)")
+        if FileManager.default.fileExists(atPath: lowerURL.path) {
+          logger.log("[MIGRATION] basePath: '\(envDir)' not found, using lowercase fallback '\(lowerDir)'")
+          return "\(base)/\(lowerDir)"
+        }
+      }
+    }
+    return "\(base)/\(envDir)"
   }
 
   var provider: String {
@@ -435,6 +458,25 @@ class StorageService {
     }
   }
 
+  /// Logs the high-level contents (names, type, size) of a directory — one line per item.
+  private func logDirectoryContents(_ url: URL, label: String) {
+    guard let contents = try? FileManager.default.contentsOfDirectory(
+      at: url,
+      includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
+      options: .skipsHiddenFiles
+    ) else {
+      logger.log("[MIGRATION] \(label): not accessible at \(url.path)")
+      return
+    }
+    logger.log("[MIGRATION] \(label): \(contents.count) item(s) at \(url.lastPathComponent)/")
+    for item in contents.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+      let isDir = (try? item.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
+      let size = (try? item.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+      let suffix = isDir ? "/" : " (\(size) bytes)"
+      logger.log("[MIGRATION]   \(item.lastPathComponent)\(suffix)")
+    }
+  }
+
   /// Scans the accounts_dir for known environment subdirectories containing UUID-format account
   /// directories. Returns the issuer URL for the first match in priority order.
   /// Used as a fallback when the issuer file is missing (e.g. V3 migrated users).
@@ -446,6 +488,9 @@ class StorageService {
     let accountsDirURL = rootURL
       .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
 
+    logger.log("[MIGRATION] findIssuerFromAccountDirectories: scanning \(accountsDirURL.path)")
+    logDirectoryContents(accountsDirURL, label: "findIssuerFromAccountDirectories: accounts_dir")
+
     guard let uuidRegex = try? NSRegularExpression(
       pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       options: .caseInsensitive
@@ -455,43 +500,56 @@ class StorageService {
       let envDirURL = accountsDirURL.appendingPathComponent(entry.name)
       guard let contents = try? FileManager.default.contentsOfDirectory(
         at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
-      ) else { continue }
+      ) else {
+        logger.log("[MIGRATION] findIssuerFromAccountDirectories: '\(entry.name)' — not present")
+        continue
+      }
 
-      let hasUUIDSubdir = contents.contains { url in
+      logger.log("[MIGRATION] findIssuerFromAccountDirectories: '\(entry.name)' — \(contents.count) item(s)")
+      logDirectoryContents(envDirURL, label: "findIssuerFromAccountDirectories: \(entry.name)")
+
+      let uuidDirs = contents.filter { url in
         guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
         else { return false }
         let name = url.lastPathComponent
-        return uuidRegex.firstMatch(
-          in: name, range: NSRange(name.startIndex..., in: name)
-        ) != nil
+        return uuidRegex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil
       }
 
-      if hasUUIDSubdir {
+      if !uuidDirs.isEmpty {
         logger.log(
-          "findIssuerFromAccountDirectories: Found accounts in '\(entry.name)', using issuer \(entry.url)"
+          "[MIGRATION] findIssuerFromAccountDirectories: Found \(uuidDirs.count) account(s) in '\(entry.name)', using issuer \(entry.url)"
         )
+        for uuidDir in uuidDirs {
+          logDirectoryContents(
+            uuidDir,
+            label: "findIssuerFromAccountDirectories: \(entry.name)/\(uuidDir.lastPathComponent)"
+          )
+        }
         return entry.url
       }
     }
 
+    logger.log("[MIGRATION] findIssuerFromAccountDirectories: No accounts found in any known environment directory")
     return nil
   }
 
-  /// https://id.gov.bc.ca -> "prod"
-  /// https://iddev.gov.bc.ca -> "dev"
+  /// https://id.gov.bc.ca -> "PROD"
+  /// https://iddev.gov.bc.ca -> "DEV"
   private func getIssuerNameFromIssuer(issuer: String) -> String {
     guard let host = URLComponents(string: issuer)?.host else {
-      return "prod"
+      return "PROD"
     }
 
     if host.hasPrefix("id") {
       let remainder = host.dropFirst(2) // remove "id"
 
-      if let env = remainder.split(separator: ".").first, !env.isEmpty {
-        return String(env).uppercased() // "DEV", "TEST"
+      // Production is "id.gov.bc.ca" — remainder starts with "." (no env segment after "id").
+      // Non-prod is "id{env}.gov.bc.ca" — remainder starts with the env name.
+      if !remainder.hasPrefix("."), let env = remainder.split(separator: ".").first, !env.isEmpty {
+        return String(env).uppercased() // "DEV", "SIT", "TEST", etc.
       }
     }
 
-    return "prod"
+    return "PROD"
   }
 }
