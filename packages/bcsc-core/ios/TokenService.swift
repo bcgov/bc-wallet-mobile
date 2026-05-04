@@ -168,7 +168,7 @@ extension KeychainTokenStorageService {
     guard let range = newId.range(of: "/tokens/") else { return }
     let v3Id = newId.replacingCharacters(in: range, with: "/")
 
-    logger.log("[MIGRATION] migrateV3TokenIfNeeded: checking V3 key '\(v3Id)' for V4 key '\(newId)'")
+    logger.log("migrateV3TokenIfNeeded: checking V3 key '\(v3Id)' for V4 key '\(newId)'")
 
     // Read token data at V3 key
     let readQuery: NSDictionary = [
@@ -182,11 +182,11 @@ extension KeychainTokenStorageService {
           let data = result as? Data,
           let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
     else {
-      logger.log("[MIGRATION] migrateV3TokenIfNeeded: no V3 token found at '\(v3Id)'")
+      logger.log("migrateV3TokenIfNeeded: no V3 token found at '\(v3Id)'")
       return
     }
 
-    logger.log("[MIGRATION] migrateV3TokenIfNeeded: found V3 token at '\(v3Id)', migrating to '\(newId)'")
+    logger.log("migrateV3TokenIfNeeded: found V3 token at '\(v3Id)', migrating to '\(newId)'")
 
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
@@ -215,6 +215,6 @@ extension KeychainTokenStorageService {
     ]
     SecItemDelete(deleteQuery)
 
-    logger.log("[MIGRATION] migrateV3TokenIfNeeded: migration complete, old key '\(v3Id)' deleted")
+    logger.log("migrateV3TokenIfNeeded: migration complete, old key '\(v3Id)' deleted")
   }
 }

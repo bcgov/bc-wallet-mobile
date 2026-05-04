@@ -465,15 +465,15 @@ class StorageService {
       includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
       options: .skipsHiddenFiles
     ) else {
-      logger.log("[MIGRATION] \(label): not accessible at \(url.path)")
+      logger.log("logDirectoryContents: \(label): not accessible at \(url.path)")
       return
     }
-    logger.log("[MIGRATION] \(label): \(contents.count) item(s) at \(url.lastPathComponent)/")
+    logger.log("logDirectoryContents: \(label): \(contents.count) item(s) at \(url.lastPathComponent)/")
     for item in contents.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
       let isDir = (try? item.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
       let size = (try? item.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
       let suffix = isDir ? "/" : " (\(size) bytes)"
-      logger.log("[MIGRATION]   \(item.lastPathComponent)\(suffix)")
+      logger.log("logDirectoryContents:   \(item.lastPathComponent)\(suffix)")
     }
   }
 
@@ -488,7 +488,7 @@ class StorageService {
     let accountsDirURL = rootURL
       .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
 
-    logger.log("[MIGRATION] findIssuerFromAccountDirectories: scanning \(accountsDirURL.path)")
+    logger.log("findIssuerFromAccountDirectories: scanning \(accountsDirURL.path)")
     logDirectoryContents(accountsDirURL, label: "findIssuerFromAccountDirectories: accounts_dir")
 
     guard let uuidRegex = try? NSRegularExpression(
@@ -501,11 +501,11 @@ class StorageService {
       guard let contents = try? FileManager.default.contentsOfDirectory(
         at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
       ) else {
-        logger.log("[MIGRATION] findIssuerFromAccountDirectories: '\(entry.name)' — not present")
+        logger.log("findIssuerFromAccountDirectories: '\(entry.name)' — not present")
         continue
       }
 
-      logger.log("[MIGRATION] findIssuerFromAccountDirectories: '\(entry.name)' — \(contents.count) item(s)")
+      logger.log("findIssuerFromAccountDirectories: '\(entry.name)' — \(contents.count) item(s)")
       logDirectoryContents(envDirURL, label: "findIssuerFromAccountDirectories: \(entry.name)")
 
       let uuidDirs = contents.filter { url in
@@ -517,7 +517,7 @@ class StorageService {
 
       if !uuidDirs.isEmpty {
         logger.log(
-          "[MIGRATION] findIssuerFromAccountDirectories: Found \(uuidDirs.count) account(s) in '\(entry.name)', using issuer \(entry.url)"
+          "findIssuerFromAccountDirectories: Found \(uuidDirs.count) account(s) in '\(entry.name)', using issuer \(entry.url)"
         )
         for uuidDir in uuidDirs {
           logDirectoryContents(
@@ -529,7 +529,7 @@ class StorageService {
       }
     }
 
-    logger.log("[MIGRATION] findIssuerFromAccountDirectories: No accounts found in any known environment directory")
+    logger.log("findIssuerFromAccountDirectories: No accounts found in any known environment directory")
     return nil
   }
 
