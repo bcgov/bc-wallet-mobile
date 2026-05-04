@@ -132,7 +132,10 @@ class StorageService {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
       // Fallback: infer issuer from directory structure (v3 migration path)
       if let inferred = findIssuerFromAccountDirectories() {
-        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))")
+        logger
+          .log(
+            "currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))"
+          )
         return inferred
       }
       logger.log("currentIssuer: Defaulting to production issuer")

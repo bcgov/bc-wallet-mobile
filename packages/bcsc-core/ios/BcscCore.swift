@@ -1828,7 +1828,6 @@ class BcscCore: NSObject {
       return
     }
 
-
     let authReason = reason ?? "Authenticate to unlock"
 
     Task { @MainActor in

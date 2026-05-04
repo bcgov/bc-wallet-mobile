@@ -168,7 +168,6 @@ extension KeychainTokenStorageService {
     guard let range = newId.range(of: "/tokens/") else { return }
     let v3Id = newId.replacingCharacters(in: range, with: "/")
 
-
     // Read token data at V3 key
     let readQuery: NSDictionary = [
       kSecClass: kSecClassKey,
