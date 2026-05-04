@@ -124,9 +124,8 @@ class StorageService {
           .appendingPathComponent("\(currentBundleID)/data")
           .appendingPathComponent(issuerURLComponent)
 
-      let value = try String(contentsOf: issuerFileURL, encoding: .utf8)
+      return try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-      return value
     } catch {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
       // Fallback: infer issuer from directory structure (v3 migration path)
