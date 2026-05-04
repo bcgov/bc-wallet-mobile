@@ -44,7 +44,6 @@ class StorageService {
   /// Priority order matters: prod is checked first, then non-prod environments.
   private let issuerDirectoryToURL: [(name: String, url: String)] = [
     ("PROD", "https://id.gov.bc.ca"),
-    ("prod", "https://id.gov.bc.ca"),
     ("SIT", "https://idsit.gov.bc.ca"),
     ("QA", "https://idqa.gov.bc.ca"),
     ("DEV", "https://iddev.gov.bc.ca"),
@@ -86,8 +85,8 @@ class StorageService {
           .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        logger.error("[MIGRATION] account_list file does not exist at \(accountListFileUrl.path).")
-        logDirectoryContents(accountListFileUrl.deletingLastPathComponent(), label: "[MIGRATION] account_list parent dir")
+        logger.error("account_list file does not exist at \(accountListFileUrl.path).")
+        logDirectoryContents(accountListFileUrl.deletingLastPathComponent(), label: "account_list parent dir")
         return nil
       }
 
@@ -129,41 +128,24 @@ class StorageService {
 
       let value = try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
-      logger.log("[MIGRATION] currentIssuer: Read from issuer file → \(value) (env: \(getIssuerNameFromIssuer(issuer: value)))")
+      logger.log("currentIssuer: Read from issuer file → \(value) (env: \(getIssuerNameFromIssuer(issuer: value)))")
       let accountsDirURL = rootDirectoryURL.appendingPathComponent("\(currentBundleID)/data/accounts_dir")
-      logDirectoryContents(accountsDirURL, label: "[MIGRATION] currentIssuer: accounts_dir")
+      logDirectoryContents(accountsDirURL, label: "currentIssuer: accounts_dir")
       return value
     } catch {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
       // Fallback: infer issuer from directory structure (v3 migration path)
       if let inferred = findIssuerFromAccountDirectories() {
-        logger.log("[MIGRATION] currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))")
+        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))")
         return inferred
       }
-      logger.log("[MIGRATION] currentIssuer: Defaulting to production issuer")
+      logger.log("currentIssuer: Defaulting to production issuer")
       return productionIssuer
     }
   }
 
   var basePath: String {
-    let envDir = getIssuerNameFromIssuer(issuer: issuer)
-    let base = "\(currentBundleID)/data/accounts_dir"
-    // iOS APFS is case-sensitive. Primary dir is uppercase (e.g. "PROD") matching V3.
-    // Fall back to lowercase (e.g. "prod") for any early V4 installs that used lowercase.
-    if let rootURL = try? FileManager.default.url(
-      for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
-    ) {
-      let computedURL = rootURL.appendingPathComponent("\(base)/\(envDir)")
-      if !FileManager.default.fileExists(atPath: computedURL.path) {
-        let lowerDir = envDir.lowercased()
-        let lowerURL = rootURL.appendingPathComponent("\(base)/\(lowerDir)")
-        if FileManager.default.fileExists(atPath: lowerURL.path) {
-          logger.log("[MIGRATION] basePath: '\(envDir)' not found, using lowercase fallback '\(lowerDir)'")
-          return "\(base)/\(lowerDir)"
-        }
-      }
-    }
-    return "\(base)/\(envDir)"
+    return "\(currentBundleID)/data/accounts_dir/\(getIssuerNameFromIssuer(issuer: issuer))"
   }
 
   var provider: String {
