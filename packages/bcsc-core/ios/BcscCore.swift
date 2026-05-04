@@ -338,10 +338,10 @@ class BcscCore: NSObject {
     }
 
     let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
-    logger.log("getToken: Looking for token with id: \(id)")
+    logger.log("getToken: querying type=\(tokenType.rawValue) id=\(id)")
 
     if let token = tokenStorageService.get(id: id) {
-      logger.log("getToken: Found token of type \(tokenType) with id: \(token.id)")
+      logger.log("getToken: found type=\(tokenType.rawValue) expiry=\(token.expiry?.description ?? "none")")
       var tokenDict: [String: Any?] = [
         "id": token.id,
         "type": token.type.rawValue,
@@ -357,7 +357,7 @@ class BcscCore: NSObject {
 
       resolve(tokenDict)
     } else {
-      logger.log("getToken: Token not found for id: \(id)")
+      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id)")
       resolve(nil)
     }
   }
@@ -1847,7 +1847,7 @@ class BcscCore: NSObject {
           .deviceOwnerAuthentication, localizedReason: authReason
         )
       } catch {
-        print("Local Authentication error: ", error.localizedDescription)
+        logger.error("unlockWithDeviceSecurity: LAContext error: \(error.localizedDescription)")
         resolve([
           "success": false,
         ])

@@ -15,8 +15,6 @@ protocol TokenStorageServiceProtocol {
 }
 
 class KeychainTokenStorageService: TokenStorageServiceProtocol {
-  // private let log = Logger(source: "KeychainTokenStorageService")
-
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
   private var nativeModuleName: String {
@@ -176,7 +174,9 @@ extension KeychainTokenStorageService {
     guard SecItemCopyMatching(readQuery, &result) == errSecSuccess,
           let data = result as? Data,
           let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
-    else { return }
+    else {
+      return
+    }
 
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
