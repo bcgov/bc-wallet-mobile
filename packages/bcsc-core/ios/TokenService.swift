@@ -186,8 +186,6 @@ extension KeychainTokenStorageService {
       return
     }
 
-    logger.log("migrateV3TokenIfNeeded: found V3 token at '\(v3Id)', migrating to '\(newId)'")
-
     // Re-archive with the new V4 id and write directly to avoid recursive save() → get() calls
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
     let migratedToken = Token(

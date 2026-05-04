@@ -85,8 +85,6 @@ class StorageService {
           .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        logger.error("account_list file does not exist at \(accountListFileUrl.path).")
-        logDirectoryContents(accountListFileUrl.deletingLastPathComponent(), label: "account_list parent dir")
         return nil
       }
 
@@ -129,8 +127,6 @@ class StorageService {
       let value = try String(contentsOf: issuerFileURL, encoding: .utf8)
         .trimmingCharacters(in: .whitespacesAndNewlines)
       logger.log("currentIssuer: Read from issuer file → \(value) (env: \(getIssuerNameFromIssuer(issuer: value)))")
-      let accountsDirURL = rootDirectoryURL.appendingPathComponent("\(currentBundleID)/data/accounts_dir")
-      logDirectoryContents(accountsDirURL, label: "currentIssuer: accounts_dir")
       return value
     } catch {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
