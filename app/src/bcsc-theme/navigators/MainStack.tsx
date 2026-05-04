@@ -24,6 +24,8 @@ import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
+import ContactsScreen from '../features/contacts/ContactsScreen'
+import WhatAreContactsScreen from '../features/contacts/WhatAreContactsScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -279,6 +281,23 @@ const MainStack: React.FC = () => {
           component={AccountRenewalFinalWarningScreen}
           options={() => ({
             headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.Contacts}
+          component={ContactsScreen}
+          options={() => ({
+            headerShown: true,
+            title: t('BCSC.Contacts.Title'),
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.WhatAreContacts}
+          component={WhatAreContactsScreen}
+          options={() => ({
+            headerShown: true,
+            title: t('BCSC.Contacts.Title'),
+            headerRight: () => null,
           })}
         />
 

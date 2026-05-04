@@ -221,6 +221,25 @@ const translation = {
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
     },
+    "Contacts": {
+      "Title": "Contacts",
+      "EmptyTitle": "Your contacts are empty",
+      "WhatAreContactsButton": "What are contacts?",
+      "HelpAccessibilityLabel": "What are contacts?",
+      "WhatAre": {
+        "Title": "What are Contacts?",
+        "Description1": "Contacts are people or organizations you've interacted with.",
+        "Description2": "You're connected over a secure and private line that no one but you or them can see. Nothing is shared without your permission.",
+        "YouCanHeader": "You can:",
+        "Bullet1": "Direct message your Contacts",
+        "Bullet2": "Get offered new credentials",
+        "Bullet3": "Get notified of updates to your credentials issued by them",
+        "Bullet4": "Request for information from your contact or they request information from you",
+        "FooterPrefix": "You can always remove Contacts at anytime from your ",
+        "FooterLink": "Contacts list",
+        "FooterSuffix": ".",
+      },
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
       "AppStartup": "Getting your BCSC App ready..."
@@ -299,6 +318,12 @@ const translation = {
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
       "RemoveAccount": "Remove account",
+      "Features": {
+        "Header": "Features",
+        "Contacts": "Contacts",
+        "ScanQR": "Scan my QR code",
+        "ProofRequests": "Proof Requests",
+      },
       "AppSecurity": {
         "ScreenTitle": "App Security",
         "ChangeAppSecurity": "Change App Security",

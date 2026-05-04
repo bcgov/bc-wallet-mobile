@@ -221,6 +221,25 @@ const translation = {
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
     },
+    "Contacts": {
+      "Title": "Contacts (PT-BR)",
+      "EmptyTitle": "Your contacts are empty (PT-BR)",
+      "WhatAreContactsButton": "What are contacts? (PT-BR)",
+      "HelpAccessibilityLabel": "What are contacts? (PT-BR)",
+      "WhatAre": {
+        "Title": "What are Contacts? (PT-BR)",
+        "Description1": "Contacts are people or organizations you've interacted with. (PT-BR)",
+        "Description2": "You're connected over a secure and private line that no one but you or them can see. Nothing is shared without your permission. (PT-BR)",
+        "YouCanHeader": "You can: (PT-BR)",
+        "Bullet1": "Direct message your Contacts (PT-BR)",
+        "Bullet2": "Get offered new credentials (PT-BR)",
+        "Bullet3": "Get notified of updates to your credentials issued by them (PT-BR)",
+        "Bullet4": "Request for information from your contact or they request information from you (PT-BR)",
+        "FooterPrefix": "You can always remove Contacts at anytime from your  (PT-BR)",
+        "FooterLink": "Contacts list (PT-BR)",
+        "FooterSuffix": ". (PT-BR)",
+      },
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
       "AppStartup": "Getting your BCSC App ready... (PT-BR)"

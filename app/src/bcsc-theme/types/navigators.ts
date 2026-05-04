@@ -61,6 +61,8 @@ export enum BCSCScreens {
   AdditionalIdentificationRequired = 'Photo ID Required',
   DualIdentificationRequired = 'BCSCDualIdentificationRequired', // FIXME (MD): Not sure which V3 screen this maps to...
   IDPhotoInformation = 'ID Photo Instructions',
+  Contacts = 'Contacts',
+  WhatAreContacts = 'What are Contacts',
   /**
    * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3 https://github.com/bcgov/bc-wallet-mobile/issues/3409
    *
@@ -253,6 +255,8 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
+  [BCSCScreens.Contacts]: undefined
+  [BCSCScreens.WhatAreContacts]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
