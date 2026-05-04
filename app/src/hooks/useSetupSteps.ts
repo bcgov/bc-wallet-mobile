@@ -37,14 +37,13 @@ export interface IdStepState extends StepState {
  * Return type for the useSetupSteps hook
  */
 export interface SetupStepsResult {
-  nickname: StepState
   id: IdStepState
   address: StepState
   email: StepState
   verify: StepState
   transfer: StepState
   /** The currently focused step, or null if all complete */
-  currentStep: 'nickname' | 'id' | 'address' | 'email' | 'verify' | 'transfer' | null
+  currentStep: 'id' | 'address' | 'email' | 'verify' | 'transfer' | null
   /** Whether all steps are completed */
   allCompleted: boolean
 }
@@ -63,7 +62,6 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
   return useMemo(() => {
     // ---- Derived state from store ----
-    const nickname = store.bcsc.selectedNickname || null
     const bcscSerialNumber = store.bcscSecure.serial || null
     const emailAddress = store.bcscSecure.emailAddress || null
     const isEmailVerified = Boolean(store.bcscSecure.isEmailVerified)
@@ -96,31 +94,22 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const nonBcscRegistered = isNonBCSCCards && completedEvidenceCount === 2
 
     // ---- Step completion states ----
-    // Calculating Step 5 first, if this is true, it is safe to assume all other steps are complete
-    const step5Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
-    const step1Completed = step5Completed || Boolean(nickname)
-    const step2Completed = step5Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
-    const step3Completed = step5Completed || (step2Completed && Boolean(store.bcscSecure.deviceCode)) // Step 2 must be completed before step 3 can be completed
-    const step4Completed =
-      step5Completed || (step2Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification)) // Step 2 must be completed before step 4 can be completed
+    // Step 4 (verify) first — if true, all other steps are complete
+    const step4Completed = Boolean(store.bcscSecure.verified || store.bcscSecure.userSubmittedVerificationVideo)
+    const step1Completed = step4Completed || bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
+    const step2Completed = step4Completed || (step1Completed && Boolean(store.bcscSecure.deviceCode))
+    const step3Completed =
+      step4Completed || (step1Completed && ((Boolean(emailAddress) && isEmailVerified) || userSkippedEmailVerification))
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
     const step2Focused = step1Completed && !step2Completed
-    const step3Focused = step2Completed && !step3Completed
-    const step4Focused = step2Completed && step3Completed && !step4Completed
-    const step5Focused = step2Completed && step3Completed && step4Completed
-    const step6Focused = step1Completed && store.bcsc.accountSetupType === AccountSetupType.TransferAccount // this is used for the account transfer process
+    const step3Focused = step1Completed && step2Completed && !step3Completed
+    const step4Focused = step1Completed && step2Completed && step3Completed
+    const step5Focused = store.bcsc.accountSetupType === AccountSetupType.TransferAccount
 
     // ---- Subtext generators ----
     const getStep1Subtext = (): string[] => {
-      if (step1Completed && store.bcsc.selectedNickname) {
-        return [`${t('BCSC.NicknameAccount.AccountName')}: ${store.bcsc.selectedNickname}`]
-      }
-      return [t('BCSC.NicknameAccount.AccountName')]
-    }
-
-    const getStep2Subtext = (): string[] => {
       const cards: string[] = []
 
       if (store.bcscSecure.serial) {
@@ -139,14 +128,14 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       return cards.length ? cards : [t('BCSC.Steps.ScanOrTakePhotos')]
     }
 
-    const getStep3Subtext = (): string[] => {
+    const getStep2Subtext = (): string[] => {
       // For BCSC card with serial, address comes from the card
-      if (step2Completed && store.bcscSecure.serial) {
+      if (step1Completed && store.bcscSecure.serial) {
         return [t('BCSC.Steps.GetVerificationStep3Subtext1')]
       }
 
-      // Only show address if step 3 is completed
-      if (step3Completed && store.bcscSecure.userMetadata?.address) {
+      // Only show address if step 2 is completed
+      if (step2Completed && store.bcscSecure.userMetadata?.address) {
         return [
           t('BCSC.Steps.GetVerificationStep3Subtext2', {
             address: formatAddressForDisplay(store.bcscSecure.userMetadata.address),
@@ -157,8 +146,8 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       return [t('BCSC.Steps.GetVerificationStep3Subtext3')]
     }
 
-    const getStep5Subtext = (): string[] => {
-      if (step5Focused && store.bcscSecure.deviceCodeExpiresAt) {
+    const getStep4Subtext = (): string[] => {
+      if (step4Focused && store.bcscSecure.deviceCodeExpiresAt) {
         const expirationDate = store.bcscSecure.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
           day: '2-digit',
           month: 'long',
@@ -181,21 +170,18 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     // ---- Determine current step ----
     const getCurrentStep = (): SetupStepsResult['currentStep'] => {
       if (step1Focused) {
-        return 'nickname'
-      }
-      if (step2Focused) {
         return 'id'
       }
-      if (step3Focused) {
+      if (step2Focused) {
         return 'address'
       }
-      if (step4Focused) {
+      if (step3Focused) {
         return 'email'
       }
-      if (step5Focused) {
+      if (step4Focused) {
         return 'verify'
       }
-      if (step6Focused) {
+      if (step5Focused) {
         return 'transfer'
       }
       return null
@@ -203,44 +189,38 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
 
     // ---- Build result object ----
     return {
-      nickname: {
+      id: {
         completed: step1Completed,
         focused: step1Focused,
         subtext: getStep1Subtext(),
-      },
-      id: {
-        completed: step2Completed,
-        focused: step2Focused,
-        subtext: getStep2Subtext(),
         nonBcscNeedsAdditionalCard,
         nonPhotoBcscNeedsAdditionalCard,
       },
       address: {
-        completed: step3Completed,
-        focused: step3Focused,
-        subtext: getStep3Subtext(),
+        completed: step2Completed,
+        focused: step2Focused,
+        subtext: getStep2Subtext(),
       },
       email: {
-        completed: step4Completed,
-        focused: step4Focused,
+        completed: step3Completed,
+        focused: step3Focused,
         subtext: [], // Email step has custom children rendering
       },
       verify: {
-        completed: step5Completed,
-        focused: step5Focused,
-        subtext: getStep5Subtext(),
+        completed: step4Completed,
+        focused: step4Focused,
+        subtext: getStep4Subtext(),
       },
       transfer: {
         completed: false, // leaving this false, once the user has scanned they don't see the steps screen again
-        focused: step6Focused,
+        focused: step5Focused,
         subtext: getTransferSubtext(),
       },
       currentStep: getCurrentStep(),
-      allCompleted: step1Completed && step2Completed && step3Completed && step4Completed && step5Completed,
+      allCompleted: step1Completed && step2Completed && step3Completed && step4Completed,
     }
   }, [
     store.bcsc.accountSetupType,
-    store.bcsc.selectedNickname,
     store.bcscSecure.additionalEvidenceData,
     store.bcscSecure.cardProcess,
     store.bcscSecure.deviceCode,

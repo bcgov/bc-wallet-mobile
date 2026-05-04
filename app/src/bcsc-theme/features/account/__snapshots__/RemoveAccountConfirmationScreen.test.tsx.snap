@@ -357,6 +357,22 @@ exports[`RemoveAccountConfirmation renders correctly 1`] = `
                     "type": 0,
                   }
                 }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
                 propList={
                   [
                     "fill",

@@ -48,6 +48,8 @@ export const LightTheme = createAppTheme({
   tertiaryButtonBackground: GrayscaleColors.veryLightGrey,
   tabBarBackground: GrayscaleColors.white,
   tabBarIcon: GrayscaleColors.darkGrey,
+  pinInputBorder: '#AAAAAA',
+  pinInputBackground: '#F8F8F8',
   notification: {
     info: OFF_WHITE,
     infoBorder: '#053662',

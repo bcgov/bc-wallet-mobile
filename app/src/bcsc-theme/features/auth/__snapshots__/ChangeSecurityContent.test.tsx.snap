@@ -34,11 +34,10 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -55,7 +54,9 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
@@ -221,19 +222,49 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -241,35 +272,18 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
                       },
-                      undefined,
+                      {
+                        "fontSize": 16,
+                      },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  BCSC.Settings.AppSecurity.CurrentlySelected
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Settings.AppSecurity.CurrentlySelected
-              </Text>
             </View>
           </View>
           <View
@@ -319,19 +333,49 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppPINTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -339,35 +383,18 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
                       },
-                      undefined,
+                      {
+                        "fontSize": 16,
+                      },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppPINTitle
+                  BCSC.Onboarding.SecureAppPINSubtext
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Onboarding.SecureAppPINSubtext
-              </Text>
             </View>
           </View>
           <View
@@ -417,58 +444,72 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
-                <Text
-                  maxFontSizeMultiplier={2}
+                <View
                   style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
-                      },
-                      undefined,
-                    ]
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
                   }
                 >
-                  BCSC.Onboarding.LearnMore
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": undefined,
-                        "fontSize": 32,
-                      },
-                      {
-                        "color": "#313132",
-                      },
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
-                </Text>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.LearnMore
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": undefined,
+                          "fontSize": 32,
+                        },
+                        {
+                          "color": "#313132",
+                        },
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -591,10 +632,26 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294493282,
+                    "payload": 4294558818,
                     "type": 0,
                   }
                 }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
                 propList={
                   [
                     "fill",
@@ -666,9 +723,9 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                     [
                       1,
                       0,
-                      -0,
+                      0,
                       1,
-                      -0.2640023024576092,
+                      0,
                       0,
                     ]
                   }
@@ -782,11 +839,10 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -803,7 +859,9 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
@@ -967,19 +1025,49 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -987,35 +1075,18 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
                       },
-                      undefined,
+                      {
+                        "fontSize": 16,
+                      },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  BCSC.Onboarding.SecureAppDeviceAuthSubtext
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Onboarding.SecureAppDeviceAuthSubtext
-              </Text>
             </View>
           </View>
           <View
@@ -1067,19 +1138,49 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppPINTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -1087,35 +1188,18 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                       {
                         "color": "#313132",
                         "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
                       },
-                      undefined,
+                      {
+                        "fontSize": 16,
+                      },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppPINTitle
+                  BCSC.Settings.AppSecurity.CurrentlySelected
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Settings.AppSecurity.CurrentlySelected
-              </Text>
             </View>
           </View>
           <View
@@ -1165,58 +1249,72 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
-                <Text
-                  maxFontSizeMultiplier={2}
+                <View
                   style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 21,
-                        "fontWeight": "bold",
-                      },
-                      undefined,
-                    ]
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
                   }
                 >
-                  BCSC.Onboarding.LearnMore
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": undefined,
-                        "fontSize": 32,
-                      },
-                      {
-                        "color": "#313132",
-                      },
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
-                </Text>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.LearnMore
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": undefined,
+                          "fontSize": 32,
+                        },
+                        {
+                          "color": "#313132",
+                        },
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -1339,10 +1437,26 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294493282,
+                    "payload": 4294558818,
                     "type": 0,
                   }
                 }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
                 propList={
                   [
                     "fill",
@@ -1414,9 +1528,9 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                     [
                       1,
                       0,
-                      -0,
+                      0,
                       1,
-                      -0.2640023024576092,
+                      0,
                       0,
                     ]
                   }
@@ -1530,11 +1644,10 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -1551,7 +1664,9 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
@@ -1676,167 +1791,133 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
             {
               "gap": 16,
             },
-            {
-              "paddingBottom": 16,
-              "paddingHorizontal": 16,
-            },
+            false,
             undefined,
           ]
         }
       >
         <View
-          accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": false,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
           style={
             {
-              "backgroundColor": "#003366",
-              "borderRadius": 4,
-              "opacity": 1,
-              "padding": 16,
+              "flexGrow": 1,
+              "width": "100%",
             }
           }
-          testID="com.ariesbifold:id/ChoosePINButton"
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "center",
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": -3,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.9,
+                "shadowRadius": 3,
+                "top": 0,
+                "zIndex": -1,
               }
             }
           >
-            <Text
-              maxFontSizeMultiplier={2}
+            <View
               style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "color": "#FFFFFF",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    false,
-                    false,
-                  ],
-                ]
+                {
+                  "backgroundColor": "#F2F2F2",
+                  "height": 1,
+                }
               }
-            >
-              BCSC.Onboarding.SecureAppPINTitle
-            </Text>
+            />
           </View>
-        </View>
-        <View
-          accessibilityLabel="BCSC.Onboarding.LearnMore"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": false,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
-              "borderColor": "#003366",
-              "borderRadius": 4,
-              "borderWidth": 2,
-              "opacity": 1,
-              "padding": 16,
-            }
-          }
-          testID="com.ariesbifold:id/LearnMoreButton"
-        >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "center",
+                "backgroundColor": "#F2F2F2",
+                "flexGrow": 1,
+                "gap": 8,
+                "padding": 24,
               }
             }
           >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "color": "#003366",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    false,
-                    false,
-                  ],
-                ]
+            <View
+              accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
               }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "backgroundColor": "#003366",
+                  "borderRadius": 4,
+                  "opacity": 1,
+                  "padding": 16,
+                }
+              }
+              testID="com.ariesbifold:id/ChoosePINButton"
             >
-              BCSC.Onboarding.LearnMore
-            </Text>
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "justifyContent": "center",
+                  }
+                }
+              >
+                <Text
+                  maxFontSizeMultiplier={2}
+                  style={
+                    [
+                      {
+                        "color": "#313132",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
+                      },
+                      [
+                        {
+                          "color": "#FFFFFF",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
+                        false,
+                        false,
+                      ],
+                    ]
+                  }
+                >
+                  BCSC.Onboarding.SecureAppPINTitle
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -1957,10 +2038,26 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                 d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
                 fill={
                   {
-                    "payload": 4294493282,
+                    "payload": 4294558818,
                     "type": 0,
                   }
                 }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
                 propList={
                   [
                     "fill",
@@ -2032,9 +2129,9 @@ exports[`ChangeSecurityContent when device auth is NOT available shows message t
                     [
                       1,
                       0,
-                      -0,
+                      0,
                       1,
-                      -0.2640023024576092,
+                      0,
                       0,
                     ]
                   }

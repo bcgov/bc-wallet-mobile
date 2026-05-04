@@ -114,10 +114,6 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    */
   const stepActions = useMemo(
     () => ({
-      nickname: () => {
-        navigation.navigate(BCSCScreens.NicknameAccount)
-      },
-
       id: () => {
         if (steps.id.nonBcscNeedsAdditionalCard) {
           navigation.navigate(BCSCScreens.EvidenceTypeList, {
