@@ -1,4 +1,5 @@
 import { useDefaultStackOptions, useTheme } from '@bifold/core'
+import RenameWallet from '@bifold/core/lib/typescript/src/screens/RenameWallet'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
@@ -124,6 +125,13 @@ const AuthStack = (): React.ReactElement => {
         component={QRCoreStack}
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.AuthRenameWallet}
+        component={RenameWallet}
+        options={{
+          title: t('NameWallet.EditWalletName'),
         }}
       />
 

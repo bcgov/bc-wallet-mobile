@@ -1,6 +1,7 @@
+import AccountNotVerifiedCTA from '@/bcsc-theme/features/common/AccountNotVerifiedCTA'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
-import QRDisplay from '@/bcsc-theme/features/qr-scanning/QRDisplay'
-import QRScanner from '@/bcsc-theme/features/qr-scanning/QRScanner'
+import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
+import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
@@ -13,6 +14,7 @@ type QRCoreTabParams = {
   Scanner: undefined
   Display: undefined
   PairingCode: undefined
+  AccountNotVerified: undefined
 }
 
 type TabBarIconProps = {
@@ -106,6 +108,17 @@ const QRCoreStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.ManualPairing.TabTitle'),
             tabBarTestID: testIdWithKey('PairingCode'),
+          }}
+        />
+        <Tab.Screen
+          name="AccountNotVerified"
+          component={AccountNotVerifiedCTA}
+          options={{
+            tabBarIconStyle: styles.tabBarIcon,
+            tabBarIcon: createTabBarIcon(t('BCSC.AccountNotVerified.TabTitle'), 'account-alert-outline'),
+            tabBarShowLabel: false,
+            tabBarAccessibilityLabel: t('BCSC.AccountNotVerified.TabTitle'),
+            tabBarTestID: testIdWithKey('AccountNotVerified'),
           }}
         />
       </Tab.Navigator>
