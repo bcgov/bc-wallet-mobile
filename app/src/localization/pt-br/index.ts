@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Ocultar detalhes",
     "Dismiss": "Dispensar",
     "GetHelp": "Get help (PT-BR)",
-    "ContinueSetup": "Continue setup (PT-BR)",
     "Share": "Share (PT-BR)",
     "Skip": "Skip (PT-BR)",
     "A11y": {

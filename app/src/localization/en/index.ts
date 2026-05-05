@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
-    "ContinueSetup": "Continue setup",
     "Share": "Share",
     "Skip": "Skip",
     "A11y": {
