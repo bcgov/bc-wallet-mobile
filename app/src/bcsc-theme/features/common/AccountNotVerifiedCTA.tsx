@@ -1,4 +1,4 @@
-import Verified from '@assets/img/verified.svg'
+import VerifiedCTA from '@assets/img/account-verification-cta.svg'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -24,7 +24,7 @@ const AccountNotVerifiedCTA: React.FC = () => {
   return (
     <ScreenWrapper controls={controls}>
       <View style={{ marginHorizontal: Spacing.md }}>
-        <Verified height={100} style={{ alignSelf: 'center', marginBottom: Spacing.md }} />
+        <VerifiedCTA height={100} style={{ alignSelf: 'center', marginBottom: Spacing.md }} />
         <ThemedText variant="headingThree" style={{ marginBottom: Spacing.md, alignSelf: 'center' }}>
           {t('BCSC.AccountNotVerified.Title')}
         </ThemedText>
