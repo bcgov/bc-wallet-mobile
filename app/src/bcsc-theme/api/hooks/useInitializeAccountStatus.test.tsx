@@ -225,6 +225,30 @@ describe('useInitializeAccountStatus', () => {
     })
   })
 
+  it('falls back to displayName when nickname is an empty string', async () => {
+    // Uses `||` (not `??`) so empty-string nicknames fall through to displayName.
+    const mockDispatch = jest.fn()
+    const mockAccount = { nickname: '', displayName: 'Jane' }
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
+    jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+    renderHook(() => useInitializeAccountStatus())
+
+    await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: ['Jane'],
+    })
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: [''],
+    })
+  })
+
   it('logs error when getAccount throws', async () => {
     const mockDispatch = jest.fn()
     const mockLogger = { info: jest.fn(), error: jest.fn() }

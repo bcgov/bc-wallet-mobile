@@ -32,7 +32,7 @@ export const useInitializeAccountStatus = () => {
 
       dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
 
-      const nickname = account?.nickname ?? account?.displayName
+      const nickname = account?.nickname || account?.displayName
 
       if (nickname && !store.bcsc.nicknames.includes(nickname)) {
         dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })

@@ -276,7 +276,7 @@ export const BCSC_TestIDs = {
   },
   AccountSelector: {
     SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
-    ContinueSetup: 'com.ariesbifold:id/ContinueSetup',
+    ContinueSetup: 'com.ariesbifold:id/Continue',
   },
   EnterPIN: {
     PINInput: 'com.ariesbifold:id/PINInput',
