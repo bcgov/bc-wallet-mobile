@@ -2,6 +2,7 @@ import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -59,6 +60,7 @@ const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
   const { TabTheme, ColorPalette } = useTheme()
   const { customNotifications } = useCustomNotifications()
+  const { t } = useTranslation()
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
   // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
@@ -112,6 +114,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarAccessibilityLabel: 'Services',
             tabBarTestID: testIdWithKey('Services'),
             headerLeft: createMainSettingsHeaderButton(),
+            title: t('BCSC.Services.CatalogueTitle'),
           }}
         />
         <Tab.Screen

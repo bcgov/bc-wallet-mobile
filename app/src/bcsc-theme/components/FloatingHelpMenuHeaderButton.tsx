@@ -23,7 +23,7 @@ const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
     <>
       <IconButton
         buttonLocation={ButtonLocation.Right}
-        icon={'help-circle'}
+        icon={'help-circle-outline'}
         accessibilityLabel={t('BCSC.HelpMenu.AccessibilityLabel')}
         testID={testIdWithKey('HelpMenu')}
         onPress={() => setOpen(true)}

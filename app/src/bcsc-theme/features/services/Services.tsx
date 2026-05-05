@@ -32,7 +32,7 @@ const Services: React.FC = () => {
   const token = useTokenService()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, Inputs } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
@@ -60,24 +60,17 @@ const Services: React.FC = () => {
   }, [loadIdTokenMetadata, store.bcscSecure.verified])
 
   const styles = StyleSheet.create({
-    headerText: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.lg,
-    },
     searchInputContainer: {
       paddingHorizontal: Spacing.md,
       paddingBottom: Spacing.md,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     searchInput: {
+      ...Inputs.textInput,
+      color: undefined,
+      fontSize: undefined,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      borderRadius: 8,
-      height: Spacing.xl * 2,
-      paddingHorizontal: Spacing.md,
-      borderWidth: 1,
-      borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8',
     },
     searchText: {
       flex: 1,
@@ -98,15 +91,10 @@ const Services: React.FC = () => {
   })
 
   return (
-    <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [1], keyboardShouldPersistTaps: 'handled' }}>
-      {/* Dismiss keyboard when tapping outside of TextInput */}
-      <ThemedText variant={'headingTwo'} style={styles.headerText}>
-        {t('BCSC.Services.CatalogueTitle')}
-      </ThemedText>
-
+    <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [0], keyboardShouldPersistTaps: 'handled' }}>
       <View style={styles.searchInputContainer}>
         <View ref={searchInputRef} style={styles.searchInput}>
-          <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
+          <Icon name="search" size={24} color={TextTheme.headingFour.color} />
           <TextInput
             placeholder={t('BCSC.Services.CatalogueSearch')}
             placeholderTextColor={ColorPalette.brand.tertiary}
@@ -166,7 +154,7 @@ const Services: React.FC = () => {
           testID={testIdWithKey('ServicesLoading')}
         />
       ) : (
-        <>
+        <View>
           <View style={styles.servicesContainer}>
             {serviceClients.map((service) => (
               <ServiceButton
@@ -189,7 +177,7 @@ const Services: React.FC = () => {
               {t('BCSC.Services.NotListedDescriptionContact')}
             </ThemedText>
           </View>
-        </>
+        </View>
       )}
     </TabScreenWrapper>
   )
