@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
-    "ContinueSetup": "Continue setup",
     "A11y": {
       "OpensInBrowser": "This opens in browser",
     }

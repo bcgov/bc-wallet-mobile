@@ -376,7 +376,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
       }
     >
       <View
-        accessibilityLabel="Global.ContinueSetup"
+        accessibilityLabel="Global.Continue"
         accessibilityRole="button"
         accessibilityState={
           {
@@ -413,7 +413,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/ContinueSetup"
+        testID="com.ariesbifold:id/Continue"
       >
         <View
           style={
@@ -448,7 +448,7 @@ exports[`AccountSetup when no nicknames exist renders Continue setting up accoun
               ]
             }
           >
-            Global.ContinueSetup
+            Global.Continue
           </Text>
         </View>
       </View>
