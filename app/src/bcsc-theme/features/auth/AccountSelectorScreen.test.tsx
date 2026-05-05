@@ -62,7 +62,7 @@ describe('AccountSetup', () => {
         </BasicAppContext>
       )
 
-      expect(tree.getByText('Global.ContinueSetup')).toBeTruthy()
+      expect(tree.getByText('Global.Continue')).toBeTruthy()
       expect(tree.queryByText('BCSC.AccountSetup.ContinueAs')).toBeNull()
       expect(tree).toMatchSnapshot()
     })
@@ -74,7 +74,7 @@ describe('AccountSetup', () => {
         </BasicAppContext>
       )
 
-      const continueButton = tree.getByTestId('com.ariesbifold:id/ContinueSetup')
+      const continueButton = tree.getByTestId('com.ariesbifold:id/Continue')
       fireEvent.press(continueButton)
 
       expect(mockUnlockApp).toHaveBeenCalled()

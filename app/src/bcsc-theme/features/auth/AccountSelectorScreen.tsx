@@ -51,9 +51,9 @@ const AccountSelectorScreen = ({ navigation }: AccountSelectorScreenProps) => {
   ) : (
     <Button
       buttonType={ButtonType.Primary}
-      testID={testIdWithKey('ContinueSetup')}
-      title={t('Global.ContinueSetup')}
-      accessibilityLabel={a11yLabel(t('Global.ContinueSetup'))}
+      testID={testIdWithKey('Continue')}
+      title={t('Global.Continue')}
+      accessibilityLabel={a11yLabel(t('Global.Continue'))}
       onPress={authentication.unlockApp}
     />
   )
