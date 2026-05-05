@@ -63,6 +63,11 @@ export enum BCSCScreens {
   IDPhotoInformation = 'ID Photo Instructions',
   Contacts = 'Contacts',
   WhatAreContacts = 'What are Contacts',
+  ContactDetails = 'Contact Details',
+  EditContactName = 'Edit Contact Name',
+  ContactJSONDetails = 'Contact JSON Details',
+  ContactChat = 'Contact Chat',
+  RemoveContact = 'Remove Contact',
   /**
    * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3 https://github.com/bcgov/bc-wallet-mobile/issues/3409
    *
@@ -257,6 +262,11 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
   [BCSCScreens.Contacts]: undefined
   [BCSCScreens.WhatAreContacts]: undefined
+  [BCSCScreens.ContactDetails]: { connectionId: string }
+  [BCSCScreens.EditContactName]: { connectionId: string }
+  [BCSCScreens.ContactJSONDetails]: { jsonBlob: string; title?: string }
+  [BCSCScreens.ContactChat]: { connectionId: string }
+  [BCSCScreens.RemoveContact]: { connectionId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
