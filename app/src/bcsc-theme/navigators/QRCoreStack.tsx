@@ -2,11 +2,12 @@ import AccountNotVerifiedCTA from '@/bcsc-theme/features/common/AccountNotVerifi
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
-import { testIdWithKey, useTheme } from '@bifold/core'
+import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -21,6 +22,22 @@ type TabBarIconProps = {
   focused: boolean
   color: string
   size: number
+}
+
+const createQRBackButton = () => {
+  const QRBackButton = () => {
+    const navigation = useNavigation()
+    return (
+      <IconButton
+        buttonLocation={ButtonLocation.Left}
+        icon={Platform.select({ ios: 'arrow-back-ios', android: 'arrow-left', default: 'arrow-left' })}
+        accessibilityLabel="Back"
+        testID={testIdWithKey('Back')}
+        onPress={() => navigation.goBack()}
+      />
+    )
+  }
+  return QRBackButton
 }
 
 const createTabBarIcon = (label: string, iconName: string) => {
@@ -74,13 +91,16 @@ const QRCoreStack: React.FC = () => {
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          title: '',
+          headerShadowVisible: false,
+          headerTitleAlign: 'center',
+          headerLeft: createQRBackButton(),
         }}
       >
         <Tab.Screen
           name="Scanner"
           component={QRScanner}
           options={{
+            title: t('Scan.ScanQRCode'),
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon(t('Scan.ScanQRCode'), 'qrcode-scan'),
             tabBarShowLabel: false,
@@ -92,6 +112,7 @@ const QRCoreStack: React.FC = () => {
           name="Display"
           component={QRDisplay}
           options={{
+            title: t('Scan.MyQRCode'),
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
             tabBarShowLabel: false,
@@ -103,6 +124,7 @@ const QRCoreStack: React.FC = () => {
           name="PairingCode"
           component={ManualPairing}
           options={{
+            title: t('BCSC.ManualPairing.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon(t('BCSC.ManualPairing.TabTitle'), 'keyboard-outline'),
             tabBarShowLabel: false,
@@ -114,6 +136,7 @@ const QRCoreStack: React.FC = () => {
           name="AccountNotVerified"
           component={AccountNotVerifiedCTA}
           options={{
+            title: t('BCSC.AccountNotVerified.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon(t('BCSC.AccountNotVerified.TabTitle'), 'account-alert-outline'),
             tabBarShowLabel: false,
