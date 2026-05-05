@@ -460,7 +460,7 @@ describe('Settings', () => {
       await Settings.tap(row)
       await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
       await driver.activateApp(appId)
-      await Settings.waitFor('EditNickname')
+      await Settings.waitFor('Help')
     })
   }
 

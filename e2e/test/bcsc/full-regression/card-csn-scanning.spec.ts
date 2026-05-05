@@ -8,5 +8,5 @@
 import '../onboarding/onboarding-basic.spec.js'
 // Verify: Import `verify/card-type/config-*.js` before any `../verify/*.spec.js` imports.
 import '../verify/card-type/config-combined-card.js'
-import '../verify/nickname.spec.js'
-import '../verify/card-scan.spec.js'
+import '../verify/components/nickname.spec.js'
+import '../verify/components/card-scan.spec.js'

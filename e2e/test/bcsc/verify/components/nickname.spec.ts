@@ -1,6 +1,6 @@
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { getVerifyContext } from './card-type/card-context.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const Nickname = new BaseScreen(BCSC_TestIDs.Nickname)

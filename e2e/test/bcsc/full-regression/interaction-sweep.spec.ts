@@ -7,7 +7,7 @@ import '../onboarding/transferee-flow.spec.js'
 
 import '../onboarding/onboarding-interaction-sweep.spec.js'
 
-// import '../verify/verify-interaction-sweep.spec.js'
+import '../verify/verify-interaction-sweep.spec.js'
 
 import '../main/main-interaction-sweep.spec.js'
 

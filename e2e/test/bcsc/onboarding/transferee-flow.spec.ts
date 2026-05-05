@@ -19,6 +19,7 @@ const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 
 describe('Transfer Account Detour', () => {
   it('should tap Transfer Account', async () => {
+    acceptSystemAlert()
     await AccountSetup.waitFor('TransferAccount', Timeouts.APP_LAUNCH)
     await AccountSetup.tap('TransferAccount')
   })
