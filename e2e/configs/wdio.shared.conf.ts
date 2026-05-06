@@ -18,7 +18,7 @@ export const config: WebdriverIO.Config = {
     smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
     'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
     'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
-    biometrics: [resolve(__dirname, `../test/${variant}/biometrics.spec.ts`)],
+    biometrics: [resolve(__dirname, `../test/${variant}/manual/biometrics.spec.ts`)],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
   exclude: [],
