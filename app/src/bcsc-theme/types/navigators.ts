@@ -1,3 +1,4 @@
+import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
@@ -30,7 +31,7 @@ export enum BCSCModals {
 export enum BCSCScreens {
   Home = 'Home',
   Services = 'Service List',
-  Account = 'Account Details',
+  Wallet = 'Wallet',
   ForgetAllPairings = 'Forget All Pairings',
   SetupSteps = 'Setup Steps',
   IdentitySelection = 'New Setup ID Confirmation',
@@ -221,7 +222,7 @@ export type BCSCVerifyStackParams = {
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
+  [BCSCScreens.Wallet]: undefined
 }
 
 export type BCSCMainStackParams = {
@@ -253,6 +254,10 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
+
+  // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
+  // so ListCredentials (rendered in the Wallet tab) can navigate to it.
+  [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

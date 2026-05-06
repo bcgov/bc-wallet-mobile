@@ -1,6 +1,7 @@
 import {
   Biometry,
   Container,
+  DefaultScreenOptionsDictionary,
   DispatchAction,
   InlineErrorPosition,
   LocalStorageKeys,
@@ -32,6 +33,8 @@ import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
+import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
+import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
@@ -237,7 +240,30 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooterView)
-    this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
+    // BCSC re-uses Bifold's CredentialStack for the Wallet tab but owns its
+    // own settings flow. Override the Credentials screen options so the
+    // hamburger navigates to BCSCScreens.MainSettings (Bifold's default would
+    // navigate to Stacks.SettingStack which BCSC does not register), rename
+    // the header to "Wallet" per the v4.1 design, and replace the BC-Wallet-
+    // branded empty-list component with a plain BCSC empty state.
+    //
+    // The hamburger button is rendered inside Bifold's CredentialStack, so its
+    // active navigator is the inner Credentials stack — not BCSC's MainStack.
+    // navigation.navigate('BCSC Main Stack In App Settings') still resolves
+    // because react-navigation walks up the navigator tree by route name and
+    // finds MainSettings registered in BCSC's MainStack.
+    const isBCSC = Config.BUILD_TARGET === Mode.BCSC
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, isBCSC ? EmptyWalletList : EmptyList)
+    if (isBCSC) {
+      this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
+        ...DefaultScreenOptionsDictionary,
+        [Screens.Credentials]: {
+          ...DefaultScreenOptionsDictionary[Screens.Credentials],
+          title: 'Wallet',
+          headerLeft: createMainSettingsHeaderButton(),
+        },
+      })
+    }
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
       // { did: "4WW6792ksq62UroZyfd6nQ", id: "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight" },
