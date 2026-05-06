@@ -19,6 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
@@ -81,11 +82,13 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       >
         {loading && <ButtonLoading />}
       </Button>
-      <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-        {t('BCSC.VerifyIdentity.CardSerialNumber', {
-          serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
-        })}
-      </ThemedText>
+      {store.bcscSecure.cardProcess !== BCSCCardProcess.NonBCSC ? (
+        <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
+          {t('BCSC.VerifyIdentity.CardSerialNumber', {
+            serial: store.bcscSecure.serial ?? 'N/A',
+          })}
+        </ThemedText>
+      ) : null}
     </>
   )
 
@@ -108,7 +111,11 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       </View>
       <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
+        <ThemedText>
+          {store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+            ? `${t('BCSC.VerifyIdentity.YourID')} ${store.bcscSecure.additionalEvidenceData.map((d) => d.evidenceType?.evidence_type).join(', ')}`
+            : t('BCSC.VerifyIdentity.YourBCServicesCard')}
+        </ThemedText>
       </View>
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
       <ThemedText
