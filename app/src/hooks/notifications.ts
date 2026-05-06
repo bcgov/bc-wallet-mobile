@@ -1,11 +1,11 @@
 import { AttestationRestrictions } from '@/constants'
 import {
   BasicMessageMetadata,
-  BifoldAgent,
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
 } from '@bifold/core'
+import { BCAgent } from '@utils/bc-agent-modules'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import {
@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from 'react'
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
 
 export const useNotifications = (): Array<CredentialNotificationRecord> => {
-  const { agent } = useAgent()
+  const { agent } = useAgent<BCAgent>()
   const offers = useCredentialByState(DidCommCredentialState.OfferReceived)
   const proofsRequested = useProofByState(DidCommProofState.RequestReceived)
   const [nonAttestationProofs, setNonAttestationProofs] = useState<DidCommProofExchangeRecord[]>([])
@@ -77,7 +77,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   useEffect(() => {
     Promise.all(
       [...proofsRequested, ...proofsDone].map(async (proof: DidCommProofExchangeRecord) => {
-        const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, AttestationRestrictions)
+        const isAttestation = await isProofRequestingAttestation(proof, agent, AttestationRestrictions)
         return {
           value: proof,
           include: !isAttestation,

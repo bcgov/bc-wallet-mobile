@@ -16,6 +16,7 @@ import {
 } from '@bifold/react-native-attestation'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 import { Agent, BaseEvent } from '@credo-ts/core'
+import { BCAgent } from '@utils/bc-agent-modules'
 import {
   DidCommConnectionRecord,
   DidCommCredentialEventTypes,
@@ -102,7 +103,7 @@ const findCredDefIDs = (restrictions: [Restriction]): Array<string> => {
 
 const invitationUrlFromRestrictions = async (
   proof: DidCommProofExchangeRecord,
-  agent: BifoldAgent,
+  agent: BCAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<string | undefined> => {
   const format = (await agent.didcomm.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
@@ -129,7 +130,7 @@ const invitationUrlFromRestrictions = async (
 
 export const isProofRequestingAttestation = async (
   proof: DidCommProofExchangeRecord,
-  agent: BifoldAgent,
+  agent: BCAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<boolean> => {
   return (await invitationUrlFromRestrictions(proof, agent, restrictions)) !== undefined
@@ -152,7 +153,7 @@ export const isOfferingAttestation = (credDefId: string, restrictions: Attestati
 export class AttestationMonitor implements AttestationMonitorI {
   private proofSubscription?: AgentSubscription
   private offerSubscription?: AgentSubscription
-  private agent?: Agent
+  private agent?: BCAgent
   private options: AttestationMonitorOptions
   private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
@@ -329,7 +330,7 @@ export class AttestationMonitor implements AttestationMonitorI {
       if (credential.state === DidCommCredentialState.OfferReceived) {
         this.log?.info('Accepting credential offer')
         await this.agent.didcomm.credentials.acceptOffer({
-          credentialRecordId: credential.id,
+          credentialExchangeRecordId: credential.id,
         })
       }
 
@@ -444,10 +445,10 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
 
     this.log?.info('Removing any existing duplicate invitations if they exist')
-    await removeExistingInvitationsById(this.agent, invite.id)
+    await removeExistingInvitationsById(this.agent as unknown as BifoldAgent, invite.id)
 
     this.log?.info('Receiving invitation')
-    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite)
+    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, { label: 'Attestation Service' })
     if (!connectionRecord) {
       throw new BifoldError(
         'Attestation Service',
@@ -647,7 +648,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return attestationRequest
   }
 
-  private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
+  private attestationCredentialRequired = async (agent: BCAgent, proofId: string): Promise<boolean> => {
     agent.config.logger.info('Fetching proof by id')
     const proof = await agent?.didcomm.proofs.getById(proofId)
     agent.config.logger.info('Second check if proof is requesting attestation')
