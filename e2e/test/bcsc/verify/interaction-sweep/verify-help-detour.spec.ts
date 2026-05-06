@@ -67,7 +67,7 @@ describe('ManualSerial Help detour', () => {
   it('enters Step 2 → CheckForServicesCard', async () => {
     await SetupSteps.waitFor('Step2')
     await SetupSteps.tap('Step2')
-    await IdentitySelection.waitFor('CheckForServicesCard')
+    await IdentitySelection.scrollToTestId('CheckForServicesCard', 8, 'down')
     await IdentitySelection.tap('CheckForServicesCard')
     await WebView.waitFor('Back')
     await WebView.tap('Back')

@@ -3,10 +3,12 @@
  * of the verification method picker: BeforeYouCall.Help, BeforeYouCall.Assistance.
  * Stops short of StartCall (which would dial out) and backs out to SetupSteps.
  *
+ * The VideoReview recording detour (record / retake / play-pause) lives in
+ * `verify/components/send-video-verification.spec.ts` because video capture
+ * is unreliable on Sauce devices and is exercised only in the manual flow.
+ *
  * Pre: SetupSteps with Step 5 ready. Post: SetupSteps anchor.
  */
-import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { swipeUpBy } from '../../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 
@@ -14,13 +16,6 @@ const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
 const BeforeYouCall = new BaseScreen(BCSC_TestIDs.BeforeYouCall)
 const WebView = new BaseScreen(BCSC_TestIDs.WebView)
-const InformationRequired = new BaseScreen(BCSC_TestIDs.InformationRequired)
-const PhotoInstructions = new BaseScreen(BCSC_TestIDs.PhotoInstructions)
-const TakePhoto = new BaseScreen(BCSC_TestIDs.TakePhoto)
-const PhotoReview = new BaseScreen(BCSC_TestIDs.PhotoReview)
-const VideoInstructions = new BaseScreen(BCSC_TestIDs.VideoInstructions)
-const TakeVideo = new BaseScreen(BCSC_TestIDs.TakeVideo)
-const VideoReview = new BaseScreen(BCSC_TestIDs.VideoReview)
 const ContactUs = new BaseScreen(BCSC_TestIDs.ContactUs)
 
 describe('VerificationMethod + VideoCall detour', () => {
@@ -58,58 +53,6 @@ describe('VerificationMethod + VideoCall detour', () => {
 
   it('backs out to SetupSteps without continuing the call', async () => {
     await BeforeYouCall.tap('Back')
-    await VerificationMethodSelection.waitFor('Back')
-    await VerificationMethodSelection.tap('Back')
-    await SetupSteps.waitFor('Step5')
-  })
-})
-
-describe('VideoReview interactions', () => {
-  it('enters Step 5 → SendVideo → captures selfie photo', async () => {
-    await SetupSteps.waitFor('Step5')
-    await SetupSteps.tap('Step5')
-    await VerificationMethodSelection.waitFor('SendVideo')
-    await VerificationMethodSelection.tap('SendVideo')
-    await InformationRequired.waitFor('TakePhotoAction')
-    await InformationRequired.tap('TakePhotoAction')
-    await PhotoInstructions.waitFor('TakePhotoButton')
-    await PhotoInstructions.tap('TakePhotoButton')
-    await TakePhoto.waitFor('TakePhoto')
-    await TakePhoto.tap('TakePhoto')
-    await PhotoReview.waitFor('UsePhoto')
-    await PhotoReview.tap('UsePhoto')
-  })
-
-  it('records the video and lands on VideoReview', async () => {
-    await InformationRequired.waitFor('RecordVideoAction')
-    await InformationRequired.tap('RecordVideoAction')
-    swipeUpBy(0.5) // scroll to the bottom of the instructions
-    await VideoInstructions.waitFor('StartRecordingButton')
-    await VideoInstructions.tap('StartRecordingButton')
-    await acceptSystemAlert()
-    for (let i = 0; i < 3; i++) {
-      await TakeVideo.waitForEnabledAndTap('StartRecordingButton')
-    }
-    await VideoReview.waitFor('UseVideo')
-  })
-
-  it('toggles play/pause on the preview', async () => {
-    await VideoReview.tap('TogglePlayPause')
-    await VideoReview.tap('TogglePlayPause')
-  })
-
-  it('retakes the video and re-lands on VideoReview', async () => {
-    await VideoReview.tap('RetakeVideo')
-    for (let i = 0; i < 3; i++) {
-      await TakeVideo.waitForEnabledAndTap('StartRecordingButton')
-    }
-    await VideoReview.waitFor('UseVideo')
-  })
-
-  it('backs out to SetupSteps without sending', async () => {
-    await VideoReview.tap('UseVideo')
-    await InformationRequired.waitFor('Back')
-    await InformationRequired.tap('Back')
     await VerificationMethodSelection.waitFor('Back')
     await VerificationMethodSelection.tap('Back')
     await SetupSteps.waitFor('Step5')

@@ -149,7 +149,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await el.waitForDisplayed({ timeout: 500 })
     } catch {
       console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 5, 'both')
+      await this.scrollToTestId(testId, 6, 'both')
       await el.waitForDisplayed({ timeout: 500 })
     }
     await el.click()
