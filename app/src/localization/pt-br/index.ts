@@ -932,6 +932,9 @@ const translation = {
       "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
       "ScanQRCode": "Scan QR Code (PT-BR)",
     },
+    "QRDisplay": {
+      "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",
+    },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (PT-BR)",
       "GetNewQRCode": "Get new QR code (PT-BR)",
