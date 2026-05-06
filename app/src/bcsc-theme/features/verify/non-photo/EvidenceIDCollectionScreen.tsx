@@ -2,6 +2,7 @@ import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState, NonBCSCUserMetadata } from '@/store'
@@ -145,7 +146,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         const canonicalBirthDate = toCanonicalBirthDate(formState.birthDate)
 
         await updateUserInfo({
-          birthdate: new Date(canonicalBirthDate),
+          birthdate: parseBirthdateToLocalDate(canonicalBirthDate),
         })
 
         const newUserMetadata: NonBCSCUserMetadata = {
