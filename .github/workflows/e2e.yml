@@ -7,14 +7,12 @@
 #   smoke           — basic launch + first navigation
 #   happy-path      — onboarding → verify → main (straight-through)
 #   full-regression — onboarding → verify → main (with detours)
-#   biometrics      — onboarding with biometric auth (Sauce RDC only)
+#   migration       — v3 → v4 app upgrade flow (Sauce RDC only)
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
 #   objects. Each entry spawns a separate SauceLabs session.
 #   Example: [{"platform":"iOS","device":"iPhone.*","os_version":"18"}]
-#   For suites that don't need specific devices (biometrics), pass
-#   a minimal matrix: [{"platform":"iOS"},{"platform":"Android"}]
 #
 # Trigger modes:
 #   workflow_call  — called from main.yaml after builds (PR smoke tests)
@@ -30,7 +28,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, happy-path, full-regression, biometrics)'
+        description: 'Test suite (smoke, happy-path, full-regression, migration)'
         type: string
         required: true
       build_number:
@@ -46,10 +44,6 @@ on:
         required: true
       SAUCE_ACCESS_KEY:
         required: true
-      CARD_SERIAL:
-        required: true
-      BIRTH_DATE:
-        required: true
   workflow_dispatch:
     inputs:
       suite:
@@ -59,7 +53,7 @@ on:
           - smoke
           - happy-path
           - full-regression
-          - biometrics
+          - migration
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
@@ -74,10 +68,10 @@ jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
-  #   smoke / happy-path / full-regression → configs/sauce/
-  #   biometrics                           → configs/sauce/biometrics/
+  #   smoke / happy-path / full-regression → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
+  #   migration                            → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
   #
-  # Non-blocking suites (biometrics): failures are reported but
+  # Non-blocking suites (migration): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -85,7 +79,7 @@ jobs:
     permissions:
       contents: read
     timeout-minutes: 45
-    continue-on-error: ${{ inputs.suite == 'biometrics' }}
+    continue-on-error: ${{ inputs.suite == 'migration' }}
     strategy:
       max-parallel: 2
       fail-fast: false
@@ -131,13 +125,11 @@ jobs:
           SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
-          CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-          BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
         run: |
           case "$SUITE" in
-            biometrics)
-              IOS_CONF="configs/sauce/biometrics/wdio.ios.bio.sauce.rdc.conf.ts"
-              ANDROID_CONF="configs/sauce/biometrics/wdio.android.bio.sauce.rdc.conf.ts"
+            migration)
+              IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
+              ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
             *)
               IOS_CONF="configs/sauce/wdio.ios.sauce.rdc.conf.ts"

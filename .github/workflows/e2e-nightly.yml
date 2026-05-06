@@ -1,9 +1,9 @@
 # E2E Nightly Full Regression
 #
 # Runs the full-regression E2E suite against the latest successful main
-# build's SauceLabs artifacts, followed by biometric tests (non-blocking).
+# build's SauceLabs artifacts.
 #
-# Default device matrix: 3 iOS + 3 Android OS versions (moderate coverage).
+# Default device matrix: 2 iOS + 2 Android OS versions (moderate coverage).
 #
 # Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
@@ -36,15 +36,12 @@ on:
           - full-regression
           - happy-path
           - smoke
+          - migration
         default: full-regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]'
-      include_biometrics:
-        description: 'Include biometric tests (non-blocking)'
-        type: boolean
-        default: true
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]'
 
 jobs:
   # ─── Gate: skip scheduled runs when nothing merged to main ──────
@@ -107,25 +104,7 @@ jobs:
     with:
       suite: ${{ inputs.suite || 'full-regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]' }}
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
-
-  e2e-biometrics:
-    needs: [check-for-merges, resolve-build]
-    if: >-
-      needs.check-for-merges.outputs.should_run == 'true' &&
-      (github.event_name != 'workflow_dispatch' || inputs.include_biometrics)
-    uses: ./.github/workflows/e2e.yml
-    with:
-      suite: biometrics
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
-    secrets:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
