@@ -1,8 +1,9 @@
-import { ButtonLocation, IconButton, QRRenderer, TOKENS, testIdWithKey, useServices } from '@bifold/core'
+import { ButtonLocation, IconButton, QRRenderer, TOKENS, ThemedText, testIdWithKey, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, useWindowDimensions } from 'react-native'
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 // import { useBCSCAgent } from '../agent'
+import { Share } from 'react-native'
 import WalletNameDisplay from './WalletNameDisplay'
 
 const QRDisplay: React.FC = () => {
@@ -22,8 +23,11 @@ const QRDisplay: React.FC = () => {
           accessibilityLabel="Share"
           testID={testIdWithKey('Share')}
           onPress={() => {
-            if (!invitation) { return }
+            if (!invitation) {
+              return
+            }
             logger.info(`QR invitation: ${invitation}`)
+            Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
           }}
         />
       ),
@@ -50,6 +54,11 @@ const QRDisplay: React.FC = () => {
     <ScrollView contentContainerStyle={styles.content}>
       <QRRenderer value={invitation || ''} size={qrSize} />
       <WalletNameDisplay />
+      <View>
+        <ThemedText style={{ marginTop: 20 }}>
+          {'Sharing this QR code with someone will add them as a Contact.'}
+        </ThemedText>
+      </View>
     </ScrollView>
   )
 }

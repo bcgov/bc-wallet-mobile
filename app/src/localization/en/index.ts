@@ -623,6 +623,8 @@ const translation = {
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
       "WillScanAutomatically": "Will scan automatically",
+      "TorchOn": "Turn flashlight on",
+      "TorchOff": "Turn flashlight off",
       "ErrorDetails": "Error details",
       "Dismiss": "Dismiss",
       "SaveScanZones": "Save Scan Zones",

@@ -1,8 +1,8 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { MaskType, ScanCamera, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
 
@@ -11,6 +11,7 @@ const QRScanner: React.FC = () => {
   const { t } = useTranslation()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [torchActive, setTorchActive] = useState(false)
 
   useEffect(() => {
     if (!hasPermission) {
@@ -18,9 +19,12 @@ const QRScanner: React.FC = () => {
     }
   }, [hasPermission, requestPermission])
 
-  const handleScan = useCallback(async (code: string) => {
-    logger.info(`QR code scanned: ${code}`)
-  }, [logger])
+  const handleScan = useCallback(
+    async (code: string) => {
+      logger.info(`QR code scanned: ${code}`)
+    },
+    [logger]
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -43,6 +47,17 @@ const QRScanner: React.FC = () => {
     text: {
       color: ColorPalette.grayscale.white,
     },
+    torchButton: {
+      position: 'absolute',
+      bottom: Spacing.lg,
+      right: Spacing.lg,
+      backgroundColor: torchActive ? ColorPalette.grayscale.white : 'rgba(0,0,0,0.4)',
+      borderRadius: 24,
+      padding: Spacing.sm,
+    },
+    torchIcon: {
+      color: torchActive ? ColorPalette.grayscale.black : ColorPalette.grayscale.white,
+    },
   })
 
   if (!hasPermission) {
@@ -51,7 +66,7 @@ const QRScanner: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} />
+      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} />
       <View pointerEvents="none" style={styles.overlay}>
         <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       </View>
@@ -61,6 +76,14 @@ const QRScanner: React.FC = () => {
           {t('BCSC.Scan.WillScanAutomatically')}
         </ThemedText>
       </View>
+      <TouchableOpacity
+        style={styles.torchButton}
+        onPress={() => setTorchActive((v) => !v)}
+        accessibilityRole="button"
+        accessibilityLabel={t(torchActive ? 'BCSC.Scan.TorchOff' : 'BCSC.Scan.TorchOn')}
+      >
+        <Icon name={torchActive ? 'flashlight' : 'flashlight-off'} size={28} style={styles.torchIcon} />
+      </TouchableOpacity>
     </View>
   )
 }
