@@ -757,6 +757,7 @@ const translation = {
       "WhereToGoLink": "A Service BC Location",
       "WhatToBring": "What to bring",
       "ThisDevice": "This device",
+      "YourID": "Your ID, including",
       "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too",
       "ShowThisConfirmationNumber": "Show this confirmation number",
       "YouMustCompleteThisBy": "You must complete this by",
