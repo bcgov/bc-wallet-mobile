@@ -161,6 +161,106 @@ describe('TransferQRDisplayScreen', () => {
       })
     })
 
+    it('stops polling for attestation status after a successful attestation', async () => {
+      jest.mocked(getAccount).mockResolvedValue(mockAccount)
+      // First call resolves true (success); any subsequent call would resolve false.
+      mockCheckAttestationStatus.mockResolvedValueOnce(true).mockResolvedValue(false)
+
+      render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
+      })
+
+      const callsAfterSuccess = mockCheckAttestationStatus.mock.calls.length
+
+      // Advance well past several attestation poll intervals (3s each)
+      await act(async () => {
+        jest.advanceTimersByTime(30000)
+      })
+
+      // No additional polls should have fired
+      expect(mockCheckAttestationStatus).toHaveBeenCalledTimes(callsAfterSuccess)
+    })
+
+    it('stops refreshing the QR code after a successful attestation', async () => {
+      jest.mocked(getAccount).mockResolvedValue(mockAccount)
+      mockCheckAttestationStatus.mockResolvedValueOnce(true).mockResolvedValue(false)
+
+      render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
+      })
+
+      const tokenCallsAfterSuccess = (createDeviceSignedJWT as jest.Mock).mock.calls.length
+
+      // Advance past several QR refresh intervals (50s each)
+      await act(async () => {
+        jest.advanceTimersByTime(150000)
+      })
+
+      // No additional QR refreshes should have fired
+      expect(createDeviceSignedJWT).toHaveBeenCalledTimes(tokenCallsAfterSuccess)
+    })
+
+    it('only navigates once even if multiple polls resolve as successful', async () => {
+      jest.mocked(getAccount).mockResolvedValue(mockAccount)
+      // Every call returns success — without a completion latch the screen would
+      // re-navigate on every resolved poll, snapping the user back from later screens.
+      mockCheckAttestationStatus.mockResolvedValue(true)
+
+      render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
+      })
+
+      await act(async () => {
+        jest.advanceTimersByTime(30000)
+      })
+
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+    })
+
+    it('clears polling intervals on unmount', async () => {
+      jest.mocked(getAccount).mockResolvedValue(mockAccount)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(mockCheckAttestationStatus).toHaveBeenCalled()
+      })
+
+      const pollsBeforeUnmount = mockCheckAttestationStatus.mock.calls.length
+      const tokensBeforeUnmount = (createDeviceSignedJWT as jest.Mock).mock.calls.length
+
+      unmount()
+
+      await act(async () => {
+        jest.advanceTimersByTime(150000)
+      })
+
+      expect(mockCheckAttestationStatus).toHaveBeenCalledTimes(pollsBeforeUnmount)
+      expect(createDeviceSignedJWT).toHaveBeenCalledTimes(tokensBeforeUnmount)
+    })
+
     it('falls back to the locally generated jti when jwtDecode returns no jti', async () => {
       jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
       ;(jwtDecode as jest.Mock).mockReturnValue({}) // no jti in decoded token
