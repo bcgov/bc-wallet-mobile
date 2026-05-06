@@ -1,5 +1,4 @@
-import { useDefaultStackOptions, useTheme } from '@bifold/core'
-import RenameWallet from '@bifold/core/lib/typescript/src/screens/RenameWallet'
+import { RenameWallet, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
