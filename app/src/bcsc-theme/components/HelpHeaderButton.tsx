@@ -4,7 +4,13 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BCSCMainStackParams, BCSCOnboardingStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import {
+  BCSCAuthStackParams,
+  BCSCMainStackParams,
+  BCSCOnboardingStackParams,
+  BCSCScreens,
+  BCSCVerifyStackParams,
+} from '../types/navigators'
 
 type HelpHeaderButtonUrlProps = {
   helpCentreUrl: HelpCentreUrl
@@ -42,7 +48,7 @@ const HelpHeaderButton: React.FC<{
   return (
     <IconButton
       buttonLocation={ButtonLocation.Right}
-      icon={'help-circle'}
+      icon={'help-circle-outline'}
       accessibilityLabel={t('PersonCredential.HelpLink')}
       testID={testIdWithKey('Help')}
       onPress={() => {
@@ -92,6 +98,25 @@ export const createVerifyHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonPr
     return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
   }
   return VerifyHeaderRight
+}
+
+/**
+ * Creates a Help Header Button for the Auth Stack that navigates to AuthWebView or executes a custom action.
+ */
+export const createAuthHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProps) => {
+  const AuthHeaderRight = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
+
+    const navigateToWebView = useCallback(
+      (url: string, title: string) => {
+        navigation.navigate(BCSCScreens.AuthWebView, { url, title })
+      },
+      [navigation]
+    )
+
+    return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
+  }
+  return AuthHeaderRight
 }
 
 /**

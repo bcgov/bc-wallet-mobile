@@ -2,6 +2,7 @@ import AccountNotVerifiedCTA from '@/bcsc-theme/features/common/AccountNotVerifi
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
+import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
@@ -10,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { createAuthHelpHeaderButton } from '../components/HelpHeaderButton'
 
 type QRCoreTabParams = {
   Scanner: undefined
@@ -106,6 +108,7 @@ const QRCoreStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('Scan.ScanQRCode'),
             tabBarTestID: testIdWithKey('ScanQRCode'),
+            headerRight: createAuthHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
           }}
         />
         <Tab.Screen
@@ -126,17 +129,18 @@ const QRCoreStack: React.FC = () => {
           options={{
             title: t('BCSC.ManualPairing.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon(t('BCSC.ManualPairing.TabTitle'), 'keyboard-outline'),
+            tabBarIcon: createTabBarIcon(t('BCSC.ManualPairing.TabTitle'), 'export'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.ManualPairing.TabTitle'),
             tabBarTestID: testIdWithKey('PairingCode'),
+            headerRight: createAuthHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
           }}
         />
+        {/* TODO: (al) remove this from the tab stack, this is only for testing */}
         <Tab.Screen
           name="AccountNotVerified"
           component={AccountNotVerifiedCTA}
           options={{
-            title: t('BCSC.AccountNotVerified.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon(t('BCSC.AccountNotVerified.TabTitle'), 'account-alert-outline'),
             tabBarShowLabel: false,

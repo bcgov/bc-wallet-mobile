@@ -609,7 +609,7 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again. (FR)",
       "NoDeviceCodeFound": "No device code found (FR)",
       "InvalidQrCode": "Invalid QR code (FR)",
-      "WillScanAutomatically": "Will scan automatically (FR)",
+      "WillScanAutomatically": "A valid QR Code will scan automatically (FR)",
       "TorchOn": "Turn flashlight on (FR)",
       "TorchOff": "Turn flashlight off (FR)",
       "ErrorDetails": "Error details (FR)",
