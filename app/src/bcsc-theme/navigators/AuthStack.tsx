@@ -1,4 +1,4 @@
-import { RenameWallet, useDefaultStackOptions, useTheme } from '@bifold/core'
+import { useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
@@ -7,6 +7,7 @@ import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import AccountSelector from '../features/auth/AccountSelectorScreen'
+import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
 import { EnterPINScreen } from '../features/auth/EnterPINScreen'
@@ -127,10 +128,10 @@ const AuthStack = (): React.ReactElement => {
         }}
       />
       <Stack.Screen
-        name={BCSCScreens.AuthRenameWallet}
-        component={RenameWallet}
+        name={BCSCScreens.EditNickname}
+        component={EditNicknameScreen}
         options={{
-          title: t('NameWallet.EditWalletName'),
+          headerShown: true,
         }}
       />
 

@@ -136,7 +136,6 @@ export enum BCSCScreens {
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   QRCore = 'QRCore',
-  AuthRenameWallet = 'Auth Rename Wallet',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -271,7 +270,7 @@ export type BCSCMainStackParams = {
 
 export type BCSCAuthStackParams = {
   [BCSCScreens.QRCore]: undefined
-  [BCSCScreens.AuthRenameWallet]: undefined
+  [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

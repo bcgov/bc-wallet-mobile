@@ -540,18 +540,6 @@ const translation = {
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
       "TabTitle": "Pairing code",
     },
-    "AccountNotVerified": {
-      "TabTitle": "Not verified",
-      "Title": "Verify your account",
-      "Message": "In order to enter a pairing code you will require a verified account. It gives you access to services that need to know who you are.",
-      "Details": {
-        "Title": "You will need to:",
-        "Step1": "Verify your email",
-        "Step2": "Add a photo ID",
-        "Step3": "Take a photo of your face",
-        "Step4": "Record a short video, have a video call or visit a Service BC office"
-      }
-    },
     "Onboarding": {
       "LearnMore": "Learn more",
       "AcceptAndContinueButton": "Accept and continue",
