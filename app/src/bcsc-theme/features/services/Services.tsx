@@ -1,3 +1,4 @@
+import { ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
@@ -7,10 +8,10 @@ import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { BCState, Mode } from '@/store'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -32,9 +33,10 @@ const Services: React.FC = () => {
   const token = useTokenService()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme, Inputs } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')
+  const [sortVersion, setSortVersion] = useState(0)
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -48,33 +50,56 @@ const Services: React.FC = () => {
   const { serviceClients, isLoading } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
+    disabled: !store.bcscSecure.verified, // V4.1 only fetch service clients when user is verified
   })
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
+  // Track the latest bookmarks via a ref so toggling a bookmark does not
+  // re-sort the list. Sort order is recomputed only when the underlying
+  // service list changes (initial load or search filter change), or when
+  // the screen regains focus (e.g. user navigates back to the Services tab).
+  const savedServicesRef = useRef(store.bcscSecure.savedServices)
   useEffect(() => {
-    loadIdTokenMetadata()
-  }, [loadIdTokenMetadata])
+    savedServicesRef.current = store.bcscSecure.savedServices
+  }, [store.bcscSecure.savedServices])
+
+  useFocusEffect(
+    useCallback(() => {
+      setSortVersion((v) => v + 1)
+    }, [])
+  )
+
+  const sortedServiceClients = useMemo(() => {
+    const saved = new Set(savedServicesRef.current)
+    return [...serviceClients].sort((a, b) => {
+      const aBookmarked = saved.has(a.client_ref_id) ? 1 : 0
+      const bBookmarked = saved.has(b.client_ref_id) ? 1 : 0
+      return bBookmarked - aBookmarked
+    })
+    // sortVersion intentionally included so that returning to the screen
+    // (focus) re-promotes any newly bookmarked services to the top.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceClients, sortVersion])
+
+  useEffect(() => {
+    if (store.bcscSecure.verified) {
+      loadIdTokenMetadata()
+    }
+  }, [loadIdTokenMetadata, store.bcscSecure.verified])
 
   const styles = StyleSheet.create({
-    headerText: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.lg,
-    },
     searchInputContainer: {
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
       paddingBottom: Spacing.md,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     searchInput: {
+      ...Inputs.textInput,
+      color: undefined,
+      fontSize: undefined,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      borderRadius: 8,
-      height: Spacing.xl * 2,
-      paddingHorizontal: Spacing.md,
-      borderWidth: 1,
-      borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8',
     },
     searchText: {
       flex: 1,
@@ -83,27 +108,19 @@ const Services: React.FC = () => {
       marginLeft: Spacing.sm,
     },
     servicesContainer: {
-      paddingHorizontal: Spacing.md,
+      paddingHorizontal: Spacing.lg,
       gap: 2,
     },
     bottomContainer: {
-      margin: Spacing.md,
-    },
-    desciptionText: {
-      lineHeight: 30,
+      margin: Spacing.lg,
     },
   })
 
   return (
-    <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [1], keyboardShouldPersistTaps: 'handled' }}>
-      {/* Dismiss keyboard when tapping outside of TextInput */}
-      <ThemedText variant={'headingTwo'} style={styles.headerText}>
-        {t('BCSC.Services.CatalogueTitle')}
-      </ThemedText>
-
+    <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [0], keyboardShouldPersistTaps: 'handled' }}>
       <View style={styles.searchInputContainer}>
         <View ref={searchInputRef} style={styles.searchInput}>
-          <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
+          <Icon name="search" size={24} color={TextTheme.headingFour.color} />
           <TextInput
             placeholder={t('BCSC.Services.CatalogueSearch')}
             placeholderTextColor={ColorPalette.brand.tertiary}
@@ -163,30 +180,31 @@ const Services: React.FC = () => {
           testID={testIdWithKey('ServicesLoading')}
         />
       ) : (
-        <>
+        <View>
           <View style={styles.servicesContainer}>
-            {serviceClients.map((service) => (
-              <ServiceButton
-                key={service.client_ref_id}
-                title={service.client_name}
-                description={service.client_description}
-                onPress={() => {
-                  navigation.navigate(BCSCScreens.ServiceLogin, {
-                    serviceClientId: service.client_ref_id,
-                  })
-                }}
-              />
-            ))}
+            <ListButtonGroup gap={Spacing.sm}>
+              {sortedServiceClients.map((service) => (
+                <ServiceButton
+                  key={service.client_ref_id}
+                  clientRefId={service.client_ref_id}
+                  title={service.client_name}
+                  description={service.client_description}
+                  onPress={() => {
+                    navigation.navigate(BCSCScreens.ServiceLogin, {
+                      serviceClientId: service.client_ref_id,
+                    })
+                  }}
+                />
+              ))}
+            </ListButtonGroup>
           </View>
 
           <View style={styles.bottomContainer}>
             <ThemedText variant={'bold'}>{t('BCSC.Services.NotListed')}</ThemedText>
-            <ThemedText style={styles.desciptionText}>{t('BCSC.Services.NotListedDescription')}</ThemedText>
-            <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
-              {t('BCSC.Services.NotListedDescriptionContact')}
-            </ThemedText>
+            <ThemedText>{t('BCSC.Services.NotListedDescription')}</ThemedText>
+            <ThemedText style={{ marginTop: Spacing.xl }}>{t('BCSC.Services.NotListedDescriptionContact')}</ThemedText>
           </View>
-        </>
+        </View>
       )}
     </TabScreenWrapper>
   )

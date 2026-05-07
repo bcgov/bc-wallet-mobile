@@ -49,6 +49,11 @@ export interface ServiceClientsFilter {
    * @type {string[]}
    */
   serviceClientIdsFilter?: string[]
+  /**
+   * If true, the hook will skip loading service clients and return an empty list.
+   * @type {boolean}
+   */
+  disabled?: boolean
 }
 
 /**
@@ -71,12 +76,21 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     load,
     isReady,
     isLoading,
-  } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
-    onError: (error) => {
-      logger.error('Error loading services', error as Error)
-      filteringDoneRef.current = true
+  } = useDataLoader<ClientMetadata[]>(
+    async () => {
+      if (filter.disabled) {
+        return []
+      }
+
+      return metadata.getClientMetadata()
     },
-  })
+    {
+      onError: (error) => {
+        logger.error('Error loading services', error as Error)
+        filteringDoneRef.current = true
+      },
+    }
+  )
 
   useEffect(() => {
     load()

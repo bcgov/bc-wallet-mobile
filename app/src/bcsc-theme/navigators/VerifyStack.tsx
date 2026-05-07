@@ -14,7 +14,6 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
-import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
 import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
@@ -100,7 +99,6 @@ const VerifyStack = () => {
           headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
-      <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen
         name={BCSCScreens.VerifyPrivacyPolicy}

@@ -48,7 +48,7 @@ export const DropdownWithValidation = <T extends string | number>({
   subtextProps,
   errorProps,
 }: DropdownWithValidationProps<T>) => {
-  const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -93,7 +93,7 @@ export const DropdownWithValidation = <T extends string | number>({
     modalTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: ColorPalette.brand.secondary,
+      color: TextTheme.normal.color,
       flex: 1,
       textAlign: 'center',
     },
@@ -114,7 +114,7 @@ export const DropdownWithValidation = <T extends string | number>({
     },
     optionText: {
       fontSize: 16,
-      color: ColorPalette.brand.secondary,
+      color: TextTheme.normal.color,
     },
     optionTextSelected: {
       fontWeight: '600',

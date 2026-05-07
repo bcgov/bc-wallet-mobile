@@ -13,6 +13,8 @@ const translation = {
     "HideDetails": "Masquer les détails",
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
+    "ContinueSetup": "Continue setup (FR)",
+    "Skip": "Skip (FR)",
     "A11y": {
       "OpensInBrowser": "This opens in browser (FR)",
     }
@@ -30,6 +32,10 @@ const translation = {
     "Message2022": "Un problème est survenu lors de l'extraction du dépôt de la numérotation directe à l'arrivé (DID).",
     "Title2026": "Oups! Un problème est survenu.",
     "Message2026": "L'application a rencontré un problème. Essayez de la redémarrer.",
+    "Title2901": "Unable to initialize wallet (FR)",
+    "Message2901": "We couldn't start your wallet. Check your connection and try again. (FR)",
+    "Title2902": "Wallet secret not found (FR)",
+    "Message2902": "Your wallet secret is missing. Sign in again to continue. (FR)",
     "Title2031": "Unable to complete agent initialization (FR)",
     "Message2031": "There was a problem while initializing the agent. (FR)",
     "Title2032": "Unable to open app-to-app URL (FR)",
@@ -80,10 +86,27 @@ const translation = {
       "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone. (FR)",
     }
   },
-  "PersonCredentialNotification": {
-    "Title": "Obtener votre carte d'identité",
-    "Description": "Ajouter votre carte d'identité à votre portefeuille et utilisez-la pour accéder aux services en ligne.",
-    "ButtonTitle": "Start (FR)",
+  "Notification": {
+    "StartVerification": {
+      "Title": "You're not verified (FR)",
+      "Description": "You can continue the verification process at any time. (FR)",
+      "ButtonTitle": "Start verification (FR)"
+    },
+    "BasicMessage": {
+      "Title": "New message (FR)",
+      "SentMessage": "{{ label }} sent a message (FR)",
+      "ReceivedMessage": "You received a new message (FR)",
+      "ButtonTitle": "View message (FR)"
+    },
+    "CredentialOffer": {
+      "Title": "New credential offer (FR)",
+    },
+    "ProofRequest": {
+      "Title": "New proof request (FR)"
+    },
+    "Revocation": {
+      "Title": "Credential revoked (FR)"
+    }
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Étape 1: BC Services Card est déjà installé",
@@ -190,8 +213,17 @@ const translation = {
       "PrivacyInformation": "Privacy Information (FR)",
       "ManageDevices": "Manage Devices (FR)",
     },
+    "HelpMenu": {
+      "Title": "Need help? (FR)",
+      "AccessibilityLabel": "Help menu (FR)",
+      "Version": "BCSC version: {{ version }} (FR)",
+      "LearnMore": "Learn about BCSC app (FR)",
+      "GiveFeedback": "Give feedback (FR)",
+      "ReportProblem": "Report a problem (FR)",
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
+      "AppStartup": "Getting your BCSC App ready... (FR)"
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
@@ -215,8 +247,10 @@ const translation = {
       "CreatePIN": "Create a 6-digit PIN (FR)",
       "CreatePINShort": "Create PIN (FR)",
       "ConfirmPIN": "Confirm PIN (FR)",
-      "RememberPIN": "Remember your PIN (FR)",
-      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (FR)",
+      "ThisPINIsUnique": "This PIN is unique to this app (FR)",
+      "RememberPINWarning": "We cannot help you get or reset your PIN if you forget it. (FR)",
+      "RememberPINDescription": "It's only saved on this device. It's never shared with us. (FR)",
+      "CreatePINExample": "Create a unique PIN. Example: 589476 (FR)",
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (FR)",
       "MustCheckBox": "You must check this box to continue. (FR)",
       "PINTooShort": "PIN must be 6 digits (FR)",
@@ -259,6 +293,9 @@ const translation = {
       "Feedback": "Feedback (FR)",
       "Accessibility": "Accessibility (FR)",
       "AnalyticsOptIn": "Analytics Opt-In (FR)",
+      "Theme": "Theme (FR)",
+      "ThemeLight": "Light (FR)",
+      "ThemeDark": "Dark (FR)",
       "TermsOfUse": "Terms of use (FR)",
       "Analytics": "Analytics (FR)",
       "RemoveAccount": "Remove account (FR)",
@@ -297,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (FR)",
+      "Title": "Services (FR)",
       "CatalogueSearch": "Search services (FR)",
       "WantToLogin": "Do you want to log in to (FR)",
       "RequestedInformation": "They will receive the following information: (FR)",
@@ -311,7 +348,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (FR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (FR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (FR)",
-      "Goto": "On that device, go to: (FR)",
+      "Goto": "Go to: (FR)",
       "GotoService": "Go to {{- service}} (FR)",
       "GotoUrl": "Go to: {{- url}} (FR)",
       "NotListed": "Services not listed? (FR)",
@@ -505,21 +542,11 @@ const translation = {
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
-      "CarouselNext": "Next (FR)",
-      "CarouselBack": "Back (FR)",
       "AcceptAndContinueButton": "Accept and continue (FR)",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry (FR)",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (FR)",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use (FR)",
       "TermsOfUseVersion": "Version (FR)",
-      "CarouselServicesHeader": "Access services online (FR)",
-      "CarouselProveHeader": "Prove who you are online (FR)",
-      "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (FR)",
-      "CarouselServicesContent": "It's accepted by many government services. (FR)",
-      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed. (FR)",
-      "CarouselProveBodyContentB": "Access services from any device by approving login in this app. (FR)",
-      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card. (FR)",
-      "CarouselCannotUseBodyContentB": "It's your account to access services online only. (FR)",
       "PrivacyPolicyTitle": "Privacy (FR)",
       "PrivacyPolicyHeaderSetup": "App Setup (FR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (FR)",
@@ -528,17 +555,19 @@ const translation = {
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (FR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (FR)",
       "TermsOfUseTitle": "Terms of Use (FR)",
-      "NotificationsHeader": "Notifications (FR)",
-      "NotificationsContentA": "It's recommended you allow this app to receive push notifications. (FR)",
-      "NotificationsContentB": "Notifications will be sent to you when: (FR)",
-      "NotificationsBullet1": "The app is setup and ready to use (FR)",
-      "NotificationsBullet2": "You choose to log in (FR)",
-      "NotificationsBullet3": "You need to renew and verify your identity again (FR)",
-      "NotificationsBullet4": "There are changes to your account (FR)",
+      "NotificationsTitle": "Notifications (FR)",
+      "NotificationsHeader": "Enable Notifications? (FR)",
+      "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions. (FR)",
+      "EnableNotifications": "Enable Notifications (FR)",
+      "SkipNotifications": "Skip (FR)",
       "SecureAppHeader": "Choose how to secure this app (FR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (FR)",
+      "SecureAppOnboardingHeader": "How to secure this app (FR)",
+      "SecureAppOnboardingContent": "Your privacy is important. Securing the app helps to prevent others from accessing it. (FR)",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}} (FR)",
+      "SecureAppOnboardingDeviceAuthTitle": "Use device authentication (FR)",
       "SecureAppDeviceAuthSubtext": "It's already set up on this {{platform}}. It never leaves this device or is shared with us. (FR)",
+      "SecureAppOnboardingDeviceAuthSubtext": "It's already set up on this phone or tablet. It never leaves this device or is shared with us. (FR)",
       "SecureAppPINTitle": "Create a PIN (FR)",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)",
       "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private. (FR)",
@@ -615,10 +644,20 @@ const translation = {
       "OpenAccountServices": "Open account services (FR)",
     },
     "AccountSetup": {
-      "Title": "BC Services Card Account (FR)",
-      "AddAccount": "Add account (FR)",
-      "TransferAccount": "Transfer from another device (FR)",
+      "Title": "Welcome to the BCSC App (FR)",
+      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (FR)",
+      "AddAccount": "No, continue setup (FR)",
+      "TransferAccount": "Yes, connect this device (FR)",
       "ContinueAs": "Continue as: (FR)",
+    },
+    "VerifyPrompt": {
+      "Title": "Verify Your Account (FR)",
+      "Description": "Verify your account to access services that may need additional information. (FR)",
+      "YouWillNeedTo": "You will need to: (FR)",
+      "Bullet1": "Verify your email (FR)",
+      "Bullet2": "Add a photo ID (FR)",
+      "Bullet3": "Take a photo of your face (FR)",
+      "Bullet4": "Record a short video, have a video call, or visit a Service BC office (FR)",
     },
     "NewSetup": {
       "Title": "New setup (FR)",

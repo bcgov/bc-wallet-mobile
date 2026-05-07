@@ -1,12 +1,17 @@
+import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { BifoldAgent } from '@bifold/core'
-import { Attribute, Predicate } from '@bifold/oca/build/legacy'
+import type { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
   AnonCredsCredentialInfo,
   AnonCredsPredicateType,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import { CredentialExchangeRecord, GetCredentialsForProofRequestReturn, ProofExchangeRecord } from '@credo-ts/core'
+import {
+  DidCommCredentialExchangeRecord,
+  DidCommProofExchangeRecord,
+  GetCredentialsForProofRequestReturn,
+} from '@credo-ts/didcomm'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 
@@ -14,7 +19,7 @@ export type ProofCredentialItems = ProofCredentialAttributes & ProofCredentialPr
 
 export type ProofCredentialAttributes = {
   altCredentials?: string[]
-  credExchangeRecord?: CredentialExchangeRecord
+  credExchangeRecord?: DidCommCredentialExchangeRecord
   credId: string
   credDefId?: string
   proofCredDefId?: string
@@ -26,7 +31,7 @@ export type ProofCredentialAttributes = {
 
 export type ProofCredentialPredicates = {
   altCredentials?: string[]
-  credExchangeRecord?: CredentialExchangeRecord
+  credExchangeRecord?: DidCommCredentialExchangeRecord
   credId: string
   credDefId?: string
   proofCredDefId?: string
@@ -34,6 +39,15 @@ export type ProofCredentialPredicates = {
   proofSchemaId?: string
   credName: string
   predicates?: Predicate[]
+}
+
+// TODO: Export this from @bifold/core
+export enum NotificationType {
+  BasicMessage = 'BasicMessage',
+  CredentialOffer = 'Offer',
+  ProofRequest = 'ProofRecord',
+  Revocation = 'Revocation',
+  Proof = 'Proof',
 }
 
 /**
@@ -124,7 +138,7 @@ export const evaluatePredicates =
  * @returns The Anoncreds or Indy proof format object
  */
 const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterByNonRevocationRequirements = false) => {
-  const format = await agent.proofs.getFormatData(proofId)
+  const format = await agent.didcomm.proofs.getFormatData(proofId)
   const proofIsAnoncredsFormat = format.request?.anoncreds !== undefined
   const proofIsIndycredsFormat = format.request?.indy !== undefined
   const proofFormats = {
@@ -168,12 +182,12 @@ const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterB
  */
 export const credentialsMatchForProof = async (
   agent: BifoldAgent,
-  proof: ProofExchangeRecord,
+  proof: DidCommProofExchangeRecord,
   filterByNonRevocationRequirements = true
 ): Promise<GetCredentialsForProofRequestReturn> => {
   const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
-  const credentials = await agent.proofs.getCredentialsForRequest({
-    proofRecordId: proof.id,
+  const credentials = await agent.didcomm.proofs.getCredentialsForRequest({
+    proofExchangeRecordId: proof.id,
     proofFormats,
   })
 
@@ -182,4 +196,30 @@ export const credentialsMatchForProof = async (
   }
 
   return credentials
+}
+
+/**
+ * Get the notification type for a given notification item.
+ *
+ * @param notification The notification item to get the type for.
+ * @returns The notification type for the given notification item.
+ */
+export const getCredentialNotificationType = (notification: CredentialNotificationRecord): NotificationType => {
+  if (notification.type === 'BasicMessageRecord') {
+    return NotificationType.BasicMessage
+  }
+
+  if (notification.type === 'CredentialRecord' && 'revocationNotification' in notification) {
+    return NotificationType.Revocation
+  }
+
+  if (notification.type === 'CredentialRecord') {
+    return NotificationType.CredentialOffer
+  }
+
+  if (notification.type === 'ProofRecord') {
+    return NotificationType.ProofRequest
+  }
+
+  return NotificationType.Proof
 }

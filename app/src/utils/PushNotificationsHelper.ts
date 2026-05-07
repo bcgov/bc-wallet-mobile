@@ -1,5 +1,13 @@
 import { PersistentStorage } from '@bifold/core'
-import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
+import {
+  DidCommConnectionRecord,
+  DidCommConnectionService,
+  DidCommConnectionType,
+  DidCommMessageSender,
+  DidCommOutboundMessageContext,
+} from '@credo-ts/didcomm'
+import { DidCommPushNotificationsFcmSetDeviceInfoMessage } from '@credo-ts/didcomm-push-notifications'
 import { getApp } from '@react-native-firebase/app'
 import {
   AuthorizationStatus,
@@ -109,9 +117,9 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
  * Helper Functions Section
  */
 
-const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
-  const connections: ConnectionRecord[] = await agent.connections.getAll()
-  const mediators = connections.filter((r) => r.connectionTypes.includes(ConnectionType.Mediator))
+const getMediatorConnection = async (agent: Agent): Promise<DidCommConnectionRecord | undefined> => {
+  const connections: DidCommConnectionRecord[] = await agent.didcomm.connections.getAll()
+  const mediators = connections.filter((r) => r.connectionTypes.includes(DidCommConnectionType.Mediator))
   if (mediators.length < 1) {
     agent.config.logger.warn(`Mediator connection not found`)
     return undefined
@@ -169,8 +177,7 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
   if (!mediator) {
     return
   }
-
-  const response = await agent.discovery.queryFeatures({
+  const response = await agent.didcomm.discovery.queryFeatures({
     awaitDisclosures: true,
     connectionId: mediator.id,
     protocolVersion: 'v1',
@@ -244,19 +251,28 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     return
   }
 
-  agent.config.logger.info(`Trying to send device info to mediator with connection [${mediator.id}]`)
+  agent.config.logger.info(
+    `Trying to send device info to mediator with connection [${mediator.id}] platform=${Platform.OS} tokenLength=${token?.length ?? 0} blank=${blankDeviceToken}`
+  )
   try {
-    await agent.modules.pushNotificationsFcm.setDeviceInfo(mediator.id, {
+    const message = new DidCommPushNotificationsFcmSetDeviceInfoMessage({
       deviceToken: token,
       devicePlatform: Platform.OS,
     })
+    const connectionService = agent.context.dependencyManager.resolve(DidCommConnectionService)
+    const connection = await connectionService.getById(agent.context, mediator.id)
+    const outbound = new DidCommOutboundMessageContext(message, { agentContext: agent.context, connection })
+
+    await agent.context.dependencyManager.resolve(DidCommMessageSender).sendMessage(outbound)
+    agent.config.logger.info(`Successfully sent device info to mediator [${mediator.id}]`)
     if (blankDeviceToken) {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
     } else {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
     }
   } catch (error) {
-    agent.config.logger.error('Error sending device token info to mediator agent')
+    const errorMessage = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+    agent.config.logger.error(`Error sending device token info to mediator agent: ${errorMessage}`)
   }
 }
 

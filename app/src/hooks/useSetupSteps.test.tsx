@@ -24,33 +24,14 @@ describe('useSetupSteps Hook', () => {
 
       const { result: hook } = renderHook(() => useSetupSteps(store))
 
-      expect(hook.current.nickname.completed).toBe(false)
-      expect(hook.current.nickname.focused).toBe(true)
       expect(hook.current.id.completed).toBe(false)
-      expect(hook.current.id.focused).toBe(false)
+      expect(hook.current.id.focused).toBe(true)
       expect(hook.current.address.completed).toBe(false)
       expect(hook.current.address.focused).toBe(false)
       expect(hook.current.email.completed).toBe(false)
       expect(hook.current.email.focused).toBe(false)
       expect(hook.current.verify.completed).toBe(false)
       expect(hook.current.verify.focused).toBe(false)
-    })
-  })
-  describe('Nickname Step', () => {
-    it('should be focused when nickname is not provided', () => {
-      const store = structuredClone(initialState)
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.nickname.completed).toBe(false)
-      expect(hook.result.current.nickname.focused).toBe(true)
-    })
-
-    it('should be completed when nickname is provided', () => {
-      const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
-      store.bcsc.selectedNickname = 'test'
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.nickname.completed).toBe(true)
-      expect(hook.result.current.nickname.focused).toBe(false)
     })
   })
 
@@ -446,10 +427,8 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      expect(hook.result.current.nickname.completed).toBe(false)
-      expect(hook.result.current.nickname.focused).toBe(true)
       expect(hook.result.current.id.completed).toBe(false)
-      expect(hook.result.current.id.focused).toBe(false)
+      expect(hook.result.current.id.focused).toBe(true)
       expect(hook.result.current.address.completed).toBe(false)
       expect(hook.result.current.address.focused).toBe(false)
       expect(hook.result.current.email.completed).toBe(false)
@@ -461,9 +440,6 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.selectedNickname = 'test'
 
       hook.rerender(store)
-
-      expect(hook.result.current.nickname.completed).toBe(true)
-      expect(hook.result.current.nickname.focused).toBe(false)
 
       expect(hook.result.current.id.completed).toBe(false)
       expect(hook.result.current.id.focused).toBe(true)
@@ -511,12 +487,6 @@ describe('useSetupSteps Hook', () => {
   })
 
   describe('currentStep property', () => {
-    it('should return nickname when nickname step is focused', () => {
-      const store = structuredClone(initialState)
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.currentStep).toBe('nickname')
-    })
-
     it('should return id when id step is focused', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'
@@ -588,19 +558,6 @@ describe('useSetupSteps Hook', () => {
   })
 
   describe('subtext property', () => {
-    it('should return default subtext for nickname when not completed', () => {
-      const store = structuredClone(initialState)
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.nickname.subtext).toEqual(['BCSC.NicknameAccount.AccountName'])
-    })
-
-    it('should return nickname in subtext when completed', () => {
-      const store = structuredClone(initialState)
-      store.bcsc.selectedNickname = 'MyAccount'
-      const hook = renderHook(() => useSetupSteps(store))
-      expect(hook.result.current.nickname.subtext[0]).toContain('MyAccount')
-    })
-
     it('should return scan/photos subtext for id when not completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.selectedNickname = 'test'

@@ -16,11 +16,29 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
+import { NotificationsList } from './components/NotificationsList'
 import SavedServices from './components/SavedServices'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
-const Home: React.FC<HomeProps> = ({ navigation }) => {
+/**
+ * Home screen for >= V4.1.x
+ * @returns React element
+ */
+const Home: React.FC<HomeProps> = () => {
+  const { Spacing } = useTheme()
+
+  return (
+    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+      <NotificationsList />
+    </TabScreenWrapper>
+  )
+}
+
+/**
+ * FIXME (V4.1): This screen will be needed somewhere in the release, uncertain where it will be used. Keeping as reference.
+ */
+export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()

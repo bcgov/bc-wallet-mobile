@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
@@ -288,10 +289,10 @@ const Developer: React.FC = () => {
   }
 
   const toggleTheme = () => {
-    if (themeName === BCThemeNames.BCSC) {
-      setTheme(BCThemeNames.BCWallet)
+    if (themeName === BCThemeNames.Dark) {
+      setTheme(BCThemeNames.Light)
     } else {
-      setTheme(BCThemeNames.BCSC)
+      setTheme(BCThemeNames.Dark)
     }
   }
 
@@ -299,7 +300,7 @@ const Developer: React.FC = () => {
     lockOutUser(LockoutReason.Logout)
 
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
-    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
+    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.Light
 
     setTheme(newTheme)
     dispatch({
@@ -547,10 +548,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(themeName === BCThemeNames.BCSC)}
+            thumbColor={getSwitchColor(themeName === BCThemeNames.Dark)}
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleTheme}
-            value={themeName === BCThemeNames.BCSC}
+            value={themeName === BCThemeNames.Dark}
             accessibilityLabel={t('Developer.SwitchTheme')}
           />
         </SectionRow>
@@ -584,6 +585,9 @@ const Developer: React.FC = () => {
             </SectionRow>
           </>
         ) : null}
+        <View style={styles.footer}>
+          <Text style={TextTheme.caption}>{`Version ${getVersion()} (${getBuildNumber()})`}</Text>
+        </View>
       </ScrollView>
     </ScreenWrapper>
   )

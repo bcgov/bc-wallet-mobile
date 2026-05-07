@@ -33,6 +33,7 @@ export const CreatePINScreen: React.FC<CreatePINScreenProps> = () => {
       onSuccess={handlePINSuccess}
       loadingMessage={t('BCSC.PIN.SettingUpAccount')}
       translationPrefix="BCSC.PIN"
+      creatingNewPIN={true}
     />
   )
 }

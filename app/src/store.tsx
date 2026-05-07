@@ -96,12 +96,14 @@ export interface BCSCState {
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
+  hasSeenVerifyPrompt?: boolean
 }
 
 export enum VerificationStatus {
   VERIFIED = 'VERIFIED', // Credential is valid (not cancelled or expired)
   UNVERIFIED = 'UNVERIFIED', // Credential does't exist or we haven't verified it's status
   DEACTIVATED = 'DEACTIVATED', // Credential was deactivated (cancelled or expired)
+  IN_PROGRESS = 'IN_PROGRESS', // Verification is currently in progress
 }
 
 /**
@@ -262,12 +264,14 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
+  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus',
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
+  SEEN_VERIFY_PROMPT = 'bcsc/seenVerifyPrompt',
 }
 
 enum ModeDispatchAction {
@@ -687,6 +691,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS: {
+      const verifiedStatus = (action?.payload || []).pop() ?? VerificationStatus.UNVERIFIED
+      const bcscSecure = { ...state.bcscSecure, verifiedStatus }
+      return { ...state, bcscSecure }
+    }
     case BCSCDispatchAction.UPDATE_SECURE_WALLET_KEY: {
       const [walletKey] = action.payload as [string | undefined]
       const bcscSecure = { ...state.bcscSecure, walletKey }
@@ -770,6 +779,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.DISMISSED_DEVICE_LIMIT_BANNER: {
       const dismissedAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceLimitBannerDismissedAt: dismissedAt }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SEEN_VERIFY_PROMPT: {
+      const hasSeen = (action?.payload || []).pop() ?? true
+      const bcsc = { ...state.bcsc, hasSeenVerifyPrompt: hasSeen }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

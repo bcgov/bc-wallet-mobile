@@ -1,4 +1,5 @@
 import { ErrorRegistry } from '@/errors'
+import { VerificationStatus } from '@/store'
 import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
@@ -49,6 +50,10 @@ jest.mock('./VerifyStack', () => ({
   __esModule: true,
   default: () => 'VerifyStack',
 }))
+jest.mock('./PromptStack', () => ({
+  __esModule: true,
+  default: () => 'PromptStack',
+}))
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
 }))
@@ -57,6 +62,10 @@ jest.mock('../contexts/BCSCAccountContext', () => ({
 }))
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
+}))
+jest.mock('../features/agent/BCSCAgentProvider', () => ({
+  __esModule: true,
+  default: ({ children }: any) => children,
 }))
 
 const mockStore = (overrides: Record<string, any> = {}) => ({
@@ -167,13 +176,13 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('AuthStack')
   })
 
-  it('renders VerifyStack when authenticated but not verified', () => {
+  it('renders VerifyStack when authenticated and verification in progress', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
         bcsc: { hasAccount: true, nicknames: [] },
         authentication: { didAuthenticate: true },
-        bcscSecure: { verified: false },
+        bcscSecure: { verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS },
       }),
       mockDispatch,
     ] as any)
@@ -199,11 +208,11 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
-  it('renders AuthStack as fallback when verified is undefined', () => {
+  it('renders MainStack as fallback when verified is undefined', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [] },
+        bcsc: { hasAccount: true, nicknames: [], hasSeenVerifyPrompt: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: undefined },
       }),
@@ -212,7 +221,23 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('AuthStack')
+    expect(toJSON()).toBe('MainStack')
+  })
+
+  it('renders PromptStack when user has not seen verify prompt and is not verified', () => {
+    const mockDispatch = jest.fn()
+    jest.mocked(Bifold.useStore).mockReturnValue([
+      mockStore({
+        bcsc: { hasAccount: true, nicknames: [], hasSeenVerifyPrompt: false },
+        authentication: { didAuthenticate: true },
+        bcscSecure: { verified: false },
+      }),
+      mockDispatch,
+    ] as any)
+
+    const { toJSON } = render(<BCSCRootStack />)
+
+    expect(toJSON()).toBe('PromptStack')
   })
 
   it('calls loadState when stateLoaded is false', () => {
