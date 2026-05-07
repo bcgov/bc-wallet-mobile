@@ -21,29 +21,23 @@ const ManualPairing: React.FC = () => {
   const loadingScreen = useLoadingScreen()
 
   const onSubmit = useCallback(
-    async (paringCode: string) => {
-      if (!paringCode.length) {
-        setError(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
-      } else if (paringCode.length < PAIRING_CODE_LENGTH) {
-        setError(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
-      } else {
-        const stopLoading = loadingScreen.startLoading()
-        try {
-          logger.info('Submitting pairing code.')
-          const serviceClient = await pairing.loginByPairingCode(paringCode)
+    async (pairingCode: string) => {
+      const stopLoading = loadingScreen.startLoading()
+      try {
+        logger.info('Submitting pairing code.')
+        const serviceClient = await pairing.loginByPairingCode(pairingCode)
 
-          logger.info('Pairing code submitted successfully.')
+        logger.info('Pairing code submitted successfully.')
 
-          navigation.navigate(BCSCScreens.PairingConfirmation, {
-            serviceId: serviceClient.client_ref_id,
-            serviceName: serviceClient.client_name,
-          })
-        } catch (error) {
-          logger.error(`Error submitting pairing code: ${error}`)
-          setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
-        } finally {
-          stopLoading()
-        }
+        navigation.navigate(BCSCScreens.PairingConfirmation, {
+          serviceId: serviceClient.client_ref_id,
+          serviceName: serviceClient.client_name,
+        })
+      } catch (error) {
+        logger.error(`Error submitting pairing code: ${error}`)
+        setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
+      } finally {
+        stopLoading()
       }
     },
     [loadingScreen, logger, navigation, pairing, t]

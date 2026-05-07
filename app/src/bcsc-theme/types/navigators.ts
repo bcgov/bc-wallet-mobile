@@ -270,6 +270,7 @@ export type BCSCMainStackParams = {
 
 export type BCSCAuthStackParams = {
   [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
