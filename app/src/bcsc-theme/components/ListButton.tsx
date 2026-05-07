@@ -5,20 +5,31 @@ import React, { Children, ReactElement } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 interface ListButtonGroupProps {
+  // Optional gap between buttons in the group. Defaults to theme Spacing.xs / 2
+  gap?: number
   // Accepts either a single ListButton or an array of ListButtons as children
   children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
 }
 
 export interface ListButtonProps {
-  text: string
   onPress: () => void
-  endAdornment?: React.ReactNode // Optional end adornment (e.g., an icon, text, etc.)
+  /**
+   * The content of the button. Can be any React node (text, views, components, etc.).
+   * Plain string children are wrapped in a `ThemedText` for convenience.
+   */
+  children: React.ReactNode
+  /**
+   * Optional accessibility label. If not provided and `children` is a string,
+   * the string is used to derive the accessibility label.
+   */
+  accessibilityLabel?: string
   position?: 'first' | 'middle' | 'last' | 'only' // Position in the list to determine border radius
 }
 
 /**
- * A ListButton component that renders a button with text and an optional end adornment.
- * It also accepts isFirst and isLast props to determine the border radius of the button.
+ * A ListButton component that renders a pressable list row containing arbitrary content.
+ * Accepts any React node as children (text, views, components, etc.) and a `position`
+ * prop to determine the border radius of the button when used in a group.
  *
  * @example:
  * ╭──────────────╮
@@ -46,7 +57,7 @@ export const ListButton = (props: ListButtonProps) => {
       padding: Spacing.md,
       backgroundColor: ColorPalette.brand.tertiaryBackground,
     },
-    textContainer: {
+    contentContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: Spacing.sm,
@@ -74,17 +85,20 @@ export const ListButton = (props: ListButtonProps) => {
     }
   }
 
+  const isStringChild = typeof props.children === 'string'
+  const resolvedA11yLabel =
+    props.accessibilityLabel ?? (isStringChild ? a11yLabel(props.children as string) : undefined)
+
   return (
     <PressableOpacity
       accessible={true}
       style={[styles.container, getBorderRadiusStyle()]}
       onPress={props.onPress}
       accessibilityRole="button"
-      accessibilityLabel={a11yLabel(props.text)}
+      accessibilityLabel={resolvedA11yLabel}
     >
-      <View style={styles.textContainer}>
-        <ThemedText style={styles.text}>{props.text}</ThemedText>
-        {props.endAdornment}
+      <View style={styles.contentContainer}>
+        {isStringChild ? <ThemedText style={styles.text}>{props.children}</ThemedText> : props.children}
       </View>
     </PressableOpacity>
   )
@@ -104,7 +118,7 @@ export const ListButtonGroup = (props: ListButtonGroupProps) => {
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'column',
-      gap: Spacing.xs / 2,
+      gap: props.gap ?? Spacing.xs / 2,
     },
   })
 

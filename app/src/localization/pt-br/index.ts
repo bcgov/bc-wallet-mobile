@@ -334,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (PT-BR)",
+      "Title": "Services (PT-BR)",
       "CatalogueSearch": "Search services (PT-BR)",
       "WantToLogin": "Do you want to log in to (PT-BR)",
       "RequestedInformation": "They will receive the following information: (PT-BR)",
@@ -348,7 +348,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (PT-BR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-      "Goto": "On that device, go to: (PT-BR)",
+      "Goto": "Go to: (PT-BR)",
       "GotoService": "Go to {{- service}} (PT-BR)",
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
