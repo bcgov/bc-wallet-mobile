@@ -1,7 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCState } from '@/store'
+import { BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,8 +9,8 @@ import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountSta
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
-import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -18,6 +18,7 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
+import PromptStack from './PromptStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
@@ -54,7 +55,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
-    return <LoadingScreen />
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 
   if (store.bcsc.hasAccount === false) {
@@ -65,28 +66,33 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verified === false) {
-    return (
-      <BCSCActivityProvider>
-        <VerifyStack />
-      </BCSCActivityProvider>
-    )
+  const shouldShowVerifyPrompt =
+    !store.bcsc.hasSeenVerifyPrompt &&
+    store.bcscSecure.verified !== true &&
+    store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS &&
+    store.bcscSecure.verifiedStatus !== VerificationStatus.VERIFIED
+
+  if (shouldShowVerifyPrompt) {
+    return <PromptStack />
   }
 
-  if (store.bcscSecure.verified === true) {
-    return (
-      <BCSCActivityProvider>
-        <BCSCAccountProvider>
-          <BCSCIdTokenProvider>
+  return (
+    <BCSCAgentProvider>
+      {store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS ? (
+        <BCSCActivityProvider>
+          <VerifyStack />
+        </BCSCActivityProvider>
+      ) : (
+        <BCSCActivityProvider>
+          <BCSCAccountProvider>
+            {/* <BCSCIdTokenProvider> */}
             <BCSCMainStack />
-          </BCSCIdTokenProvider>
-        </BCSCAccountProvider>
-      </BCSCActivityProvider>
-    )
-  }
-
-  // Fallback to AuthStack if verification state is somehow lost
-  return <AuthStack />
+            {/* </BCSCIdTokenProvider> */}
+          </BCSCAccountProvider>
+        </BCSCActivityProvider>
+      )}
+    </BCSCAgentProvider>
+  )
 }
 
 export default BCSCRootStack

@@ -3,22 +3,35 @@ import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import {
   createLinkSecretIfRequired,
-  DispatchAction,
-  migrateToAskar,
   PersistentStorage,
   TOKENS,
   useServices,
   useStore,
   WalletSecret,
 } from '@bifold/core'
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+import { Agent } from '@credo-ts/core'
+import {
+  DidCommConnectionEventTypes,
+  DidCommConnectionRecord,
+  DidCommConnectionRepository,
+  DidCommConnectionStateChangedEvent,
+  DidCommConnectionType,
+  DidCommDidExchangeState,
+  DidCommKeylistUpdateAction,
+  DidCommMediationRepository,
+  DidCommMediatorPickupStrategy,
+  DidCommOutOfBandRepository,
+} from '@credo-ts/didcomm'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr'
 import { agentDependencies } from '@credo-ts/react-native'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
 import { useCallback, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 import { CachesDirectoryPath } from 'react-native-fs'
+
+const DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS = '90'
+const CONNECTION_COMPLETION_TIMEOUT_MS = 10000
 
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +45,7 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
@@ -50,17 +63,13 @@ const useBCAgentSetup = () => {
   )
 
   const restartExistingAgent = useCallback(
-    async (agent: Agent, walletSecret: WalletSecret): Promise<Agent | undefined> => {
+    async (agent: Agent): Promise<Agent | undefined> => {
       try {
-        await agent.wallet.open({
-          id: walletSecret.id,
-          key: walletSecret.key,
-        })
         await agent.initialize()
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
-        // if the existing agents wallet cannot be opened or initialize() fails it was
-        // again not a clean shutdown and the agent should be replaced, not restarted
+        // if the existing agent cannot initialize it was not a clean shutdown
+        // replace rather than restart
         return
       }
 
@@ -72,19 +81,15 @@ const useBCAgentSetup = () => {
   const createNewAgent = useCallback(
     async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
       const options = {
+        label: store.preferences.walletName || 'BC Wallet',
         config: {
-          label: store.preferences.walletName || 'BC Wallet',
-          walletConfig: {
-            id: walletSecret.id,
-            key: walletSecret.key,
-          },
           logger,
-          mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
           autoUpdateStorageOnStartup: true,
-          autoAcceptConnections: true,
         },
         dependencies: agentDependencies,
         modules: getBCAgentModules({
+          walletId: walletSecret.id,
+          walletKey: walletSecret.key,
           indyNetworks: ledgers,
           mediatorInvitationUrl: mediatorUrl,
           txnCache: {
@@ -103,29 +108,9 @@ const useBCAgentSetup = () => {
 
       logger.info(store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled')
 
-      const newAgent = new Agent(options)
-      const wsTransport = new WsOutboundTransport()
-      const httpTransport = new HttpOutboundTransport()
-
-      newAgent.registerOutboundTransport(wsTransport)
-      newAgent.registerOutboundTransport(httpTransport)
-
-      return newAgent
+      return new Agent(options)
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy]
-  )
-
-  const migrateIfRequired = useCallback(
-    async (newAgent: Agent, walletSecret: WalletSecret) => {
-      // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-      if (!store.migration.didMigrateToAskar) {
-        await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
-        dispatch({
-          type: DispatchAction.DID_MIGRATE_TO_ASKAR,
-        })
-      }
-    },
-    [store.migration.didMigrateToAskar, dispatch]
+    [logger, store.developer.enableProxy, store.preferences.walletName]
   )
 
   const warmUpCache = useCallback(
@@ -175,15 +160,186 @@ const useBCAgentSetup = () => {
     [credDefs, schemas]
   )
 
+  const waitForConnectionCompleted = async (agent: Agent, connection: DidCommConnectionRecord) => {
+    if (connection.state === DidCommDidExchangeState.Completed) {
+      return connection
+    }
+
+    return new Promise<DidCommConnectionRecord>((resolve, reject) => {
+      const listener = (event: DidCommConnectionStateChangedEvent) => {
+        const { connectionRecord } = event.payload
+
+        if (
+          connectionRecord.id === connection.id &&
+          connectionRecord.state === DidCommDidExchangeState.Completed &&
+          connectionRecord.isReady
+        ) {
+          cleanup()
+          resolve(connectionRecord)
+        }
+      }
+
+      const cleanup = () => {
+        agent.events.off(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
+        clearTimeout(timeoutId)
+      }
+
+      agent.events.on(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
+
+      const timeoutId = setTimeout(() => {
+        cleanup()
+        reject(new Error(`Timed out waiting for connection ${connection.id} to complete`))
+      }, CONNECTION_COMPLETION_TIMEOUT_MS)
+    })
+  }
+
+  const updateLastSeen = useCallback(async (agent: Agent) => {
+    const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
+
+    const connectionRecords = await connectionRepository.getAll(agent.context)
+    const defaultMediatorConnection = connectionRecords.find((record) =>
+      record.connectionTypes?.includes(DidCommConnectionType.Mediator)
+    )
+    defaultMediatorConnection?.setTag('lastSeen', new Date().toISOString())
+    if (defaultMediatorConnection) {
+      await connectionRepository.update(agent.context, defaultMediatorConnection)
+    }
+  }, [])
+
+  const recoverMediationIfExpired = useCallback(
+    async (agent: Agent, mediatorUrl: string, originalError: Error) => {
+      logger.info('Resetting mediation state and creating a new connection...')
+
+      try {
+        await agent.didcomm.mediationRecipient.stopMessagePickup()
+      } catch (e) {
+        logger.warn(`No active message pickup to stop: ${e}`)
+      }
+
+      const mediationRepository = agent.dependencyManager.resolve(DidCommMediationRepository)
+      const connectionRepository = agent.dependencyManager.resolve(DidCommConnectionRepository)
+      const outOfBandRepository = agent.dependencyManager.resolve(DidCommOutOfBandRepository)
+
+      const oldMediationRecord = await agent.didcomm.mediationRecipient.findDefaultMediator()
+      if (!oldMediationRecord) {
+        logger.warn('No mediation record found to delete')
+        throw originalError
+      }
+
+      const mediationConnectionRecord = await connectionRepository.getById(
+        agent.context,
+        oldMediationRecord.connectionId
+      )
+      if (!mediationConnectionRecord) {
+        logger.warn('No connection record found for mediation record')
+        throw originalError
+      }
+
+      let lastSeen = mediationConnectionRecord.getTag('lastSeen')?.toString()
+
+      if (!lastSeen) {
+        lastSeen = mediationConnectionRecord.updatedAt?.toISOString()
+      }
+
+      const daysSinceLastSeen = moment().diff(moment(lastSeen), 'days')
+      const mediationExpiredThresholdConfig =
+        Config.MEDIATION_EXPIRED_THRESHOLD_DAYS || DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS
+      let mediationExpiredThresholdDays = Number.parseInt(mediationExpiredThresholdConfig, 10)
+      if (Number.isNaN(mediationExpiredThresholdDays)) {
+        logger.warn(
+          `Invalid mediation expired threshold config value: ${mediationExpiredThresholdConfig}. Falling back to default of ${DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS} days.`
+        )
+        mediationExpiredThresholdDays = Number.parseInt(DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS, 10)
+      }
+
+      if (daysSinceLastSeen < mediationExpiredThresholdDays) {
+        logger.info(
+          `Mediation connection last seen ${daysSinceLastSeen} days ago, which is below the expiration threshold. No need to reset mediation.`
+        )
+        return
+      }
+      logger.info(
+        `Mediation connection last seen ${daysSinceLastSeen} days ago, which is above the expiration threshold. Proceeding with mediation reset.`
+      )
+
+      // Delete all of the default mediation records.
+      logger.info(`Deleting mediation record ${oldMediationRecord.id}...`)
+      await mediationRepository.delete(agent.context, oldMediationRecord)
+      logger.info(`Deleting mediator connection record ${mediationConnectionRecord.id}...`)
+      await connectionRepository.delete(agent.context, mediationConnectionRecord)
+      let oldOobRecord = undefined
+      if (mediationConnectionRecord.outOfBandId) {
+        logger.info(`Deleting out-of-band record ${mediationConnectionRecord.outOfBandId}...`)
+        oldOobRecord = await outOfBandRepository.getById(agent.context, mediationConnectionRecord.outOfBandId)
+        await outOfBandRepository.delete(agent.context, oldOobRecord)
+      }
+
+      let newConnectionEstablished = false
+      try {
+        logger.info('Mediation state cleared. Creating new mediation connection...')
+
+        const { connectionRecord } = await agent.didcomm.oob.receiveInvitationFromUrl(mediatorUrl, {
+          reuseConnection: false,
+          autoAcceptConnection: true,
+          autoAcceptInvitation: true,
+        })
+        newConnectionEstablished = true
+
+        logger.info(`New connection created ${connectionRecord?.id}. Waiting for completion...`)
+
+        if (!connectionRecord) {
+          throw new Error('Failed to establish mediation connection: no connection record returned from invitation')
+        }
+
+        await waitForConnectionCompleted(agent, connectionRecord)
+        const freshConnection = await connectionRepository.getById(agent.context, connectionRecord.id)
+
+        // Ping ensures the session is created on the mediator side for the new connection.
+        await agent.didcomm.connections.sendPing(freshConnection.id, { responseRequested: true })
+
+        // Request mediation grant for the new connection and register the existing recipient keys.
+        const newMediationRecord = await agent.didcomm.mediationRecipient.requestAndAwaitGrant(freshConnection)
+        for (const key of oldMediationRecord.recipientKeys) {
+          logger.debug(`Adding key to key list: ${key}`)
+          await agent.didcomm.mediationRecipient.notifyKeylistUpdate(
+            freshConnection,
+            key,
+            DidCommKeylistUpdateAction.add
+          )
+        }
+
+        await agent.didcomm.mediationRecipient.setDefaultMediator(newMediationRecord)
+        await agent.didcomm.mediationRecipient.initiateMessagePickup(
+          newMediationRecord,
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
+        )
+      } catch (error) {
+        logger.error(`Error during mediation recovery. Attempting recovery of the deleted mediation records: ${error}`)
+        await mediationRepository.save(agent.context, oldMediationRecord)
+        await connectionRepository.save(agent.context, mediationConnectionRecord)
+        if (oldOobRecord && !newConnectionEstablished) {
+          await outOfBandRepository.save(agent.context, oldOobRecord)
+        }
+        throw error
+      }
+
+      logger.info('Mediation re-established successfully')
+    },
+    [logger]
+  )
+
   const initializeAgent = useCallback(
     async (walletSecret: WalletSecret): Promise<void> => {
       const mediatorUrl = store.preferences.selectedMediator
       logger.info('Checking for existing agent...')
       if (agentInstanceRef.current) {
-        const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
+        const restartedAgent = await restartExistingAgent(agentInstanceRef.current)
         if (restartedAgent) {
           logger.info('Successfully restarted existing agent...')
-          restartedAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+          restartedAgent.didcomm.mediationRecipient.initiateMessagePickup(
+            undefined,
+            DidCommMediatorPickupStrategy.PickUpV2LiveMode
+          )
           refreshAttestationMonitor(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
@@ -198,14 +354,19 @@ const useBCAgentSetup = () => {
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
 
-      logger.info('Migrating agent if required...')
-      await migrateIfRequired(newAgent, walletSecret)
-
       logger.info('Initializing agent...')
       await newAgent.initialize()
 
       logger.info(`checking mediator type for ${mediatorUrl}`)
-      await newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+      try {
+        await newAgent.didcomm.mediationRecipient.initiateMessagePickup(
+          undefined,
+          DidCommMediatorPickupStrategy.PickUpV2LiveMode
+        )
+      } catch (error) {
+        logger.error(`Error initiating message pickup: ${error}`)
+        await recoverMediationIfExpired(newAgent, mediatorUrl, error as Error)
+      }
 
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)
@@ -222,6 +383,11 @@ const useBCAgentSetup = () => {
       logger.info('Starting attestation monitor...')
       refreshAttestationMonitor(newAgent)
 
+      logger.info('Tag mediation connection with last seen time')
+      updateLastSeen(newAgent).catch((e) =>
+        logger.error(`Failed to update last seen tag on mediation connection: ${e}`)
+      )
+
       logger.info('Setting new agent...')
       agentInstanceRef.current = newAgent
       setAgent(newAgent)
@@ -232,10 +398,11 @@ const useBCAgentSetup = () => {
       logger,
       indyLedgers,
       createNewAgent,
-      migrateIfRequired,
       warmUpCache,
       refreshAttestationMonitor,
       restartExistingAgent,
+      updateLastSeen,
+      recoverMediationIfExpired,
     ]
   )
 

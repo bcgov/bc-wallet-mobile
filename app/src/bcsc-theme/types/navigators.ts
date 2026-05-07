@@ -1,3 +1,4 @@
+import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
@@ -6,6 +7,7 @@ import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
+  Prompt = 'BCSCPromptStack',
   Auth = 'BCSCAuthStack',
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
@@ -29,7 +31,7 @@ export enum BCSCModals {
 export enum BCSCScreens {
   Home = 'Home',
   Services = 'Service List',
-  Account = 'Account Details',
+  Wallet = 'Wallet',
   ForgetAllPairings = 'Forget All Pairings',
   SetupSteps = 'Setup Steps',
   IdentitySelection = 'New Setup ID Confirmation',
@@ -89,7 +91,6 @@ export enum BCSCScreens {
   TransferAccountQRInformation = 'QR Get Overview',
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
-  NicknameAccount = 'Choose Account Nickname',
   EditNickname = 'Change Account Nickname',
   OnboardingAccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
@@ -102,6 +103,7 @@ export enum BCSCScreens {
   OnboardingOptInAnalytics = 'Analytics Opt In', // NOTE: New V4 screen, not in V3
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
+  VerifyPrompt = `${BCSCStacks.Prompt} Verify Prompt`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -155,6 +157,10 @@ export type BCSCOnboardingStackParams = {
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }
 
+export type BCSCPromptStackParams = {
+  [BCSCScreens.VerifyPrompt]: undefined
+}
+
 export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.SetupSteps]: undefined
@@ -198,7 +204,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddress]: undefined
-  [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.VerifySettings]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
@@ -217,7 +222,7 @@ export type BCSCVerifyStackParams = {
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
+  [BCSCScreens.Wallet]: undefined
 }
 
 export type BCSCMainStackParams = {
@@ -249,6 +254,10 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
+
+  // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
+  // so ListCredentials (rendered in the Wallet tab) can navigate to it.
+  [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

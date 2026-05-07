@@ -34,11 +34,10 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -55,7 +54,9 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
@@ -207,10 +208,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 {
@@ -223,19 +222,49 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -247,35 +276,14 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         "fontWeight": "normal",
                       },
                       {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
+                        "fontSize": 16,
                       },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  BCSC.Settings.AppSecurity.CurrentlySelected
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Settings.AppSecurity.CurrentlySelected
-              </Text>
             </View>
           </View>
           <View
@@ -313,10 +321,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -327,19 +333,49 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppPINTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -351,35 +387,14 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         "fontWeight": "normal",
                       },
                       {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
+                        "fontSize": 16,
                       },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppPINTitle
+                  BCSC.Onboarding.SecureAppPINSubtext
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Onboarding.SecureAppPINSubtext
-              </Text>
             </View>
           </View>
           <View
@@ -417,10 +432,8 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 undefined,
@@ -431,62 +444,72 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
-                <Text
-                  maxFontSizeMultiplier={2}
+                <View
                   style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
-                      },
-                    ]
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
                   }
                 >
-                  BCSC.Onboarding.LearnMore
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": undefined,
-                        "fontSize": 32,
-                      },
-                      {
-                        "color": "#003366",
-                      },
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
-                </Text>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 21,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": undefined,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.LearnMore
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": undefined,
+                          "fontSize": 32,
+                        },
+                        {
+                          "color": "#313132",
+                        },
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -518,7 +541,6 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
         {
           "backgroundColor": "#F2F2F2",
           "flex": 1,
-          "paddingHorizontal": 40,
         }
       }
       testID="com.ariesbifold:id/LoadingScreenContent"
@@ -526,129 +548,256 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
       <View
         style={
           {
-            "flex": 4,
-            "justifyContent": "flex-end",
-            "marginBottom": 4,
+            "alignItems": "center",
+            "flex": 1,
+            "gap": 24,
+            "justifyContent": "center",
           }
         }
       >
-        <View
-          style={
-            {
-              "padding": 16,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "justifyContent": "center",
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "alignSelf": "center",
-                  "backgroundColor": "#FFFFFF",
-                  "borderRadius": 8,
-                  "margin": 24,
-                  "padding": 8,
-                }
-              }
-            >
-              <
-                height={75}
-                width={120}
-              />
-            </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 26,
-                    "fontWeight": "bold",
-                  },
-                  [
-                    {
-                      "fontSize": 18,
-                    },
-                  ],
-                ]
-              }
-            >
-              BCSC.FullTitle
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#003366",
-            "height": 1,
-            "width": "100%",
-          }
-        }
-      />
-      <View
-        style={
-          {
-            "flex": 6,
-            "justifyContent": "space-between",
-            "marginTop": 32,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+        <RNSVGSvgView
+          align="xMidYMid"
+          bbHeight={113}
+          bbWidth={113}
+          fill="none"
+          focusable={false}
+          height={113}
+          meetOrSlice={0}
+          minX={0}
+          minY={0}
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
               },
               {
-                "fontSize": 26,
-                "textAlign": "center",
+                "flex": 0,
+                "height": 113,
+                "width": 113,
               },
             ]
           }
+          vbHeight={113}
+          vbWidth={113}
+          width={113}
         >
-          BCSC.Loading.DefaultMessage
-        </Text>
-        <ActivityIndicator
-          color="#D9EAF7"
-          size="large"
-        />
+          <RNSVGGroup
+            fill={null}
+            propList={
+              [
+                "fill",
+              ]
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGClipPath
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                name="clip0_369_1738"
+              >
+                <RNSVGRect
+                  fill={
+                    {
+                      "payload": 4294967295,
+                      "type": 0,
+                    }
+                  }
+                  height="113"
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                  width="113"
+                  x={0}
+                  y={0}
+                />
+              </RNSVGClipPath>
+            </RNSVGDefs>
+            <RNSVGGroup
+              clipPath="clip0_369_1738"
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+            >
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4294558818,
+                    "type": 0,
+                  }
+                }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M112.985 56.5969C112.985 87.7377 87.7378 112.985 56.5969 112.985C25.4561 112.985 0.20459 87.7377 0.20459 56.5969C0.20459 53.1345 0.51563 49.7458 1.11315 46.4594L13.3051 41.0613L17.1317 43.0953L20.2871 44.0693L20.4549 44.0243C20.4549 44.0243 23.7086 42.5305 24.5271 42.0148L29.3155 47.0611C29.3155 47.0611 39.7107 55.2995 40.0136 55.2995C40.3165 55.2995 49.1893 50.151 49.1893 50.151L57.1372 44.6914L64.066 49.7376L69.2636 50.769L74.1052 54.2723C74.1052 54.2723 86.7269 45.8333 88.7732 44.8019L94.8139 47.1552L103.797 40.8525L111.864 45.3503C112.6 48.9846 112.985 52.7457 112.985 56.5969Z"
+                fill={
+                  {
+                    "payload": 4280500341,
+                    "type": 0,
+                  }
+                }
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGMask
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                height="113"
+                maskContentUnits={1}
+                maskType={0}
+                maskUnits={0}
+                name="mask0_369_1738"
+                width="113"
+                x="0"
+                y="0"
+              >
+                <RNSVGPath
+                  d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                  fill={
+                    {
+                      "payload": 4292467161,
+                      "type": 0,
+                    }
+                  }
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                />
+              </RNSVGMask>
+              <RNSVGGroup
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                mask="mask0_369_1738"
+              >
+                <RNSVGGroup
+                  fill={
+                    {
+                      "payload": 4278190080,
+                      "type": 0,
+                    }
+                  }
+                  matrix={
+                    [
+                      1,
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                    ]
+                  }
+                >
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    matrix={
+                      [
+                        1,
+                        0,
+                        0,
+                        1,
+                        236,
+                        0,
+                      ]
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                </RNSVGGroup>
+              </RNSVGGroup>
+            </RNSVGGroup>
+          </RNSVGGroup>
+        </RNSVGSvgView>
         <View
           style={
             {
-              "alignSelf": "center",
-              "marginBottom": 30,
+              "padding": 24,
             }
           }
         >
-          <Image
-            source={
-              {
-                "default": "",
-              }
-            }
+          <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "height": 150,
-                "width": 150,
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
             }
-            testID="com.ariesbifold:id/BCGovLogo"
-          />
+          >
+            BCSC.Loading.DefaultMessage
+          </Text>
         </View>
       </View>
     </RNCSafeAreaView>
@@ -690,11 +839,10 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -711,11 +859,13 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
-            BCSC.Onboarding.SecureAppHeader
+            BCSC.Onboarding.SecureAppOnboardingHeader
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -757,167 +907,133 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
             {
               "gap": 16,
             },
-            {
-              "paddingBottom": 16,
-              "paddingHorizontal": 16,
-            },
+            false,
             undefined,
           ]
         }
       >
         <View
-          accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": false,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
           style={
             {
-              "backgroundColor": "#003366",
-              "borderRadius": 4,
-              "opacity": 1,
-              "padding": 16,
+              "flexGrow": 1,
+              "width": "100%",
             }
           }
-          testID="com.ariesbifold:id/ChoosePINButton"
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "center",
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "shadowColor": "#000",
+                "shadowOffset": {
+                  "height": -3,
+                  "width": 0,
+                },
+                "shadowOpacity": 0.9,
+                "shadowRadius": 3,
+                "top": 0,
+                "zIndex": -1,
               }
             }
           >
-            <Text
-              maxFontSizeMultiplier={2}
+            <View
               style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "color": "#FFFFFF",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    false,
-                    false,
-                  ],
-                ]
+                {
+                  "backgroundColor": "#F2F2F2",
+                  "height": 1,
+                }
               }
-            >
-              BCSC.Onboarding.SecureAppPINTitle
-            </Text>
+            />
           </View>
-        </View>
-        <View
-          accessibilityLabel="BCSC.Onboarding.LearnMore"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": false,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
-              "borderColor": "#003366",
-              "borderRadius": 4,
-              "borderWidth": 2,
-              "opacity": 1,
-              "padding": 16,
-            }
-          }
-          testID="com.ariesbifold:id/LearnMoreButton"
-        >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "center",
+                "backgroundColor": "#F2F2F2",
+                "flexGrow": 1,
+                "gap": 8,
+                "padding": 24,
               }
             }
           >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "color": "#003366",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    false,
-                    false,
-                  ],
-                ]
+            <View
+              accessibilityLabel="BCSC.Onboarding.SecureAppPINTitle"
+              accessibilityRole="button"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": false,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
               }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "backgroundColor": "#003366",
+                  "borderRadius": 4,
+                  "opacity": 1,
+                  "padding": 16,
+                }
+              }
+              testID="com.ariesbifold:id/ChoosePINButton"
             >
-              BCSC.Onboarding.LearnMore
-            </Text>
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "justifyContent": "center",
+                  }
+                }
+              >
+                <Text
+                  maxFontSizeMultiplier={2}
+                  style={
+                    [
+                      {
+                        "color": "#313132",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
+                      },
+                      [
+                        {
+                          "color": "#FFFFFF",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
+                        false,
+                        false,
+                      ],
+                    ]
+                  }
+                >
+                  BCSC.Onboarding.SecureAppPINTitle
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
       </View>
@@ -947,7 +1063,6 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
         {
           "backgroundColor": "#F2F2F2",
           "flex": 1,
-          "paddingHorizontal": 40,
         }
       }
       testID="com.ariesbifold:id/LoadingScreenContent"
@@ -955,129 +1070,256 @@ exports[`SecurityMethodSelector when device auth is NOT available renders PIN-on
       <View
         style={
           {
-            "flex": 4,
-            "justifyContent": "flex-end",
-            "marginBottom": 4,
+            "alignItems": "center",
+            "flex": 1,
+            "gap": 24,
+            "justifyContent": "center",
           }
         }
       >
-        <View
-          style={
-            {
-              "padding": 16,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "justifyContent": "center",
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "alignSelf": "center",
-                  "backgroundColor": "#FFFFFF",
-                  "borderRadius": 8,
-                  "margin": 24,
-                  "padding": 8,
-                }
-              }
-            >
-              <
-                height={75}
-                width={120}
-              />
-            </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 26,
-                    "fontWeight": "bold",
-                  },
-                  [
-                    {
-                      "fontSize": 18,
-                    },
-                  ],
-                ]
-              }
-            >
-              BCSC.FullTitle
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#003366",
-            "height": 1,
-            "width": "100%",
-          }
-        }
-      />
-      <View
-        style={
-          {
-            "flex": 6,
-            "justifyContent": "space-between",
-            "marginTop": 32,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+        <RNSVGSvgView
+          align="xMidYMid"
+          bbHeight={113}
+          bbWidth={113}
+          fill="none"
+          focusable={false}
+          height={113}
+          meetOrSlice={0}
+          minX={0}
+          minY={0}
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
               },
               {
-                "fontSize": 26,
-                "textAlign": "center",
+                "flex": 0,
+                "height": 113,
+                "width": 113,
               },
             ]
           }
+          vbHeight={113}
+          vbWidth={113}
+          width={113}
         >
-          BCSC.Loading.DefaultMessage
-        </Text>
-        <ActivityIndicator
-          color="#D9EAF7"
-          size="large"
-        />
+          <RNSVGGroup
+            fill={null}
+            propList={
+              [
+                "fill",
+              ]
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGClipPath
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                name="clip0_369_1738"
+              >
+                <RNSVGRect
+                  fill={
+                    {
+                      "payload": 4294967295,
+                      "type": 0,
+                    }
+                  }
+                  height="113"
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                  width="113"
+                  x={0}
+                  y={0}
+                />
+              </RNSVGClipPath>
+            </RNSVGDefs>
+            <RNSVGGroup
+              clipPath="clip0_369_1738"
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+            >
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4294558818,
+                    "type": 0,
+                  }
+                }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M112.985 56.5969C112.985 87.7377 87.7378 112.985 56.5969 112.985C25.4561 112.985 0.20459 87.7377 0.20459 56.5969C0.20459 53.1345 0.51563 49.7458 1.11315 46.4594L13.3051 41.0613L17.1317 43.0953L20.2871 44.0693L20.4549 44.0243C20.4549 44.0243 23.7086 42.5305 24.5271 42.0148L29.3155 47.0611C29.3155 47.0611 39.7107 55.2995 40.0136 55.2995C40.3165 55.2995 49.1893 50.151 49.1893 50.151L57.1372 44.6914L64.066 49.7376L69.2636 50.769L74.1052 54.2723C74.1052 54.2723 86.7269 45.8333 88.7732 44.8019L94.8139 47.1552L103.797 40.8525L111.864 45.3503C112.6 48.9846 112.985 52.7457 112.985 56.5969Z"
+                fill={
+                  {
+                    "payload": 4280500341,
+                    "type": 0,
+                  }
+                }
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGMask
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                height="113"
+                maskContentUnits={1}
+                maskType={0}
+                maskUnits={0}
+                name="mask0_369_1738"
+                width="113"
+                x="0"
+                y="0"
+              >
+                <RNSVGPath
+                  d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                  fill={
+                    {
+                      "payload": 4292467161,
+                      "type": 0,
+                    }
+                  }
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                />
+              </RNSVGMask>
+              <RNSVGGroup
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                mask="mask0_369_1738"
+              >
+                <RNSVGGroup
+                  fill={
+                    {
+                      "payload": 4278190080,
+                      "type": 0,
+                    }
+                  }
+                  matrix={
+                    [
+                      1,
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                    ]
+                  }
+                >
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    matrix={
+                      [
+                        1,
+                        0,
+                        0,
+                        1,
+                        236,
+                        0,
+                      ]
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                </RNSVGGroup>
+              </RNSVGGroup>
+            </RNSVGGroup>
+          </RNSVGGroup>
+        </RNSVGSvgView>
         <View
           style={
             {
-              "alignSelf": "center",
-              "marginBottom": 30,
+              "padding": 24,
             }
           }
         >
-          <Image
-            source={
-              {
-                "default": "",
-              }
-            }
+          <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "height": 150,
-                "width": 150,
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
             }
-            testID="com.ariesbifold:id/BCGovLogo"
-          />
+          >
+            BCSC.Loading.DefaultMessage
+          </Text>
         </View>
       </View>
     </RNCSafeAreaView>
@@ -1119,11 +1361,10 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
       <RCTScrollView
         contentContainerStyle={
           [
-            {
-              "padding": 16,
-            },
+            false,
             {
               "gap": 24,
+              "padding": 24,
             },
           ]
         }
@@ -1140,11 +1381,13 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
-            BCSC.Onboarding.SecureAppHeader
+            BCSC.Onboarding.SecureAppOnboardingHeader
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -1160,10 +1403,10 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
               ]
             }
           >
-            BCSC.Onboarding.SecureAppContent
+            BCSC.Onboarding.SecureAppOnboardingContent
           </Text>
           <View
-            accessibilityLabel="BCSC.Onboarding.SecureAppDeviceAuthTitle"
+            accessibilityLabel="BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -1197,10 +1440,8 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -1211,19 +1452,72 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": undefined,
+                      "fontSize": 40,
+                    },
+                    {
+                      "color": "#313132",
+                    },
+                    {
+                      "fontFamily": "Material Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                
+              </Text>
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": 16,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -1235,35 +1529,14 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                         "fontWeight": "normal",
                       },
                       {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
+                        "fontSize": 16,
                       },
                     ]
                   }
                 >
-                  BCSC.Onboarding.SecureAppDeviceAuthTitle
+                  BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext
                 </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    {
-                      "fontSize": 18,
-                      "lineHeight": 30,
-                    },
-                  ]
-                }
-              >
-                BCSC.Onboarding.SecureAppDeviceAuthSubtext
-              </Text>
             </View>
           </View>
           <View
@@ -1301,10 +1574,8 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             style={
               [
                 {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
+                  "backgroundColor": "#003366",
                   "borderRadius": 4,
-                  "borderWidth": 1,
                   "padding": 16,
                 },
                 false,
@@ -1315,123 +1586,72 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             <View
               style={
                 {
-                  "gap": 8,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 16,
                 }
               }
             >
-              <View
-                style={
-                  {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
-                  }
-                }
-              >
-                <Text
-                  maxFontSizeMultiplier={2}
-                  style={
-                    [
-                      {
-                        "color": "#313132",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                      },
-                      {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
-                      },
-                    ]
-                  }
-                >
-                  BCSC.Onboarding.SecureAppPINTitle
-                </Text>
-              </View>
               <Text
-                maxFontSizeMultiplier={2}
+                allowFontScaling={false}
+                selectable={false}
                 style={
                   [
                     {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
+                      "color": undefined,
+                      "fontSize": 40,
                     },
                     {
-                      "fontSize": 18,
-                      "lineHeight": 30,
+                      "color": "#313132",
                     },
+                    {
+                      "fontFamily": "Material Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
                   ]
                 }
               >
-                BCSC.Onboarding.SecureAppPINSubtext
+                
               </Text>
-            </View>
-          </View>
-          <View
-            accessibilityLabel="BCSC.Onboarding.LearnMore"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onBlur={[Function]}
-            onClick={[Function]}
-            onFocus={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              [
-                {
-                  "backgroundColor": "#FFFFFF",
-                  "borderColor": "#D9EAF7",
-                  "borderRadius": 4,
-                  "borderWidth": 1,
-                  "padding": 16,
-                },
-                undefined,
-              ]
-            }
-            testID="com.ariesbifold:id/LearnMoreButton"
-          >
-            <View
-              style={
-                {
-                  "gap": 8,
-                }
-              }
-            >
               <View
                 style={
                   {
-                    "alignItems": "center",
-                    "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "flex": 1,
+                    "gap": 4,
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "space-between",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#313132",
+                          "fontSize": 16,
+                        },
+                      ]
+                    }
+                  >
+                    BCSC.Onboarding.SecureAppPINTitle
+                  </Text>
+                </View>
                 <Text
                   maxFontSizeMultiplier={2}
                   style={
@@ -1443,37 +1663,12 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                         "fontWeight": "normal",
                       },
                       {
-                        "color": "#003366",
-                        "fontSize": 20,
-                        "fontWeight": "bold",
+                        "fontSize": 16,
                       },
                     ]
                   }
                 >
-                  BCSC.Onboarding.LearnMore
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": undefined,
-                        "fontSize": 32,
-                      },
-                      {
-                        "color": "#003366",
-                      },
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
+                  BCSC.Onboarding.SecureAppPINSubtext
                 </Text>
               </View>
             </View>
@@ -1506,7 +1701,6 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
         {
           "backgroundColor": "#F2F2F2",
           "flex": 1,
-          "paddingHorizontal": 40,
         }
       }
       testID="com.ariesbifold:id/LoadingScreenContent"
@@ -1514,129 +1708,256 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
       <View
         style={
           {
-            "flex": 4,
-            "justifyContent": "flex-end",
-            "marginBottom": 4,
+            "alignItems": "center",
+            "flex": 1,
+            "gap": 24,
+            "justifyContent": "center",
           }
         }
       >
-        <View
-          style={
-            {
-              "padding": 16,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "justifyContent": "center",
-              }
-            }
-          >
-            <View
-              style={
-                {
-                  "alignSelf": "center",
-                  "backgroundColor": "#FFFFFF",
-                  "borderRadius": 8,
-                  "margin": 24,
-                  "padding": 8,
-                }
-              }
-            >
-              <
-                height={75}
-                width={120}
-              />
-            </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 26,
-                    "fontWeight": "bold",
-                  },
-                  [
-                    {
-                      "fontSize": 18,
-                    },
-                  ],
-                ]
-              }
-            >
-              BCSC.FullTitle
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#003366",
-            "height": 1,
-            "width": "100%",
-          }
-        }
-      />
-      <View
-        style={
-          {
-            "flex": 6,
-            "justifyContent": "space-between",
-            "marginTop": 32,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+        <RNSVGSvgView
+          align="xMidYMid"
+          bbHeight={113}
+          bbWidth={113}
+          fill="none"
+          focusable={false}
+          height={113}
+          meetOrSlice={0}
+          minX={0}
+          minY={0}
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
+                "backgroundColor": "transparent",
+                "borderWidth": 0,
               },
               {
-                "fontSize": 26,
-                "textAlign": "center",
+                "flex": 0,
+                "height": 113,
+                "width": 113,
               },
             ]
           }
+          vbHeight={113}
+          vbWidth={113}
+          width={113}
         >
-          BCSC.Loading.DefaultMessage
-        </Text>
-        <ActivityIndicator
-          color="#D9EAF7"
-          size="large"
-        />
+          <RNSVGGroup
+            fill={null}
+            propList={
+              [
+                "fill",
+              ]
+            }
+          >
+            <RNSVGDefs>
+              <RNSVGClipPath
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                name="clip0_369_1738"
+              >
+                <RNSVGRect
+                  fill={
+                    {
+                      "payload": 4294967295,
+                      "type": 0,
+                    }
+                  }
+                  height="113"
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                  width="113"
+                  x={0}
+                  y={0}
+                />
+              </RNSVGClipPath>
+            </RNSVGDefs>
+            <RNSVGGroup
+              clipPath="clip0_369_1738"
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+            >
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4294558818,
+                    "type": 0,
+                  }
+                }
+                opacity={1}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                fill={
+                  {
+                    "payload": 4278265420,
+                    "type": 0,
+                  }
+                }
+                opacity={0}
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGPath
+                d="M112.985 56.5969C112.985 87.7377 87.7378 112.985 56.5969 112.985C25.4561 112.985 0.20459 87.7377 0.20459 56.5969C0.20459 53.1345 0.51563 49.7458 1.11315 46.4594L13.3051 41.0613L17.1317 43.0953L20.2871 44.0693L20.4549 44.0243C20.4549 44.0243 23.7086 42.5305 24.5271 42.0148L29.3155 47.0611C29.3155 47.0611 39.7107 55.2995 40.0136 55.2995C40.3165 55.2995 49.1893 50.151 49.1893 50.151L57.1372 44.6914L64.066 49.7376L69.2636 50.769L74.1052 54.2723C74.1052 54.2723 86.7269 45.8333 88.7732 44.8019L94.8139 47.1552L103.797 40.8525L111.864 45.3503C112.6 48.9846 112.985 52.7457 112.985 56.5969Z"
+                fill={
+                  {
+                    "payload": 4280500341,
+                    "type": 0,
+                  }
+                }
+                propList={
+                  [
+                    "fill",
+                  ]
+                }
+              />
+              <RNSVGMask
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                height="113"
+                maskContentUnits={1}
+                maskType={0}
+                maskUnits={0}
+                name="mask0_369_1738"
+                width="113"
+                x="0"
+                y="0"
+              >
+                <RNSVGPath
+                  d="M56.5969 112.989C87.7416 112.989 112.989 87.7416 112.989 56.5969C112.989 25.4523 87.7416 0.20459 56.5969 0.20459C25.4523 0.20459 0.20459 25.4523 0.20459 56.5969C0.20459 87.7416 25.4523 112.989 56.5969 112.989Z"
+                  fill={
+                    {
+                      "payload": 4292467161,
+                      "type": 0,
+                    }
+                  }
+                  propList={
+                    [
+                      "fill",
+                    ]
+                  }
+                />
+              </RNSVGMask>
+              <RNSVGGroup
+                fill={
+                  {
+                    "payload": 4278190080,
+                    "type": 0,
+                  }
+                }
+                mask="mask0_369_1738"
+              >
+                <RNSVGGroup
+                  fill={
+                    {
+                      "payload": 4278190080,
+                      "type": 0,
+                    }
+                  }
+                  matrix={
+                    [
+                      1,
+                      0,
+                      0,
+                      1,
+                      0,
+                      0,
+                    ]
+                  }
+                >
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                  <RNSVGPath
+                    d="M240.917 81.6561C211.364 81.6561 211.364 70.1968 181.815 70.1968C152.262 70.1968 152.262 81.6561 122.713 81.6561C93.1606 81.6561 93.1606 70.1968 63.6077 70.1968C34.0548 70.1968 34.0548 81.6561 4.50195 81.6561V123.278H240.921V81.6561H240.917Z"
+                    fill={
+                      {
+                        "payload": 4285971199,
+                        "type": 0,
+                      }
+                    }
+                    matrix={
+                      [
+                        1,
+                        0,
+                        0,
+                        1,
+                        236,
+                        0,
+                      ]
+                    }
+                    propList={
+                      [
+                        "fill",
+                      ]
+                    }
+                  />
+                </RNSVGGroup>
+              </RNSVGGroup>
+            </RNSVGGroup>
+          </RNSVGGroup>
+        </RNSVGSvgView>
         <View
           style={
             {
-              "alignSelf": "center",
-              "marginBottom": 30,
+              "padding": 24,
             }
           }
         >
-          <Image
-            source={
-              {
-                "default": "",
-              }
-            }
+          <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "height": 150,
-                "width": 150,
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
             }
-            testID="com.ariesbifold:id/BCGovLogo"
-          />
+          >
+            BCSC.Loading.DefaultMessage
+          </Text>
         </View>
       </View>
     </RNCSafeAreaView>

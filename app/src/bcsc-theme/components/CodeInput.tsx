@@ -60,7 +60,7 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
       borderRadius: 8,
       borderWidth: CELL_BORDER_WIDTH,
       borderColor: 'transparent',
-      color: ColorPalette.brand.text,
+      color: ColorPalette.grayscale.darkGrey,
       includeFontPadding: false,
     },
     cellFocused: {

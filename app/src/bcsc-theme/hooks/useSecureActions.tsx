@@ -419,6 +419,13 @@ export const useSecureActions = () => {
     [dispatch, logger, store.bcscSecure.cardProcess]
   )
 
+  const continueVerificationProcess = useCallback(() => {
+    dispatch({
+      type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
+      payload: [VerificationStatus.IN_PROGRESS],
+    })
+  }, [dispatch])
+
   /**
    * Update wallet key in state
    * This is the PBKDF2 hash of the PIN used for Askar wallet encryption
@@ -962,6 +969,7 @@ export const useSecureActions = () => {
     clearAccountFlags,
     updateVerificationRequest,
     updateVerificationOptions,
+    continueVerificationProcess,
     addEvidenceType,
     updateEvidenceMetadata,
     updateEvidenceDocumentNumber,

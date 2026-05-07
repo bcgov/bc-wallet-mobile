@@ -13,6 +13,8 @@ const translation = {
     "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
+    "ContinueSetup": "Continue setup",
+    "Skip": "Skip",
     "A11y": {
       "OpensInBrowser": "This opens in browser",
     }
@@ -30,6 +32,10 @@ const translation = {
     "Message2022": "There was a problem extracting the did repository.",
     "Title2026": "Oops! Something went wrong",
     "Message2026": "The app has encountered a problem. Try restarting the app.",
+    "Title2901": "Unable to initialize wallet",
+    "Message2901": "We couldn't start your wallet. Check your connection and try again.",
+    "Title2902": "Wallet secret not found",
+    "Message2902": "Your wallet secret is missing. Sign in again to continue.",
     "Title2031": "Unable to complete agent initialization",
     "Message2031": "There was a problem while initializing the agent.",
     "Title2032": "Unable to open app-to-app URL",
@@ -80,10 +86,27 @@ const translation = {
       "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone.",
     }
   },
-  "PersonCredentialNotification": {
-    "Title": "Get your Person credential",
-    "Description": "Add your Person credential to your wallet and use it to get access to services online.",
-    "ButtonTitle": "Start",
+  "Notification": {
+    "StartVerification": {
+      "Title": "You're not verified",
+      "Description": "You can continue the verification process at any time.",
+      "ButtonTitle": "Start verification"
+    },
+    "BasicMessage": {
+      "Title": "New message",
+      "SentMessage": "{{ label }} sent a message",
+      "ReceivedMessage": "You received a new message",
+      "ButtonTitle": "View message"
+    },
+    "CredentialOffer": {
+      "Title": "New credential offer",
+    },
+    "ProofRequest": {
+      "Title": "New proof request"
+    },
+    "Revocation": {
+      "Title": "Credential revoked"
+    }
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Step 1: BC Services Card app installed",
@@ -190,8 +213,17 @@ const translation = {
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
     },
+    "HelpMenu": {
+      "Title": "Need help?",
+      "AccessibilityLabel": "Help menu",
+      "Version": "BCSC version: {{ version }}",
+      "LearnMore": "Learn about BCSC app",
+      "GiveFeedback": "Give feedback",
+      "ReportProblem": "Report a problem",
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
+      "AppStartup": "Getting your BCSC App ready..."
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app",
@@ -215,8 +247,10 @@ const translation = {
       "CreatePIN": "Create a 6-digit PIN",
       "CreatePINShort": "Create PIN",
       "ConfirmPIN": "Confirm PIN",
-      "RememberPIN": "Remember your PIN",
-      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us.",
+      "ThisPINIsUnique": "This PIN is unique to this app",
+      "RememberPINWarning": "We cannot help you get or reset your PIN if you forget it.",
+      "RememberPINDescription": "It's only saved on this device. It's never shared with us.",
+      "CreatePINExample": "Create a unique PIN. Example: 589476",
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again.",
       "MustCheckBox": "You must check this box to continue.",
       "PINTooShort": "PIN must be 6 digits",
@@ -259,6 +293,9 @@ const translation = {
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
       "AnalyticsOptIn": "Analytics Opt-In",
+      "Theme": "Theme",
+      "ThemeLight": "Light",
+      "ThemeDark": "Dark",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
       "RemoveAccount": "Remove account",
@@ -297,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services",
+      "Title": "Services",
       "CatalogueSearch": "Search services",
       "WantToLogin": "Do you want to log in to",
       "RequestedInformation": "They will receive the following information:",
@@ -311,7 +348,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later.",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
       "NoLoginProof": "You will use this app to prove who you are when you log in.",
-      "Goto": "On that device, go to:",
+      "Goto": "Go to:",
       "GotoService": "Go to {{- service}}",
       "GotoUrl": "Go to: {{- url}}",
       "NotListed": "Services not listed?",
@@ -505,21 +542,11 @@ const translation = {
     },
     "Onboarding": {
       "LearnMore": "Learn more",
-      "CarouselNext": "Next",
-      "CarouselBack": "Back",
       "AcceptAndContinueButton": "Accept and continue",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use",
       "TermsOfUseVersion": "Version",
-      "CarouselServicesHeader": "Access services online",
-      "CarouselProveHeader": "Prove who you are online",
-      "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
-      "CarouselServicesContent": "It's accepted by many government services.",
-      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed.",
-      "CarouselProveBodyContentB": "Access services from any device by approving login in this app.",
-      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card.",
-      "CarouselCannotUseBodyContentB": "It's your account to access services online only.",
       "PrivacyPolicyTitle": "Privacy",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
@@ -528,17 +555,19 @@ const translation = {
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
       "TermsOfUseTitle": "Terms of Use",
-      "NotificationsHeader": "Notifications",
-      "NotificationsContentA": "It's recommended you allow this app to receive push notifications.",
-      "NotificationsContentB": "Notifications will be sent to you when:",
-      "NotificationsBullet1": "The app is setup and ready to use",
-      "NotificationsBullet2": "You choose to log in",
-      "NotificationsBullet3": "You need to renew and verify your identity again",
-      "NotificationsBullet4": "There are changes to your account",
+      "NotificationsTitle": "Notifications",
+      "NotificationsHeader": "Enable Notifications?",
+      "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions.",
+      "EnableNotifications": "Enable Notifications",
+      "SkipNotifications": "Skip",
       "SecureAppHeader": "Choose how to secure this app",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
+      "SecureAppOnboardingHeader": "How to secure this app",
+      "SecureAppOnboardingContent": "Your privacy is important. Securing the app helps to prevent others from accessing it.",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",
+      "SecureAppOnboardingDeviceAuthTitle": "Use device authentication",
       "SecureAppDeviceAuthSubtext": "It’s already set up on this {{platform}}. It never leaves this device or is shared with us.",
+      "SecureAppOnboardingDeviceAuthSubtext": "It’s already set up on this phone or tablet. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
       "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private.",
@@ -617,10 +646,20 @@ const translation = {
       "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {
-      "Title": "BC Services Card Account",
-      "AddAccount": "Add account",
-      "TransferAccount": "Transfer from another device",
+      "Title": "Welcome to the BCSC App",
+      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet?",
+      "AddAccount": "No, continue setup",
+      "TransferAccount": "Yes, connect this device",
       "ContinueAs": "Continue as:",
+    },
+    "VerifyPrompt": {
+      "Title": "Verify Your Account",
+      "Description": "Verify your account to access services that may need additional information.",
+      "YouWillNeedTo": "You will need to:",
+      "Bullet1": "Verify your email",
+      "Bullet2": "Add a photo ID",
+      "Bullet3": "Take a photo of your face",
+      "Bullet4": "Record a short video, have a video call, or visit a Service BC office",
     },
     "NewSetup": {
       "Title": "New setup",
@@ -1059,6 +1098,9 @@ const translation = {
       "AddressSaved": "Address saved",
       "AuthorizationErrorTitle": "Authorization failed",
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
+    },
+    "Wallet": {
+      "EmptyMessage": "Your wallet is empty",
     },
     "Account": {
       "RemoveAccount": "Remove account",

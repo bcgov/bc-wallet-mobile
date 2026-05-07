@@ -121,7 +121,7 @@ exports[`RadioButton Component Rendering renders correctly when selected 1`] = `
   <Text
     style={
       {
-        "color": "#FFFFFF",
+        "color": "#313132",
         "flex": 1,
         "fontFamily": "BCSans-Regular",
         "fontSize": 18,
@@ -291,7 +291,7 @@ exports[`RadioButton Component Rendering renders correctly when unselected 1`] =
   <Text
     style={
       {
-        "color": "#FFFFFF",
+        "color": "#313132",
         "flex": 1,
         "fontFamily": "BCSans-Regular",
         "fontSize": 18,

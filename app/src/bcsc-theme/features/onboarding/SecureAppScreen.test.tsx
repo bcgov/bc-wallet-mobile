@@ -78,7 +78,7 @@ describe('SecureApp', () => {
     )
 
     await waitFor(() => {
-      expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+      expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
     })
 
     expect(tree).toMatchSnapshot()
@@ -97,7 +97,7 @@ describe('SecureApp', () => {
     )
 
     await waitFor(() => {
-      expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+      expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
     })
 
     expect(tree).toMatchSnapshot()

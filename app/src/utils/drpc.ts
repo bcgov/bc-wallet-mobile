@@ -1,4 +1,5 @@
-import { Agent, ConnectionRecord } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
+import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import { DrpcRequest, DrpcResponseObject } from '@credo-ts/drpc'
 
 export type DrpcResponsePromise<T> = (responseTimeout: number) => Promise<T>
@@ -45,7 +46,7 @@ export const sendDrpcRequest = async (
 
 export const requestNonceDrpc = async (
   agent: Agent,
-  connectionRecord: ConnectionRecord
+  connectionRecord: DidCommConnectionRecord
 ): Promise<DrpcResponsePromise<NonceDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
     method: DrpcMethod.RequestNonceV2,
@@ -56,7 +57,7 @@ export const requestNonceDrpc = async (
 
 export const requestAttestationDrpc = async (
   agent: Agent,
-  connectionRecord: ConnectionRecord,
+  connectionRecord: DidCommConnectionRecord,
   params: AttestationRequestParams
 ): Promise<DrpcResponsePromise<AttestationDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {

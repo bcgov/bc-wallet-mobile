@@ -13,6 +13,8 @@ const translation = {
     "HideDetails": "Ocultar detalhes",
     "Dismiss": "Dispensar",
     "GetHelp": "Get help (PT-BR)",
+    "ContinueSetup": "Continue setup (PT-BR)",
+    "Skip": "Skip (PT-BR)",
     "A11y": {
       "OpensInBrowser": "This opens in browser (PT-BR)",
     }
@@ -30,6 +32,10 @@ const translation = {
     "Message2022": "There was a problem extracting the did repository. (PT-BR)",
     "Title2026": "Oops! Something went wrong (PT-BR)",
     "Message2026": "The app has encountered a problem. Try restarting the app. (PT-BR)",
+    "Title2901": "Unable to initialize wallet (PT-BR)",
+    "Message2901": "We couldn't start your wallet. Check your connection and try again. (PT-BR)",
+    "Title2902": "Wallet secret not found (PT-BR)",
+    "Message2902": "Your wallet secret is missing. Sign in again to continue. (PT-BR)",
     "Title2031": "Unable to complete agent initialization (PT-BR)",
     "Message2031": "There was a problem while initializing the agent. (PT-BR)",
     "Title2032": "Unable to open app-to-app URL (PT-BR)",
@@ -80,10 +86,27 @@ const translation = {
       "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone. (PT-BR)",
     }
   },
-  "PersonCredentialNotification": {
-    "Title": "Get your Person credential (PT-BR)",
-    "Description": "Add your Person credential to your wallet and use it to get access to services online. (PT-BR)",
-    "ButtonTitle": "Start (PT-BR)",
+  "Notification": {
+    "StartVerification": {
+      "Title": "You're not verified (PT-BR)",
+      "Description": "You can continue the verification process at any time. (PT-BR)",
+      "ButtonTitle": "Start verification (PT-BR)"
+    },
+    "BasicMessage": {
+      "Title": "New message (PT-BR)",
+      "SentMessage": "{{ label }} sent a message (PT-BR)",
+      "ReceivedMessage": "You received a new message (PT-BR)",
+      "ButtonTitle": "View message (PT-BR)"
+    },
+    "CredentialOffer": {
+      "Title": "New credential offer (PT-BR)",
+    },
+    "ProofRequest": {
+      "Title": "New proof request (PT-BR)"
+    },
+    "Revocation": {
+      "Title": "Credential revoked (PT-BR)"
+    }
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Step 1: BC Services Card app installed (PT-BR)",
@@ -190,8 +213,17 @@ const translation = {
       "PrivacyInformation": "Privacy Information (PT-BR)",
       "ManageDevices": "Manage Devices (PT-BR)",
     },
+    "HelpMenu": {
+      "Title": "Need help? (PT-BR)",
+      "AccessibilityLabel": "Help menu (PT-BR)",
+      "Version": "BCSC version: {{ version }} (PT-BR)",
+      "LearnMore": "Learn about BCSC app (PT-BR)",
+      "GiveFeedback": "Give feedback (PT-BR)",
+      "ReportProblem": "Report a problem (PT-BR)",
+    },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
+      "AppStartup": "Getting your BCSC App ready... (PT-BR)"
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
@@ -215,8 +247,10 @@ const translation = {
       "CreatePIN": "Create a 6-digit PIN (PT-BR)",
       "CreatePINShort": "Create PIN (PT-BR)",
       "ConfirmPIN": "Confirm PIN (PT-BR)",
-      "RememberPIN": "Remember your PIN (PT-BR)",
-      "RememberPINDescription": "We cannot help you get or reset your PIN if you forget it. It's only saved on this device. It's never shared with us. (PT-BR)",
+      "ThisPINIsUnique": "This PIN is unique to this app (PT-BR)",
+      "RememberPINWarning": "We cannot help you get or reset your PIN if you forget it. (PT-BR)",
+      "RememberPINDescription": "It's only saved on this device. It's never shared with us. (PT-BR)",
+      "CreatePINExample": "Create a unique PIN. Example: 589476 (PT-BR)",
       "IUnderstand": "I understand if I forget my PIN that I have to set up this app again. (PT-BR)",
       "MustCheckBox": "You must check this box to continue. (PT-BR)",
       "PINTooShort": "PIN must be 6 digits (PT-BR)",
@@ -259,6 +293,9 @@ const translation = {
       "Feedback": "Feedback (PT-BR)",
       "Accessibility": "Accessibility (PT-BR)",
       "AnalyticsOptIn": "Analytics Opt-In (PT-BR)",
+      "Theme": "Theme (PT-BR)",
+      "ThemeLight": "Light (PT-BR)",
+      "ThemeDark": "Dark (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
       "Analytics": "Analytics (PT-BR)",
       "RemoveAccount": "Remove account (PT-BR)",
@@ -297,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (PT-BR)",
+      "Title": "Services (PT-BR)",
       "CatalogueSearch": "Search services (PT-BR)",
       "WantToLogin": "Do you want to log in to (PT-BR)",
       "RequestedInformation": "They will receive the following information: (PT-BR)",
@@ -311,7 +348,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (PT-BR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-      "Goto": "On that device, go to: (PT-BR)",
+      "Goto": "Go to: (PT-BR)",
       "GotoService": "Go to {{- service}} (PT-BR)",
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
@@ -505,21 +542,11 @@ const translation = {
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
-      "CarouselNext": "Next (PT-BR)",
-      "CarouselBack": "Back (PT-BR)",
       "AcceptAndContinueButton": "Accept and continue (PT-BR)",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry (PT-BR)",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (PT-BR)",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use (PT-BR)",
       "TermsOfUseVersion": "Version (PT-BR)",
-      "CarouselServicesHeader": "Access services online (PT-BR)",
-      "CarouselProveHeader": "Prove who you are online (PT-BR)",
-      "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (PT-BR)",
-      "CarouselServicesContent": "It's accepted by many government services. (PT-BR)",
-      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed. (PT-BR)",
-      "CarouselProveBodyContentB": "Access services from any device by approving login in this app. (PT-BR)",
-      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card. (PT-BR)",
-      "CarouselCannotUseBodyContentB": "It's your account to access services online only. (PT-BR)",
       "PrivacyPolicyTitle": "Privacy (PT-BR)",
       "PrivacyPolicyHeaderSetup": "App Setup (PT-BR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (PT-BR)",
@@ -528,17 +555,19 @@ const translation = {
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up. (PT-BR)",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential (PT-BR)",
       "TermsOfUseTitle": "Terms of Use (PT-BR)",
-      "NotificationsHeader": "Notifications (PT-BR)",
-      "NotificationsContentA": "It's recommended you allow this app to receive push notifications. (PT-BR)",
-      "NotificationsContentB": "Notifications will be sent to you when: (PT-BR)",
-      "NotificationsBullet1": "The app is setup and ready to use (PT-BR)",
-      "NotificationsBullet2": "You choose to log in (PT-BR)",
-      "NotificationsBullet3": "You need to renew and verify your identity again (PT-BR)",
-      "NotificationsBullet4": "There are changes to your account (PT-BR)",
+      "NotificationsTitle": "Notifications (PT-BR)",
+      "NotificationsHeader": "Enable Notifications? (PT-BR)",
+      "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions. (PT-BR)",
+      "EnableNotifications": "Enable Notifications (PT-BR)",
+      "SkipNotifications": "Skip (PT-BR)",
       "SecureAppHeader": "Choose how to secure this app (PT-BR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (PT-BR)",
+      "SecureAppOnboardingHeader": "How to secure this app (PT-BR)",
+      "SecureAppOnboardingContent": "Your privacy is important. Securing the app helps to prevent others from accessing it. (PT-BR)",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}} (PT-BR)",
+      "SecureAppOnboardingDeviceAuthTitle": "Use device authentication (PT-BR)",
       "SecureAppDeviceAuthSubtext": "It's already set up on this {{platform}}. It never leaves this device or is shared with us. (PT-BR)",
+      "SecureAppOnboardingDeviceAuthSubtext": "It's already set up on this phone or tablet. It never leaves this device or is shared with us. (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
       "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private. (PT-BR)",
@@ -615,10 +644,20 @@ const translation = {
       "OpenAccountServices": "Open account services (PT-BR)",
     },
     "AccountSetup": {
-      "Title": "BC Services Card Account (PT-BR)",
-      "AddAccount": "Add account (PT-BR)",
-      "TransferAccount": "Transfer from another device (PT-BR)",
+      "Title": "Welcome to the BCSC App (PT-BR)",
+      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (PT-BR)",
+      "AddAccount": "No, continue setup (PT-BR)",
+      "TransferAccount": "Yes, connect this device (PT-BR)",
       "ContinueAs": "Continue as: (PT-BR)",
+    },
+    "VerifyPrompt": {
+      "Title": "Verify Your Account (PT-BR)",
+      "Description": "Verify your account to access services that may need additional information. (PT-BR)",
+      "YouWillNeedTo": "You will need to: (PT-BR)",
+      "Bullet1": "Verify your email (PT-BR)",
+      "Bullet2": "Add a photo ID (PT-BR)",
+      "Bullet3": "Take a photo of your face (PT-BR)",
+      "Bullet4": "Record a short video, have a video call, or visit a Service BC office (PT-BR)",
     },
     "NewSetup": {
       "Title": "New setup (PT-BR)",

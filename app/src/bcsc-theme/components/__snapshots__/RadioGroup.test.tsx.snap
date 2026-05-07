@@ -73,7 +73,7 @@ exports[`RadioGroup Component Edge Cases handles single option 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -160,7 +160,7 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -238,7 +238,7 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -316,7 +316,7 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -403,7 +403,7 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -559,7 +559,7 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -646,7 +646,7 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -724,7 +724,7 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
@@ -813,7 +813,7 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
             "flex": 1,
             "fontFamily": "BCSans-Regular",
             "fontSize": 18,
