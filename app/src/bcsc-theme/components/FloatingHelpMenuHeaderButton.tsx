@@ -48,26 +48,29 @@ export const createMainFloatingMenuButton = () => {
     return (
       <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
         <ListButton
-          text={t('BCSC.HelpMenu.LearnMore')}
           onPress={() => {
             // TODO (V4.1.x): Implement Learn More page and link here
             floatingHelpMenuRef.current?.close()
           }}
-        />
+        >
+          {t('BCSC.HelpMenu.LearnMore')}
+        </ListButton>
         <ListButton
-          text={t('BCSC.HelpMenu.GiveFeedback')}
           onPress={() => {
             // TODO (V4.1.x): Implement Give Feedback page and link here
             floatingHelpMenuRef.current?.close()
           }}
-        />
+        >
+          {t('BCSC.HelpMenu.GiveFeedback')}
+        </ListButton>
         <ListButton
-          text={t('BCSC.HelpMenu.ReportProblem')}
           onPress={() => {
             // TODO (V4.1.x): Implement Report a Problem page and link here
             floatingHelpMenuRef.current?.close()
           }}
-        />
+        >
+          {t('BCSC.HelpMenu.ReportProblem')}
+        </ListButton>
       </FloatingHelpMenuButton>
     )
   }

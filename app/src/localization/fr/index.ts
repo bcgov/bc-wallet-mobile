@@ -334,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (FR)",
+      "Title": "Services (FR)",
       "CatalogueSearch": "Search services (FR)",
       "WantToLogin": "Do you want to log in to (FR)",
       "RequestedInformation": "They will receive the following information: (FR)",

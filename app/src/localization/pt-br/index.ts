@@ -334,7 +334,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (PT-BR)",
+      "Title": "Services (PT-BR)",
       "CatalogueSearch": "Search services (PT-BR)",
       "WantToLogin": "Do you want to log in to (PT-BR)",
       "RequestedInformation": "They will receive the following information: (PT-BR)",
