@@ -96,7 +96,6 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
 type ReportSuspiciousLinkProps = {
   t: (key: string, options?: Record<string, unknown>) => string
   testID?: string
-  Spacing: ReturnType<typeof useTheme>['Spacing']
 }
 
 const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }: ReportSuspiciousLinkProps) => {
@@ -274,7 +273,7 @@ const ServiceLoginDefaultView = ({
           </TouchableOpacity>
         ) : null}
       </View>
-      <ReportSuspiciousLink t={t} Spacing={Spacing} testID={testIdWithKey('ReportSuspiciousLink')} />
+      <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
     </ScreenWrapper>
   )
 }
