@@ -12,6 +12,7 @@ export enum BCSCStacks {
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
   Main = 'BCSCMainStack',
+  Scan = 'BCSCScanStack',
 }
 
 export enum BCSCModals {
@@ -135,6 +136,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  ConnectionLoading = 'BCSCConnectionLoading',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -225,6 +227,11 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Wallet]: undefined
 }
 
+export type BCSCScanStackParams = {
+  [Screens.Scan]: undefined
+  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
+}
+
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
   [BCSCScreens.MainWebView]: { url: string; title: string }
@@ -258,6 +265,8 @@ export type BCSCMainStackParams = {
   // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
+
+  [BCSCStacks.Scan]: NavigatorScreenParams<BCSCScanStackParams>
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
