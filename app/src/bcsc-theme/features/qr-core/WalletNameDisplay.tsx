@@ -35,7 +35,7 @@ const WalletNameDisplay: React.FC = () => {
   return (
     <View style={styles.container}>
       <ThemedText variant="headingTwo" testID={testIdWithKey('WalletName')} style={styles.name}>
-        {store.bcsc.selectedNickname}
+        {store.bcsc.selectedNickname || 'My Wallet'}
       </ThemedText>
       <IconButton
         buttonLocation={ButtonLocation.Right}
