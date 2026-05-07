@@ -25,7 +25,7 @@ export const LightTheme = createAppTheme({
   unorderedList: GrayscaleColors.darkGrey,
   unorderedListModal: GrayscaleColors.darkGrey,
   text: GrayscaleColors.white,
-  icon: GrayscaleColors.darkGrey,
+  icon: GrayscaleColors.white,
   headerIcon: GrayscaleColors.darkGrey,
   headerText: HEADING_TEXT_BLUE,
   tabBarInactive: GrayscaleColors.darkGrey,

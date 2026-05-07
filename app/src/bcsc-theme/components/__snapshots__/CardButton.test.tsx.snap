@@ -85,7 +85,7 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
               },
               {
                 "color": "#313132",
-                "fontSize": undefined,
+                "fontSize": 21,
               },
             ]
           }
@@ -199,7 +199,7 @@ exports[`CardButton Component renders correctly with subtext and end icon 1`] = 
               },
               {
                 "color": "#313132",
-                "fontSize": undefined,
+                "fontSize": 21,
               },
             ]
           }
@@ -336,7 +336,7 @@ exports[`CardButton Component renders correctly with title only 1`] = `
               },
               {
                 "color": "#313132",
-                "fontSize": undefined,
+                "fontSize": 21,
               },
             ]
           }

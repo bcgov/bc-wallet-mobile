@@ -97,7 +97,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
     },
     cardTitle: {
       color: TextTheme.headingFour.color,
-      fontSize: props.startIcon ? 16 : undefined,
+      fontSize: props.startIcon ? 16 : TextTheme.headingFour.fontSize,
     },
     cardSubtext: {
       fontSize: 16,
