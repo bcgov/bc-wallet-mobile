@@ -32,8 +32,6 @@ type ServiceLoginScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens
 type ServiceLoginDefaultViewProps = {
   state: LocalState
   styles: ReturnType<typeof StyleSheet.create>
-  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
   isContinueDisabled: boolean
   setIsContinueDisabled: (disabled: boolean) => void
@@ -46,8 +44,6 @@ type ServiceLoginDefaultViewProps = {
 type ServiceLoginUnavailableViewProps = {
   state: LocalState
   styles: ReturnType<typeof StyleSheet.create>
-  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
   logger: any
   onCancel: () => void
@@ -70,7 +66,6 @@ const ServiceLoginLoadingView = () => (
 type DevicePreferenceURLViewProps = {
   serviceClientUri?: string
   t: (key: string, options?: Record<string, unknown>) => string
-  Spacing: ReturnType<typeof useTheme>['Spacing']
 }
 
 const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
@@ -104,34 +99,26 @@ type ReportSuspiciousLinkProps = {
   Spacing: ReturnType<typeof useTheme>['Spacing']
 }
 
-const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({
-  t,
-  testID,
-  Spacing,
-}: ReportSuspiciousLinkProps) => (
-  <ThemedText variant={'bold'} style={{ marginTop: Spacing.sm }}>
-    {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
-    <Link
-      linkText={t('BCSC.Services.ReportSuspicious')}
-      testID={testID}
-      onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
-    />
-  </ThemedText>
-)
+const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }: ReportSuspiciousLinkProps) => {
+  const { Spacing } = useTheme()
+  return (
+    <ThemedText variant={'bold'} style={{ marginTop: Spacing.sm }}>
+      {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
+      <Link
+        linkText={t('BCSC.Services.ReportSuspicious')}
+        testID={testID}
+        onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
+      />
+    </ThemedText>
+  )
+}
 
-const ServiceLoginUnavailableView = ({
-  state,
-  styles,
-  ColorPalette,
-  t,
-  logger,
-  Spacing,
-  onCancel,
-}: ServiceLoginUnavailableViewProps) => {
+const ServiceLoginUnavailableView = ({ state, styles, t, logger, onCancel }: ServiceLoginUnavailableViewProps) => {
+  const { ColorPalette, Spacing } = useTheme()
   const controls = (
     <ControlContainer>
       <Button
-        title={t('BCSC.Services.GotoService', { service: state.serviceTitle })}
+        title={''}
         accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
         accessibilityHint={t('Global.A11y.OpensInBrowser')}
         testID={testIdWithKey('GoToServiceClient')}
@@ -150,7 +137,12 @@ const ServiceLoginUnavailableView = ({
           }
         }}
       >
-        <Icon name="open-in-new" size={20} color={ColorPalette.brand.buttonText} />
+        <View style={styles.externalButtonContent}>
+          <ThemedText style={styles.externalButtonText}>
+            {t('BCSC.Services.GotoService', { service: state.serviceTitle })}
+          </ThemedText>
+          <Icon name="open-in-new" size={24} color={ColorPalette.brand.buttonText} />
+        </View>
       </Button>
       <Button
         buttonType={ButtonType.Secondary}
@@ -178,7 +170,7 @@ const ServiceLoginUnavailableView = ({
       <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
       <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
 
-      <DevicePreferenceURLView serviceClientUri={state.serviceClientUri} t={t} Spacing={Spacing} />
+      <DevicePreferenceURLView serviceClientUri={state.serviceClientUri} t={t} />
     </ScreenWrapper>
   )
 }
@@ -186,8 +178,6 @@ const ServiceLoginUnavailableView = ({
 const ServiceLoginDefaultView = ({
   state,
   styles,
-  ColorPalette,
-  Spacing,
   t,
   isContinueDisabled,
   setIsContinueDisabled,
@@ -196,6 +186,7 @@ const ServiceLoginDefaultView = ({
   onOpenInfoShared,
   onOpenPrivacyPolicy,
 }: ServiceLoginDefaultViewProps) => {
+  const { ColorPalette, Spacing } = useTheme()
   const controls = (
     <ControlContainer>
       <Button
@@ -300,7 +291,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const { serviceClientId, serviceTitle, pairingCode, fromAppSwitch } = route.params ?? {}
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  const { Spacing, ColorPalette, TextTheme } = useTheme()
+  const { Spacing, ColorPalette, TextTheme, Buttons } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const alerts = useAlerts(navigation)
   const pairingService = usePairingService()
@@ -349,6 +340,18 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
     link: {
       color: ColorPalette.brand.primary,
+    },
+    externalButtonContent: {
+      paddingHorizontal: Spacing.md,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+    },
+    externalButtonText: {
+      ...Buttons.primaryText,
+      flexWrap: 'wrap',
+      flexShrink: 1,
     },
   })
 
@@ -498,24 +501,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     case RenderState.Loading:
       return <ServiceLoginLoadingView />
     case RenderState.Unavailable:
-      return (
-        <ServiceLoginUnavailableView
-          state={state}
-          styles={styles}
-          ColorPalette={ColorPalette}
-          t={t}
-          logger={logger}
-          Spacing={Spacing}
-          onCancel={onCancel}
-        />
-      )
+      return <ServiceLoginUnavailableView state={state} styles={styles} t={t} logger={logger} onCancel={onCancel} />
     default:
       return (
         <ServiceLoginDefaultView
           state={state}
           styles={styles}
-          ColorPalette={ColorPalette}
-          Spacing={Spacing}
           t={t}
           isContinueDisabled={isContinueDisabled}
           setIsContinueDisabled={setIsContinueDisabled}
