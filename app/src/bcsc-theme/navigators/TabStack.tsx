@@ -57,11 +57,11 @@ const createTabBarIcon = (label: string, iconName: string) => {
   return TabBarIconComponent
 }
 
-const ACTIVE_INDICATOR_COLOR = '#FCBA19'
-const ACTIVE_INDICATOR_HEIGHT = 4
+const ACTIVE_INDICATOR_HEIGHT = 3
 const ACTIVE_INDICATOR_DURATION_MS = 100
 
 const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
+  const { ColorPalette } = useTheme()
   const { state } = props
   const tabCount = state.routes.length
   const { width: windowWidth } = useWindowDimensions()
@@ -88,7 +88,7 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
           left: 0,
           width: indicatorWidth,
           height: ACTIVE_INDICATOR_HEIGHT,
-          backgroundColor: ACTIVE_INDICATOR_COLOR,
+          backgroundColor: ColorPalette.brand.highlight,
           transform: [{ translateX }],
           zIndex: 1,
         }}

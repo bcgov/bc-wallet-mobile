@@ -199,8 +199,8 @@ const ServiceLoginDefaultView = ({
   const controls = (
     <ControlContainer>
       <Button
-        title="Continue"
-        accessibilityLabel={a11yLabel('Continue')}
+        title={t('Global.Continue')}
+        accessibilityLabel={a11yLabel(t('Global.Continue'))}
         testID={testIdWithKey('ServiceLoginContinue')}
         buttonType={ButtonType.Primary}
         disabled={isContinueDisabled}
@@ -210,8 +210,8 @@ const ServiceLoginDefaultView = ({
         }}
       />
       <Button
-        title="Cancel"
-        accessibilityLabel={a11yLabel('Cancel')}
+        title={t('Global.Cancel')}
+        accessibilityLabel={a11yLabel(t('Global.Cancel'))}
         testID={testIdWithKey('ServiceLoginCancel')}
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
